@@ -14,9 +14,25 @@ const CreateTicketPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateTicketRequest>({
     title: "",
     description: "",
-    priority: "中",
+    priority: "medium", // 改为英文默认值
     form_fields: {},
   });
+
+  // 添加优先级映射函数
+  const priorityMap: { [key: string]: string } = {
+    低: "low",
+    中: "medium",
+    高: "high",
+    紧急: "critical",
+  };
+
+  // 反向映射，用于显示
+  const priorityDisplayMap: { [key: string]: string } = {
+    low: "低",
+    medium: "中",
+    high: "高",
+    critical: "紧急",
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +46,15 @@ const CreateTicketPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await TicketApi.createTicket(formData);
+      // 创建提交数据，确保priority是英文值
+      const submitData = {
+        ...formData,
+        priority: priorityMap[formData.priority] || formData.priority,
+      };
+
+      const response = await TicketApi.createTicket(submitData);
 
       if (response.code === 0) {
-        // 创建成功，跳转到工单详情页
         router.push(`/tickets/${response.data.id}`);
       } else {
         setError(response.message || "创建工单失败");
@@ -101,10 +122,10 @@ const CreateTicketPage: React.FC = () => {
               onChange={(e) => handleInputChange("priority", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="低">低</option>
-              <option value="中">中</option>
-              <option value="高">高</option>
-              <option value="紧急">紧急</option>
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
+              <option value="critical">紧急</option>
             </select>
           </div>
 
