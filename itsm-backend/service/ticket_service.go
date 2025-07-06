@@ -251,3 +251,87 @@ func (s *TicketService) getNextCommentStep(ctx context.Context, ticketID int) (i
 
 	return lastLog.StepOrder + 1, nil
 }
+
+// GetTickets 获取工单列表
+func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsRequest) (*dto.TicketListResponse, error) {
+	// 构建查询条件
+	query := s.client.Ticket.Query()
+	
+	// 状态筛选
+	if req.Status != "" {
+		query = query.Where(ticket.StatusEQ(ticket.Status(req.Status)))
+	}
+	
+	// 优先级筛选
+	if req.Priority != "" {
+		query = query.Where(ticket.PriorityEQ(ticket.Priority(req.Priority)))
+	}
+	
+	// 只显示用户相关的工单（申请人或处理人）
+	query = query.Where(
+		ticket.Or(
+			ticket.RequesterID(req.UserID),
+			ticket.AssigneeID(req.UserID),
+		),
+	)
+
+	// 获取总数
+	total, err := query.Count(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to count tickets", "error", err)
+		return nil, fmt.Errorf("获取工单总数失败: %w", err)
+	}
+
+	// 分页查询
+	offset := (req.Page - 1) * req.Size
+	tickets, err := query.
+		Order(ent.Desc(ticket.FieldCreatedAt)).
+		Offset(offset).
+		Limit(req.Size).
+		All(ctx)
+
+	if err != nil {
+		s.logger.Errorw("Failed to get tickets", "error", err)
+		return nil, fmt.Errorf("获取工单列表失败: %w", err)
+	}
+
+	// 转换为响应格式
+	ticketResponses := make([]dto.TicketResponse, len(tickets))
+	for i, t := range tickets {
+		ticketResponses[i] = *dto.ToTicketResponse(t)
+	}
+
+	return &dto.TicketListResponse{
+		Tickets: ticketResponses,
+		Total:   total,
+		Page:    req.Page,
+		Size:    req.Size,
+	}, nil
+}
+
+// UpdateTicketStatus 更新工单状态
+func (s *TicketService) UpdateTicketStatus(ctx context.Context, id int, status string, userID int) (*ent.Ticket, error) {
+	// 检查工单是否存在
+	ticketEntity, err := s.GetTicketByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查权限（只有申请人或处理人可以更新状态）
+	if ticketEntity.RequesterID != userID && (ticketEntity.AssigneeID == nil || *ticketEntity.AssigneeID != userID) {
+		return nil, fmt.Errorf("无权限更新此工单")
+	}
+
+	// 更新状态
+	updatedTicket, err := s.client.Ticket.UpdateOneID(id).
+		SetStatus(ticket.Status(status)).
+		Save(ctx)
+
+	if err != nil {
+		s.logger.Errorw("Failed to update ticket status", "ticket_id", id, "error", err)
+		return nil, fmt.Errorf("更新工单状态失败: %w", err)
+	}
+
+	s.logger.Infow("Ticket status updated successfully", "ticket_id", id, "status", status, "user_id", userID)
+	return updatedTicket, nil
+}

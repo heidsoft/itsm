@@ -113,3 +113,26 @@ func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
 
 	return resp
 }
+
+
+// GetTicketsRequest 获取工单列表请求
+type GetTicketsRequest struct {
+	Page     int    `json:"page" form:"page"`
+	Size     int    `json:"size" form:"size"`
+	Status   string `json:"status" form:"status"`
+	Priority string `json:"priority" form:"priority"`
+	UserID   int    `json:"-"` // 从认证中间件获取
+}
+
+// TicketListResponse 工单列表响应
+type TicketListResponse struct {
+	Tickets []TicketResponse `json:"tickets"`
+	Total   int              `json:"total"`
+	Page    int              `json:"page"`
+	Size    int              `json:"size"`
+}
+
+// UpdateStatusRequest 更新状态请求
+type UpdateStatusRequest struct {
+	Status string `json:"status" binding:"required"`
+}
