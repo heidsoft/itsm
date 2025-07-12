@@ -56,9 +56,11 @@ type TicketEdges struct {
 	ApprovalLogs []*ApprovalLog `json:"approval_logs,omitempty"`
 	// FlowInstance holds the value of the flow_instance edge.
 	FlowInstance *FlowInstance `json:"flow_instance,omitempty"`
+	// StatusLogs holds the value of the status_logs edge.
+	StatusLogs []*StatusLog `json:"status_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // RequesterOrErr returns the Requester value or an error if the edge
@@ -101,6 +103,15 @@ func (e TicketEdges) FlowInstanceOrErr() (*FlowInstance, error) {
 		return nil, &NotFoundError{label: flowinstance.Label}
 	}
 	return nil, &NotLoadedError{edge: "flow_instance"}
+}
+
+// StatusLogsOrErr returns the StatusLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) StatusLogsOrErr() ([]*StatusLog, error) {
+	if e.loadedTypes[4] {
+		return e.StatusLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "status_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -231,6 +242,11 @@ func (t *Ticket) QueryApprovalLogs() *ApprovalLogQuery {
 // QueryFlowInstance queries the "flow_instance" edge of the Ticket entity.
 func (t *Ticket) QueryFlowInstance() *FlowInstanceQuery {
 	return NewTicketClient(t.config).QueryFlowInstance(t)
+}
+
+// QueryStatusLogs queries the "status_logs" edge of the Ticket entity.
+func (t *Ticket) QueryStatusLogs() *StatusLogQuery {
+	return NewTicketClient(t.config).QueryStatusLogs(t)
 }
 
 // Update returns a builder for updating this Ticket.

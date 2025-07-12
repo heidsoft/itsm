@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -203,6 +204,21 @@ func (tu *TicketUpdate) SetFlowInstance(f *FlowInstance) *TicketUpdate {
 	return tu.SetFlowInstanceID(f.ID)
 }
 
+// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
+func (tu *TicketUpdate) AddStatusLogIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddStatusLogIDs(ids...)
+	return tu
+}
+
+// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
+func (tu *TicketUpdate) AddStatusLogs(s ...*StatusLog) *TicketUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tu.AddStatusLogIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tu *TicketUpdate) Mutation() *TicketMutation {
 	return tu.mutation
@@ -245,6 +261,27 @@ func (tu *TicketUpdate) RemoveApprovalLogs(a ...*ApprovalLog) *TicketUpdate {
 func (tu *TicketUpdate) ClearFlowInstance() *TicketUpdate {
 	tu.mutation.ClearFlowInstance()
 	return tu
+}
+
+// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
+func (tu *TicketUpdate) ClearStatusLogs() *TicketUpdate {
+	tu.mutation.ClearStatusLogs()
+	return tu
+}
+
+// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
+func (tu *TicketUpdate) RemoveStatusLogIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveStatusLogIDs(ids...)
+	return tu
+}
+
+// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
+func (tu *TicketUpdate) RemoveStatusLogs(s ...*StatusLog) *TicketUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tu.RemoveStatusLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -492,6 +529,51 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !tu.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.StatusLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticket.Label}
@@ -684,6 +766,21 @@ func (tuo *TicketUpdateOne) SetFlowInstance(f *FlowInstance) *TicketUpdateOne {
 	return tuo.SetFlowInstanceID(f.ID)
 }
 
+// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
+func (tuo *TicketUpdateOne) AddStatusLogIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddStatusLogIDs(ids...)
+	return tuo
+}
+
+// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
+func (tuo *TicketUpdateOne) AddStatusLogs(s ...*StatusLog) *TicketUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tuo.AddStatusLogIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tuo *TicketUpdateOne) Mutation() *TicketMutation {
 	return tuo.mutation
@@ -726,6 +823,27 @@ func (tuo *TicketUpdateOne) RemoveApprovalLogs(a ...*ApprovalLog) *TicketUpdateO
 func (tuo *TicketUpdateOne) ClearFlowInstance() *TicketUpdateOne {
 	tuo.mutation.ClearFlowInstance()
 	return tuo
+}
+
+// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
+func (tuo *TicketUpdateOne) ClearStatusLogs() *TicketUpdateOne {
+	tuo.mutation.ClearStatusLogs()
+	return tuo
+}
+
+// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
+func (tuo *TicketUpdateOne) RemoveStatusLogIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveStatusLogIDs(ids...)
+	return tuo
+}
+
+// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
+func (tuo *TicketUpdateOne) RemoveStatusLogs(s ...*StatusLog) *TicketUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tuo.RemoveStatusLogIDs(ids...)
 }
 
 // Where appends a list predicates to the TicketUpdate builder.
@@ -996,6 +1114,51 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(flowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !tuo.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.StatusLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

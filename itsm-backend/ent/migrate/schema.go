@@ -131,6 +131,158 @@ var (
 			},
 		},
 	}
+	// ServiceCatalogsColumns holds the columns for the "service_catalogs" table.
+	ServiceCatalogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "category", Type: field.TypeString, Size: 100},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "delivery_time", Type: field.TypeString, Size: 50},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled"}, Default: "enabled"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ServiceCatalogsTable holds the schema information for the "service_catalogs" table.
+	ServiceCatalogsTable = &schema.Table{
+		Name:       "service_catalogs",
+		Columns:    ServiceCatalogsColumns,
+		PrimaryKey: []*schema.Column{ServiceCatalogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "servicecatalog_category",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[2]},
+			},
+			{
+				Name:    "servicecatalog_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[5]},
+			},
+			{
+				Name:    "servicecatalog_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[6]},
+			},
+			{
+				Name:    "servicecatalog_category_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[2], ServiceCatalogsColumns[5]},
+			},
+		},
+	}
+	// ServiceRequestsColumns holds the columns for the "service_requests" table.
+	ServiceRequestsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "in_progress", "completed", "rejected"}, Default: "pending"},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "catalog_id", Type: field.TypeInt},
+		{Name: "requester_id", Type: field.TypeInt},
+	}
+	// ServiceRequestsTable holds the schema information for the "service_requests" table.
+	ServiceRequestsTable = &schema.Table{
+		Name:       "service_requests",
+		Columns:    ServiceRequestsColumns,
+		PrimaryKey: []*schema.Column{ServiceRequestsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "service_requests_service_catalogs_service_requests",
+				Columns:    []*schema.Column{ServiceRequestsColumns[4]},
+				RefColumns: []*schema.Column{ServiceCatalogsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "service_requests_users_service_requests",
+				Columns:    []*schema.Column{ServiceRequestsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "servicerequest_catalog_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[4]},
+			},
+			{
+				Name:    "servicerequest_requester_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[5]},
+			},
+			{
+				Name:    "servicerequest_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[1]},
+			},
+			{
+				Name:    "servicerequest_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[3]},
+			},
+			{
+				Name:    "servicerequest_requester_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[5], ServiceRequestsColumns[1]},
+			},
+			{
+				Name:    "servicerequest_catalog_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[4], ServiceRequestsColumns[1]},
+			},
+		},
+	}
+	// StatusLogsColumns holds the columns for the "status_logs" table.
+	StatusLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "from_status", Type: field.TypeString, Size: 50},
+		{Name: "to_status", Type: field.TypeString, Size: 50},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// StatusLogsTable holds the schema information for the "status_logs" table.
+	StatusLogsTable = &schema.Table{
+		Name:       "status_logs",
+		Columns:    StatusLogsColumns,
+		PrimaryKey: []*schema.Column{StatusLogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "status_logs_tickets_status_logs",
+				Columns:    []*schema.Column{StatusLogsColumns[5]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "status_logs_users_status_logs",
+				Columns:    []*schema.Column{StatusLogsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "statuslog_ticket_id",
+				Unique:  false,
+				Columns: []*schema.Column{StatusLogsColumns[5]},
+			},
+			{
+				Name:    "statuslog_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{StatusLogsColumns[6]},
+			},
+			{
+				Name:    "statuslog_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{StatusLogsColumns[4]},
+			},
+			{
+				Name:    "statuslog_ticket_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{StatusLogsColumns[5], StatusLogsColumns[4]},
+			},
+		},
+	}
 	// TicketsColumns holds the columns for the "tickets" table.
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -247,6 +399,9 @@ var (
 	Tables = []*schema.Table{
 		ApprovalLogsTable,
 		FlowInstancesTable,
+		ServiceCatalogsTable,
+		ServiceRequestsTable,
+		StatusLogsTable,
 		TicketsTable,
 		UsersTable,
 	}
@@ -256,6 +411,10 @@ func init() {
 	ApprovalLogsTable.ForeignKeys[0].RefTable = TicketsTable
 	ApprovalLogsTable.ForeignKeys[1].RefTable = UsersTable
 	FlowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
+	ServiceRequestsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
+	ServiceRequestsTable.ForeignKeys[1].RefTable = UsersTable
+	StatusLogsTable.ForeignKeys[0].RefTable = TicketsTable
+	StatusLogsTable.ForeignKeys[1].RefTable = UsersTable
 	TicketsTable.ForeignKeys[0].RefTable = UsersTable
 	TicketsTable.ForeignKeys[1].RefTable = UsersTable
 }

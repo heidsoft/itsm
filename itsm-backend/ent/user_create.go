@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -159,6 +161,36 @@ func (uc *UserCreate) AddApprovalLogs(a ...*ApprovalLog) *UserCreate {
 		ids[i] = a[i].ID
 	}
 	return uc.AddApprovalLogIDs(ids...)
+}
+
+// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
+func (uc *UserCreate) AddStatusLogIDs(ids ...int) *UserCreate {
+	uc.mutation.AddStatusLogIDs(ids...)
+	return uc
+}
+
+// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
+func (uc *UserCreate) AddStatusLogs(s ...*StatusLog) *UserCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uc.AddStatusLogIDs(ids...)
+}
+
+// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
+func (uc *UserCreate) AddServiceRequestIDs(ids ...int) *UserCreate {
+	uc.mutation.AddServiceRequestIDs(ids...)
+	return uc
+}
+
+// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
+func (uc *UserCreate) AddServiceRequests(s ...*ServiceRequest) *UserCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uc.AddServiceRequestIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -361,6 +393,38 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.StatusLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

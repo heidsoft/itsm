@@ -49,9 +49,13 @@ type UserEdges struct {
 	AssignedTickets []*Ticket `json:"assigned_tickets,omitempty"`
 	// ApprovalLogs holds the value of the approval_logs edge.
 	ApprovalLogs []*ApprovalLog `json:"approval_logs,omitempty"`
+	// StatusLogs holds the value of the status_logs edge.
+	StatusLogs []*StatusLog `json:"status_logs,omitempty"`
+	// ServiceRequests holds the value of the service_requests edge.
+	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // SubmittedTicketsOrErr returns the SubmittedTickets value or an error if the edge
@@ -79,6 +83,24 @@ func (e UserEdges) ApprovalLogsOrErr() ([]*ApprovalLog, error) {
 		return e.ApprovalLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "approval_logs"}
+}
+
+// StatusLogsOrErr returns the StatusLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) StatusLogsOrErr() ([]*StatusLog, error) {
+	if e.loadedTypes[3] {
+		return e.StatusLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "status_logs"}
+}
+
+// ServiceRequestsOrErr returns the ServiceRequests value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ServiceRequestsOrErr() ([]*ServiceRequest, error) {
+	if e.loadedTypes[4] {
+		return e.ServiceRequests, nil
+	}
+	return nil, &NotLoadedError{edge: "service_requests"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -195,6 +217,16 @@ func (u *User) QueryAssignedTickets() *TicketQuery {
 // QueryApprovalLogs queries the "approval_logs" edge of the User entity.
 func (u *User) QueryApprovalLogs() *ApprovalLogQuery {
 	return NewUserClient(u.config).QueryApprovalLogs(u)
+}
+
+// QueryStatusLogs queries the "status_logs" edge of the User entity.
+func (u *User) QueryStatusLogs() *StatusLogQuery {
+	return NewUserClient(u.config).QueryStatusLogs(u)
+}
+
+// QueryServiceRequests queries the "service_requests" edge of the User entity.
+func (u *User) QueryServiceRequests() *ServiceRequestQuery {
+	return NewUserClient(u.config).QueryServiceRequests(u)
 }
 
 // Update returns a builder for updating this User.

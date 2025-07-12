@@ -8,33 +8,48 @@ import (
 )
 
 // SetupRoutes 设置路由
-func SetupRoutes(r *gin.Engine, ticketController *controller.TicketController) {
-	// 配置CORS
+func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController) *gin.Engine {
+	r := gin.Default()
+	
+	// CORS 中间件
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
+		
 		c.Next()
 	})
-
-	// API路由组
+	
+	// API 路由组
 	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
 	{
-		// 工单相关路由（需要认证）
-		tickets := api.Group("/tickets")
-		tickets.Use(middleware.AuthMiddleware())
-		{
-			tickets.GET("", ticketController.GetTickets)              // GET /api/tickets
-			tickets.POST("", ticketController.CreateTicket)           // POST /api/tickets
-			tickets.GET("/:id", ticketController.GetTicket)           // GET /api/tickets/:id
-			tickets.PATCH("/:id", ticketController.UpdateTicket)      // PATCH /api/tickets/:id
-			tickets.PUT("/:id/status", ticketController.UpdateTicketStatus) // PUT /api/tickets/:id/status
-			tickets.POST("/:id/approve", ticketController.ApproveTicket) // POST /api/tickets/:id/approve
-			tickets.POST("/:id/comment", ticketController.AddComment)   // POST /api/tickets/:id/comment
-		}
+		// 工单相关路由
+		api.GET("/tickets", ticketController.GetTickets)
+		api.POST("/tickets", ticketController.CreateTicket)
+		api.GET("/tickets/:id", ticketController.GetTicket)
+		api.PATCH("/tickets/:id", ticketController.UpdateTicket)
+		api.PUT("/tickets/:id/status", ticketController.UpdateTicketStatus)
+		api.POST("/tickets/:id/approve", ticketController.ApproveTicket)
+		
+		// 服务目录相关路由
+		api.GET("/service-catalogs", serviceController.GetServiceCatalogs)
+		api.POST("/service-catalogs", serviceController.CreateServiceCatalog)
+		api.GET("/service-catalogs/:id", serviceController.GetServiceCatalogByID)
+		api.PUT("/service-catalogs/:id", serviceController.UpdateServiceCatalog)
+		api.DELETE("/service-catalogs/:id", serviceController.DeleteServiceCatalog)
+		
+		// 服务请求相关路由
+		api.POST("/service-requests", serviceController.CreateServiceRequest)
+		api.GET("/service-requests/me", serviceController.GetUserServiceRequests)
+		api.GET("/service-requests/:id", serviceController.GetServiceRequestByID)
+		api.PUT("/service-requests/:id/status", serviceController.UpdateServiceRequestStatus)
 	}
+	
+	return r
 }

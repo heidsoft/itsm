@@ -13,6 +13,9 @@ import (
 
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
@@ -31,6 +34,12 @@ type Client struct {
 	ApprovalLog *ApprovalLogClient
 	// FlowInstance is the client for interacting with the FlowInstance builders.
 	FlowInstance *FlowInstanceClient
+	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
+	ServiceCatalog *ServiceCatalogClient
+	// ServiceRequest is the client for interacting with the ServiceRequest builders.
+	ServiceRequest *ServiceRequestClient
+	// StatusLog is the client for interacting with the StatusLog builders.
+	StatusLog *StatusLogClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
 	// User is the client for interacting with the User builders.
@@ -48,6 +57,9 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.ApprovalLog = NewApprovalLogClient(c.config)
 	c.FlowInstance = NewFlowInstanceClient(c.config)
+	c.ServiceCatalog = NewServiceCatalogClient(c.config)
+	c.ServiceRequest = NewServiceRequestClient(c.config)
+	c.StatusLog = NewStatusLogClient(c.config)
 	c.Ticket = NewTicketClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -140,12 +152,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		ApprovalLog:  NewApprovalLogClient(cfg),
-		FlowInstance: NewFlowInstanceClient(cfg),
-		Ticket:       NewTicketClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		ApprovalLog:    NewApprovalLogClient(cfg),
+		FlowInstance:   NewFlowInstanceClient(cfg),
+		ServiceCatalog: NewServiceCatalogClient(cfg),
+		ServiceRequest: NewServiceRequestClient(cfg),
+		StatusLog:      NewStatusLogClient(cfg),
+		Ticket:         NewTicketClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -163,12 +178,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:          ctx,
-		config:       cfg,
-		ApprovalLog:  NewApprovalLogClient(cfg),
-		FlowInstance: NewFlowInstanceClient(cfg),
-		Ticket:       NewTicketClient(cfg),
-		User:         NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		ApprovalLog:    NewApprovalLogClient(cfg),
+		FlowInstance:   NewFlowInstanceClient(cfg),
+		ServiceCatalog: NewServiceCatalogClient(cfg),
+		ServiceRequest: NewServiceRequestClient(cfg),
+		StatusLog:      NewStatusLogClient(cfg),
+		Ticket:         NewTicketClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -197,19 +215,23 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.ApprovalLog.Use(hooks...)
-	c.FlowInstance.Use(hooks...)
-	c.Ticket.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.ApprovalLog, c.FlowInstance, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
+		c.Ticket, c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.ApprovalLog.Intercept(interceptors...)
-	c.FlowInstance.Intercept(interceptors...)
-	c.Ticket.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.ApprovalLog, c.FlowInstance, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
+		c.Ticket, c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -219,6 +241,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ApprovalLog.mutate(ctx, m)
 	case *FlowInstanceMutation:
 		return c.FlowInstance.mutate(ctx, m)
+	case *ServiceCatalogMutation:
+		return c.ServiceCatalog.mutate(ctx, m)
+	case *ServiceRequestMutation:
+		return c.ServiceRequest.mutate(ctx, m)
+	case *StatusLogMutation:
+		return c.StatusLog.mutate(ctx, m)
 	case *TicketMutation:
 		return c.Ticket.mutate(ctx, m)
 	case *UserMutation:
@@ -542,6 +570,485 @@ func (c *FlowInstanceClient) mutate(ctx context.Context, m *FlowInstanceMutation
 	}
 }
 
+// ServiceCatalogClient is a client for the ServiceCatalog schema.
+type ServiceCatalogClient struct {
+	config
+}
+
+// NewServiceCatalogClient returns a client for the ServiceCatalog from the given config.
+func NewServiceCatalogClient(c config) *ServiceCatalogClient {
+	return &ServiceCatalogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `servicecatalog.Hooks(f(g(h())))`.
+func (c *ServiceCatalogClient) Use(hooks ...Hook) {
+	c.hooks.ServiceCatalog = append(c.hooks.ServiceCatalog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `servicecatalog.Intercept(f(g(h())))`.
+func (c *ServiceCatalogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ServiceCatalog = append(c.inters.ServiceCatalog, interceptors...)
+}
+
+// Create returns a builder for creating a ServiceCatalog entity.
+func (c *ServiceCatalogClient) Create() *ServiceCatalogCreate {
+	mutation := newServiceCatalogMutation(c.config, OpCreate)
+	return &ServiceCatalogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ServiceCatalog entities.
+func (c *ServiceCatalogClient) CreateBulk(builders ...*ServiceCatalogCreate) *ServiceCatalogCreateBulk {
+	return &ServiceCatalogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ServiceCatalogClient) MapCreateBulk(slice any, setFunc func(*ServiceCatalogCreate, int)) *ServiceCatalogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ServiceCatalogCreateBulk{err: fmt.Errorf("calling to ServiceCatalogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ServiceCatalogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ServiceCatalogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ServiceCatalog.
+func (c *ServiceCatalogClient) Update() *ServiceCatalogUpdate {
+	mutation := newServiceCatalogMutation(c.config, OpUpdate)
+	return &ServiceCatalogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ServiceCatalogClient) UpdateOne(sc *ServiceCatalog) *ServiceCatalogUpdateOne {
+	mutation := newServiceCatalogMutation(c.config, OpUpdateOne, withServiceCatalog(sc))
+	return &ServiceCatalogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ServiceCatalogClient) UpdateOneID(id int) *ServiceCatalogUpdateOne {
+	mutation := newServiceCatalogMutation(c.config, OpUpdateOne, withServiceCatalogID(id))
+	return &ServiceCatalogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ServiceCatalog.
+func (c *ServiceCatalogClient) Delete() *ServiceCatalogDelete {
+	mutation := newServiceCatalogMutation(c.config, OpDelete)
+	return &ServiceCatalogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ServiceCatalogClient) DeleteOne(sc *ServiceCatalog) *ServiceCatalogDeleteOne {
+	return c.DeleteOneID(sc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ServiceCatalogClient) DeleteOneID(id int) *ServiceCatalogDeleteOne {
+	builder := c.Delete().Where(servicecatalog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ServiceCatalogDeleteOne{builder}
+}
+
+// Query returns a query builder for ServiceCatalog.
+func (c *ServiceCatalogClient) Query() *ServiceCatalogQuery {
+	return &ServiceCatalogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeServiceCatalog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ServiceCatalog entity by its id.
+func (c *ServiceCatalogClient) Get(ctx context.Context, id int) (*ServiceCatalog, error) {
+	return c.Query().Where(servicecatalog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ServiceCatalogClient) GetX(ctx context.Context, id int) *ServiceCatalog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryServiceRequests queries the service_requests edge of a ServiceCatalog.
+func (c *ServiceCatalogClient) QueryServiceRequests(sc *ServiceCatalog) *ServiceRequestQuery {
+	query := (&ServiceRequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, id),
+			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, servicecatalog.ServiceRequestsTable, servicecatalog.ServiceRequestsColumn),
+		)
+		fromV = sqlgraph.Neighbors(sc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ServiceCatalogClient) Hooks() []Hook {
+	return c.hooks.ServiceCatalog
+}
+
+// Interceptors returns the client interceptors.
+func (c *ServiceCatalogClient) Interceptors() []Interceptor {
+	return c.inters.ServiceCatalog
+}
+
+func (c *ServiceCatalogClient) mutate(ctx context.Context, m *ServiceCatalogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ServiceCatalogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ServiceCatalogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ServiceCatalogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ServiceCatalogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ServiceCatalog mutation op: %q", m.Op())
+	}
+}
+
+// ServiceRequestClient is a client for the ServiceRequest schema.
+type ServiceRequestClient struct {
+	config
+}
+
+// NewServiceRequestClient returns a client for the ServiceRequest from the given config.
+func NewServiceRequestClient(c config) *ServiceRequestClient {
+	return &ServiceRequestClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `servicerequest.Hooks(f(g(h())))`.
+func (c *ServiceRequestClient) Use(hooks ...Hook) {
+	c.hooks.ServiceRequest = append(c.hooks.ServiceRequest, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `servicerequest.Intercept(f(g(h())))`.
+func (c *ServiceRequestClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ServiceRequest = append(c.inters.ServiceRequest, interceptors...)
+}
+
+// Create returns a builder for creating a ServiceRequest entity.
+func (c *ServiceRequestClient) Create() *ServiceRequestCreate {
+	mutation := newServiceRequestMutation(c.config, OpCreate)
+	return &ServiceRequestCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ServiceRequest entities.
+func (c *ServiceRequestClient) CreateBulk(builders ...*ServiceRequestCreate) *ServiceRequestCreateBulk {
+	return &ServiceRequestCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ServiceRequestClient) MapCreateBulk(slice any, setFunc func(*ServiceRequestCreate, int)) *ServiceRequestCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ServiceRequestCreateBulk{err: fmt.Errorf("calling to ServiceRequestClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ServiceRequestCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ServiceRequestCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ServiceRequest.
+func (c *ServiceRequestClient) Update() *ServiceRequestUpdate {
+	mutation := newServiceRequestMutation(c.config, OpUpdate)
+	return &ServiceRequestUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ServiceRequestClient) UpdateOne(sr *ServiceRequest) *ServiceRequestUpdateOne {
+	mutation := newServiceRequestMutation(c.config, OpUpdateOne, withServiceRequest(sr))
+	return &ServiceRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ServiceRequestClient) UpdateOneID(id int) *ServiceRequestUpdateOne {
+	mutation := newServiceRequestMutation(c.config, OpUpdateOne, withServiceRequestID(id))
+	return &ServiceRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ServiceRequest.
+func (c *ServiceRequestClient) Delete() *ServiceRequestDelete {
+	mutation := newServiceRequestMutation(c.config, OpDelete)
+	return &ServiceRequestDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ServiceRequestClient) DeleteOne(sr *ServiceRequest) *ServiceRequestDeleteOne {
+	return c.DeleteOneID(sr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ServiceRequestClient) DeleteOneID(id int) *ServiceRequestDeleteOne {
+	builder := c.Delete().Where(servicerequest.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ServiceRequestDeleteOne{builder}
+}
+
+// Query returns a query builder for ServiceRequest.
+func (c *ServiceRequestClient) Query() *ServiceRequestQuery {
+	return &ServiceRequestQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeServiceRequest},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ServiceRequest entity by its id.
+func (c *ServiceRequestClient) Get(ctx context.Context, id int) (*ServiceRequest, error) {
+	return c.Query().Where(servicerequest.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ServiceRequestClient) GetX(ctx context.Context, id int) *ServiceRequest {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCatalog queries the catalog edge of a ServiceRequest.
+func (c *ServiceRequestClient) QueryCatalog(sr *ServiceRequest) *ServiceCatalogQuery {
+	query := (&ServiceCatalogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicerequest.Table, servicerequest.FieldID, id),
+			sqlgraph.To(servicecatalog.Table, servicecatalog.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, servicerequest.CatalogTable, servicerequest.CatalogColumn),
+		)
+		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRequester queries the requester edge of a ServiceRequest.
+func (c *ServiceRequestClient) QueryRequester(sr *ServiceRequest) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicerequest.Table, servicerequest.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, servicerequest.RequesterTable, servicerequest.RequesterColumn),
+		)
+		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ServiceRequestClient) Hooks() []Hook {
+	return c.hooks.ServiceRequest
+}
+
+// Interceptors returns the client interceptors.
+func (c *ServiceRequestClient) Interceptors() []Interceptor {
+	return c.inters.ServiceRequest
+}
+
+func (c *ServiceRequestClient) mutate(ctx context.Context, m *ServiceRequestMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ServiceRequestCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ServiceRequestUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ServiceRequestUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ServiceRequestDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ServiceRequest mutation op: %q", m.Op())
+	}
+}
+
+// StatusLogClient is a client for the StatusLog schema.
+type StatusLogClient struct {
+	config
+}
+
+// NewStatusLogClient returns a client for the StatusLog from the given config.
+func NewStatusLogClient(c config) *StatusLogClient {
+	return &StatusLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `statuslog.Hooks(f(g(h())))`.
+func (c *StatusLogClient) Use(hooks ...Hook) {
+	c.hooks.StatusLog = append(c.hooks.StatusLog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `statuslog.Intercept(f(g(h())))`.
+func (c *StatusLogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StatusLog = append(c.inters.StatusLog, interceptors...)
+}
+
+// Create returns a builder for creating a StatusLog entity.
+func (c *StatusLogClient) Create() *StatusLogCreate {
+	mutation := newStatusLogMutation(c.config, OpCreate)
+	return &StatusLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StatusLog entities.
+func (c *StatusLogClient) CreateBulk(builders ...*StatusLogCreate) *StatusLogCreateBulk {
+	return &StatusLogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StatusLogClient) MapCreateBulk(slice any, setFunc func(*StatusLogCreate, int)) *StatusLogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StatusLogCreateBulk{err: fmt.Errorf("calling to StatusLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StatusLogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StatusLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StatusLog.
+func (c *StatusLogClient) Update() *StatusLogUpdate {
+	mutation := newStatusLogMutation(c.config, OpUpdate)
+	return &StatusLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StatusLogClient) UpdateOne(sl *StatusLog) *StatusLogUpdateOne {
+	mutation := newStatusLogMutation(c.config, OpUpdateOne, withStatusLog(sl))
+	return &StatusLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StatusLogClient) UpdateOneID(id int) *StatusLogUpdateOne {
+	mutation := newStatusLogMutation(c.config, OpUpdateOne, withStatusLogID(id))
+	return &StatusLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StatusLog.
+func (c *StatusLogClient) Delete() *StatusLogDelete {
+	mutation := newStatusLogMutation(c.config, OpDelete)
+	return &StatusLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StatusLogClient) DeleteOne(sl *StatusLog) *StatusLogDeleteOne {
+	return c.DeleteOneID(sl.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StatusLogClient) DeleteOneID(id int) *StatusLogDeleteOne {
+	builder := c.Delete().Where(statuslog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StatusLogDeleteOne{builder}
+}
+
+// Query returns a query builder for StatusLog.
+func (c *StatusLogClient) Query() *StatusLogQuery {
+	return &StatusLogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStatusLog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StatusLog entity by its id.
+func (c *StatusLogClient) Get(ctx context.Context, id int) (*StatusLog, error) {
+	return c.Query().Where(statuslog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StatusLogClient) GetX(ctx context.Context, id int) *StatusLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a StatusLog.
+func (c *StatusLogClient) QueryTicket(sl *StatusLog) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(statuslog.Table, statuslog.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, statuslog.TicketTable, statuslog.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(sl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a StatusLog.
+func (c *StatusLogClient) QueryUser(sl *StatusLog) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(statuslog.Table, statuslog.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, statuslog.UserTable, statuslog.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(sl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *StatusLogClient) Hooks() []Hook {
+	return c.hooks.StatusLog
+}
+
+// Interceptors returns the client interceptors.
+func (c *StatusLogClient) Interceptors() []Interceptor {
+	return c.inters.StatusLog
+}
+
+func (c *StatusLogClient) mutate(ctx context.Context, m *StatusLogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StatusLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StatusLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StatusLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StatusLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StatusLog mutation op: %q", m.Op())
+	}
+}
+
 // TicketClient is a client for the Ticket schema.
 type TicketClient struct {
 	config
@@ -707,6 +1214,22 @@ func (c *TicketClient) QueryFlowInstance(t *Ticket) *FlowInstanceQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
 			sqlgraph.To(flowinstance.Table, flowinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, ticket.FlowInstanceTable, ticket.FlowInstanceColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStatusLogs queries the status_logs edge of a Ticket.
+func (c *TicketClient) QueryStatusLogs(t *Ticket) *StatusLogQuery {
+	query := (&StatusLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(statuslog.Table, statuslog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.StatusLogsTable, ticket.StatusLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -895,6 +1418,38 @@ func (c *UserClient) QueryApprovalLogs(u *User) *ApprovalLogQuery {
 	return query
 }
 
+// QueryStatusLogs queries the status_logs edge of a User.
+func (c *UserClient) QueryStatusLogs(u *User) *StatusLogQuery {
+	query := (&StatusLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(statuslog.Table, statuslog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.StatusLogsTable, user.StatusLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryServiceRequests queries the service_requests edge of a User.
+func (c *UserClient) QueryServiceRequests(u *User) *ServiceRequestQuery {
+	query := (&ServiceRequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ServiceRequestsTable, user.ServiceRequestsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -923,9 +1478,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ApprovalLog, FlowInstance, Ticket, User []ent.Hook
+		ApprovalLog, FlowInstance, ServiceCatalog, ServiceRequest, StatusLog, Ticket,
+		User []ent.Hook
 	}
 	inters struct {
-		ApprovalLog, FlowInstance, Ticket, User []ent.Interceptor
+		ApprovalLog, FlowInstance, ServiceCatalog, ServiceRequest, StatusLog, Ticket,
+		User []ent.Interceptor
 	}
 )

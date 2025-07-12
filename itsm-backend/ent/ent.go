@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"reflect"
@@ -76,10 +79,13 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			approvallog.Table:  approvallog.ValidColumn,
-			flowinstance.Table: flowinstance.ValidColumn,
-			ticket.Table:       ticket.ValidColumn,
-			user.Table:         user.ValidColumn,
+			approvallog.Table:    approvallog.ValidColumn,
+			flowinstance.Table:   flowinstance.ValidColumn,
+			servicecatalog.Table: servicecatalog.ValidColumn,
+			servicerequest.Table: servicerequest.ValidColumn,
+			statuslog.Table:      statuslog.ValidColumn,
+			ticket.Table:         ticket.ValidColumn,
+			user.Table:           user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

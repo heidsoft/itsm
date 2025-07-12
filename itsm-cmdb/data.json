@@ -1,0 +1,21 @@
+
+{
+  "nodes": [
+    {"id": 1, "label": "WebServer A"},
+    {"id": 2, "label": "WebServer B"},
+    {"id": 3, "label": "API Gateway"},
+    {"id": 4, "label": "Auth Service"},
+    {"id": 5, "label": "User Database"},
+    {"id": 6, "label": "Load Balancer"},
+    {"id": 7, "label": "WebApp"}
+  ],
+  "edges": [
+    {"from": 6, "to": 1},
+    {"from": 6, "to": 2},
+    {"from": 1, "to": 3},
+    {"from": 2, "to": 3},
+    {"from": 3, "to": 4},
+    {"from": 4, "to": 5},
+    {"from": 7, "to": 6}
+  ]
+}

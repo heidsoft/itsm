@@ -32,6 +32,42 @@ func (f FlowInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FlowInstanceMutation", m)
 }
 
+// The ServiceCatalogFunc type is an adapter to allow the use of ordinary
+// function as ServiceCatalog mutator.
+type ServiceCatalogFunc func(context.Context, *ent.ServiceCatalogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ServiceCatalogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ServiceCatalogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceCatalogMutation", m)
+}
+
+// The ServiceRequestFunc type is an adapter to allow the use of ordinary
+// function as ServiceRequest mutator.
+type ServiceRequestFunc func(context.Context, *ent.ServiceRequestMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ServiceRequestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ServiceRequestMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceRequestMutation", m)
+}
+
+// The StatusLogFunc type is an adapter to allow the use of ordinary
+// function as StatusLog mutator.
+type StatusLogFunc func(context.Context, *ent.StatusLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StatusLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StatusLogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StatusLogMutation", m)
+}
+
 // The TicketFunc type is an adapter to allow the use of ordinary
 // function as Ticket mutator.
 type TicketFunc func(context.Context, *ent.TicketMutation) (ent.Value, error)

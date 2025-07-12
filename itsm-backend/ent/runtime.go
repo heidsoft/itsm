@@ -6,6 +6,9 @@ import (
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
 	"itsm-backend/ent/schema"
+	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -105,6 +108,112 @@ func init() {
 	flowinstance.DefaultUpdatedAt = flowinstanceDescUpdatedAt.Default.(func() time.Time)
 	// flowinstance.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	flowinstance.UpdateDefaultUpdatedAt = flowinstanceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	servicecatalogFields := schema.ServiceCatalog{}.Fields()
+	_ = servicecatalogFields
+	// servicecatalogDescName is the schema descriptor for name field.
+	servicecatalogDescName := servicecatalogFields[0].Descriptor()
+	// servicecatalog.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	servicecatalog.NameValidator = func() func(string) error {
+		validators := servicecatalogDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// servicecatalogDescCategory is the schema descriptor for category field.
+	servicecatalogDescCategory := servicecatalogFields[1].Descriptor()
+	// servicecatalog.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	servicecatalog.CategoryValidator = func() func(string) error {
+		validators := servicecatalogDescCategory.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(category string) error {
+			for _, fn := range fns {
+				if err := fn(category); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// servicecatalogDescDeliveryTime is the schema descriptor for delivery_time field.
+	servicecatalogDescDeliveryTime := servicecatalogFields[3].Descriptor()
+	// servicecatalog.DeliveryTimeValidator is a validator for the "delivery_time" field. It is called by the builders before save.
+	servicecatalog.DeliveryTimeValidator = func() func(string) error {
+		validators := servicecatalogDescDeliveryTime.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(delivery_time string) error {
+			for _, fn := range fns {
+				if err := fn(delivery_time); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// servicecatalogDescCreatedAt is the schema descriptor for created_at field.
+	servicecatalogDescCreatedAt := servicecatalogFields[5].Descriptor()
+	// servicecatalog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	servicecatalog.DefaultCreatedAt = servicecatalogDescCreatedAt.Default.(func() time.Time)
+	// servicecatalogDescUpdatedAt is the schema descriptor for updated_at field.
+	servicecatalogDescUpdatedAt := servicecatalogFields[6].Descriptor()
+	// servicecatalog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	servicecatalog.DefaultUpdatedAt = servicecatalogDescUpdatedAt.Default.(func() time.Time)
+	// servicecatalog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	servicecatalog.UpdateDefaultUpdatedAt = servicecatalogDescUpdatedAt.UpdateDefault.(func() time.Time)
+	servicerequestFields := schema.ServiceRequest{}.Fields()
+	_ = servicerequestFields
+	// servicerequestDescCatalogID is the schema descriptor for catalog_id field.
+	servicerequestDescCatalogID := servicerequestFields[0].Descriptor()
+	// servicerequest.CatalogIDValidator is a validator for the "catalog_id" field. It is called by the builders before save.
+	servicerequest.CatalogIDValidator = servicerequestDescCatalogID.Validators[0].(func(int) error)
+	// servicerequestDescRequesterID is the schema descriptor for requester_id field.
+	servicerequestDescRequesterID := servicerequestFields[1].Descriptor()
+	// servicerequest.RequesterIDValidator is a validator for the "requester_id" field. It is called by the builders before save.
+	servicerequest.RequesterIDValidator = servicerequestDescRequesterID.Validators[0].(func(int) error)
+	// servicerequestDescReason is the schema descriptor for reason field.
+	servicerequestDescReason := servicerequestFields[3].Descriptor()
+	// servicerequest.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	servicerequest.ReasonValidator = servicerequestDescReason.Validators[0].(func(string) error)
+	// servicerequestDescCreatedAt is the schema descriptor for created_at field.
+	servicerequestDescCreatedAt := servicerequestFields[4].Descriptor()
+	// servicerequest.DefaultCreatedAt holds the default value on creation for the created_at field.
+	servicerequest.DefaultCreatedAt = servicerequestDescCreatedAt.Default.(func() time.Time)
+	statuslogFields := schema.StatusLog{}.Fields()
+	_ = statuslogFields
+	// statuslogDescTicketID is the schema descriptor for ticket_id field.
+	statuslogDescTicketID := statuslogFields[0].Descriptor()
+	// statuslog.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	statuslog.TicketIDValidator = statuslogDescTicketID.Validators[0].(func(int) error)
+	// statuslogDescFromStatus is the schema descriptor for from_status field.
+	statuslogDescFromStatus := statuslogFields[1].Descriptor()
+	// statuslog.FromStatusValidator is a validator for the "from_status" field. It is called by the builders before save.
+	statuslog.FromStatusValidator = statuslogDescFromStatus.Validators[0].(func(string) error)
+	// statuslogDescToStatus is the schema descriptor for to_status field.
+	statuslogDescToStatus := statuslogFields[2].Descriptor()
+	// statuslog.ToStatusValidator is a validator for the "to_status" field. It is called by the builders before save.
+	statuslog.ToStatusValidator = statuslogDescToStatus.Validators[0].(func(string) error)
+	// statuslogDescUserID is the schema descriptor for user_id field.
+	statuslogDescUserID := statuslogFields[3].Descriptor()
+	// statuslog.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	statuslog.UserIDValidator = statuslogDescUserID.Validators[0].(func(int) error)
+	// statuslogDescCreatedAt is the schema descriptor for created_at field.
+	statuslogDescCreatedAt := statuslogFields[5].Descriptor()
+	// statuslog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	statuslog.DefaultCreatedAt = statuslogDescCreatedAt.Default.(func() time.Time)
 	ticketFields := schema.Ticket{}.Fields()
 	_ = ticketFields
 	// ticketDescTitle is the schema descriptor for title field.

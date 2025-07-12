@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -191,6 +193,36 @@ func (uu *UserUpdate) AddApprovalLogs(a ...*ApprovalLog) *UserUpdate {
 	return uu.AddApprovalLogIDs(ids...)
 }
 
+// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
+func (uu *UserUpdate) AddStatusLogIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddStatusLogIDs(ids...)
+	return uu
+}
+
+// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
+func (uu *UserUpdate) AddStatusLogs(s ...*StatusLog) *UserUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.AddStatusLogIDs(ids...)
+}
+
+// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
+func (uu *UserUpdate) AddServiceRequestIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddServiceRequestIDs(ids...)
+	return uu
+}
+
+// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
+func (uu *UserUpdate) AddServiceRequests(s ...*ServiceRequest) *UserUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.AddServiceRequestIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -257,6 +289,48 @@ func (uu *UserUpdate) RemoveApprovalLogs(a ...*ApprovalLog) *UserUpdate {
 		ids[i] = a[i].ID
 	}
 	return uu.RemoveApprovalLogIDs(ids...)
+}
+
+// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
+func (uu *UserUpdate) ClearStatusLogs() *UserUpdate {
+	uu.mutation.ClearStatusLogs()
+	return uu
+}
+
+// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
+func (uu *UserUpdate) RemoveStatusLogIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveStatusLogIDs(ids...)
+	return uu
+}
+
+// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
+func (uu *UserUpdate) RemoveStatusLogs(s ...*StatusLog) *UserUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.RemoveStatusLogIDs(ids...)
+}
+
+// ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
+func (uu *UserUpdate) ClearServiceRequests() *UserUpdate {
+	uu.mutation.ClearServiceRequests()
+	return uu
+}
+
+// RemoveServiceRequestIDs removes the "service_requests" edge to ServiceRequest entities by IDs.
+func (uu *UserUpdate) RemoveServiceRequestIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveServiceRequestIDs(ids...)
+	return uu
+}
+
+// RemoveServiceRequests removes "service_requests" edges to ServiceRequest entities.
+func (uu *UserUpdate) RemoveServiceRequests(s ...*ServiceRequest) *UserUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.RemoveServiceRequestIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -502,6 +576,96 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !uu.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.StatusLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ServiceRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedServiceRequestsIDs(); len(nodes) > 0 && !uu.mutation.ServiceRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -683,6 +847,36 @@ func (uuo *UserUpdateOne) AddApprovalLogs(a ...*ApprovalLog) *UserUpdateOne {
 	return uuo.AddApprovalLogIDs(ids...)
 }
 
+// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
+func (uuo *UserUpdateOne) AddStatusLogIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddStatusLogIDs(ids...)
+	return uuo
+}
+
+// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
+func (uuo *UserUpdateOne) AddStatusLogs(s ...*StatusLog) *UserUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.AddStatusLogIDs(ids...)
+}
+
+// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
+func (uuo *UserUpdateOne) AddServiceRequestIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddServiceRequestIDs(ids...)
+	return uuo
+}
+
+// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
+func (uuo *UserUpdateOne) AddServiceRequests(s ...*ServiceRequest) *UserUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.AddServiceRequestIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -749,6 +943,48 @@ func (uuo *UserUpdateOne) RemoveApprovalLogs(a ...*ApprovalLog) *UserUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return uuo.RemoveApprovalLogIDs(ids...)
+}
+
+// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
+func (uuo *UserUpdateOne) ClearStatusLogs() *UserUpdateOne {
+	uuo.mutation.ClearStatusLogs()
+	return uuo
+}
+
+// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
+func (uuo *UserUpdateOne) RemoveStatusLogIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveStatusLogIDs(ids...)
+	return uuo
+}
+
+// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
+func (uuo *UserUpdateOne) RemoveStatusLogs(s ...*StatusLog) *UserUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.RemoveStatusLogIDs(ids...)
+}
+
+// ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
+func (uuo *UserUpdateOne) ClearServiceRequests() *UserUpdateOne {
+	uuo.mutation.ClearServiceRequests()
+	return uuo
+}
+
+// RemoveServiceRequestIDs removes the "service_requests" edge to ServiceRequest entities by IDs.
+func (uuo *UserUpdateOne) RemoveServiceRequestIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveServiceRequestIDs(ids...)
+	return uuo
+}
+
+// RemoveServiceRequests removes "service_requests" edges to ServiceRequest entities.
+func (uuo *UserUpdateOne) RemoveServiceRequests(s ...*ServiceRequest) *UserUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.RemoveServiceRequestIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1017,6 +1253,96 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !uuo.mutation.StatusLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.StatusLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.StatusLogsTable,
+			Columns: []string{user.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ServiceRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedServiceRequestsIDs(); len(nodes) > 0 && !uuo.mutation.ServiceRequestsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ServiceRequestsTable,
+			Columns: []string{user.ServiceRequestsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

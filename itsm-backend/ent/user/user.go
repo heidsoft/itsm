@@ -38,6 +38,10 @@ const (
 	EdgeAssignedTickets = "assigned_tickets"
 	// EdgeApprovalLogs holds the string denoting the approval_logs edge name in mutations.
 	EdgeApprovalLogs = "approval_logs"
+	// EdgeStatusLogs holds the string denoting the status_logs edge name in mutations.
+	EdgeStatusLogs = "status_logs"
+	// EdgeServiceRequests holds the string denoting the service_requests edge name in mutations.
+	EdgeServiceRequests = "service_requests"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// SubmittedTicketsTable is the table that holds the submitted_tickets relation/edge.
@@ -61,6 +65,20 @@ const (
 	ApprovalLogsInverseTable = "approval_logs"
 	// ApprovalLogsColumn is the table column denoting the approval_logs relation/edge.
 	ApprovalLogsColumn = "approver_id"
+	// StatusLogsTable is the table that holds the status_logs relation/edge.
+	StatusLogsTable = "status_logs"
+	// StatusLogsInverseTable is the table name for the StatusLog entity.
+	// It exists in this package in order to avoid circular dependency with the "statuslog" package.
+	StatusLogsInverseTable = "status_logs"
+	// StatusLogsColumn is the table column denoting the status_logs relation/edge.
+	StatusLogsColumn = "user_id"
+	// ServiceRequestsTable is the table that holds the service_requests relation/edge.
+	ServiceRequestsTable = "service_requests"
+	// ServiceRequestsInverseTable is the table name for the ServiceRequest entity.
+	// It exists in this package in order to avoid circular dependency with the "servicerequest" package.
+	ServiceRequestsInverseTable = "service_requests"
+	// ServiceRequestsColumn is the table column denoting the service_requests relation/edge.
+	ServiceRequestsColumn = "requester_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -202,6 +220,34 @@ func ByApprovalLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newApprovalLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByStatusLogsCount orders the results by status_logs count.
+func ByStatusLogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStatusLogsStep(), opts...)
+	}
+}
+
+// ByStatusLogs orders the results by status_logs terms.
+func ByStatusLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStatusLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByServiceRequestsCount orders the results by service_requests count.
+func ByServiceRequestsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newServiceRequestsStep(), opts...)
+	}
+}
+
+// ByServiceRequests orders the results by service_requests terms.
+func ByServiceRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newServiceRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newSubmittedTicketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -221,5 +267,19 @@ func newApprovalLogsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ApprovalLogsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalLogsTable, ApprovalLogsColumn),
+	)
+}
+func newStatusLogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StatusLogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
+	)
+}
+func newServiceRequestsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ServiceRequestsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ServiceRequestsTable, ServiceRequestsColumn),
 	)
 }

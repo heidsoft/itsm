@@ -115,6 +115,8 @@ func (Ticket) Edges() []ent.Edge {
 		// 流程实例
 		edge.To("flow_instance", FlowInstance.Type).
 			Unique(),
+		// 状态变更日志
+		edge.To("status_logs", StatusLog.Type),
 	}
 }
 

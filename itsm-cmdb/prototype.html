@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <title>AI驱动的CMDB智能视图</title>
+  <meta charset="UTF-8">
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style type="text/css">
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f0f2f5;
+      height: 100%;
+    }
+    .header {
+      background-color: #fff;
+      padding: 10px 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+      border-bottom: 1px solid #ddd;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      height: calc(100% - 60px);
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #fff;
+      padding: 15px;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+    .main-content {
+      flex-grow: 1;
+      position: relative;
+    }
+    #cmdb-graph {
+      width: 100%;
+      height: 100%;
+    }
+    .details-panel {
+      width: 300px;
+      background-color: #fff;
+      padding: 15px;
+      border-left: 1px solid #ddd;
+      overflow-y: auto;
+    }
+    .sidebar h3, .details-panel h3 {
+      margin-top: 0;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+      color: #555;
+    }
+    .action-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 10px 0;
+      cursor: pointer;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .action-button:hover {
+      background-color: #0056b3;
+    }
+    .anomaly-list ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .anomaly-list li {
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .anomaly-list li:hover {
+      background-color: #f0f0f0;
+    }
+    .anomaly-list .critical {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    #details-content {
+      color: #666;
+    }
+     #details-content p {
+      margin: 5px 0;
+    }
+    #details-content strong {
+        color: #333;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  AI驱动的CMDB智能视图
+</div>
+
+<div class="container">
+  <div class="sidebar">
+    <h3>智能操作</h3>
+    <button class="action-button" onclick="runDiscovery()">运行智能发现</button>
+    
+    <div class="anomaly-list">
+      <h3>异常与漂移检测</h3>
+      <ul>
+        <li onclick="focusOnNode(4)" class="critical">严重: Auth Service 响应超时</li>
+        <li onclick="focusOnNode(1)">警告: WebServer A 配置漂移</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div id="cmdb-graph"></div>
+  </div>
+
+  <div class="details-panel">
+    <h3>CI 详细信息</h3>
+    <div id="details-content">
+      <p>请在拓扑图中选择一个节点以查看其详细信息。</p>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  const container = document.getElementById('cmdb-graph');
+  const detailsContent = document.getElementById('details-content');
+  let network = null;
+  let allData = {};
+
+  const options = {
+    nodes: {
+      shape: 'dot',
+      size: 20,
+      font: {
+        size: 14,
+        color: '#333'
+      },
+      borderWidth: 2,
+    },
+    edges: {
+      width: 2,
+      color: { inherit: 'from' }
+    },
+    physics: {
+      enabled: true,
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: {
+        gravitationalConstant: -50,
+        centralGravity: 0.01,
+        springLength: 100,
+        springConstant: 0.08,
+      }
+    },
+    interaction: {
+      hover: true,
+      tooltipDelay: 300
+    }
+  };
+
+  // Fetch data and initialize the network
+  fetch('http://127.0.0.1:8000/api/data')
+    .then(response => response.json())
+    .then(data => {
+      allData = data;
+      network = new vis.Network(container, allData, options);
+      
+      // Add event listener for clicks on nodes
+      network.on("click", function (params) {
+        if (params.nodes.length > 0) {
+          const nodeId = params.nodes[0];
+          const nodeData = allData.nodes.find(n => n.id === nodeId);
+          displayNodeDetails(nodeData);
+        } else {
+          clearDetails();
+        }
+      });
+    })
+    .catch(error => {
+        console.error('Error fetching CMDB data:', error);
+        container.innerHTML = '<p style="text-align:center; padding-top: 20px;">无法加载CMDB数据，请确保后端服务正在运行。</p>';
+    });
+
+  function displayNodeDetails(node) {
+    if (node) {
+      detailsContent.innerHTML = `
+        <p><strong>ID:</strong> ${node.id}</p>
+        <p><strong>标签:</strong> ${node.label}</p>
+        <p><strong>类型:</strong> ${getNodeType(node.label)}</p>
+        <p><strong>状态:</strong> <span style="color: green;">●</span> 正常</p>
+        <p><strong>IP地址:</strong> 192.168.1.${node.id + 10}</p>
+        <p><strong>数据中心:</strong> DC-1</p>
+      `;
+    }
+  }
+  
+  function getNodeType(label) {
+      if (label.includes('Service')) return '服务';
+      if (label.includes('WebServer')) return 'Web服务器';
+      if (label.includes('Database')) return '数据库';
+      if (label.includes('Gateway')) return '网关';
+      if (label.includes('Balancer')) return '负载均衡器';
+      return '应用';
+  }
+
+  function clearDetails() {
+    detailsContent.innerHTML = '<p>请在拓扑图中选择一个节点以查看其详细信息。</p>';
+  }
+
+  function focusOnNode(nodeId) {
+    if (network) {
+      network.focus(nodeId, {
+        scale: 1.2,
+        animation: {
+          duration: 1000,
+          easingFunction: 'easeInOutQuad'
+        }
+      });
+      network.selectNodes([nodeId]);
+      const nodeData = allData.nodes.find(n => n.id === nodeId);
+      displayNodeDetails(nodeData);
+    }
+  }
+
+  function runDiscovery() {
+    alert("正在模拟AI智能发现...发现了一个新的CDN节点！");
+    
+    const newNodeId = allData.nodes.length + 1;
+    const newNode = {id: newNodeId, label: `CDN节点 ${newNodeId - 7}`};
+    const newEdge = {from: newNodeId, to: 7}; // Connects to the WebApp
+
+    network.body.data.nodes.add(newNode);
+    network.body.data.edges.add(newEdge);
+    allData.nodes.push(newNode);
+    allData.edges.push(newEdge);
+    
+    focusOnNode(newNodeId);
+  }
+
+</script>
+
+</body>
+</html>

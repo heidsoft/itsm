@@ -12,6 +12,15 @@ type ApprovalLog func(*sql.Selector)
 // FlowInstance is the predicate function for flowinstance builders.
 type FlowInstance func(*sql.Selector)
 
+// ServiceCatalog is the predicate function for servicecatalog builders.
+type ServiceCatalog func(*sql.Selector)
+
+// ServiceRequest is the predicate function for servicerequest builders.
+type ServiceRequest func(*sql.Selector)
+
+// StatusLog is the predicate function for statuslog builders.
+type StatusLog func(*sql.Selector)
+
 // Ticket is the predicate function for ticket builders.
 type Ticket func(*sql.Selector)
 

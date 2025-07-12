@@ -567,6 +567,29 @@ func HasFlowInstanceWith(preds ...predicate.FlowInstance) predicate.Ticket {
 	})
 }
 
+// HasStatusLogs applies the HasEdge predicate on the "status_logs" edge.
+func HasStatusLogs() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStatusLogsWith applies the HasEdge predicate on the "status_logs" edge with a given conditions (other predicates).
+func HasStatusLogsWith(preds ...predicate.StatusLog) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newStatusLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Ticket) predicate.Ticket {
 	return predicate.Ticket(sql.AndPredicates(predicates...))

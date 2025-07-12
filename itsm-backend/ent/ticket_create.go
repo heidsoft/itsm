@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -173,6 +174,21 @@ func (tc *TicketCreate) SetNillableFlowInstanceID(id *int) *TicketCreate {
 // SetFlowInstance sets the "flow_instance" edge to the FlowInstance entity.
 func (tc *TicketCreate) SetFlowInstance(f *FlowInstance) *TicketCreate {
 	return tc.SetFlowInstanceID(f.ID)
+}
+
+// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
+func (tc *TicketCreate) AddStatusLogIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddStatusLogIDs(ids...)
+	return tc
+}
+
+// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
+func (tc *TicketCreate) AddStatusLogs(s ...*StatusLog) *TicketCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tc.AddStatusLogIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -401,6 +417,22 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(flowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.StatusLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.StatusLogsTable,
+			Columns: []string{ticket.StatusLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

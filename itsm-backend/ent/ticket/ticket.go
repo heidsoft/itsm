@@ -43,6 +43,8 @@ const (
 	EdgeApprovalLogs = "approval_logs"
 	// EdgeFlowInstance holds the string denoting the flow_instance edge name in mutations.
 	EdgeFlowInstance = "flow_instance"
+	// EdgeStatusLogs holds the string denoting the status_logs edge name in mutations.
+	EdgeStatusLogs = "status_logs"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// RequesterTable is the table that holds the requester relation/edge.
@@ -73,6 +75,13 @@ const (
 	FlowInstanceInverseTable = "flow_instances"
 	// FlowInstanceColumn is the table column denoting the flow_instance relation/edge.
 	FlowInstanceColumn = "ticket_id"
+	// StatusLogsTable is the table that holds the status_logs relation/edge.
+	StatusLogsTable = "status_logs"
+	// StatusLogsInverseTable is the table name for the StatusLog entity.
+	// It exists in this package in order to avoid circular dependency with the "statuslog" package.
+	StatusLogsInverseTable = "status_logs"
+	// StatusLogsColumn is the table column denoting the status_logs relation/edge.
+	StatusLogsColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -264,6 +273,20 @@ func ByFlowInstanceField(field string, opts ...sql.OrderTermOption) OrderOption 
 		sqlgraph.OrderByNeighborTerms(s, newFlowInstanceStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByStatusLogsCount orders the results by status_logs count.
+func ByStatusLogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStatusLogsStep(), opts...)
+	}
+}
+
+// ByStatusLogs orders the results by status_logs terms.
+func ByStatusLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStatusLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRequesterStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -290,5 +313,12 @@ func newFlowInstanceStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(FlowInstanceInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, false, FlowInstanceTable, FlowInstanceColumn),
+	)
+}
+func newStatusLogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StatusLogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
 	)
 }

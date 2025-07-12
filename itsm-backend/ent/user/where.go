@@ -669,6 +669,52 @@ func HasApprovalLogsWith(preds ...predicate.ApprovalLog) predicate.User {
 	})
 }
 
+// HasStatusLogs applies the HasEdge predicate on the "status_logs" edge.
+func HasStatusLogs() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStatusLogsWith applies the HasEdge predicate on the "status_logs" edge with a given conditions (other predicates).
+func HasStatusLogsWith(preds ...predicate.StatusLog) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newStatusLogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasServiceRequests applies the HasEdge predicate on the "service_requests" edge.
+func HasServiceRequests() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ServiceRequestsTable, ServiceRequestsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasServiceRequestsWith applies the HasEdge predicate on the "service_requests" edge with a given conditions (other predicates).
+func HasServiceRequestsWith(preds ...predicate.ServiceRequest) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newServiceRequestsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

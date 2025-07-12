@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"math"
@@ -30,6 +31,7 @@ type TicketQuery struct {
 	withAssignee     *UserQuery
 	withApprovalLogs *ApprovalLogQuery
 	withFlowInstance *FlowInstanceQuery
+	withStatusLogs   *StatusLogQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -147,6 +149,28 @@ func (tq *TicketQuery) QueryFlowInstance() *FlowInstanceQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(flowinstance.Table, flowinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, ticket.FlowInstanceTable, ticket.FlowInstanceColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStatusLogs chains the current query on the "status_logs" edge.
+func (tq *TicketQuery) QueryStatusLogs() *StatusLogQuery {
+	query := (&StatusLogClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(statuslog.Table, statuslog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.StatusLogsTable, ticket.StatusLogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -350,6 +374,7 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		withAssignee:     tq.withAssignee.Clone(),
 		withApprovalLogs: tq.withApprovalLogs.Clone(),
 		withFlowInstance: tq.withFlowInstance.Clone(),
+		withStatusLogs:   tq.withStatusLogs.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -397,6 +422,17 @@ func (tq *TicketQuery) WithFlowInstance(opts ...func(*FlowInstanceQuery)) *Ticke
 		opt(query)
 	}
 	tq.withFlowInstance = query
+	return tq
+}
+
+// WithStatusLogs tells the query-builder to eager-load the nodes that are connected to
+// the "status_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithStatusLogs(opts ...func(*StatusLogQuery)) *TicketQuery {
+	query := (&StatusLogClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withStatusLogs = query
 	return tq
 }
 
@@ -478,11 +514,12 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	var (
 		nodes       = []*Ticket{}
 		_spec       = tq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			tq.withRequester != nil,
 			tq.withAssignee != nil,
 			tq.withApprovalLogs != nil,
 			tq.withFlowInstance != nil,
+			tq.withStatusLogs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -525,6 +562,13 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	if query := tq.withFlowInstance; query != nil {
 		if err := tq.loadFlowInstance(ctx, query, nodes, nil,
 			func(n *Ticket, e *FlowInstance) { n.Edges.FlowInstance = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withStatusLogs; query != nil {
+		if err := tq.loadStatusLogs(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.StatusLogs = []*StatusLog{} },
+			func(n *Ticket, e *StatusLog) { n.Edges.StatusLogs = append(n.Edges.StatusLogs, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -634,6 +678,36 @@ func (tq *TicketQuery) loadFlowInstance(ctx context.Context, query *FlowInstance
 	}
 	query.Where(predicate.FlowInstance(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(ticket.FlowInstanceColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadStatusLogs(ctx context.Context, query *StatusLogQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *StatusLog)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(statuslog.FieldTicketID)
+	}
+	query.Where(predicate.StatusLog(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.StatusLogsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

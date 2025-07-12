@@ -9,7 +9,6 @@ import (
 	"itsm-backend/router"
 	"itsm-backend/service"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
@@ -35,19 +34,19 @@ func main() {
 
 	// 初始化服务层
 	ticketService := service.NewTicketService(client, sugar)
-
+	serviceCatalogService := service.NewServiceCatalogService(client)
+	serviceRequestService := service.NewServiceRequestService(client, serviceCatalogService)
+	
 	// 初始化控制器层
 	ticketController := controller.NewTicketController(ticketService, sugar)
-
-	// 初始化Gin引擎
-	r := gin.Default()
-
+	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
+	
 	// 设置路由
-	router.SetupRoutes(r, ticketController)
-
+	r := router.SetupRouter(ticketController, serviceController)
+	
 	// 启动服务器
-	sugar.Info("Starting server on :8080")
+	log.Println("服务器启动在端口 8080")
 	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		log.Fatal("启动服务器失败:", err)
 	}
 }

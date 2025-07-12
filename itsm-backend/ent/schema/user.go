@@ -58,12 +58,16 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		// 用户作为申请人的工单
+		// 提交的工单
 		edge.To("submitted_tickets", Ticket.Type),
-		// 用户作为处理人的工单
+		// 分配的工单
 		edge.To("assigned_tickets", Ticket.Type),
-		// 用户的审批记录
+		// 审批记录
 		edge.To("approval_logs", ApprovalLog.Type),
+		// 状态变更日志
+		edge.To("status_logs", StatusLog.Type),
+		// 服务请求
+		edge.To("service_requests", ServiceRequest.Type),
 	}
 }
 

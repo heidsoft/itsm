@@ -1,24 +1,19 @@
 
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
-      keyframes: {
-        'pulse-strong': {
-          '0%, 100%': { opacity: 1 },
-          '50%': { opacity: 0.5 },
-        }
-      },
-      animation: {
-        'pulse-strong': 'pulse-strong 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
+      // 可以移除不需要的动画
+      // animation: {},
+      // keyframes: {},
     },
   },
   plugins: [],
+  // 关闭某些功能
+  corePlugins: {
+    preflight: true,    // 关闭基础样式重置
+    container: true,    // 关闭容器类
+  }
 };

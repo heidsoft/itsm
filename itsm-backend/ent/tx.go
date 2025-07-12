@@ -16,6 +16,12 @@ type Tx struct {
 	ApprovalLog *ApprovalLogClient
 	// FlowInstance is the client for interacting with the FlowInstance builders.
 	FlowInstance *FlowInstanceClient
+	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
+	ServiceCatalog *ServiceCatalogClient
+	// ServiceRequest is the client for interacting with the ServiceRequest builders.
+	ServiceRequest *ServiceRequestClient
+	// StatusLog is the client for interacting with the StatusLog builders.
+	StatusLog *StatusLogClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
 	// User is the client for interacting with the User builders.
@@ -153,6 +159,9 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.ApprovalLog = NewApprovalLogClient(tx.config)
 	tx.FlowInstance = NewFlowInstanceClient(tx.config)
+	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
+	tx.ServiceRequest = NewServiceRequestClient(tx.config)
+	tx.StatusLog = NewStatusLogClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
