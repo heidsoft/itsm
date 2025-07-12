@@ -3,12 +3,15 @@ import { API_BASE_URL, ApiResponse } from './api-config';
 class HttpClient {
   private baseURL: string;
   private token: string | null = null;
+  private tenantId: number | null = null;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
-    // 从localStorage获取token
+    // 从localStorage获取token和租户ID
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('auth_token');
+      const storedTenantId = localStorage.getItem('current_tenant_id');
+      this.tenantId = storedTenantId ? parseInt(storedTenantId) : null;
     }
   }
 
@@ -26,6 +29,21 @@ class HttpClient {
     }
   }
 
+  setTenantId(tenantId: number | null) {
+    this.tenantId = tenantId;
+    if (typeof window !== 'undefined') {
+      if (tenantId) {
+        localStorage.setItem('current_tenant_id', tenantId.toString());
+      } else {
+        localStorage.removeItem('current_tenant_id');
+      }
+    }
+  }
+
+  getTenantId(): number | null {
+    return this.tenantId;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -39,6 +57,11 @@ class HttpClient {
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    // 添加租户ID到请求头
+    if (this.tenantId) {
+      headers['X-Tenant-ID'] = this.tenantId.toString();
     }
 
     try {

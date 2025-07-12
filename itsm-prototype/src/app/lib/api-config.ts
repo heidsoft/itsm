@@ -8,7 +8,54 @@ export interface ApiResponse<T = any> {
   data: T;
 }
 
-// 工单相关接口
+// 租户相关接口
+export interface Tenant {
+  id: number;
+  name: string;
+  code: string;
+  domain?: string;
+  type: 'trial' | 'standard' | 'professional' | 'enterprise';
+  status: 'active' | 'suspended' | 'expired' | 'trial';
+  created_at: string;
+  updated_at: string;
+  expires_at?: string;
+  settings?: Record<string, any>;
+}
+
+export interface TenantListResponse {
+  tenants: Tenant[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface CreateTenantRequest {
+  name: string;
+  code: string;
+  domain?: string;
+  type: string;
+  expires_at?: string;
+  settings?: Record<string, any>;
+}
+
+export interface UpdateTenantRequest {
+  name?: string;
+  domain?: string;
+  type?: string;
+  status?: string;
+  expires_at?: string;
+  settings?: Record<string, any>;
+}
+
+export interface GetTenantsParams {
+  page?: number;
+  size?: number;
+  status?: string;
+  type?: string;
+  search?: string;
+}
+
+// 工单相关接口（添加租户ID）
 export interface Ticket {
   id: number;
   title: string;
@@ -19,10 +66,12 @@ export interface Ticket {
   ticket_number: string;
   requester_id: number;
   assignee_id?: number;
+  tenant_id: number;
   created_at: string;
   updated_at: string;
   requester?: User;
   assignee?: User;
+  tenant?: Tenant;
 }
 
 export interface User {
@@ -30,6 +79,9 @@ export interface User {
   username: string;
   email: string;
   name: string;
+  tenant_id?: number;
+  role?: string;
+  department?: string;
 }
 
 export interface TicketListResponse {
@@ -56,4 +108,35 @@ export interface GetTicketsParams {
   size?: number;
   status?: string;
   priority?: string;
+  tenant_id?: number;
+}
+
+// 服务目录相关接口（添加租户支持）
+export interface ServiceCatalog {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  price?: number;
+  tenant_id: number;
+  is_active: boolean;
+  form_schema?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  tenant?: Tenant;
+}
+
+export interface ServiceRequest {
+  id: number;
+  catalog_id: number;
+  requester_id: number;
+  tenant_id: number;
+  status: string;
+  reason: string;
+  form_data?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  catalog?: ServiceCatalog;
+  requester?: User;
+  tenant?: Tenant;
 }

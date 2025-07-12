@@ -4,7 +4,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -48,13 +47,19 @@ func (tc *TenantController) CreateTenant(c *gin.Context) {
 		return
 	}
 
+	// 处理 Domain 字段的指针转换
+	var domain *string
+	if tenant.Domain != "" {
+		domain = &tenant.Domain
+	}
+
 	response := &dto.TenantResponse{
 		ID:        tenant.ID,
 		Name:      tenant.Name,
 		Code:      tenant.Code,
-		Domain:    tenant.Domain,
-		Type:      tenant.Type,
-		Status:    tenant.Status,
+		Domain:    domain,
+		Type:      string(tenant.Type),
+		Status:    string(tenant.Status),
 		Settings:  tenant.Settings,
 		Quota:     tenant.Quota,
 		ExpiresAt: tenant.ExpiresAt,
@@ -97,13 +102,19 @@ func (tc *TenantController) ListTenants(c *gin.Context) {
 	// 转换响应格式
 	tenantResponses := make([]dto.TenantResponse, len(tenants))
 	for i, tenant := range tenants {
+		// 处理 Domain 字段的指针转换
+		var domain *string
+		if tenant.Domain != "" {
+			domain = &tenant.Domain
+		}
+
 		tenantResponses[i] = dto.TenantResponse{
 			ID:        tenant.ID,
 			Name:      tenant.Name,
 			Code:      tenant.Code,
-			Domain:    tenant.Domain,
-			Type:      tenant.Type,
-			Status:    tenant.Status,
+			Domain:    domain,
+			Type:      string(tenant.Type),
+			Status:    string(tenant.Status),
 			Settings:  tenant.Settings,
 			Quota:     tenant.Quota,
 			ExpiresAt: tenant.ExpiresAt,

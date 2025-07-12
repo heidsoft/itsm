@@ -177,14 +177,14 @@ const ACTION_CONFIG = {
 
 // 模拟权限配置数据
 const mockPermissionConfig = {
-  modules: Object.keys(PERMISSION_MODULES).map((key) => ({
-    id: key,
-    name: MODULE_CONFIG[key].label,
-    description: MODULE_CONFIG[key].description,
-    category: MODULE_CONFIG[key].category,
-    icon: MODULE_CONFIG[key].icon,
+  modules: Object.values(PERMISSION_MODULES).map((moduleKey) => ({
+    id: moduleKey,
+    name: MODULE_CONFIG[moduleKey].label,
+    description: MODULE_CONFIG[moduleKey].description,
+    category: MODULE_CONFIG[moduleKey].category,
+    icon: MODULE_CONFIG[moduleKey].icon,
     isEnabled: true,
-    actions: Object.keys(PERMISSION_ACTIONS).map((actionKey) => ({
+    actions: Object.values(PERMISSION_ACTIONS).map((actionKey) => ({
       id: actionKey,
       name: ACTION_CONFIG[actionKey].label,
       description: ACTION_CONFIG[actionKey].description,

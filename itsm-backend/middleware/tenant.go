@@ -1,12 +1,12 @@
 package middleware
 
 import (
-	"context"
+	"errors"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"net/http"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -60,7 +60,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		// 检查租户状态
-		if tenantEntity.Status != string(TenantStatusActive) {
+		if tenantEntity.Status != tenant.StatusActive {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    1003,
 				"message": "租户已被暂停或过期",

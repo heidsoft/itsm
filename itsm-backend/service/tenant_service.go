@@ -44,8 +44,8 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		SetName(req.Name).
 		SetCode(req.Code).
 		SetNillableDomain(req.Domain).
-		SetType(req.Type).
-		SetStatus(string(TenantStatusActive)).
+		SetType(tenant.Type(req.Type)).
+		SetStatus(tenant.StatusActive).
 		SetSettings(req.Settings).
 		SetQuota(req.Quota).
 		SetNillableExpiresAt(req.ExpiresAt).
@@ -79,7 +79,7 @@ func (s *TenantService) GetTenantByCode(ctx context.Context, code string) (*ent.
 func (s *TenantService) UpdateTenantStatus(ctx context.Context, tenantID int, status string) error {
 	err := s.client.Tenant.
 		UpdateOneID(tenantID).
-		SetStatus(status).
+		SetStatus(tenant.Status(status)).
 		SetUpdatedAt(time.Now()).
 		Exec(ctx)
 	if err != nil {
@@ -97,12 +97,12 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 
 	// 状态过滤
 	if req.Status != "" {
-		query = query.Where(tenant.StatusEQ(req.Status))
+		query = query.Where(tenant.StatusEQ(tenant.Status(req.Status)))
 	}
 
 	// 类型过滤
 	if req.Type != "" {
-		query = query.Where(tenant.TypeEQ(req.Type))
+		query = query.Where(tenant.TypeEQ(tenant.Type(req.Type)))
 	}
 
 	// 搜索过滤
