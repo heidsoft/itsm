@@ -52,6 +52,21 @@ func (User) Fields() []ent.Field {
 			Default(time.Now).
 			UpdateDefault(time.Now).
 			Comment("更新时间"),
+		// 在User模型的Fields中添加
+		field.Int("tenant_id").
+			Positive().
+			Comment("租户ID"),
+
+		// 在User模型的Edges中添加
+		edge.From("tenant", Tenant.Type).
+			Ref("users").
+			Field("tenant_id").
+			Required().
+			Unique(),
+
+		// 在User模型的Indexes中添加
+		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "username"),
 	}
 }
 
