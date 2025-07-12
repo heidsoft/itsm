@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"time"
 	"itsm-backend/ent"
+	"time"
 )
 
 // CreateTicketRequest 创建工单请求
@@ -114,14 +114,15 @@ func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
 	return resp
 }
 
-
-// GetTicketsRequest 获取工单列表请求
+// GetTicketsRequest 获取工单列表请求（合并后的完整版本）
 type GetTicketsRequest struct {
-	Page     int    `json:"page" form:"page"`
-	Size     int    `json:"size" form:"size"`
-	Status   string `json:"status" form:"status"`
-	Priority string `json:"priority" form:"priority"`
-	UserID   int    `json:"-"` // 从认证中间件获取
+	Page        int     `json:"page" form:"page"`
+	Size        int     `json:"size" form:"size"`
+	PageSize    int     `json:"page_size" form:"page_size"`
+	Status      *string `json:"status" form:"status"`
+	Priority    *string `json:"priority" form:"priority"`
+	UserID      int     `json:"-"` // 从认证中间件获取
+	RequesterID *int    `json:"requester_id" form:"requester_id"`
 }
 
 // TicketListResponse 工单列表响应
@@ -135,4 +136,13 @@ type TicketListResponse struct {
 // UpdateStatusRequest 更新状态请求
 type UpdateStatusRequest struct {
 	Status string `json:"status" binding:"required"`
+}
+
+// PaginatedTicketsResponse 分页工单响应
+type PaginatedTicketsResponse struct {
+	Tickets    []*ent.Ticket `json:"tickets"`
+	Total      int           `json:"total"`
+	Page       int           `json:"page"`
+	PageSize   int           `json:"page_size"`
+	TotalPages int           `json:"total_pages"`
 }

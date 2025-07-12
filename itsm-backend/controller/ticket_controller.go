@@ -29,11 +29,13 @@ func NewTicketController(ticketService *service.TicketService, logger *zap.Sugar
 // @Tags tickets
 // @Accept json
 // @Produce json
-// @Param ticket body dto.CreateTicketRequest true "工单信息"
-// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Param request body dto.CreateTicketRequest true "创建工单请求"
+// @Success 200 {object} common.Response{data=ent.Ticket}
 // @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /tickets [post]
+// @Security BearerAuth
+// @Router /api/tickets [post]
 func (tc *TicketController) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -314,11 +316,23 @@ func (tc *TicketController) GetTickets(c *gin.Context) {
 	}
 
 	req := &dto.GetTicketsRequest{
-		Page:     page,
-		Size:     size,
-		Status:   status,
-		Priority: priority,
-		UserID:   userIDInt,
+		Page: page,
+		Size: size,
+		Status: func() *string {
+			if status != "" {
+				return &status
+			} else {
+				return nil
+			}
+		}(),
+		Priority: func() *string {
+			if priority != "" {
+				return &priority
+			} else {
+				return nil
+			}
+		}(),
+		UserID: userIDInt,
 	}
 
 	result, err := tc.ticketService.GetTickets(c.Request.Context(), req)

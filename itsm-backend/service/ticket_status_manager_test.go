@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"testing"
-	"time"
 )
 
 func TestTicketStatusManager(t *testing.T) {
 	// 创建状态管理器实例
 	manager := NewTicketStatusManager(nil)
-	
+
 	// 测试合法的状态转换
 	tests := []struct {
 		name     string
@@ -26,7 +25,7 @@ func TestTicketStatusManager(t *testing.T) {
 		{"非法转换：新建到已关闭", "new", "closed", false},
 		{"非法转换：处理中到已关闭", "in_progress", "closed", false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := manager.validateStatusTransition(tt.from, tt.to)
@@ -43,19 +42,19 @@ func TestTicketStatusManager(t *testing.T) {
 func TestStatusTransitionLogging(t *testing.T) {
 	manager := NewTicketStatusManager(nil)
 	ctx := context.Background()
-	
+
 	// 执行状态转换并记录日志
 	err := manager.TransitionTicketStatus(ctx, 1, "new", "in_progress", 100, "开始处理工单")
 	if err != nil {
 		t.Errorf("状态转换失败: %v", err)
 	}
-	
+
 	// 检查日志是否记录
 	logs := manager.GetTransitionLogs(1)
 	if len(logs) != 1 {
 		t.Errorf("期望1条日志记录，实际得到%d条", len(logs))
 	}
-	
+
 	log := logs[0]
 	if log.FromStatus != StatusNew {
 		t.Errorf("期望源状态为new，实际为%s", log.FromStatus)
@@ -70,15 +69,15 @@ func TestStatusTransitionLogging(t *testing.T) {
 
 func TestGetValidTransitions(t *testing.T) {
 	manager := NewTicketStatusManager(nil)
-	
+
 	// 测试获取合法转换
 	validTransitions := manager.GetValidTransitions("new")
 	expected := []string{"in_progress", "returned"}
-	
+
 	if len(validTransitions) != len(expected) {
 		t.Errorf("期望%d个合法转换，实际得到%d个", len(expected), len(validTransitions))
 	}
-	
+
 	for _, exp := range expected {
 		found := false
 		for _, actual := range validTransitions {

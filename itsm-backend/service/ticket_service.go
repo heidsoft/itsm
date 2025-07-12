@@ -7,8 +7,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
@@ -256,22 +256,22 @@ func (s *TicketService) getNextCommentStep(ctx context.Context, ticketID int) (i
 func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsRequest) (*dto.TicketListResponse, error) {
 	// 构建查询条件
 	query := s.client.Ticket.Query()
-	
+
 	// 状态筛选
-	if req.Status != "" {
-		query = query.Where(ticket.StatusEQ(ticket.Status(req.Status)))
+	if req.Status != nil && *req.Status != "" {
+		query = query.Where(ticket.StatusEQ(ticket.Status(*req.Status)))
 	}
-	
+
 	// 优先级筛选
-	if req.Priority != "" {
-		query = query.Where(ticket.PriorityEQ(ticket.Priority(req.Priority)))
+	if req.Priority != nil && *req.Priority != "" {
+		query = query.Where(ticket.PriorityEQ(ticket.Priority(*req.Priority)))
 	}
-	
+
 	// 只显示用户相关的工单（申请人或处理人）
 	query = query.Where(
 		ticket.Or(
-			ticket.RequesterID(req.UserID),
-			ticket.AssigneeID(req.UserID),
+			ticket.RequesterIDEQ(req.UserID),
+			ticket.AssigneeIDEQ(req.UserID),
 		),
 	)
 
@@ -282,9 +282,11 @@ func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsReque
 		return nil, fmt.Errorf("获取工单总数失败: %w", err)
 	}
 
-	// 分页查询
+	// 分页查询，包含关联用户信息
 	offset := (req.Page - 1) * req.Size
 	tickets, err := query.
+		WithRequester(). // 加载申请人信息
+		WithAssignee().  // 加载处理人信息
 		Order(ent.Desc(ticket.FieldCreatedAt)).
 		Offset(offset).
 		Limit(req.Size).
@@ -306,6 +308,124 @@ func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsReque
 		Total:   total,
 		Page:    req.Page,
 		Size:    req.Size,
+	}, nil
+}
+
+// CreateTicketWithFlow 创建工单并初始化流程
+func (s *TicketService) CreateTicketWithFlow(ctx context.Context, req *dto.CreateTicketRequest, requesterID int) (*ent.Ticket, error) {
+	// 开启事务
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启事务失败: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// 生成工单编号
+	ticketNumber := s.generateTicketNumber()
+
+	// 创建工单
+	ticketEntity, err := tx.Ticket.Create().
+		SetTitle(req.Title).
+		SetDescription(req.Description).
+		SetPriority(ticket.Priority(req.Priority)).
+		SetTicketNumber(ticketNumber).
+		SetRequesterID(requesterID).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建工单失败: %w", err)
+	}
+
+	// 创建流程实例
+	_, err = tx.FlowInstance.Create().
+		SetTicketID(ticketEntity.ID).
+		SetFlowDefinitionID("1"). // 修改为字符串类型
+		SetCurrentStep(1).
+		SetTotalSteps(3).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建流程实例失败: %w", err)
+	}
+
+	// 记录状态日志
+	_, err = tx.StatusLog.Create().
+		SetTicketID(ticketEntity.ID).
+		SetFromStatus("").
+		SetToStatus(string(ticket.StatusPending)). // 使用正确的状态枚举
+		SetUserID(requesterID).
+		SetReason("工单创建").
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("记录状态日志失败: %w", err)
+	}
+
+	s.logger.Infow("Ticket created with flow", "ticket_id", ticketEntity.ID, "requester_id", requesterID)
+	return ticketEntity, nil
+}
+
+// GetTicketsWithPagination 分页获取工单列表（优化版）
+func (s *TicketService) GetTicketsWithPagination(ctx context.Context, req *dto.GetTicketsRequest) (*dto.PaginatedTicketsResponse, error) {
+	query := s.client.Ticket.Query()
+
+	// 条件过滤
+	if req.Status != nil {
+		query = query.Where(ticket.StatusEQ(ticket.Status(*req.Status)))
+	}
+	if req.Priority != nil {
+		query = query.Where(ticket.PriorityEQ(ticket.Priority(*req.Priority)))
+	}
+	if req.RequesterID != nil {
+		query = query.Where(ticket.RequesterIDEQ(*req.RequesterID))
+	}
+
+	// 总数查询（使用索引优化）
+	totalCount, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取工单总数失败: %w", err)
+	}
+
+	// 确保 PageSize 有值
+	pageSize := req.PageSize
+	if pageSize == 0 {
+		pageSize = req.Size
+	}
+	if pageSize == 0 {
+		pageSize = 10 // 默认值
+	}
+
+	// 分页查询（只查询必要字段）
+	tickets, err := query.
+		Select(
+			ticket.FieldID,
+			ticket.FieldTitle,
+			ticket.FieldStatus,
+			ticket.FieldPriority,
+			ticket.FieldTicketNumber,
+			ticket.FieldCreatedAt,
+		).
+		WithRequester(func(q *ent.UserQuery) {
+			q.Select("id", "username") // 使用字符串而不是 user.FieldID
+		}).
+		Order(ent.Desc(ticket.FieldCreatedAt)).
+		Offset((req.Page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("获取工单列表失败: %w", err)
+	}
+
+	return &dto.PaginatedTicketsResponse{
+		Tickets:    tickets,
+		Total:      totalCount,
+		Page:       req.Page,
+		PageSize:   pageSize,
+		TotalPages: (totalCount + pageSize - 1) / pageSize,
 	}, nil
 }
 

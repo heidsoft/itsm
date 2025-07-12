@@ -1,0 +1,19 @@
+database:
+  host: localhost
+  port: 5432
+  user: dev
+  password: "123456!@#$%^"
+  dbname: itsm
+  sslmode: disable
+
+server:
+  port: 8080
+  mode: debug
+
+jwt:
+  secret: "itsm-dev-secret-key-2024"
+  expire_time: 86400  # 24小时
+
+log:
+  level: debug  # 开发环境使用 debug 级别
+  path: ./logs/app.log

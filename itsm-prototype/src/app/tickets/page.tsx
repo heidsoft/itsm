@@ -57,9 +57,10 @@ const TicketsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // 确保token已设置
+    // 检查认证状态，如果未认证则重定向到登录页
     if (!AuthService.isAuthenticated()) {
-      AuthService.setDefaultToken();
+      window.location.href = "/login";
+      return;
     }
     fetchTickets();
   }, [page, filters]);

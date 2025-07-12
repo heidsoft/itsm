@@ -15,39 +15,27 @@ import {
   User,
   Ticket,
   BarChart,
-  Settings, // 添加 Settings 图标导入
+  Settings,
 } from "lucide-react";
-
-const NavItem = ({ href, icon: Icon, label }) => {
-  const pathname = usePathname();
-  const active =
-    pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
-
-  return (
-    <Link
-      href={href}
-      className={`flex items-center px-4 py-3 transition-colors duration-200 ease-in-out 
-                ${
-                  active
-                    ? "bg-blue-600 text-white font-semibold shadow-lg rounded-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg"
-                }`}
-    >
-      <Icon className="w-5 h-5 mr-3" />
-      <span>{label}</span>
-    </Link>
-  );
-};
+import { AuthService } from "../lib/auth-service";
+import { useRouter } from "next/navigation";
 
 // 在组件顶部添加配置
 const MENU_CONFIG = {
-  showAdmin: true,              // 控制管理菜单显示
-  showReports: true,            // 控制报告菜单显示
-  showCMDB: true,               // 控制 CMDB 菜单显示
-  showKnowledgeBase: true,      // 控制知识库菜单显示
+  showAdmin: true, // 控制管理菜单显示
+  showReports: true, // 控制报告菜单显示
+  showCMDB: true, // 控制 CMDB 菜单显示
+  showKnowledgeBase: true, // 控制知识库菜单显示
 };
 
 export const Sidebar = () => {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    AuthService.clearToken();
+    router.push("/login");
+  };
+
   const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "仪表盘" },
     { href: "/tickets", icon: Ticket, label: "所有工单" },
@@ -59,10 +47,24 @@ export const Sidebar = () => {
     { href: "/sla", icon: Target, label: "服务级别管理" },
     { href: "/improvements", icon: TrendingUp, label: "持续改进" },
     // 条件显示菜单项
-    ...(MENU_CONFIG.showCMDB ? [{ href: "/cmdb", icon: Database, label: "配置管理 (CMDB)" }] : []),
-    ...(MENU_CONFIG.showKnowledgeBase ? [{ href: "/knowledge-base", icon: BookOpen, label: "知识库" }] : []),
-    ...(MENU_CONFIG.showReports ? [{ href: "/reports", icon: BarChart, label: "报告与分析" }] : []),
-    ...(MENU_CONFIG.showAdmin ? [{ href: "/admin/service-catalogs", icon: Settings, label: "服务目录管理" }] : []),
+    ...(MENU_CONFIG.showCMDB
+      ? [{ href: "/cmdb", icon: Database, label: "配置管理 (CMDB)" }]
+      : []),
+    ...(MENU_CONFIG.showKnowledgeBase
+      ? [{ href: "/knowledge-base", icon: BookOpen, label: "知识库" }]
+      : []),
+    ...(MENU_CONFIG.showReports
+      ? [{ href: "/reports", icon: BarChart, label: "报告与分析" }]
+      : []),
+    ...(MENU_CONFIG.showAdmin
+      ? [
+          {
+            href: "/admin/service-catalogs",
+            icon: Settings,
+            label: "服务目录管理",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -72,11 +74,46 @@ export const Sidebar = () => {
           ITSM<span className="text-blue-400">Pro</span>
         </h1>
       </div>
-      <nav className="flex flex-col space-y-2">
+      <nav className="flex flex-col space-y-2 flex-1">
         {navItems.map((item) => (
           <NavItem key={item.href} {...item} />
         ))}
       </nav>
+      <div className="mt-auto pt-4 border-t border-gray-700">
+        <button
+          className="w-full text-left text-red-500 hover:text-red-400 p-2 rounded transition-colors"
+          onClick={handleLogout}
+        >
+          登出
+        </button>
+      </div>
     </aside>
+  );
+};
+
+const NavItem = ({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+}) => {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link
+      href={href}
+      className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+        isActive
+          ? "bg-blue-600 text-white"
+          : "text-gray-300 hover:bg-gray-800 hover:text-white"
+      }`}
+    >
+      <Icon className="w-5 h-5" />
+      <span>{label}</span>
+    </Link>
   );
 };

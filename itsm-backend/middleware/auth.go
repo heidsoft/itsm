@@ -2,14 +2,21 @@ package middleware
 
 import (
 	"strings"
-
+	"time"
 	"itsm-backend/common"
-
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
+type Claims struct {
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
+	jwt.RegisteredClaims
+}
+
 // AuthMiddleware JWT认证中间件
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取Authorization header
 		authHeader := c.GetHeader("Authorization")
@@ -27,27 +34,52 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// 提取token
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if token == "" {
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == "" {
 			common.Fail(c, common.AuthFailedCode, "token不能为空")
 			c.Abort()
 			return
 		}
 
-		// TODO: 这里应该验证JWT token并解析用户信息
-		// 现在为了演示，我们模拟一个用户ID
-		// 在实际项目中，你需要:
-		// 1. 验证JWT token的有效性
-		// 2. 解析token中的用户信息
-		// 3. 可选：从数据库验证用户状态
-		
-		// 模拟用户ID（实际应从JWT中解析）
-		userID := 1 // 这里应该从JWT token中解析出真实的用户ID
-		
-		// 将用户ID存储到上下文中
-		c.Set("user_id", userID)
-		c.Set("token", token)
+		// 解析JWT token
+		token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			common.Fail(c, common.AuthFailedCode, "token无效")
+			c.Abort()
+			return
+		}
+
+		// 提取用户信息
+		if claims, ok := token.Claims.(*Claims); ok {
+			c.Set("user_id", claims.UserID)
+			c.Set("username", claims.Username)
+			c.Set("role", claims.Role)
+			c.Set("token", tokenString)
+		} else {
+			common.Fail(c, common.AuthFailedCode, "token解析失败")
+			c.Abort()
+			return
+		}
 
 		c.Next()
 	}
+}
+
+// GenerateToken 生成JWT token
+func GenerateToken(userID int, username, role, jwtSecret string, expireTime time.Duration) (string, error) {
+	claims := Claims{
+		UserID:   userID,
+		Username: username,
+		Role:     role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireTime)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(jwtSecret))
 }
