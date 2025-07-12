@@ -3,8 +3,10 @@ package middleware
 import (
 	"context"
 	"itsm-backend/ent"
+	"itsm-backend/ent/tenant"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,34 +29,62 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 			tenantCode = extractTenantFromHost(host)
 		}
 
+		// 如果还是没有，尝试从路径参数获取
 		if tenantCode == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "租户信息缺失"})
+			tenantCode = c.Param("tenant")
+		}
+
+		if tenantCode == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    1001,
+				"message": "租户信息缺失",
+				"data":    nil,
+			})
 			c.Abort()
 			return
 		}
 
 		// 查询租户信息
-		tenant, err := client.Tenant.
+		tenantEntity, err := client.Tenant.
 			Query().
 			Where(tenant.CodeEQ(tenantCode)).
 			First(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "租户不存在"})
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    1002,
+				"message": "租户不存在",
+				"data":    nil,
+			})
 			c.Abort()
 			return
 		}
 
 		// 检查租户状态
-		if tenant.Status != string(TenantStatusActive) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "租户已被暂停或过期"})
+		if tenantEntity.Status != string(TenantStatusActive) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    1003,
+				"message": "租户已被暂停或过期",
+				"data":    nil,
+			})
+			c.Abort()
+			return
+		}
+
+		// 检查租户是否过期
+		if tenantEntity.ExpiresAt != nil && tenantEntity.ExpiresAt.Before(time.Now()) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    1004,
+				"message": "租户已过期",
+				"data":    nil,
+			})
 			c.Abort()
 			return
 		}
 
 		// 设置租户上下文
 		tenantCtx := &TenantContext{
-			TenantID: tenant.ID,
-			Tenant:   tenant,
+			TenantID: tenantEntity.ID,
+			Tenant:   tenantEntity,
 		}
 		c.Set(TenantContextKey, tenantCtx)
 
@@ -62,8 +92,31 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 	}
 }
 
+// extractTenantFromHost 从主机名提取租户代码
+// 例如：tenant1.itsm.example.com -> tenant1
 func extractTenantFromHost(host string) string {
-	// 实现从主机名提取租户代码的逻辑
-	// 例如：tenant1.itsm.example.com -> tenant1
+	parts := strings.Split(host, ".")
+	if len(parts) >= 3 {
+		return parts[0]
+	}
 	return ""
+}
+
+// GetTenantContext 获取租户上下文
+func GetTenantContext(c *gin.Context) (*TenantContext, bool) {
+	value, exists := c.Get(TenantContextKey)
+	if !exists {
+		return nil, false
+	}
+	tenantCtx, ok := value.(*TenantContext)
+	return tenantCtx, ok
+}
+
+// GetTenantID 获取租户ID
+func GetTenantID(c *gin.Context) (int, error) {
+	tenantCtx, exists := GetTenantContext(c)
+	if !exists {
+		return 0, errors.New("租户上下文不存在")
+	}
+	return tenantCtx.TenantID, nil
 }

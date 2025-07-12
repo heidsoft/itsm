@@ -22,6 +22,10 @@ type Tx struct {
 	ServiceRequest *ServiceRequestClient
 	// StatusLog is the client for interacting with the StatusLog builders.
 	StatusLog *StatusLogClient
+	// Subscription is the client for interacting with the Subscription builders.
+	Subscription *SubscriptionClient
+	// Tenant is the client for interacting with the Tenant builders.
+	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
 	// User is the client for interacting with the User builders.
@@ -162,6 +166,8 @@ func (tx *Tx) init() {
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.StatusLog = NewStatusLogClient(tx.config)
+	tx.Subscription = NewSubscriptionClient(tx.config)
+	tx.Tenant = NewTenantClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

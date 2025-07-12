@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -31,6 +32,8 @@ type User struct {
 	PasswordHash string `json:"-"`
 	// 是否激活
 	Active bool `json:"active,omitempty"`
+	// 租户ID
+	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -43,6 +46,8 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
+	// Tenant holds the value of the tenant edge.
+	Tenant *Tenant `json:"tenant,omitempty"`
 	// SubmittedTickets holds the value of the submitted_tickets edge.
 	SubmittedTickets []*Ticket `json:"submitted_tickets,omitempty"`
 	// AssignedTickets holds the value of the assigned_tickets edge.
@@ -55,13 +60,24 @@ type UserEdges struct {
 	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
+}
+
+// TenantOrErr returns the Tenant value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) TenantOrErr() (*Tenant, error) {
+	if e.Tenant != nil {
+		return e.Tenant, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: tenant.Label}
+	}
+	return nil, &NotLoadedError{edge: "tenant"}
 }
 
 // SubmittedTicketsOrErr returns the SubmittedTickets value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) SubmittedTicketsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.SubmittedTickets, nil
 	}
 	return nil, &NotLoadedError{edge: "submitted_tickets"}
@@ -70,7 +86,7 @@ func (e UserEdges) SubmittedTicketsOrErr() ([]*Ticket, error) {
 // AssignedTicketsOrErr returns the AssignedTickets value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AssignedTicketsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.AssignedTickets, nil
 	}
 	return nil, &NotLoadedError{edge: "assigned_tickets"}
@@ -79,7 +95,7 @@ func (e UserEdges) AssignedTicketsOrErr() ([]*Ticket, error) {
 // ApprovalLogsOrErr returns the ApprovalLogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ApprovalLogsOrErr() ([]*ApprovalLog, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.ApprovalLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "approval_logs"}
@@ -88,7 +104,7 @@ func (e UserEdges) ApprovalLogsOrErr() ([]*ApprovalLog, error) {
 // StatusLogsOrErr returns the StatusLogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) StatusLogsOrErr() ([]*StatusLog, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.StatusLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "status_logs"}
@@ -97,7 +113,7 @@ func (e UserEdges) StatusLogsOrErr() ([]*StatusLog, error) {
 // ServiceRequestsOrErr returns the ServiceRequests value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ServiceRequestsOrErr() ([]*ServiceRequest, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.ServiceRequests, nil
 	}
 	return nil, &NotLoadedError{edge: "service_requests"}
@@ -110,7 +126,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldActive:
 			values[i] = new(sql.NullBool)
-		case user.FieldID:
+		case user.FieldID, user.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldUsername, user.FieldEmail, user.FieldName, user.FieldDepartment, user.FieldPhone, user.FieldPasswordHash:
 			values[i] = new(sql.NullString)
@@ -179,6 +195,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Active = value.Bool
 			}
+		case user.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				u.TenantID = int(value.Int64)
+			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -202,6 +224,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryTenant queries the "tenant" edge of the User entity.
+func (u *User) QueryTenant() *TenantQuery {
+	return NewUserClient(u.config).QueryTenant(u)
 }
 
 // QuerySubmittedTickets queries the "submitted_tickets" edge of the User entity.
@@ -271,6 +298,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("active=")
 	builder.WriteString(fmt.Sprintf("%v", u.Active))
+	builder.WriteString(", ")
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", u.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(u.CreatedAt.Format(time.ANSIC))

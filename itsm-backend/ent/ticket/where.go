@@ -80,6 +80,11 @@ func AssigneeID(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldAssigneeID, v))
 }
 
+// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
+func TenantID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTenantID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -395,6 +400,26 @@ func AssigneeIDNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldAssigneeID))
 }
 
+// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
+func TenantIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
+func TenantIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldTenantID, v))
+}
+
+// TenantIDIn applies the In predicate on the "tenant_id" field.
+func TenantIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldTenantID, vs...))
+}
+
+// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
+func TenantIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -473,6 +498,29 @@ func UpdatedAtLT(v time.Time) predicate.Ticket {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasTenant applies the HasEdge predicate on the "tenant" edge.
+func HasTenant() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
+func HasTenantWith(preds ...predicate.Tenant) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newTenantStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // HasRequester applies the HasEdge predicate on the "requester" edge.

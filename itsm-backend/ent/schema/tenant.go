@@ -93,13 +93,20 @@ func (Tenant) Edges() []ent.Edge {
 		edge.To("tickets", Ticket.Type),
 		edge.To("service_catalogs", ServiceCatalog.Type),
 		edge.To("service_requests", ServiceRequest.Type),
+		// 添加订阅关联
+		edge.To("subscriptions", Subscription.Type),
 	}
 }
 
+// Indexes of the Tenant.
 func (Tenant) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("code"),
 		index.Fields("status"),
 		index.Fields("type"),
+		index.Fields("domain"),
+		index.Fields("created_at"),
+		// 复合索引
+		index.Fields("status", "type"),
 	}
 }

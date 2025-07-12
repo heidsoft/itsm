@@ -68,6 +68,30 @@ func (f StatusLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StatusLogMutation", m)
 }
 
+// The SubscriptionFunc type is an adapter to allow the use of ordinary
+// function as Subscription mutator.
+type SubscriptionFunc func(context.Context, *ent.SubscriptionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SubscriptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SubscriptionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubscriptionMutation", m)
+}
+
+// The TenantFunc type is an adapter to allow the use of ordinary
+// function as Tenant mutator.
+type TenantFunc func(context.Context, *ent.TenantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TenantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TenantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantMutation", m)
+}
+
 // The TicketFunc type is an adapter to allow the use of ordinary
 // function as Ticket mutator.
 type TicketFunc func(context.Context, *ent.TicketMutation) (ent.Value, error)

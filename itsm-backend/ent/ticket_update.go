@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/flowinstance"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -154,10 +155,29 @@ func (tu *TicketUpdate) ClearAssigneeID() *TicketUpdate {
 	return tu
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (tu *TicketUpdate) SetTenantID(i int) *TicketUpdate {
+	tu.mutation.SetTenantID(i)
+	return tu
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableTenantID(i *int) *TicketUpdate {
+	if i != nil {
+		tu.SetTenantID(*i)
+	}
+	return tu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (tu *TicketUpdate) SetUpdatedAt(t time.Time) *TicketUpdate {
 	tu.mutation.SetUpdatedAt(t)
 	return tu
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (tu *TicketUpdate) SetTenant(t *Tenant) *TicketUpdate {
+	return tu.SetTenantID(t.ID)
 }
 
 // SetRequester sets the "requester" edge to the User entity.
@@ -222,6 +242,12 @@ func (tu *TicketUpdate) AddStatusLogs(s ...*StatusLog) *TicketUpdate {
 // Mutation returns the TicketMutation object of the builder.
 func (tu *TicketUpdate) Mutation() *TicketMutation {
 	return tu.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (tu *TicketUpdate) ClearTenant() *TicketUpdate {
+	tu.mutation.ClearTenant()
+	return tu
 }
 
 // ClearRequester clears the "requester" edge to the User entity.
@@ -352,6 +378,14 @@ func (tu *TicketUpdate) check() error {
 			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.assignee_id": %w`, err)}
 		}
 	}
+	if v, ok := tu.mutation.TenantID(); ok {
+		if err := ticket.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
+		}
+	}
+	if tu.mutation.TenantCleared() && len(tu.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Ticket.tenant"`)
+	}
 	if tu.mutation.RequesterCleared() && len(tu.mutation.RequesterIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Ticket.requester"`)
 	}
@@ -396,6 +430,35 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticket.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if tu.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.TenantTable,
+			Columns: []string{ticket.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.TenantTable,
+			Columns: []string{ticket.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if tu.mutation.RequesterCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -716,10 +779,29 @@ func (tuo *TicketUpdateOne) ClearAssigneeID() *TicketUpdateOne {
 	return tuo
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (tuo *TicketUpdateOne) SetTenantID(i int) *TicketUpdateOne {
+	tuo.mutation.SetTenantID(i)
+	return tuo
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableTenantID(i *int) *TicketUpdateOne {
+	if i != nil {
+		tuo.SetTenantID(*i)
+	}
+	return tuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (tuo *TicketUpdateOne) SetUpdatedAt(t time.Time) *TicketUpdateOne {
 	tuo.mutation.SetUpdatedAt(t)
 	return tuo
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (tuo *TicketUpdateOne) SetTenant(t *Tenant) *TicketUpdateOne {
+	return tuo.SetTenantID(t.ID)
 }
 
 // SetRequester sets the "requester" edge to the User entity.
@@ -784,6 +866,12 @@ func (tuo *TicketUpdateOne) AddStatusLogs(s ...*StatusLog) *TicketUpdateOne {
 // Mutation returns the TicketMutation object of the builder.
 func (tuo *TicketUpdateOne) Mutation() *TicketMutation {
 	return tuo.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (tuo *TicketUpdateOne) ClearTenant() *TicketUpdateOne {
+	tuo.mutation.ClearTenant()
+	return tuo
 }
 
 // ClearRequester clears the "requester" edge to the User entity.
@@ -927,6 +1015,14 @@ func (tuo *TicketUpdateOne) check() error {
 			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.assignee_id": %w`, err)}
 		}
 	}
+	if v, ok := tuo.mutation.TenantID(); ok {
+		if err := ticket.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
+		}
+	}
+	if tuo.mutation.TenantCleared() && len(tuo.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Ticket.tenant"`)
+	}
 	if tuo.mutation.RequesterCleared() && len(tuo.mutation.RequesterIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Ticket.requester"`)
 	}
@@ -988,6 +1084,35 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 	}
 	if value, ok := tuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticket.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if tuo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.TenantTable,
+			Columns: []string{ticket.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.TenantTable,
+			Columns: []string{ticket.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if tuo.mutation.RequesterCleared() {
 		edge := &sqlgraph.EdgeSpec{

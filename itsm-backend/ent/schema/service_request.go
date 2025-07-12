@@ -45,6 +45,9 @@ func (ServiceRequest) Fields() []ent.Field {
 			Optional().
 			MaxLen(500).
 			Comment("申请原因"),
+		field.Int("tenant_id").
+			Positive().
+			Comment("租户ID"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -55,6 +58,12 @@ func (ServiceRequest) Fields() []ent.Field {
 // Edges of the ServiceRequest.
 func (ServiceRequest) Edges() []ent.Edge {
 	return []ent.Edge{
+		// 租户关联
+		edge.From("tenant", Tenant.Type).
+			Ref("service_requests").
+			Field("tenant_id").
+			Required().
+			Unique(),
 		// 关联服务目录
 		edge.From("catalog", ServiceCatalog.Type).
 			Ref("service_requests").
@@ -77,6 +86,11 @@ func (ServiceRequest) Indexes() []ent.Index {
 		index.Fields("requester_id"),
 		index.Fields("status"),
 		index.Fields("created_at"),
+		// 租户相关索引
+		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "status"),
+		index.Fields("tenant_id", "requester_id"),
+		// 复合索引
 		index.Fields("requester_id", "status"),
 		index.Fields("catalog_id", "status"),
 	}

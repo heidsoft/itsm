@@ -23,14 +23,25 @@ const (
 	FieldStatus = "status"
 	// FieldReason holds the string denoting the reason field in the database.
 	FieldReason = "reason"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// EdgeCatalog holds the string denoting the catalog edge name in mutations.
 	EdgeCatalog = "catalog"
 	// EdgeRequester holds the string denoting the requester edge name in mutations.
 	EdgeRequester = "requester"
 	// Table holds the table name of the servicerequest in the database.
 	Table = "service_requests"
+	// TenantTable is the table that holds the tenant relation/edge.
+	TenantTable = "service_requests"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
+	// TenantColumn is the table column denoting the tenant relation/edge.
+	TenantColumn = "tenant_id"
 	// CatalogTable is the table that holds the catalog relation/edge.
 	CatalogTable = "service_requests"
 	// CatalogInverseTable is the table name for the ServiceCatalog entity.
@@ -54,6 +65,7 @@ var Columns = []string{
 	FieldRequesterID,
 	FieldStatus,
 	FieldReason,
+	FieldTenantID,
 	FieldCreatedAt,
 }
 
@@ -74,6 +86,8 @@ var (
 	RequesterIDValidator func(int) error
 	// ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
 	ReasonValidator func(string) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 )
@@ -134,9 +148,21 @@ func ByReason(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReason, opts...).ToFunc()
 }
 
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByTenantField orders the results by tenant field.
+func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
+	}
 }
 
 // ByCatalogField orders the results by catalog field.
@@ -151,6 +177,13 @@ func ByRequesterField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newRequesterStep(), sql.OrderByField(field, opts...))
 	}
+}
+func newTenantStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+	)
 }
 func newCatalogStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

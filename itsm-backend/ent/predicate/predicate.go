@@ -21,6 +21,12 @@ type ServiceRequest func(*sql.Selector)
 // StatusLog is the predicate function for statuslog builders.
 type StatusLog func(*sql.Selector)
 
+// Subscription is the predicate function for subscription builders.
+type Subscription func(*sql.Selector)
+
+// Tenant is the predicate function for tenant builders.
+type Tenant func(*sql.Selector)
+
 // Ticket is the predicate function for ticket builders.
 type Ticket func(*sql.Selector)
 

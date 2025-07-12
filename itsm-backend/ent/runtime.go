@@ -9,6 +9,8 @@ import (
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/subscription"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -164,12 +166,16 @@ func init() {
 			return nil
 		}
 	}()
+	// servicecatalogDescTenantID is the schema descriptor for tenant_id field.
+	servicecatalogDescTenantID := servicecatalogFields[5].Descriptor()
+	// servicecatalog.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	servicecatalog.TenantIDValidator = servicecatalogDescTenantID.Validators[0].(func(int) error)
 	// servicecatalogDescCreatedAt is the schema descriptor for created_at field.
-	servicecatalogDescCreatedAt := servicecatalogFields[5].Descriptor()
+	servicecatalogDescCreatedAt := servicecatalogFields[6].Descriptor()
 	// servicecatalog.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicecatalog.DefaultCreatedAt = servicecatalogDescCreatedAt.Default.(func() time.Time)
 	// servicecatalogDescUpdatedAt is the schema descriptor for updated_at field.
-	servicecatalogDescUpdatedAt := servicecatalogFields[6].Descriptor()
+	servicecatalogDescUpdatedAt := servicecatalogFields[7].Descriptor()
 	// servicecatalog.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	servicecatalog.DefaultUpdatedAt = servicecatalogDescUpdatedAt.Default.(func() time.Time)
 	// servicecatalog.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -188,8 +194,12 @@ func init() {
 	servicerequestDescReason := servicerequestFields[3].Descriptor()
 	// servicerequest.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
 	servicerequest.ReasonValidator = servicerequestDescReason.Validators[0].(func(string) error)
+	// servicerequestDescTenantID is the schema descriptor for tenant_id field.
+	servicerequestDescTenantID := servicerequestFields[4].Descriptor()
+	// servicerequest.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	servicerequest.TenantIDValidator = servicerequestDescTenantID.Validators[0].(func(int) error)
 	// servicerequestDescCreatedAt is the schema descriptor for created_at field.
-	servicerequestDescCreatedAt := servicerequestFields[4].Descriptor()
+	servicerequestDescCreatedAt := servicerequestFields[5].Descriptor()
 	// servicerequest.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequest.DefaultCreatedAt = servicerequestDescCreatedAt.Default.(func() time.Time)
 	statuslogFields := schema.StatusLog{}.Fields()
@@ -214,6 +224,100 @@ func init() {
 	statuslogDescCreatedAt := statuslogFields[5].Descriptor()
 	// statuslog.DefaultCreatedAt holds the default value on creation for the created_at field.
 	statuslog.DefaultCreatedAt = statuslogDescCreatedAt.Default.(func() time.Time)
+	subscriptionFields := schema.Subscription{}.Fields()
+	_ = subscriptionFields
+	// subscriptionDescTenantID is the schema descriptor for tenant_id field.
+	subscriptionDescTenantID := subscriptionFields[0].Descriptor()
+	// subscription.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	subscription.TenantIDValidator = subscriptionDescTenantID.Validators[0].(func(int) error)
+	// subscriptionDescPlanName is the schema descriptor for plan_name field.
+	subscriptionDescPlanName := subscriptionFields[1].Descriptor()
+	// subscription.PlanNameValidator is a validator for the "plan_name" field. It is called by the builders before save.
+	subscription.PlanNameValidator = func() func(string) error {
+		validators := subscriptionDescPlanName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(plan_name string) error {
+			for _, fn := range fns {
+				if err := fn(plan_name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionDescMonthlyPrice is the schema descriptor for monthly_price field.
+	subscriptionDescMonthlyPrice := subscriptionFields[2].Descriptor()
+	// subscription.MonthlyPriceValidator is a validator for the "monthly_price" field. It is called by the builders before save.
+	subscription.MonthlyPriceValidator = subscriptionDescMonthlyPrice.Validators[0].(func(float64) error)
+	// subscriptionDescYearlyPrice is the schema descriptor for yearly_price field.
+	subscriptionDescYearlyPrice := subscriptionFields[3].Descriptor()
+	// subscription.YearlyPriceValidator is a validator for the "yearly_price" field. It is called by the builders before save.
+	subscription.YearlyPriceValidator = subscriptionDescYearlyPrice.Validators[0].(func(float64) error)
+	// subscriptionDescCreatedAt is the schema descriptor for created_at field.
+	subscriptionDescCreatedAt := subscriptionFields[9].Descriptor()
+	// subscription.DefaultCreatedAt holds the default value on creation for the created_at field.
+	subscription.DefaultCreatedAt = subscriptionDescCreatedAt.Default.(func() time.Time)
+	// subscriptionDescUpdatedAt is the schema descriptor for updated_at field.
+	subscriptionDescUpdatedAt := subscriptionFields[10].Descriptor()
+	// subscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	subscription.DefaultUpdatedAt = subscriptionDescUpdatedAt.Default.(func() time.Time)
+	// subscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	subscription.UpdateDefaultUpdatedAt = subscriptionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	tenantFields := schema.Tenant{}.Fields()
+	_ = tenantFields
+	// tenantDescName is the schema descriptor for name field.
+	tenantDescName := tenantFields[0].Descriptor()
+	// tenant.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tenant.NameValidator = func() func(string) error {
+		validators := tenantDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// tenantDescCode is the schema descriptor for code field.
+	tenantDescCode := tenantFields[1].Descriptor()
+	// tenant.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	tenant.CodeValidator = func() func(string) error {
+		validators := tenantDescCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(code string) error {
+			for _, fn := range fns {
+				if err := fn(code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// tenantDescDomain is the schema descriptor for domain field.
+	tenantDescDomain := tenantFields[2].Descriptor()
+	// tenant.DomainValidator is a validator for the "domain" field. It is called by the builders before save.
+	tenant.DomainValidator = tenantDescDomain.Validators[0].(func(string) error)
+	// tenantDescCreatedAt is the schema descriptor for created_at field.
+	tenantDescCreatedAt := tenantFields[8].Descriptor()
+	// tenant.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tenant.DefaultCreatedAt = tenantDescCreatedAt.Default.(func() time.Time)
+	// tenantDescUpdatedAt is the schema descriptor for updated_at field.
+	tenantDescUpdatedAt := tenantFields[9].Descriptor()
+	// tenant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tenant.DefaultUpdatedAt = tenantDescUpdatedAt.Default.(func() time.Time)
+	// tenant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tenant.UpdateDefaultUpdatedAt = tenantDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ticketFields := schema.Ticket{}.Fields()
 	_ = ticketFields
 	// ticketDescTitle is the schema descriptor for title field.
@@ -260,12 +364,16 @@ func init() {
 	ticketDescAssigneeID := ticketFields[7].Descriptor()
 	// ticket.AssigneeIDValidator is a validator for the "assignee_id" field. It is called by the builders before save.
 	ticket.AssigneeIDValidator = ticketDescAssigneeID.Validators[0].(func(int) error)
+	// ticketDescTenantID is the schema descriptor for tenant_id field.
+	ticketDescTenantID := ticketFields[8].Descriptor()
+	// ticket.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticket.TenantIDValidator = ticketDescTenantID.Validators[0].(func(int) error)
 	// ticketDescCreatedAt is the schema descriptor for created_at field.
-	ticketDescCreatedAt := ticketFields[8].Descriptor()
+	ticketDescCreatedAt := ticketFields[9].Descriptor()
 	// ticket.DefaultCreatedAt holds the default value on creation for the created_at field.
 	ticket.DefaultCreatedAt = ticketDescCreatedAt.Default.(func() time.Time)
 	// ticketDescUpdatedAt is the schema descriptor for updated_at field.
-	ticketDescUpdatedAt := ticketFields[9].Descriptor()
+	ticketDescUpdatedAt := ticketFields[10].Descriptor()
 	// ticket.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	ticket.DefaultUpdatedAt = ticketDescUpdatedAt.Default.(func() time.Time)
 	// ticket.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -338,12 +446,16 @@ func init() {
 	userDescActive := userFields[6].Descriptor()
 	// user.DefaultActive holds the default value on creation for the active field.
 	user.DefaultActive = userDescActive.Default.(bool)
+	// userDescTenantID is the schema descriptor for tenant_id field.
+	userDescTenantID := userFields[7].Descriptor()
+	// user.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	user.TenantIDValidator = userDescTenantID.Validators[0].(func(int) error)
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[7].Descriptor()
+	userDescCreatedAt := userFields[8].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
-	userDescUpdatedAt := userFields[8].Descriptor()
+	userDescUpdatedAt := userFields[9].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

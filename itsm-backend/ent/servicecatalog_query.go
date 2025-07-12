@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/tenant"
 	"math"
 
 	"entgo.io/ent"
@@ -24,6 +25,7 @@ type ServiceCatalogQuery struct {
 	order               []servicecatalog.OrderOption
 	inters              []Interceptor
 	predicates          []predicate.ServiceCatalog
+	withTenant          *TenantQuery
 	withServiceRequests *ServiceRequestQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -59,6 +61,28 @@ func (scq *ServiceCatalogQuery) Unique(unique bool) *ServiceCatalogQuery {
 func (scq *ServiceCatalogQuery) Order(o ...servicecatalog.OrderOption) *ServiceCatalogQuery {
 	scq.order = append(scq.order, o...)
 	return scq
+}
+
+// QueryTenant chains the current query on the "tenant" edge.
+func (scq *ServiceCatalogQuery) QueryTenant() *TenantQuery {
+	query := (&TenantClient{config: scq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := scq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := scq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, selector),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, servicecatalog.TenantTable, servicecatalog.TenantColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(scq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryServiceRequests chains the current query on the "service_requests" edge.
@@ -275,11 +299,23 @@ func (scq *ServiceCatalogQuery) Clone() *ServiceCatalogQuery {
 		order:               append([]servicecatalog.OrderOption{}, scq.order...),
 		inters:              append([]Interceptor{}, scq.inters...),
 		predicates:          append([]predicate.ServiceCatalog{}, scq.predicates...),
+		withTenant:          scq.withTenant.Clone(),
 		withServiceRequests: scq.withServiceRequests.Clone(),
 		// clone intermediate query.
 		sql:  scq.sql.Clone(),
 		path: scq.path,
 	}
+}
+
+// WithTenant tells the query-builder to eager-load the nodes that are connected to
+// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
+func (scq *ServiceCatalogQuery) WithTenant(opts ...func(*TenantQuery)) *ServiceCatalogQuery {
+	query := (&TenantClient{config: scq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	scq.withTenant = query
+	return scq
 }
 
 // WithServiceRequests tells the query-builder to eager-load the nodes that are connected to
@@ -371,7 +407,8 @@ func (scq *ServiceCatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	var (
 		nodes       = []*ServiceCatalog{}
 		_spec       = scq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
+			scq.withTenant != nil,
 			scq.withServiceRequests != nil,
 		}
 	)
@@ -393,6 +430,12 @@ func (scq *ServiceCatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := scq.withTenant; query != nil {
+		if err := scq.loadTenant(ctx, query, nodes, nil,
+			func(n *ServiceCatalog, e *Tenant) { n.Edges.Tenant = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := scq.withServiceRequests; query != nil {
 		if err := scq.loadServiceRequests(ctx, query, nodes,
 			func(n *ServiceCatalog) { n.Edges.ServiceRequests = []*ServiceRequest{} },
@@ -405,6 +448,35 @@ func (scq *ServiceCatalogQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
+func (scq *ServiceCatalogQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*ServiceCatalog, init func(*ServiceCatalog), assign func(*ServiceCatalog, *Tenant)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ServiceCatalog)
+	for i := range nodes {
+		fk := nodes[i].TenantID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(tenant.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (scq *ServiceCatalogQuery) loadServiceRequests(ctx context.Context, query *ServiceRequestQuery, nodes []*ServiceCatalog, init func(*ServiceCatalog), assign func(*ServiceCatalog, *ServiceRequest)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ServiceCatalog)
@@ -460,6 +532,9 @@ func (scq *ServiceCatalogQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != servicecatalog.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if scq.withTenant != nil {
+			_spec.Node.AddColumnOnce(servicecatalog.FieldTenantID)
 		}
 	}
 	if ps := scq.predicates; len(ps) > 0 {

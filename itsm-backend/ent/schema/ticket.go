@@ -85,6 +85,9 @@ func (Ticket) Fields() []ent.Field {
 			Nillable().
 			Positive().
 			Comment("处理人ID"),
+		field.Int("tenant_id").
+			Positive().
+			Comment("租户ID"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -99,6 +102,12 @@ func (Ticket) Fields() []ent.Field {
 // Edges of the Ticket.
 func (Ticket) Edges() []ent.Edge {
 	return []ent.Edge{
+		// 租户关联
+		edge.From("tenant", Tenant.Type).
+			Ref("tickets").
+			Field("tenant_id").
+			Required().
+			Unique(),
 		// 申请人
 		edge.From("requester", User.Type).
 			Ref("submitted_tickets").
@@ -129,6 +138,10 @@ func (Ticket) Indexes() []ent.Index {
 		index.Fields("assignee_id"),
 		index.Fields("created_at"),
 		index.Fields("ticket_number"),
+		// 租户相关索引
+		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "status"),
+		index.Fields("tenant_id", "requester_id"),
 		// 复合索引
 		index.Fields("status", "priority"),
 		index.Fields("requester_id", "status"),

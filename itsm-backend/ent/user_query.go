@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"math"
@@ -27,6 +28,7 @@ type UserQuery struct {
 	order                []user.OrderOption
 	inters               []Interceptor
 	predicates           []predicate.User
+	withTenant           *TenantQuery
 	withSubmittedTickets *TicketQuery
 	withAssignedTickets  *TicketQuery
 	withApprovalLogs     *ApprovalLogQuery
@@ -66,6 +68,28 @@ func (uq *UserQuery) Unique(unique bool) *UserQuery {
 func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	uq.order = append(uq.order, o...)
 	return uq
+}
+
+// QueryTenant chains the current query on the "tenant" edge.
+func (uq *UserQuery) QueryTenant() *TenantQuery {
+	query := (&TenantClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.TenantTable, user.TenantColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QuerySubmittedTickets chains the current query on the "submitted_tickets" edge.
@@ -370,6 +394,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		order:                append([]user.OrderOption{}, uq.order...),
 		inters:               append([]Interceptor{}, uq.inters...),
 		predicates:           append([]predicate.User{}, uq.predicates...),
+		withTenant:           uq.withTenant.Clone(),
 		withSubmittedTickets: uq.withSubmittedTickets.Clone(),
 		withAssignedTickets:  uq.withAssignedTickets.Clone(),
 		withApprovalLogs:     uq.withApprovalLogs.Clone(),
@@ -379,6 +404,17 @@ func (uq *UserQuery) Clone() *UserQuery {
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
+}
+
+// WithTenant tells the query-builder to eager-load the nodes that are connected to
+// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTenant(opts ...func(*TenantQuery)) *UserQuery {
+	query := (&TenantClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTenant = query
+	return uq
 }
 
 // WithSubmittedTickets tells the query-builder to eager-load the nodes that are connected to
@@ -514,7 +550,8 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
+			uq.withTenant != nil,
 			uq.withSubmittedTickets != nil,
 			uq.withAssignedTickets != nil,
 			uq.withApprovalLogs != nil,
@@ -539,6 +576,12 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
+	}
+	if query := uq.withTenant; query != nil {
+		if err := uq.loadTenant(ctx, query, nodes, nil,
+			func(n *User, e *Tenant) { n.Edges.Tenant = e }); err != nil {
+			return nil, err
+		}
 	}
 	if query := uq.withSubmittedTickets; query != nil {
 		if err := uq.loadSubmittedTickets(ctx, query, nodes,
@@ -578,6 +621,35 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	return nodes, nil
 }
 
+func (uq *UserQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*User, init func(*User), assign func(*User, *Tenant)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*User)
+	for i := range nodes {
+		fk := nodes[i].TenantID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(tenant.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (uq *UserQuery) loadSubmittedTickets(ctx context.Context, query *TicketQuery, nodes []*User, init func(*User), assign func(*User, *Ticket)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -756,6 +828,9 @@ func (uq *UserQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != user.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if uq.withTenant != nil {
+			_spec.Node.AddColumnOnce(user.FieldTenantID)
 		}
 	}
 	if ps := uq.predicates; len(ps) > 0 {

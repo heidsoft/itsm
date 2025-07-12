@@ -25,14 +25,25 @@ const (
 	FieldDeliveryTime = "delivery_time"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// EdgeServiceRequests holds the string denoting the service_requests edge name in mutations.
 	EdgeServiceRequests = "service_requests"
 	// Table holds the table name of the servicecatalog in the database.
 	Table = "service_catalogs"
+	// TenantTable is the table that holds the tenant relation/edge.
+	TenantTable = "service_catalogs"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
+	// TenantColumn is the table column denoting the tenant relation/edge.
+	TenantColumn = "tenant_id"
 	// ServiceRequestsTable is the table that holds the service_requests relation/edge.
 	ServiceRequestsTable = "service_requests"
 	// ServiceRequestsInverseTable is the table name for the ServiceRequest entity.
@@ -50,6 +61,7 @@ var Columns = []string{
 	FieldDescription,
 	FieldDeliveryTime,
 	FieldStatus,
+	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -71,6 +83,8 @@ var (
 	CategoryValidator func(string) error
 	// DeliveryTimeValidator is a validator for the "delivery_time" field. It is called by the builders before save.
 	DeliveryTimeValidator func(string) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -138,6 +152,11 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -146,6 +165,13 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByTenantField orders the results by tenant field.
+func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
+	}
 }
 
 // ByServiceRequestsCount orders the results by service_requests count.
@@ -160,6 +186,13 @@ func ByServiceRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newServiceRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newTenantStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+	)
 }
 func newServiceRequestsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

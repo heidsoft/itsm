@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/flowinstance"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -104,6 +105,12 @@ func (tc *TicketCreate) SetNillableAssigneeID(i *int) *TicketCreate {
 	return tc
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (tc *TicketCreate) SetTenantID(i int) *TicketCreate {
+	tc.mutation.SetTenantID(i)
+	return tc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tc *TicketCreate) SetCreatedAt(t time.Time) *TicketCreate {
 	tc.mutation.SetCreatedAt(t)
@@ -130,6 +137,11 @@ func (tc *TicketCreate) SetNillableUpdatedAt(t *time.Time) *TicketCreate {
 		tc.SetUpdatedAt(*t)
 	}
 	return tc
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (tc *TicketCreate) SetTenant(t *Tenant) *TicketCreate {
+	return tc.SetTenantID(t.ID)
 }
 
 // SetRequester sets the "requester" edge to the User entity.
@@ -291,11 +303,22 @@ func (tc *TicketCreate) check() error {
 			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.assignee_id": %w`, err)}
 		}
 	}
+	if _, ok := tc.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Ticket.tenant_id"`)}
+	}
+	if v, ok := tc.mutation.TenantID(); ok {
+		if err := ticket.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
+		}
+	}
 	if _, ok := tc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Ticket.created_at"`)}
 	}
 	if _, ok := tc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Ticket.updated_at"`)}
+	}
+	if len(tc.mutation.TenantIDs()) == 0 {
+		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "Ticket.tenant"`)}
 	}
 	if len(tc.mutation.RequesterIDs()) == 0 {
 		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required edge "Ticket.requester"`)}
@@ -357,6 +380,23 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticket.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := tc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.TenantTable,
+			Columns: []string{ticket.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.TenantID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := tc.mutation.RequesterIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

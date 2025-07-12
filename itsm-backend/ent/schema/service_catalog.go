@@ -46,6 +46,9 @@ func (ServiceCatalog) Fields() []ent.Field {
 			).
 			Default(string(ServiceCatalogStatusEnabled)).
 			Comment("服务状态"),
+		field.Int("tenant_id").
+			Positive().
+			Comment("租户ID"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -60,6 +63,12 @@ func (ServiceCatalog) Fields() []ent.Field {
 // Edges of the ServiceCatalog.
 func (ServiceCatalog) Edges() []ent.Edge {
 	return []ent.Edge{
+		// 租户关联
+		edge.From("tenant", Tenant.Type).
+			Ref("service_catalogs").
+			Field("tenant_id").
+			Required().
+			Unique(),
 		// 服务请求
 		edge.To("service_requests", ServiceRequest.Type),
 	}
@@ -71,6 +80,10 @@ func (ServiceCatalog) Indexes() []ent.Index {
 		index.Fields("category"),
 		index.Fields("status"),
 		index.Fields("created_at"),
+		// 租户相关索引
+		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "category"),
+		// 复合索引
 		index.Fields("category", "status"),
 	}
 }

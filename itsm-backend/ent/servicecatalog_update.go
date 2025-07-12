@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -105,10 +106,29 @@ func (scu *ServiceCatalogUpdate) SetNillableStatus(s *servicecatalog.Status) *Se
 	return scu
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (scu *ServiceCatalogUpdate) SetTenantID(i int) *ServiceCatalogUpdate {
+	scu.mutation.SetTenantID(i)
+	return scu
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableTenantID(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetTenantID(*i)
+	}
+	return scu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (scu *ServiceCatalogUpdate) SetUpdatedAt(t time.Time) *ServiceCatalogUpdate {
 	scu.mutation.SetUpdatedAt(t)
 	return scu
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (scu *ServiceCatalogUpdate) SetTenant(t *Tenant) *ServiceCatalogUpdate {
+	return scu.SetTenantID(t.ID)
 }
 
 // AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
@@ -129,6 +149,12 @@ func (scu *ServiceCatalogUpdate) AddServiceRequests(s ...*ServiceRequest) *Servi
 // Mutation returns the ServiceCatalogMutation object of the builder.
 func (scu *ServiceCatalogUpdate) Mutation() *ServiceCatalogMutation {
 	return scu.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (scu *ServiceCatalogUpdate) ClearTenant() *ServiceCatalogUpdate {
+	scu.mutation.ClearTenant()
+	return scu
 }
 
 // ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
@@ -210,6 +236,14 @@ func (scu *ServiceCatalogUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.status": %w`, err)}
 		}
 	}
+	if v, ok := scu.mutation.TenantID(); ok {
+		if err := servicecatalog.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
+		}
+	}
+	if scu.mutation.TenantCleared() && len(scu.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ServiceCatalog.tenant"`)
+	}
 	return nil
 }
 
@@ -245,6 +279,35 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	}
 	if value, ok := scu.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if scu.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   servicecatalog.TenantTable,
+			Columns: []string{servicecatalog.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := scu.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   servicecatalog.TenantTable,
+			Columns: []string{servicecatalog.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if scu.mutation.ServiceRequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -387,10 +450,29 @@ func (scuo *ServiceCatalogUpdateOne) SetNillableStatus(s *servicecatalog.Status)
 	return scuo
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (scuo *ServiceCatalogUpdateOne) SetTenantID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetTenantID(i)
+	return scuo
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableTenantID(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetTenantID(*i)
+	}
+	return scuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (scuo *ServiceCatalogUpdateOne) SetUpdatedAt(t time.Time) *ServiceCatalogUpdateOne {
 	scuo.mutation.SetUpdatedAt(t)
 	return scuo
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (scuo *ServiceCatalogUpdateOne) SetTenant(t *Tenant) *ServiceCatalogUpdateOne {
+	return scuo.SetTenantID(t.ID)
 }
 
 // AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
@@ -411,6 +493,12 @@ func (scuo *ServiceCatalogUpdateOne) AddServiceRequests(s ...*ServiceRequest) *S
 // Mutation returns the ServiceCatalogMutation object of the builder.
 func (scuo *ServiceCatalogUpdateOne) Mutation() *ServiceCatalogMutation {
 	return scuo.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (scuo *ServiceCatalogUpdateOne) ClearTenant() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearTenant()
+	return scuo
 }
 
 // ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
@@ -505,6 +593,14 @@ func (scuo *ServiceCatalogUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.status": %w`, err)}
 		}
 	}
+	if v, ok := scuo.mutation.TenantID(); ok {
+		if err := servicecatalog.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
+		}
+	}
+	if scuo.mutation.TenantCleared() && len(scuo.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ServiceCatalog.tenant"`)
+	}
 	return nil
 }
 
@@ -557,6 +653,35 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	}
 	if value, ok := scuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if scuo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   servicecatalog.TenantTable,
+			Columns: []string{servicecatalog.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := scuo.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   servicecatalog.TenantTable,
+			Columns: []string{servicecatalog.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if scuo.mutation.ServiceRequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -44,6 +44,10 @@ func (User) Fields() []ent.Field {
 		field.Bool("active").
 			Default(true).
 			Comment("是否激活"),
+		// 添加租户ID字段
+		field.Int("tenant_id").
+			Positive().
+			Comment("租户ID"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -52,27 +56,18 @@ func (User) Fields() []ent.Field {
 			Default(time.Now).
 			UpdateDefault(time.Now).
 			Comment("更新时间"),
-		// 在User模型的Fields中添加
-		field.Int("tenant_id").
-			Positive().
-			Comment("租户ID"),
-
-		// 在User模型的Edges中添加
-		edge.From("tenant", Tenant.Type).
-			Ref("users").
-			Field("tenant_id").
-			Required().
-			Unique(),
-
-		// 在User模型的Indexes中添加
-		index.Fields("tenant_id"),
-		index.Fields("tenant_id", "username"),
 	}
 }
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
+		// 租户关联
+		edge.From("tenant", Tenant.Type).
+			Ref("users").
+			Field("tenant_id").
+			Required().
+			Unique(),
 		// 提交的工单
 		edge.To("submitted_tickets", Ticket.Type),
 		// 分配的工单
@@ -92,5 +87,9 @@ func (User) Indexes() []ent.Index {
 		index.Fields("email"),
 		index.Fields("username"),
 		index.Fields("department"),
+		// 添加租户相关索引
+		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "username"),
+		index.Fields("tenant_id", "email"),
 	}
 }

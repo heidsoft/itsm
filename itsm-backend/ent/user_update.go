@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -142,10 +143,29 @@ func (uu *UserUpdate) SetNillableActive(b *bool) *UserUpdate {
 	return uu
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (uu *UserUpdate) SetTenantID(i int) *UserUpdate {
+	uu.mutation.SetTenantID(i)
+	return uu
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableTenantID(i *int) *UserUpdate {
+	if i != nil {
+		uu.SetTenantID(*i)
+	}
+	return uu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (uu *UserUpdate) SetUpdatedAt(t time.Time) *UserUpdate {
 	uu.mutation.SetUpdatedAt(t)
 	return uu
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (uu *UserUpdate) SetTenant(t *Tenant) *UserUpdate {
+	return uu.SetTenantID(t.ID)
 }
 
 // AddSubmittedTicketIDs adds the "submitted_tickets" edge to the Ticket entity by IDs.
@@ -226,6 +246,12 @@ func (uu *UserUpdate) AddServiceRequests(s ...*ServiceRequest) *UserUpdate {
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (uu *UserUpdate) ClearTenant() *UserUpdate {
+	uu.mutation.ClearTenant()
+	return uu
 }
 
 // ClearSubmittedTickets clears all "submitted_tickets" edges to the Ticket entity.
@@ -396,6 +422,14 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
 		}
 	}
+	if v, ok := uu.mutation.TenantID(); ok {
+		if err := user.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "User.tenant_id": %w`, err)}
+		}
+	}
+	if uu.mutation.TenantCleared() && len(uu.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "User.tenant"`)
+	}
 	return nil
 }
 
@@ -440,6 +474,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if uu.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uu.mutation.SubmittedTicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -796,10 +859,29 @@ func (uuo *UserUpdateOne) SetNillableActive(b *bool) *UserUpdateOne {
 	return uuo
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (uuo *UserUpdateOne) SetTenantID(i int) *UserUpdateOne {
+	uuo.mutation.SetTenantID(i)
+	return uuo
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableTenantID(i *int) *UserUpdateOne {
+	if i != nil {
+		uuo.SetTenantID(*i)
+	}
+	return uuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (uuo *UserUpdateOne) SetUpdatedAt(t time.Time) *UserUpdateOne {
 	uuo.mutation.SetUpdatedAt(t)
 	return uuo
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (uuo *UserUpdateOne) SetTenant(t *Tenant) *UserUpdateOne {
+	return uuo.SetTenantID(t.ID)
 }
 
 // AddSubmittedTicketIDs adds the "submitted_tickets" edge to the Ticket entity by IDs.
@@ -880,6 +962,12 @@ func (uuo *UserUpdateOne) AddServiceRequests(s ...*ServiceRequest) *UserUpdateOn
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (uuo *UserUpdateOne) ClearTenant() *UserUpdateOne {
+	uuo.mutation.ClearTenant()
+	return uuo
 }
 
 // ClearSubmittedTickets clears all "submitted_tickets" edges to the Ticket entity.
@@ -1063,6 +1151,14 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
 		}
 	}
+	if v, ok := uuo.mutation.TenantID(); ok {
+		if err := user.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "User.tenant_id": %w`, err)}
+		}
+	}
+	if uuo.mutation.TenantCleared() && len(uuo.mutation.TenantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "User.tenant"`)
+	}
 	return nil
 }
 
@@ -1124,6 +1220,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if uuo.mutation.TenantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uuo.mutation.SubmittedTicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{

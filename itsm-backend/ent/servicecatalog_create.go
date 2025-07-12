@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -67,6 +68,12 @@ func (scc *ServiceCatalogCreate) SetNillableStatus(s *servicecatalog.Status) *Se
 	return scc
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (scc *ServiceCatalogCreate) SetTenantID(i int) *ServiceCatalogCreate {
+	scc.mutation.SetTenantID(i)
+	return scc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (scc *ServiceCatalogCreate) SetCreatedAt(t time.Time) *ServiceCatalogCreate {
 	scc.mutation.SetCreatedAt(t)
@@ -93,6 +100,11 @@ func (scc *ServiceCatalogCreate) SetNillableUpdatedAt(t *time.Time) *ServiceCata
 		scc.SetUpdatedAt(*t)
 	}
 	return scc
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (scc *ServiceCatalogCreate) SetTenant(t *Tenant) *ServiceCatalogCreate {
+	return scc.SetTenantID(t.ID)
 }
 
 // AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
@@ -193,11 +205,22 @@ func (scc *ServiceCatalogCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.status": %w`, err)}
 		}
 	}
+	if _, ok := scc.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ServiceCatalog.tenant_id"`)}
+	}
+	if v, ok := scc.mutation.TenantID(); ok {
+		if err := servicecatalog.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
+		}
+	}
 	if _, ok := scc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceCatalog.created_at"`)}
 	}
 	if _, ok := scc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ServiceCatalog.updated_at"`)}
+	}
+	if len(scc.mutation.TenantIDs()) == 0 {
+		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "ServiceCatalog.tenant"`)}
 	}
 	return nil
 }
@@ -252,6 +275,23 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 	if value, ok := scc.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := scc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   servicecatalog.TenantTable,
+			Columns: []string{servicecatalog.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.TenantID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := scc.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

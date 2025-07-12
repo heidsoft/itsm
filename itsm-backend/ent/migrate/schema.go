@@ -141,12 +141,21 @@ var (
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled"}, Default: "enabled"},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// ServiceCatalogsTable holds the schema information for the "service_catalogs" table.
 	ServiceCatalogsTable = &schema.Table{
 		Name:       "service_catalogs",
 		Columns:    ServiceCatalogsColumns,
 		PrimaryKey: []*schema.Column{ServiceCatalogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "service_catalogs_tenants_service_catalogs",
+				Columns:    []*schema.Column{ServiceCatalogsColumns[8]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "servicecatalog_category",
@@ -164,6 +173,16 @@ var (
 				Columns: []*schema.Column{ServiceCatalogsColumns[6]},
 			},
 			{
+				Name:    "servicecatalog_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[8]},
+			},
+			{
+				Name:    "servicecatalog_tenant_id_category",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[8], ServiceCatalogsColumns[2]},
+			},
+			{
 				Name:    "servicecatalog_category_status",
 				Unique:  false,
 				Columns: []*schema.Column{ServiceCatalogsColumns[2], ServiceCatalogsColumns[5]},
@@ -177,6 +196,7 @@ var (
 		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "catalog_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "requester_id", Type: field.TypeInt},
 	}
 	// ServiceRequestsTable holds the schema information for the "service_requests" table.
@@ -192,8 +212,14 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "service_requests_users_service_requests",
+				Symbol:     "service_requests_tenants_service_requests",
 				Columns:    []*schema.Column{ServiceRequestsColumns[5]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "service_requests_users_service_requests",
+				Columns:    []*schema.Column{ServiceRequestsColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -207,7 +233,7 @@ var (
 			{
 				Name:    "servicerequest_requester_id",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[5]},
+				Columns: []*schema.Column{ServiceRequestsColumns[6]},
 			},
 			{
 				Name:    "servicerequest_status",
@@ -220,9 +246,24 @@ var (
 				Columns: []*schema.Column{ServiceRequestsColumns[3]},
 			},
 			{
-				Name:    "servicerequest_requester_id_status",
+				Name:    "servicerequest_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[5]},
+			},
+			{
+				Name:    "servicerequest_tenant_id_status",
 				Unique:  false,
 				Columns: []*schema.Column{ServiceRequestsColumns[5], ServiceRequestsColumns[1]},
+			},
+			{
+				Name:    "servicerequest_tenant_id_requester_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[5], ServiceRequestsColumns[6]},
+			},
+			{
+				Name:    "servicerequest_requester_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[6], ServiceRequestsColumns[1]},
 			},
 			{
 				Name:    "servicerequest_catalog_id_status",
@@ -283,6 +324,87 @@ var (
 			},
 		},
 	}
+	// SubscriptionsColumns holds the columns for the "subscriptions" table.
+	SubscriptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "plan_name", Type: field.TypeString, Size: 50},
+		{Name: "monthly_price", Type: field.TypeFloat64},
+		{Name: "yearly_price", Type: field.TypeFloat64},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "expired", "canceled"}, Default: "active"},
+		{Name: "starts_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "features", Type: field.TypeJSON, Nullable: true},
+		{Name: "quota", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
+	}
+	// SubscriptionsTable holds the schema information for the "subscriptions" table.
+	SubscriptionsTable = &schema.Table{
+		Name:       "subscriptions",
+		Columns:    SubscriptionsColumns,
+		PrimaryKey: []*schema.Column{SubscriptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subscriptions_tenants_subscriptions",
+				Columns:    []*schema.Column{SubscriptionsColumns[11]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TenantsColumns holds the columns for the "tenants" table.
+	TenantsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "code", Type: field.TypeString, Unique: true, Size: 50},
+		{Name: "domain", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "suspended", "expired", "deleted"}, Default: "active"},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"trial", "standard", "professional", "enterprise"}, Default: "trial"},
+		{Name: "settings", Type: field.TypeJSON, Nullable: true},
+		{Name: "quota", Type: field.TypeJSON, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// TenantsTable holds the schema information for the "tenants" table.
+	TenantsTable = &schema.Table{
+		Name:       "tenants",
+		Columns:    TenantsColumns,
+		PrimaryKey: []*schema.Column{TenantsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tenant_code",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[2]},
+			},
+			{
+				Name:    "tenant_status",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[4]},
+			},
+			{
+				Name:    "tenant_type",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[5]},
+			},
+			{
+				Name:    "tenant_domain",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[3]},
+			},
+			{
+				Name:    "tenant_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[9]},
+			},
+			{
+				Name:    "tenant_status_type",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[4], TenantsColumns[5]},
+			},
+		},
+	}
 	// TicketsColumns holds the columns for the "tickets" table.
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -294,6 +416,7 @@ var (
 		{Name: "ticket_number", Type: field.TypeString, Unique: true, Size: 50},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
 	}
@@ -304,14 +427,20 @@ var (
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "tickets_users_submitted_tickets",
+				Symbol:     "tickets_tenants_tickets",
 				Columns:    []*schema.Column{TicketsColumns[9]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "tickets_users_submitted_tickets",
+				Columns:    []*schema.Column{TicketsColumns[10]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "tickets_users_assigned_tickets",
-				Columns:    []*schema.Column{TicketsColumns[10]},
+				Columns:    []*schema.Column{TicketsColumns[11]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -330,12 +459,12 @@ var (
 			{
 				Name:    "ticket_requester_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[9]},
+				Columns: []*schema.Column{TicketsColumns[10]},
 			},
 			{
 				Name:    "ticket_assignee_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[10]},
+				Columns: []*schema.Column{TicketsColumns[11]},
 			},
 			{
 				Name:    "ticket_created_at",
@@ -348,6 +477,21 @@ var (
 				Columns: []*schema.Column{TicketsColumns[6]},
 			},
 			{
+				Name:    "ticket_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[9]},
+			},
+			{
+				Name:    "ticket_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[9], TicketsColumns[3]},
+			},
+			{
+				Name:    "ticket_tenant_id_requester_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[9], TicketsColumns[10]},
+			},
+			{
 				Name:    "ticket_status_priority",
 				Unique:  false,
 				Columns: []*schema.Column{TicketsColumns[3], TicketsColumns[4]},
@@ -355,7 +499,7 @@ var (
 			{
 				Name:    "ticket_requester_id_status",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[9], TicketsColumns[3]},
+				Columns: []*schema.Column{TicketsColumns[10], TicketsColumns[3]},
 			},
 		},
 	}
@@ -371,12 +515,21 @@ var (
 		{Name: "active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "users_tenants_users",
+				Columns:    []*schema.Column{UsersColumns[10]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "user_email",
@@ -393,6 +546,21 @@ var (
 				Unique:  false,
 				Columns: []*schema.Column{UsersColumns[4]},
 			},
+			{
+				Name:    "user_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[10]},
+			},
+			{
+				Name:    "user_tenant_id_username",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[10], UsersColumns[1]},
+			},
+			{
+				Name:    "user_tenant_id_email",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[10], UsersColumns[2]},
+			},
 		},
 	}
 	// Tables holds all the tables in the schema.
@@ -402,6 +570,8 @@ var (
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
 		StatusLogsTable,
+		SubscriptionsTable,
+		TenantsTable,
 		TicketsTable,
 		UsersTable,
 	}
@@ -411,10 +581,15 @@ func init() {
 	ApprovalLogsTable.ForeignKeys[0].RefTable = TicketsTable
 	ApprovalLogsTable.ForeignKeys[1].RefTable = UsersTable
 	FlowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
+	ServiceCatalogsTable.ForeignKeys[0].RefTable = TenantsTable
 	ServiceRequestsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
-	ServiceRequestsTable.ForeignKeys[1].RefTable = UsersTable
+	ServiceRequestsTable.ForeignKeys[1].RefTable = TenantsTable
+	ServiceRequestsTable.ForeignKeys[2].RefTable = UsersTable
 	StatusLogsTable.ForeignKeys[0].RefTable = TicketsTable
 	StatusLogsTable.ForeignKeys[1].RefTable = UsersTable
-	TicketsTable.ForeignKeys[0].RefTable = UsersTable
+	SubscriptionsTable.ForeignKeys[0].RefTable = TenantsTable
+	TicketsTable.ForeignKeys[0].RefTable = TenantsTable
 	TicketsTable.ForeignKeys[1].RefTable = UsersTable
+	TicketsTable.ForeignKeys[2].RefTable = UsersTable
+	UsersTable.ForeignKeys[0].RefTable = TenantsTable
 }

@@ -11,6 +11,8 @@ import (
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/subscription"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"reflect"
@@ -84,6 +86,8 @@ func checkColumn(table, column string) error {
 			servicecatalog.Table: servicecatalog.ValidColumn,
 			servicerequest.Table: servicerequest.ValidColumn,
 			statuslog.Table:      statuslog.ValidColumn,
+			subscription.Table:   subscription.ValidColumn,
+			tenant.Table:         tenant.ValidColumn,
 			ticket.Table:         ticket.ValidColumn,
 			user.Table:           user.ValidColumn,
 		})

@@ -16,6 +16,8 @@ import (
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/subscription"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
@@ -40,6 +42,10 @@ type Client struct {
 	ServiceRequest *ServiceRequestClient
 	// StatusLog is the client for interacting with the StatusLog builders.
 	StatusLog *StatusLogClient
+	// Subscription is the client for interacting with the Subscription builders.
+	Subscription *SubscriptionClient
+	// Tenant is the client for interacting with the Tenant builders.
+	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
 	// User is the client for interacting with the User builders.
@@ -60,6 +66,8 @@ func (c *Client) init() {
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
 	c.StatusLog = NewStatusLogClient(c.config)
+	c.Subscription = NewSubscriptionClient(c.config)
+	c.Tenant = NewTenantClient(c.config)
 	c.Ticket = NewTicketClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -159,6 +167,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ServiceCatalog: NewServiceCatalogClient(cfg),
 		ServiceRequest: NewServiceRequestClient(cfg),
 		StatusLog:      NewStatusLogClient(cfg),
+		Subscription:   NewSubscriptionClient(cfg),
+		Tenant:         NewTenantClient(cfg),
 		Ticket:         NewTicketClient(cfg),
 		User:           NewUserClient(cfg),
 	}, nil
@@ -185,6 +195,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ServiceCatalog: NewServiceCatalogClient(cfg),
 		ServiceRequest: NewServiceRequestClient(cfg),
 		StatusLog:      NewStatusLogClient(cfg),
+		Subscription:   NewSubscriptionClient(cfg),
+		Tenant:         NewTenantClient(cfg),
 		Ticket:         NewTicketClient(cfg),
 		User:           NewUserClient(cfg),
 	}, nil
@@ -217,7 +229,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.ApprovalLog, c.FlowInstance, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
-		c.Ticket, c.User,
+		c.Subscription, c.Tenant, c.Ticket, c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -228,7 +240,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.ApprovalLog, c.FlowInstance, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
-		c.Ticket, c.User,
+		c.Subscription, c.Tenant, c.Ticket, c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -247,6 +259,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ServiceRequest.mutate(ctx, m)
 	case *StatusLogMutation:
 		return c.StatusLog.mutate(ctx, m)
+	case *SubscriptionMutation:
+		return c.Subscription.mutate(ctx, m)
+	case *TenantMutation:
+		return c.Tenant.mutate(ctx, m)
 	case *TicketMutation:
 		return c.Ticket.mutate(ctx, m)
 	case *UserMutation:
@@ -678,6 +694,22 @@ func (c *ServiceCatalogClient) GetX(ctx context.Context, id int) *ServiceCatalog
 	return obj
 }
 
+// QueryTenant queries the tenant edge of a ServiceCatalog.
+func (c *ServiceCatalogClient) QueryTenant(sc *ServiceCatalog) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, servicecatalog.TenantTable, servicecatalog.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(sc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryServiceRequests queries the service_requests edge of a ServiceCatalog.
 func (c *ServiceCatalogClient) QueryServiceRequests(sc *ServiceCatalog) *ServiceRequestQuery {
 	query := (&ServiceRequestClient{config: c.config}).Query()
@@ -825,6 +857,22 @@ func (c *ServiceRequestClient) GetX(ctx context.Context, id int) *ServiceRequest
 		panic(err)
 	}
 	return obj
+}
+
+// QueryTenant queries the tenant edge of a ServiceRequest.
+func (c *ServiceRequestClient) QueryTenant(sr *ServiceRequest) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(servicerequest.Table, servicerequest.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, servicerequest.TenantTable, servicerequest.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QueryCatalog queries the catalog edge of a ServiceRequest.
@@ -1049,6 +1097,368 @@ func (c *StatusLogClient) mutate(ctx context.Context, m *StatusLogMutation) (Val
 	}
 }
 
+// SubscriptionClient is a client for the Subscription schema.
+type SubscriptionClient struct {
+	config
+}
+
+// NewSubscriptionClient returns a client for the Subscription from the given config.
+func NewSubscriptionClient(c config) *SubscriptionClient {
+	return &SubscriptionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `subscription.Hooks(f(g(h())))`.
+func (c *SubscriptionClient) Use(hooks ...Hook) {
+	c.hooks.Subscription = append(c.hooks.Subscription, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `subscription.Intercept(f(g(h())))`.
+func (c *SubscriptionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Subscription = append(c.inters.Subscription, interceptors...)
+}
+
+// Create returns a builder for creating a Subscription entity.
+func (c *SubscriptionClient) Create() *SubscriptionCreate {
+	mutation := newSubscriptionMutation(c.config, OpCreate)
+	return &SubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Subscription entities.
+func (c *SubscriptionClient) CreateBulk(builders ...*SubscriptionCreate) *SubscriptionCreateBulk {
+	return &SubscriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SubscriptionClient) MapCreateBulk(slice any, setFunc func(*SubscriptionCreate, int)) *SubscriptionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SubscriptionCreateBulk{err: fmt.Errorf("calling to SubscriptionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SubscriptionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SubscriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Subscription.
+func (c *SubscriptionClient) Update() *SubscriptionUpdate {
+	mutation := newSubscriptionMutation(c.config, OpUpdate)
+	return &SubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SubscriptionClient) UpdateOne(s *Subscription) *SubscriptionUpdateOne {
+	mutation := newSubscriptionMutation(c.config, OpUpdateOne, withSubscription(s))
+	return &SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SubscriptionClient) UpdateOneID(id int) *SubscriptionUpdateOne {
+	mutation := newSubscriptionMutation(c.config, OpUpdateOne, withSubscriptionID(id))
+	return &SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Subscription.
+func (c *SubscriptionClient) Delete() *SubscriptionDelete {
+	mutation := newSubscriptionMutation(c.config, OpDelete)
+	return &SubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SubscriptionClient) DeleteOne(s *Subscription) *SubscriptionDeleteOne {
+	return c.DeleteOneID(s.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SubscriptionClient) DeleteOneID(id int) *SubscriptionDeleteOne {
+	builder := c.Delete().Where(subscription.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SubscriptionDeleteOne{builder}
+}
+
+// Query returns a query builder for Subscription.
+func (c *SubscriptionClient) Query() *SubscriptionQuery {
+	return &SubscriptionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSubscription},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Subscription entity by its id.
+func (c *SubscriptionClient) Get(ctx context.Context, id int) (*Subscription, error) {
+	return c.Query().Where(subscription.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SubscriptionClient) GetX(ctx context.Context, id int) *Subscription {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a Subscription.
+func (c *SubscriptionClient) QueryTenant(s *Subscription) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(subscription.Table, subscription.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, subscription.TenantTable, subscription.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SubscriptionClient) Hooks() []Hook {
+	return c.hooks.Subscription
+}
+
+// Interceptors returns the client interceptors.
+func (c *SubscriptionClient) Interceptors() []Interceptor {
+	return c.inters.Subscription
+}
+
+func (c *SubscriptionClient) mutate(ctx context.Context, m *SubscriptionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Subscription mutation op: %q", m.Op())
+	}
+}
+
+// TenantClient is a client for the Tenant schema.
+type TenantClient struct {
+	config
+}
+
+// NewTenantClient returns a client for the Tenant from the given config.
+func NewTenantClient(c config) *TenantClient {
+	return &TenantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenant.Hooks(f(g(h())))`.
+func (c *TenantClient) Use(hooks ...Hook) {
+	c.hooks.Tenant = append(c.hooks.Tenant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenant.Intercept(f(g(h())))`.
+func (c *TenantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Tenant = append(c.inters.Tenant, interceptors...)
+}
+
+// Create returns a builder for creating a Tenant entity.
+func (c *TenantClient) Create() *TenantCreate {
+	mutation := newTenantMutation(c.config, OpCreate)
+	return &TenantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Tenant entities.
+func (c *TenantClient) CreateBulk(builders ...*TenantCreate) *TenantCreateBulk {
+	return &TenantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantClient) MapCreateBulk(slice any, setFunc func(*TenantCreate, int)) *TenantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantCreateBulk{err: fmt.Errorf("calling to TenantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Tenant.
+func (c *TenantClient) Update() *TenantUpdate {
+	mutation := newTenantMutation(c.config, OpUpdate)
+	return &TenantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantClient) UpdateOne(t *Tenant) *TenantUpdateOne {
+	mutation := newTenantMutation(c.config, OpUpdateOne, withTenant(t))
+	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantClient) UpdateOneID(id int) *TenantUpdateOne {
+	mutation := newTenantMutation(c.config, OpUpdateOne, withTenantID(id))
+	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Tenant.
+func (c *TenantClient) Delete() *TenantDelete {
+	mutation := newTenantMutation(c.config, OpDelete)
+	return &TenantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantClient) DeleteOne(t *Tenant) *TenantDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantClient) DeleteOneID(id int) *TenantDeleteOne {
+	builder := c.Delete().Where(tenant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantDeleteOne{builder}
+}
+
+// Query returns a query builder for Tenant.
+func (c *TenantClient) Query() *TenantQuery {
+	return &TenantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Tenant entity by its id.
+func (c *TenantClient) Get(ctx context.Context, id int) (*Tenant, error) {
+	return c.Query().Where(tenant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantClient) GetX(ctx context.Context, id int) *Tenant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsers queries the users edge of a Tenant.
+func (c *TenantClient) QueryUsers(t *Tenant) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.UsersTable, tenant.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTickets queries the tickets edge of a Tenant.
+func (c *TenantClient) QueryTickets(t *Tenant) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.TicketsTable, tenant.TicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryServiceCatalogs queries the service_catalogs edge of a Tenant.
+func (c *TenantClient) QueryServiceCatalogs(t *Tenant) *ServiceCatalogQuery {
+	query := (&ServiceCatalogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(servicecatalog.Table, servicecatalog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ServiceCatalogsTable, tenant.ServiceCatalogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryServiceRequests queries the service_requests edge of a Tenant.
+func (c *TenantClient) QueryServiceRequests(t *Tenant) *ServiceRequestQuery {
+	query := (&ServiceRequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ServiceRequestsTable, tenant.ServiceRequestsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySubscriptions queries the subscriptions edge of a Tenant.
+func (c *TenantClient) QuerySubscriptions(t *Tenant) *SubscriptionQuery {
+	query := (&SubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(subscription.Table, subscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.SubscriptionsTable, tenant.SubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TenantClient) Hooks() []Hook {
+	return c.hooks.Tenant
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantClient) Interceptors() []Interceptor {
+	return c.inters.Tenant
+}
+
+func (c *TenantClient) mutate(ctx context.Context, m *TenantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Tenant mutation op: %q", m.Op())
+	}
+}
+
 // TicketClient is a client for the Ticket schema.
 type TicketClient struct {
 	config
@@ -1155,6 +1565,22 @@ func (c *TicketClient) GetX(ctx context.Context, id int) *Ticket {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryTenant queries the tenant edge of a Ticket.
+func (c *TicketClient) QueryTenant(t *Ticket) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.TenantTable, ticket.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QueryRequester queries the requester edge of a Ticket.
@@ -1370,6 +1796,22 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
+// QueryTenant queries the tenant edge of a User.
+func (c *UserClient) QueryTenant(u *User) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.TenantTable, user.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QuerySubmittedTickets queries the submitted_tickets edge of a User.
 func (c *UserClient) QuerySubmittedTickets(u *User) *TicketQuery {
 	query := (&TicketClient{config: c.config}).Query()
@@ -1478,11 +1920,11 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ApprovalLog, FlowInstance, ServiceCatalog, ServiceRequest, StatusLog, Ticket,
-		User []ent.Hook
+		ApprovalLog, FlowInstance, ServiceCatalog, ServiceRequest, StatusLog,
+		Subscription, Tenant, Ticket, User []ent.Hook
 	}
 	inters struct {
-		ApprovalLog, FlowInstance, ServiceCatalog, ServiceRequest, StatusLog, Ticket,
-		User []ent.Interceptor
+		ApprovalLog, FlowInstance, ServiceCatalog, ServiceRequest, StatusLog,
+		Subscription, Tenant, Ticket, User []ent.Interceptor
 	}
 )

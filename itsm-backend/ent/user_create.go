@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/approvallog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
@@ -90,6 +91,12 @@ func (uc *UserCreate) SetNillableActive(b *bool) *UserCreate {
 	return uc
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (uc *UserCreate) SetTenantID(i int) *UserCreate {
+	uc.mutation.SetTenantID(i)
+	return uc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (uc *UserCreate) SetCreatedAt(t time.Time) *UserCreate {
 	uc.mutation.SetCreatedAt(t)
@@ -116,6 +123,11 @@ func (uc *UserCreate) SetNillableUpdatedAt(t *time.Time) *UserCreate {
 		uc.SetUpdatedAt(*t)
 	}
 	return uc
+}
+
+// SetTenant sets the "tenant" edge to the Tenant entity.
+func (uc *UserCreate) SetTenant(t *Tenant) *UserCreate {
+	return uc.SetTenantID(t.ID)
 }
 
 // AddSubmittedTicketIDs adds the "submitted_tickets" edge to the Ticket entity by IDs.
@@ -284,11 +296,22 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Active(); !ok {
 		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "User.active"`)}
 	}
+	if _, ok := uc.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "User.tenant_id"`)}
+	}
+	if v, ok := uc.mutation.TenantID(); ok {
+		if err := user.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "User.tenant_id": %w`, err)}
+		}
+	}
 	if _, ok := uc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "User.created_at"`)}
 	}
 	if _, ok := uc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "User.updated_at"`)}
+	}
+	if len(uc.mutation.TenantIDs()) == 0 {
+		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "User.tenant"`)}
 	}
 	return nil
 }
@@ -351,6 +374,23 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := uc.mutation.TenantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.TenantTable,
+			Columns: []string{user.TenantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.TenantID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.SubmittedTicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

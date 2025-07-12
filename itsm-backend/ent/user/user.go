@@ -28,10 +28,14 @@ const (
 	FieldPasswordHash = "password_hash"
 	// FieldActive holds the string denoting the active field in the database.
 	FieldActive = "active"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// EdgeSubmittedTickets holds the string denoting the submitted_tickets edge name in mutations.
 	EdgeSubmittedTickets = "submitted_tickets"
 	// EdgeAssignedTickets holds the string denoting the assigned_tickets edge name in mutations.
@@ -44,6 +48,13 @@ const (
 	EdgeServiceRequests = "service_requests"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// TenantTable is the table that holds the tenant relation/edge.
+	TenantTable = "users"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
+	// TenantColumn is the table column denoting the tenant relation/edge.
+	TenantColumn = "tenant_id"
 	// SubmittedTicketsTable is the table that holds the submitted_tickets relation/edge.
 	SubmittedTicketsTable = "tickets"
 	// SubmittedTicketsInverseTable is the table name for the Ticket entity.
@@ -91,6 +102,7 @@ var Columns = []string{
 	FieldPhone,
 	FieldPasswordHash,
 	FieldActive,
+	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -118,6 +130,8 @@ var (
 	PhoneValidator func(string) error
 	// DefaultActive holds the default value on creation for the "active" field.
 	DefaultActive bool
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -169,6 +183,11 @@ func ByActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldActive, opts...).ToFunc()
 }
 
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -177,6 +196,13 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByTenantField orders the results by tenant field.
+func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
+	}
 }
 
 // BySubmittedTicketsCount orders the results by submitted_tickets count.
@@ -247,6 +273,13 @@ func ByServiceRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newServiceRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newTenantStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+	)
 }
 func newSubmittedTicketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

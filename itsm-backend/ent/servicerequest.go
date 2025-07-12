@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -27,6 +28,8 @@ type ServiceRequest struct {
 	Status servicerequest.Status `json:"status,omitempty"`
 	// 申请原因
 	Reason string `json:"reason,omitempty"`
+	// 租户ID
+	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -37,13 +40,26 @@ type ServiceRequest struct {
 
 // ServiceRequestEdges holds the relations/edges for other nodes in the graph.
 type ServiceRequestEdges struct {
+	// Tenant holds the value of the tenant edge.
+	Tenant *Tenant `json:"tenant,omitempty"`
 	// Catalog holds the value of the catalog edge.
 	Catalog *ServiceCatalog `json:"catalog,omitempty"`
 	// Requester holds the value of the requester edge.
 	Requester *User `json:"requester,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
+}
+
+// TenantOrErr returns the Tenant value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ServiceRequestEdges) TenantOrErr() (*Tenant, error) {
+	if e.Tenant != nil {
+		return e.Tenant, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: tenant.Label}
+	}
+	return nil, &NotLoadedError{edge: "tenant"}
 }
 
 // CatalogOrErr returns the Catalog value or an error if the edge
@@ -51,7 +67,7 @@ type ServiceRequestEdges struct {
 func (e ServiceRequestEdges) CatalogOrErr() (*ServiceCatalog, error) {
 	if e.Catalog != nil {
 		return e.Catalog, nil
-	} else if e.loadedTypes[0] {
+	} else if e.loadedTypes[1] {
 		return nil, &NotFoundError{label: servicecatalog.Label}
 	}
 	return nil, &NotLoadedError{edge: "catalog"}
@@ -62,7 +78,7 @@ func (e ServiceRequestEdges) CatalogOrErr() (*ServiceCatalog, error) {
 func (e ServiceRequestEdges) RequesterOrErr() (*User, error) {
 	if e.Requester != nil {
 		return e.Requester, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[2] {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "requester"}
@@ -73,7 +89,7 @@ func (*ServiceRequest) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicerequest.FieldID, servicerequest.FieldCatalogID, servicerequest.FieldRequesterID:
+		case servicerequest.FieldID, servicerequest.FieldCatalogID, servicerequest.FieldRequesterID, servicerequest.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case servicerequest.FieldStatus, servicerequest.FieldReason:
 			values[i] = new(sql.NullString)
@@ -124,6 +140,12 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sr.Reason = value.String
 			}
+		case servicerequest.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				sr.TenantID = int(value.Int64)
+			}
 		case servicerequest.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -141,6 +163,11 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (sr *ServiceRequest) Value(name string) (ent.Value, error) {
 	return sr.selectValues.Get(name)
+}
+
+// QueryTenant queries the "tenant" edge of the ServiceRequest entity.
+func (sr *ServiceRequest) QueryTenant() *TenantQuery {
+	return NewServiceRequestClient(sr.config).QueryTenant(sr)
 }
 
 // QueryCatalog queries the "catalog" edge of the ServiceRequest entity.
@@ -187,6 +214,9 @@ func (sr *ServiceRequest) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("reason=")
 	builder.WriteString(sr.Reason)
+	builder.WriteString(", ")
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", sr.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(sr.CreatedAt.Format(time.ANSIC))
