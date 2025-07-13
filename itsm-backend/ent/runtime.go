@@ -4,7 +4,14 @@ package ent
 
 import (
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/cichangerecord"
+	"itsm-backend/ent/cilifecyclestate"
+	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/cirelationshiptype"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -13,6 +20,7 @@ import (
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/workflow"
 	"time"
 )
 
@@ -42,6 +50,154 @@ func init() {
 	approvallogDescCreatedAt := approvallogFields[8].Descriptor()
 	// approvallog.DefaultCreatedAt holds the default value on creation for the created_at field.
 	approvallog.DefaultCreatedAt = approvallogDescCreatedAt.Default.(func() time.Time)
+	cichangerecordFields := schema.CIChangeRecord{}.Fields()
+	_ = cichangerecordFields
+	// cichangerecordDescChangeType is the schema descriptor for change_type field.
+	cichangerecordDescChangeType := cichangerecordFields[1].Descriptor()
+	// cichangerecord.ChangeTypeValidator is a validator for the "change_type" field. It is called by the builders before save.
+	cichangerecord.ChangeTypeValidator = cichangerecordDescChangeType.Validators[0].(func(string) error)
+	// cichangerecordDescChangedBy is the schema descriptor for changed_by field.
+	cichangerecordDescChangedBy := cichangerecordFields[4].Descriptor()
+	// cichangerecord.ChangedByValidator is a validator for the "changed_by" field. It is called by the builders before save.
+	cichangerecord.ChangedByValidator = cichangerecordDescChangedBy.Validators[0].(func(string) error)
+	// cichangerecordDescChangeSource is the schema descriptor for change_source field.
+	cichangerecordDescChangeSource := cichangerecordFields[5].Descriptor()
+	// cichangerecord.DefaultChangeSource holds the default value on creation for the change_source field.
+	cichangerecord.DefaultChangeSource = cichangerecordDescChangeSource.Default.(string)
+	// cichangerecordDescCreatedAt is the schema descriptor for created_at field.
+	cichangerecordDescCreatedAt := cichangerecordFields[10].Descriptor()
+	// cichangerecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cichangerecord.DefaultCreatedAt = cichangerecordDescCreatedAt.Default.(func() time.Time)
+	cilifecyclestateFields := schema.CILifecycleState{}.Fields()
+	_ = cilifecyclestateFields
+	// cilifecyclestateDescState is the schema descriptor for state field.
+	cilifecyclestateDescState := cilifecyclestateFields[1].Descriptor()
+	// cilifecyclestate.StateValidator is a validator for the "state" field. It is called by the builders before save.
+	cilifecyclestate.StateValidator = cilifecyclestateDescState.Validators[0].(func(string) error)
+	// cilifecyclestateDescChangedBy is the schema descriptor for changed_by field.
+	cilifecyclestateDescChangedBy := cilifecyclestateFields[4].Descriptor()
+	// cilifecyclestate.ChangedByValidator is a validator for the "changed_by" field. It is called by the builders before save.
+	cilifecyclestate.ChangedByValidator = cilifecyclestateDescChangedBy.Validators[0].(func(string) error)
+	// cilifecyclestateDescChangedAt is the schema descriptor for changed_at field.
+	cilifecyclestateDescChangedAt := cilifecyclestateFields[5].Descriptor()
+	// cilifecyclestate.DefaultChangedAt holds the default value on creation for the changed_at field.
+	cilifecyclestate.DefaultChangedAt = cilifecyclestateDescChangedAt.Default.(func() time.Time)
+	cirelationshipFields := schema.CIRelationship{}.Fields()
+	_ = cirelationshipFields
+	// cirelationshipDescStatus is the schema descriptor for status field.
+	cirelationshipDescStatus := cirelationshipFields[4].Descriptor()
+	// cirelationship.DefaultStatus holds the default value on creation for the status field.
+	cirelationship.DefaultStatus = cirelationshipDescStatus.Default.(string)
+	// cirelationshipDescEffectiveFrom is the schema descriptor for effective_from field.
+	cirelationshipDescEffectiveFrom := cirelationshipFields[5].Descriptor()
+	// cirelationship.DefaultEffectiveFrom holds the default value on creation for the effective_from field.
+	cirelationship.DefaultEffectiveFrom = cirelationshipDescEffectiveFrom.Default.(func() time.Time)
+	// cirelationshipDescCreatedAt is the schema descriptor for created_at field.
+	cirelationshipDescCreatedAt := cirelationshipFields[8].Descriptor()
+	// cirelationship.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cirelationship.DefaultCreatedAt = cirelationshipDescCreatedAt.Default.(func() time.Time)
+	// cirelationshipDescUpdatedAt is the schema descriptor for updated_at field.
+	cirelationshipDescUpdatedAt := cirelationshipFields[9].Descriptor()
+	// cirelationship.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cirelationship.DefaultUpdatedAt = cirelationshipDescUpdatedAt.Default.(func() time.Time)
+	// cirelationship.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cirelationship.UpdateDefaultUpdatedAt = cirelationshipDescUpdatedAt.UpdateDefault.(func() time.Time)
+	cirelationshiptypeFields := schema.CIRelationshipType{}.Fields()
+	_ = cirelationshiptypeFields
+	// cirelationshiptypeDescName is the schema descriptor for name field.
+	cirelationshiptypeDescName := cirelationshiptypeFields[0].Descriptor()
+	// cirelationshiptype.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	cirelationshiptype.NameValidator = cirelationshiptypeDescName.Validators[0].(func(string) error)
+	// cirelationshiptypeDescDisplayName is the schema descriptor for display_name field.
+	cirelationshiptypeDescDisplayName := cirelationshiptypeFields[1].Descriptor()
+	// cirelationshiptype.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	cirelationshiptype.DisplayNameValidator = cirelationshiptypeDescDisplayName.Validators[0].(func(string) error)
+	// cirelationshiptypeDescDirection is the schema descriptor for direction field.
+	cirelationshiptypeDescDirection := cirelationshiptypeFields[3].Descriptor()
+	// cirelationshiptype.DefaultDirection holds the default value on creation for the direction field.
+	cirelationshiptype.DefaultDirection = cirelationshiptypeDescDirection.Default.(string)
+	// cirelationshiptypeDescCardinality is the schema descriptor for cardinality field.
+	cirelationshiptypeDescCardinality := cirelationshiptypeFields[4].Descriptor()
+	// cirelationshiptype.DefaultCardinality holds the default value on creation for the cardinality field.
+	cirelationshiptype.DefaultCardinality = cirelationshiptypeDescCardinality.Default.(string)
+	// cirelationshiptypeDescIsSystem is the schema descriptor for is_system field.
+	cirelationshiptypeDescIsSystem := cirelationshiptypeFields[7].Descriptor()
+	// cirelationshiptype.DefaultIsSystem holds the default value on creation for the is_system field.
+	cirelationshiptype.DefaultIsSystem = cirelationshiptypeDescIsSystem.Default.(bool)
+	// cirelationshiptypeDescIsActive is the schema descriptor for is_active field.
+	cirelationshiptypeDescIsActive := cirelationshiptypeFields[8].Descriptor()
+	// cirelationshiptype.DefaultIsActive holds the default value on creation for the is_active field.
+	cirelationshiptype.DefaultIsActive = cirelationshiptypeDescIsActive.Default.(bool)
+	// cirelationshiptypeDescCreatedAt is the schema descriptor for created_at field.
+	cirelationshiptypeDescCreatedAt := cirelationshiptypeFields[10].Descriptor()
+	// cirelationshiptype.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cirelationshiptype.DefaultCreatedAt = cirelationshiptypeDescCreatedAt.Default.(func() time.Time)
+	// cirelationshiptypeDescUpdatedAt is the schema descriptor for updated_at field.
+	cirelationshiptypeDescUpdatedAt := cirelationshiptypeFields[11].Descriptor()
+	// cirelationshiptype.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cirelationshiptype.DefaultUpdatedAt = cirelationshiptypeDescUpdatedAt.Default.(func() time.Time)
+	// cirelationshiptype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cirelationshiptype.UpdateDefaultUpdatedAt = cirelationshiptypeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	citypeFields := schema.CIType{}.Fields()
+	_ = citypeFields
+	// citypeDescName is the schema descriptor for name field.
+	citypeDescName := citypeFields[0].Descriptor()
+	// citype.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	citype.NameValidator = citypeDescName.Validators[0].(func(string) error)
+	// citypeDescDisplayName is the schema descriptor for display_name field.
+	citypeDescDisplayName := citypeFields[1].Descriptor()
+	// citype.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	citype.DisplayNameValidator = citypeDescDisplayName.Validators[0].(func(string) error)
+	// citypeDescCategory is the schema descriptor for category field.
+	citypeDescCategory := citypeFields[3].Descriptor()
+	// citype.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	citype.CategoryValidator = citypeDescCategory.Validators[0].(func(string) error)
+	// citypeDescIsSystem is the schema descriptor for is_system field.
+	citypeDescIsSystem := citypeFields[7].Descriptor()
+	// citype.DefaultIsSystem holds the default value on creation for the is_system field.
+	citype.DefaultIsSystem = citypeDescIsSystem.Default.(bool)
+	// citypeDescIsActive is the schema descriptor for is_active field.
+	citypeDescIsActive := citypeFields[8].Descriptor()
+	// citype.DefaultIsActive holds the default value on creation for the is_active field.
+	citype.DefaultIsActive = citypeDescIsActive.Default.(bool)
+	// citypeDescCreatedAt is the schema descriptor for created_at field.
+	citypeDescCreatedAt := citypeFields[10].Descriptor()
+	// citype.DefaultCreatedAt holds the default value on creation for the created_at field.
+	citype.DefaultCreatedAt = citypeDescCreatedAt.Default.(func() time.Time)
+	// citypeDescUpdatedAt is the schema descriptor for updated_at field.
+	citypeDescUpdatedAt := citypeFields[11].Descriptor()
+	// citype.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	citype.DefaultUpdatedAt = citypeDescUpdatedAt.Default.(func() time.Time)
+	// citype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	citype.UpdateDefaultUpdatedAt = citypeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	configurationitemFields := schema.ConfigurationItem{}.Fields()
+	_ = configurationitemFields
+	// configurationitemDescName is the schema descriptor for name field.
+	configurationitemDescName := configurationitemFields[0].Descriptor()
+	// configurationitem.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	configurationitem.NameValidator = configurationitemDescName.Validators[0].(func(string) error)
+	// configurationitemDescStatus is the schema descriptor for status field.
+	configurationitemDescStatus := configurationitemFields[6].Descriptor()
+	// configurationitem.DefaultStatus holds the default value on creation for the status field.
+	configurationitem.DefaultStatus = configurationitemDescStatus.Default.(string)
+	// configurationitemDescLifecycleState is the schema descriptor for lifecycle_state field.
+	configurationitemDescLifecycleState := configurationitemFields[7].Descriptor()
+	// configurationitem.DefaultLifecycleState holds the default value on creation for the lifecycle_state field.
+	configurationitem.DefaultLifecycleState = configurationitemDescLifecycleState.Default.(string)
+	// configurationitemDescVersion is the schema descriptor for version field.
+	configurationitemDescVersion := configurationitemFields[16].Descriptor()
+	// configurationitem.DefaultVersion holds the default value on creation for the version field.
+	configurationitem.DefaultVersion = configurationitemDescVersion.Default.(string)
+	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
+	configurationitemDescCreatedAt := configurationitemFields[18].Descriptor()
+	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
+	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
+	configurationitemDescUpdatedAt := configurationitemFields[19].Descriptor()
+	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
+	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	flowinstanceFields := schema.FlowInstance{}.Fields()
 	_ = flowinstanceFields
 	// flowinstanceDescFlowDefinitionID is the schema descriptor for flow_definition_id field.
@@ -110,6 +266,38 @@ func init() {
 	flowinstance.DefaultUpdatedAt = flowinstanceDescUpdatedAt.Default.(func() time.Time)
 	// flowinstance.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	flowinstance.UpdateDefaultUpdatedAt = flowinstanceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	knowledgearticleFields := schema.KnowledgeArticle{}.Fields()
+	_ = knowledgearticleFields
+	// knowledgearticleDescTitle is the schema descriptor for title field.
+	knowledgearticleDescTitle := knowledgearticleFields[0].Descriptor()
+	// knowledgearticle.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	knowledgearticle.TitleValidator = knowledgearticleDescTitle.Validators[0].(func(string) error)
+	// knowledgearticleDescCategory is the schema descriptor for category field.
+	knowledgearticleDescCategory := knowledgearticleFields[2].Descriptor()
+	// knowledgearticle.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	knowledgearticle.CategoryValidator = knowledgearticleDescCategory.Validators[0].(func(string) error)
+	// knowledgearticleDescStatus is the schema descriptor for status field.
+	knowledgearticleDescStatus := knowledgearticleFields[3].Descriptor()
+	// knowledgearticle.DefaultStatus holds the default value on creation for the status field.
+	knowledgearticle.DefaultStatus = knowledgearticleDescStatus.Default.(string)
+	// knowledgearticleDescAuthor is the schema descriptor for author field.
+	knowledgearticleDescAuthor := knowledgearticleFields[4].Descriptor()
+	// knowledgearticle.AuthorValidator is a validator for the "author" field. It is called by the builders before save.
+	knowledgearticle.AuthorValidator = knowledgearticleDescAuthor.Validators[0].(func(string) error)
+	// knowledgearticleDescViews is the schema descriptor for views field.
+	knowledgearticleDescViews := knowledgearticleFields[5].Descriptor()
+	// knowledgearticle.DefaultViews holds the default value on creation for the views field.
+	knowledgearticle.DefaultViews = knowledgearticleDescViews.Default.(int)
+	// knowledgearticleDescCreatedAt is the schema descriptor for created_at field.
+	knowledgearticleDescCreatedAt := knowledgearticleFields[8].Descriptor()
+	// knowledgearticle.DefaultCreatedAt holds the default value on creation for the created_at field.
+	knowledgearticle.DefaultCreatedAt = knowledgearticleDescCreatedAt.Default.(func() time.Time)
+	// knowledgearticleDescUpdatedAt is the schema descriptor for updated_at field.
+	knowledgearticleDescUpdatedAt := knowledgearticleFields[9].Descriptor()
+	// knowledgearticle.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	knowledgearticle.DefaultUpdatedAt = knowledgearticleDescUpdatedAt.Default.(func() time.Time)
+	// knowledgearticle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	knowledgearticle.UpdateDefaultUpdatedAt = knowledgearticleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	servicecatalogFields := schema.ServiceCatalog{}.Fields()
 	_ = servicecatalogFields
 	// servicecatalogDescName is the schema descriptor for name field.
@@ -460,4 +648,28 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	workflowFields := schema.Workflow{}.Fields()
+	_ = workflowFields
+	// workflowDescName is the schema descriptor for name field.
+	workflowDescName := workflowFields[0].Descriptor()
+	// workflow.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	workflow.NameValidator = workflowDescName.Validators[0].(func(string) error)
+	// workflowDescType is the schema descriptor for type field.
+	workflowDescType := workflowFields[1].Descriptor()
+	// workflow.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	workflow.TypeValidator = workflowDescType.Validators[0].(func(string) error)
+	// workflowDescStatus is the schema descriptor for status field.
+	workflowDescStatus := workflowFields[3].Descriptor()
+	// workflow.DefaultStatus holds the default value on creation for the status field.
+	workflow.DefaultStatus = workflowDescStatus.Default.(string)
+	// workflowDescCreatedAt is the schema descriptor for created_at field.
+	workflowDescCreatedAt := workflowFields[5].Descriptor()
+	// workflow.DefaultCreatedAt holds the default value on creation for the created_at field.
+	workflow.DefaultCreatedAt = workflowDescCreatedAt.Default.(func() time.Time)
+	// workflowDescUpdatedAt is the schema descriptor for updated_at field.
+	workflowDescUpdatedAt := workflowFields[6].Descriptor()
+	// workflow.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	workflow.DefaultUpdatedAt = workflowDescUpdatedAt.Default.(func() time.Time)
+	// workflow.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	workflow.UpdateDefaultUpdatedAt = workflowDescUpdatedAt.UpdateDefault.(func() time.Time)
 }

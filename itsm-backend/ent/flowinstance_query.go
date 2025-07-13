@@ -24,6 +24,7 @@ type FlowInstanceQuery struct {
 	inters     []Interceptor
 	predicates []predicate.FlowInstance
 	withTicket *TicketQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -369,11 +370,15 @@ func (fiq *FlowInstanceQuery) prepareQuery(ctx context.Context) error {
 func (fiq *FlowInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*FlowInstance, error) {
 	var (
 		nodes       = []*FlowInstance{}
+		withFKs     = fiq.withFKs
 		_spec       = fiq.querySpec()
 		loadedTypes = [1]bool{
 			fiq.withTicket != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, flowinstance.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*FlowInstance).scanValues(nil, columns)
 	}

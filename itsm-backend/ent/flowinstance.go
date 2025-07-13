@@ -47,8 +47,9 @@ type FlowInstance struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the FlowInstanceQuery when eager-loading is set.
-	Edges        FlowInstanceEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                   FlowInstanceEdges `json:"edges"`
+	workflow_flow_instances *int
+	selectValues            sql.SelectValues
 }
 
 // FlowInstanceEdges holds the relations/edges for other nodes in the graph.
@@ -84,6 +85,8 @@ func (*FlowInstance) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case flowinstance.FieldStartedAt, flowinstance.FieldCompletedAt, flowinstance.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case flowinstance.ForeignKeys[0]: // workflow_flow_instances
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -189,6 +192,13 @@ func (fi *FlowInstance) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				fi.UpdatedAt = value.Time
+			}
+		case flowinstance.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field workflow_flow_instances", value)
+			} else if value.Valid {
+				fi.workflow_flow_instances = new(int)
+				*fi.workflow_flow_instances = int(value.Int64)
 			}
 		default:
 			fi.selectValues.Set(columns[i], values[i])

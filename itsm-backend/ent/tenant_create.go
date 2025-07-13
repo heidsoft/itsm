@@ -6,12 +6,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/cichangerecord"
+	"itsm-backend/ent/cilifecyclestate"
+	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/cirelationshiptype"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -206,6 +214,126 @@ func (tc *TenantCreate) AddSubscriptions(s ...*Subscription) *TenantCreate {
 		ids[i] = s[i].ID
 	}
 	return tc.AddSubscriptionIDs(ids...)
+}
+
+// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
+func (tc *TenantCreate) AddConfigurationItemIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddConfigurationItemIDs(ids...)
+	return tc
+}
+
+// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
+func (tc *TenantCreate) AddConfigurationItems(c ...*ConfigurationItem) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddConfigurationItemIDs(ids...)
+}
+
+// AddKnowledgeArticleIDs adds the "knowledge_articles" edge to the KnowledgeArticle entity by IDs.
+func (tc *TenantCreate) AddKnowledgeArticleIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddKnowledgeArticleIDs(ids...)
+	return tc
+}
+
+// AddKnowledgeArticles adds the "knowledge_articles" edges to the KnowledgeArticle entity.
+func (tc *TenantCreate) AddKnowledgeArticles(k ...*KnowledgeArticle) *TenantCreate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return tc.AddKnowledgeArticleIDs(ids...)
+}
+
+// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
+func (tc *TenantCreate) AddWorkflowIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddWorkflowIDs(ids...)
+	return tc
+}
+
+// AddWorkflows adds the "workflows" edges to the Workflow entity.
+func (tc *TenantCreate) AddWorkflows(w ...*Workflow) *TenantCreate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return tc.AddWorkflowIDs(ids...)
+}
+
+// AddCiTypeIDs adds the "ci_types" edge to the CIType entity by IDs.
+func (tc *TenantCreate) AddCiTypeIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddCiTypeIDs(ids...)
+	return tc
+}
+
+// AddCiTypes adds the "ci_types" edges to the CIType entity.
+func (tc *TenantCreate) AddCiTypes(c ...*CIType) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddCiTypeIDs(ids...)
+}
+
+// AddCiRelationshipTypeIDs adds the "ci_relationship_types" edge to the CIRelationshipType entity by IDs.
+func (tc *TenantCreate) AddCiRelationshipTypeIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddCiRelationshipTypeIDs(ids...)
+	return tc
+}
+
+// AddCiRelationshipTypes adds the "ci_relationship_types" edges to the CIRelationshipType entity.
+func (tc *TenantCreate) AddCiRelationshipTypes(c ...*CIRelationshipType) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddCiRelationshipTypeIDs(ids...)
+}
+
+// AddCiRelationshipIDs adds the "ci_relationships" edge to the CIRelationship entity by IDs.
+func (tc *TenantCreate) AddCiRelationshipIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddCiRelationshipIDs(ids...)
+	return tc
+}
+
+// AddCiRelationships adds the "ci_relationships" edges to the CIRelationship entity.
+func (tc *TenantCreate) AddCiRelationships(c ...*CIRelationship) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddCiRelationshipIDs(ids...)
+}
+
+// AddCiLifecycleStateIDs adds the "ci_lifecycle_states" edge to the CILifecycleState entity by IDs.
+func (tc *TenantCreate) AddCiLifecycleStateIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddCiLifecycleStateIDs(ids...)
+	return tc
+}
+
+// AddCiLifecycleStates adds the "ci_lifecycle_states" edges to the CILifecycleState entity.
+func (tc *TenantCreate) AddCiLifecycleStates(c ...*CILifecycleState) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddCiLifecycleStateIDs(ids...)
+}
+
+// AddCiChangeRecordIDs adds the "ci_change_records" edge to the CIChangeRecord entity by IDs.
+func (tc *TenantCreate) AddCiChangeRecordIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddCiChangeRecordIDs(ids...)
+	return tc
+}
+
+// AddCiChangeRecords adds the "ci_change_records" edges to the CIChangeRecord entity.
+func (tc *TenantCreate) AddCiChangeRecords(c ...*CIChangeRecord) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddCiChangeRecordIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -445,6 +573,134 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.ConfigurationItemsTable,
+			Columns: []string{tenant.ConfigurationItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.KnowledgeArticlesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.KnowledgeArticlesTable,
+			Columns: []string{tenant.KnowledgeArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.WorkflowsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.WorkflowsTable,
+			Columns: []string{tenant.WorkflowsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CiTypesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiTypesTable,
+			Columns: []string{tenant.CiTypesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CiRelationshipTypesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiRelationshipTypesTable,
+			Columns: []string{tenant.CiRelationshipTypesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CiRelationshipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiRelationshipsTable,
+			Columns: []string{tenant.CiRelationshipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CiLifecycleStatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiLifecycleStatesTable,
+			Columns: []string{tenant.CiLifecycleStatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CiChangeRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiChangeRecordsTable,
+			Columns: []string{tenant.CiChangeRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

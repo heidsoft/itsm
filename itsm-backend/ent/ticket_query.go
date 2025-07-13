@@ -34,6 +34,7 @@ type TicketQuery struct {
 	withApprovalLogs *ApprovalLogQuery
 	withFlowInstance *FlowInstanceQuery
 	withStatusLogs   *StatusLogQuery
+	withFKs          bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -549,6 +550,7 @@ func (tq *TicketQuery) prepareQuery(ctx context.Context) error {
 func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticket, error) {
 	var (
 		nodes       = []*Ticket{}
+		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
 		loadedTypes = [6]bool{
 			tq.withTenant != nil,
@@ -559,6 +561,9 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			tq.withStatusLogs != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, ticket.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Ticket).scanValues(nil, columns)
 	}
@@ -745,6 +750,7 @@ func (tq *TicketQuery) loadFlowInstance(ctx context.Context, query *FlowInstance
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(flowinstance.FieldTicketID)
 	}

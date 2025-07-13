@@ -66,6 +66,18 @@ func SetupRouter(ticketController *controller.TicketController, serviceControlle
 		api.GET("/service-requests/me", serviceController.GetUserServiceRequests)
 		api.GET("/service-requests/:id", serviceController.GetServiceRequestByID)
 		api.PUT("/service-requests/:id/status", serviceController.UpdateServiceRequestStatus)
+
+		// CMDB路由
+		cmdbController := controller.NewCMDBController(service.NewCMDBService(client))
+		cmdbGroup := api.Group("/cmdb")
+		{
+			cmdbGroup.POST("/configuration-items", cmdbController.CreateConfigurationItem)
+			cmdbGroup.GET("/configuration-items", cmdbController.ListConfigurationItems)
+			cmdbGroup.GET("/configuration-items/stats", cmdbController.GetConfigurationItemStats)
+			cmdbGroup.GET("/configuration-items/:id", cmdbController.GetConfigurationItem)
+			cmdbGroup.PUT("/configuration-items/:id", cmdbController.UpdateConfigurationItem)
+			cmdbGroup.DELETE("/configuration-items/:id", cmdbController.DeleteConfigurationItem)
+		}
 	}
 
 	return r

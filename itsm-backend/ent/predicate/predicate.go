@@ -9,8 +9,29 @@ import (
 // ApprovalLog is the predicate function for approvallog builders.
 type ApprovalLog func(*sql.Selector)
 
+// CIChangeRecord is the predicate function for cichangerecord builders.
+type CIChangeRecord func(*sql.Selector)
+
+// CILifecycleState is the predicate function for cilifecyclestate builders.
+type CILifecycleState func(*sql.Selector)
+
+// CIRelationship is the predicate function for cirelationship builders.
+type CIRelationship func(*sql.Selector)
+
+// CIRelationshipType is the predicate function for cirelationshiptype builders.
+type CIRelationshipType func(*sql.Selector)
+
+// CIType is the predicate function for citype builders.
+type CIType func(*sql.Selector)
+
+// ConfigurationItem is the predicate function for configurationitem builders.
+type ConfigurationItem func(*sql.Selector)
+
 // FlowInstance is the predicate function for flowinstance builders.
 type FlowInstance func(*sql.Selector)
+
+// KnowledgeArticle is the predicate function for knowledgearticle builders.
+type KnowledgeArticle func(*sql.Selector)
 
 // ServiceCatalog is the predicate function for servicecatalog builders.
 type ServiceCatalog func(*sql.Selector)
@@ -32,3 +53,6 @@ type Ticket func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// Workflow is the predicate function for workflow builders.
+type Workflow func(*sql.Selector)

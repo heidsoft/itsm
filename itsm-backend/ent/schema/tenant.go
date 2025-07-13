@@ -93,8 +93,16 @@ func (Tenant) Edges() []ent.Edge {
 		edge.To("tickets", Ticket.Type),
 		edge.To("service_catalogs", ServiceCatalog.Type),
 		edge.To("service_requests", ServiceRequest.Type),
-		// 添加订阅关联
 		edge.To("subscriptions", Subscription.Type),
+		edge.To("configuration_items", ConfigurationItem.Type),
+		edge.To("knowledge_articles", KnowledgeArticle.Type),
+		edge.To("workflows", Workflow.Type),
+		// CMDB扩展
+		edge.To("ci_types", CIType.Type),
+		edge.To("ci_relationship_types", CIRelationshipType.Type),
+		edge.To("ci_relationships", CIRelationship.Type),
+		edge.To("ci_lifecycle_states", CILifecycleState.Type),
+		edge.To("ci_change_records", CIChangeRecord.Type),
 	}
 }
 

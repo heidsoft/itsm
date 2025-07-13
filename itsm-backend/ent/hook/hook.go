@@ -20,6 +20,78 @@ func (f ApprovalLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApprovalLogMutation", m)
 }
 
+// The CIChangeRecordFunc type is an adapter to allow the use of ordinary
+// function as CIChangeRecord mutator.
+type CIChangeRecordFunc func(context.Context, *ent.CIChangeRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CIChangeRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CIChangeRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CIChangeRecordMutation", m)
+}
+
+// The CILifecycleStateFunc type is an adapter to allow the use of ordinary
+// function as CILifecycleState mutator.
+type CILifecycleStateFunc func(context.Context, *ent.CILifecycleStateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CILifecycleStateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CILifecycleStateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CILifecycleStateMutation", m)
+}
+
+// The CIRelationshipFunc type is an adapter to allow the use of ordinary
+// function as CIRelationship mutator.
+type CIRelationshipFunc func(context.Context, *ent.CIRelationshipMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CIRelationshipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CIRelationshipMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CIRelationshipMutation", m)
+}
+
+// The CIRelationshipTypeFunc type is an adapter to allow the use of ordinary
+// function as CIRelationshipType mutator.
+type CIRelationshipTypeFunc func(context.Context, *ent.CIRelationshipTypeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CIRelationshipTypeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CIRelationshipTypeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CIRelationshipTypeMutation", m)
+}
+
+// The CITypeFunc type is an adapter to allow the use of ordinary
+// function as CIType mutator.
+type CITypeFunc func(context.Context, *ent.CITypeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CITypeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CITypeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CITypeMutation", m)
+}
+
+// The ConfigurationItemFunc type is an adapter to allow the use of ordinary
+// function as ConfigurationItem mutator.
+type ConfigurationItemFunc func(context.Context, *ent.ConfigurationItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ConfigurationItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ConfigurationItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConfigurationItemMutation", m)
+}
+
 // The FlowInstanceFunc type is an adapter to allow the use of ordinary
 // function as FlowInstance mutator.
 type FlowInstanceFunc func(context.Context, *ent.FlowInstanceMutation) (ent.Value, error)
@@ -30,6 +102,18 @@ func (f FlowInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FlowInstanceMutation", m)
+}
+
+// The KnowledgeArticleFunc type is an adapter to allow the use of ordinary
+// function as KnowledgeArticle mutator.
+type KnowledgeArticleFunc func(context.Context, *ent.KnowledgeArticleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnowledgeArticleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnowledgeArticleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleMutation", m)
 }
 
 // The ServiceCatalogFunc type is an adapter to allow the use of ordinary
@@ -114,6 +198,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The WorkflowFunc type is an adapter to allow the use of ordinary
+// function as Workflow mutator.
+type WorkflowFunc func(context.Context, *ent.WorkflowMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorkflowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorkflowMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowMutation", m)
 }
 
 // Condition is a hook condition function.

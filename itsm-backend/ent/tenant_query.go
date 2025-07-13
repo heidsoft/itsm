@@ -6,6 +6,13 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/cichangerecord"
+	"itsm-backend/ent/cilifecyclestate"
+	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/cirelationshiptype"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -13,6 +20,7 @@ import (
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/workflow"
 	"math"
 
 	"entgo.io/ent"
@@ -24,15 +32,23 @@ import (
 // TenantQuery is the builder for querying Tenant entities.
 type TenantQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []tenant.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.Tenant
-	withUsers           *UserQuery
-	withTickets         *TicketQuery
-	withServiceCatalogs *ServiceCatalogQuery
-	withServiceRequests *ServiceRequestQuery
-	withSubscriptions   *SubscriptionQuery
+	ctx                     *QueryContext
+	order                   []tenant.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.Tenant
+	withUsers               *UserQuery
+	withTickets             *TicketQuery
+	withServiceCatalogs     *ServiceCatalogQuery
+	withServiceRequests     *ServiceRequestQuery
+	withSubscriptions       *SubscriptionQuery
+	withConfigurationItems  *ConfigurationItemQuery
+	withKnowledgeArticles   *KnowledgeArticleQuery
+	withWorkflows           *WorkflowQuery
+	withCiTypes             *CITypeQuery
+	withCiRelationshipTypes *CIRelationshipTypeQuery
+	withCiRelationships     *CIRelationshipQuery
+	withCiLifecycleStates   *CILifecycleStateQuery
+	withCiChangeRecords     *CIChangeRecordQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -172,6 +188,182 @@ func (tq *TenantQuery) QuerySubscriptions() *SubscriptionQuery {
 			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
 			sqlgraph.To(subscription.Table, subscription.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tenant.SubscriptionsTable, tenant.SubscriptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryConfigurationItems chains the current query on the "configuration_items" edge.
+func (tq *TenantQuery) QueryConfigurationItems() *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ConfigurationItemsTable, tenant.ConfigurationItemsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryKnowledgeArticles chains the current query on the "knowledge_articles" edge.
+func (tq *TenantQuery) QueryKnowledgeArticles() *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.KnowledgeArticlesTable, tenant.KnowledgeArticlesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflows chains the current query on the "workflows" edge.
+func (tq *TenantQuery) QueryWorkflows() *WorkflowQuery {
+	query := (&WorkflowClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.WorkflowsTable, tenant.WorkflowsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCiTypes chains the current query on the "ci_types" edge.
+func (tq *TenantQuery) QueryCiTypes() *CITypeQuery {
+	query := (&CITypeClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiTypesTable, tenant.CiTypesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCiRelationshipTypes chains the current query on the "ci_relationship_types" edge.
+func (tq *TenantQuery) QueryCiRelationshipTypes() *CIRelationshipTypeQuery {
+	query := (&CIRelationshipTypeClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(cirelationshiptype.Table, cirelationshiptype.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiRelationshipTypesTable, tenant.CiRelationshipTypesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCiRelationships chains the current query on the "ci_relationships" edge.
+func (tq *TenantQuery) QueryCiRelationships() *CIRelationshipQuery {
+	query := (&CIRelationshipClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiRelationshipsTable, tenant.CiRelationshipsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCiLifecycleStates chains the current query on the "ci_lifecycle_states" edge.
+func (tq *TenantQuery) QueryCiLifecycleStates() *CILifecycleStateQuery {
+	query := (&CILifecycleStateClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(cilifecyclestate.Table, cilifecyclestate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiLifecycleStatesTable, tenant.CiLifecycleStatesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCiChangeRecords chains the current query on the "ci_change_records" edge.
+func (tq *TenantQuery) QueryCiChangeRecords() *CIChangeRecordQuery {
+	query := (&CIChangeRecordClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(cichangerecord.Table, cichangerecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiChangeRecordsTable, tenant.CiChangeRecordsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -366,16 +558,24 @@ func (tq *TenantQuery) Clone() *TenantQuery {
 		return nil
 	}
 	return &TenantQuery{
-		config:              tq.config,
-		ctx:                 tq.ctx.Clone(),
-		order:               append([]tenant.OrderOption{}, tq.order...),
-		inters:              append([]Interceptor{}, tq.inters...),
-		predicates:          append([]predicate.Tenant{}, tq.predicates...),
-		withUsers:           tq.withUsers.Clone(),
-		withTickets:         tq.withTickets.Clone(),
-		withServiceCatalogs: tq.withServiceCatalogs.Clone(),
-		withServiceRequests: tq.withServiceRequests.Clone(),
-		withSubscriptions:   tq.withSubscriptions.Clone(),
+		config:                  tq.config,
+		ctx:                     tq.ctx.Clone(),
+		order:                   append([]tenant.OrderOption{}, tq.order...),
+		inters:                  append([]Interceptor{}, tq.inters...),
+		predicates:              append([]predicate.Tenant{}, tq.predicates...),
+		withUsers:               tq.withUsers.Clone(),
+		withTickets:             tq.withTickets.Clone(),
+		withServiceCatalogs:     tq.withServiceCatalogs.Clone(),
+		withServiceRequests:     tq.withServiceRequests.Clone(),
+		withSubscriptions:       tq.withSubscriptions.Clone(),
+		withConfigurationItems:  tq.withConfigurationItems.Clone(),
+		withKnowledgeArticles:   tq.withKnowledgeArticles.Clone(),
+		withWorkflows:           tq.withWorkflows.Clone(),
+		withCiTypes:             tq.withCiTypes.Clone(),
+		withCiRelationshipTypes: tq.withCiRelationshipTypes.Clone(),
+		withCiRelationships:     tq.withCiRelationships.Clone(),
+		withCiLifecycleStates:   tq.withCiLifecycleStates.Clone(),
+		withCiChangeRecords:     tq.withCiChangeRecords.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -434,6 +634,94 @@ func (tq *TenantQuery) WithSubscriptions(opts ...func(*SubscriptionQuery)) *Tena
 		opt(query)
 	}
 	tq.withSubscriptions = query
+	return tq
+}
+
+// WithConfigurationItems tells the query-builder to eager-load the nodes that are connected to
+// the "configuration_items" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithConfigurationItems(opts ...func(*ConfigurationItemQuery)) *TenantQuery {
+	query := (&ConfigurationItemClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withConfigurationItems = query
+	return tq
+}
+
+// WithKnowledgeArticles tells the query-builder to eager-load the nodes that are connected to
+// the "knowledge_articles" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithKnowledgeArticles(opts ...func(*KnowledgeArticleQuery)) *TenantQuery {
+	query := (&KnowledgeArticleClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withKnowledgeArticles = query
+	return tq
+}
+
+// WithWorkflows tells the query-builder to eager-load the nodes that are connected to
+// the "workflows" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithWorkflows(opts ...func(*WorkflowQuery)) *TenantQuery {
+	query := (&WorkflowClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withWorkflows = query
+	return tq
+}
+
+// WithCiTypes tells the query-builder to eager-load the nodes that are connected to
+// the "ci_types" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithCiTypes(opts ...func(*CITypeQuery)) *TenantQuery {
+	query := (&CITypeClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withCiTypes = query
+	return tq
+}
+
+// WithCiRelationshipTypes tells the query-builder to eager-load the nodes that are connected to
+// the "ci_relationship_types" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithCiRelationshipTypes(opts ...func(*CIRelationshipTypeQuery)) *TenantQuery {
+	query := (&CIRelationshipTypeClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withCiRelationshipTypes = query
+	return tq
+}
+
+// WithCiRelationships tells the query-builder to eager-load the nodes that are connected to
+// the "ci_relationships" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithCiRelationships(opts ...func(*CIRelationshipQuery)) *TenantQuery {
+	query := (&CIRelationshipClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withCiRelationships = query
+	return tq
+}
+
+// WithCiLifecycleStates tells the query-builder to eager-load the nodes that are connected to
+// the "ci_lifecycle_states" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithCiLifecycleStates(opts ...func(*CILifecycleStateQuery)) *TenantQuery {
+	query := (&CILifecycleStateClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withCiLifecycleStates = query
+	return tq
+}
+
+// WithCiChangeRecords tells the query-builder to eager-load the nodes that are connected to
+// the "ci_change_records" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithCiChangeRecords(opts ...func(*CIChangeRecordQuery)) *TenantQuery {
+	query := (&CIChangeRecordClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withCiChangeRecords = query
 	return tq
 }
 
@@ -515,12 +803,20 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 	var (
 		nodes       = []*Tenant{}
 		_spec       = tq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [13]bool{
 			tq.withUsers != nil,
 			tq.withTickets != nil,
 			tq.withServiceCatalogs != nil,
 			tq.withServiceRequests != nil,
 			tq.withSubscriptions != nil,
+			tq.withConfigurationItems != nil,
+			tq.withKnowledgeArticles != nil,
+			tq.withWorkflows != nil,
+			tq.withCiTypes != nil,
+			tq.withCiRelationshipTypes != nil,
+			tq.withCiRelationships != nil,
+			tq.withCiLifecycleStates != nil,
+			tq.withCiChangeRecords != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -576,6 +872,66 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 			return nil, err
 		}
 	}
+	if query := tq.withConfigurationItems; query != nil {
+		if err := tq.loadConfigurationItems(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.ConfigurationItems = []*ConfigurationItem{} },
+			func(n *Tenant, e *ConfigurationItem) {
+				n.Edges.ConfigurationItems = append(n.Edges.ConfigurationItems, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withKnowledgeArticles; query != nil {
+		if err := tq.loadKnowledgeArticles(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.KnowledgeArticles = []*KnowledgeArticle{} },
+			func(n *Tenant, e *KnowledgeArticle) { n.Edges.KnowledgeArticles = append(n.Edges.KnowledgeArticles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withWorkflows; query != nil {
+		if err := tq.loadWorkflows(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.Workflows = []*Workflow{} },
+			func(n *Tenant, e *Workflow) { n.Edges.Workflows = append(n.Edges.Workflows, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withCiTypes; query != nil {
+		if err := tq.loadCiTypes(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.CiTypes = []*CIType{} },
+			func(n *Tenant, e *CIType) { n.Edges.CiTypes = append(n.Edges.CiTypes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withCiRelationshipTypes; query != nil {
+		if err := tq.loadCiRelationshipTypes(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.CiRelationshipTypes = []*CIRelationshipType{} },
+			func(n *Tenant, e *CIRelationshipType) {
+				n.Edges.CiRelationshipTypes = append(n.Edges.CiRelationshipTypes, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withCiRelationships; query != nil {
+		if err := tq.loadCiRelationships(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.CiRelationships = []*CIRelationship{} },
+			func(n *Tenant, e *CIRelationship) { n.Edges.CiRelationships = append(n.Edges.CiRelationships, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withCiLifecycleStates; query != nil {
+		if err := tq.loadCiLifecycleStates(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.CiLifecycleStates = []*CILifecycleState{} },
+			func(n *Tenant, e *CILifecycleState) { n.Edges.CiLifecycleStates = append(n.Edges.CiLifecycleStates, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withCiChangeRecords; query != nil {
+		if err := tq.loadCiChangeRecords(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.CiChangeRecords = []*CIChangeRecord{} },
+			func(n *Tenant, e *CIChangeRecord) { n.Edges.CiChangeRecords = append(n.Edges.CiChangeRecords, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -619,6 +975,7 @@ func (tq *TenantQuery) loadTickets(ctx context.Context, query *TicketQuery, node
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(ticket.FieldTenantID)
 	}
@@ -714,6 +1071,247 @@ func (tq *TenantQuery) loadSubscriptions(ctx context.Context, query *Subscriptio
 	}
 	query.Where(predicate.Subscription(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(tenant.SubscriptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadConfigurationItems(ctx context.Context, query *ConfigurationItemQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *ConfigurationItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(configurationitem.FieldTenantID)
+	}
+	query.Where(predicate.ConfigurationItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.ConfigurationItemsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadKnowledgeArticles(ctx context.Context, query *KnowledgeArticleQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *KnowledgeArticle)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(knowledgearticle.FieldTenantID)
+	}
+	query.Where(predicate.KnowledgeArticle(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.KnowledgeArticlesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadWorkflows(ctx context.Context, query *WorkflowQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *Workflow)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflow.FieldTenantID)
+	}
+	query.Where(predicate.Workflow(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.WorkflowsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadCiTypes(ctx context.Context, query *CITypeQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *CIType)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(citype.FieldTenantID)
+	}
+	query.Where(predicate.CIType(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.CiTypesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadCiRelationshipTypes(ctx context.Context, query *CIRelationshipTypeQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *CIRelationshipType)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(cirelationshiptype.FieldTenantID)
+	}
+	query.Where(predicate.CIRelationshipType(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.CiRelationshipTypesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadCiRelationships(ctx context.Context, query *CIRelationshipQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *CIRelationship)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(cirelationship.FieldTenantID)
+	}
+	query.Where(predicate.CIRelationship(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.CiRelationshipsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadCiLifecycleStates(ctx context.Context, query *CILifecycleStateQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *CILifecycleState)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(cilifecyclestate.FieldTenantID)
+	}
+	query.Where(predicate.CILifecycleState(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.CiLifecycleStatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadCiChangeRecords(ctx context.Context, query *CIChangeRecordQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *CIChangeRecord)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(cichangerecord.FieldTenantID)
+	}
+	query.Where(predicate.CIChangeRecord(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.CiChangeRecordsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

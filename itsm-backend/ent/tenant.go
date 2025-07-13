@@ -56,9 +56,25 @@ type TenantEdges struct {
 	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
 	// Subscriptions holds the value of the subscriptions edge.
 	Subscriptions []*Subscription `json:"subscriptions,omitempty"`
+	// ConfigurationItems holds the value of the configuration_items edge.
+	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
+	// KnowledgeArticles holds the value of the knowledge_articles edge.
+	KnowledgeArticles []*KnowledgeArticle `json:"knowledge_articles,omitempty"`
+	// Workflows holds the value of the workflows edge.
+	Workflows []*Workflow `json:"workflows,omitempty"`
+	// CiTypes holds the value of the ci_types edge.
+	CiTypes []*CIType `json:"ci_types,omitempty"`
+	// CiRelationshipTypes holds the value of the ci_relationship_types edge.
+	CiRelationshipTypes []*CIRelationshipType `json:"ci_relationship_types,omitempty"`
+	// CiRelationships holds the value of the ci_relationships edge.
+	CiRelationships []*CIRelationship `json:"ci_relationships,omitempty"`
+	// CiLifecycleStates holds the value of the ci_lifecycle_states edge.
+	CiLifecycleStates []*CILifecycleState `json:"ci_lifecycle_states,omitempty"`
+	// CiChangeRecords holds the value of the ci_change_records edge.
+	CiChangeRecords []*CIChangeRecord `json:"ci_change_records,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [13]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -104,6 +120,78 @@ func (e TenantEdges) SubscriptionsOrErr() ([]*Subscription, error) {
 		return e.Subscriptions, nil
 	}
 	return nil, &NotLoadedError{edge: "subscriptions"}
+}
+
+// ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
+	if e.loadedTypes[5] {
+		return e.ConfigurationItems, nil
+	}
+	return nil, &NotLoadedError{edge: "configuration_items"}
+}
+
+// KnowledgeArticlesOrErr returns the KnowledgeArticles value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) KnowledgeArticlesOrErr() ([]*KnowledgeArticle, error) {
+	if e.loadedTypes[6] {
+		return e.KnowledgeArticles, nil
+	}
+	return nil, &NotLoadedError{edge: "knowledge_articles"}
+}
+
+// WorkflowsOrErr returns the Workflows value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) WorkflowsOrErr() ([]*Workflow, error) {
+	if e.loadedTypes[7] {
+		return e.Workflows, nil
+	}
+	return nil, &NotLoadedError{edge: "workflows"}
+}
+
+// CiTypesOrErr returns the CiTypes value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) CiTypesOrErr() ([]*CIType, error) {
+	if e.loadedTypes[8] {
+		return e.CiTypes, nil
+	}
+	return nil, &NotLoadedError{edge: "ci_types"}
+}
+
+// CiRelationshipTypesOrErr returns the CiRelationshipTypes value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) CiRelationshipTypesOrErr() ([]*CIRelationshipType, error) {
+	if e.loadedTypes[9] {
+		return e.CiRelationshipTypes, nil
+	}
+	return nil, &NotLoadedError{edge: "ci_relationship_types"}
+}
+
+// CiRelationshipsOrErr returns the CiRelationships value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) CiRelationshipsOrErr() ([]*CIRelationship, error) {
+	if e.loadedTypes[10] {
+		return e.CiRelationships, nil
+	}
+	return nil, &NotLoadedError{edge: "ci_relationships"}
+}
+
+// CiLifecycleStatesOrErr returns the CiLifecycleStates value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) CiLifecycleStatesOrErr() ([]*CILifecycleState, error) {
+	if e.loadedTypes[11] {
+		return e.CiLifecycleStates, nil
+	}
+	return nil, &NotLoadedError{edge: "ci_lifecycle_states"}
+}
+
+// CiChangeRecordsOrErr returns the CiChangeRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) CiChangeRecordsOrErr() ([]*CIChangeRecord, error) {
+	if e.loadedTypes[12] {
+		return e.CiChangeRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "ci_change_records"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -241,6 +329,46 @@ func (t *Tenant) QueryServiceRequests() *ServiceRequestQuery {
 // QuerySubscriptions queries the "subscriptions" edge of the Tenant entity.
 func (t *Tenant) QuerySubscriptions() *SubscriptionQuery {
 	return NewTenantClient(t.config).QuerySubscriptions(t)
+}
+
+// QueryConfigurationItems queries the "configuration_items" edge of the Tenant entity.
+func (t *Tenant) QueryConfigurationItems() *ConfigurationItemQuery {
+	return NewTenantClient(t.config).QueryConfigurationItems(t)
+}
+
+// QueryKnowledgeArticles queries the "knowledge_articles" edge of the Tenant entity.
+func (t *Tenant) QueryKnowledgeArticles() *KnowledgeArticleQuery {
+	return NewTenantClient(t.config).QueryKnowledgeArticles(t)
+}
+
+// QueryWorkflows queries the "workflows" edge of the Tenant entity.
+func (t *Tenant) QueryWorkflows() *WorkflowQuery {
+	return NewTenantClient(t.config).QueryWorkflows(t)
+}
+
+// QueryCiTypes queries the "ci_types" edge of the Tenant entity.
+func (t *Tenant) QueryCiTypes() *CITypeQuery {
+	return NewTenantClient(t.config).QueryCiTypes(t)
+}
+
+// QueryCiRelationshipTypes queries the "ci_relationship_types" edge of the Tenant entity.
+func (t *Tenant) QueryCiRelationshipTypes() *CIRelationshipTypeQuery {
+	return NewTenantClient(t.config).QueryCiRelationshipTypes(t)
+}
+
+// QueryCiRelationships queries the "ci_relationships" edge of the Tenant entity.
+func (t *Tenant) QueryCiRelationships() *CIRelationshipQuery {
+	return NewTenantClient(t.config).QueryCiRelationships(t)
+}
+
+// QueryCiLifecycleStates queries the "ci_lifecycle_states" edge of the Tenant entity.
+func (t *Tenant) QueryCiLifecycleStates() *CILifecycleStateQuery {
+	return NewTenantClient(t.config).QueryCiLifecycleStates(t)
+}
+
+// QueryCiChangeRecords queries the "ci_change_records" edge of the Tenant entity.
+func (t *Tenant) QueryCiChangeRecords() *CIChangeRecordQuery {
+	return NewTenantClient(t.config).QueryCiChangeRecords(t)
 }
 
 // Update returns a builder for updating this Tenant.

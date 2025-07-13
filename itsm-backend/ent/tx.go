@@ -14,8 +14,22 @@ type Tx struct {
 	config
 	// ApprovalLog is the client for interacting with the ApprovalLog builders.
 	ApprovalLog *ApprovalLogClient
+	// CIChangeRecord is the client for interacting with the CIChangeRecord builders.
+	CIChangeRecord *CIChangeRecordClient
+	// CILifecycleState is the client for interacting with the CILifecycleState builders.
+	CILifecycleState *CILifecycleStateClient
+	// CIRelationship is the client for interacting with the CIRelationship builders.
+	CIRelationship *CIRelationshipClient
+	// CIRelationshipType is the client for interacting with the CIRelationshipType builders.
+	CIRelationshipType *CIRelationshipTypeClient
+	// CIType is the client for interacting with the CIType builders.
+	CIType *CITypeClient
+	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
+	ConfigurationItem *ConfigurationItemClient
 	// FlowInstance is the client for interacting with the FlowInstance builders.
 	FlowInstance *FlowInstanceClient
+	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
+	KnowledgeArticle *KnowledgeArticleClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
@@ -30,6 +44,8 @@ type Tx struct {
 	Ticket *TicketClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Workflow is the client for interacting with the Workflow builders.
+	Workflow *WorkflowClient
 
 	// lazily loaded.
 	client     *Client
@@ -162,7 +178,14 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.ApprovalLog = NewApprovalLogClient(tx.config)
+	tx.CIChangeRecord = NewCIChangeRecordClient(tx.config)
+	tx.CILifecycleState = NewCILifecycleStateClient(tx.config)
+	tx.CIRelationship = NewCIRelationshipClient(tx.config)
+	tx.CIRelationshipType = NewCIRelationshipTypeClient(tx.config)
+	tx.CIType = NewCITypeClient(tx.config)
+	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.FlowInstance = NewFlowInstanceClient(tx.config)
+	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.StatusLog = NewStatusLogClient(tx.config)
@@ -170,6 +193,7 @@ func (tx *Tx) init() {
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.Workflow = NewWorkflowClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

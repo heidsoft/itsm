@@ -595,6 +595,190 @@ func HasSubscriptionsWith(preds ...predicate.Subscription) predicate.Tenant {
 	})
 }
 
+// HasConfigurationItems applies the HasEdge predicate on the "configuration_items" edge.
+func HasConfigurationItems() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemsTable, ConfigurationItemsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasConfigurationItemsWith applies the HasEdge predicate on the "configuration_items" edge with a given conditions (other predicates).
+func HasConfigurationItemsWith(preds ...predicate.ConfigurationItem) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newConfigurationItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasKnowledgeArticles applies the HasEdge predicate on the "knowledge_articles" edge.
+func HasKnowledgeArticles() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, KnowledgeArticlesTable, KnowledgeArticlesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasKnowledgeArticlesWith applies the HasEdge predicate on the "knowledge_articles" edge with a given conditions (other predicates).
+func HasKnowledgeArticlesWith(preds ...predicate.KnowledgeArticle) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newKnowledgeArticlesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasWorkflows applies the HasEdge predicate on the "workflows" edge.
+func HasWorkflows() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, WorkflowsTable, WorkflowsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWorkflowsWith applies the HasEdge predicate on the "workflows" edge with a given conditions (other predicates).
+func HasWorkflowsWith(preds ...predicate.Workflow) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newWorkflowsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCiTypes applies the HasEdge predicate on the "ci_types" edge.
+func HasCiTypes() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CiTypesTable, CiTypesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiTypesWith applies the HasEdge predicate on the "ci_types" edge with a given conditions (other predicates).
+func HasCiTypesWith(preds ...predicate.CIType) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newCiTypesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCiRelationshipTypes applies the HasEdge predicate on the "ci_relationship_types" edge.
+func HasCiRelationshipTypes() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CiRelationshipTypesTable, CiRelationshipTypesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiRelationshipTypesWith applies the HasEdge predicate on the "ci_relationship_types" edge with a given conditions (other predicates).
+func HasCiRelationshipTypesWith(preds ...predicate.CIRelationshipType) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newCiRelationshipTypesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCiRelationships applies the HasEdge predicate on the "ci_relationships" edge.
+func HasCiRelationships() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CiRelationshipsTable, CiRelationshipsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiRelationshipsWith applies the HasEdge predicate on the "ci_relationships" edge with a given conditions (other predicates).
+func HasCiRelationshipsWith(preds ...predicate.CIRelationship) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newCiRelationshipsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCiLifecycleStates applies the HasEdge predicate on the "ci_lifecycle_states" edge.
+func HasCiLifecycleStates() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CiLifecycleStatesTable, CiLifecycleStatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiLifecycleStatesWith applies the HasEdge predicate on the "ci_lifecycle_states" edge with a given conditions (other predicates).
+func HasCiLifecycleStatesWith(preds ...predicate.CILifecycleState) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newCiLifecycleStatesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCiChangeRecords applies the HasEdge predicate on the "ci_change_records" edge.
+func HasCiChangeRecords() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CiChangeRecordsTable, CiChangeRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiChangeRecordsWith applies the HasEdge predicate on the "ci_change_records" edge with a given conditions (other predicates).
+func HasCiChangeRecordsWith(preds ...predicate.CIChangeRecord) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newCiChangeRecordsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Tenant) predicate.Tenant {
 	return predicate.Tenant(sql.AndPredicates(predicates...))

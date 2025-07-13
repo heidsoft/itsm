@@ -45,8 +45,10 @@ type Ticket struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TicketQuery when eager-loading is set.
-	Edges        TicketEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                        TicketEdges `json:"edges"`
+	configuration_item_incidents *int
+	configuration_item_changes   *int
+	selectValues                 sql.SelectValues
 }
 
 // TicketEdges holds the relations/edges for other nodes in the graph.
@@ -143,6 +145,10 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case ticket.ForeignKeys[0]: // configuration_item_incidents
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[1]: // configuration_item_changes
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -232,6 +238,20 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				t.UpdatedAt = value.Time
+			}
+		case ticket.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field configuration_item_incidents", value)
+			} else if value.Valid {
+				t.configuration_item_incidents = new(int)
+				*t.configuration_item_incidents = int(value.Int64)
+			}
+		case ticket.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field configuration_item_changes", value)
+			} else if value.Valid {
+				t.configuration_item_changes = new(int)
+				*t.configuration_item_changes = int(value.Int64)
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])

@@ -660,6 +660,7 @@ func (uq *UserQuery) loadSubmittedTickets(ctx context.Context, query *TicketQuer
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(ticket.FieldRequesterID)
 	}
@@ -690,6 +691,7 @@ func (uq *UserQuery) loadAssignedTickets(ctx context.Context, query *TicketQuery
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(ticket.FieldAssigneeID)
 	}

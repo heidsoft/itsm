@@ -45,6 +45,22 @@ const (
 	EdgeServiceRequests = "service_requests"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
 	EdgeSubscriptions = "subscriptions"
+	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
+	EdgeConfigurationItems = "configuration_items"
+	// EdgeKnowledgeArticles holds the string denoting the knowledge_articles edge name in mutations.
+	EdgeKnowledgeArticles = "knowledge_articles"
+	// EdgeWorkflows holds the string denoting the workflows edge name in mutations.
+	EdgeWorkflows = "workflows"
+	// EdgeCiTypes holds the string denoting the ci_types edge name in mutations.
+	EdgeCiTypes = "ci_types"
+	// EdgeCiRelationshipTypes holds the string denoting the ci_relationship_types edge name in mutations.
+	EdgeCiRelationshipTypes = "ci_relationship_types"
+	// EdgeCiRelationships holds the string denoting the ci_relationships edge name in mutations.
+	EdgeCiRelationships = "ci_relationships"
+	// EdgeCiLifecycleStates holds the string denoting the ci_lifecycle_states edge name in mutations.
+	EdgeCiLifecycleStates = "ci_lifecycle_states"
+	// EdgeCiChangeRecords holds the string denoting the ci_change_records edge name in mutations.
+	EdgeCiChangeRecords = "ci_change_records"
 	// Table holds the table name of the tenant in the database.
 	Table = "tenants"
 	// UsersTable is the table that holds the users relation/edge.
@@ -82,6 +98,62 @@ const (
 	SubscriptionsInverseTable = "subscriptions"
 	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
 	SubscriptionsColumn = "tenant_id"
+	// ConfigurationItemsTable is the table that holds the configuration_items relation/edge.
+	ConfigurationItemsTable = "configuration_items"
+	// ConfigurationItemsInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	ConfigurationItemsInverseTable = "configuration_items"
+	// ConfigurationItemsColumn is the table column denoting the configuration_items relation/edge.
+	ConfigurationItemsColumn = "tenant_id"
+	// KnowledgeArticlesTable is the table that holds the knowledge_articles relation/edge.
+	KnowledgeArticlesTable = "knowledge_articles"
+	// KnowledgeArticlesInverseTable is the table name for the KnowledgeArticle entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticle" package.
+	KnowledgeArticlesInverseTable = "knowledge_articles"
+	// KnowledgeArticlesColumn is the table column denoting the knowledge_articles relation/edge.
+	KnowledgeArticlesColumn = "tenant_id"
+	// WorkflowsTable is the table that holds the workflows relation/edge.
+	WorkflowsTable = "workflows"
+	// WorkflowsInverseTable is the table name for the Workflow entity.
+	// It exists in this package in order to avoid circular dependency with the "workflow" package.
+	WorkflowsInverseTable = "workflows"
+	// WorkflowsColumn is the table column denoting the workflows relation/edge.
+	WorkflowsColumn = "tenant_id"
+	// CiTypesTable is the table that holds the ci_types relation/edge.
+	CiTypesTable = "ci_types"
+	// CiTypesInverseTable is the table name for the CIType entity.
+	// It exists in this package in order to avoid circular dependency with the "citype" package.
+	CiTypesInverseTable = "ci_types"
+	// CiTypesColumn is the table column denoting the ci_types relation/edge.
+	CiTypesColumn = "tenant_id"
+	// CiRelationshipTypesTable is the table that holds the ci_relationship_types relation/edge.
+	CiRelationshipTypesTable = "ci_relationship_types"
+	// CiRelationshipTypesInverseTable is the table name for the CIRelationshipType entity.
+	// It exists in this package in order to avoid circular dependency with the "cirelationshiptype" package.
+	CiRelationshipTypesInverseTable = "ci_relationship_types"
+	// CiRelationshipTypesColumn is the table column denoting the ci_relationship_types relation/edge.
+	CiRelationshipTypesColumn = "tenant_id"
+	// CiRelationshipsTable is the table that holds the ci_relationships relation/edge.
+	CiRelationshipsTable = "ci_relationships"
+	// CiRelationshipsInverseTable is the table name for the CIRelationship entity.
+	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
+	CiRelationshipsInverseTable = "ci_relationships"
+	// CiRelationshipsColumn is the table column denoting the ci_relationships relation/edge.
+	CiRelationshipsColumn = "tenant_id"
+	// CiLifecycleStatesTable is the table that holds the ci_lifecycle_states relation/edge.
+	CiLifecycleStatesTable = "ci_lifecycle_states"
+	// CiLifecycleStatesInverseTable is the table name for the CILifecycleState entity.
+	// It exists in this package in order to avoid circular dependency with the "cilifecyclestate" package.
+	CiLifecycleStatesInverseTable = "ci_lifecycle_states"
+	// CiLifecycleStatesColumn is the table column denoting the ci_lifecycle_states relation/edge.
+	CiLifecycleStatesColumn = "tenant_id"
+	// CiChangeRecordsTable is the table that holds the ci_change_records relation/edge.
+	CiChangeRecordsTable = "ci_change_records"
+	// CiChangeRecordsInverseTable is the table name for the CIChangeRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "cichangerecord" package.
+	CiChangeRecordsInverseTable = "ci_change_records"
+	// CiChangeRecordsColumn is the table column denoting the ci_change_records relation/edge.
+	CiChangeRecordsColumn = "tenant_id"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -297,6 +369,118 @@ func BySubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByConfigurationItemsCount orders the results by configuration_items count.
+func ByConfigurationItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newConfigurationItemsStep(), opts...)
+	}
+}
+
+// ByConfigurationItems orders the results by configuration_items terms.
+func ByConfigurationItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByKnowledgeArticlesCount orders the results by knowledge_articles count.
+func ByKnowledgeArticlesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newKnowledgeArticlesStep(), opts...)
+	}
+}
+
+// ByKnowledgeArticles orders the results by knowledge_articles terms.
+func ByKnowledgeArticles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newKnowledgeArticlesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByWorkflowsCount orders the results by workflows count.
+func ByWorkflowsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowsStep(), opts...)
+	}
+}
+
+// ByWorkflows orders the results by workflows terms.
+func ByWorkflows(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCiTypesCount orders the results by ci_types count.
+func ByCiTypesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCiTypesStep(), opts...)
+	}
+}
+
+// ByCiTypes orders the results by ci_types terms.
+func ByCiTypes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiTypesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCiRelationshipTypesCount orders the results by ci_relationship_types count.
+func ByCiRelationshipTypesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCiRelationshipTypesStep(), opts...)
+	}
+}
+
+// ByCiRelationshipTypes orders the results by ci_relationship_types terms.
+func ByCiRelationshipTypes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiRelationshipTypesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCiRelationshipsCount orders the results by ci_relationships count.
+func ByCiRelationshipsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCiRelationshipsStep(), opts...)
+	}
+}
+
+// ByCiRelationships orders the results by ci_relationships terms.
+func ByCiRelationships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiRelationshipsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCiLifecycleStatesCount orders the results by ci_lifecycle_states count.
+func ByCiLifecycleStatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCiLifecycleStatesStep(), opts...)
+	}
+}
+
+// ByCiLifecycleStates orders the results by ci_lifecycle_states terms.
+func ByCiLifecycleStates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiLifecycleStatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCiChangeRecordsCount orders the results by ci_change_records count.
+func ByCiChangeRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCiChangeRecordsStep(), opts...)
+	}
+}
+
+// ByCiChangeRecords orders the results by ci_change_records terms.
+func ByCiChangeRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiChangeRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -330,5 +514,61 @@ func newSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
+	)
+}
+func newConfigurationItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConfigurationItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemsTable, ConfigurationItemsColumn),
+	)
+}
+func newKnowledgeArticlesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(KnowledgeArticlesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, KnowledgeArticlesTable, KnowledgeArticlesColumn),
+	)
+}
+func newWorkflowsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowsTable, WorkflowsColumn),
+	)
+}
+func newCiTypesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiTypesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CiTypesTable, CiTypesColumn),
+	)
+}
+func newCiRelationshipTypesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiRelationshipTypesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CiRelationshipTypesTable, CiRelationshipTypesColumn),
+	)
+}
+func newCiRelationshipsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiRelationshipsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CiRelationshipsTable, CiRelationshipsColumn),
+	)
+}
+func newCiLifecycleStatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiLifecycleStatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CiLifecycleStatesTable, CiLifecycleStatesColumn),
+	)
+}
+func newCiChangeRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiChangeRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CiChangeRecordsTable, CiChangeRecordsColumn),
 	)
 }

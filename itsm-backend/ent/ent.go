@@ -7,7 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/cichangerecord"
+	"itsm-backend/ent/cilifecyclestate"
+	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/cirelationshiptype"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
@@ -15,6 +22,7 @@ import (
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/workflow"
 	"reflect"
 	"sync"
 
@@ -81,15 +89,23 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			approvallog.Table:    approvallog.ValidColumn,
-			flowinstance.Table:   flowinstance.ValidColumn,
-			servicecatalog.Table: servicecatalog.ValidColumn,
-			servicerequest.Table: servicerequest.ValidColumn,
-			statuslog.Table:      statuslog.ValidColumn,
-			subscription.Table:   subscription.ValidColumn,
-			tenant.Table:         tenant.ValidColumn,
-			ticket.Table:         ticket.ValidColumn,
-			user.Table:           user.ValidColumn,
+			approvallog.Table:        approvallog.ValidColumn,
+			cichangerecord.Table:     cichangerecord.ValidColumn,
+			cilifecyclestate.Table:   cilifecyclestate.ValidColumn,
+			cirelationship.Table:     cirelationship.ValidColumn,
+			cirelationshiptype.Table: cirelationshiptype.ValidColumn,
+			citype.Table:             citype.ValidColumn,
+			configurationitem.Table:  configurationitem.ValidColumn,
+			flowinstance.Table:       flowinstance.ValidColumn,
+			knowledgearticle.Table:   knowledgearticle.ValidColumn,
+			servicecatalog.Table:     servicecatalog.ValidColumn,
+			servicerequest.Table:     servicerequest.ValidColumn,
+			statuslog.Table:          statuslog.ValidColumn,
+			subscription.Table:       subscription.ValidColumn,
+			tenant.Table:             tenant.ValidColumn,
+			ticket.Table:             ticket.ValidColumn,
+			user.Table:               user.ValidColumn,
+			workflow.Table:           workflow.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)
