@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -334,6 +335,21 @@ func (tc *TenantCreate) AddCiChangeRecords(c ...*CIChangeRecord) *TenantCreate {
 		ids[i] = c[i].ID
 	}
 	return tc.AddCiChangeRecordIDs(ids...)
+}
+
+// AddCiAttributeDefinitionIDs adds the "ci_attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (tc *TenantCreate) AddCiAttributeDefinitionIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddCiAttributeDefinitionIDs(ids...)
+	return tc
+}
+
+// AddCiAttributeDefinitions adds the "ci_attribute_definitions" edges to the CIAttributeDefinition entity.
+func (tc *TenantCreate) AddCiAttributeDefinitions(c ...*CIAttributeDefinition) *TenantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddCiAttributeDefinitionIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -701,6 +717,22 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CiAttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

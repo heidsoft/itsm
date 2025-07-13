@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -362,6 +363,21 @@ func (tu *TenantUpdate) AddCiChangeRecords(c ...*CIChangeRecord) *TenantUpdate {
 	return tu.AddCiChangeRecordIDs(ids...)
 }
 
+// AddCiAttributeDefinitionIDs adds the "ci_attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (tu *TenantUpdate) AddCiAttributeDefinitionIDs(ids ...int) *TenantUpdate {
+	tu.mutation.AddCiAttributeDefinitionIDs(ids...)
+	return tu
+}
+
+// AddCiAttributeDefinitions adds the "ci_attribute_definitions" edges to the CIAttributeDefinition entity.
+func (tu *TenantUpdate) AddCiAttributeDefinitions(c ...*CIAttributeDefinition) *TenantUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tu.AddCiAttributeDefinitionIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tu *TenantUpdate) Mutation() *TenantMutation {
 	return tu.mutation
@@ -638,6 +654,27 @@ func (tu *TenantUpdate) RemoveCiChangeRecords(c ...*CIChangeRecord) *TenantUpdat
 		ids[i] = c[i].ID
 	}
 	return tu.RemoveCiChangeRecordIDs(ids...)
+}
+
+// ClearCiAttributeDefinitions clears all "ci_attribute_definitions" edges to the CIAttributeDefinition entity.
+func (tu *TenantUpdate) ClearCiAttributeDefinitions() *TenantUpdate {
+	tu.mutation.ClearCiAttributeDefinitions()
+	return tu
+}
+
+// RemoveCiAttributeDefinitionIDs removes the "ci_attribute_definitions" edge to CIAttributeDefinition entities by IDs.
+func (tu *TenantUpdate) RemoveCiAttributeDefinitionIDs(ids ...int) *TenantUpdate {
+	tu.mutation.RemoveCiAttributeDefinitionIDs(ids...)
+	return tu
+}
+
+// RemoveCiAttributeDefinitions removes "ci_attribute_definitions" edges to CIAttributeDefinition entities.
+func (tu *TenantUpdate) RemoveCiAttributeDefinitions(c ...*CIAttributeDefinition) *TenantUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tu.RemoveCiAttributeDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1342,6 +1379,51 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.CiAttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedCiAttributeDefinitionsIDs(); len(nodes) > 0 && !tu.mutation.CiAttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.CiAttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tenant.Label}
@@ -1683,6 +1765,21 @@ func (tuo *TenantUpdateOne) AddCiChangeRecords(c ...*CIChangeRecord) *TenantUpda
 	return tuo.AddCiChangeRecordIDs(ids...)
 }
 
+// AddCiAttributeDefinitionIDs adds the "ci_attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (tuo *TenantUpdateOne) AddCiAttributeDefinitionIDs(ids ...int) *TenantUpdateOne {
+	tuo.mutation.AddCiAttributeDefinitionIDs(ids...)
+	return tuo
+}
+
+// AddCiAttributeDefinitions adds the "ci_attribute_definitions" edges to the CIAttributeDefinition entity.
+func (tuo *TenantUpdateOne) AddCiAttributeDefinitions(c ...*CIAttributeDefinition) *TenantUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tuo.AddCiAttributeDefinitionIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tuo *TenantUpdateOne) Mutation() *TenantMutation {
 	return tuo.mutation
@@ -1959,6 +2056,27 @@ func (tuo *TenantUpdateOne) RemoveCiChangeRecords(c ...*CIChangeRecord) *TenantU
 		ids[i] = c[i].ID
 	}
 	return tuo.RemoveCiChangeRecordIDs(ids...)
+}
+
+// ClearCiAttributeDefinitions clears all "ci_attribute_definitions" edges to the CIAttributeDefinition entity.
+func (tuo *TenantUpdateOne) ClearCiAttributeDefinitions() *TenantUpdateOne {
+	tuo.mutation.ClearCiAttributeDefinitions()
+	return tuo
+}
+
+// RemoveCiAttributeDefinitionIDs removes the "ci_attribute_definitions" edge to CIAttributeDefinition entities by IDs.
+func (tuo *TenantUpdateOne) RemoveCiAttributeDefinitionIDs(ids ...int) *TenantUpdateOne {
+	tuo.mutation.RemoveCiAttributeDefinitionIDs(ids...)
+	return tuo
+}
+
+// RemoveCiAttributeDefinitions removes "ci_attribute_definitions" edges to CIAttributeDefinition entities.
+func (tuo *TenantUpdateOne) RemoveCiAttributeDefinitions(c ...*CIAttributeDefinition) *TenantUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tuo.RemoveCiAttributeDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -2686,6 +2804,51 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.CiAttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedCiAttributeDefinitionsIDs(); len(nodes) > 0 && !tuo.mutation.CiAttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.CiAttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.CiAttributeDefinitionsTable,
+			Columns: []string{tenant.CiAttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

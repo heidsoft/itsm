@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
@@ -176,6 +177,21 @@ func (ctc *CITypeCreate) AddAllowedRelationships(c ...*CIRelationshipType) *CITy
 		ids[i] = c[i].ID
 	}
 	return ctc.AddAllowedRelationshipIDs(ids...)
+}
+
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (ctc *CITypeCreate) AddAttributeDefinitionIDs(ids ...int) *CITypeCreate {
+	ctc.mutation.AddAttributeDefinitionIDs(ids...)
+	return ctc
+}
+
+// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (ctc *CITypeCreate) AddAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctc.AddAttributeDefinitionIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
@@ -387,6 +403,22 @@ func (ctc *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ctc.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

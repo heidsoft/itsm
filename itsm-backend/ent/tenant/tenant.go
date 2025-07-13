@@ -61,6 +61,8 @@ const (
 	EdgeCiLifecycleStates = "ci_lifecycle_states"
 	// EdgeCiChangeRecords holds the string denoting the ci_change_records edge name in mutations.
 	EdgeCiChangeRecords = "ci_change_records"
+	// EdgeCiAttributeDefinitions holds the string denoting the ci_attribute_definitions edge name in mutations.
+	EdgeCiAttributeDefinitions = "ci_attribute_definitions"
 	// Table holds the table name of the tenant in the database.
 	Table = "tenants"
 	// UsersTable is the table that holds the users relation/edge.
@@ -154,6 +156,13 @@ const (
 	CiChangeRecordsInverseTable = "ci_change_records"
 	// CiChangeRecordsColumn is the table column denoting the ci_change_records relation/edge.
 	CiChangeRecordsColumn = "tenant_id"
+	// CiAttributeDefinitionsTable is the table that holds the ci_attribute_definitions relation/edge.
+	CiAttributeDefinitionsTable = "ci_attribute_definitions"
+	// CiAttributeDefinitionsInverseTable is the table name for the CIAttributeDefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "ciattributedefinition" package.
+	CiAttributeDefinitionsInverseTable = "ci_attribute_definitions"
+	// CiAttributeDefinitionsColumn is the table column denoting the ci_attribute_definitions relation/edge.
+	CiAttributeDefinitionsColumn = "tenant_id"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -481,6 +490,20 @@ func ByCiChangeRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCiChangeRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCiAttributeDefinitionsCount orders the results by ci_attribute_definitions count.
+func ByCiAttributeDefinitionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCiAttributeDefinitionsStep(), opts...)
+	}
+}
+
+// ByCiAttributeDefinitions orders the results by ci_attribute_definitions terms.
+func ByCiAttributeDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiAttributeDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -570,5 +593,12 @@ func newCiChangeRecordsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CiChangeRecordsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CiChangeRecordsTable, CiChangeRecordsColumn),
+	)
+}
+func newCiAttributeDefinitionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiAttributeDefinitionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CiAttributeDefinitionsTable, CiAttributeDefinitionsColumn),
 	)
 }

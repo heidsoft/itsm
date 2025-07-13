@@ -1,5 +1,11 @@
 package service
 
+import (
+	"context"
+	"go.uber.org/zap"
+	"itsm-backend/ent"
+)
+
 type EscalationService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger

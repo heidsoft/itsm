@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -89,23 +90,24 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			approvallog.Table:        approvallog.ValidColumn,
-			cichangerecord.Table:     cichangerecord.ValidColumn,
-			cilifecyclestate.Table:   cilifecyclestate.ValidColumn,
-			cirelationship.Table:     cirelationship.ValidColumn,
-			cirelationshiptype.Table: cirelationshiptype.ValidColumn,
-			citype.Table:             citype.ValidColumn,
-			configurationitem.Table:  configurationitem.ValidColumn,
-			flowinstance.Table:       flowinstance.ValidColumn,
-			knowledgearticle.Table:   knowledgearticle.ValidColumn,
-			servicecatalog.Table:     servicecatalog.ValidColumn,
-			servicerequest.Table:     servicerequest.ValidColumn,
-			statuslog.Table:          statuslog.ValidColumn,
-			subscription.Table:       subscription.ValidColumn,
-			tenant.Table:             tenant.ValidColumn,
-			ticket.Table:             ticket.ValidColumn,
-			user.Table:               user.ValidColumn,
-			workflow.Table:           workflow.ValidColumn,
+			approvallog.Table:           approvallog.ValidColumn,
+			ciattributedefinition.Table: ciattributedefinition.ValidColumn,
+			cichangerecord.Table:        cichangerecord.ValidColumn,
+			cilifecyclestate.Table:      cilifecyclestate.ValidColumn,
+			cirelationship.Table:        cirelationship.ValidColumn,
+			cirelationshiptype.Table:    cirelationshiptype.ValidColumn,
+			citype.Table:                citype.ValidColumn,
+			configurationitem.Table:     configurationitem.ValidColumn,
+			flowinstance.Table:          flowinstance.ValidColumn,
+			knowledgearticle.Table:      knowledgearticle.ValidColumn,
+			servicecatalog.Table:        servicecatalog.ValidColumn,
+			servicerequest.Table:        servicerequest.ValidColumn,
+			statuslog.Table:             statuslog.ValidColumn,
+			subscription.Table:          subscription.ValidColumn,
+			tenant.Table:                tenant.ValidColumn,
+			ticket.Table:                ticket.ValidColumn,
+			user.Table:                  user.ValidColumn,
+			workflow.Table:              workflow.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

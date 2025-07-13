@@ -659,6 +659,29 @@ func HasAllowedRelationshipsWith(preds ...predicate.CIRelationshipType) predicat
 	})
 }
 
+// HasAttributeDefinitions applies the HasEdge predicate on the "attribute_definitions" edge.
+func HasAttributeDefinitions() predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AttributeDefinitionsTable, AttributeDefinitionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAttributeDefinitionsWith applies the HasEdge predicate on the "attribute_definitions" edge with a given conditions (other predicates).
+func HasAttributeDefinitionsWith(preds ...predicate.CIAttributeDefinition) predicate.CIType {
+	return predicate.CIType(func(s *sql.Selector) {
+		step := newAttributeDefinitionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.CIType) predicate.CIType {
 	return predicate.CIType(sql.AndPredicates(predicates...))

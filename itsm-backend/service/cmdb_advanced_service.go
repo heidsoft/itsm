@@ -2,53 +2,52 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 )
 
 type CMDBAdvancedService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
-func NewCMDBAdvancedService(client *ent.Client) *CMDBAdvancedService {
-	return &CMDBAdvancedService{client: client}
+func NewCMDBAdvancedService(client *ent.Client, logger *zap.SugaredLogger) *CMDBAdvancedService {
+	return &CMDBAdvancedService{
+		client: client,
+		logger: logger,
+	}
 }
 
 // CreateCIType 创建CI类型
 func (s *CMDBAdvancedService) CreateCIType(ctx context.Context, req *dto.CreateCITypeRequest) (*dto.CITypeResponse, error) {
 	ciType, err := s.client.CIType.Create().
 		SetName(req.Name).
-		SetDisplayName(req.DisplayName).
 		SetDescription(req.Description).
-		SetCategory(req.Category).
 		SetIcon(req.Icon).
 		SetAttributeSchema(req.AttributeSchema).
-		SetValidationRules(req.ValidationRules).
+		SetIsSystem(req.IsSystemDefined). // 修改为 SetIsSystem
 		SetTenantID(req.TenantID).
 		Save(ctx)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create CI type: %w", err)
+		s.logger.Errorf("Failed to create CI type: %v", err)
+		return nil, err
 	}
 
 	return &dto.CITypeResponse{
 		ID:              ciType.ID,
 		Name:            ciType.Name,
-		DisplayName:     ciType.DisplayName,
 		Description:     ciType.Description,
-		Category:        ciType.Category,
 		Icon:            ciType.Icon,
 		AttributeSchema: ciType.AttributeSchema,
-		ValidationRules: ciType.ValidationRules,
-		IsSystem:        ciType.IsSystem,
-		IsActive:        ciType.IsActive,
+		IsSystemDefined: ciType.IsSystem, // 修改为 IsSystem
+		TenantID:        ciType.TenantID,
 		CreatedAt:       ciType.CreatedAt,
 		UpdatedAt:       ciType.UpdatedAt,
 	}, nil
@@ -56,349 +55,412 @@ func (s *CMDBAdvancedService) CreateCIType(ctx context.Context, req *dto.CreateC
 
 // CreateCIRelationship 创建CI关系
 func (s *CMDBAdvancedService) CreateCIRelationship(ctx context.Context, req *dto.CreateCIRelationshipRequest) (*dto.CIRelationshipResponse, error) {
-	// 验证关系类型是否允许这种CI类型组合
-	relType, err := s.client.CIRelationshipType.Get(ctx, req.RelationshipTypeID)
-	if err != nil {
-		return nil, fmt.Errorf("relationship type not found: %w", err)
+	// 验证关系约束
+	if err := s.validateRelationshipConstraints(ctx, req); err != nil {
+		return nil, err
 	}
 
-	// 获取源和目标CI的类型
-	sourceCi, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.ID(req.SourceCIID)).
-		WithCiType().
-		Only(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("source CI not found: %w", err)
-	}
-
-	targetCi, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.ID(req.TargetCIID)).
-		WithCiType().
-		Only(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("target CI not found: %w", err)
-	}
-
-	// 验证关系类型约束
-	if !s.validateRelationshipConstraints(relType, sourceCi.Edges.CiType.Name, targetCi.Edges.CiType.Name) {
-		return nil, fmt.Errorf("relationship not allowed between these CI types")
-	}
-
+	// 创建关系
 	relationship, err := s.client.CIRelationship.Create().
-		SetSourceCIID(req.SourceCIID).
-		SetTargetCIID(req.TargetCIID).
+		SetSourceCiID(req.SourceCIID).
+		SetTargetCiID(req.TargetCIID).
 		SetRelationshipTypeID(req.RelationshipTypeID).
 		SetProperties(req.Properties).
+		SetEffectiveFrom(req.EffectiveFrom).
+		SetNillableEffectiveTo(req.EffectiveTo). // 使用 SetNillableEffectiveTo
 		SetTenantID(req.TenantID).
 		Save(ctx)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create relationship: %w", err)
+		s.logger.Errorf("Failed to create CI relationship: %v", err)
+		return nil, err
 	}
 
 	return &dto.CIRelationshipResponse{
 		ID:                 relationship.ID,
-		SourceCIID:         relationship.SourceCIID,
-		TargetCIID:         relationship.TargetCIID,
+		SourceCIID:         relationship.SourceCiID,
+		TargetCIID:         relationship.TargetCiID,
 		RelationshipTypeID: relationship.RelationshipTypeID,
 		Properties:         relationship.Properties,
-		Status:             relationship.Status,
 		EffectiveFrom:      relationship.EffectiveFrom,
-		EffectiveTo:        relationship.EffectiveTo,
+		EffectiveTo:        &relationship.EffectiveTo, // 添加 & 取地址符号
+		TenantID:           relationship.TenantID,
 		CreatedAt:          relationship.CreatedAt,
+		UpdatedAt:          relationship.UpdatedAt,
 	}, nil
 }
 
 // GetServiceMap 获取服务图谱
-func (s *CMDBAdvancedService) GetServiceMap(ctx context.Context, ciID int, depth int, tenantID int) (*dto.ServiceMapResponse, error) {
-	nodes := make(map[int]*dto.ServiceMapNode)
-	edges := make([]*dto.ServiceMapEdge, 0)
+func (s *CMDBAdvancedService) GetServiceMap(ctx context.Context, req *dto.GetServiceMapRequest) (*dto.ServiceMapResponse, error) {
+	// 获取根CI
+	rootCI, err := s.client.ConfigurationItem.Get(ctx, req.RootCIID)
+	if err != nil {
+		s.logger.Errorf("Failed to get root CI: %v", err)
+		return nil, err
+	}
 
-	// 递归获取关联的CI
-	err := s.buildServiceMap(ctx, ciID, depth, tenantID, nodes, &edges, make(map[int]bool))
+	// 构建服务图谱
+	serviceMap, err := s.buildServiceMap(ctx, rootCI, req.Depth, req.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 转换为数组
-	nodeList := make([]*dto.ServiceMapNode, 0, len(nodes))
-	for _, node := range nodes {
-		nodeList = append(nodeList, node)
-	}
-
 	return &dto.ServiceMapResponse{
-		Nodes: nodeList,
-		Edges: edges,
+		RootCI:   serviceMap.RootCI,
+		Nodes:    serviceMap.Nodes,
+		Edges:    serviceMap.Edges,
+		Metadata: serviceMap.Metadata,
 	}, nil
 }
 
 // AnalyzeImpact 影响分析
-func (s *CMDBAdvancedService) AnalyzeImpact(ctx context.Context, ciID int, changeType string, tenantID int) (*dto.ImpactAnalysisResponse, error) {
-	// 获取所有受影响的CI
-	affectedCIs := make([]*dto.AffectedCI, 0)
+func (s *CMDBAdvancedService) AnalyzeImpact(ctx context.Context, req *dto.AnalyzeImpactRequest) (*dto.ImpactAnalysisResponse, error) {
+	// 获取源CI
+	sourceCI, err := s.client.ConfigurationItem.Get(ctx, req.SourceCIID)
+	if err != nil {
+		s.logger.Errorf("Failed to get source CI: %v", err)
+		return nil, err
+	}
 
-	// 向上分析（依赖此CI的其他CI）
-	upstreamCIs, err := s.getUpstreamCIs(ctx, ciID, tenantID)
+	// 获取上游影响
+	upstreamImpacts, err := s.getUpstreamCIs(ctx, req.SourceCIID, req.Depth, req.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 向下分析（此CI依赖的其他CI）
-	downstreamCIs, err := s.getDownstreamCIs(ctx, ciID, tenantID)
+	// 获取下游影响
+	downstreamImpacts, err := s.getDownstreamCIs(ctx, req.SourceCIID, req.Depth, req.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 计算影响级别
-	for _, ci := range upstreamCIs {
-		impactLevel := s.calculateImpactLevel(ci, changeType)
-		affectedCIs = append(affectedCIs, &dto.AffectedCI{
-			CIID:        ci.ID,
-			CIName:      ci.Name,
-			CIType:      ci.Edges.CiType.Name,
-			ImpactLevel: impactLevel,
-			Direction:   "upstream",
-		})
-	}
-
-	for _, ci := range downstreamCIs {
-		impactLevel := s.calculateImpactLevel(ci, changeType)
-		affectedCIs = append(affectedCIs, &dto.AffectedCI{
-			CIID:        ci.ID,
-			CIName:      ci.Name,
-			CIType:      ci.Edges.CiType.Name,
-			ImpactLevel: impactLevel,
-			Direction:   "downstream",
-		})
-	}
+	impactLevel := s.calculateImpactLevel(upstreamImpacts, downstreamImpacts)
 
 	return &dto.ImpactAnalysisResponse{
-		SourceCIID:  ciID,
-		ChangeType:  changeType,
-		AffectedCIs: affectedCIs,
-		TotalCount:  len(affectedCIs),
-		AnalyzedAt:  time.Now(),
+		SourceCI:          sourceCI,
+		UpstreamImpacts:   upstreamImpacts,
+		DownstreamImpacts: downstreamImpacts,
+		ImpactLevel:       impactLevel,
+		AnalysisTime:      time.Now(),
 	}, nil
 }
 
 // UpdateCILifecycleState 更新CI生命周期状态
-func (s *CMDBAdvancedService) UpdateCILifecycleState(ctx context.Context, req *dto.UpdateCILifecycleRequest) error {
-	// 记录状态变更
+func (s *CMDBAdvancedService) UpdateCILifecycleState(ctx context.Context, req *dto.UpdateCILifecycleStateRequest) error {
+	// 创建生命周期状态记录
 	_, err := s.client.CILifecycleState.Create().
-		SetCIID(req.CIID).
-		SetState(req.NewState).
-		SetSubState(req.SubState).
+		SetCiID(req.CIID).
+		SetState(req.State).
 		SetReason(req.Reason).
 		SetChangedBy(req.ChangedBy).
-		SetMetadata(req.Metadata).
+		SetChangedAt(req.ChangedAt).
 		SetTenantID(req.TenantID).
 		Save(ctx)
 
 	if err != nil {
-		return fmt.Errorf("failed to record lifecycle state: %w", err)
+		s.logger.Errorf("Failed to create CI lifecycle state: %v", err)
+		return err
 	}
 
 	// 更新CI的当前状态
 	err = s.client.ConfigurationItem.UpdateOneID(req.CIID).
-		SetLifecycleState(req.NewState).
+		SetStatus(req.State).
 		Exec(ctx)
 
 	if err != nil {
-		return fmt.Errorf("failed to update CI lifecycle state: %w", err)
+		s.logger.Errorf("Failed to update CI status: %v", err)
+		return err
 	}
 
+	s.logger.Infof("Updated CI %d lifecycle state to %s", req.CIID, req.State)
 	return nil
 }
 
 // BatchImportCIs 批量导入CI
-func (s *CMDBAdvancedService) BatchImportCIs(ctx context.Context, req *dto.BatchImportCIRequest) (*dto.BatchImportResponse, error) {
-	results := &dto.BatchImportResponse{
-		Total:     len(req.CIs),
-		Succeeded: 0,
-		Failed:    0,
-		Errors:    make([]string, 0),
-	}
+func (s *CMDBAdvancedService) BatchImportCIs(ctx context.Context, req *dto.BatchImportCIsRequest) (*dto.BatchImportCIsResponse, error) {
+	var successCount, failureCount int
+	var errors []string
 
-	tx, err := s.client.Tx(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start transaction: %w", err)
-	}
-	defer tx.Rollback()
-
-	for i, ciData := range req.CIs {
-		_, err := tx.ConfigurationItem.Create().
+	for _, ciData := range req.CIs {
+		_, err := s.client.ConfigurationItem.Create().
 			SetName(ciData.Name).
-			SetDisplayName(ciData.DisplayName).
-			SetDescription(ciData.Description).
 			SetCiTypeID(ciData.CITypeID).
-			SetSerialNumber(ciData.SerialNumber).
-			SetAssetTag(ciData.AssetTag).
-			SetStatus(ciData.Status).
-			SetLifecycleState(ciData.LifecycleState).
-			SetBusinessService(ciData.BusinessService).
-			SetOwner(ciData.Owner).
-			SetEnvironment(ciData.Environment).
-			SetLocation(ciData.Location).
 			SetAttributes(ciData.Attributes).
-			SetDiscoverySource(map[string]interface{}{
-				"source":   "batch_import",
-				"batch_id": req.BatchID,
-			}).
+			SetStatus(ciData.Status).
 			SetTenantID(req.TenantID).
 			Save(ctx)
 
 		if err != nil {
-			results.Failed++
-			results.Errors = append(results.Errors, fmt.Sprintf("Row %d: %v", i+1, err))
+			failureCount++
+			errors = append(errors, fmt.Sprintf("Failed to import CI %s: %v", ciData.Name, err))
+			s.logger.Errorf("Failed to import CI %s: %v", ciData.Name, err)
 		} else {
-			results.Succeeded++
+			successCount++
 		}
 	}
 
-	if results.Failed == 0 {
-		err = tx.Commit()
-		if err != nil {
-			return nil, fmt.Errorf("failed to commit transaction: %w", err)
-		}
-	}
-
-	return results, nil
+	return &dto.BatchImportCIsResponse{
+		TotalCount:   len(req.CIs),
+		SuccessCount: successCount,
+		FailureCount: failureCount,
+		Errors:       errors,
+	}, nil
 }
 
-// 辅助方法
-func (s *CMDBAdvancedService) validateRelationshipConstraints(relType *ent.CIRelationshipType, sourceType, targetType string) bool {
-	// 检查源CI类型约束
-	if len(relType.SourceCiTypes) > 0 {
-		allowed := false
-		for _, allowedType := range relType.SourceCiTypes {
-			if allowedType == sourceType {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
-			return false
-		}
+// validateRelationshipConstraints 验证关系约束
+func (s *CMDBAdvancedService) validateRelationshipConstraints(ctx context.Context, req *dto.CreateCIRelationshipRequest) error {
+	// 检查源CI和目标CI是否存在
+	sourceExists, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.ID(req.SourceCIID)).
+		Exist(ctx)
+	if err != nil || !sourceExists {
+		return fmt.Errorf("source CI %d does not exist", req.SourceCIID)
 	}
 
-	// 检查目标CI类型约束
-	if len(relType.TargetCiTypes) > 0 {
-		allowed := false
-		for _, allowedType := range relType.TargetCiTypes {
-			if allowedType == targetType {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
-			return false
-		}
+	targetExists, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.ID(req.TargetCIID)).
+		Exist(ctx)
+	if err != nil || !targetExists {
+		return fmt.Errorf("target CI %d does not exist", req.TargetCIID)
 	}
 
-	return true
+	// 检查关系是否已存在
+	existingRel, err := s.client.CIRelationship.Query().
+		Where(
+			cirelationship.SourceCiID(req.SourceCIID),
+			cirelationship.TargetCiID(req.TargetCIID),
+			cirelationship.RelationshipTypeID(req.RelationshipTypeID),
+		).
+		First(ctx)
+
+	if err == nil && existingRel != nil {
+		return fmt.Errorf("relationship already exists between CI %d and %d", req.SourceCIID, req.TargetCIID)
+	}
+
+	return nil
 }
 
-func (s *CMDBAdvancedService) buildServiceMap(ctx context.Context, ciID, depth, tenantID int, nodes map[int]*dto.ServiceMapNode, edges *[]*dto.ServiceMapEdge, visited map[int]bool) error {
-	if depth <= 0 || visited[ciID] {
+// buildServiceMap 构建服务图谱
+func (s *CMDBAdvancedService) buildServiceMap(ctx context.Context, rootCI *ent.ConfigurationItem, depth int, tenantID int) (*dto.ServiceMapData, error) {
+	nodes := []*dto.ServiceMapNode{{
+		ID:       rootCI.ID,
+		Name:     rootCI.Name,
+		Type:     "root",
+		Level:    0,
+		Metadata: rootCI.Attributes,
+	}}
+
+	var edges []*dto.ServiceMapEdge
+	visited := make(map[int]bool)
+	visited[rootCI.ID] = true
+
+	// 递归构建图谱
+	err := s.buildServiceMapRecursive(ctx, rootCI.ID, 0, depth, tenantID, &nodes, &edges, visited)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ServiceMapData{
+		RootCI: &dto.ServiceMapNode{
+			ID:       rootCI.ID,
+			Name:     rootCI.Name,
+			Type:     "root",
+			Level:    0,
+			Metadata: rootCI.Attributes,
+		},
+		Nodes: nodes,
+		Edges: edges,
+		Metadata: map[string]interface{}{
+			"totalNodes": len(nodes),
+			"totalEdges": len(edges),
+			"maxDepth":   depth,
+		},
+	}, nil
+}
+
+// buildServiceMapRecursive 递归构建服务图谱
+func (s *CMDBAdvancedService) buildServiceMapRecursive(ctx context.Context, ciID, currentLevel, maxDepth, tenantID int, nodes *[]*dto.ServiceMapNode, edges *[]*dto.ServiceMapEdge, visited map[int]bool) error {
+	if currentLevel >= maxDepth {
 		return nil
 	}
 
-	visited[ciID] = true
-
-	// 获取CI信息
-	ci, err := s.client.ConfigurationItem.Query().
-		Where(configurationitem.ID(ciID)).
-		WithCiType().
-		Only(ctx)
-	if err != nil {
-		return err
-	}
-
-	// 添加节点
-	nodes[ciID] = &dto.ServiceMapNode{
-		ID:       ci.ID,
-		Name:     ci.Name,
-		Type:     ci.Edges.CiType.Name,
-		Status:   ci.Status,
-		Category: ci.Edges.CiType.Category,
-	}
-
-	// 获取关联关系
+	// 获取相关关系
 	relationships, err := s.client.CIRelationship.Query().
 		Where(
 			cirelationship.Or(
-				cirelationship.SourceCIID(ciID),
-				cirelationship.TargetCIID(ciID),
+				cirelationship.SourceCiID(ciID),
+				cirelationship.TargetCiID(ciID),
 			),
 			cirelationship.TenantID(tenantID),
 		).
-		WithRelationshipType().
+		WithSourceCi().
+		WithTargetCi().
 		All(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	// 处理关系和递归
 	for _, rel := range relationships {
-		*edges = append(*edges, &dto.ServiceMapEdge{
-			SourceID:         rel.SourceCIID,
-			TargetID:         rel.TargetCIID,
-			RelationshipType: rel.Edges.RelationshipType.Name,
-			Properties:       rel.Properties,
-		})
-
-		// 递归处理相关CI
 		var nextCIID int
-		if rel.SourceCIID == ciID {
-			nextCIID = rel.TargetCIID
+		var nextCI *ent.ConfigurationItem
+		var edgeDirection string
+
+		if rel.SourceCiID == ciID {
+			nextCIID = rel.TargetCiID
+			nextCI = rel.Edges.TargetCi
+			edgeDirection = "outgoing"
 		} else {
-			nextCIID = rel.SourceCIID
+			nextCIID = rel.SourceCiID
+			nextCI = rel.Edges.SourceCi
+			edgeDirection = "incoming"
 		}
 
-		err = s.buildServiceMap(ctx, nextCIID, depth-1, tenantID, nodes, edges, visited)
-		if err != nil {
-			return err
+		if !visited[nextCIID] {
+			visited[nextCIID] = true
+
+			// 添加节点
+			*nodes = append(*nodes, &dto.ServiceMapNode{
+				ID:       nextCI.ID,
+				Name:     nextCI.Name,
+				Type:     "ci",
+				Level:    currentLevel + 1,
+				Metadata: nextCI.Attributes,
+			})
+
+			// 递归处理下一级
+			err = s.buildServiceMapRecursive(ctx, nextCIID, currentLevel+1, maxDepth, tenantID, nodes, edges, visited)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 添加边
+		*edges = append(*edges, &dto.ServiceMapEdge{
+			ID:       rel.ID,
+			SourceID: rel.SourceCiID,
+			TargetID: rel.TargetCiID,
+			Type:     edgeDirection,
+			Metadata: rel.Properties,
+		})
+	}
+
+	return nil
+}
+
+// getUpstreamCIs 获取上游CI
+func (s *CMDBAdvancedService) getUpstreamCIs(ctx context.Context, ciID, depth, tenantID int) ([]*dto.ImpactedCI, error) {
+	var upstreamCIs []*dto.ImpactedCI
+	visited := make(map[int]bool)
+
+	err := s.getUpstreamCIsRecursive(ctx, ciID, 0, depth, tenantID, &upstreamCIs, visited)
+	return upstreamCIs, err
+}
+
+// getUpstreamCIsRecursive 递归获取上游CI
+func (s *CMDBAdvancedService) getUpstreamCIsRecursive(ctx context.Context, ciID, currentLevel, maxDepth, tenantID int, upstreamCIs *[]*dto.ImpactedCI, visited map[int]bool) error {
+	if currentLevel >= maxDepth {
+		return nil
+	}
+
+	// 获取指向当前CI的关系（上游）
+	relationships, err := s.client.CIRelationship.Query().
+		Where(
+			cirelationship.TargetCiID(ciID),
+			cirelationship.TenantID(tenantID),
+		).
+		WithSourceCi().
+		All(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range relationships {
+		if !visited[rel.SourceCiID] {
+			visited[rel.SourceCiID] = true
+
+			*upstreamCIs = append(*upstreamCIs, &dto.ImpactedCI{
+				CI:           rel.Edges.SourceCi,
+				ImpactLevel:  currentLevel + 1,
+				Relationship: rel,
+			})
+
+			// 递归获取更上游的CI
+			err = s.getUpstreamCIsRecursive(ctx, rel.SourceCiID, currentLevel+1, maxDepth, tenantID, upstreamCIs, visited)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func (s *CMDBAdvancedService) getUpstreamCIs(ctx context.Context, ciID, tenantID int) ([]*ent.ConfigurationItem, error) {
-	// 获取依赖此CI的其他CI（向上依赖）
-	return s.client.ConfigurationItem.Query().
-		Where(
-			configurationitem.HasOutgoingRelationshipsWith(
-				cirelationship.TargetCIID(ciID),
-				cirelationship.TenantID(tenantID),
-			),
-		).
-		WithCiType().
-		All(ctx)
+// getDownstreamCIs 获取下游CI
+func (s *CMDBAdvancedService) getDownstreamCIs(ctx context.Context, ciID, depth, tenantID int) ([]*dto.ImpactedCI, error) {
+	var downstreamCIs []*dto.ImpactedCI
+	visited := make(map[int]bool)
+
+	err := s.getDownstreamCIsRecursive(ctx, ciID, 0, depth, tenantID, &downstreamCIs, visited)
+	return downstreamCIs, err
 }
 
-func (s *CMDBAdvancedService) getDownstreamCIs(ctx context.Context, ciID, tenantID int) ([]*ent.ConfigurationItem, error) {
-	// 获取此CI依赖的其他CI（向下依赖）
-	return s.client.ConfigurationItem.Query().
+// getDownstreamCIsRecursive 递归获取下游CI
+func (s *CMDBAdvancedService) getDownstreamCIsRecursive(ctx context.Context, ciID, currentLevel, maxDepth, tenantID int, downstreamCIs *[]*dto.ImpactedCI, visited map[int]bool) error {
+	if currentLevel >= maxDepth {
+		return nil
+	}
+
+	// 获取从当前CI出发的关系（下游）
+	relationships, err := s.client.CIRelationship.Query().
 		Where(
-			configurationitem.HasIncomingRelationshipsWith(
-				cirelationship.SourceCIID(ciID),
-				cirelationship.TenantID(tenantID),
-			),
+			cirelationship.SourceCiID(ciID),
+			cirelationship.TenantID(tenantID),
 		).
-		WithCiType().
+		WithTargetCi().
 		All(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range relationships {
+		if !visited[rel.TargetCiID] {
+			visited[rel.TargetCiID] = true
+
+			*downstreamCIs = append(*downstreamCIs, &dto.ImpactedCI{
+				CI:           rel.Edges.TargetCi,
+				ImpactLevel:  currentLevel + 1,
+				Relationship: rel,
+			})
+
+			// 递归获取更下游的CI
+			err = s.getDownstreamCIsRecursive(ctx, rel.TargetCiID, currentLevel+1, maxDepth, tenantID, downstreamCIs, visited)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
-func (s *CMDBAdvancedService) calculateImpactLevel(ci *ent.ConfigurationItem, changeType string) string {
-	// 根据CI类型、业务重要性等计算影响级别
-	switch ci.Edges.CiType.Category {
-	case "infrastructure":
-		return "high"
-	case "application":
-		return "medium"
+// calculateImpactLevel 计算影响级别
+func (s *CMDBAdvancedService) calculateImpactLevel(upstreamCIs, downstreamCIs []*dto.ImpactedCI) string {
+	totalImpacted := len(upstreamCIs) + len(downstreamCIs)
+
+	switch {
+	case totalImpacted == 0:
+		return "无影响"
+	case totalImpacted <= 5:
+		return "低影响"
+	case totalImpacted <= 15:
+		return "中等影响"
+	case totalImpacted <= 30:
+		return "高影响"
 	default:
-		return "low"
+		return "严重影响"
 	}
 }

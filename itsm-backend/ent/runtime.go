@@ -4,6 +4,7 @@ package ent
 
 import (
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -50,6 +51,54 @@ func init() {
 	approvallogDescCreatedAt := approvallogFields[8].Descriptor()
 	// approvallog.DefaultCreatedAt holds the default value on creation for the created_at field.
 	approvallog.DefaultCreatedAt = approvallogDescCreatedAt.Default.(func() time.Time)
+	ciattributedefinitionFields := schema.CIAttributeDefinition{}.Fields()
+	_ = ciattributedefinitionFields
+	// ciattributedefinitionDescName is the schema descriptor for name field.
+	ciattributedefinitionDescName := ciattributedefinitionFields[0].Descriptor()
+	// ciattributedefinition.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	ciattributedefinition.NameValidator = ciattributedefinitionDescName.Validators[0].(func(string) error)
+	// ciattributedefinitionDescDisplayName is the schema descriptor for display_name field.
+	ciattributedefinitionDescDisplayName := ciattributedefinitionFields[1].Descriptor()
+	// ciattributedefinition.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	ciattributedefinition.DisplayNameValidator = ciattributedefinitionDescDisplayName.Validators[0].(func(string) error)
+	// ciattributedefinitionDescDataType is the schema descriptor for data_type field.
+	ciattributedefinitionDescDataType := ciattributedefinitionFields[3].Descriptor()
+	// ciattributedefinition.DataTypeValidator is a validator for the "data_type" field. It is called by the builders before save.
+	ciattributedefinition.DataTypeValidator = ciattributedefinitionDescDataType.Validators[0].(func(string) error)
+	// ciattributedefinitionDescIsRequired is the schema descriptor for is_required field.
+	ciattributedefinitionDescIsRequired := ciattributedefinitionFields[4].Descriptor()
+	// ciattributedefinition.DefaultIsRequired holds the default value on creation for the is_required field.
+	ciattributedefinition.DefaultIsRequired = ciattributedefinitionDescIsRequired.Default.(bool)
+	// ciattributedefinitionDescIsUnique is the schema descriptor for is_unique field.
+	ciattributedefinitionDescIsUnique := ciattributedefinitionFields[5].Descriptor()
+	// ciattributedefinition.DefaultIsUnique holds the default value on creation for the is_unique field.
+	ciattributedefinition.DefaultIsUnique = ciattributedefinitionDescIsUnique.Default.(bool)
+	// ciattributedefinitionDescDisplayOrder is the schema descriptor for display_order field.
+	ciattributedefinitionDescDisplayOrder := ciattributedefinitionFields[10].Descriptor()
+	// ciattributedefinition.DefaultDisplayOrder holds the default value on creation for the display_order field.
+	ciattributedefinition.DefaultDisplayOrder = ciattributedefinitionDescDisplayOrder.Default.(int)
+	// ciattributedefinitionDescIsSearchable is the schema descriptor for is_searchable field.
+	ciattributedefinitionDescIsSearchable := ciattributedefinitionFields[11].Descriptor()
+	// ciattributedefinition.DefaultIsSearchable holds the default value on creation for the is_searchable field.
+	ciattributedefinition.DefaultIsSearchable = ciattributedefinitionDescIsSearchable.Default.(bool)
+	// ciattributedefinitionDescIsSystem is the schema descriptor for is_system field.
+	ciattributedefinitionDescIsSystem := ciattributedefinitionFields[12].Descriptor()
+	// ciattributedefinition.DefaultIsSystem holds the default value on creation for the is_system field.
+	ciattributedefinition.DefaultIsSystem = ciattributedefinitionDescIsSystem.Default.(bool)
+	// ciattributedefinitionDescIsActive is the schema descriptor for is_active field.
+	ciattributedefinitionDescIsActive := ciattributedefinitionFields[13].Descriptor()
+	// ciattributedefinition.DefaultIsActive holds the default value on creation for the is_active field.
+	ciattributedefinition.DefaultIsActive = ciattributedefinitionDescIsActive.Default.(bool)
+	// ciattributedefinitionDescCreatedAt is the schema descriptor for created_at field.
+	ciattributedefinitionDescCreatedAt := ciattributedefinitionFields[16].Descriptor()
+	// ciattributedefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ciattributedefinition.DefaultCreatedAt = ciattributedefinitionDescCreatedAt.Default.(func() time.Time)
+	// ciattributedefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	ciattributedefinitionDescUpdatedAt := ciattributedefinitionFields[17].Descriptor()
+	// ciattributedefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ciattributedefinition.DefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.Default.(func() time.Time)
+	// ciattributedefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ciattributedefinition.UpdateDefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	cichangerecordFields := schema.CIChangeRecord{}.Fields()
 	_ = cichangerecordFields
 	// cichangerecordDescChangeType is the schema descriptor for change_type field.

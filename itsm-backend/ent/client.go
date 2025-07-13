@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/migrate"
 
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -42,6 +43,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// ApprovalLog is the client for interacting with the ApprovalLog builders.
 	ApprovalLog *ApprovalLogClient
+	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
+	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIChangeRecord is the client for interacting with the CIChangeRecord builders.
 	CIChangeRecord *CIChangeRecordClient
 	// CILifecycleState is the client for interacting with the CILifecycleState builders.
@@ -86,6 +89,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.ApprovalLog = NewApprovalLogClient(c.config)
+	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
 	c.CIChangeRecord = NewCIChangeRecordClient(c.config)
 	c.CILifecycleState = NewCILifecycleStateClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
@@ -192,25 +196,26 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                ctx,
-		config:             cfg,
-		ApprovalLog:        NewApprovalLogClient(cfg),
-		CIChangeRecord:     NewCIChangeRecordClient(cfg),
-		CILifecycleState:   NewCILifecycleStateClient(cfg),
-		CIRelationship:     NewCIRelationshipClient(cfg),
-		CIRelationshipType: NewCIRelationshipTypeClient(cfg),
-		CIType:             NewCITypeClient(cfg),
-		ConfigurationItem:  NewConfigurationItemClient(cfg),
-		FlowInstance:       NewFlowInstanceClient(cfg),
-		KnowledgeArticle:   NewKnowledgeArticleClient(cfg),
-		ServiceCatalog:     NewServiceCatalogClient(cfg),
-		ServiceRequest:     NewServiceRequestClient(cfg),
-		StatusLog:          NewStatusLogClient(cfg),
-		Subscription:       NewSubscriptionClient(cfg),
-		Tenant:             NewTenantClient(cfg),
-		Ticket:             NewTicketClient(cfg),
-		User:               NewUserClient(cfg),
-		Workflow:           NewWorkflowClient(cfg),
+		ctx:                   ctx,
+		config:                cfg,
+		ApprovalLog:           NewApprovalLogClient(cfg),
+		CIAttributeDefinition: NewCIAttributeDefinitionClient(cfg),
+		CIChangeRecord:        NewCIChangeRecordClient(cfg),
+		CILifecycleState:      NewCILifecycleStateClient(cfg),
+		CIRelationship:        NewCIRelationshipClient(cfg),
+		CIRelationshipType:    NewCIRelationshipTypeClient(cfg),
+		CIType:                NewCITypeClient(cfg),
+		ConfigurationItem:     NewConfigurationItemClient(cfg),
+		FlowInstance:          NewFlowInstanceClient(cfg),
+		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
+		ServiceCatalog:        NewServiceCatalogClient(cfg),
+		ServiceRequest:        NewServiceRequestClient(cfg),
+		StatusLog:             NewStatusLogClient(cfg),
+		Subscription:          NewSubscriptionClient(cfg),
+		Tenant:                NewTenantClient(cfg),
+		Ticket:                NewTicketClient(cfg),
+		User:                  NewUserClient(cfg),
+		Workflow:              NewWorkflowClient(cfg),
 	}, nil
 }
 
@@ -228,25 +233,26 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                ctx,
-		config:             cfg,
-		ApprovalLog:        NewApprovalLogClient(cfg),
-		CIChangeRecord:     NewCIChangeRecordClient(cfg),
-		CILifecycleState:   NewCILifecycleStateClient(cfg),
-		CIRelationship:     NewCIRelationshipClient(cfg),
-		CIRelationshipType: NewCIRelationshipTypeClient(cfg),
-		CIType:             NewCITypeClient(cfg),
-		ConfigurationItem:  NewConfigurationItemClient(cfg),
-		FlowInstance:       NewFlowInstanceClient(cfg),
-		KnowledgeArticle:   NewKnowledgeArticleClient(cfg),
-		ServiceCatalog:     NewServiceCatalogClient(cfg),
-		ServiceRequest:     NewServiceRequestClient(cfg),
-		StatusLog:          NewStatusLogClient(cfg),
-		Subscription:       NewSubscriptionClient(cfg),
-		Tenant:             NewTenantClient(cfg),
-		Ticket:             NewTicketClient(cfg),
-		User:               NewUserClient(cfg),
-		Workflow:           NewWorkflowClient(cfg),
+		ctx:                   ctx,
+		config:                cfg,
+		ApprovalLog:           NewApprovalLogClient(cfg),
+		CIAttributeDefinition: NewCIAttributeDefinitionClient(cfg),
+		CIChangeRecord:        NewCIChangeRecordClient(cfg),
+		CILifecycleState:      NewCILifecycleStateClient(cfg),
+		CIRelationship:        NewCIRelationshipClient(cfg),
+		CIRelationshipType:    NewCIRelationshipTypeClient(cfg),
+		CIType:                NewCITypeClient(cfg),
+		ConfigurationItem:     NewConfigurationItemClient(cfg),
+		FlowInstance:          NewFlowInstanceClient(cfg),
+		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
+		ServiceCatalog:        NewServiceCatalogClient(cfg),
+		ServiceRequest:        NewServiceRequestClient(cfg),
+		StatusLog:             NewStatusLogClient(cfg),
+		Subscription:          NewSubscriptionClient(cfg),
+		Tenant:                NewTenantClient(cfg),
+		Ticket:                NewTicketClient(cfg),
+		User:                  NewUserClient(cfg),
+		Workflow:              NewWorkflowClient(cfg),
 	}, nil
 }
 
@@ -276,10 +282,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.ApprovalLog, c.CIChangeRecord, c.CILifecycleState, c.CIRelationship,
-		c.CIRelationshipType, c.CIType, c.ConfigurationItem, c.FlowInstance,
-		c.KnowledgeArticle, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
-		c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
+		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
+		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
+		c.FlowInstance, c.KnowledgeArticle, c.ServiceCatalog, c.ServiceRequest,
+		c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
 	} {
 		n.Use(hooks...)
 	}
@@ -289,10 +295,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.ApprovalLog, c.CIChangeRecord, c.CILifecycleState, c.CIRelationship,
-		c.CIRelationshipType, c.CIType, c.ConfigurationItem, c.FlowInstance,
-		c.KnowledgeArticle, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
-		c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
+		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
+		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
+		c.FlowInstance, c.KnowledgeArticle, c.ServiceCatalog, c.ServiceRequest,
+		c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -303,6 +309,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ApprovalLogMutation:
 		return c.ApprovalLog.mutate(ctx, m)
+	case *CIAttributeDefinitionMutation:
+		return c.CIAttributeDefinition.mutate(ctx, m)
 	case *CIChangeRecordMutation:
 		return c.CIChangeRecord.mutate(ctx, m)
 	case *CILifecycleStateMutation:
@@ -502,6 +510,171 @@ func (c *ApprovalLogClient) mutate(ctx context.Context, m *ApprovalLogMutation) 
 		return (&ApprovalLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ApprovalLog mutation op: %q", m.Op())
+	}
+}
+
+// CIAttributeDefinitionClient is a client for the CIAttributeDefinition schema.
+type CIAttributeDefinitionClient struct {
+	config
+}
+
+// NewCIAttributeDefinitionClient returns a client for the CIAttributeDefinition from the given config.
+func NewCIAttributeDefinitionClient(c config) *CIAttributeDefinitionClient {
+	return &CIAttributeDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ciattributedefinition.Hooks(f(g(h())))`.
+func (c *CIAttributeDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.CIAttributeDefinition = append(c.hooks.CIAttributeDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ciattributedefinition.Intercept(f(g(h())))`.
+func (c *CIAttributeDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CIAttributeDefinition = append(c.inters.CIAttributeDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a CIAttributeDefinition entity.
+func (c *CIAttributeDefinitionClient) Create() *CIAttributeDefinitionCreate {
+	mutation := newCIAttributeDefinitionMutation(c.config, OpCreate)
+	return &CIAttributeDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CIAttributeDefinition entities.
+func (c *CIAttributeDefinitionClient) CreateBulk(builders ...*CIAttributeDefinitionCreate) *CIAttributeDefinitionCreateBulk {
+	return &CIAttributeDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CIAttributeDefinitionClient) MapCreateBulk(slice any, setFunc func(*CIAttributeDefinitionCreate, int)) *CIAttributeDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CIAttributeDefinitionCreateBulk{err: fmt.Errorf("calling to CIAttributeDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CIAttributeDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CIAttributeDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CIAttributeDefinition.
+func (c *CIAttributeDefinitionClient) Update() *CIAttributeDefinitionUpdate {
+	mutation := newCIAttributeDefinitionMutation(c.config, OpUpdate)
+	return &CIAttributeDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CIAttributeDefinitionClient) UpdateOne(cad *CIAttributeDefinition) *CIAttributeDefinitionUpdateOne {
+	mutation := newCIAttributeDefinitionMutation(c.config, OpUpdateOne, withCIAttributeDefinition(cad))
+	return &CIAttributeDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CIAttributeDefinitionClient) UpdateOneID(id int) *CIAttributeDefinitionUpdateOne {
+	mutation := newCIAttributeDefinitionMutation(c.config, OpUpdateOne, withCIAttributeDefinitionID(id))
+	return &CIAttributeDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CIAttributeDefinition.
+func (c *CIAttributeDefinitionClient) Delete() *CIAttributeDefinitionDelete {
+	mutation := newCIAttributeDefinitionMutation(c.config, OpDelete)
+	return &CIAttributeDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CIAttributeDefinitionClient) DeleteOne(cad *CIAttributeDefinition) *CIAttributeDefinitionDeleteOne {
+	return c.DeleteOneID(cad.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CIAttributeDefinitionClient) DeleteOneID(id int) *CIAttributeDefinitionDeleteOne {
+	builder := c.Delete().Where(ciattributedefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CIAttributeDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for CIAttributeDefinition.
+func (c *CIAttributeDefinitionClient) Query() *CIAttributeDefinitionQuery {
+	return &CIAttributeDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCIAttributeDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CIAttributeDefinition entity by its id.
+func (c *CIAttributeDefinitionClient) Get(ctx context.Context, id int) (*CIAttributeDefinition, error) {
+	return c.Query().Where(ciattributedefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CIAttributeDefinitionClient) GetX(ctx context.Context, id int) *CIAttributeDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a CIAttributeDefinition.
+func (c *CIAttributeDefinitionClient) QueryTenant(cad *CIAttributeDefinition) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cad.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.TenantTable, ciattributedefinition.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(cad.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCiType queries the ci_type edge of a CIAttributeDefinition.
+func (c *CIAttributeDefinitionClient) QueryCiType(cad *CIAttributeDefinition) *CITypeQuery {
+	query := (&CITypeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := cad.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, id),
+			sqlgraph.To(citype.Table, citype.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.CiTypeTable, ciattributedefinition.CiTypeColumn),
+		)
+		fromV = sqlgraph.Neighbors(cad.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *CIAttributeDefinitionClient) Hooks() []Hook {
+	return c.hooks.CIAttributeDefinition
+}
+
+// Interceptors returns the client interceptors.
+func (c *CIAttributeDefinitionClient) Interceptors() []Interceptor {
+	return c.inters.CIAttributeDefinition
+}
+
+func (c *CIAttributeDefinitionClient) mutate(ctx context.Context, m *CIAttributeDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CIAttributeDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CIAttributeDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CIAttributeDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CIAttributeDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CIAttributeDefinition mutation op: %q", m.Op())
 	}
 }
 
@@ -1346,6 +1519,22 @@ func (c *CITypeClient) QueryAllowedRelationships(ct *CIType) *CIRelationshipType
 			sqlgraph.From(citype.Table, citype.FieldID, id),
 			sqlgraph.To(cirelationshiptype.Table, cirelationshiptype.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, citype.AllowedRelationshipsTable, citype.AllowedRelationshipsColumn),
+		)
+		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttributeDefinitions queries the attribute_definitions edge of a CIType.
+func (c *CITypeClient) QueryAttributeDefinitions(ct *CIType) *CIAttributeDefinitionQuery {
+	query := (&CIAttributeDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ct.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, id),
+			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, citype.AttributeDefinitionsTable, citype.AttributeDefinitionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
 		return fromV, nil
@@ -2913,6 +3102,22 @@ func (c *TenantClient) QueryCiChangeRecords(t *Tenant) *CIChangeRecordQuery {
 	return query
 }
 
+// QueryCiAttributeDefinitions queries the ci_attribute_definitions edge of a Tenant.
+func (c *TenantClient) QueryCiAttributeDefinitions(t *Tenant) *CIAttributeDefinitionQuery {
+	query := (&CIAttributeDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiAttributeDefinitionsTable, tenant.CiAttributeDefinitionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TenantClient) Hooks() []Hook {
 	return c.hooks.Tenant
@@ -3564,15 +3769,15 @@ func (c *WorkflowClient) mutate(ctx context.Context, m *WorkflowMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ApprovalLog, CIChangeRecord, CILifecycleState, CIRelationship,
-		CIRelationshipType, CIType, ConfigurationItem, FlowInstance, KnowledgeArticle,
-		ServiceCatalog, ServiceRequest, StatusLog, Subscription, Tenant, Ticket, User,
-		Workflow []ent.Hook
+		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
+		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
+		KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog, Subscription,
+		Tenant, Ticket, User, Workflow []ent.Hook
 	}
 	inters struct {
-		ApprovalLog, CIChangeRecord, CILifecycleState, CIRelationship,
-		CIRelationshipType, CIType, ConfigurationItem, FlowInstance, KnowledgeArticle,
-		ServiceCatalog, ServiceRequest, StatusLog, Subscription, Tenant, Ticket, User,
-		Workflow []ent.Interceptor
+		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
+		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
+		KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog, Subscription,
+		Tenant, Ticket, User, Workflow []ent.Interceptor
 	}
 )

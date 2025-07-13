@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -40,23 +41,24 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeApprovalLog        = "ApprovalLog"
-	TypeCIChangeRecord     = "CIChangeRecord"
-	TypeCILifecycleState   = "CILifecycleState"
-	TypeCIRelationship     = "CIRelationship"
-	TypeCIRelationshipType = "CIRelationshipType"
-	TypeCIType             = "CIType"
-	TypeConfigurationItem  = "ConfigurationItem"
-	TypeFlowInstance       = "FlowInstance"
-	TypeKnowledgeArticle   = "KnowledgeArticle"
-	TypeServiceCatalog     = "ServiceCatalog"
-	TypeServiceRequest     = "ServiceRequest"
-	TypeStatusLog          = "StatusLog"
-	TypeSubscription       = "Subscription"
-	TypeTenant             = "Tenant"
-	TypeTicket             = "Ticket"
-	TypeUser               = "User"
-	TypeWorkflow           = "Workflow"
+	TypeApprovalLog           = "ApprovalLog"
+	TypeCIAttributeDefinition = "CIAttributeDefinition"
+	TypeCIChangeRecord        = "CIChangeRecord"
+	TypeCILifecycleState      = "CILifecycleState"
+	TypeCIRelationship        = "CIRelationship"
+	TypeCIRelationshipType    = "CIRelationshipType"
+	TypeCIType                = "CIType"
+	TypeConfigurationItem     = "ConfigurationItem"
+	TypeFlowInstance          = "FlowInstance"
+	TypeKnowledgeArticle      = "KnowledgeArticle"
+	TypeServiceCatalog        = "ServiceCatalog"
+	TypeServiceRequest        = "ServiceRequest"
+	TypeStatusLog             = "StatusLog"
+	TypeSubscription          = "Subscription"
+	TypeTenant                = "Tenant"
+	TypeTicket                = "Ticket"
+	TypeUser                  = "User"
+	TypeWorkflow              = "Workflow"
 )
 
 // ApprovalLogMutation represents an operation that mutates the ApprovalLog nodes in the graph.
@@ -1030,6 +1032,1501 @@ func (m *ApprovalLogMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ApprovalLog edge %s", name)
+}
+
+// CIAttributeDefinitionMutation represents an operation that mutates the CIAttributeDefinition nodes in the graph.
+type CIAttributeDefinitionMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *int
+	name              *string
+	display_name      *string
+	description       *string
+	data_type         *string
+	is_required       *bool
+	is_unique         *bool
+	default_value     *string
+	validation_rules  *map[string]interface{}
+	enum_values       *[]string
+	appendenum_values []string
+	reference_type    *string
+	display_order     *int
+	adddisplay_order  *int
+	is_searchable     *bool
+	is_system         *bool
+	is_active         *bool
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	tenant            *int
+	clearedtenant     bool
+	ci_type           *int
+	clearedci_type    bool
+	done              bool
+	oldValue          func(context.Context) (*CIAttributeDefinition, error)
+	predicates        []predicate.CIAttributeDefinition
+}
+
+var _ ent.Mutation = (*CIAttributeDefinitionMutation)(nil)
+
+// ciattributedefinitionOption allows management of the mutation configuration using functional options.
+type ciattributedefinitionOption func(*CIAttributeDefinitionMutation)
+
+// newCIAttributeDefinitionMutation creates new mutation for the CIAttributeDefinition entity.
+func newCIAttributeDefinitionMutation(c config, op Op, opts ...ciattributedefinitionOption) *CIAttributeDefinitionMutation {
+	m := &CIAttributeDefinitionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCIAttributeDefinition,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCIAttributeDefinitionID sets the ID field of the mutation.
+func withCIAttributeDefinitionID(id int) ciattributedefinitionOption {
+	return func(m *CIAttributeDefinitionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CIAttributeDefinition
+		)
+		m.oldValue = func(ctx context.Context) (*CIAttributeDefinition, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CIAttributeDefinition.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCIAttributeDefinition sets the old CIAttributeDefinition of the mutation.
+func withCIAttributeDefinition(node *CIAttributeDefinition) ciattributedefinitionOption {
+	return func(m *CIAttributeDefinitionMutation) {
+		m.oldValue = func(context.Context) (*CIAttributeDefinition, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CIAttributeDefinitionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CIAttributeDefinitionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CIAttributeDefinitionMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CIAttributeDefinitionMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CIAttributeDefinition.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *CIAttributeDefinitionMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *CIAttributeDefinitionMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *CIAttributeDefinitionMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDisplayName sets the "display_name" field.
+func (m *CIAttributeDefinitionMutation) SetDisplayName(s string) {
+	m.display_name = &s
+}
+
+// DisplayName returns the value of the "display_name" field in the mutation.
+func (m *CIAttributeDefinitionMutation) DisplayName() (r string, exists bool) {
+	v := m.display_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisplayName returns the old "display_name" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldDisplayName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisplayName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisplayName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisplayName: %w", err)
+	}
+	return oldValue.DisplayName, nil
+}
+
+// ResetDisplayName resets all changes to the "display_name" field.
+func (m *CIAttributeDefinitionMutation) ResetDisplayName() {
+	m.display_name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *CIAttributeDefinitionMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *CIAttributeDefinitionMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *CIAttributeDefinitionMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[ciattributedefinition.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[ciattributedefinition.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *CIAttributeDefinitionMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, ciattributedefinition.FieldDescription)
+}
+
+// SetDataType sets the "data_type" field.
+func (m *CIAttributeDefinitionMutation) SetDataType(s string) {
+	m.data_type = &s
+}
+
+// DataType returns the value of the "data_type" field in the mutation.
+func (m *CIAttributeDefinitionMutation) DataType() (r string, exists bool) {
+	v := m.data_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDataType returns the old "data_type" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldDataType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDataType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDataType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDataType: %w", err)
+	}
+	return oldValue.DataType, nil
+}
+
+// ResetDataType resets all changes to the "data_type" field.
+func (m *CIAttributeDefinitionMutation) ResetDataType() {
+	m.data_type = nil
+}
+
+// SetIsRequired sets the "is_required" field.
+func (m *CIAttributeDefinitionMutation) SetIsRequired(b bool) {
+	m.is_required = &b
+}
+
+// IsRequired returns the value of the "is_required" field in the mutation.
+func (m *CIAttributeDefinitionMutation) IsRequired() (r bool, exists bool) {
+	v := m.is_required
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsRequired returns the old "is_required" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldIsRequired(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsRequired is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsRequired requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsRequired: %w", err)
+	}
+	return oldValue.IsRequired, nil
+}
+
+// ResetIsRequired resets all changes to the "is_required" field.
+func (m *CIAttributeDefinitionMutation) ResetIsRequired() {
+	m.is_required = nil
+}
+
+// SetIsUnique sets the "is_unique" field.
+func (m *CIAttributeDefinitionMutation) SetIsUnique(b bool) {
+	m.is_unique = &b
+}
+
+// IsUnique returns the value of the "is_unique" field in the mutation.
+func (m *CIAttributeDefinitionMutation) IsUnique() (r bool, exists bool) {
+	v := m.is_unique
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsUnique returns the old "is_unique" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldIsUnique(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsUnique is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsUnique requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsUnique: %w", err)
+	}
+	return oldValue.IsUnique, nil
+}
+
+// ResetIsUnique resets all changes to the "is_unique" field.
+func (m *CIAttributeDefinitionMutation) ResetIsUnique() {
+	m.is_unique = nil
+}
+
+// SetDefaultValue sets the "default_value" field.
+func (m *CIAttributeDefinitionMutation) SetDefaultValue(s string) {
+	m.default_value = &s
+}
+
+// DefaultValue returns the value of the "default_value" field in the mutation.
+func (m *CIAttributeDefinitionMutation) DefaultValue() (r string, exists bool) {
+	v := m.default_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDefaultValue returns the old "default_value" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldDefaultValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDefaultValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDefaultValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDefaultValue: %w", err)
+	}
+	return oldValue.DefaultValue, nil
+}
+
+// ClearDefaultValue clears the value of the "default_value" field.
+func (m *CIAttributeDefinitionMutation) ClearDefaultValue() {
+	m.default_value = nil
+	m.clearedFields[ciattributedefinition.FieldDefaultValue] = struct{}{}
+}
+
+// DefaultValueCleared returns if the "default_value" field was cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) DefaultValueCleared() bool {
+	_, ok := m.clearedFields[ciattributedefinition.FieldDefaultValue]
+	return ok
+}
+
+// ResetDefaultValue resets all changes to the "default_value" field.
+func (m *CIAttributeDefinitionMutation) ResetDefaultValue() {
+	m.default_value = nil
+	delete(m.clearedFields, ciattributedefinition.FieldDefaultValue)
+}
+
+// SetValidationRules sets the "validation_rules" field.
+func (m *CIAttributeDefinitionMutation) SetValidationRules(value map[string]interface{}) {
+	m.validation_rules = &value
+}
+
+// ValidationRules returns the value of the "validation_rules" field in the mutation.
+func (m *CIAttributeDefinitionMutation) ValidationRules() (r map[string]interface{}, exists bool) {
+	v := m.validation_rules
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValidationRules returns the old "validation_rules" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldValidationRules(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValidationRules is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValidationRules requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValidationRules: %w", err)
+	}
+	return oldValue.ValidationRules, nil
+}
+
+// ClearValidationRules clears the value of the "validation_rules" field.
+func (m *CIAttributeDefinitionMutation) ClearValidationRules() {
+	m.validation_rules = nil
+	m.clearedFields[ciattributedefinition.FieldValidationRules] = struct{}{}
+}
+
+// ValidationRulesCleared returns if the "validation_rules" field was cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) ValidationRulesCleared() bool {
+	_, ok := m.clearedFields[ciattributedefinition.FieldValidationRules]
+	return ok
+}
+
+// ResetValidationRules resets all changes to the "validation_rules" field.
+func (m *CIAttributeDefinitionMutation) ResetValidationRules() {
+	m.validation_rules = nil
+	delete(m.clearedFields, ciattributedefinition.FieldValidationRules)
+}
+
+// SetEnumValues sets the "enum_values" field.
+func (m *CIAttributeDefinitionMutation) SetEnumValues(s []string) {
+	m.enum_values = &s
+	m.appendenum_values = nil
+}
+
+// EnumValues returns the value of the "enum_values" field in the mutation.
+func (m *CIAttributeDefinitionMutation) EnumValues() (r []string, exists bool) {
+	v := m.enum_values
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnumValues returns the old "enum_values" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldEnumValues(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnumValues is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnumValues requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnumValues: %w", err)
+	}
+	return oldValue.EnumValues, nil
+}
+
+// AppendEnumValues adds s to the "enum_values" field.
+func (m *CIAttributeDefinitionMutation) AppendEnumValues(s []string) {
+	m.appendenum_values = append(m.appendenum_values, s...)
+}
+
+// AppendedEnumValues returns the list of values that were appended to the "enum_values" field in this mutation.
+func (m *CIAttributeDefinitionMutation) AppendedEnumValues() ([]string, bool) {
+	if len(m.appendenum_values) == 0 {
+		return nil, false
+	}
+	return m.appendenum_values, true
+}
+
+// ClearEnumValues clears the value of the "enum_values" field.
+func (m *CIAttributeDefinitionMutation) ClearEnumValues() {
+	m.enum_values = nil
+	m.appendenum_values = nil
+	m.clearedFields[ciattributedefinition.FieldEnumValues] = struct{}{}
+}
+
+// EnumValuesCleared returns if the "enum_values" field was cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) EnumValuesCleared() bool {
+	_, ok := m.clearedFields[ciattributedefinition.FieldEnumValues]
+	return ok
+}
+
+// ResetEnumValues resets all changes to the "enum_values" field.
+func (m *CIAttributeDefinitionMutation) ResetEnumValues() {
+	m.enum_values = nil
+	m.appendenum_values = nil
+	delete(m.clearedFields, ciattributedefinition.FieldEnumValues)
+}
+
+// SetReferenceType sets the "reference_type" field.
+func (m *CIAttributeDefinitionMutation) SetReferenceType(s string) {
+	m.reference_type = &s
+}
+
+// ReferenceType returns the value of the "reference_type" field in the mutation.
+func (m *CIAttributeDefinitionMutation) ReferenceType() (r string, exists bool) {
+	v := m.reference_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReferenceType returns the old "reference_type" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldReferenceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReferenceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReferenceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReferenceType: %w", err)
+	}
+	return oldValue.ReferenceType, nil
+}
+
+// ClearReferenceType clears the value of the "reference_type" field.
+func (m *CIAttributeDefinitionMutation) ClearReferenceType() {
+	m.reference_type = nil
+	m.clearedFields[ciattributedefinition.FieldReferenceType] = struct{}{}
+}
+
+// ReferenceTypeCleared returns if the "reference_type" field was cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) ReferenceTypeCleared() bool {
+	_, ok := m.clearedFields[ciattributedefinition.FieldReferenceType]
+	return ok
+}
+
+// ResetReferenceType resets all changes to the "reference_type" field.
+func (m *CIAttributeDefinitionMutation) ResetReferenceType() {
+	m.reference_type = nil
+	delete(m.clearedFields, ciattributedefinition.FieldReferenceType)
+}
+
+// SetDisplayOrder sets the "display_order" field.
+func (m *CIAttributeDefinitionMutation) SetDisplayOrder(i int) {
+	m.display_order = &i
+	m.adddisplay_order = nil
+}
+
+// DisplayOrder returns the value of the "display_order" field in the mutation.
+func (m *CIAttributeDefinitionMutation) DisplayOrder() (r int, exists bool) {
+	v := m.display_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisplayOrder returns the old "display_order" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldDisplayOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisplayOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisplayOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisplayOrder: %w", err)
+	}
+	return oldValue.DisplayOrder, nil
+}
+
+// AddDisplayOrder adds i to the "display_order" field.
+func (m *CIAttributeDefinitionMutation) AddDisplayOrder(i int) {
+	if m.adddisplay_order != nil {
+		*m.adddisplay_order += i
+	} else {
+		m.adddisplay_order = &i
+	}
+}
+
+// AddedDisplayOrder returns the value that was added to the "display_order" field in this mutation.
+func (m *CIAttributeDefinitionMutation) AddedDisplayOrder() (r int, exists bool) {
+	v := m.adddisplay_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDisplayOrder resets all changes to the "display_order" field.
+func (m *CIAttributeDefinitionMutation) ResetDisplayOrder() {
+	m.display_order = nil
+	m.adddisplay_order = nil
+}
+
+// SetIsSearchable sets the "is_searchable" field.
+func (m *CIAttributeDefinitionMutation) SetIsSearchable(b bool) {
+	m.is_searchable = &b
+}
+
+// IsSearchable returns the value of the "is_searchable" field in the mutation.
+func (m *CIAttributeDefinitionMutation) IsSearchable() (r bool, exists bool) {
+	v := m.is_searchable
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsSearchable returns the old "is_searchable" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldIsSearchable(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsSearchable is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsSearchable requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsSearchable: %w", err)
+	}
+	return oldValue.IsSearchable, nil
+}
+
+// ResetIsSearchable resets all changes to the "is_searchable" field.
+func (m *CIAttributeDefinitionMutation) ResetIsSearchable() {
+	m.is_searchable = nil
+}
+
+// SetIsSystem sets the "is_system" field.
+func (m *CIAttributeDefinitionMutation) SetIsSystem(b bool) {
+	m.is_system = &b
+}
+
+// IsSystem returns the value of the "is_system" field in the mutation.
+func (m *CIAttributeDefinitionMutation) IsSystem() (r bool, exists bool) {
+	v := m.is_system
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsSystem returns the old "is_system" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldIsSystem(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsSystem is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsSystem requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsSystem: %w", err)
+	}
+	return oldValue.IsSystem, nil
+}
+
+// ResetIsSystem resets all changes to the "is_system" field.
+func (m *CIAttributeDefinitionMutation) ResetIsSystem() {
+	m.is_system = nil
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *CIAttributeDefinitionMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *CIAttributeDefinitionMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *CIAttributeDefinitionMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetCiTypeID sets the "ci_type_id" field.
+func (m *CIAttributeDefinitionMutation) SetCiTypeID(i int) {
+	m.ci_type = &i
+}
+
+// CiTypeID returns the value of the "ci_type_id" field in the mutation.
+func (m *CIAttributeDefinitionMutation) CiTypeID() (r int, exists bool) {
+	v := m.ci_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCiTypeID returns the old "ci_type_id" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldCiTypeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCiTypeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCiTypeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCiTypeID: %w", err)
+	}
+	return oldValue.CiTypeID, nil
+}
+
+// ResetCiTypeID resets all changes to the "ci_type_id" field.
+func (m *CIAttributeDefinitionMutation) ResetCiTypeID() {
+	m.ci_type = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *CIAttributeDefinitionMutation) SetTenantID(i int) {
+	m.tenant = &i
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *CIAttributeDefinitionMutation) TenantID() (r int, exists bool) {
+	v := m.tenant
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *CIAttributeDefinitionMutation) ResetTenantID() {
+	m.tenant = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CIAttributeDefinitionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CIAttributeDefinitionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CIAttributeDefinitionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CIAttributeDefinitionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CIAttributeDefinitionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the CIAttributeDefinition entity.
+// If the CIAttributeDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CIAttributeDefinitionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CIAttributeDefinitionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearTenant clears the "tenant" edge to the Tenant entity.
+func (m *CIAttributeDefinitionMutation) ClearTenant() {
+	m.clearedtenant = true
+	m.clearedFields[ciattributedefinition.FieldTenantID] = struct{}{}
+}
+
+// TenantCleared reports if the "tenant" edge to the Tenant entity was cleared.
+func (m *CIAttributeDefinitionMutation) TenantCleared() bool {
+	return m.clearedtenant
+}
+
+// TenantIDs returns the "tenant" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TenantID instead. It exists only for internal usage by the builders.
+func (m *CIAttributeDefinitionMutation) TenantIDs() (ids []int) {
+	if id := m.tenant; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTenant resets all changes to the "tenant" edge.
+func (m *CIAttributeDefinitionMutation) ResetTenant() {
+	m.tenant = nil
+	m.clearedtenant = false
+}
+
+// ClearCiType clears the "ci_type" edge to the CIType entity.
+func (m *CIAttributeDefinitionMutation) ClearCiType() {
+	m.clearedci_type = true
+	m.clearedFields[ciattributedefinition.FieldCiTypeID] = struct{}{}
+}
+
+// CiTypeCleared reports if the "ci_type" edge to the CIType entity was cleared.
+func (m *CIAttributeDefinitionMutation) CiTypeCleared() bool {
+	return m.clearedci_type
+}
+
+// CiTypeIDs returns the "ci_type" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CiTypeID instead. It exists only for internal usage by the builders.
+func (m *CIAttributeDefinitionMutation) CiTypeIDs() (ids []int) {
+	if id := m.ci_type; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCiType resets all changes to the "ci_type" edge.
+func (m *CIAttributeDefinitionMutation) ResetCiType() {
+	m.ci_type = nil
+	m.clearedci_type = false
+}
+
+// Where appends a list predicates to the CIAttributeDefinitionMutation builder.
+func (m *CIAttributeDefinitionMutation) Where(ps ...predicate.CIAttributeDefinition) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CIAttributeDefinitionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CIAttributeDefinitionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CIAttributeDefinition, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CIAttributeDefinitionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CIAttributeDefinitionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CIAttributeDefinition).
+func (m *CIAttributeDefinitionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CIAttributeDefinitionMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.name != nil {
+		fields = append(fields, ciattributedefinition.FieldName)
+	}
+	if m.display_name != nil {
+		fields = append(fields, ciattributedefinition.FieldDisplayName)
+	}
+	if m.description != nil {
+		fields = append(fields, ciattributedefinition.FieldDescription)
+	}
+	if m.data_type != nil {
+		fields = append(fields, ciattributedefinition.FieldDataType)
+	}
+	if m.is_required != nil {
+		fields = append(fields, ciattributedefinition.FieldIsRequired)
+	}
+	if m.is_unique != nil {
+		fields = append(fields, ciattributedefinition.FieldIsUnique)
+	}
+	if m.default_value != nil {
+		fields = append(fields, ciattributedefinition.FieldDefaultValue)
+	}
+	if m.validation_rules != nil {
+		fields = append(fields, ciattributedefinition.FieldValidationRules)
+	}
+	if m.enum_values != nil {
+		fields = append(fields, ciattributedefinition.FieldEnumValues)
+	}
+	if m.reference_type != nil {
+		fields = append(fields, ciattributedefinition.FieldReferenceType)
+	}
+	if m.display_order != nil {
+		fields = append(fields, ciattributedefinition.FieldDisplayOrder)
+	}
+	if m.is_searchable != nil {
+		fields = append(fields, ciattributedefinition.FieldIsSearchable)
+	}
+	if m.is_system != nil {
+		fields = append(fields, ciattributedefinition.FieldIsSystem)
+	}
+	if m.is_active != nil {
+		fields = append(fields, ciattributedefinition.FieldIsActive)
+	}
+	if m.ci_type != nil {
+		fields = append(fields, ciattributedefinition.FieldCiTypeID)
+	}
+	if m.tenant != nil {
+		fields = append(fields, ciattributedefinition.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, ciattributedefinition.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, ciattributedefinition.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CIAttributeDefinitionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case ciattributedefinition.FieldName:
+		return m.Name()
+	case ciattributedefinition.FieldDisplayName:
+		return m.DisplayName()
+	case ciattributedefinition.FieldDescription:
+		return m.Description()
+	case ciattributedefinition.FieldDataType:
+		return m.DataType()
+	case ciattributedefinition.FieldIsRequired:
+		return m.IsRequired()
+	case ciattributedefinition.FieldIsUnique:
+		return m.IsUnique()
+	case ciattributedefinition.FieldDefaultValue:
+		return m.DefaultValue()
+	case ciattributedefinition.FieldValidationRules:
+		return m.ValidationRules()
+	case ciattributedefinition.FieldEnumValues:
+		return m.EnumValues()
+	case ciattributedefinition.FieldReferenceType:
+		return m.ReferenceType()
+	case ciattributedefinition.FieldDisplayOrder:
+		return m.DisplayOrder()
+	case ciattributedefinition.FieldIsSearchable:
+		return m.IsSearchable()
+	case ciattributedefinition.FieldIsSystem:
+		return m.IsSystem()
+	case ciattributedefinition.FieldIsActive:
+		return m.IsActive()
+	case ciattributedefinition.FieldCiTypeID:
+		return m.CiTypeID()
+	case ciattributedefinition.FieldTenantID:
+		return m.TenantID()
+	case ciattributedefinition.FieldCreatedAt:
+		return m.CreatedAt()
+	case ciattributedefinition.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CIAttributeDefinitionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case ciattributedefinition.FieldName:
+		return m.OldName(ctx)
+	case ciattributedefinition.FieldDisplayName:
+		return m.OldDisplayName(ctx)
+	case ciattributedefinition.FieldDescription:
+		return m.OldDescription(ctx)
+	case ciattributedefinition.FieldDataType:
+		return m.OldDataType(ctx)
+	case ciattributedefinition.FieldIsRequired:
+		return m.OldIsRequired(ctx)
+	case ciattributedefinition.FieldIsUnique:
+		return m.OldIsUnique(ctx)
+	case ciattributedefinition.FieldDefaultValue:
+		return m.OldDefaultValue(ctx)
+	case ciattributedefinition.FieldValidationRules:
+		return m.OldValidationRules(ctx)
+	case ciattributedefinition.FieldEnumValues:
+		return m.OldEnumValues(ctx)
+	case ciattributedefinition.FieldReferenceType:
+		return m.OldReferenceType(ctx)
+	case ciattributedefinition.FieldDisplayOrder:
+		return m.OldDisplayOrder(ctx)
+	case ciattributedefinition.FieldIsSearchable:
+		return m.OldIsSearchable(ctx)
+	case ciattributedefinition.FieldIsSystem:
+		return m.OldIsSystem(ctx)
+	case ciattributedefinition.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case ciattributedefinition.FieldCiTypeID:
+		return m.OldCiTypeID(ctx)
+	case ciattributedefinition.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case ciattributedefinition.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case ciattributedefinition.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown CIAttributeDefinition field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CIAttributeDefinitionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case ciattributedefinition.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case ciattributedefinition.FieldDisplayName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisplayName(v)
+		return nil
+	case ciattributedefinition.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case ciattributedefinition.FieldDataType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDataType(v)
+		return nil
+	case ciattributedefinition.FieldIsRequired:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsRequired(v)
+		return nil
+	case ciattributedefinition.FieldIsUnique:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsUnique(v)
+		return nil
+	case ciattributedefinition.FieldDefaultValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDefaultValue(v)
+		return nil
+	case ciattributedefinition.FieldValidationRules:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValidationRules(v)
+		return nil
+	case ciattributedefinition.FieldEnumValues:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnumValues(v)
+		return nil
+	case ciattributedefinition.FieldReferenceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReferenceType(v)
+		return nil
+	case ciattributedefinition.FieldDisplayOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisplayOrder(v)
+		return nil
+	case ciattributedefinition.FieldIsSearchable:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsSearchable(v)
+		return nil
+	case ciattributedefinition.FieldIsSystem:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsSystem(v)
+		return nil
+	case ciattributedefinition.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case ciattributedefinition.FieldCiTypeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCiTypeID(v)
+		return nil
+	case ciattributedefinition.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case ciattributedefinition.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case ciattributedefinition.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CIAttributeDefinition field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CIAttributeDefinitionMutation) AddedFields() []string {
+	var fields []string
+	if m.adddisplay_order != nil {
+		fields = append(fields, ciattributedefinition.FieldDisplayOrder)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CIAttributeDefinitionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case ciattributedefinition.FieldDisplayOrder:
+		return m.AddedDisplayOrder()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CIAttributeDefinitionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case ciattributedefinition.FieldDisplayOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDisplayOrder(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CIAttributeDefinition numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CIAttributeDefinitionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(ciattributedefinition.FieldDescription) {
+		fields = append(fields, ciattributedefinition.FieldDescription)
+	}
+	if m.FieldCleared(ciattributedefinition.FieldDefaultValue) {
+		fields = append(fields, ciattributedefinition.FieldDefaultValue)
+	}
+	if m.FieldCleared(ciattributedefinition.FieldValidationRules) {
+		fields = append(fields, ciattributedefinition.FieldValidationRules)
+	}
+	if m.FieldCleared(ciattributedefinition.FieldEnumValues) {
+		fields = append(fields, ciattributedefinition.FieldEnumValues)
+	}
+	if m.FieldCleared(ciattributedefinition.FieldReferenceType) {
+		fields = append(fields, ciattributedefinition.FieldReferenceType)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CIAttributeDefinitionMutation) ClearField(name string) error {
+	switch name {
+	case ciattributedefinition.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case ciattributedefinition.FieldDefaultValue:
+		m.ClearDefaultValue()
+		return nil
+	case ciattributedefinition.FieldValidationRules:
+		m.ClearValidationRules()
+		return nil
+	case ciattributedefinition.FieldEnumValues:
+		m.ClearEnumValues()
+		return nil
+	case ciattributedefinition.FieldReferenceType:
+		m.ClearReferenceType()
+		return nil
+	}
+	return fmt.Errorf("unknown CIAttributeDefinition nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CIAttributeDefinitionMutation) ResetField(name string) error {
+	switch name {
+	case ciattributedefinition.FieldName:
+		m.ResetName()
+		return nil
+	case ciattributedefinition.FieldDisplayName:
+		m.ResetDisplayName()
+		return nil
+	case ciattributedefinition.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case ciattributedefinition.FieldDataType:
+		m.ResetDataType()
+		return nil
+	case ciattributedefinition.FieldIsRequired:
+		m.ResetIsRequired()
+		return nil
+	case ciattributedefinition.FieldIsUnique:
+		m.ResetIsUnique()
+		return nil
+	case ciattributedefinition.FieldDefaultValue:
+		m.ResetDefaultValue()
+		return nil
+	case ciattributedefinition.FieldValidationRules:
+		m.ResetValidationRules()
+		return nil
+	case ciattributedefinition.FieldEnumValues:
+		m.ResetEnumValues()
+		return nil
+	case ciattributedefinition.FieldReferenceType:
+		m.ResetReferenceType()
+		return nil
+	case ciattributedefinition.FieldDisplayOrder:
+		m.ResetDisplayOrder()
+		return nil
+	case ciattributedefinition.FieldIsSearchable:
+		m.ResetIsSearchable()
+		return nil
+	case ciattributedefinition.FieldIsSystem:
+		m.ResetIsSystem()
+		return nil
+	case ciattributedefinition.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case ciattributedefinition.FieldCiTypeID:
+		m.ResetCiTypeID()
+		return nil
+	case ciattributedefinition.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case ciattributedefinition.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case ciattributedefinition.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown CIAttributeDefinition field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CIAttributeDefinitionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.tenant != nil {
+		edges = append(edges, ciattributedefinition.EdgeTenant)
+	}
+	if m.ci_type != nil {
+		edges = append(edges, ciattributedefinition.EdgeCiType)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CIAttributeDefinitionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case ciattributedefinition.EdgeTenant:
+		if id := m.tenant; id != nil {
+			return []ent.Value{*id}
+		}
+	case ciattributedefinition.EdgeCiType:
+		if id := m.ci_type; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CIAttributeDefinitionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CIAttributeDefinitionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedtenant {
+		edges = append(edges, ciattributedefinition.EdgeTenant)
+	}
+	if m.clearedci_type {
+		edges = append(edges, ciattributedefinition.EdgeCiType)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CIAttributeDefinitionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case ciattributedefinition.EdgeTenant:
+		return m.clearedtenant
+	case ciattributedefinition.EdgeCiType:
+		return m.clearedci_type
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CIAttributeDefinitionMutation) ClearEdge(name string) error {
+	switch name {
+	case ciattributedefinition.EdgeTenant:
+		m.ClearTenant()
+		return nil
+	case ciattributedefinition.EdgeCiType:
+		m.ClearCiType()
+		return nil
+	}
+	return fmt.Errorf("unknown CIAttributeDefinition unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CIAttributeDefinitionMutation) ResetEdge(name string) error {
+	switch name {
+	case ciattributedefinition.EdgeTenant:
+		m.ResetTenant()
+		return nil
+	case ciattributedefinition.EdgeCiType:
+		m.ResetCiType()
+		return nil
+	}
+	return fmt.Errorf("unknown CIAttributeDefinition edge %s", name)
 }
 
 // CIChangeRecordMutation represents an operation that mutates the CIChangeRecord nodes in the graph.
@@ -5222,6 +6719,9 @@ type CITypeMutation struct {
 	allowed_relationships        map[int]struct{}
 	removedallowed_relationships map[int]struct{}
 	clearedallowed_relationships bool
+	attribute_definitions        map[int]struct{}
+	removedattribute_definitions map[int]struct{}
+	clearedattribute_definitions bool
 	done                         bool
 	oldValue                     func(context.Context) (*CIType, error)
 	predicates                   []predicate.CIType
@@ -5944,6 +7444,60 @@ func (m *CITypeMutation) ResetAllowedRelationships() {
 	m.removedallowed_relationships = nil
 }
 
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by ids.
+func (m *CITypeMutation) AddAttributeDefinitionIDs(ids ...int) {
+	if m.attribute_definitions == nil {
+		m.attribute_definitions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.attribute_definitions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAttributeDefinitions clears the "attribute_definitions" edge to the CIAttributeDefinition entity.
+func (m *CITypeMutation) ClearAttributeDefinitions() {
+	m.clearedattribute_definitions = true
+}
+
+// AttributeDefinitionsCleared reports if the "attribute_definitions" edge to the CIAttributeDefinition entity was cleared.
+func (m *CITypeMutation) AttributeDefinitionsCleared() bool {
+	return m.clearedattribute_definitions
+}
+
+// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (m *CITypeMutation) RemoveAttributeDefinitionIDs(ids ...int) {
+	if m.removedattribute_definitions == nil {
+		m.removedattribute_definitions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.attribute_definitions, ids[i])
+		m.removedattribute_definitions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAttributeDefinitions returns the removed IDs of the "attribute_definitions" edge to the CIAttributeDefinition entity.
+func (m *CITypeMutation) RemovedAttributeDefinitionsIDs() (ids []int) {
+	for id := range m.removedattribute_definitions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AttributeDefinitionsIDs returns the "attribute_definitions" edge IDs in the mutation.
+func (m *CITypeMutation) AttributeDefinitionsIDs() (ids []int) {
+	for id := range m.attribute_definitions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAttributeDefinitions resets all changes to the "attribute_definitions" edge.
+func (m *CITypeMutation) ResetAttributeDefinitions() {
+	m.attribute_definitions = nil
+	m.clearedattribute_definitions = false
+	m.removedattribute_definitions = nil
+}
+
 // Where appends a list predicates to the CITypeMutation builder.
 func (m *CITypeMutation) Where(ps ...predicate.CIType) {
 	m.predicates = append(m.predicates, ps...)
@@ -6294,7 +7848,7 @@ func (m *CITypeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CITypeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.tenant != nil {
 		edges = append(edges, citype.EdgeTenant)
 	}
@@ -6303,6 +7857,9 @@ func (m *CITypeMutation) AddedEdges() []string {
 	}
 	if m.allowed_relationships != nil {
 		edges = append(edges, citype.EdgeAllowedRelationships)
+	}
+	if m.attribute_definitions != nil {
+		edges = append(edges, citype.EdgeAttributeDefinitions)
 	}
 	return edges
 }
@@ -6327,18 +7884,27 @@ func (m *CITypeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case citype.EdgeAttributeDefinitions:
+		ids := make([]ent.Value, 0, len(m.attribute_definitions))
+		for id := range m.attribute_definitions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CITypeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedconfiguration_items != nil {
 		edges = append(edges, citype.EdgeConfigurationItems)
 	}
 	if m.removedallowed_relationships != nil {
 		edges = append(edges, citype.EdgeAllowedRelationships)
+	}
+	if m.removedattribute_definitions != nil {
+		edges = append(edges, citype.EdgeAttributeDefinitions)
 	}
 	return edges
 }
@@ -6359,13 +7925,19 @@ func (m *CITypeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case citype.EdgeAttributeDefinitions:
+		ids := make([]ent.Value, 0, len(m.removedattribute_definitions))
+		for id := range m.removedattribute_definitions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CITypeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedtenant {
 		edges = append(edges, citype.EdgeTenant)
 	}
@@ -6374,6 +7946,9 @@ func (m *CITypeMutation) ClearedEdges() []string {
 	}
 	if m.clearedallowed_relationships {
 		edges = append(edges, citype.EdgeAllowedRelationships)
+	}
+	if m.clearedattribute_definitions {
+		edges = append(edges, citype.EdgeAttributeDefinitions)
 	}
 	return edges
 }
@@ -6388,6 +7963,8 @@ func (m *CITypeMutation) EdgeCleared(name string) bool {
 		return m.clearedconfiguration_items
 	case citype.EdgeAllowedRelationships:
 		return m.clearedallowed_relationships
+	case citype.EdgeAttributeDefinitions:
+		return m.clearedattribute_definitions
 	}
 	return false
 }
@@ -6415,6 +7992,9 @@ func (m *CITypeMutation) ResetEdge(name string) error {
 		return nil
 	case citype.EdgeAllowedRelationships:
 		m.ResetAllowedRelationships()
+		return nil
+	case citype.EdgeAttributeDefinitions:
+		m.ResetAttributeDefinitions()
 		return nil
 	}
 	return fmt.Errorf("unknown CIType edge %s", name)
@@ -14184,62 +15764,65 @@ func (m *SubscriptionMutation) ResetEdge(name string) error {
 // TenantMutation represents an operation that mutates the Tenant nodes in the graph.
 type TenantMutation struct {
 	config
-	op                           Op
-	typ                          string
-	id                           *int
-	name                         *string
-	code                         *string
-	domain                       *string
-	status                       *tenant.Status
-	_type                        *tenant.Type
-	settings                     *map[string]interface{}
-	quota                        *map[string]interface{}
-	expires_at                   *time.Time
-	created_at                   *time.Time
-	updated_at                   *time.Time
-	clearedFields                map[string]struct{}
-	users                        map[int]struct{}
-	removedusers                 map[int]struct{}
-	clearedusers                 bool
-	tickets                      map[int]struct{}
-	removedtickets               map[int]struct{}
-	clearedtickets               bool
-	service_catalogs             map[int]struct{}
-	removedservice_catalogs      map[int]struct{}
-	clearedservice_catalogs      bool
-	service_requests             map[int]struct{}
-	removedservice_requests      map[int]struct{}
-	clearedservice_requests      bool
-	subscriptions                map[int]struct{}
-	removedsubscriptions         map[int]struct{}
-	clearedsubscriptions         bool
-	configuration_items          map[int]struct{}
-	removedconfiguration_items   map[int]struct{}
-	clearedconfiguration_items   bool
-	knowledge_articles           map[int]struct{}
-	removedknowledge_articles    map[int]struct{}
-	clearedknowledge_articles    bool
-	workflows                    map[int]struct{}
-	removedworkflows             map[int]struct{}
-	clearedworkflows             bool
-	ci_types                     map[int]struct{}
-	removedci_types              map[int]struct{}
-	clearedci_types              bool
-	ci_relationship_types        map[int]struct{}
-	removedci_relationship_types map[int]struct{}
-	clearedci_relationship_types bool
-	ci_relationships             map[int]struct{}
-	removedci_relationships      map[int]struct{}
-	clearedci_relationships      bool
-	ci_lifecycle_states          map[int]struct{}
-	removedci_lifecycle_states   map[int]struct{}
-	clearedci_lifecycle_states   bool
-	ci_change_records            map[int]struct{}
-	removedci_change_records     map[int]struct{}
-	clearedci_change_records     bool
-	done                         bool
-	oldValue                     func(context.Context) (*Tenant, error)
-	predicates                   []predicate.Tenant
+	op                              Op
+	typ                             string
+	id                              *int
+	name                            *string
+	code                            *string
+	domain                          *string
+	status                          *tenant.Status
+	_type                           *tenant.Type
+	settings                        *map[string]interface{}
+	quota                           *map[string]interface{}
+	expires_at                      *time.Time
+	created_at                      *time.Time
+	updated_at                      *time.Time
+	clearedFields                   map[string]struct{}
+	users                           map[int]struct{}
+	removedusers                    map[int]struct{}
+	clearedusers                    bool
+	tickets                         map[int]struct{}
+	removedtickets                  map[int]struct{}
+	clearedtickets                  bool
+	service_catalogs                map[int]struct{}
+	removedservice_catalogs         map[int]struct{}
+	clearedservice_catalogs         bool
+	service_requests                map[int]struct{}
+	removedservice_requests         map[int]struct{}
+	clearedservice_requests         bool
+	subscriptions                   map[int]struct{}
+	removedsubscriptions            map[int]struct{}
+	clearedsubscriptions            bool
+	configuration_items             map[int]struct{}
+	removedconfiguration_items      map[int]struct{}
+	clearedconfiguration_items      bool
+	knowledge_articles              map[int]struct{}
+	removedknowledge_articles       map[int]struct{}
+	clearedknowledge_articles       bool
+	workflows                       map[int]struct{}
+	removedworkflows                map[int]struct{}
+	clearedworkflows                bool
+	ci_types                        map[int]struct{}
+	removedci_types                 map[int]struct{}
+	clearedci_types                 bool
+	ci_relationship_types           map[int]struct{}
+	removedci_relationship_types    map[int]struct{}
+	clearedci_relationship_types    bool
+	ci_relationships                map[int]struct{}
+	removedci_relationships         map[int]struct{}
+	clearedci_relationships         bool
+	ci_lifecycle_states             map[int]struct{}
+	removedci_lifecycle_states      map[int]struct{}
+	clearedci_lifecycle_states      bool
+	ci_change_records               map[int]struct{}
+	removedci_change_records        map[int]struct{}
+	clearedci_change_records        bool
+	ci_attribute_definitions        map[int]struct{}
+	removedci_attribute_definitions map[int]struct{}
+	clearedci_attribute_definitions bool
+	done                            bool
+	oldValue                        func(context.Context) (*Tenant, error)
+	predicates                      []predicate.Tenant
 }
 
 var _ ent.Mutation = (*TenantMutation)(nil)
@@ -15454,6 +17037,60 @@ func (m *TenantMutation) ResetCiChangeRecords() {
 	m.removedci_change_records = nil
 }
 
+// AddCiAttributeDefinitionIDs adds the "ci_attribute_definitions" edge to the CIAttributeDefinition entity by ids.
+func (m *TenantMutation) AddCiAttributeDefinitionIDs(ids ...int) {
+	if m.ci_attribute_definitions == nil {
+		m.ci_attribute_definitions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.ci_attribute_definitions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCiAttributeDefinitions clears the "ci_attribute_definitions" edge to the CIAttributeDefinition entity.
+func (m *TenantMutation) ClearCiAttributeDefinitions() {
+	m.clearedci_attribute_definitions = true
+}
+
+// CiAttributeDefinitionsCleared reports if the "ci_attribute_definitions" edge to the CIAttributeDefinition entity was cleared.
+func (m *TenantMutation) CiAttributeDefinitionsCleared() bool {
+	return m.clearedci_attribute_definitions
+}
+
+// RemoveCiAttributeDefinitionIDs removes the "ci_attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (m *TenantMutation) RemoveCiAttributeDefinitionIDs(ids ...int) {
+	if m.removedci_attribute_definitions == nil {
+		m.removedci_attribute_definitions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.ci_attribute_definitions, ids[i])
+		m.removedci_attribute_definitions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCiAttributeDefinitions returns the removed IDs of the "ci_attribute_definitions" edge to the CIAttributeDefinition entity.
+func (m *TenantMutation) RemovedCiAttributeDefinitionsIDs() (ids []int) {
+	for id := range m.removedci_attribute_definitions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CiAttributeDefinitionsIDs returns the "ci_attribute_definitions" edge IDs in the mutation.
+func (m *TenantMutation) CiAttributeDefinitionsIDs() (ids []int) {
+	for id := range m.ci_attribute_definitions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCiAttributeDefinitions resets all changes to the "ci_attribute_definitions" edge.
+func (m *TenantMutation) ResetCiAttributeDefinitions() {
+	m.ci_attribute_definitions = nil
+	m.clearedci_attribute_definitions = false
+	m.removedci_attribute_definitions = nil
+}
+
 // Where appends a list predicates to the TenantMutation builder.
 func (m *TenantMutation) Where(ps ...predicate.Tenant) {
 	m.predicates = append(m.predicates, ps...)
@@ -15767,7 +17404,7 @@ func (m *TenantMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TenantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 13)
+	edges := make([]string, 0, 14)
 	if m.users != nil {
 		edges = append(edges, tenant.EdgeUsers)
 	}
@@ -15806,6 +17443,9 @@ func (m *TenantMutation) AddedEdges() []string {
 	}
 	if m.ci_change_records != nil {
 		edges = append(edges, tenant.EdgeCiChangeRecords)
+	}
+	if m.ci_attribute_definitions != nil {
+		edges = append(edges, tenant.EdgeCiAttributeDefinitions)
 	}
 	return edges
 }
@@ -15892,13 +17532,19 @@ func (m *TenantMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tenant.EdgeCiAttributeDefinitions:
+		ids := make([]ent.Value, 0, len(m.ci_attribute_definitions))
+		for id := range m.ci_attribute_definitions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TenantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 13)
+	edges := make([]string, 0, 14)
 	if m.removedusers != nil {
 		edges = append(edges, tenant.EdgeUsers)
 	}
@@ -15937,6 +17583,9 @@ func (m *TenantMutation) RemovedEdges() []string {
 	}
 	if m.removedci_change_records != nil {
 		edges = append(edges, tenant.EdgeCiChangeRecords)
+	}
+	if m.removedci_attribute_definitions != nil {
+		edges = append(edges, tenant.EdgeCiAttributeDefinitions)
 	}
 	return edges
 }
@@ -16023,13 +17672,19 @@ func (m *TenantMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tenant.EdgeCiAttributeDefinitions:
+		ids := make([]ent.Value, 0, len(m.removedci_attribute_definitions))
+		for id := range m.removedci_attribute_definitions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TenantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 13)
+	edges := make([]string, 0, 14)
 	if m.clearedusers {
 		edges = append(edges, tenant.EdgeUsers)
 	}
@@ -16069,6 +17724,9 @@ func (m *TenantMutation) ClearedEdges() []string {
 	if m.clearedci_change_records {
 		edges = append(edges, tenant.EdgeCiChangeRecords)
 	}
+	if m.clearedci_attribute_definitions {
+		edges = append(edges, tenant.EdgeCiAttributeDefinitions)
+	}
 	return edges
 }
 
@@ -16102,6 +17760,8 @@ func (m *TenantMutation) EdgeCleared(name string) bool {
 		return m.clearedci_lifecycle_states
 	case tenant.EdgeCiChangeRecords:
 		return m.clearedci_change_records
+	case tenant.EdgeCiAttributeDefinitions:
+		return m.clearedci_attribute_definitions
 	}
 	return false
 }
@@ -16156,6 +17816,9 @@ func (m *TenantMutation) ResetEdge(name string) error {
 		return nil
 	case tenant.EdgeCiChangeRecords:
 		m.ResetCiChangeRecords()
+		return nil
+	case tenant.EdgeCiAttributeDefinitions:
+		m.ResetCiAttributeDefinitions()
 		return nil
 	}
 	return fmt.Errorf("unknown Tenant edge %s", name)

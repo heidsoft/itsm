@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cichangerecord"
 	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
@@ -32,23 +33,24 @@ import (
 // TenantQuery is the builder for querying Tenant entities.
 type TenantQuery struct {
 	config
-	ctx                     *QueryContext
-	order                   []tenant.OrderOption
-	inters                  []Interceptor
-	predicates              []predicate.Tenant
-	withUsers               *UserQuery
-	withTickets             *TicketQuery
-	withServiceCatalogs     *ServiceCatalogQuery
-	withServiceRequests     *ServiceRequestQuery
-	withSubscriptions       *SubscriptionQuery
-	withConfigurationItems  *ConfigurationItemQuery
-	withKnowledgeArticles   *KnowledgeArticleQuery
-	withWorkflows           *WorkflowQuery
-	withCiTypes             *CITypeQuery
-	withCiRelationshipTypes *CIRelationshipTypeQuery
-	withCiRelationships     *CIRelationshipQuery
-	withCiLifecycleStates   *CILifecycleStateQuery
-	withCiChangeRecords     *CIChangeRecordQuery
+	ctx                        *QueryContext
+	order                      []tenant.OrderOption
+	inters                     []Interceptor
+	predicates                 []predicate.Tenant
+	withUsers                  *UserQuery
+	withTickets                *TicketQuery
+	withServiceCatalogs        *ServiceCatalogQuery
+	withServiceRequests        *ServiceRequestQuery
+	withSubscriptions          *SubscriptionQuery
+	withConfigurationItems     *ConfigurationItemQuery
+	withKnowledgeArticles      *KnowledgeArticleQuery
+	withWorkflows              *WorkflowQuery
+	withCiTypes                *CITypeQuery
+	withCiRelationshipTypes    *CIRelationshipTypeQuery
+	withCiRelationships        *CIRelationshipQuery
+	withCiLifecycleStates      *CILifecycleStateQuery
+	withCiChangeRecords        *CIChangeRecordQuery
+	withCiAttributeDefinitions *CIAttributeDefinitionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -371,6 +373,28 @@ func (tq *TenantQuery) QueryCiChangeRecords() *CIChangeRecordQuery {
 	return query
 }
 
+// QueryCiAttributeDefinitions chains the current query on the "ci_attribute_definitions" edge.
+func (tq *TenantQuery) QueryCiAttributeDefinitions() *CIAttributeDefinitionQuery {
+	query := (&CIAttributeDefinitionClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiAttributeDefinitionsTable, tenant.CiAttributeDefinitionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Tenant entity from the query.
 // Returns a *NotFoundError when no Tenant was found.
 func (tq *TenantQuery) First(ctx context.Context) (*Tenant, error) {
@@ -558,24 +582,25 @@ func (tq *TenantQuery) Clone() *TenantQuery {
 		return nil
 	}
 	return &TenantQuery{
-		config:                  tq.config,
-		ctx:                     tq.ctx.Clone(),
-		order:                   append([]tenant.OrderOption{}, tq.order...),
-		inters:                  append([]Interceptor{}, tq.inters...),
-		predicates:              append([]predicate.Tenant{}, tq.predicates...),
-		withUsers:               tq.withUsers.Clone(),
-		withTickets:             tq.withTickets.Clone(),
-		withServiceCatalogs:     tq.withServiceCatalogs.Clone(),
-		withServiceRequests:     tq.withServiceRequests.Clone(),
-		withSubscriptions:       tq.withSubscriptions.Clone(),
-		withConfigurationItems:  tq.withConfigurationItems.Clone(),
-		withKnowledgeArticles:   tq.withKnowledgeArticles.Clone(),
-		withWorkflows:           tq.withWorkflows.Clone(),
-		withCiTypes:             tq.withCiTypes.Clone(),
-		withCiRelationshipTypes: tq.withCiRelationshipTypes.Clone(),
-		withCiRelationships:     tq.withCiRelationships.Clone(),
-		withCiLifecycleStates:   tq.withCiLifecycleStates.Clone(),
-		withCiChangeRecords:     tq.withCiChangeRecords.Clone(),
+		config:                     tq.config,
+		ctx:                        tq.ctx.Clone(),
+		order:                      append([]tenant.OrderOption{}, tq.order...),
+		inters:                     append([]Interceptor{}, tq.inters...),
+		predicates:                 append([]predicate.Tenant{}, tq.predicates...),
+		withUsers:                  tq.withUsers.Clone(),
+		withTickets:                tq.withTickets.Clone(),
+		withServiceCatalogs:        tq.withServiceCatalogs.Clone(),
+		withServiceRequests:        tq.withServiceRequests.Clone(),
+		withSubscriptions:          tq.withSubscriptions.Clone(),
+		withConfigurationItems:     tq.withConfigurationItems.Clone(),
+		withKnowledgeArticles:      tq.withKnowledgeArticles.Clone(),
+		withWorkflows:              tq.withWorkflows.Clone(),
+		withCiTypes:                tq.withCiTypes.Clone(),
+		withCiRelationshipTypes:    tq.withCiRelationshipTypes.Clone(),
+		withCiRelationships:        tq.withCiRelationships.Clone(),
+		withCiLifecycleStates:      tq.withCiLifecycleStates.Clone(),
+		withCiChangeRecords:        tq.withCiChangeRecords.Clone(),
+		withCiAttributeDefinitions: tq.withCiAttributeDefinitions.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -725,6 +750,17 @@ func (tq *TenantQuery) WithCiChangeRecords(opts ...func(*CIChangeRecordQuery)) *
 	return tq
 }
 
+// WithCiAttributeDefinitions tells the query-builder to eager-load the nodes that are connected to
+// the "ci_attribute_definitions" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TenantQuery) WithCiAttributeDefinitions(opts ...func(*CIAttributeDefinitionQuery)) *TenantQuery {
+	query := (&CIAttributeDefinitionClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withCiAttributeDefinitions = query
+	return tq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -803,7 +839,7 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 	var (
 		nodes       = []*Tenant{}
 		_spec       = tq.querySpec()
-		loadedTypes = [13]bool{
+		loadedTypes = [14]bool{
 			tq.withUsers != nil,
 			tq.withTickets != nil,
 			tq.withServiceCatalogs != nil,
@@ -817,6 +853,7 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 			tq.withCiRelationships != nil,
 			tq.withCiLifecycleStates != nil,
 			tq.withCiChangeRecords != nil,
+			tq.withCiAttributeDefinitions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -929,6 +966,15 @@ func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenan
 		if err := tq.loadCiChangeRecords(ctx, query, nodes,
 			func(n *Tenant) { n.Edges.CiChangeRecords = []*CIChangeRecord{} },
 			func(n *Tenant, e *CIChangeRecord) { n.Edges.CiChangeRecords = append(n.Edges.CiChangeRecords, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withCiAttributeDefinitions; query != nil {
+		if err := tq.loadCiAttributeDefinitions(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.CiAttributeDefinitions = []*CIAttributeDefinition{} },
+			func(n *Tenant, e *CIAttributeDefinition) {
+				n.Edges.CiAttributeDefinitions = append(n.Edges.CiAttributeDefinitions, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -1312,6 +1358,36 @@ func (tq *TenantQuery) loadCiChangeRecords(ctx context.Context, query *CIChangeR
 	}
 	query.Where(predicate.CIChangeRecord(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(tenant.CiChangeRecordsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TenantQuery) loadCiAttributeDefinitions(ctx context.Context, query *CIAttributeDefinitionQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *CIAttributeDefinition)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ciattributedefinition.FieldTenantID)
+	}
+	query.Where(predicate.CIAttributeDefinition(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.CiAttributeDefinitionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

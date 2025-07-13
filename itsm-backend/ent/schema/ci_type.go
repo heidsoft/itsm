@@ -35,6 +35,8 @@ func (CIType) Edges() []ent.Edge {
 		edge.From("tenant", Tenant.Type).Ref("ci_types").Field("tenant_id").Unique().Required(),
 		edge.To("configuration_items", ConfigurationItem.Type),
 		edge.To("allowed_relationships", CIRelationshipType.Type),
+		// 新增：属性定义关系
+		edge.To("attribute_definitions", CIAttributeDefinition.Type),
 	}
 }
 

@@ -779,6 +779,29 @@ func HasCiChangeRecordsWith(preds ...predicate.CIChangeRecord) predicate.Tenant 
 	})
 }
 
+// HasCiAttributeDefinitions applies the HasEdge predicate on the "ci_attribute_definitions" edge.
+func HasCiAttributeDefinitions() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CiAttributeDefinitionsTable, CiAttributeDefinitionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCiAttributeDefinitionsWith applies the HasEdge predicate on the "ci_attribute_definitions" edge with a given conditions (other predicates).
+func HasCiAttributeDefinitionsWith(preds ...predicate.CIAttributeDefinition) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newCiAttributeDefinitionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Tenant) predicate.Tenant {
 	return predicate.Tenant(sql.AndPredicates(predicates...))

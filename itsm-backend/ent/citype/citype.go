@@ -44,6 +44,8 @@ const (
 	EdgeConfigurationItems = "configuration_items"
 	// EdgeAllowedRelationships holds the string denoting the allowed_relationships edge name in mutations.
 	EdgeAllowedRelationships = "allowed_relationships"
+	// EdgeAttributeDefinitions holds the string denoting the attribute_definitions edge name in mutations.
+	EdgeAttributeDefinitions = "attribute_definitions"
 	// Table holds the table name of the citype in the database.
 	Table = "ci_types"
 	// TenantTable is the table that holds the tenant relation/edge.
@@ -67,6 +69,13 @@ const (
 	AllowedRelationshipsInverseTable = "ci_relationship_types"
 	// AllowedRelationshipsColumn is the table column denoting the allowed_relationships relation/edge.
 	AllowedRelationshipsColumn = "ci_type_allowed_relationships"
+	// AttributeDefinitionsTable is the table that holds the attribute_definitions relation/edge.
+	AttributeDefinitionsTable = "ci_attribute_definitions"
+	// AttributeDefinitionsInverseTable is the table name for the CIAttributeDefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "ciattributedefinition" package.
+	AttributeDefinitionsInverseTable = "ci_attribute_definitions"
+	// AttributeDefinitionsColumn is the table column denoting the attribute_definitions relation/edge.
+	AttributeDefinitionsColumn = "ci_type_id"
 )
 
 // Columns holds all SQL columns for citype fields.
@@ -207,6 +216,20 @@ func ByAllowedRelationships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpt
 		sqlgraph.OrderByNeighborTerms(s, newAllowedRelationshipsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAttributeDefinitionsCount orders the results by attribute_definitions count.
+func ByAttributeDefinitionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAttributeDefinitionsStep(), opts...)
+	}
+}
+
+// ByAttributeDefinitions orders the results by attribute_definitions terms.
+func ByAttributeDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAttributeDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -226,5 +249,12 @@ func newAllowedRelationshipsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AllowedRelationshipsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AllowedRelationshipsTable, AllowedRelationshipsColumn),
+	)
+}
+func newAttributeDefinitionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AttributeDefinitionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AttributeDefinitionsTable, AttributeDefinitionsColumn),
 	)
 }

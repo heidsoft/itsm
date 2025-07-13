@@ -73,6 +73,70 @@ var (
 			},
 		},
 	}
+	// CiAttributeDefinitionsColumns holds the columns for the "ci_attribute_definitions" table.
+	CiAttributeDefinitionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "display_name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "data_type", Type: field.TypeString},
+		{Name: "is_required", Type: field.TypeBool, Default: false},
+		{Name: "is_unique", Type: field.TypeBool, Default: false},
+		{Name: "default_value", Type: field.TypeString, Nullable: true},
+		{Name: "validation_rules", Type: field.TypeJSON, Nullable: true},
+		{Name: "enum_values", Type: field.TypeJSON, Nullable: true},
+		{Name: "reference_type", Type: field.TypeString, Nullable: true},
+		{Name: "display_order", Type: field.TypeInt, Default: 0},
+		{Name: "is_searchable", Type: field.TypeBool, Default: true},
+		{Name: "is_system", Type: field.TypeBool, Default: false},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+	}
+	// CiAttributeDefinitionsTable holds the schema information for the "ci_attribute_definitions" table.
+	CiAttributeDefinitionsTable = &schema.Table{
+		Name:       "ci_attribute_definitions",
+		Columns:    CiAttributeDefinitionsColumns,
+		PrimaryKey: []*schema.Column{CiAttributeDefinitionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ci_attribute_definitions_ci_types_attribute_definitions",
+				Columns:    []*schema.Column{CiAttributeDefinitionsColumns[17]},
+				RefColumns: []*schema.Column{CiTypesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "ci_attribute_definitions_tenants_ci_attribute_definitions",
+				Columns:    []*schema.Column{CiAttributeDefinitionsColumns[18]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ciattributedefinition_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[18]},
+			},
+			{
+				Name:    "ciattributedefinition_ci_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[17]},
+			},
+			{
+				Name:    "ciattributedefinition_data_type",
+				Unique:  false,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[4]},
+			},
+			{
+				Name:    "ciattributedefinition_tenant_id_ci_type_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{CiAttributeDefinitionsColumns[18], CiAttributeDefinitionsColumns[17], CiAttributeDefinitionsColumns[1]},
+			},
+		},
+	}
 	// CiChangeRecordsColumns holds the columns for the "ci_change_records" table.
 	CiChangeRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1038,6 +1102,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ApprovalLogsTable,
+		CiAttributeDefinitionsTable,
 		CiChangeRecordsTable,
 		CiLifecycleStatesTable,
 		CiRelationshipsTable,
@@ -1060,6 +1125,8 @@ var (
 func init() {
 	ApprovalLogsTable.ForeignKeys[0].RefTable = TicketsTable
 	ApprovalLogsTable.ForeignKeys[1].RefTable = UsersTable
+	CiAttributeDefinitionsTable.ForeignKeys[0].RefTable = CiTypesTable
+	CiAttributeDefinitionsTable.ForeignKeys[1].RefTable = TenantsTable
 	CiChangeRecordsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	CiChangeRecordsTable.ForeignKeys[1].RefTable = TenantsTable
 	CiLifecycleStatesTable.ForeignKeys[0].RefTable = ConfigurationItemsTable

@@ -77,3 +77,49 @@ type ConfigurationItemStatsResponse struct {
 	TypeDistribution        map[string]int `json:"type_distribution"`
 	EnvironmentDistribution map[string]int `json:"environment_distribution"`
 }
+
+// CreateCIRequest 创建配置项请求
+type CreateCIRequest struct {
+	Name        string                 `json:"name" binding:"required,max=255"`
+	CITypeID    int                    `json:"ci_type_id" binding:"required"`
+	Description string                 `json:"description"`
+	Status      string                 `json:"status" binding:"required,oneof=active inactive maintenance"`
+	Attributes  map[string]interface{} `json:"attributes,omitempty"`
+	TenantID    int                    `json:"tenant_id" binding:"required"`
+}
+
+// CIResponse 配置项响应
+type CIResponse struct {
+	ID          int                    `json:"id"`
+	Name        string                 `json:"name"`
+	CITypeID    int                    `json:"ci_type_id"`
+	Description string                 `json:"description"`
+	Status      string                 `json:"status"`
+	Attributes  map[string]interface{} `json:"attributes,omitempty"`
+	TenantID    int                    `json:"tenant_id"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+}
+
+// ListCIsRequest 获取配置项列表请求
+type ListCIsRequest struct {
+	TenantID int    `json:"tenant_id" binding:"required"`
+	CITypeID int    `json:"ci_type_id,omitempty"`
+	Status   string `json:"status,omitempty"`
+	Limit    int    `json:"limit,omitempty"`
+	Offset   int    `json:"offset,omitempty"`
+}
+
+// ListCIsResponse 配置项列表响应
+type ListCIsResponse struct {
+	CIs   []*CIResponse `json:"cis"`
+	Total int           `json:"total"`
+}
+
+// UpdateCIRequest 更新配置项请求
+type UpdateCIRequest struct {
+	Name        string                 `json:"name,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	Status      string                 `json:"status,omitempty"`
+	Attributes  map[string]interface{} `json:"attributes,omitempty"`
+}

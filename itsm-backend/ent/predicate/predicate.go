@@ -9,6 +9,9 @@ import (
 // ApprovalLog is the predicate function for approvallog builders.
 type ApprovalLog func(*sql.Selector)
 
+// CIAttributeDefinition is the predicate function for ciattributedefinition builders.
+type CIAttributeDefinition func(*sql.Selector)
+
 // CIChangeRecord is the predicate function for cichangerecord builders.
 type CIChangeRecord func(*sql.Selector)
 

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
@@ -234,6 +235,21 @@ func (ctu *CITypeUpdate) AddAllowedRelationships(c ...*CIRelationshipType) *CITy
 	return ctu.AddAllowedRelationshipIDs(ids...)
 }
 
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (ctu *CITypeUpdate) AddAttributeDefinitionIDs(ids ...int) *CITypeUpdate {
+	ctu.mutation.AddAttributeDefinitionIDs(ids...)
+	return ctu
+}
+
+// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (ctu *CITypeUpdate) AddAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctu.AddAttributeDefinitionIDs(ids...)
+}
+
 // Mutation returns the CITypeMutation object of the builder.
 func (ctu *CITypeUpdate) Mutation() *CITypeMutation {
 	return ctu.mutation
@@ -285,6 +301,27 @@ func (ctu *CITypeUpdate) RemoveAllowedRelationships(c ...*CIRelationshipType) *C
 		ids[i] = c[i].ID
 	}
 	return ctu.RemoveAllowedRelationshipIDs(ids...)
+}
+
+// ClearAttributeDefinitions clears all "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (ctu *CITypeUpdate) ClearAttributeDefinitions() *CITypeUpdate {
+	ctu.mutation.ClearAttributeDefinitions()
+	return ctu
+}
+
+// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to CIAttributeDefinition entities by IDs.
+func (ctu *CITypeUpdate) RemoveAttributeDefinitionIDs(ids ...int) *CITypeUpdate {
+	ctu.mutation.RemoveAttributeDefinitionIDs(ids...)
+	return ctu
+}
+
+// RemoveAttributeDefinitions removes "attribute_definitions" edges to CIAttributeDefinition entities.
+func (ctu *CITypeUpdate) RemoveAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctu.RemoveAttributeDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -522,6 +559,51 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ctu.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctu.mutation.RemovedAttributeDefinitionsIDs(); len(nodes) > 0 && !ctu.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctu.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ctu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{citype.Label}
@@ -745,6 +827,21 @@ func (ctuo *CITypeUpdateOne) AddAllowedRelationships(c ...*CIRelationshipType) *
 	return ctuo.AddAllowedRelationshipIDs(ids...)
 }
 
+// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
+func (ctuo *CITypeUpdateOne) AddAttributeDefinitionIDs(ids ...int) *CITypeUpdateOne {
+	ctuo.mutation.AddAttributeDefinitionIDs(ids...)
+	return ctuo
+}
+
+// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (ctuo *CITypeUpdateOne) AddAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctuo.AddAttributeDefinitionIDs(ids...)
+}
+
 // Mutation returns the CITypeMutation object of the builder.
 func (ctuo *CITypeUpdateOne) Mutation() *CITypeMutation {
 	return ctuo.mutation
@@ -796,6 +893,27 @@ func (ctuo *CITypeUpdateOne) RemoveAllowedRelationships(c ...*CIRelationshipType
 		ids[i] = c[i].ID
 	}
 	return ctuo.RemoveAllowedRelationshipIDs(ids...)
+}
+
+// ClearAttributeDefinitions clears all "attribute_definitions" edges to the CIAttributeDefinition entity.
+func (ctuo *CITypeUpdateOne) ClearAttributeDefinitions() *CITypeUpdateOne {
+	ctuo.mutation.ClearAttributeDefinitions()
+	return ctuo
+}
+
+// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to CIAttributeDefinition entities by IDs.
+func (ctuo *CITypeUpdateOne) RemoveAttributeDefinitionIDs(ids ...int) *CITypeUpdateOne {
+	ctuo.mutation.RemoveAttributeDefinitionIDs(ids...)
+	return ctuo
+}
+
+// RemoveAttributeDefinitions removes "attribute_definitions" edges to CIAttributeDefinition entities.
+func (ctuo *CITypeUpdateOne) RemoveAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctuo.RemoveAttributeDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the CITypeUpdate builder.
@@ -1056,6 +1174,51 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ctuo.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctuo.mutation.RemovedAttributeDefinitionsIDs(); len(nodes) > 0 && !ctuo.mutation.AttributeDefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctuo.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.AttributeDefinitionsTable,
+			Columns: []string{citype.AttributeDefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -57,9 +57,11 @@ type CITypeEdges struct {
 	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
 	// AllowedRelationships holds the value of the allowed_relationships edge.
 	AllowedRelationships []*CIRelationshipType `json:"allowed_relationships,omitempty"`
+	// AttributeDefinitions holds the value of the attribute_definitions edge.
+	AttributeDefinitions []*CIAttributeDefinition `json:"attribute_definitions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -89,6 +91,15 @@ func (e CITypeEdges) AllowedRelationshipsOrErr() ([]*CIRelationshipType, error) 
 		return e.AllowedRelationships, nil
 	}
 	return nil, &NotLoadedError{edge: "allowed_relationships"}
+}
+
+// AttributeDefinitionsOrErr returns the AttributeDefinitions value or an error if the edge
+// was not loaded in eager-loading.
+func (e CITypeEdges) AttributeDefinitionsOrErr() ([]*CIAttributeDefinition, error) {
+	if e.loadedTypes[3] {
+		return e.AttributeDefinitions, nil
+	}
+	return nil, &NotLoadedError{edge: "attribute_definitions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -229,6 +240,11 @@ func (ct *CIType) QueryConfigurationItems() *ConfigurationItemQuery {
 // QueryAllowedRelationships queries the "allowed_relationships" edge of the CIType entity.
 func (ct *CIType) QueryAllowedRelationships() *CIRelationshipTypeQuery {
 	return NewCITypeClient(ct.config).QueryAllowedRelationships(ct)
+}
+
+// QueryAttributeDefinitions queries the "attribute_definitions" edge of the CIType entity.
+func (ct *CIType) QueryAttributeDefinitions() *CIAttributeDefinitionQuery {
+	return NewCITypeClient(ct.config).QueryAttributeDefinitions(ct)
 }
 
 // Update returns a builder for updating this CIType.

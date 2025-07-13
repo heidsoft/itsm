@@ -42,14 +42,16 @@ func main() {
 	serviceCatalogService := service.NewServiceCatalogService(client)
 	serviceRequestService := service.NewServiceRequestService(client, serviceCatalogService)
 	dashboardService := service.NewDashboardService(client, sugar)
+	cmdbService := service.NewCMDBService(client, sugar)
 
 	// 初始化控制器
 	ticketController := controller.NewTicketController(ticketService, sugar)
 	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
 	dashboardController := controller.NewDashboardController(dashboardService, sugar)
+	cmdbController := controller.NewCMDBController(cmdbService)
 
 	// 设置路由
-	r := router.SetupRouter(ticketController, serviceController, dashboardController, cfg.JWT.Secret)
+	r := router.SetupRouter(ticketController, serviceController, dashboardController, cmdbController, cfg.JWT.Secret)
 
 	// 启动服务器
 	sugar.Infof("Server starting on port %d", cfg.Server.Port)

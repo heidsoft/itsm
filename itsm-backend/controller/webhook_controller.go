@@ -1,5 +1,12 @@
 package controller
 
+import (
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"itsm-backend/common"
+	"itsm-backend/service"
+)
+
 type WebhookController struct {
 	ticketService *service.TicketService
 	logger        *zap.SugaredLogger

@@ -8,7 +8,7 @@ import (
 )
 
 // SetupRoutes 设置路由
-func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, jwtSecret string) *gin.Engine {
+func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, cmdbController *controller.CMDBController, jwtSecret string) *gin.Engine {
 	r := gin.Default()
 
 	// CORS 中间件
@@ -68,15 +68,18 @@ func SetupRouter(ticketController *controller.TicketController, serviceControlle
 		api.PUT("/service-requests/:id/status", serviceController.UpdateServiceRequestStatus)
 
 		// CMDB路由
-		cmdbController := controller.NewCMDBController(service.NewCMDBService(client))
 		cmdbGroup := api.Group("/cmdb")
 		{
 			cmdbGroup.POST("/configuration-items", cmdbController.CreateConfigurationItem)
 			cmdbGroup.GET("/configuration-items", cmdbController.ListConfigurationItems)
-			cmdbGroup.GET("/configuration-items/stats", cmdbController.GetConfigurationItemStats)
 			cmdbGroup.GET("/configuration-items/:id", cmdbController.GetConfigurationItem)
 			cmdbGroup.PUT("/configuration-items/:id", cmdbController.UpdateConfigurationItem)
 			cmdbGroup.DELETE("/configuration-items/:id", cmdbController.DeleteConfigurationItem)
+			// CMDB 动态属性管理路由
+			cmdbGroup.POST("/ci-types/attributes", cmdbController.CreateCIAttributeDefinition)
+			cmdbGroup.GET("/ci-types/:id/attributes", cmdbController.GetCITypeWithAttributes)
+			cmdbGroup.POST("/ci-attributes/validate", cmdbController.ValidateCIAttributes)
+			cmdbGroup.POST("/cis/search-by-attributes", cmdbController.SearchCIsByAttributes)
 		}
 	}
 

@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// ApprovalLog is the client for interacting with the ApprovalLog builders.
 	ApprovalLog *ApprovalLogClient
+	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
+	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIChangeRecord is the client for interacting with the CIChangeRecord builders.
 	CIChangeRecord *CIChangeRecordClient
 	// CILifecycleState is the client for interacting with the CILifecycleState builders.
@@ -178,6 +180,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.ApprovalLog = NewApprovalLogClient(tx.config)
+	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIChangeRecord = NewCIChangeRecordClient(tx.config)
 	tx.CILifecycleState = NewCILifecycleStateClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)

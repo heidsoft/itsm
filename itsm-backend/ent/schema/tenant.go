@@ -103,6 +103,8 @@ func (Tenant) Edges() []ent.Edge {
 		edge.To("ci_relationships", CIRelationship.Type),
 		edge.To("ci_lifecycle_states", CILifecycleState.Type),
 		edge.To("ci_change_records", CIChangeRecord.Type),
+		// 新增：CI属性定义
+		edge.To("ci_attribute_definitions", CIAttributeDefinition.Type),
 	}
 }
 

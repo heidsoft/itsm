@@ -4,7 +4,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -26,13 +25,13 @@ func NewCMDBController(cmdbService *service.CMDBService) *CMDBController {
 // @Tags CMDB
 // @Accept json
 // @Produce json
-// @Param request body dto.CreateConfigurationItemRequest true "创建配置项请求"
-// @Success 200 {object} common.Response{data=dto.ConfigurationItemResponse}
+// @Param request body dto.CreateCIRequest true "创建配置项请求"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/cmdb/configuration-items [post]
 func (ctrl *CMDBController) CreateConfigurationItem(c *gin.Context) {
-	var req dto.CreateConfigurationItemRequest
+	var req dto.CreateCIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
@@ -44,7 +43,7 @@ func (ctrl *CMDBController) CreateConfigurationItem(c *gin.Context) {
 		return
 	}
 
-	resp, err := ctrl.cmdbService.CreateConfigurationItem(c.Request.Context(), &req, tenantID)
+	resp, err := ctrl.cmdbService.CreateCI(c.Request.Context(), &req)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -59,7 +58,7 @@ func (ctrl *CMDBController) CreateConfigurationItem(c *gin.Context) {
 // @Tags CMDB
 // @Produce json
 // @Param id path int true "配置项ID"
-// @Success 200 {object} common.Response{data=dto.ConfigurationItemResponse}
+// @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
@@ -78,7 +77,7 @@ func (ctrl *CMDBController) GetConfigurationItem(c *gin.Context) {
 		return
 	}
 
-	resp, err := ctrl.cmdbService.GetConfigurationItem(c.Request.Context(), id, tenantID)
+	resp, err := ctrl.cmdbService.GetCI(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if err.Error() == "配置项不存在" {
 			common.Fail(c, 4001, err.Error())
@@ -104,23 +103,23 @@ func (ctrl *CMDBController) GetConfigurationItem(c *gin.Context) {
 // @Param owner query string false "负责人"
 // @Param environment query string false "环境" Enums(production,staging,development)
 // @Param search query string false "搜索关键词"
-// @Success 200 {object} common.Response{data=dto.ConfigurationItemListResponse}
+// @Success 200 {object} common.Response{data=dto.ListCIsResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/cmdb/configuration-items [get]
 func (ctrl *CMDBController) ListConfigurationItems(c *gin.Context) {
-	var req dto.ListConfigurationItemsRequest
+	var req dto.ListCIsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
 
 	// 设置默认值
-	if req.Page == 0 {
-		req.Page = 1
+	if req.Limit == 0 {
+		req.Limit = 10
 	}
-	if req.Size == 0 {
-		req.Size = 10
+	if req.Offset == 0 {
+		req.Offset = 0
 	}
 
 	tenantID := c.GetInt("tenant_id")
@@ -128,8 +127,9 @@ func (ctrl *CMDBController) ListConfigurationItems(c *gin.Context) {
 		common.Fail(c, 2001, "租户信息缺失")
 		return
 	}
+	req.TenantID = tenantID
 
-	resp, err := ctrl.cmdbService.ListConfigurationItems(c.Request.Context(), &req, tenantID)
+	resp, err := ctrl.cmdbService.ListCIs(c.Request.Context(), &req)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
@@ -145,8 +145,8 @@ func (ctrl *CMDBController) ListConfigurationItems(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "配置项ID"
-// @Param request body dto.UpdateConfigurationItemRequest true "更新配置项请求"
-// @Success 200 {object} common.Response{data=dto.ConfigurationItemResponse}
+// @Param request body dto.UpdateCIRequest true "更新配置项请求"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
@@ -159,7 +159,7 @@ func (ctrl *CMDBController) UpdateConfigurationItem(c *gin.Context) {
 		return
 	}
 
-	var req dto.UpdateConfigurationItemRequest
+	var req dto.UpdateCIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
@@ -171,7 +171,7 @@ func (ctrl *CMDBController) UpdateConfigurationItem(c *gin.Context) {
 		return
 	}
 
-	resp, err := ctrl.cmdbService.UpdateConfigurationItem(c.Request.Context(), id, &req, tenantID)
+	resp, err := ctrl.cmdbService.UpdateCI(c.Request.Context(), id, &req)
 	if err != nil {
 		if err.Error() == "配置项不存在" {
 			common.Fail(c, 4001, err.Error())
@@ -209,7 +209,7 @@ func (ctrl *CMDBController) DeleteConfigurationItem(c *gin.Context) {
 		return
 	}
 
-	err = ctrl.cmdbService.DeleteConfigurationItem(c.Request.Context(), id, tenantID)
+	err = ctrl.cmdbService.DeleteCI(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if err.Error() == "配置项不存在" {
 			common.Fail(c, 4001, err.Error())
@@ -222,26 +222,115 @@ func (ctrl *CMDBController) DeleteConfigurationItem(c *gin.Context) {
 	common.Success(c, gin.H{"message": "删除成功"})
 }
 
-// GetConfigurationItemStats 获取配置项统计信息
-// @Summary 获取配置项统计信息
-// @Description 获取配置项的统计信息，包括总数、状态分布、类型分布等
+// CreateCIAttributeDefinition 创建CI属性定义
+// @Summary 创建CI属性定义
+// @Description 为指定的CI类型创建新的属性定义
 // @Tags CMDB
+// @Accept json
 // @Produce json
-// @Success 200 {object} common.Response{data=dto.ConfigurationItemStatsResponse}
+// @Param request body dto.CIAttributeDefinitionRequest true "属性定义信息"
+// @Success 200 {object} common.Response{data=dto.CIAttributeDefinitionResponse}
+// @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/configuration-items/stats [get]
-func (ctrl *CMDBController) GetConfigurationItemStats(c *gin.Context) {
+// @Router /api/cmdb/ci-types/attributes [post]
+func (ctrl *CMDBController) CreateCIAttributeDefinition(c *gin.Context) {
+	var req dto.CIAttributeDefinitionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, 1001, "参数错误: "+err.Error())
+		return
+	}
+
 	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, 2001, "租户信息缺失")
-		return
-	}
-
-	resp, err := ctrl.cmdbService.GetConfigurationItemStats(c.Request.Context(), tenantID)
+	result, err := ctrl.cmdbService.CreateCIAttributeDefinition(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, 5001, err.Error())
+		common.Fail(c, 5001, "创建属性定义失败: "+err.Error())
 		return
 	}
 
-	common.Success(c, resp)
+	common.Success(c, result)
+}
+
+// GetCITypeWithAttributes 获取CI类型及其属性定义
+// @Summary 获取CI类型及其属性定义
+// @Description 获取指定CI类型的详细信息及其所有属性定义
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param id path int true "CI类型ID"
+// @Success 200 {object} common.Response{data=dto.CITypeWithAttributesResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/cmdb/ci-types/{id}/attributes [get]
+func (ctrl *CMDBController) GetCITypeWithAttributes(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, 1001, "无效的CI类型ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	result, err := ctrl.cmdbService.GetCITypeWithAttributes(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, 5001, "获取CI类型属性失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, result)
+}
+
+// ValidateCIAttributes 验证CI属性
+// @Summary 验证CI属性
+// @Description 根据CI类型的属性定义验证提供的属性值
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.ValidateCIAttributesRequest true "验证请求"
+// @Success 200 {object} common.Response{data=dto.ValidateCIAttributesResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/cmdb/ci-attributes/validate [post]
+func (ctrl *CMDBController) ValidateCIAttributes(c *gin.Context) {
+	var req dto.ValidateCIAttributesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, 1001, "参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	result, err := ctrl.cmdbService.ValidateCIAttributes(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		common.Fail(c, 5001, "验证属性失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, result)
+}
+
+// SearchCIsByAttributes 根据属性搜索CI
+// @Summary 根据属性搜索CI
+// @Description 使用动态属性条件搜索配置项
+// @Tags CMDB
+// @Accept json
+// @Produce json
+// @Param request body dto.CIAttributeSearchRequest true "搜索条件"
+// @Success 200 {object} common.Response{data=dto.ListCIsResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/cmdb/cis/search-by-attributes [post]
+func (ctrl *CMDBController) SearchCIsByAttributes(c *gin.Context) {
+	var req dto.CIAttributeSearchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, 1001, "参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	result, err := ctrl.cmdbService.SearchCIsByAttributes(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		common.Fail(c, 5001, "搜索失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, result)
 }

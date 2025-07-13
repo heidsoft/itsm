@@ -20,6 +20,18 @@ func (f ApprovalLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApprovalLogMutation", m)
 }
 
+// The CIAttributeDefinitionFunc type is an adapter to allow the use of ordinary
+// function as CIAttributeDefinition mutator.
+type CIAttributeDefinitionFunc func(context.Context, *ent.CIAttributeDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CIAttributeDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CIAttributeDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CIAttributeDefinitionMutation", m)
+}
+
 // The CIChangeRecordFunc type is an adapter to allow the use of ordinary
 // function as CIChangeRecord mutator.
 type CIChangeRecordFunc func(context.Context, *ent.CIChangeRecordMutation) (ent.Value, error)
