@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
@@ -24,16 +25,18 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                  *QueryContext
-	order                []user.OrderOption
-	inters               []Interceptor
-	predicates           []predicate.User
-	withTenant           *TenantQuery
-	withSubmittedTickets *TicketQuery
-	withAssignedTickets  *TicketQuery
-	withApprovalLogs     *ApprovalLogQuery
-	withStatusLogs       *StatusLogQuery
-	withServiceRequests  *ServiceRequestQuery
+	ctx                   *QueryContext
+	order                 []user.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.User
+	withTenant            *TenantQuery
+	withSubmittedTickets  *TicketQuery
+	withAssignedTickets   *TicketQuery
+	withApprovalLogs      *ApprovalLogQuery
+	withStatusLogs        *StatusLogQuery
+	withServiceRequests   *ServiceRequestQuery
+	withReportedIncidents *IncidentQuery
+	withAssignedIncidents *IncidentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -195,6 +198,50 @@ func (uq *UserQuery) QueryServiceRequests() *ServiceRequestQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ServiceRequestsTable, user.ServiceRequestsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReportedIncidents chains the current query on the "reported_incidents" edge.
+func (uq *UserQuery) QueryReportedIncidents() *IncidentQuery {
+	query := (&IncidentClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReportedIncidentsTable, user.ReportedIncidentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAssignedIncidents chains the current query on the "assigned_incidents" edge.
+func (uq *UserQuery) QueryAssignedIncidents() *IncidentQuery {
+	query := (&IncidentClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedIncidentsTable, user.AssignedIncidentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -389,17 +436,19 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:               uq.config,
-		ctx:                  uq.ctx.Clone(),
-		order:                append([]user.OrderOption{}, uq.order...),
-		inters:               append([]Interceptor{}, uq.inters...),
-		predicates:           append([]predicate.User{}, uq.predicates...),
-		withTenant:           uq.withTenant.Clone(),
-		withSubmittedTickets: uq.withSubmittedTickets.Clone(),
-		withAssignedTickets:  uq.withAssignedTickets.Clone(),
-		withApprovalLogs:     uq.withApprovalLogs.Clone(),
-		withStatusLogs:       uq.withStatusLogs.Clone(),
-		withServiceRequests:  uq.withServiceRequests.Clone(),
+		config:                uq.config,
+		ctx:                   uq.ctx.Clone(),
+		order:                 append([]user.OrderOption{}, uq.order...),
+		inters:                append([]Interceptor{}, uq.inters...),
+		predicates:            append([]predicate.User{}, uq.predicates...),
+		withTenant:            uq.withTenant.Clone(),
+		withSubmittedTickets:  uq.withSubmittedTickets.Clone(),
+		withAssignedTickets:   uq.withAssignedTickets.Clone(),
+		withApprovalLogs:      uq.withApprovalLogs.Clone(),
+		withStatusLogs:        uq.withStatusLogs.Clone(),
+		withServiceRequests:   uq.withServiceRequests.Clone(),
+		withReportedIncidents: uq.withReportedIncidents.Clone(),
+		withAssignedIncidents: uq.withAssignedIncidents.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -469,6 +518,28 @@ func (uq *UserQuery) WithServiceRequests(opts ...func(*ServiceRequestQuery)) *Us
 		opt(query)
 	}
 	uq.withServiceRequests = query
+	return uq
+}
+
+// WithReportedIncidents tells the query-builder to eager-load the nodes that are connected to
+// the "reported_incidents" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithReportedIncidents(opts ...func(*IncidentQuery)) *UserQuery {
+	query := (&IncidentClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withReportedIncidents = query
+	return uq
+}
+
+// WithAssignedIncidents tells the query-builder to eager-load the nodes that are connected to
+// the "assigned_incidents" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithAssignedIncidents(opts ...func(*IncidentQuery)) *UserQuery {
+	query := (&IncidentClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withAssignedIncidents = query
 	return uq
 }
 
@@ -550,13 +621,15 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [8]bool{
 			uq.withTenant != nil,
 			uq.withSubmittedTickets != nil,
 			uq.withAssignedTickets != nil,
 			uq.withApprovalLogs != nil,
 			uq.withStatusLogs != nil,
 			uq.withServiceRequests != nil,
+			uq.withReportedIncidents != nil,
+			uq.withAssignedIncidents != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -615,6 +688,20 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadServiceRequests(ctx, query, nodes,
 			func(n *User) { n.Edges.ServiceRequests = []*ServiceRequest{} },
 			func(n *User, e *ServiceRequest) { n.Edges.ServiceRequests = append(n.Edges.ServiceRequests, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withReportedIncidents; query != nil {
+		if err := uq.loadReportedIncidents(ctx, query, nodes,
+			func(n *User) { n.Edges.ReportedIncidents = []*Incident{} },
+			func(n *User, e *Incident) { n.Edges.ReportedIncidents = append(n.Edges.ReportedIncidents, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withAssignedIncidents; query != nil {
+		if err := uq.loadAssignedIncidents(ctx, query, nodes,
+			func(n *User) { n.Edges.AssignedIncidents = []*Incident{} },
+			func(n *User, e *Incident) { n.Edges.AssignedIncidents = append(n.Edges.AssignedIncidents, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -755,6 +842,7 @@ func (uq *UserQuery) loadStatusLogs(ctx context.Context, query *StatusLogQuery, 
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(statuslog.FieldUserID)
 	}
@@ -800,6 +888,69 @@ func (uq *UserQuery) loadServiceRequests(ctx context.Context, query *ServiceRequ
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "requester_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadReportedIncidents(ctx context.Context, query *IncidentQuery, nodes []*User, init func(*User), assign func(*User, *Incident)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(incident.FieldReporterID)
+	}
+	query.Where(predicate.Incident(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReportedIncidentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ReporterID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "reporter_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadAssignedIncidents(ctx context.Context, query *IncidentQuery, nodes []*User, init func(*User), assign func(*User, *Incident)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(incident.FieldAssigneeID)
+	}
+	query.Where(predicate.Incident(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AssignedIncidentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AssigneeID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "assignee_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "assignee_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

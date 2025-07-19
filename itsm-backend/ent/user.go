@@ -58,9 +58,13 @@ type UserEdges struct {
 	StatusLogs []*StatusLog `json:"status_logs,omitempty"`
 	// ServiceRequests holds the value of the service_requests edge.
 	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
+	// ReportedIncidents holds the value of the reported_incidents edge.
+	ReportedIncidents []*Incident `json:"reported_incidents,omitempty"`
+	// AssignedIncidents holds the value of the assigned_incidents edge.
+	AssignedIncidents []*Incident `json:"assigned_incidents,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // TenantOrErr returns the Tenant value or an error if the edge
@@ -117,6 +121,24 @@ func (e UserEdges) ServiceRequestsOrErr() ([]*ServiceRequest, error) {
 		return e.ServiceRequests, nil
 	}
 	return nil, &NotLoadedError{edge: "service_requests"}
+}
+
+// ReportedIncidentsOrErr returns the ReportedIncidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReportedIncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[6] {
+		return e.ReportedIncidents, nil
+	}
+	return nil, &NotLoadedError{edge: "reported_incidents"}
+}
+
+// AssignedIncidentsOrErr returns the AssignedIncidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AssignedIncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[7] {
+		return e.AssignedIncidents, nil
+	}
+	return nil, &NotLoadedError{edge: "assigned_incidents"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -254,6 +276,16 @@ func (u *User) QueryStatusLogs() *StatusLogQuery {
 // QueryServiceRequests queries the "service_requests" edge of the User entity.
 func (u *User) QueryServiceRequests() *ServiceRequestQuery {
 	return NewUserClient(u.config).QueryServiceRequests(u)
+}
+
+// QueryReportedIncidents queries the "reported_incidents" edge of the User entity.
+func (u *User) QueryReportedIncidents() *IncidentQuery {
+	return NewUserClient(u.config).QueryReportedIncidents(u)
+}
+
+// QueryAssignedIncidents queries the "assigned_incidents" edge of the User entity.
+func (u *User) QueryAssignedIncidents() *IncidentQuery {
+	return NewUserClient(u.config).QueryAssignedIncidents(u)
 }
 
 // Update returns a builder for updating this User.

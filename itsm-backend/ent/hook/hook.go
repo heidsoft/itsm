@@ -116,6 +116,18 @@ func (f FlowInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FlowInstanceMutation", m)
 }
 
+// The IncidentFunc type is an adapter to allow the use of ordinary
+// function as Incident mutator.
+type IncidentFunc func(context.Context, *ent.IncidentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentMutation", m)
+}
+
 // The KnowledgeArticleFunc type is an adapter to allow the use of ordinary
 // function as KnowledgeArticle mutator.
 type KnowledgeArticleFunc func(context.Context, *ent.KnowledgeArticleMutation) (ent.Value, error)

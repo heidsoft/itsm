@@ -1,11 +1,12 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"time"
 )
 
 // User holds the schema definition for the User entity.
@@ -78,6 +79,10 @@ func (User) Edges() []ent.Edge {
 		edge.To("status_logs", StatusLog.Type),
 		// 服务请求
 		edge.To("service_requests", ServiceRequest.Type),
+		// 报告的事件
+		edge.To("reported_incidents", Incident.Type),
+		// 分配的事件
+		edge.To("assigned_incidents", Incident.Type),
 	}
 }
 

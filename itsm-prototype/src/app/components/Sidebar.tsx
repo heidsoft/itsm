@@ -64,7 +64,8 @@ export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = () => {
-    AuthService.clearToken();
+    // 推荐：使用 logout() 方法，它会清除 tokens 并更新状态
+    AuthService.logout();
     router.push("/login");
   };
 

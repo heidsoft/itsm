@@ -257,6 +257,9 @@ func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsReque
 	// 构建查询条件
 	query := s.client.Ticket.Query()
 
+	// 租户过滤
+	query = query.Where(ticket.TenantIDEQ(req.TenantID))
+
 	// 状态筛选
 	if req.Status != nil && *req.Status != "" {
 		query = query.Where(ticket.StatusEQ(ticket.Status(*req.Status)))

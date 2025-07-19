@@ -33,8 +33,9 @@ type StatusLog struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the StatusLogQuery when eager-loading is set.
-	Edges        StatusLogEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                StatusLogEdges `json:"edges"`
+	incident_status_logs *int
+	selectValues         sql.SelectValues
 }
 
 // StatusLogEdges holds the relations/edges for other nodes in the graph.
@@ -81,6 +82,8 @@ func (*StatusLog) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case statuslog.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
+		case statuslog.ForeignKeys[0]: // incident_status_logs
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -137,6 +140,13 @@ func (sl *StatusLog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				sl.CreatedAt = value.Time
+			}
+		case statuslog.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_status_logs", value)
+			} else if value.Valid {
+				sl.incident_status_logs = new(int)
+				*sl.incident_status_logs = int(value.Int64)
 			}
 		default:
 			sl.selectValues.Set(columns[i], values[i])

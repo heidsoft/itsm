@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
@@ -315,6 +316,98 @@ func init() {
 	flowinstance.DefaultUpdatedAt = flowinstanceDescUpdatedAt.Default.(func() time.Time)
 	// flowinstance.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	flowinstance.UpdateDefaultUpdatedAt = flowinstanceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	incidentFields := schema.Incident{}.Fields()
+	_ = incidentFields
+	// incidentDescTitle is the schema descriptor for title field.
+	incidentDescTitle := incidentFields[0].Descriptor()
+	// incident.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	incident.TitleValidator = func() func(string) error {
+		validators := incidentDescTitle.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(title string) error {
+			for _, fn := range fns {
+				if err := fn(title); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// incidentDescIncidentNumber is the schema descriptor for incident_number field.
+	incidentDescIncidentNumber := incidentFields[6].Descriptor()
+	// incident.IncidentNumberValidator is a validator for the "incident_number" field. It is called by the builders before save.
+	incident.IncidentNumberValidator = func() func(string) error {
+		validators := incidentDescIncidentNumber.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(incident_number string) error {
+			for _, fn := range fns {
+				if err := fn(incident_number); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// incidentDescIsMajorIncident is the schema descriptor for is_major_incident field.
+	incidentDescIsMajorIncident := incidentFields[7].Descriptor()
+	// incident.DefaultIsMajorIncident holds the default value on creation for the is_major_incident field.
+	incident.DefaultIsMajorIncident = incidentDescIsMajorIncident.Default.(bool)
+	// incidentDescReporterID is the schema descriptor for reporter_id field.
+	incidentDescReporterID := incidentFields[8].Descriptor()
+	// incident.ReporterIDValidator is a validator for the "reporter_id" field. It is called by the builders before save.
+	incident.ReporterIDValidator = incidentDescReporterID.Validators[0].(func(int) error)
+	// incidentDescAssigneeID is the schema descriptor for assignee_id field.
+	incidentDescAssigneeID := incidentFields[9].Descriptor()
+	// incident.AssigneeIDValidator is a validator for the "assignee_id" field. It is called by the builders before save.
+	incident.AssigneeIDValidator = incidentDescAssigneeID.Validators[0].(func(int) error)
+	// incidentDescTenantID is the schema descriptor for tenant_id field.
+	incidentDescTenantID := incidentFields[10].Descriptor()
+	// incident.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	incident.TenantIDValidator = incidentDescTenantID.Validators[0].(func(int) error)
+	// incidentDescAlibabaCloudInstanceID is the schema descriptor for alibaba_cloud_instance_id field.
+	incidentDescAlibabaCloudInstanceID := incidentFields[11].Descriptor()
+	// incident.AlibabaCloudInstanceIDValidator is a validator for the "alibaba_cloud_instance_id" field. It is called by the builders before save.
+	incident.AlibabaCloudInstanceIDValidator = incidentDescAlibabaCloudInstanceID.Validators[0].(func(string) error)
+	// incidentDescAlibabaCloudRegion is the schema descriptor for alibaba_cloud_region field.
+	incidentDescAlibabaCloudRegion := incidentFields[12].Descriptor()
+	// incident.AlibabaCloudRegionValidator is a validator for the "alibaba_cloud_region" field. It is called by the builders before save.
+	incident.AlibabaCloudRegionValidator = incidentDescAlibabaCloudRegion.Validators[0].(func(string) error)
+	// incidentDescAlibabaCloudService is the schema descriptor for alibaba_cloud_service field.
+	incidentDescAlibabaCloudService := incidentFields[13].Descriptor()
+	// incident.AlibabaCloudServiceValidator is a validator for the "alibaba_cloud_service" field. It is called by the builders before save.
+	incident.AlibabaCloudServiceValidator = incidentDescAlibabaCloudService.Validators[0].(func(string) error)
+	// incidentDescSecurityEventType is the schema descriptor for security_event_type field.
+	incidentDescSecurityEventType := incidentFields[16].Descriptor()
+	// incident.SecurityEventTypeValidator is a validator for the "security_event_type" field. It is called by the builders before save.
+	incident.SecurityEventTypeValidator = incidentDescSecurityEventType.Validators[0].(func(string) error)
+	// incidentDescSecurityEventSourceIP is the schema descriptor for security_event_source_ip field.
+	incidentDescSecurityEventSourceIP := incidentFields[17].Descriptor()
+	// incident.SecurityEventSourceIPValidator is a validator for the "security_event_source_ip" field. It is called by the builders before save.
+	incident.SecurityEventSourceIPValidator = incidentDescSecurityEventSourceIP.Validators[0].(func(string) error)
+	// incidentDescSecurityEventTarget is the schema descriptor for security_event_target field.
+	incidentDescSecurityEventTarget := incidentFields[18].Descriptor()
+	// incident.SecurityEventTargetValidator is a validator for the "security_event_target" field. It is called by the builders before save.
+	incident.SecurityEventTargetValidator = incidentDescSecurityEventTarget.Validators[0].(func(string) error)
+	// incidentDescDetectedAt is the schema descriptor for detected_at field.
+	incidentDescDetectedAt := incidentFields[20].Descriptor()
+	// incident.DefaultDetectedAt holds the default value on creation for the detected_at field.
+	incident.DefaultDetectedAt = incidentDescDetectedAt.Default.(func() time.Time)
+	// incidentDescCreatedAt is the schema descriptor for created_at field.
+	incidentDescCreatedAt := incidentFields[24].Descriptor()
+	// incident.DefaultCreatedAt holds the default value on creation for the created_at field.
+	incident.DefaultCreatedAt = incidentDescCreatedAt.Default.(func() time.Time)
+	// incidentDescUpdatedAt is the schema descriptor for updated_at field.
+	incidentDescUpdatedAt := incidentFields[25].Descriptor()
+	// incident.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	incident.DefaultUpdatedAt = incidentDescUpdatedAt.Default.(func() time.Time)
+	// incident.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	incident.UpdateDefaultUpdatedAt = incidentDescUpdatedAt.UpdateDefault.(func() time.Time)
 	knowledgearticleFields := schema.KnowledgeArticle{}.Fields()
 	_ = knowledgearticleFields
 	// knowledgearticleDescTitle is the schema descriptor for title field.

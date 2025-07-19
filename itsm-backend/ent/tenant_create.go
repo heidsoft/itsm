@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -350,6 +351,21 @@ func (tc *TenantCreate) AddCiAttributeDefinitions(c ...*CIAttributeDefinition) *
 		ids[i] = c[i].ID
 	}
 	return tc.AddCiAttributeDefinitionIDs(ids...)
+}
+
+// AddIncidentIDs adds the "incidents" edge to the Incident entity by IDs.
+func (tc *TenantCreate) AddIncidentIDs(ids ...int) *TenantCreate {
+	tc.mutation.AddIncidentIDs(ids...)
+	return tc
+}
+
+// AddIncidents adds the "incidents" edges to the Incident entity.
+func (tc *TenantCreate) AddIncidents(i ...*Incident) *TenantCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tc.AddIncidentIDs(ids...)
 }
 
 // Mutation returns the TenantMutation object of the builder.
@@ -733,6 +749,22 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.IncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

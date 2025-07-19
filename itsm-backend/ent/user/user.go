@@ -46,6 +46,10 @@ const (
 	EdgeStatusLogs = "status_logs"
 	// EdgeServiceRequests holds the string denoting the service_requests edge name in mutations.
 	EdgeServiceRequests = "service_requests"
+	// EdgeReportedIncidents holds the string denoting the reported_incidents edge name in mutations.
+	EdgeReportedIncidents = "reported_incidents"
+	// EdgeAssignedIncidents holds the string denoting the assigned_incidents edge name in mutations.
+	EdgeAssignedIncidents = "assigned_incidents"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// TenantTable is the table that holds the tenant relation/edge.
@@ -90,6 +94,20 @@ const (
 	ServiceRequestsInverseTable = "service_requests"
 	// ServiceRequestsColumn is the table column denoting the service_requests relation/edge.
 	ServiceRequestsColumn = "requester_id"
+	// ReportedIncidentsTable is the table that holds the reported_incidents relation/edge.
+	ReportedIncidentsTable = "incidents"
+	// ReportedIncidentsInverseTable is the table name for the Incident entity.
+	// It exists in this package in order to avoid circular dependency with the "incident" package.
+	ReportedIncidentsInverseTable = "incidents"
+	// ReportedIncidentsColumn is the table column denoting the reported_incidents relation/edge.
+	ReportedIncidentsColumn = "reporter_id"
+	// AssignedIncidentsTable is the table that holds the assigned_incidents relation/edge.
+	AssignedIncidentsTable = "incidents"
+	// AssignedIncidentsInverseTable is the table name for the Incident entity.
+	// It exists in this package in order to avoid circular dependency with the "incident" package.
+	AssignedIncidentsInverseTable = "incidents"
+	// AssignedIncidentsColumn is the table column denoting the assigned_incidents relation/edge.
+	AssignedIncidentsColumn = "assignee_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -274,6 +292,34 @@ func ByServiceRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newServiceRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByReportedIncidentsCount orders the results by reported_incidents count.
+func ByReportedIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReportedIncidentsStep(), opts...)
+	}
+}
+
+// ByReportedIncidents orders the results by reported_incidents terms.
+func ByReportedIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReportedIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAssignedIncidentsCount orders the results by assigned_incidents count.
+func ByAssignedIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAssignedIncidentsStep(), opts...)
+	}
+}
+
+// ByAssignedIncidents orders the results by assigned_incidents terms.
+func ByAssignedIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAssignedIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTenantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -314,5 +360,19 @@ func newServiceRequestsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ServiceRequestsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ServiceRequestsTable, ServiceRequestsColumn),
+	)
+}
+func newReportedIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReportedIncidentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReportedIncidentsTable, ReportedIncidentsColumn),
+	)
+}
+func newAssignedIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AssignedIncidentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AssignedIncidentsTable, AssignedIncidentsColumn),
 	)
 }

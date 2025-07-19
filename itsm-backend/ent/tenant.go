@@ -74,9 +74,11 @@ type TenantEdges struct {
 	CiChangeRecords []*CIChangeRecord `json:"ci_change_records,omitempty"`
 	// CiAttributeDefinitions holds the value of the ci_attribute_definitions edge.
 	CiAttributeDefinitions []*CIAttributeDefinition `json:"ci_attribute_definitions,omitempty"`
+	// Incidents holds the value of the incidents edge.
+	Incidents []*Incident `json:"incidents,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [14]bool
+	loadedTypes [15]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -203,6 +205,15 @@ func (e TenantEdges) CiAttributeDefinitionsOrErr() ([]*CIAttributeDefinition, er
 		return e.CiAttributeDefinitions, nil
 	}
 	return nil, &NotLoadedError{edge: "ci_attribute_definitions"}
+}
+
+// IncidentsOrErr returns the Incidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) IncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[14] {
+		return e.Incidents, nil
+	}
+	return nil, &NotLoadedError{edge: "incidents"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -385,6 +396,11 @@ func (t *Tenant) QueryCiChangeRecords() *CIChangeRecordQuery {
 // QueryCiAttributeDefinitions queries the "ci_attribute_definitions" edge of the Tenant entity.
 func (t *Tenant) QueryCiAttributeDefinitions() *CIAttributeDefinitionQuery {
 	return NewTenantClient(t.config).QueryCiAttributeDefinitions(t)
+}
+
+// QueryIncidents queries the "incidents" edge of the Tenant entity.
+func (t *Tenant) QueryIncidents() *IncidentQuery {
+	return NewTenantClient(t.config).QueryIncidents(t)
 }
 
 // Update returns a builder for updating this Tenant.

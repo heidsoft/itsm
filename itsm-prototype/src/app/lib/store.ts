@@ -33,7 +33,8 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       login: (user, token, tenant) => {
         set({ user, token, isAuthenticated: true, currentTenant: tenant });
-        localStorage.setItem('auth_token', token);
+        // 统一使用 access_token 作为键名
+        localStorage.setItem('access_token', token);
         httpClient.setToken(token);
         if (tenant) {
           httpClient.setTenantId(tenant.id);
@@ -41,7 +42,10 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: () => {
         set({ user: null, token: null, isAuthenticated: false, currentTenant: null });
+        // 清除所有可能的 token 键名
+        localStorage.removeItem('access_token');
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('current_tenant_id');
         httpClient.clearToken();
         httpClient.setTenantId(null);

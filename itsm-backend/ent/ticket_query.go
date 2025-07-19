@@ -781,6 +781,7 @@ func (tq *TicketQuery) loadStatusLogs(ctx context.Context, query *StatusLogQuery
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(statuslog.FieldTicketID)
 	}

@@ -37,6 +37,7 @@ type ConfigurationItemQuery struct {
 	withChangeRecords         *CIChangeRecordQuery
 	withIncidents             *TicketQuery
 	withChanges               *TicketQuery
+	withFKs                   bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -620,6 +621,7 @@ func (ciq *ConfigurationItemQuery) prepareQuery(ctx context.Context) error {
 func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ConfigurationItem, error) {
 	var (
 		nodes       = []*ConfigurationItem{}
+		withFKs     = ciq.withFKs
 		_spec       = ciq.querySpec()
 		loadedTypes = [8]bool{
 			ciq.withTenant != nil,
@@ -632,6 +634,9 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			ciq.withChanges != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, configurationitem.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ConfigurationItem).scanValues(nil, columns)
 	}

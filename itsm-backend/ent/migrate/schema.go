@@ -444,6 +444,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "incident_affected_configuration_items", Type: field.TypeInt, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// ConfigurationItemsTable holds the schema information for the "configuration_items" table.
@@ -459,8 +460,14 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "configuration_items_tenants_configuration_items",
+				Symbol:     "configuration_items_incidents_affected_configuration_items",
 				Columns:    []*schema.Column{ConfigurationItemsColumns[20]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "configuration_items_tenants_configuration_items",
+				Columns:    []*schema.Column{ConfigurationItemsColumns[21]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -469,7 +476,7 @@ var (
 			{
 				Name:    "configurationitem_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[20]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[21]},
 			},
 			{
 				Name:    "configurationitem_ci_type_id",
@@ -494,17 +501,17 @@ var (
 			{
 				Name:    "configurationitem_tenant_id_name",
 				Unique:  true,
-				Columns: []*schema.Column{ConfigurationItemsColumns[20], ConfigurationItemsColumns[1]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[21], ConfigurationItemsColumns[1]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_serial_number",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[20], ConfigurationItemsColumns[4]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[21], ConfigurationItemsColumns[4]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_asset_tag",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[20], ConfigurationItemsColumns[5]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[21], ConfigurationItemsColumns[5]},
 			},
 		},
 	}
@@ -570,6 +577,169 @@ var (
 				Name:    "flowinstance_flow_definition_id_status",
 				Unique:  false,
 				Columns: []*schema.Column{FlowInstancesColumns[1], FlowInstancesColumns[4]},
+			},
+		},
+	}
+	// IncidentsColumns holds the columns for the "incidents" table.
+	IncidentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString, Size: 255},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"new", "assigned", "in_progress", "resolved", "closed", "suspended"}, Default: "new"},
+		{Name: "priority", Type: field.TypeEnum, Enums: []string{"low", "medium", "high", "critical"}, Default: "medium"},
+		{Name: "source", Type: field.TypeEnum, Enums: []string{"service_desk", "monitoring", "security", "user_report", "alibaba_cloud", "cloud_product", "security_event"}},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"infrastructure", "application", "security", "network", "database", "storage", "cloud_service"}},
+		{Name: "incident_number", Type: field.TypeString, Unique: true, Size: 50},
+		{Name: "is_major_incident", Type: field.TypeBool, Default: false},
+		{Name: "alibaba_cloud_instance_id", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "alibaba_cloud_region", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "alibaba_cloud_service", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "alibaba_cloud_alert_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "alibaba_cloud_metrics", Type: field.TypeJSON, Nullable: true},
+		{Name: "security_event_type", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "security_event_source_ip", Type: field.TypeString, Nullable: true, Size: 50},
+		{Name: "security_event_target", Type: field.TypeString, Nullable: true, Size: 200},
+		{Name: "security_event_details", Type: field.TypeJSON, Nullable: true},
+		{Name: "detected_at", Type: field.TypeTime},
+		{Name: "confirmed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "reporter_id", Type: field.TypeInt},
+		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+	}
+	// IncidentsTable holds the schema information for the "incidents" table.
+	IncidentsTable = &schema.Table{
+		Name:       "incidents",
+		Columns:    IncidentsColumns,
+		PrimaryKey: []*schema.Column{IncidentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incidents_tenants_incidents",
+				Columns:    []*schema.Column{IncidentsColumns[24]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "incidents_users_reported_incidents",
+				Columns:    []*schema.Column{IncidentsColumns[25]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "incidents_users_assigned_incidents",
+				Columns:    []*schema.Column{IncidentsColumns[26]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "incident_status",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[3]},
+			},
+			{
+				Name:    "incident_priority",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[4]},
+			},
+			{
+				Name:    "incident_source",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[5]},
+			},
+			{
+				Name:    "incident_type",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[6]},
+			},
+			{
+				Name:    "incident_reporter_id",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[25]},
+			},
+			{
+				Name:    "incident_assignee_id",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[26]},
+			},
+			{
+				Name:    "incident_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[22]},
+			},
+			{
+				Name:    "incident_incident_number",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[7]},
+			},
+			{
+				Name:    "incident_is_major_incident",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[8]},
+			},
+			{
+				Name:    "incident_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[24]},
+			},
+			{
+				Name:    "incident_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[3]},
+			},
+			{
+				Name:    "incident_tenant_id_priority",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[4]},
+			},
+			{
+				Name:    "incident_alibaba_cloud_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[9]},
+			},
+			{
+				Name:    "incident_alibaba_cloud_region",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[10]},
+			},
+			{
+				Name:    "incident_alibaba_cloud_service",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[11]},
+			},
+			{
+				Name:    "incident_security_event_type",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[14]},
+			},
+			{
+				Name:    "incident_security_event_source_ip",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[15]},
+			},
+			{
+				Name:    "incident_status_priority",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[3], IncidentsColumns[4]},
+			},
+			{
+				Name:    "incident_source_type",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[5], IncidentsColumns[6]},
+			},
+			{
+				Name:    "incident_tenant_id_source",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[5]},
+			},
+			{
+				Name:    "incident_tenant_id_is_major_incident",
+				Unique:  false,
+				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[8]},
 			},
 		},
 	}
@@ -776,6 +946,7 @@ var (
 		{Name: "to_status", Type: field.TypeString, Size: 50},
 		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "incident_status_logs", Type: field.TypeInt, Nullable: true},
 		{Name: "ticket_id", Type: field.TypeInt},
 		{Name: "user_id", Type: field.TypeInt},
 	}
@@ -786,14 +957,20 @@ var (
 		PrimaryKey: []*schema.Column{StatusLogsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "status_logs_tickets_status_logs",
+				Symbol:     "status_logs_incidents_status_logs",
 				Columns:    []*schema.Column{StatusLogsColumns[5]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "status_logs_tickets_status_logs",
+				Columns:    []*schema.Column{StatusLogsColumns[6]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "status_logs_users_status_logs",
-				Columns:    []*schema.Column{StatusLogsColumns[6]},
+				Columns:    []*schema.Column{StatusLogsColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -802,12 +979,12 @@ var (
 			{
 				Name:    "statuslog_ticket_id",
 				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[5]},
+				Columns: []*schema.Column{StatusLogsColumns[6]},
 			},
 			{
 				Name:    "statuslog_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[6]},
+				Columns: []*schema.Column{StatusLogsColumns[7]},
 			},
 			{
 				Name:    "statuslog_created_at",
@@ -817,7 +994,7 @@ var (
 			{
 				Name:    "statuslog_ticket_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[5], StatusLogsColumns[4]},
+				Columns: []*schema.Column{StatusLogsColumns[6], StatusLogsColumns[4]},
 			},
 		},
 	}
@@ -915,6 +1092,9 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "configuration_item_incidents", Type: field.TypeInt, Nullable: true},
 		{Name: "configuration_item_changes", Type: field.TypeInt, Nullable: true},
+		{Name: "incident_related_problems", Type: field.TypeInt, Nullable: true},
+		{Name: "incident_related_changes", Type: field.TypeInt, Nullable: true},
+		{Name: "incident_comments", Type: field.TypeInt, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
@@ -938,20 +1118,38 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "tickets_tenants_tickets",
+				Symbol:     "tickets_incidents_related_problems",
 				Columns:    []*schema.Column{TicketsColumns[11]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_incidents_related_changes",
+				Columns:    []*schema.Column{TicketsColumns[12]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_incidents_comments",
+				Columns:    []*schema.Column{TicketsColumns[13]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_tenants_tickets",
+				Columns:    []*schema.Column{TicketsColumns[14]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "tickets_users_submitted_tickets",
-				Columns:    []*schema.Column{TicketsColumns[12]},
+				Columns:    []*schema.Column{TicketsColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "tickets_users_assigned_tickets",
-				Columns:    []*schema.Column{TicketsColumns[13]},
+				Columns:    []*schema.Column{TicketsColumns[16]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -970,12 +1168,12 @@ var (
 			{
 				Name:    "ticket_requester_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[12]},
+				Columns: []*schema.Column{TicketsColumns[15]},
 			},
 			{
 				Name:    "ticket_assignee_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[13]},
+				Columns: []*schema.Column{TicketsColumns[16]},
 			},
 			{
 				Name:    "ticket_created_at",
@@ -990,17 +1188,17 @@ var (
 			{
 				Name:    "ticket_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[11]},
+				Columns: []*schema.Column{TicketsColumns[14]},
 			},
 			{
 				Name:    "ticket_tenant_id_status",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[11], TicketsColumns[3]},
+				Columns: []*schema.Column{TicketsColumns[14], TicketsColumns[3]},
 			},
 			{
 				Name:    "ticket_tenant_id_requester_id",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[11], TicketsColumns[12]},
+				Columns: []*schema.Column{TicketsColumns[14], TicketsColumns[15]},
 			},
 			{
 				Name:    "ticket_status_priority",
@@ -1010,7 +1208,7 @@ var (
 			{
 				Name:    "ticket_requester_id_status",
 				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[12], TicketsColumns[3]},
+				Columns: []*schema.Column{TicketsColumns[15], TicketsColumns[3]},
 			},
 		},
 	}
@@ -1110,6 +1308,7 @@ var (
 		CiTypesTable,
 		ConfigurationItemsTable,
 		FlowInstancesTable,
+		IncidentsTable,
 		KnowledgeArticlesTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
@@ -1139,22 +1338,30 @@ func init() {
 	CiRelationshipTypesTable.ForeignKeys[1].RefTable = TenantsTable
 	CiTypesTable.ForeignKeys[0].RefTable = TenantsTable
 	ConfigurationItemsTable.ForeignKeys[0].RefTable = CiTypesTable
-	ConfigurationItemsTable.ForeignKeys[1].RefTable = TenantsTable
+	ConfigurationItemsTable.ForeignKeys[1].RefTable = IncidentsTable
+	ConfigurationItemsTable.ForeignKeys[2].RefTable = TenantsTable
 	FlowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
 	FlowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
+	IncidentsTable.ForeignKeys[0].RefTable = TenantsTable
+	IncidentsTable.ForeignKeys[1].RefTable = UsersTable
+	IncidentsTable.ForeignKeys[2].RefTable = UsersTable
 	KnowledgeArticlesTable.ForeignKeys[0].RefTable = TenantsTable
 	ServiceCatalogsTable.ForeignKeys[0].RefTable = TenantsTable
 	ServiceRequestsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
 	ServiceRequestsTable.ForeignKeys[1].RefTable = TenantsTable
 	ServiceRequestsTable.ForeignKeys[2].RefTable = UsersTable
-	StatusLogsTable.ForeignKeys[0].RefTable = TicketsTable
-	StatusLogsTable.ForeignKeys[1].RefTable = UsersTable
+	StatusLogsTable.ForeignKeys[0].RefTable = IncidentsTable
+	StatusLogsTable.ForeignKeys[1].RefTable = TicketsTable
+	StatusLogsTable.ForeignKeys[2].RefTable = UsersTable
 	SubscriptionsTable.ForeignKeys[0].RefTable = TenantsTable
 	TicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	TicketsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
-	TicketsTable.ForeignKeys[2].RefTable = TenantsTable
-	TicketsTable.ForeignKeys[3].RefTable = UsersTable
-	TicketsTable.ForeignKeys[4].RefTable = UsersTable
+	TicketsTable.ForeignKeys[2].RefTable = IncidentsTable
+	TicketsTable.ForeignKeys[3].RefTable = IncidentsTable
+	TicketsTable.ForeignKeys[4].RefTable = IncidentsTable
+	TicketsTable.ForeignKeys[5].RefTable = TenantsTable
+	TicketsTable.ForeignKeys[6].RefTable = UsersTable
+	TicketsTable.ForeignKeys[7].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = TenantsTable
 	WorkflowsTable.ForeignKeys[0].RefTable = TenantsTable
 }

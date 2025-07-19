@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
@@ -378,6 +379,21 @@ func (tu *TenantUpdate) AddCiAttributeDefinitions(c ...*CIAttributeDefinition) *
 	return tu.AddCiAttributeDefinitionIDs(ids...)
 }
 
+// AddIncidentIDs adds the "incidents" edge to the Incident entity by IDs.
+func (tu *TenantUpdate) AddIncidentIDs(ids ...int) *TenantUpdate {
+	tu.mutation.AddIncidentIDs(ids...)
+	return tu
+}
+
+// AddIncidents adds the "incidents" edges to the Incident entity.
+func (tu *TenantUpdate) AddIncidents(i ...*Incident) *TenantUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tu.AddIncidentIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tu *TenantUpdate) Mutation() *TenantMutation {
 	return tu.mutation
@@ -675,6 +691,27 @@ func (tu *TenantUpdate) RemoveCiAttributeDefinitions(c ...*CIAttributeDefinition
 		ids[i] = c[i].ID
 	}
 	return tu.RemoveCiAttributeDefinitionIDs(ids...)
+}
+
+// ClearIncidents clears all "incidents" edges to the Incident entity.
+func (tu *TenantUpdate) ClearIncidents() *TenantUpdate {
+	tu.mutation.ClearIncidents()
+	return tu
+}
+
+// RemoveIncidentIDs removes the "incidents" edge to Incident entities by IDs.
+func (tu *TenantUpdate) RemoveIncidentIDs(ids ...int) *TenantUpdate {
+	tu.mutation.RemoveIncidentIDs(ids...)
+	return tu
+}
+
+// RemoveIncidents removes "incidents" edges to Incident entities.
+func (tu *TenantUpdate) RemoveIncidents(i ...*Incident) *TenantUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tu.RemoveIncidentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1424,6 +1461,51 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.IncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedIncidentsIDs(); len(nodes) > 0 && !tu.mutation.IncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.IncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tenant.Label}
@@ -1780,6 +1862,21 @@ func (tuo *TenantUpdateOne) AddCiAttributeDefinitions(c ...*CIAttributeDefinitio
 	return tuo.AddCiAttributeDefinitionIDs(ids...)
 }
 
+// AddIncidentIDs adds the "incidents" edge to the Incident entity by IDs.
+func (tuo *TenantUpdateOne) AddIncidentIDs(ids ...int) *TenantUpdateOne {
+	tuo.mutation.AddIncidentIDs(ids...)
+	return tuo
+}
+
+// AddIncidents adds the "incidents" edges to the Incident entity.
+func (tuo *TenantUpdateOne) AddIncidents(i ...*Incident) *TenantUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tuo.AddIncidentIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tuo *TenantUpdateOne) Mutation() *TenantMutation {
 	return tuo.mutation
@@ -2077,6 +2174,27 @@ func (tuo *TenantUpdateOne) RemoveCiAttributeDefinitions(c ...*CIAttributeDefini
 		ids[i] = c[i].ID
 	}
 	return tuo.RemoveCiAttributeDefinitionIDs(ids...)
+}
+
+// ClearIncidents clears all "incidents" edges to the Incident entity.
+func (tuo *TenantUpdateOne) ClearIncidents() *TenantUpdateOne {
+	tuo.mutation.ClearIncidents()
+	return tuo
+}
+
+// RemoveIncidentIDs removes the "incidents" edge to Incident entities by IDs.
+func (tuo *TenantUpdateOne) RemoveIncidentIDs(ids ...int) *TenantUpdateOne {
+	tuo.mutation.RemoveIncidentIDs(ids...)
+	return tuo
+}
+
+// RemoveIncidents removes "incidents" edges to Incident entities.
+func (tuo *TenantUpdateOne) RemoveIncidents(i ...*Incident) *TenantUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return tuo.RemoveIncidentIDs(ids...)
 }
 
 // Where appends a list predicates to the TenantUpdate builder.
@@ -2849,6 +2967,51 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.IncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedIncidentsIDs(); len(nodes) > 0 && !tuo.mutation.IncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.IncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.IncidentsTable,
+			Columns: []string{tenant.IncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

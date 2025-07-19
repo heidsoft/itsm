@@ -122,6 +122,7 @@ type GetTicketsRequest struct {
 	Status      *string `json:"status" form:"status"`
 	Priority    *string `json:"priority" form:"priority"`
 	UserID      int     `json:"-"` // 从认证中间件获取
+	TenantID    int     `json:"-"` // 从认证中间件获取
 	RequesterID *int    `json:"requester_id" form:"requester_id"`
 }
 

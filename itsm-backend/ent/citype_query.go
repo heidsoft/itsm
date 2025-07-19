@@ -579,6 +579,7 @@ func (ctq *CITypeQuery) loadConfigurationItems(ctx context.Context, query *Confi
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(configurationitem.FieldCiTypeID)
 	}

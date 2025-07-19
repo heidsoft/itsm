@@ -48,6 +48,9 @@ type Ticket struct {
 	Edges                        TicketEdges `json:"edges"`
 	configuration_item_incidents *int
 	configuration_item_changes   *int
+	incident_related_problems    *int
+	incident_related_changes     *int
+	incident_comments            *int
 	selectValues                 sql.SelectValues
 }
 
@@ -148,6 +151,12 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 		case ticket.ForeignKeys[0]: // configuration_item_incidents
 			values[i] = new(sql.NullInt64)
 		case ticket.ForeignKeys[1]: // configuration_item_changes
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[2]: // incident_related_problems
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[3]: // incident_related_changes
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[4]: // incident_comments
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -252,6 +261,27 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.configuration_item_changes = new(int)
 				*t.configuration_item_changes = int(value.Int64)
+			}
+		case ticket.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_related_problems", value)
+			} else if value.Valid {
+				t.incident_related_problems = new(int)
+				*t.incident_related_problems = int(value.Int64)
+			}
+		case ticket.ForeignKeys[3]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_related_changes", value)
+			} else if value.Valid {
+				t.incident_related_changes = new(int)
+				*t.incident_related_changes = int(value.Int64)
+			}
+		case ticket.ForeignKeys[4]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_comments", value)
+			} else if value.Valid {
+				t.incident_comments = new(int)
+				*t.incident_comments = int(value.Int64)
 			}
 		default:
 			t.selectValues.Set(columns[i], values[i])

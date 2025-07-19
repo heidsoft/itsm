@@ -30,6 +30,8 @@ type Tx struct {
 	ConfigurationItem *ConfigurationItemClient
 	// FlowInstance is the client for interacting with the FlowInstance builders.
 	FlowInstance *FlowInstanceClient
+	// Incident is the client for interacting with the Incident builders.
+	Incident *IncidentClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -188,6 +190,7 @@ func (tx *Tx) init() {
 	tx.CIType = NewCITypeClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.FlowInstance = NewFlowInstanceClient(tx.config)
+	tx.Incident = NewIncidentClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)

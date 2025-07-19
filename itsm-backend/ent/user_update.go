@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
@@ -243,6 +244,36 @@ func (uu *UserUpdate) AddServiceRequests(s ...*ServiceRequest) *UserUpdate {
 	return uu.AddServiceRequestIDs(ids...)
 }
 
+// AddReportedIncidentIDs adds the "reported_incidents" edge to the Incident entity by IDs.
+func (uu *UserUpdate) AddReportedIncidentIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddReportedIncidentIDs(ids...)
+	return uu
+}
+
+// AddReportedIncidents adds the "reported_incidents" edges to the Incident entity.
+func (uu *UserUpdate) AddReportedIncidents(i ...*Incident) *UserUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uu.AddReportedIncidentIDs(ids...)
+}
+
+// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
+func (uu *UserUpdate) AddAssignedIncidentIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddAssignedIncidentIDs(ids...)
+	return uu
+}
+
+// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
+func (uu *UserUpdate) AddAssignedIncidents(i ...*Incident) *UserUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uu.AddAssignedIncidentIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -357,6 +388,48 @@ func (uu *UserUpdate) RemoveServiceRequests(s ...*ServiceRequest) *UserUpdate {
 		ids[i] = s[i].ID
 	}
 	return uu.RemoveServiceRequestIDs(ids...)
+}
+
+// ClearReportedIncidents clears all "reported_incidents" edges to the Incident entity.
+func (uu *UserUpdate) ClearReportedIncidents() *UserUpdate {
+	uu.mutation.ClearReportedIncidents()
+	return uu
+}
+
+// RemoveReportedIncidentIDs removes the "reported_incidents" edge to Incident entities by IDs.
+func (uu *UserUpdate) RemoveReportedIncidentIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveReportedIncidentIDs(ids...)
+	return uu
+}
+
+// RemoveReportedIncidents removes "reported_incidents" edges to Incident entities.
+func (uu *UserUpdate) RemoveReportedIncidents(i ...*Incident) *UserUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uu.RemoveReportedIncidentIDs(ids...)
+}
+
+// ClearAssignedIncidents clears all "assigned_incidents" edges to the Incident entity.
+func (uu *UserUpdate) ClearAssignedIncidents() *UserUpdate {
+	uu.mutation.ClearAssignedIncidents()
+	return uu
+}
+
+// RemoveAssignedIncidentIDs removes the "assigned_incidents" edge to Incident entities by IDs.
+func (uu *UserUpdate) RemoveAssignedIncidentIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveAssignedIncidentIDs(ids...)
+	return uu
+}
+
+// RemoveAssignedIncidents removes "assigned_incidents" edges to Incident entities.
+func (uu *UserUpdate) RemoveAssignedIncidents(i ...*Incident) *UserUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uu.RemoveAssignedIncidentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -729,6 +802,96 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.ReportedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedReportedIncidentsIDs(); len(nodes) > 0 && !uu.mutation.ReportedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ReportedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedAssignedIncidentsIDs(); len(nodes) > 0 && !uu.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -959,6 +1122,36 @@ func (uuo *UserUpdateOne) AddServiceRequests(s ...*ServiceRequest) *UserUpdateOn
 	return uuo.AddServiceRequestIDs(ids...)
 }
 
+// AddReportedIncidentIDs adds the "reported_incidents" edge to the Incident entity by IDs.
+func (uuo *UserUpdateOne) AddReportedIncidentIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddReportedIncidentIDs(ids...)
+	return uuo
+}
+
+// AddReportedIncidents adds the "reported_incidents" edges to the Incident entity.
+func (uuo *UserUpdateOne) AddReportedIncidents(i ...*Incident) *UserUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uuo.AddReportedIncidentIDs(ids...)
+}
+
+// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
+func (uuo *UserUpdateOne) AddAssignedIncidentIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddAssignedIncidentIDs(ids...)
+	return uuo
+}
+
+// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
+func (uuo *UserUpdateOne) AddAssignedIncidents(i ...*Incident) *UserUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uuo.AddAssignedIncidentIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1073,6 +1266,48 @@ func (uuo *UserUpdateOne) RemoveServiceRequests(s ...*ServiceRequest) *UserUpdat
 		ids[i] = s[i].ID
 	}
 	return uuo.RemoveServiceRequestIDs(ids...)
+}
+
+// ClearReportedIncidents clears all "reported_incidents" edges to the Incident entity.
+func (uuo *UserUpdateOne) ClearReportedIncidents() *UserUpdateOne {
+	uuo.mutation.ClearReportedIncidents()
+	return uuo
+}
+
+// RemoveReportedIncidentIDs removes the "reported_incidents" edge to Incident entities by IDs.
+func (uuo *UserUpdateOne) RemoveReportedIncidentIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveReportedIncidentIDs(ids...)
+	return uuo
+}
+
+// RemoveReportedIncidents removes "reported_incidents" edges to Incident entities.
+func (uuo *UserUpdateOne) RemoveReportedIncidents(i ...*Incident) *UserUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uuo.RemoveReportedIncidentIDs(ids...)
+}
+
+// ClearAssignedIncidents clears all "assigned_incidents" edges to the Incident entity.
+func (uuo *UserUpdateOne) ClearAssignedIncidents() *UserUpdateOne {
+	uuo.mutation.ClearAssignedIncidents()
+	return uuo
+}
+
+// RemoveAssignedIncidentIDs removes the "assigned_incidents" edge to Incident entities by IDs.
+func (uuo *UserUpdateOne) RemoveAssignedIncidentIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveAssignedIncidentIDs(ids...)
+	return uuo
+}
+
+// RemoveAssignedIncidents removes "assigned_incidents" edges to Incident entities.
+func (uuo *UserUpdateOne) RemoveAssignedIncidents(i ...*Incident) *UserUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uuo.RemoveAssignedIncidentIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1468,6 +1703,96 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ReportedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedReportedIncidentsIDs(); len(nodes) > 0 && !uuo.mutation.ReportedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ReportedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedAssignedIncidentsIDs(); len(nodes) > 0 && !uuo.mutation.AssignedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

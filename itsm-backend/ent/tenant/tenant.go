@@ -63,6 +63,8 @@ const (
 	EdgeCiChangeRecords = "ci_change_records"
 	// EdgeCiAttributeDefinitions holds the string denoting the ci_attribute_definitions edge name in mutations.
 	EdgeCiAttributeDefinitions = "ci_attribute_definitions"
+	// EdgeIncidents holds the string denoting the incidents edge name in mutations.
+	EdgeIncidents = "incidents"
 	// Table holds the table name of the tenant in the database.
 	Table = "tenants"
 	// UsersTable is the table that holds the users relation/edge.
@@ -163,6 +165,13 @@ const (
 	CiAttributeDefinitionsInverseTable = "ci_attribute_definitions"
 	// CiAttributeDefinitionsColumn is the table column denoting the ci_attribute_definitions relation/edge.
 	CiAttributeDefinitionsColumn = "tenant_id"
+	// IncidentsTable is the table that holds the incidents relation/edge.
+	IncidentsTable = "incidents"
+	// IncidentsInverseTable is the table name for the Incident entity.
+	// It exists in this package in order to avoid circular dependency with the "incident" package.
+	IncidentsInverseTable = "incidents"
+	// IncidentsColumn is the table column denoting the incidents relation/edge.
+	IncidentsColumn = "tenant_id"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -504,6 +513,20 @@ func ByCiAttributeDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderO
 		sqlgraph.OrderByNeighborTerms(s, newCiAttributeDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByIncidentsCount orders the results by incidents count.
+func ByIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIncidentsStep(), opts...)
+	}
+}
+
+// ByIncidents orders the results by incidents terms.
+func ByIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUsersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -600,5 +623,12 @@ func newCiAttributeDefinitionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CiAttributeDefinitionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CiAttributeDefinitionsTable, CiAttributeDefinitionsColumn),
+	)
+}
+func newIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IncidentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IncidentsTable, IncidentsColumn),
 	)
 }

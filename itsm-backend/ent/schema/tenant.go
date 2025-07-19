@@ -1,11 +1,12 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"time"
 )
 
 // TenantStatus 租户状态枚举
@@ -105,6 +106,8 @@ func (Tenant) Edges() []ent.Edge {
 		edge.To("ci_change_records", CIChangeRecord.Type),
 		// 新增：CI属性定义
 		edge.To("ci_attribute_definitions", CIAttributeDefinition.Type),
+		// 新增：事件管理
+		edge.To("incidents", Incident.Type),
 	}
 }
 

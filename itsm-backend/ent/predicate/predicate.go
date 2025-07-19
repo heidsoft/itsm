@@ -33,6 +33,9 @@ type ConfigurationItem func(*sql.Selector)
 // FlowInstance is the predicate function for flowinstance builders.
 type FlowInstance func(*sql.Selector)
 
+// Incident is the predicate function for incident builders.
+type Incident func(*sql.Selector)
+
 // KnowledgeArticle is the predicate function for knowledgearticle builders.
 type KnowledgeArticle func(*sql.Selector)
 

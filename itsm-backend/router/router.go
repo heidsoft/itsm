@@ -9,14 +9,14 @@ import (
 )
 
 // SetupRoutes 设置路由
-func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, cmdbController *controller.CMDBController, client *ent.Client, jwtSecret string) *gin.Engine {
+func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, cmdbController *controller.CMDBController, incidentController *controller.IncidentController, client *ent.Client, jwtSecret string) *gin.Engine {
 	r := gin.Default()
 
 	// CORS 中间件
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Tenant-ID, x-tenant-id, x-user-id")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -59,6 +59,19 @@ func SetupRouter(ticketController *controller.TicketController, serviceControlle
 		api.POST("/tickets/:id/approve", ticketController.ApproveTicket)
 		// 添加评论接口
 		api.POST("/tickets/:id/comment", ticketController.AddComment)
+
+		// 事件管理相关路由
+		api.GET("/incidents", incidentController.ListIncidents)
+		api.POST("/incidents", incidentController.CreateIncident)
+		api.GET("/incidents/:id", incidentController.GetIncident)
+		api.PATCH("/incidents/:id", incidentController.UpdateIncident)
+		api.PUT("/incidents/:id/status", incidentController.UpdateIncidentStatus)
+		api.GET("/incidents/metrics", incidentController.GetIncidentMetrics)
+
+		// 外部事件集成路由
+		api.POST("/incidents/alibaba-cloud-alert", incidentController.CreateIncidentFromAlibabaCloudAlert)
+		api.POST("/incidents/security-event", incidentController.CreateIncidentFromSecurityEvent)
+		api.POST("/incidents/cloud-product-event", incidentController.CreateIncidentFromCloudProductEvent)
 
 		// 服务目录相关路由
 		api.GET("/service-catalogs", serviceController.GetServiceCatalogs)

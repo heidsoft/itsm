@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/tenant"
@@ -203,6 +204,36 @@ func (uc *UserCreate) AddServiceRequests(s ...*ServiceRequest) *UserCreate {
 		ids[i] = s[i].ID
 	}
 	return uc.AddServiceRequestIDs(ids...)
+}
+
+// AddReportedIncidentIDs adds the "reported_incidents" edge to the Incident entity by IDs.
+func (uc *UserCreate) AddReportedIncidentIDs(ids ...int) *UserCreate {
+	uc.mutation.AddReportedIncidentIDs(ids...)
+	return uc
+}
+
+// AddReportedIncidents adds the "reported_incidents" edges to the Incident entity.
+func (uc *UserCreate) AddReportedIncidents(i ...*Incident) *UserCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uc.AddReportedIncidentIDs(ids...)
+}
+
+// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
+func (uc *UserCreate) AddAssignedIncidentIDs(ids ...int) *UserCreate {
+	uc.mutation.AddAssignedIncidentIDs(ids...)
+	return uc
+}
+
+// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
+func (uc *UserCreate) AddAssignedIncidents(i ...*Incident) *UserCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uc.AddAssignedIncidentIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -465,6 +496,38 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ReportedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReportedIncidentsTable,
+			Columns: []string{user.ReportedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AssignedIncidentsTable,
+			Columns: []string{user.AssignedIncidentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

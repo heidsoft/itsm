@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -99,6 +100,7 @@ func checkColumn(table, column string) error {
 			citype.Table:                citype.ValidColumn,
 			configurationitem.Table:     configurationitem.ValidColumn,
 			flowinstance.Table:          flowinstance.ValidColumn,
+			incident.Table:              incident.ValidColumn,
 			knowledgearticle.Table:      knowledgearticle.ValidColumn,
 			servicecatalog.Table:        servicecatalog.ValidColumn,
 			servicerequest.Table:        servicerequest.ValidColumn,

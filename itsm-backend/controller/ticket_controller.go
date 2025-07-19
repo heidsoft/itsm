@@ -302,7 +302,7 @@ func (tc *TicketController) GetTickets(c *gin.Context) {
 	status := c.Query("status")
 	priority := c.Query("priority")
 
-	// 从上下文获取用户ID
+	// 从上下文获取用户ID和租户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
 		common.Fail(c, common.AuthFailedCode, "用户未认证")
@@ -312,6 +312,18 @@ func (tc *TicketController) GetTickets(c *gin.Context) {
 	userIDInt, ok := userID.(int)
 	if !ok {
 		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
+		return
+	}
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+
+	tenantIDInt, ok := tenantID.(int)
+	if !ok {
+		common.Fail(c, common.AuthFailedCode, "租户ID格式错误")
 		return
 	}
 
@@ -332,7 +344,8 @@ func (tc *TicketController) GetTickets(c *gin.Context) {
 				return nil
 			}
 		}(),
-		UserID: userIDInt,
+		UserID:   userIDInt,
+		TenantID: tenantIDInt,
 	}
 
 	result, err := tc.ticketService.GetTickets(c.Request.Context(), req)

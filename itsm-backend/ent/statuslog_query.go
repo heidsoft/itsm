@@ -26,6 +26,7 @@ type StatusLogQuery struct {
 	predicates []predicate.StatusLog
 	withTicket *TicketQuery
 	withUser   *UserQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -405,12 +406,16 @@ func (slq *StatusLogQuery) prepareQuery(ctx context.Context) error {
 func (slq *StatusLogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*StatusLog, error) {
 	var (
 		nodes       = []*StatusLog{}
+		withFKs     = slq.withFKs
 		_spec       = slq.querySpec()
 		loadedTypes = [2]bool{
 			slq.withTicket != nil,
 			slq.withUser != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, statuslog.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*StatusLog).scanValues(nil, columns)
 	}

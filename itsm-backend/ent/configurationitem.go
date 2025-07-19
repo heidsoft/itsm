@@ -62,8 +62,9 @@ type ConfigurationItem struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ConfigurationItemQuery when eager-loading is set.
-	Edges        ConfigurationItemEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                                 ConfigurationItemEdges `json:"edges"`
+	incident_affected_configuration_items *int
+	selectValues                          sql.SelectValues
 }
 
 // ConfigurationItemEdges holds the relations/edges for other nodes in the graph.
@@ -178,6 +179,8 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case configurationitem.FieldLastDiscovered, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case configurationitem.ForeignKeys[0]: // incident_affected_configuration_items
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -324,6 +327,13 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				ci.UpdatedAt = value.Time
+			}
+		case configurationitem.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field incident_affected_configuration_items", value)
+			} else if value.Valid {
+				ci.incident_affected_configuration_items = new(int)
+				*ci.incident_affected_configuration_items = int(value.Int64)
 			}
 		default:
 			ci.selectValues.Set(columns[i], values[i])

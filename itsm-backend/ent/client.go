@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -59,6 +60,8 @@ type Client struct {
 	ConfigurationItem *ConfigurationItemClient
 	// FlowInstance is the client for interacting with the FlowInstance builders.
 	FlowInstance *FlowInstanceClient
+	// Incident is the client for interacting with the Incident builders.
+	Incident *IncidentClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -97,6 +100,7 @@ func (c *Client) init() {
 	c.CIType = NewCITypeClient(c.config)
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
 	c.FlowInstance = NewFlowInstanceClient(c.config)
+	c.Incident = NewIncidentClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
@@ -207,6 +211,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		CIType:                NewCITypeClient(cfg),
 		ConfigurationItem:     NewConfigurationItemClient(cfg),
 		FlowInstance:          NewFlowInstanceClient(cfg),
+		Incident:              NewIncidentClient(cfg),
 		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
 		ServiceCatalog:        NewServiceCatalogClient(cfg),
 		ServiceRequest:        NewServiceRequestClient(cfg),
@@ -244,6 +249,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		CIType:                NewCITypeClient(cfg),
 		ConfigurationItem:     NewConfigurationItemClient(cfg),
 		FlowInstance:          NewFlowInstanceClient(cfg),
+		Incident:              NewIncidentClient(cfg),
 		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
 		ServiceCatalog:        NewServiceCatalogClient(cfg),
 		ServiceRequest:        NewServiceRequestClient(cfg),
@@ -284,8 +290,9 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
 		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
-		c.FlowInstance, c.KnowledgeArticle, c.ServiceCatalog, c.ServiceRequest,
-		c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
+		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.ServiceCatalog,
+		c.ServiceRequest, c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User,
+		c.Workflow,
 	} {
 		n.Use(hooks...)
 	}
@@ -297,8 +304,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
 		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
-		c.FlowInstance, c.KnowledgeArticle, c.ServiceCatalog, c.ServiceRequest,
-		c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
+		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.ServiceCatalog,
+		c.ServiceRequest, c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User,
+		c.Workflow,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -325,6 +333,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ConfigurationItem.mutate(ctx, m)
 	case *FlowInstanceMutation:
 		return c.FlowInstance.mutate(ctx, m)
+	case *IncidentMutation:
+		return c.Incident.mutate(ctx, m)
 	case *KnowledgeArticleMutation:
 		return c.KnowledgeArticle.mutate(ctx, m)
 	case *ServiceCatalogMutation:
@@ -1977,6 +1987,267 @@ func (c *FlowInstanceClient) mutate(ctx context.Context, m *FlowInstanceMutation
 	}
 }
 
+// IncidentClient is a client for the Incident schema.
+type IncidentClient struct {
+	config
+}
+
+// NewIncidentClient returns a client for the Incident from the given config.
+func NewIncidentClient(c config) *IncidentClient {
+	return &IncidentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incident.Hooks(f(g(h())))`.
+func (c *IncidentClient) Use(hooks ...Hook) {
+	c.hooks.Incident = append(c.hooks.Incident, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incident.Intercept(f(g(h())))`.
+func (c *IncidentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Incident = append(c.inters.Incident, interceptors...)
+}
+
+// Create returns a builder for creating a Incident entity.
+func (c *IncidentClient) Create() *IncidentCreate {
+	mutation := newIncidentMutation(c.config, OpCreate)
+	return &IncidentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Incident entities.
+func (c *IncidentClient) CreateBulk(builders ...*IncidentCreate) *IncidentCreateBulk {
+	return &IncidentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentClient) MapCreateBulk(slice any, setFunc func(*IncidentCreate, int)) *IncidentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentCreateBulk{err: fmt.Errorf("calling to IncidentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Incident.
+func (c *IncidentClient) Update() *IncidentUpdate {
+	mutation := newIncidentMutation(c.config, OpUpdate)
+	return &IncidentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentClient) UpdateOne(i *Incident) *IncidentUpdateOne {
+	mutation := newIncidentMutation(c.config, OpUpdateOne, withIncident(i))
+	return &IncidentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentClient) UpdateOneID(id int) *IncidentUpdateOne {
+	mutation := newIncidentMutation(c.config, OpUpdateOne, withIncidentID(id))
+	return &IncidentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Incident.
+func (c *IncidentClient) Delete() *IncidentDelete {
+	mutation := newIncidentMutation(c.config, OpDelete)
+	return &IncidentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentClient) DeleteOne(i *Incident) *IncidentDeleteOne {
+	return c.DeleteOneID(i.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentClient) DeleteOneID(id int) *IncidentDeleteOne {
+	builder := c.Delete().Where(incident.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentDeleteOne{builder}
+}
+
+// Query returns a query builder for Incident.
+func (c *IncidentClient) Query() *IncidentQuery {
+	return &IncidentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncident},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Incident entity by its id.
+func (c *IncidentClient) Get(ctx context.Context, id int) (*Incident, error) {
+	return c.Query().Where(incident.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentClient) GetX(ctx context.Context, id int) *Incident {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a Incident.
+func (c *IncidentClient) QueryTenant(i *Incident) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.TenantTable, incident.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReporter queries the reporter edge of a Incident.
+func (c *IncidentClient) QueryReporter(i *Incident) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.ReporterTable, incident.ReporterColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignee queries the assignee edge of a Incident.
+func (c *IncidentClient) QueryAssignee(i *Incident) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incident.AssigneeTable, incident.AssigneeColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAffectedConfigurationItems queries the affected_configuration_items edge of a Incident.
+func (c *IncidentClient) QueryAffectedConfigurationItems(i *Incident) *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.AffectedConfigurationItemsTable, incident.AffectedConfigurationItemsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRelatedProblems queries the related_problems edge of a Incident.
+func (c *IncidentClient) QueryRelatedProblems(i *Incident) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.RelatedProblemsTable, incident.RelatedProblemsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRelatedChanges queries the related_changes edge of a Incident.
+func (c *IncidentClient) QueryRelatedChanges(i *Incident) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.RelatedChangesTable, incident.RelatedChangesColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStatusLogs queries the status_logs edge of a Incident.
+func (c *IncidentClient) QueryStatusLogs(i *Incident) *StatusLogQuery {
+	query := (&StatusLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(statuslog.Table, statuslog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.StatusLogsTable, incident.StatusLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryComments queries the comments edge of a Incident.
+func (c *IncidentClient) QueryComments(i *Incident) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.CommentsTable, incident.CommentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentClient) Hooks() []Hook {
+	return c.hooks.Incident
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentClient) Interceptors() []Interceptor {
+	return c.inters.Incident
+}
+
+func (c *IncidentClient) mutate(ctx context.Context, m *IncidentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Incident mutation op: %q", m.Op())
+	}
+}
+
 // KnowledgeArticleClient is a client for the KnowledgeArticle schema.
 type KnowledgeArticleClient struct {
 	config
@@ -3118,6 +3389,22 @@ func (c *TenantClient) QueryCiAttributeDefinitions(t *Tenant) *CIAttributeDefini
 	return query
 }
 
+// QueryIncidents queries the incidents edge of a Tenant.
+func (c *TenantClient) QueryIncidents(t *Tenant) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.IncidentsTable, tenant.IncidentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TenantClient) Hooks() []Hook {
 	return c.hooks.Tenant
@@ -3576,6 +3863,38 @@ func (c *UserClient) QueryServiceRequests(u *User) *ServiceRequestQuery {
 	return query
 }
 
+// QueryReportedIncidents queries the reported_incidents edge of a User.
+func (c *UserClient) QueryReportedIncidents(u *User) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReportedIncidentsTable, user.ReportedIncidentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAssignedIncidents queries the assigned_incidents edge of a User.
+func (c *UserClient) QueryAssignedIncidents(u *User) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedIncidentsTable, user.AssignedIncidentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -3771,13 +4090,13 @@ type (
 	hooks struct {
 		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
 		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
-		KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog, Subscription,
-		Tenant, Ticket, User, Workflow []ent.Hook
+		Incident, KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog,
+		Subscription, Tenant, Ticket, User, Workflow []ent.Hook
 	}
 	inters struct {
 		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
 		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
-		KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog, Subscription,
-		Tenant, Ticket, User, Workflow []ent.Interceptor
+		Incident, KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog,
+		Subscription, Tenant, Ticket, User, Workflow []ent.Interceptor
 	}
 )
