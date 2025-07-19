@@ -172,6 +172,7 @@ type CIAttributeDefinitionResponse struct {
 	ReferenceType   string                 `json:"reference_type"`
 	DisplayOrder    int                    `json:"display_order"`
 	IsSearchable    bool                   `json:"is_searchable"`
+	IsSystem        bool                   `json:"is_system"` // 添加这个字段
 	IsActive        bool                   `json:"is_active"`
 	CITypeID        int                    `json:"ci_type_id"`
 	TenantID        int                    `json:"tenant_id"`

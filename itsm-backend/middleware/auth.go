@@ -1,18 +1,51 @@
 package middleware
 
 import (
-	"strings"
-	"time"
-	"itsm-backend/common"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"itsm-backend/common"
+	"strings"
+	"time"
 )
 
 type Claims struct {
-	UserID   int    `json:"user_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	UserID    int    `json:"user_id"`
+	Username  string `json:"username"`
+	Role      string `json:"role"`
+	TenantID  int    `json:"tenant_id"`
+	TokenType string `json:"token_type"` // "access" 或 "refresh"
 	jwt.RegisteredClaims
+}
+
+// 生成Access Token
+func GenerateAccessToken(userID int, username, role string, tenantID int, jwtSecret string, expireTime time.Duration) (string, error) {
+	claims := Claims{
+		UserID:    userID,
+		Username:  username,
+		Role:      role,
+		TenantID:  tenantID,
+		TokenType: "access",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireTime)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(jwtSecret))
+}
+
+// 生成Refresh Token
+func GenerateRefreshToken(userID int, jwtSecret string, expireTime time.Duration) (string, error) {
+	claims := Claims{
+		UserID:    userID,
+		TokenType: "refresh",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireTime)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(jwtSecret))
 }
 
 // AuthMiddleware JWT认证中间件
@@ -57,6 +90,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			c.Set("user_id", claims.UserID)
 			c.Set("username", claims.Username)
 			c.Set("role", claims.Role)
+			c.Set("tenant_id", claims.TenantID) // 添加租户ID
 			c.Set("token", tokenString)
 		} else {
 			common.Fail(c, common.AuthFailedCode, "token解析失败")
@@ -66,20 +100,4 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// GenerateToken 生成JWT token
-func GenerateToken(userID int, username, role, jwtSecret string, expireTime time.Duration) (string, error) {
-	claims := Claims{
-		UserID:   userID,
-		Username: username,
-		Role:     role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expireTime)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(jwtSecret))
 }

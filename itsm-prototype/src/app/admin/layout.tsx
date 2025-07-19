@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronRight,
   Home,
+  Building2,
   HelpCircle,
   LogOut,
 } from "lucide-react";
@@ -44,6 +45,13 @@ const ADMIN_MENU_GROUPS = {
         icon: Shield,
         label: "权限配置",
         badge: "156",
+      },
+      // 添加租户管理菜单项
+      {
+        href: "/admin/tenants",
+        icon: Building2,
+        label: "租户管理",
+        badge: "5",
       },
     ],
   },

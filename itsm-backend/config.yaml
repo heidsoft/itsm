@@ -12,7 +12,8 @@ server:
 
 jwt:
   secret: "itsm-dev-secret-key-2024"
-  expire_time: 86400  # 24小时
+  expire_time: 900        # 15分钟 (access token)
+  refresh_expire_time: 604800  # 7天 (refresh token)
 
 log:
   level: debug  # 开发环境使用 debug 级别

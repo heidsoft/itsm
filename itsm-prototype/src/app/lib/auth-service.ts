@@ -1,62 +1,157 @@
-import { httpClient } from './http-client';
+import { API_BASE_URL, ApiResponse } from './api-config';
+import { useAuthStore } from './store';
 
 export class AuthService {
-  // 设置认证token
-  static setToken(token: string) {
-    httpClient.setToken(token);
+  // 设置tokens
+  static setTokens(accessToken: string, refreshToken: string) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('refresh_token', refreshToken);
+    }
   }
 
-  // 获取当前token
-  static getToken(): string | null {
+  // 获取access token
+  static getAccessToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
+      return localStorage.getItem('access_token');
     }
     return null;
   }
 
-  // 清除token
-  static clearToken() {
-    httpClient.clearToken();
+  // 获取refresh token
+  static getRefreshToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('refresh_token');
+    }
+    return null;
   }
 
   // 检查是否已认证
   static isAuthenticated(): boolean {
-    const token = this.getToken();
+    const token = this.getAccessToken();
     if (!token) {
       return false;
     }
-    
-    // 检查token是否为demo token，如果是则清除
-    if (token === 'demo-token-12345') {
-      this.clearToken();
-      return false;
-    }
-    
-    // 可以添加token格式验证或过期检查
+
     try {
-      // 简单的JWT格式检查
+      // 简单检查token格式（JWT应该有3个部分）
       const parts = token.split('.');
       if (parts.length !== 3) {
-        this.clearToken();
         return false;
       }
+
+      // 检查token是否过期
+      const payload = JSON.parse(atob(parts[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      if (payload.exp && payload.exp < currentTime) {
+        // Token已过期，清除它
+        this.clearTokens();
+        return false;
+      }
+
       return true;
     } catch (error) {
-      this.clearToken();
+      // Token格式无效
+      console.error('Invalid token format:', error);
+      this.clearTokens();
       return false;
     }
   }
 
-  // 添加登录方法
-  static async login(username: string, password: string): Promise<boolean> {
+  // 直接使用fetch进行HTTP请求，避免循环依赖
+  private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<ApiResponse<T>> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  // 刷新token
+  static async refreshToken(): Promise<boolean> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return false;
+    }
+
     try {
-      const response = await httpClient.post<{token: string, user: any}>('/api/login', {
-        username,
-        password
+      const response = await this.makeRequest<{
+        access_token: string;
+      }>('/api/refresh-token', {
+        method: 'POST',
+        body: JSON.stringify({
+          refresh_token: refreshToken,
+        }),
+      });
+
+      if (response.code === 0) {
+        // 更新access token
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('access_token', response.data.access_token);
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      this.clearTokens();
+      return false;
+    }
+  }
+
+  // 清除所有tokens
+  static clearTokens() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+    }
+  }
+
+  // 登出方法
+  static logout() {
+    this.clearTokens();
+    const { logout } = useAuthStore.getState();
+    logout();
+  }
+
+  // 修改login方法
+  static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
+    try {
+      const response = await this.makeRequest<{
+        access_token: string;
+        refresh_token: string;
+        user: any;
+        tenant: any;
+      }>('/api/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          username,
+          password,
+          tenant_code: tenantCode,
+        }),
       });
       
       if (response.code === 0) {
-        this.setToken(response.data.token);
+        // 存储tokens
+        this.setTokens(response.data.access_token, response.data.refresh_token);
+        
+        // 使用store管理登录状态
+        const { login } = useAuthStore.getState();
+        login(
+          response.data.user,
+          response.data.access_token,
+          response.data.tenant
+        );
         return true;
       }
       return false;
@@ -65,16 +160,6 @@ export class AuthService {
       return false;
     }
   }
-
-  // 移除默认token设置
-  // static setDefaultToken() {
-  //   this.setToken('demo-token-12345');
-  // }
 }
-
-// 移除自动设置默认token
-// if (typeof window !== 'undefined') {
-//   AuthService.setDefaultToken();
-// }
 
 export default AuthService;

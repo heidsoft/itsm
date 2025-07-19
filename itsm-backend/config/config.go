@@ -22,13 +22,14 @@ type DatabaseConfig struct {
 }
 
 type ServerConfig struct {
-	Port int `mapstructure:"port"`
+	Port int    `mapstructure:"port"`
 	Mode string `mapstructure:"mode"`
 }
 
 type JWTConfig struct {
-	Secret     string `mapstructure:"secret"`
-	ExpireTime int    `mapstructure:"expire_time"`
+	Secret            string `mapstructure:"secret"`
+	ExpireTime        int    `mapstructure:"expire_time"`         // Access Token过期时间（如15分钟）
+	RefreshExpireTime int    `mapstructure:"refresh_expire_time"` // Refresh Token过期时间（如7天）
 }
 
 type LogConfig struct {
@@ -41,20 +42,20 @@ func LoadConfig() (*Config, error) {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./config")
-	
+
 	// 环境变量支持
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("ITSM")
-	
+
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("配置文件读取失败: %v", err)
 		return nil, err
 	}
-	
+
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
 	}
-	
+
 	return &config, nil
 }

@@ -3,12 +3,16 @@ package service
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
+	"strconv" // 添加 strconv 包
+	"time"    // 添加 time 包
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
+
+	"go.uber.org/zap"
 )
 
 type CMDBService struct {
@@ -314,38 +318,47 @@ func (s *CMDBService) ValidateCIAttributes(ctx context.Context, req *dto.Validat
 // SearchCIsByAttributes 根据属性搜索CI
 func (s *CMDBService) SearchCIsByAttributes(ctx context.Context, req *dto.CIAttributeSearchRequest, tenantID int) (*dto.ListCIsResponse, error) {
 	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantID(tenantID))
+		Where(configurationitem.TenantIDEQ(tenantID))
 
 	// 如果指定了CI类型，添加过滤条件
 	if req.CITypeID > 0 {
-		query = query.Where(configurationitem.CiTypeID(req.CITypeID))
+		query = query.Where(configurationitem.CiTypeIDEQ(req.CITypeID))
 	}
 
-	// 构建属性搜索条件
-	for attrName, attrValue := range req.Attributes {
-		// 使用JSON查询功能搜索属性
-		query = query.Where(configurationitem.AttributesContains(map[string]interface{}{
-			attrName: attrValue,
-		}))
-	}
-
-	// 分页
-	if req.Limit > 0 {
-		query = query.Limit(req.Limit)
-	}
-	if req.Offset > 0 {
-		query = query.Offset(req.Offset)
-	}
-
+	// 由于 Ent 不直接支持 JSON 字段的复杂查询，我们先获取所有符合基本条件的 CI
+	// 然后在应用层进行属性过滤
 	cis, err := query.All(ctx)
 	if err != nil {
-		s.logger.Errorf("Failed to search CIs by attributes: %v", err)
+		s.logger.Errorf("Failed to search CIs: %v", err)
 		return nil, err
 	}
 
+	// 在应用层过滤属性
+	var filteredCIs []*ent.ConfigurationItem
+	for _, ci := range cis {
+		if s.matchesAttributes(ci.Attributes, req.Attributes) {
+			filteredCIs = append(filteredCIs, ci)
+		}
+	}
+
+	// 应用分页
+	start := req.Offset
+	end := start + req.Limit
+	if req.Limit <= 0 {
+		end = len(filteredCIs)
+	}
+	if start > len(filteredCIs) {
+		start = len(filteredCIs)
+	}
+	if end > len(filteredCIs) {
+		end = len(filteredCIs)
+	}
+
+	pagedCIs := filteredCIs[start:end]
+
 	// 转换为响应格式
 	var ciResponses []*dto.CIResponse
-	for _, ci := range cis {
+	for _, ci := range pagedCIs {
 		ciResponses = append(ciResponses, &dto.CIResponse{
 			ID:          ci.ID,
 			Name:        ci.Name,
@@ -361,11 +374,27 @@ func (s *CMDBService) SearchCIsByAttributes(ctx context.Context, req *dto.CIAttr
 
 	return &dto.ListCIsResponse{
 		CIs:   ciResponses,
-		Total: len(ciResponses),
+		Total: len(filteredCIs),
 	}, nil
 }
 
-// 辅助方法
+// 辅助方法：检查CI属性是否匹配搜索条件
+func (s *CMDBService) matchesAttributes(ciAttrs map[string]interface{}, searchAttrs map[string]interface{}) bool {
+	for key, searchValue := range searchAttrs {
+		ciValue, exists := ciAttrs[key]
+		if !exists {
+			return false
+		}
+
+		// 简单的值比较，可以根据需要扩展为更复杂的匹配逻辑
+		if fmt.Sprintf("%v", ciValue) != fmt.Sprintf("%v", searchValue) {
+			return false
+		}
+	}
+	return true
+}
+
+// 辅助方法：转换为属性定义响应格式
 func (s *CMDBService) convertToAttributeDefinitionResponse(attr *ent.CIAttributeDefinition) *dto.CIAttributeDefinitionResponse {
 	return &dto.CIAttributeDefinitionResponse{
 		ID:              attr.ID,
@@ -390,6 +419,7 @@ func (s *CMDBService) convertToAttributeDefinitionResponse(attr *ent.CIAttribute
 	}
 }
 
+// 辅助方法：解析默认值
 func (s *CMDBService) parseDefaultValue(defaultValue, dataType string) interface{} {
 	switch dataType {
 	case "number":
@@ -408,6 +438,7 @@ func (s *CMDBService) parseDefaultValue(defaultValue, dataType string) interface
 	return defaultValue
 }
 
+// 辅助方法：验证属性值
 func (s *CMDBService) validateAttributeValue(value interface{}, attrDef *ent.CIAttributeDefinition) error {
 	switch attrDef.DataType {
 	case "string":

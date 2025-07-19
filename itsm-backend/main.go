@@ -51,7 +51,7 @@ func main() {
 	cmdbController := controller.NewCMDBController(cmdbService)
 
 	// 设置路由
-	r := router.SetupRouter(ticketController, serviceController, dashboardController, cmdbController, cfg.JWT.Secret)
+	r := router.SetupRouter(ticketController, serviceController, dashboardController, cmdbController, client, cfg.JWT.Secret)
 
 	// 启动服务器
 	sugar.Infof("Server starting on port %d", cfg.Server.Port)

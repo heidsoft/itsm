@@ -2,13 +2,14 @@ package router
 
 import (
 	"itsm-backend/controller"
+	"itsm-backend/ent"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 // SetupRoutes 设置路由
-func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, cmdbController *controller.CMDBController, jwtSecret string) *gin.Engine {
+func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, cmdbController *controller.CMDBController, client *ent.Client, jwtSecret string) *gin.Engine {
 	r := gin.Default()
 
 	// CORS 中间件
@@ -26,12 +27,17 @@ func SetupRouter(ticketController *controller.TicketController, serviceControlle
 	})
 
 	// 创建认证控制器
-	authController := controller.NewAuthController(jwtSecret)
+	authController := controller.NewAuthController(jwtSecret, client)
 
 	// 公开路由（不需要认证）
 	public := r.Group("/api")
 	{
 		public.POST("/login", authController.Login)
+		// 添加刷新token路由
+		public.POST("/refresh-token", authController.RefreshToken)
+		// 添加租户相关的公开路由
+		public.GET("/tenants/user", authController.GetUserTenants)
+		public.POST("/tenants/switch", authController.SwitchTenant)
 	}
 
 	// 需要认证的API路由组
