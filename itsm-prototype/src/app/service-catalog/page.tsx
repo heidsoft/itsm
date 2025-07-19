@@ -60,7 +60,7 @@ const ServiceCatalogPage = () => {
           category: selectedCategory || undefined,
           status: "enabled",
         });
-        setCatalogs(response.data.catalogs);
+        setCatalogs(response.catalogs);
         setError(null);
       } catch (err) {
         setError("获取服务目录失败，请稍后重试");

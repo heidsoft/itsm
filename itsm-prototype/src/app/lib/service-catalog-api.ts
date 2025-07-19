@@ -1,5 +1,4 @@
 import { httpClient } from './http-client';
-import { ApiResponse } from './api-config';
 
 // 服务目录相关接口定义
 export interface ServiceCatalog {
@@ -86,47 +85,47 @@ export interface UpdateServiceCatalogRequest {
 
 export class ServiceCatalogApi {
   // 获取服务目录列表
-  static async getServiceCatalogs(params?: GetServiceCatalogsParams): Promise<ApiResponse<ServiceCatalogListResponse>> {
+  static async getServiceCatalogs(params?: GetServiceCatalogsParams): Promise<ServiceCatalogListResponse> {
     return httpClient.get<ServiceCatalogListResponse>('/api/service-catalogs', params);
   }
 
   // 创建服务请求
-  static async createServiceRequest(request: CreateServiceRequestRequest): Promise<ApiResponse<ServiceRequest>> {
+  static async createServiceRequest(request: CreateServiceRequestRequest): Promise<ServiceRequest> {
     return httpClient.post<ServiceRequest>('/api/service-requests', request);
   }
 
   // 获取当前用户的服务请求列表
-  static async getUserServiceRequests(params?: GetServiceRequestsParams): Promise<ApiResponse<ServiceRequestListResponse>> {
+  static async getUserServiceRequests(params?: GetServiceRequestsParams): Promise<ServiceRequestListResponse> {
     return httpClient.get<ServiceRequestListResponse>('/api/service-requests/me', params);
   }
 
   // 获取服务请求详情
-  static async getServiceRequestById(id: number): Promise<ApiResponse<ServiceRequest>> {
+  static async getServiceRequestById(id: number): Promise<ServiceRequest> {
     return httpClient.get<ServiceRequest>(`/api/service-requests/${id}`);
   }
 
   // 更新服务请求状态
-  static async updateServiceRequestStatus(id: number, request: UpdateServiceRequestStatusRequest): Promise<ApiResponse<ServiceRequest>> {
+  static async updateServiceRequestStatus(id: number, request: UpdateServiceRequestStatusRequest): Promise<ServiceRequest> {
     return httpClient.put<ServiceRequest>(`/api/service-requests/${id}/status`, request);
   }
 
   // 创建服务目录
-  static async createServiceCatalog(request: CreateServiceCatalogRequest): Promise<ApiResponse<ServiceCatalog>> {
+  static async createServiceCatalog(request: CreateServiceCatalogRequest): Promise<ServiceCatalog> {
     return httpClient.post<ServiceCatalog>('/api/service-catalogs', request);
   }
 
   // 根据ID获取服务目录
-  static async getServiceCatalogById(id: number): Promise<ApiResponse<ServiceCatalog>> {
+  static async getServiceCatalogById(id: number): Promise<ServiceCatalog> {
     return httpClient.get<ServiceCatalog>(`/api/service-catalogs/${id}`);
   }
 
   // 更新服务目录
-  static async updateServiceCatalog(id: number, request: UpdateServiceCatalogRequest): Promise<ApiResponse<ServiceCatalog>> {
+  static async updateServiceCatalog(id: number, request: UpdateServiceCatalogRequest): Promise<ServiceCatalog> {
     return httpClient.put<ServiceCatalog>(`/api/service-catalogs/${id}`, request);
   }
 
   // 删除服务目录
-  static async deleteServiceCatalog(id: number): Promise<ApiResponse<void>> {
+  static async deleteServiceCatalog(id: number): Promise<void> {
     return httpClient.delete<void>(`/api/service-catalogs/${id}`);
   }
 }

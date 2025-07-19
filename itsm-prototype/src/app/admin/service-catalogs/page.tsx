@@ -1,7 +1,9 @@
 "use client";
 
+import { Plus, Search, Trash2, Edit } from 'lucide-react';
+
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import  from 'lucide-react';
 import {
   ServiceCatalogApi,
   ServiceCatalog,
@@ -34,7 +36,7 @@ const ServiceCatalogManagement = () => {
         page: 1,
         size: 100,
       });
-      setCatalogs(response.data.catalogs);
+      setCatalogs(response.catalogs);
     } catch (error) {
       console.error("Failed to fetch catalogs:", error);
     } finally {

@@ -17,6 +17,9 @@ import (
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametrics"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
@@ -440,6 +443,55 @@ func init() {
 	knowledgearticle.DefaultUpdatedAt = knowledgearticleDescUpdatedAt.Default.(func() time.Time)
 	// knowledgearticle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	knowledgearticle.UpdateDefaultUpdatedAt = knowledgearticleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	sladefinitionMixin := schema.SLADefinition{}.Mixin()
+	sladefinitionMixinFields0 := sladefinitionMixin[0].Fields()
+	_ = sladefinitionMixinFields0
+	sladefinitionFields := schema.SLADefinition{}.Fields()
+	_ = sladefinitionFields
+	// sladefinitionDescCreateTime is the schema descriptor for create_time field.
+	sladefinitionDescCreateTime := sladefinitionMixinFields0[0].Descriptor()
+	// sladefinition.DefaultCreateTime holds the default value on creation for the create_time field.
+	sladefinition.DefaultCreateTime = sladefinitionDescCreateTime.Default.(func() time.Time)
+	// sladefinitionDescUpdateTime is the schema descriptor for update_time field.
+	sladefinitionDescUpdateTime := sladefinitionMixinFields0[1].Descriptor()
+	// sladefinition.DefaultUpdateTime holds the default value on creation for the update_time field.
+	sladefinition.DefaultUpdateTime = sladefinitionDescUpdateTime.Default.(func() time.Time)
+	// sladefinition.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	sladefinition.UpdateDefaultUpdateTime = sladefinitionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// sladefinitionDescIsActive is the schema descriptor for is_active field.
+	sladefinitionDescIsActive := sladefinitionFields[9].Descriptor()
+	// sladefinition.DefaultIsActive holds the default value on creation for the is_active field.
+	sladefinition.DefaultIsActive = sladefinitionDescIsActive.Default.(bool)
+	slametricsMixin := schema.SLAMetrics{}.Mixin()
+	slametricsMixinFields0 := slametricsMixin[0].Fields()
+	_ = slametricsMixinFields0
+	slametricsFields := schema.SLAMetrics{}.Fields()
+	_ = slametricsFields
+	// slametricsDescCreateTime is the schema descriptor for create_time field.
+	slametricsDescCreateTime := slametricsMixinFields0[0].Descriptor()
+	// slametrics.DefaultCreateTime holds the default value on creation for the create_time field.
+	slametrics.DefaultCreateTime = slametricsDescCreateTime.Default.(func() time.Time)
+	// slametricsDescUpdateTime is the schema descriptor for update_time field.
+	slametricsDescUpdateTime := slametricsMixinFields0[1].Descriptor()
+	// slametrics.DefaultUpdateTime holds the default value on creation for the update_time field.
+	slametrics.DefaultUpdateTime = slametricsDescUpdateTime.Default.(func() time.Time)
+	// slametrics.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	slametrics.UpdateDefaultUpdateTime = slametricsDescUpdateTime.UpdateDefault.(func() time.Time)
+	slaviolationMixin := schema.SLAViolation{}.Mixin()
+	slaviolationMixinFields0 := slaviolationMixin[0].Fields()
+	_ = slaviolationMixinFields0
+	slaviolationFields := schema.SLAViolation{}.Fields()
+	_ = slaviolationFields
+	// slaviolationDescCreateTime is the schema descriptor for create_time field.
+	slaviolationDescCreateTime := slaviolationMixinFields0[0].Descriptor()
+	// slaviolation.DefaultCreateTime holds the default value on creation for the create_time field.
+	slaviolation.DefaultCreateTime = slaviolationDescCreateTime.Default.(func() time.Time)
+	// slaviolationDescUpdateTime is the schema descriptor for update_time field.
+	slaviolationDescUpdateTime := slaviolationMixinFields0[1].Descriptor()
+	// slaviolation.DefaultUpdateTime holds the default value on creation for the update_time field.
+	slaviolation.DefaultUpdateTime = slaviolationDescUpdateTime.Default.(func() time.Time)
+	// slaviolation.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	slaviolation.UpdateDefaultUpdateTime = slaviolationDescUpdateTime.UpdateDefault.(func() time.Time)
 	servicecatalogFields := schema.ServiceCatalog{}.Fields()
 	_ = servicecatalogFields
 	// servicecatalogDescName is the schema descriptor for name field.

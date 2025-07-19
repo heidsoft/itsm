@@ -1,10 +1,10 @@
 
 'use client';
 
+import { Eye, User, ArrowLeft, CalendarDays } from 'lucide-react';
+
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, User, CalendarDays, Eye } from 'lucide-react';
-
 // 模拟知识文章详情数据
 const mockArticleDetail = {
     'KB-001': {

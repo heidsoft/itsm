@@ -1,13 +1,13 @@
 "use client";
 
+import { Lock, User, Building2, Globe } from 'lucide-react';
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FormInput } from "../components/FormInput";
 import { AuthService } from "../lib/auth-service";
 import { TenantAPI } from "../lib/tenant-api";
 import Link from "next/link";
-import { Building2, User, Lock, Globe } from "lucide-react";
-
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

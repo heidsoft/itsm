@@ -140,6 +140,42 @@ func (f KnowledgeArticleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleMutation", m)
 }
 
+// The SLADefinitionFunc type is an adapter to allow the use of ordinary
+// function as SLADefinition mutator.
+type SLADefinitionFunc func(context.Context, *ent.SLADefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLADefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLADefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLADefinitionMutation", m)
+}
+
+// The SLAMetricsFunc type is an adapter to allow the use of ordinary
+// function as SLAMetrics mutator.
+type SLAMetricsFunc func(context.Context, *ent.SLAMetricsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAMetricsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAMetricsMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAMetricsMutation", m)
+}
+
+// The SLAViolationFunc type is an adapter to allow the use of ordinary
+// function as SLAViolation mutator.
+type SLAViolationFunc func(context.Context, *ent.SLAViolationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAViolationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAViolationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAViolationMutation", m)
+}
+
 // The ServiceCatalogFunc type is an adapter to allow the use of ordinary
 // function as ServiceCatalog mutator.
 type ServiceCatalogFunc func(context.Context, *ent.ServiceCatalogMutation) (ent.Value, error)

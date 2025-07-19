@@ -1,22 +1,9 @@
 "use client";
 
+import { Search, Filter, Calendar, FileText, RefreshCw, ChevronRight, FileText } from 'lucide-react';
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  ListFilter,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Hourglass,
-  Search,
-  RefreshCw,
-  Calendar,
-  User,
-  FileText,
-  ChevronRight,
-  Filter,
-} from "lucide-react";
-
 // API 接口类型定义
 interface ServiceRequest {
   id: number;

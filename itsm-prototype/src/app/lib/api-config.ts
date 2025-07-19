@@ -19,7 +19,7 @@ export interface Tenant {
   created_at: string;
   updated_at: string;
   expires_at?: string;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 export interface TenantListResponse {
@@ -35,7 +35,7 @@ export interface CreateTenantRequest {
   domain?: string;
   type: string;
   expires_at?: string;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 export interface UpdateTenantRequest {
@@ -44,7 +44,7 @@ export interface UpdateTenantRequest {
   type?: string;
   status?: string;
   expires_at?: string;
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 export interface GetTenantsParams {
@@ -62,7 +62,7 @@ export interface Ticket {
   description: string;
   status: string;
   priority: string;
-  form_fields?: Record<string, any>;
+  form_fields?: Record<string, unknown>;
   ticket_number: string;
   requester_id: number;
   assignee_id?: number;
@@ -95,7 +95,7 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: string;
-  form_fields?: Record<string, any>;
+  form_fields?: Record<string, unknown>;
   assignee_id?: number;
 }
 
@@ -120,7 +120,7 @@ export interface ServiceCatalog {
   price?: number;
   tenant_id: number;
   is_active: boolean;
-  form_schema?: Record<string, any>;
+  form_schema?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   tenant?: Tenant;
@@ -133,7 +133,7 @@ export interface ServiceRequest {
   tenant_id: number;
   status: string;
   reason: string;
-  form_data?: Record<string, any>;
+  form_data?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   catalog?: ServiceCatalog;

@@ -57,7 +57,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       const response = await httpClient.get<Notification[]>(
         "/api/notifications"
       );
-      setNotifications(response.data || []);
+      setNotifications(response || []);
     } catch (error) {
       console.error("获取通知失败:", error);
     } finally {

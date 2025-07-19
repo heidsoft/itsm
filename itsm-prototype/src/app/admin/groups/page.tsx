@@ -1,20 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Users,
-  UserPlus,
-  UserMinus,
-  Eye,
-  MoreHorizontal,
-  Shield,
-} from "lucide-react";
+import { Plus, Users, Search, Trash2, Edit, Shield, MoreHorizontal, UserPlus, UserMinus } from 'lucide-react';
 
+import React, { useState } from "react";
 // 用户组数据类型定义
 interface Group {
   id: number;

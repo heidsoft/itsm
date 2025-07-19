@@ -1,27 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Play,
-  Pause,
-  Copy,
-  Settings,
-  Users,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ArrowRight,
-  ArrowDown,
-  UserCheck,
-  AlertTriangle,
-  FileText,
-  GitBranch,
-} from "lucide-react";
+import { Plus, CheckCircle, Clock, Users, Search, Settings, Trash2, XCircle, FileText, Pause, Play, Copy, ArrowDown, FileText } from 'lucide-react';
 
+import React, { useState, useEffect } from "react";
 // 审批链状态枚举
 const APPROVAL_CHAIN_STATUS = {
   ACTIVE: "active",

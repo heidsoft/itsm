@@ -1,27 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Clock,
-  User,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  MessageSquare,
-  FileText,
-  Calendar,
-  Tag,
-  Cpu,
-  Shield,
-  GitMerge,
-  ChevronDown,
-  ChevronUp,
-  Edit,
-  Save,
-  X,
-} from "lucide-react";
+import { CheckCircle, Clock, XCircle, Edit, FileText, Save, ChevronDown, X, ArrowRight, ChevronUp, ChevronDown, FileText } from 'lucide-react';
 
+import React, { useState } from "react";
 // 工单详情组件的 Props 接口
 interface TicketDetailProps {
   ticket: {
@@ -61,7 +42,7 @@ interface TicketDetailProps {
   onApprove?: () => void;
   onReject?: () => void;
   onAssign?: (assignee: string) => void;
-  onUpdate?: (updates: any) => void;
+  onUpdate?: (updates: unknown) => void;
   canApprove?: boolean;
   canEdit?: boolean;
 }

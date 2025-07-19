@@ -25,10 +25,10 @@ const TicketDetailPage: React.FC = () => {
 
       const response = await TicketApi.getTicket(ticketId);
 
-      if (response.code === 0) {
-        setTicket(response.data);
+      if (response) {
+        setTicket(response);
       } else {
-        setError(response.message || "获取工单详情失败");
+        setError("获取工单详情失败");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "网络错误");
@@ -102,7 +102,7 @@ const TicketDetailPage: React.FC = () => {
   };
 
   // 处理更新
-  const handleUpdate = async (updates: any) => {
+  const handleUpdate = async (updates: unknown) => {
     try {
       const response = await TicketApi.updateTicket(ticketId, updates);
 

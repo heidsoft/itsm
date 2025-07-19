@@ -1,28 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  UserCheck,
-  UserX,
-  Mail,
-  Phone,
-  Eye,
-  MoreHorizontal,
-  Download,
-  Upload,
-  Settings,
-  ChevronDown,
-  Calendar,
-  MapPin,
-  Shield,
-  Clock,
-} from "lucide-react";
+import { Plus, Clock, Search, Settings, Trash2, Edit, Calendar, User, Shield, Download, Upload, UserCheck, UserX, ChevronDown, MapPin, Mail, Phone, ChevronDown } from 'lucide-react';
 
+import React, { useState } from "react";
 // 用户数据类型定义
 interface User {
   id: number;

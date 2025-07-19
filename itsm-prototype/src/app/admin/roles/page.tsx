@@ -1,21 +1,9 @@
 "use client";
 
+import { Plus, CheckCircle, Users, Search, Trash2, XCircle, Edit, Eye, Lock, Unlock, Key, Shield } from 'lucide-react';
+
 import React, { useState } from "react";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Users,
-  Shield,
-  Key,
-  CheckCircle,
-  XCircle,
-  Settings,
-  Eye,
-  Lock,
-  Unlock,
-} from "lucide-react";
+import  from 'lucide-react';
 
 // 权限模块定义
 const PERMISSION_MODULES = {

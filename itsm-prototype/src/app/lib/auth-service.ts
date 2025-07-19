@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiResponse } from './api-config';
+import { API_BASE_URL } from './api-config';
 import { useAuthStore } from './store';
 
 export class AuthService {
@@ -60,7 +60,7 @@ export class AuthService {
   }
 
   // 直接使用fetch进行HTTP请求，避免循环依赖
-  private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<ApiResponse<T>> {
+  private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       headers: {
@@ -74,7 +74,14 @@ export class AuthService {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const responseData = await response.json() as { code: number; message: string; data: T };
+    
+    // 检查响应码
+    if (responseData.code !== 0) {
+      throw new Error(responseData.message || '请求失败');
+    }
+    
+    return responseData.data;
   }
 
   // 刷新token
@@ -85,7 +92,7 @@ export class AuthService {
     }
 
     try {
-      const response = await this.makeRequest<{
+      const data = await this.makeRequest<{
         access_token: string;
       }>('/api/refresh-token', {
         method: 'POST',
@@ -94,14 +101,11 @@ export class AuthService {
         }),
       });
 
-      if (response.code === 0) {
-        // 更新access token
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('access_token', response.data.access_token);
-        }
-        return true;
+      // 更新access token
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', data.access_token);
       }
-      return false;
+      return true;
     } catch (error) {
       console.error('Token refresh failed:', error);
       this.clearTokens();
@@ -127,11 +131,11 @@ export class AuthService {
   // 修改login方法
   static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
     try {
-      const response = await this.makeRequest<{
+      const data = await this.makeRequest<{
         access_token: string;
         refresh_token: string;
-        user: any;
-        tenant: any;
+        user: unknown;
+        tenant: unknown;
       }>('/api/login', {
         method: 'POST',
         body: JSON.stringify({
@@ -141,20 +145,17 @@ export class AuthService {
         }),
       });
       
-      if (response.code === 0) {
-        // 存储tokens
-        this.setTokens(response.data.access_token, response.data.refresh_token);
-        
-        // 使用store管理登录状态
-        const { login } = useAuthStore.getState();
-        login(
-          response.data.user,
-          response.data.access_token,
-          response.data.tenant
-        );
-        return true;
-      }
-      return false;
+      // 存储tokens
+      this.setTokens(data.access_token, data.refresh_token);
+      
+      // 使用store管理登录状态
+      const { login } = useAuthStore.getState();
+      login(
+        data.user,
+        data.access_token,
+        data.tenant
+      );
+      return true;
     } catch (error) {
       console.error('Login failed:', error);
       return false;

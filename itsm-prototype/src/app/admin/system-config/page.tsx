@@ -1,21 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Save,
-  RefreshCw,
-  Shield,
-  Mail,
-  Database,
-  Globe,
-  Clock,
-  Bell,
-  Key,
-  Server,
-  Settings,
-  AlertTriangle,
-} from "lucide-react";
+import { Settings, AlertTriangle, RefreshCw, Save, Server } from 'lucide-react';
 
+import React, { useState } from "react";
 // 系统配置分组
 const CONFIG_SECTIONS = {
   GENERAL: "general",
@@ -108,7 +95,7 @@ const SystemConfiguration = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // 处理配置更新
-  const handleConfigChange = (section: string, field: string, value: any) => {
+  const handleConfigChange = (section: string, field: string, value: unknown) => {
     setConfig((prev) => ({
       ...prev,
       [section]: {

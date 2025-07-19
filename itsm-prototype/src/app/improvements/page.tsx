@@ -1,9 +1,11 @@
 
 'use client';
 
+import { Filter, PlusCircle } from 'lucide-react';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { TrendingUp, PlusCircle, Filter } from 'lucide-react';
+import  from 'lucide-react';
 
 // 模拟改进计划数据
 const mockImprovements = [

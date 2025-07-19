@@ -54,10 +54,10 @@ const CreateTicketPage: React.FC = () => {
 
       const response = await TicketApi.createTicket(submitData);
 
-      if (response.code === 0) {
-        router.push(`/tickets/${response.data.id}`);
+      if (response && response.id) {
+        router.push(`/tickets/${response.id}`);
       } else {
-        setError(response.message || "创建工单失败");
+        setError("创建工单失败");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "网络错误");
@@ -66,7 +66,7 @@ const CreateTicketPage: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: keyof CreateTicketRequest, value: any) => {
+  const handleInputChange = (field: keyof CreateTicketRequest, value: unknown) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,

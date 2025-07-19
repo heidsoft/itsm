@@ -1,12 +1,12 @@
-import React, { useMemo, useState, useCallback } from "react";
-import { ChevronDown, ChevronUp, Search, Filter, Download } from "lucide-react";
+import { Search, Download, ChevronDown, ChevronUp, ChevronDown } from 'lucide-react';
 
+import React, { useMemo, useState, useCallback } from "react";
 interface Column<T> {
   key: keyof T;
   title: string;
   sortable?: boolean;
   filterable?: boolean;
-  render?: (value: any, record: T) => React.ReactNode;
+  render?: (value: unknown, record: T) => React.ReactNode;
   width?: string;
 }
 
@@ -29,7 +29,7 @@ interface DataTableProps<T> {
   onExport?: () => void;
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,

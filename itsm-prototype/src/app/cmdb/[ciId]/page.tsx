@@ -1,11 +1,11 @@
 
 'use client';
 
+import { AlertTriangle, Zap, ArrowLeft, Network } from 'lucide-react';
+
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, AlertTriangle, Search, GitMerge, Cpu, Server, Cloud, HardDrive, Network, Database, Zap } from 'lucide-react';
-
 // 模拟CI详情数据
 const mockCIDetail = {
     'CI-ECS-001': {

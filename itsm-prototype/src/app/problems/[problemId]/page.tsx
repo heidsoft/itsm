@@ -1,10 +1,10 @@
 'use client';
 
+import { GitMerge, BookOpen, AlertTriangle, MessageSquare, ArrowLeft } from 'lucide-react';
+
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, AlertTriangle, BookOpen, GitMerge, PlusCircle, MessageSquare } from 'lucide-react';
-
 // 模拟问题详情数据
 const mockProblemDetail = {
     'PRB-00001': {

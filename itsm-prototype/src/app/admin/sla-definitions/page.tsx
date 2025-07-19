@@ -1,22 +1,10 @@
 "use client";
 
+import { Plus, CheckCircle, Clock, Search, Settings, Trash2, Edit, Filter, Eye, AlertTriangle, Target } from 'lucide-react';
+
 import React, { useState } from "react";
 import Link from "next/link";
-import {
-  Clock,
-  Target,
-  AlertTriangle,
-  CheckCircle,
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
-  Users,
-  Settings,
-} from "lucide-react";
+import  from 'lucide-react';
 
 // SLA定义的数据类型
 interface SLADefinition {

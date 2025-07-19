@@ -1,3 +1,6 @@
+//go:build !migrate && !create_user
+// +build !migrate,!create_user
+
 package main
 
 import (

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FileText, TrendingUp, CheckCircle, AlertTriangle, GitMerge, Target, Search, BookOpen } from 'lucide-react';
+import { FileText} from 'lucide-react';
 
 const ReportCard = ({ title, description, icon: Icon, link }) => (
     <Link href={link} className="block bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out flex items-start space-x-4">

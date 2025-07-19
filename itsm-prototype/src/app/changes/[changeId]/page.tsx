@@ -1,10 +1,10 @@
 'use client';
 
+import { GitMerge, AlertTriangle, MessageSquare, ArrowLeft, PlayCircle, Flag, ClipboardCheck } from 'lucide-react';
+
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, AlertTriangle, Search, CheckCircle, XCircle, GitMerge, PlayCircle, Flag, ClipboardCheck, MessageSquare } from 'lucide-react';
-
 // 模拟变更详情数据
 const mockChangeDetail = {
     'CHG-00001': {

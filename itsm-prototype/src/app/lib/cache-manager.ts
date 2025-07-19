@@ -1,8 +1,8 @@
 class CacheManager {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
   private maxSize = 100;
 
-  set(key: string, data: any, ttl: number = 5 * 60 * 1000) {
+  set(key: string, data: unknown, ttl: number = 5 * 60 * 1000) {
     // 如果缓存已满，删除最旧的条目
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
@@ -16,7 +16,7 @@ class CacheManager {
     });
   }
 
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const item = this.cache.get(key);
     if (!item) return null;
 

@@ -1,5 +1,6 @@
+import { Search, X, Menu } from 'lucide-react';
+
 import React, { useState } from "react";
-import { Menu, X, Search, Bell } from "lucide-react";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationCenter } from "./NotificationCenter";
 

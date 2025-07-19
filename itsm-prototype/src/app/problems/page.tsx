@@ -1,9 +1,11 @@
 
 'use client';
 
+import { Filter, PlusCircle } from 'lucide-react';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, AlertTriangle, User, PlusCircle, Filter } from 'lucide-react';
+import  from 'lucide-react';
 
 import { mockProblemsData } from '../lib/mock-data';
 

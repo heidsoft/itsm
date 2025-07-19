@@ -1,40 +1,80 @@
-# ITSM 系统
+# ITSM System
 
-基于 Go + Gin + Ent + Next.js 的IT服务管理系统
+一个完整的 IT 服务管理系统，包含前端（Next.js）和后端（Go）组件。
 
 ## 项目结构
 
 ```
 itsm/
 ├── itsm-backend/          # Go 后端服务
-│   ├── ent/               # Ent ORM 生成的代码
-│   ├── controller/        # 控制器层
-│   ├── service/           # 业务逻辑层
-│   ├── middleware/        # 中间件
-│   ├── config/            # 配置文件
-│   └── tests/             # 测试文件
 ├── itsm-prototype/        # Next.js 前端应用
-└── .trae/                 # Trae AI 项目规则
-
+├── Makefile              # 构建和运行脚本
+└── README.md            # 项目文档
 ```
 
-## 开发环境要求
+## 最近修复的问题
 
-- Go 1.22+
-- Node.js 18+
-- PostgreSQL 15+
+### 后端 (itsm-backend)
+
+1. **编译冲突修复**
+   - 添加了构建标签来解决多个 main 函数冲突
+   - 迁移脚本现在使用 `//go:build migrate` 标签
+   - 用户创建脚本使用 `//go:build create_user` 标签
+   - 主程序使用 `//go:build !migrate && !create_user` 标签
+
+2. **依赖管理**
+   - 运行 `go mod tidy` 更新依赖
+   - 确保所有依赖版本兼容
+
+### 前端 (itsm-prototype)
+
+1. **ESLint 错误修复**
+   - 创建了智能修复脚本 `scripts/smart-fix-lint.js`
+   - 自动检测和修复未使用的导入
+   - 修复了组件未定义的问题
+   - 优化了类型定义
+
+2. **代码质量改进**
+   - 修复了 ErrorBoundary 组件的类型问题
+   - 改进了 ESLint 配置
+   - 减少了 `any` 类型的使用
 
 ## 快速开始
 
-### 后端服务
+### 使用 Makefile（推荐）
+
+```bash
+# 安装依赖并构建项目
+make setup
+
+# 运行开发环境（同时启动前后端）
+make dev
+
+# 仅运行后端
+make run-backend
+
+# 仅运行前端
+make run-frontend
+
+# 修复代码问题
+make lint-fix
+
+# 清理构建文件
+make clean
+```
+
+### 手动运行
+
+#### 后端
 
 ```bash
 cd itsm-backend
 go mod tidy
-go run main.go
+go build -o itsm-backend .
+./itsm-backend
 ```
 
-### 前端应用
+#### 前端
 
 ```bash
 cd itsm-prototype
@@ -42,72 +82,116 @@ npm install
 npm run dev
 ```
 
-## Git 提交规范
+## 开发工具
 
-请遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+### 构建标签使用
 
-- `feat:` 新功能
-- `fix:` 修复bug
-- `docs:` 文档更新
-- `style:` 代码格式调整
-- `refactor:` 代码重构
-- `test:` 测试相关
-- `chore:` 构建过程或辅助工具的变动
-
-示例：
-
-```
-feat(backend): 添加工单审批流程
-fix(frontend): 修复用户登录状态异常
-docs: 更新API文档
-```
-
-```
-
-## 4. 可选：pre-commit hooks
-
-如果需要代码质量检查，可以创建：
-
-```bash:/.githooks/pre-commit
-#!/bin/sh
-
-# Go 代码检查
-echo "Running Go tests and linting..."
-cd itsm-backend
-go fmt ./...
-go vet ./...
-go test ./...
-
-if [ $? -ne 0 ]; then
-    echo "Go tests failed. Commit aborted."
-    exit 1
-fi
-
-# Node.js 代码检查
-echo "Running Node.js linting..."
-cd ../itsm-prototype
-npm run lint
-
-if [ $? -ne 0 ]; then
-    echo "Node.js linting failed. Commit aborted."
-    exit 1
-fi
-
-echo "All checks passed. Proceeding with commit."
-```
-
-然后执行：
+后端项目使用构建标签来区分不同的可执行文件：
 
 ```bash
-chmod +x .githooks/pre-commit
-git config core.hooksPath .githooks
+# 构建主程序
+go build -o itsm-backend .
+
+# 构建迁移工具
+go build -tags migrate -o migrate-tool .
+
+# 构建用户创建工具
+go build -tags create_user -o create-user .
 ```
 
-这样配置后，你的ITSM项目就有了完整的git提交文件配置，能够：
+### 代码质量
 
-1. ✅ 忽略不必要的文件（构建产物、依赖、临时文件等）
-2. ✅ 正确处理不同类型文件的行结尾
-3. ✅ 提供清晰的项目文档
-4. ✅ 可选的代码质量检查
+前端项目包含自动化的代码质量工具：
 
-建议按顺序创建这些文件，特别是.gitignore文件是必需的。
+- ESLint 配置优化
+- 智能导入修复脚本
+- TypeScript 类型检查
+
+## 配置
+
+### 后端配置
+
+配置文件位于 `itsm-backend/config.yaml`：
+
+```yaml
+database:
+  host: localhost
+  port: 5432
+  user: dev
+  password: "123456!@#$%^"
+  dbname: itsm
+  sslmode: disable
+
+server:
+  port: 8080
+  mode: debug
+
+jwt:
+  secret: "itsm-dev-secret-key-2024"
+  expire_time: 900
+  refresh_expire_time: 604800
+```
+
+### 前端配置
+
+前端 API 配置在 `itsm-prototype/src/app/lib/api-config.ts` 中：
+
+```typescript
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+```
+
+## 开发指南
+
+### 添加新功能
+
+1. 在后端添加新的控制器和服务
+2. 在前端添加对应的 API 调用
+3. 创建相应的 UI 组件
+4. 更新路由配置
+
+### 代码规范
+
+- 使用 TypeScript 进行类型检查
+- 遵循 ESLint 规则
+- 使用 Prettier 格式化代码
+- 编写单元测试
+
+## 故障排除
+
+### 常见问题
+
+1. **编译错误**
+
+   ```bash
+   make clean
+   make setup
+   ```
+
+2. **依赖问题**
+
+   ```bash
+   make install-deps
+   ```
+
+3. **代码质量问题**
+
+   ```bash
+   make lint-fix
+   ```
+
+### 日志查看
+
+- 后端日志：查看控制台输出
+- 前端日志：浏览器开发者工具
+
+## 贡献
+
+1. Fork 项目
+2. 创建功能分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
+
+## 许可证
+
+MIT License

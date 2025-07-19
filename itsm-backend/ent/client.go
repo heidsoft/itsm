@@ -24,6 +24,9 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametrics"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
@@ -64,6 +67,12 @@ type Client struct {
 	Incident *IncidentClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
+	// SLADefinition is the client for interacting with the SLADefinition builders.
+	SLADefinition *SLADefinitionClient
+	// SLAMetrics is the client for interacting with the SLAMetrics builders.
+	SLAMetrics *SLAMetricsClient
+	// SLAViolation is the client for interacting with the SLAViolation builders.
+	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
@@ -102,6 +111,9 @@ func (c *Client) init() {
 	c.FlowInstance = NewFlowInstanceClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
+	c.SLADefinition = NewSLADefinitionClient(c.config)
+	c.SLAMetrics = NewSLAMetricsClient(c.config)
+	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
 	c.StatusLog = NewStatusLogClient(c.config)
@@ -213,6 +225,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		FlowInstance:          NewFlowInstanceClient(cfg),
 		Incident:              NewIncidentClient(cfg),
 		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
+		SLADefinition:         NewSLADefinitionClient(cfg),
+		SLAMetrics:            NewSLAMetricsClient(cfg),
+		SLAViolation:          NewSLAViolationClient(cfg),
 		ServiceCatalog:        NewServiceCatalogClient(cfg),
 		ServiceRequest:        NewServiceRequestClient(cfg),
 		StatusLog:             NewStatusLogClient(cfg),
@@ -251,6 +266,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		FlowInstance:          NewFlowInstanceClient(cfg),
 		Incident:              NewIncidentClient(cfg),
 		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
+		SLADefinition:         NewSLADefinitionClient(cfg),
+		SLAMetrics:            NewSLAMetricsClient(cfg),
+		SLAViolation:          NewSLAViolationClient(cfg),
 		ServiceCatalog:        NewServiceCatalogClient(cfg),
 		ServiceRequest:        NewServiceRequestClient(cfg),
 		StatusLog:             NewStatusLogClient(cfg),
@@ -290,9 +308,9 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
 		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
-		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.ServiceCatalog,
-		c.ServiceRequest, c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User,
-		c.Workflow,
+		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.SLADefinition, c.SLAMetrics,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
+		c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
 	} {
 		n.Use(hooks...)
 	}
@@ -304,9 +322,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
 		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
-		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.ServiceCatalog,
-		c.ServiceRequest, c.StatusLog, c.Subscription, c.Tenant, c.Ticket, c.User,
-		c.Workflow,
+		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.SLADefinition, c.SLAMetrics,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
+		c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -337,6 +355,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Incident.mutate(ctx, m)
 	case *KnowledgeArticleMutation:
 		return c.KnowledgeArticle.mutate(ctx, m)
+	case *SLADefinitionMutation:
+		return c.SLADefinition.mutate(ctx, m)
+	case *SLAMetricsMutation:
+		return c.SLAMetrics.mutate(ctx, m)
+	case *SLAViolationMutation:
+		return c.SLAViolation.mutate(ctx, m)
 	case *ServiceCatalogMutation:
 		return c.ServiceCatalog.mutate(ctx, m)
 	case *ServiceRequestMutation:
@@ -2397,6 +2421,405 @@ func (c *KnowledgeArticleClient) mutate(ctx context.Context, m *KnowledgeArticle
 	}
 }
 
+// SLADefinitionClient is a client for the SLADefinition schema.
+type SLADefinitionClient struct {
+	config
+}
+
+// NewSLADefinitionClient returns a client for the SLADefinition from the given config.
+func NewSLADefinitionClient(c config) *SLADefinitionClient {
+	return &SLADefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `sladefinition.Hooks(f(g(h())))`.
+func (c *SLADefinitionClient) Use(hooks ...Hook) {
+	c.hooks.SLADefinition = append(c.hooks.SLADefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `sladefinition.Intercept(f(g(h())))`.
+func (c *SLADefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLADefinition = append(c.inters.SLADefinition, interceptors...)
+}
+
+// Create returns a builder for creating a SLADefinition entity.
+func (c *SLADefinitionClient) Create() *SLADefinitionCreate {
+	mutation := newSLADefinitionMutation(c.config, OpCreate)
+	return &SLADefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLADefinition entities.
+func (c *SLADefinitionClient) CreateBulk(builders ...*SLADefinitionCreate) *SLADefinitionCreateBulk {
+	return &SLADefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLADefinitionClient) MapCreateBulk(slice any, setFunc func(*SLADefinitionCreate, int)) *SLADefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLADefinitionCreateBulk{err: fmt.Errorf("calling to SLADefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLADefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLADefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLADefinition.
+func (c *SLADefinitionClient) Update() *SLADefinitionUpdate {
+	mutation := newSLADefinitionMutation(c.config, OpUpdate)
+	return &SLADefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLADefinitionClient) UpdateOne(sd *SLADefinition) *SLADefinitionUpdateOne {
+	mutation := newSLADefinitionMutation(c.config, OpUpdateOne, withSLADefinition(sd))
+	return &SLADefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLADefinitionClient) UpdateOneID(id int) *SLADefinitionUpdateOne {
+	mutation := newSLADefinitionMutation(c.config, OpUpdateOne, withSLADefinitionID(id))
+	return &SLADefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLADefinition.
+func (c *SLADefinitionClient) Delete() *SLADefinitionDelete {
+	mutation := newSLADefinitionMutation(c.config, OpDelete)
+	return &SLADefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLADefinitionClient) DeleteOne(sd *SLADefinition) *SLADefinitionDeleteOne {
+	return c.DeleteOneID(sd.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLADefinitionClient) DeleteOneID(id int) *SLADefinitionDeleteOne {
+	builder := c.Delete().Where(sladefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLADefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for SLADefinition.
+func (c *SLADefinitionClient) Query() *SLADefinitionQuery {
+	return &SLADefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLADefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLADefinition entity by its id.
+func (c *SLADefinitionClient) Get(ctx context.Context, id int) (*SLADefinition, error) {
+	return c.Query().Where(sladefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLADefinitionClient) GetX(ctx context.Context, id int) *SLADefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SLADefinitionClient) Hooks() []Hook {
+	return c.hooks.SLADefinition
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLADefinitionClient) Interceptors() []Interceptor {
+	return c.inters.SLADefinition
+}
+
+func (c *SLADefinitionClient) mutate(ctx context.Context, m *SLADefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLADefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLADefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLADefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLADefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLADefinition mutation op: %q", m.Op())
+	}
+}
+
+// SLAMetricsClient is a client for the SLAMetrics schema.
+type SLAMetricsClient struct {
+	config
+}
+
+// NewSLAMetricsClient returns a client for the SLAMetrics from the given config.
+func NewSLAMetricsClient(c config) *SLAMetricsClient {
+	return &SLAMetricsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slametrics.Hooks(f(g(h())))`.
+func (c *SLAMetricsClient) Use(hooks ...Hook) {
+	c.hooks.SLAMetrics = append(c.hooks.SLAMetrics, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slametrics.Intercept(f(g(h())))`.
+func (c *SLAMetricsClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAMetrics = append(c.inters.SLAMetrics, interceptors...)
+}
+
+// Create returns a builder for creating a SLAMetrics entity.
+func (c *SLAMetricsClient) Create() *SLAMetricsCreate {
+	mutation := newSLAMetricsMutation(c.config, OpCreate)
+	return &SLAMetricsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAMetrics entities.
+func (c *SLAMetricsClient) CreateBulk(builders ...*SLAMetricsCreate) *SLAMetricsCreateBulk {
+	return &SLAMetricsCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAMetricsClient) MapCreateBulk(slice any, setFunc func(*SLAMetricsCreate, int)) *SLAMetricsCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAMetricsCreateBulk{err: fmt.Errorf("calling to SLAMetricsClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAMetricsCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAMetricsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAMetrics.
+func (c *SLAMetricsClient) Update() *SLAMetricsUpdate {
+	mutation := newSLAMetricsMutation(c.config, OpUpdate)
+	return &SLAMetricsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAMetricsClient) UpdateOne(sm *SLAMetrics) *SLAMetricsUpdateOne {
+	mutation := newSLAMetricsMutation(c.config, OpUpdateOne, withSLAMetrics(sm))
+	return &SLAMetricsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAMetricsClient) UpdateOneID(id int) *SLAMetricsUpdateOne {
+	mutation := newSLAMetricsMutation(c.config, OpUpdateOne, withSLAMetricsID(id))
+	return &SLAMetricsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAMetrics.
+func (c *SLAMetricsClient) Delete() *SLAMetricsDelete {
+	mutation := newSLAMetricsMutation(c.config, OpDelete)
+	return &SLAMetricsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAMetricsClient) DeleteOne(sm *SLAMetrics) *SLAMetricsDeleteOne {
+	return c.DeleteOneID(sm.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAMetricsClient) DeleteOneID(id int) *SLAMetricsDeleteOne {
+	builder := c.Delete().Where(slametrics.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAMetricsDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAMetrics.
+func (c *SLAMetricsClient) Query() *SLAMetricsQuery {
+	return &SLAMetricsQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAMetrics},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAMetrics entity by its id.
+func (c *SLAMetricsClient) Get(ctx context.Context, id int) (*SLAMetrics, error) {
+	return c.Query().Where(slametrics.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAMetricsClient) GetX(ctx context.Context, id int) *SLAMetrics {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SLAMetricsClient) Hooks() []Hook {
+	return c.hooks.SLAMetrics
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAMetricsClient) Interceptors() []Interceptor {
+	return c.inters.SLAMetrics
+}
+
+func (c *SLAMetricsClient) mutate(ctx context.Context, m *SLAMetricsMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAMetricsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAMetricsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAMetricsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAMetricsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAMetrics mutation op: %q", m.Op())
+	}
+}
+
+// SLAViolationClient is a client for the SLAViolation schema.
+type SLAViolationClient struct {
+	config
+}
+
+// NewSLAViolationClient returns a client for the SLAViolation from the given config.
+func NewSLAViolationClient(c config) *SLAViolationClient {
+	return &SLAViolationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slaviolation.Hooks(f(g(h())))`.
+func (c *SLAViolationClient) Use(hooks ...Hook) {
+	c.hooks.SLAViolation = append(c.hooks.SLAViolation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slaviolation.Intercept(f(g(h())))`.
+func (c *SLAViolationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAViolation = append(c.inters.SLAViolation, interceptors...)
+}
+
+// Create returns a builder for creating a SLAViolation entity.
+func (c *SLAViolationClient) Create() *SLAViolationCreate {
+	mutation := newSLAViolationMutation(c.config, OpCreate)
+	return &SLAViolationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAViolation entities.
+func (c *SLAViolationClient) CreateBulk(builders ...*SLAViolationCreate) *SLAViolationCreateBulk {
+	return &SLAViolationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAViolationClient) MapCreateBulk(slice any, setFunc func(*SLAViolationCreate, int)) *SLAViolationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAViolationCreateBulk{err: fmt.Errorf("calling to SLAViolationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAViolationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAViolationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAViolation.
+func (c *SLAViolationClient) Update() *SLAViolationUpdate {
+	mutation := newSLAViolationMutation(c.config, OpUpdate)
+	return &SLAViolationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAViolationClient) UpdateOne(sv *SLAViolation) *SLAViolationUpdateOne {
+	mutation := newSLAViolationMutation(c.config, OpUpdateOne, withSLAViolation(sv))
+	return &SLAViolationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAViolationClient) UpdateOneID(id int) *SLAViolationUpdateOne {
+	mutation := newSLAViolationMutation(c.config, OpUpdateOne, withSLAViolationID(id))
+	return &SLAViolationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAViolation.
+func (c *SLAViolationClient) Delete() *SLAViolationDelete {
+	mutation := newSLAViolationMutation(c.config, OpDelete)
+	return &SLAViolationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAViolationClient) DeleteOne(sv *SLAViolation) *SLAViolationDeleteOne {
+	return c.DeleteOneID(sv.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAViolationClient) DeleteOneID(id int) *SLAViolationDeleteOne {
+	builder := c.Delete().Where(slaviolation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAViolationDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAViolation.
+func (c *SLAViolationClient) Query() *SLAViolationQuery {
+	return &SLAViolationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAViolation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAViolation entity by its id.
+func (c *SLAViolationClient) Get(ctx context.Context, id int) (*SLAViolation, error) {
+	return c.Query().Where(slaviolation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAViolationClient) GetX(ctx context.Context, id int) *SLAViolation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SLAViolationClient) Hooks() []Hook {
+	return c.hooks.SLAViolation
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAViolationClient) Interceptors() []Interceptor {
+	return c.inters.SLAViolation
+}
+
+func (c *SLAViolationClient) mutate(ctx context.Context, m *SLAViolationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAViolationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAViolationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAViolationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAViolationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAViolation mutation op: %q", m.Op())
+	}
+}
+
 // ServiceCatalogClient is a client for the ServiceCatalog schema.
 type ServiceCatalogClient struct {
 	config
@@ -4090,13 +4513,15 @@ type (
 	hooks struct {
 		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
 		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
-		Incident, KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog,
-		Subscription, Tenant, Ticket, User, Workflow []ent.Hook
+		Incident, KnowledgeArticle, SLADefinition, SLAMetrics, SLAViolation,
+		ServiceCatalog, ServiceRequest, StatusLog, Subscription, Tenant, Ticket, User,
+		Workflow []ent.Hook
 	}
 	inters struct {
 		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
 		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
-		Incident, KnowledgeArticle, ServiceCatalog, ServiceRequest, StatusLog,
-		Subscription, Tenant, Ticket, User, Workflow []ent.Interceptor
+		Incident, KnowledgeArticle, SLADefinition, SLAMetrics, SLAViolation,
+		ServiceCatalog, ServiceRequest, StatusLog, Subscription, Tenant, Ticket, User,
+		Workflow []ent.Interceptor
 	}
 )

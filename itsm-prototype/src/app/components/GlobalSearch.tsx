@@ -1,5 +1,6 @@
+import { Clock, Search } from 'lucide-react';
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Clock, FileText, User, Database, Ticket } from "lucide-react";
 import { httpClient } from "../lib/http-client";
 import { useRouter } from "next/navigation";
 
@@ -60,7 +61,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           q: searchQuery,
           limit: 10,
         });
-        setResults(response.data || []);
+        setResults(response || []);
       } catch (error) {
         console.error("搜索失败:", error);
         setResults([]);
@@ -234,7 +235,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 };
 
 // 防抖函数
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: unknown[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

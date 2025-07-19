@@ -798,6 +798,134 @@ var (
 			},
 		},
 	}
+	// SLADefinitionsColumns holds the columns for the "sla_definitions" table.
+	SLADefinitionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "service_type", Type: field.TypeString},
+		{Name: "priority", Type: field.TypeString},
+		{Name: "impact", Type: field.TypeString},
+		{Name: "response_time", Type: field.TypeInt},
+		{Name: "resolution_time", Type: field.TypeInt},
+		{Name: "business_hours", Type: field.TypeString},
+		{Name: "holidays", Type: field.TypeString},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_by", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SLADefinitionsTable holds the schema information for the "sla_definitions" table.
+	SLADefinitionsTable = &schema.Table{
+		Name:       "sla_definitions",
+		Columns:    SLADefinitionsColumns,
+		PrimaryKey: []*schema.Column{SLADefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sladefinition_tenant_id_service_type_priority_impact",
+				Unique:  false,
+				Columns: []*schema.Column{SLADefinitionsColumns[13], SLADefinitionsColumns[5], SLADefinitionsColumns[6], SLADefinitionsColumns[7]},
+			},
+			{
+				Name:    "sladefinition_tenant_id_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{SLADefinitionsColumns[13], SLADefinitionsColumns[12]},
+			},
+		},
+	}
+	// SLAMetricsColumns holds the columns for the "sla_metrics" table.
+	SLAMetricsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "service_type", Type: field.TypeString},
+		{Name: "priority", Type: field.TypeString},
+		{Name: "impact", Type: field.TypeString},
+		{Name: "total_tickets", Type: field.TypeInt},
+		{Name: "met_sla_tickets", Type: field.TypeInt},
+		{Name: "violated_sla_tickets", Type: field.TypeInt},
+		{Name: "sla_compliance_rate", Type: field.TypeFloat64},
+		{Name: "avg_response_time", Type: field.TypeFloat64},
+		{Name: "avg_resolution_time", Type: field.TypeFloat64},
+		{Name: "period", Type: field.TypeString},
+		{Name: "period_start", Type: field.TypeTime},
+		{Name: "period_end", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SLAMetricsTable holds the schema information for the "sla_metrics" table.
+	SLAMetricsTable = &schema.Table{
+		Name:       "sla_metrics",
+		Columns:    SLAMetricsColumns,
+		PrimaryKey: []*schema.Column{SLAMetricsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "slametrics_tenant_id_service_type_priority_impact",
+				Unique:  false,
+				Columns: []*schema.Column{SLAMetricsColumns[15], SLAMetricsColumns[3], SLAMetricsColumns[4], SLAMetricsColumns[5]},
+			},
+			{
+				Name:    "slametrics_tenant_id_period_period_start",
+				Unique:  false,
+				Columns: []*schema.Column{SLAMetricsColumns[15], SLAMetricsColumns[12], SLAMetricsColumns[13]},
+			},
+		},
+	}
+	// SLAViolationsColumns holds the columns for the "sla_violations" table.
+	SLAViolationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "ticket_type", Type: field.TypeString},
+		{Name: "violation_type", Type: field.TypeString},
+		{Name: "sla_definition_id", Type: field.TypeInt},
+		{Name: "sla_name", Type: field.TypeString},
+		{Name: "expected_time", Type: field.TypeInt},
+		{Name: "actual_time", Type: field.TypeInt},
+		{Name: "overdue_minutes", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString},
+		{Name: "assigned_to", Type: field.TypeString, Nullable: true},
+		{Name: "violation_occurred_at", Type: field.TypeTime},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolution_note", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_by", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SLAViolationsTable holds the schema information for the "sla_violations" table.
+	SLAViolationsTable = &schema.Table{
+		Name:       "sla_violations",
+		Columns:    SLAViolationsColumns,
+		PrimaryKey: []*schema.Column{SLAViolationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "slaviolation_tenant_id_ticket_id",
+				Unique:  false,
+				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[3]},
+			},
+			{
+				Name:    "slaviolation_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[11]},
+			},
+			{
+				Name:    "slaviolation_tenant_id_violation_occurred_at",
+				Unique:  false,
+				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[13]},
+			},
+			{
+				Name:    "slaviolation_tenant_id_assigned_to",
+				Unique:  false,
+				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[12]},
+			},
+		},
+	}
 	// ServiceCatalogsColumns holds the columns for the "service_catalogs" table.
 	ServiceCatalogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1310,6 +1438,9 @@ var (
 		FlowInstancesTable,
 		IncidentsTable,
 		KnowledgeArticlesTable,
+		SLADefinitionsTable,
+		SLAMetricsTable,
+		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
 		StatusLogsTable,

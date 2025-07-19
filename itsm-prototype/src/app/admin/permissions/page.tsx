@@ -1,24 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Shield,
-  Key,
-  CheckCircle,
-  XCircle,
-  Settings,
-  Eye,
-  Lock,
-  Unlock,
-  Users,
-  Save,
-  RefreshCw,
-} from "lucide-react";
+import { CheckCircle, Users, Search, Settings, XCircle, Key, Shield, RefreshCw, Save } from 'lucide-react';
 
+import React, { useState } from "react";
 // 权限模块定义
 const PERMISSION_MODULES = {
   DASHBOARD: "dashboard",

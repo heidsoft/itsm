@@ -1,10 +1,10 @@
 'use client';
 
+import { CheckCircle, XCircle, Cpu, BookOpen, MessageSquare, PlusCircle, Zap, ArrowLeft, PlayCircle, PauseCircle, LinkIcon } from 'lucide-react';
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Cpu, Link as LinkIcon, Search, BookOpen, PlusCircle, CheckCircle, PauseCircle, XCircle, Zap, Clock, MessageSquare, PlayCircle } from 'lucide-react';
-
 // 模拟数据
 const mockIncidentDetail = {
     'INC-00125': {

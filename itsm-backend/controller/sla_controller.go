@@ -1,0 +1,348 @@
+package controller
+
+import (
+	"net/http"
+	"strconv"
+	"time"
+
+	"itsm-backend/common"
+	"itsm-backend/dto"
+	"itsm-backend/service"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
+
+type SLAController struct {
+	slaService *service.SLAService
+	logger     *zap.SugaredLogger
+}
+
+func NewSLAController(slaService *service.SLAService, logger *zap.SugaredLogger) *SLAController {
+	return &SLAController{
+		slaService: slaService,
+		logger:     logger,
+	}
+}
+
+// CreateSLADefinition 创建SLA定义
+// @Summary 创建SLA定义
+// @Description 创建新的SLA定义
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param sla body dto.SLADefinitionRequest true "SLA定义信息"
+// @Success 200 {object} common.Response{data=dto.SLADefinitionResponse}
+// @Router /api/sla/definitions [post]
+func (c *SLAController) CreateSLADefinition(ctx *gin.Context) {
+	var req dto.SLADefinitionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Failed to bind SLA definition request", "error", err)
+		common.Fail(ctx, http.StatusBadRequest, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+	createdBy := ctx.GetString("username")
+
+	definition, err := c.slaService.CreateSLADefinition(ctx, &req, tenantID, createdBy)
+	if err != nil {
+		c.logger.Errorw("Failed to create SLA definition", "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "创建SLA定义失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, definition)
+}
+
+// GetSLADefinitionByID 根据ID获取SLA定义
+// @Summary 获取SLA定义详情
+// @Description 根据ID获取SLA定义详情
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param id path int true "SLA定义ID"
+// @Success 200 {object} common.Response{data=dto.SLADefinitionResponse}
+// @Router /api/sla/definitions/{id} [get]
+func (c *SLAController) GetSLADefinitionByID(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, http.StatusBadRequest, "无效的SLA定义ID")
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	definition, err := c.slaService.GetSLADefinitionByID(ctx, id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to get SLA definition", "id", id, "error", err)
+		common.Fail(ctx, http.StatusNotFound, "SLA定义不存在")
+		return
+	}
+
+	common.Success(ctx, definition)
+}
+
+// ListSLADefinitions 获取SLA定义列表
+// @Summary 获取SLA定义列表
+// @Description 分页获取SLA定义列表
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(10)
+// @Success 200 {object} common.Response{data=dto.SLADefinitionListResponse}
+// @Router /api/sla/definitions [get]
+func (c *SLAController) ListSLADefinitions(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	list, err := c.slaService.ListSLADefinitions(ctx, tenantID, page, pageSize)
+	if err != nil {
+		c.logger.Errorw("Failed to list SLA definitions", "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "获取SLA定义列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, list)
+}
+
+// UpdateSLADefinition 更新SLA定义
+// @Summary 更新SLA定义
+// @Description 更新SLA定义信息
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param id path int true "SLA定义ID"
+// @Param sla body dto.SLADefinitionRequest true "SLA定义信息"
+// @Success 200 {object} common.Response{data=dto.SLADefinitionResponse}
+// @Router /api/sla/definitions/{id} [put]
+func (c *SLAController) UpdateSLADefinition(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, http.StatusBadRequest, "无效的SLA定义ID")
+		return
+	}
+
+	var req dto.SLADefinitionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Failed to bind SLA definition request", "error", err)
+		common.Fail(ctx, http.StatusBadRequest, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	definition, err := c.slaService.UpdateSLADefinition(ctx, id, &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to update SLA definition", "id", id, "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "更新SLA定义失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, definition)
+}
+
+// DeleteSLADefinition 删除SLA定义
+// @Summary 删除SLA定义
+// @Description 删除SLA定义
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param id path int true "SLA定义ID"
+// @Success 200 {object} common.Response
+// @Router /api/sla/definitions/{id} [delete]
+func (c *SLAController) DeleteSLADefinition(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, http.StatusBadRequest, "无效的SLA定义ID")
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	err = c.slaService.DeleteSLADefinition(ctx, id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to delete SLA definition", "id", id, "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "删除SLA定义失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, nil)
+}
+
+// GetSLAViolations 获取SLA违规列表
+// @Summary 获取SLA违规列表
+// @Description 分页获取SLA违规列表
+// @Tags SLA监控
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(10)
+// @Param status query string false "违规状态"
+// @Success 200 {object} common.Response{data=dto.SLAViolationListResponse}
+// @Router /api/sla/violations [get]
+func (c *SLAController) GetSLAViolations(ctx *gin.Context) {
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
+	status := ctx.Query("status")
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	list, err := c.slaService.GetSLAViolations(ctx, tenantID, page, pageSize, status)
+	if err != nil {
+		c.logger.Errorw("Failed to list SLA violations", "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "获取SLA违规列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, list)
+}
+
+// UpdateSLAViolationStatus 更新SLA违规状态
+// @Summary 更新SLA违规状态
+// @Description 更新SLA违规处理状态
+// @Tags SLA监控
+// @Accept json
+// @Produce json
+// @Param id path int true "SLA违规ID"
+// @Param status body map[string]interface{} true "状态更新信息"
+// @Success 200 {object} common.Response
+// @Router /api/sla/violations/{id}/status [put]
+func (c *SLAController) UpdateSLAViolationStatus(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, http.StatusBadRequest, "无效的SLA违规ID")
+		return
+	}
+
+	var req struct {
+		Status         string `json:"status" binding:"required"`
+		AssignedTo     string `json:"assigned_to"`
+		ResolutionNote string `json:"resolution_note"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("Failed to bind SLA violation status request", "error", err)
+		common.Fail(ctx, http.StatusBadRequest, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	err = c.slaService.UpdateSLAViolationStatus(ctx, id, req.Status, req.AssignedTo, req.ResolutionNote, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to update SLA violation status", "id", id, "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "更新SLA违规状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, nil)
+}
+
+// GetSLAComplianceReport 获取SLA达标率报表
+// @Summary 获取SLA达标率报表
+// @Description 获取SLA达标率统计报表
+// @Tags SLA报表
+// @Accept json
+// @Produce json
+// @Param start_date query string false "开始日期" format(date)
+// @Param end_date query string false "结束日期" format(date)
+// @Success 200 {object} common.Response{data=dto.SLAComplianceReportResponse}
+// @Router /api/sla/reports/compliance [get]
+func (c *SLAController) GetSLAComplianceReport(ctx *gin.Context) {
+	startDateStr := ctx.DefaultQuery("start_date", "")
+	endDateStr := ctx.DefaultQuery("end_date", "")
+
+	var startDate, endDate time.Time
+	var err error
+
+	if startDateStr == "" {
+		// 默认查询最近30天
+		endDate = time.Now()
+		startDate = endDate.AddDate(0, 0, -30)
+	} else {
+		startDate, err = time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			common.Fail(ctx, http.StatusBadRequest, "无效的开始日期格式")
+			return
+		}
+	}
+
+	if endDateStr == "" {
+		endDate = time.Now()
+	} else {
+		endDate, err = time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			common.Fail(ctx, http.StatusBadRequest, "无效的结束日期格式")
+			return
+		}
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	report, err := c.slaService.GetSLAComplianceReport(ctx, tenantID, startDate, endDate)
+	if err != nil {
+		c.logger.Errorw("Failed to get SLA compliance report", "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "获取SLA达标率报表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, report)
+}
+
+// CheckTicketSLA 检查工单SLA
+// @Summary 检查工单SLA
+// @Description 检查指定工单的SLA合规性
+// @Tags SLA监控
+// @Accept json
+// @Produce json
+// @Param ticket_id path int true "工单ID"
+// @Param ticket_type query string true "工单类型"
+// @Success 200 {object} common.Response
+// @Router /api/sla/check/{ticket_id} [post]
+func (c *SLAController) CheckTicketSLA(ctx *gin.Context) {
+	ticketIDStr := ctx.Param("ticket_id")
+	ticketID, err := strconv.Atoi(ticketIDStr)
+	if err != nil {
+		common.Fail(ctx, http.StatusBadRequest, "无效的工单ID")
+		return
+	}
+
+	ticketType := ctx.Query("ticket_type")
+	if ticketType == "" {
+		common.Fail(ctx, http.StatusBadRequest, "工单类型不能为空")
+		return
+	}
+
+	tenantID := ctx.GetInt("tenant_id")
+
+	err = c.slaService.CheckSLAViolation(ctx, ticketID, ticketType, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to check ticket SLA", "ticket_id", ticketID, "error", err)
+		common.Fail(ctx, http.StatusInternalServerError, "检查工单SLA失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, nil)
+}

@@ -1,24 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Play,
-  Pause,
-  Copy,
-  Settings,
-  GitBranch,
-  Clock,
-  Users,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
+import { Plus, CheckCircle, Search, Trash2, Edit, Filter, Pause, Play, Copy, GitBranch } from 'lucide-react';
 
+import React, { useState } from "react";
 // 工作流状态枚举
 const WORKFLOW_STATUS = {
   ACTIVE: "active",
@@ -166,7 +150,7 @@ const WorkflowManagement = () => {
   };
 
   // 处理工作流复制
-  const handleDuplicate = (workflow: any) => {
+  const handleDuplicate = (workflow: unknown) => {
     const newWorkflow = {
       ...workflow,
       id: Math.max(...workflows.map((w) => w.id)) + 1,

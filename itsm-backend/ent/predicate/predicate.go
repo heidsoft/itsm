@@ -39,6 +39,15 @@ type Incident func(*sql.Selector)
 // KnowledgeArticle is the predicate function for knowledgearticle builders.
 type KnowledgeArticle func(*sql.Selector)
 
+// SLADefinition is the predicate function for sladefinition builders.
+type SLADefinition func(*sql.Selector)
+
+// SLAMetrics is the predicate function for slametrics builders.
+type SLAMetrics func(*sql.Selector)
+
+// SLAViolation is the predicate function for slaviolation builders.
+type SLAViolation func(*sql.Selector)
+
 // ServiceCatalog is the predicate function for servicecatalog builders.
 type ServiceCatalog func(*sql.Selector)
 

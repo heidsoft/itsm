@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiResponse } from './api-config';
+import { API_BASE_URL } from './api-config';
 
 interface RequestConfig {
   method: string;
@@ -55,12 +55,16 @@ class HttpClient {
       'Content-Type': 'application/json',
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    // 动态获取最新的token和tenantId
+    const currentToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : this.token;
+    const currentTenantId = typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
+
+    if (currentToken) {
+      headers['Authorization'] = `Bearer ${currentToken}`;
     }
 
-    if (this.tenantId) {
-      headers['X-Tenant-ID'] = this.tenantId.toString();
+    if (currentTenantId) {
+      headers['X-Tenant-ID'] = currentTenantId.toString();
     }
 
     return headers;
@@ -89,6 +93,8 @@ class HttpClient {
         if (data.code === 0) {
           // 更新access token
           this.setToken(data.data.access_token);
+          // 同时更新实例变量
+          this.token = data.data.access_token;
           return true;
         }
       }
@@ -100,19 +106,33 @@ class HttpClient {
   }
 
   // 使用 fetch API 的 request 方法
-  private async request<T>(endpoint: string, config: RequestConfig): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    const headers = this.getHeaders();
     const requestConfig: RequestInit = {
       method: config.method,
       headers: {
-        ...this.getHeaders(),
+        ...headers,
         ...config.headers,
       },
       body: config.body,
     };
 
+    console.log('HTTP Client Request:', {
+      url,
+      method: config.method,
+      headers,
+      body: config.body
+    });
+
     try {
       const response = await fetch(url, requestConfig);
+      
+      console.log('HTTP Client Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
       
       // 如果是401错误，尝试刷新token
       if (response.status === 401) {
@@ -130,7 +150,15 @@ class HttpClient {
           if (!retryResponse.ok) {
             throw new Error(`HTTP error! status: ${retryResponse.status}`);
           }
-          return await retryResponse.json();
+          const retryData = await retryResponse.json() as { code: number; message: string; data: T };
+          console.log('HTTP Client Retry Response Data:', retryData);
+          
+          // 检查响应码
+          if (retryData.code !== 0) {
+            throw new Error(retryData.message || '请求失败');
+          }
+          
+          return retryData.data;
         } else {
           // 刷新失败，清除token并跳转到登录页
           this.clearToken();
@@ -146,14 +174,22 @@ class HttpClient {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
-    } catch (error: any) {
+      const responseData = await response.json() as { code: number; message: string; data: T };
+      console.log('HTTP Client Raw Response Data:', responseData);
+      
+      // 检查响应码
+      if (responseData.code !== 0) {
+        throw new Error(responseData.message || '请求失败');
+      }
+      
+      return responseData.data;
+    } catch (error: unknown) {
       console.error('Request failed:', error);
       throw error;
     }
   }
 
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+  async get<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
     let url = endpoint;
     if (params) {
       const searchParams = new URLSearchParams();
@@ -170,28 +206,28 @@ class HttpClient {
     });
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async patch<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+  async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'DELETE',
     });

@@ -1,23 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Zap,
-  Clock,
-  Users,
-  AlertTriangle,
-  CheckCircle,
-  Plus,
-  Search,
-  Filter,
-  Edit,
-  Trash2,
-  Eye,
-  ArrowUp,
-  Settings,
-  Target,
-} from "lucide-react";
+import { Plus, CheckCircle, Clock, Users, Search, Settings, Trash2, Edit, Filter, Eye, AlertTriangle, Zap, ArrowUp } from 'lucide-react';
 
+import React, { useState } from "react";
 // 升级规则的数据类型
 interface EscalationRule {
   id: string;

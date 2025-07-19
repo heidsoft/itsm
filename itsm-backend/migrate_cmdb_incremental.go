@@ -1,3 +1,6 @@
+//go:build migrate
+// +build migrate
+
 package main
 
 import (
@@ -5,7 +8,6 @@ import (
 	"fmt"
 	"itsm-backend/config"
 	"itsm-backend/database"
-	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"log"
 )

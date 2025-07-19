@@ -103,6 +103,290 @@ Fail(c, code, "错误信息")
 * 鉴权失败：`code = 2001`
 * 服务内部错误：`code = 5001`
 
+### 后端响应规范
+
+#### 统一响应结构
+
+```go
+// common/response.go
+type Response struct {
+    Code    int         `json:"code"`
+    Message string      `json:"message"`
+    Data    interface{} `json:"data,omitempty"`
+}
+
+// 响应码定义
+const (
+    SuccessCode        = 0
+    ParamErrorCode     = 1001
+    ValidationError    = 1002
+    AuthFailedCode     = 2001
+    ForbiddenCode      = 2003
+    NotFoundCode       = 4004
+    InternalErrorCode  = 5001
+)
+
+// 成功响应
+func Success(c *gin.Context, data interface{}) {
+    c.JSON(http.StatusOK, Response{
+        Code:    SuccessCode,
+        Message: "success",
+        Data:    data,
+    })
+}
+
+// 失败响应
+func Fail(c *gin.Context, code int, message string) {
+    c.JSON(http.StatusOK, Response{
+        Code:    code,
+        Message: message,
+    })
+}
+```
+
+#### 控制器使用规范
+
+```go
+// 正确的控制器写法
+func (c *IncidentController) ListIncidents(ctx *gin.Context) {
+    var req dto.ListIncidentsRequest
+    if err := ctx.ShouldBindQuery(&req); err != nil {
+        common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+        return
+    }
+
+    response, err := c.incidentService.ListIncidents(ctx, &req, tenantID.(int))
+    if err != nil {
+        c.logger.Errorw("Failed to list incidents", "error", err)
+        common.Fail(ctx, common.InternalErrorCode, err.Error())
+        return
+    }
+
+    common.Success(ctx, response)
+}
+```
+
+### 前端响应处理规范
+
+#### HTTP客户端规范
+
+```typescript
+// lib/http-client.ts
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
+
+class HttpClient {
+  private async request<T>(endpoint: string, config: RequestConfig): Promise<T> {
+    // ... 请求逻辑
+    
+    const responseData = await response.json() as ApiResponse<T>;
+    
+    // 检查响应码
+    if (responseData.code !== 0) {
+      throw new Error(responseData.message || '请求失败');
+    }
+    
+    return responseData.data;
+  }
+}
+```
+
+#### API层规范
+
+```typescript
+// lib/incident-api.ts
+export class IncidentAPI {
+  static async listIncidents(params: ListIncidentsRequest = {}): Promise<ListIncidentsResponse> {
+    try {
+      const response = await httpClient.get<ListIncidentsResponse>('/api/incidents', params);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.listIncidents error:', error);
+      throw error;
+    }
+  }
+}
+```
+
+#### 页面组件规范
+
+```typescript
+// 页面组件中的错误处理
+const fetchIncidents = async () => {
+  try {
+    setLoading(true);
+    const response = await IncidentAPI.listIncidents(params);
+    
+    if (!response || !response.incidents) {
+      throw new Error('API响应数据格式错误');
+    }
+    
+    setIncidents(response.incidents);
+    setTotal(response.total);
+  } catch (error) {
+    console.error('Failed to fetch incidents:', error);
+    setError(error instanceof Error ? error.message : '获取事件列表失败');
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### 错误处理规范
+
+#### 后端错误处理
+
+* **参数验证错误**：使用 `common.Fail(ctx, common.ParamErrorCode, message)`
+* **认证失败**：使用 `common.Fail(ctx, common.AuthFailedCode, message)`
+* **权限不足**：使用 `common.Fail(ctx, common.ForbiddenCode, message)`
+* **资源不存在**：使用 `common.Fail(ctx, common.NotFoundCode, message)`
+* **内部错误**：使用 `common.Fail(ctx, common.InternalErrorCode, message)`
+
+#### 前端错误处理
+
+* **网络错误**：显示友好的网络错误提示
+* **业务错误**：显示后端返回的具体错误信息
+* **数据格式错误**：记录详细日志，显示通用错误提示
+
+### 类型定义规范
+
+#### 后端DTO规范
+
+```go
+// dto/incident_dto.go
+type ListIncidentsResponse struct {
+    Incidents []*Incident `json:"incidents"`
+    Total     int         `json:"total"`
+    Page      int         `json:"page"`
+    PageSize  int         `json:"page_size"`
+}
+
+type CreateIncidentRequest struct {
+    Title       string                 `json:"title" binding:"required,min=2,max=200"`
+    Description string                 `json:"description" binding:"required,min=10,max=5000"`
+    Priority    string                 `json:"priority" binding:"required,oneof=low medium high critical"`
+    FormFields  map[string]interface{} `json:"form_fields"`
+}
+```
+
+#### 前端类型定义规范
+
+```typescript
+// lib/incident-api.ts
+export interface Incident {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  source: string;
+  type: string;
+  incident_number: string;
+  is_major_incident: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ListIncidentsResponse {
+  incidents: Incident[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ListIncidentsRequest {
+  page?: number;
+  page_size?: number;
+  status?: string;
+  priority?: string;
+  source?: string;
+  type?: string;
+  assignee_id?: number;
+  is_major_incident?: boolean;
+  keyword?: string;
+}
+```
+
+### 调试与日志规范
+
+#### 后端日志规范
+
+```go
+// 使用结构化日志
+c.logger.Errorw("Failed to list incidents", 
+    "error", err,
+    "tenant_id", tenantID,
+    "params", req)
+```
+
+#### 前端调试规范
+
+```typescript
+// 在API层添加调试日志
+console.log('IncidentAPI.listIncidents called with params:', params);
+console.log('IncidentAPI.listIncidents response:', response);
+
+// 在HTTP客户端添加请求响应日志
+console.log('HTTP Client Request:', { url, method, headers });
+console.log('HTTP Client Response:', { status, statusText });
+console.log('HTTP Client Raw Response Data:', responseData);
+```
+
+### 性能优化规范
+
+#### 分页查询规范
+
+```typescript
+// 前端分页参数
+const params = {
+  page: 1,
+  page_size: 20,
+  status: filter === "全部" ? undefined : filter,
+  is_major_incident: showMajorIncidents ? true : undefined,
+};
+```
+
+```go
+// 后端分页处理
+if req.Page <= 0 {
+    req.Page = 1
+}
+if req.PageSize <= 0 {
+    req.PageSize = 20
+}
+```
+
+#### 缓存策略规范
+
+* 使用 React Query 或 SWR 进行数据缓存
+* 设置合理的缓存过期时间
+* 实现请求去重和防抖
+
+```typescript
+// 使用 SWR 进行数据缓存
+export const useIncidents = (params: ListIncidentsRequest) => {
+  const { data, error, mutate } = useSWR(
+    ['/api/incidents', params],
+    () => IncidentAPI.listIncidents(params),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 5000,
+    }
+  );
+  
+  return {
+    incidents: data?.incidents || [],
+    total: data?.total || 0,
+    isLoading: !error && !data,
+    isError: error,
+    refresh: mutate,
+  };
+};
+```
+
 ---
 
 ## 📁 项目结构建议

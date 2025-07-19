@@ -20,6 +20,9 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametrics"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
@@ -53,6 +56,9 @@ const (
 	TypeFlowInstance          = "FlowInstance"
 	TypeIncident              = "Incident"
 	TypeKnowledgeArticle      = "KnowledgeArticle"
+	TypeSLADefinition         = "SLADefinition"
+	TypeSLAMetrics            = "SLAMetrics"
+	TypeSLAViolation          = "SLAViolation"
 	TypeServiceCatalog        = "ServiceCatalog"
 	TypeServiceRequest        = "ServiceRequest"
 	TypeStatusLog             = "StatusLog"
@@ -14869,6 +14875,4249 @@ func (m *KnowledgeArticleMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle edge %s", name)
+}
+
+// SLADefinitionMutation represents an operation that mutates the SLADefinition nodes in the graph.
+type SLADefinitionMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	create_time        *time.Time
+	update_time        *time.Time
+	name               *string
+	description        *string
+	service_type       *string
+	priority           *string
+	impact             *string
+	response_time      *int
+	addresponse_time   *int
+	resolution_time    *int
+	addresolution_time *int
+	business_hours     *string
+	holidays           *string
+	is_active          *bool
+	tenant_id          *int
+	addtenant_id       *int
+	created_by         *string
+	created_at         *time.Time
+	updated_at         *time.Time
+	clearedFields      map[string]struct{}
+	done               bool
+	oldValue           func(context.Context) (*SLADefinition, error)
+	predicates         []predicate.SLADefinition
+}
+
+var _ ent.Mutation = (*SLADefinitionMutation)(nil)
+
+// sladefinitionOption allows management of the mutation configuration using functional options.
+type sladefinitionOption func(*SLADefinitionMutation)
+
+// newSLADefinitionMutation creates new mutation for the SLADefinition entity.
+func newSLADefinitionMutation(c config, op Op, opts ...sladefinitionOption) *SLADefinitionMutation {
+	m := &SLADefinitionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSLADefinition,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSLADefinitionID sets the ID field of the mutation.
+func withSLADefinitionID(id int) sladefinitionOption {
+	return func(m *SLADefinitionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SLADefinition
+		)
+		m.oldValue = func(ctx context.Context) (*SLADefinition, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SLADefinition.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSLADefinition sets the old SLADefinition of the mutation.
+func withSLADefinition(node *SLADefinition) sladefinitionOption {
+	return func(m *SLADefinitionMutation) {
+		m.oldValue = func(context.Context) (*SLADefinition, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SLADefinitionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SLADefinitionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SLADefinitionMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SLADefinitionMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SLADefinition.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *SLADefinitionMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *SLADefinitionMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *SLADefinitionMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *SLADefinitionMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *SLADefinitionMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *SLADefinitionMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetName sets the "name" field.
+func (m *SLADefinitionMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *SLADefinitionMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *SLADefinitionMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *SLADefinitionMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *SLADefinitionMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *SLADefinitionMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[sladefinition.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *SLADefinitionMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[sladefinition.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *SLADefinitionMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, sladefinition.FieldDescription)
+}
+
+// SetServiceType sets the "service_type" field.
+func (m *SLADefinitionMutation) SetServiceType(s string) {
+	m.service_type = &s
+}
+
+// ServiceType returns the value of the "service_type" field in the mutation.
+func (m *SLADefinitionMutation) ServiceType() (r string, exists bool) {
+	v := m.service_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceType returns the old "service_type" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldServiceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceType: %w", err)
+	}
+	return oldValue.ServiceType, nil
+}
+
+// ResetServiceType resets all changes to the "service_type" field.
+func (m *SLADefinitionMutation) ResetServiceType() {
+	m.service_type = nil
+}
+
+// SetPriority sets the "priority" field.
+func (m *SLADefinitionMutation) SetPriority(s string) {
+	m.priority = &s
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *SLADefinitionMutation) Priority() (r string, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldPriority(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *SLADefinitionMutation) ResetPriority() {
+	m.priority = nil
+}
+
+// SetImpact sets the "impact" field.
+func (m *SLADefinitionMutation) SetImpact(s string) {
+	m.impact = &s
+}
+
+// Impact returns the value of the "impact" field in the mutation.
+func (m *SLADefinitionMutation) Impact() (r string, exists bool) {
+	v := m.impact
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImpact returns the old "impact" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldImpact(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImpact is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImpact requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImpact: %w", err)
+	}
+	return oldValue.Impact, nil
+}
+
+// ResetImpact resets all changes to the "impact" field.
+func (m *SLADefinitionMutation) ResetImpact() {
+	m.impact = nil
+}
+
+// SetResponseTime sets the "response_time" field.
+func (m *SLADefinitionMutation) SetResponseTime(i int) {
+	m.response_time = &i
+	m.addresponse_time = nil
+}
+
+// ResponseTime returns the value of the "response_time" field in the mutation.
+func (m *SLADefinitionMutation) ResponseTime() (r int, exists bool) {
+	v := m.response_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResponseTime returns the old "response_time" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldResponseTime(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResponseTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResponseTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResponseTime: %w", err)
+	}
+	return oldValue.ResponseTime, nil
+}
+
+// AddResponseTime adds i to the "response_time" field.
+func (m *SLADefinitionMutation) AddResponseTime(i int) {
+	if m.addresponse_time != nil {
+		*m.addresponse_time += i
+	} else {
+		m.addresponse_time = &i
+	}
+}
+
+// AddedResponseTime returns the value that was added to the "response_time" field in this mutation.
+func (m *SLADefinitionMutation) AddedResponseTime() (r int, exists bool) {
+	v := m.addresponse_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResponseTime resets all changes to the "response_time" field.
+func (m *SLADefinitionMutation) ResetResponseTime() {
+	m.response_time = nil
+	m.addresponse_time = nil
+}
+
+// SetResolutionTime sets the "resolution_time" field.
+func (m *SLADefinitionMutation) SetResolutionTime(i int) {
+	m.resolution_time = &i
+	m.addresolution_time = nil
+}
+
+// ResolutionTime returns the value of the "resolution_time" field in the mutation.
+func (m *SLADefinitionMutation) ResolutionTime() (r int, exists bool) {
+	v := m.resolution_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolutionTime returns the old "resolution_time" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldResolutionTime(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolutionTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolutionTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolutionTime: %w", err)
+	}
+	return oldValue.ResolutionTime, nil
+}
+
+// AddResolutionTime adds i to the "resolution_time" field.
+func (m *SLADefinitionMutation) AddResolutionTime(i int) {
+	if m.addresolution_time != nil {
+		*m.addresolution_time += i
+	} else {
+		m.addresolution_time = &i
+	}
+}
+
+// AddedResolutionTime returns the value that was added to the "resolution_time" field in this mutation.
+func (m *SLADefinitionMutation) AddedResolutionTime() (r int, exists bool) {
+	v := m.addresolution_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResolutionTime resets all changes to the "resolution_time" field.
+func (m *SLADefinitionMutation) ResetResolutionTime() {
+	m.resolution_time = nil
+	m.addresolution_time = nil
+}
+
+// SetBusinessHours sets the "business_hours" field.
+func (m *SLADefinitionMutation) SetBusinessHours(s string) {
+	m.business_hours = &s
+}
+
+// BusinessHours returns the value of the "business_hours" field in the mutation.
+func (m *SLADefinitionMutation) BusinessHours() (r string, exists bool) {
+	v := m.business_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBusinessHours returns the old "business_hours" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldBusinessHours(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBusinessHours is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBusinessHours requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBusinessHours: %w", err)
+	}
+	return oldValue.BusinessHours, nil
+}
+
+// ResetBusinessHours resets all changes to the "business_hours" field.
+func (m *SLADefinitionMutation) ResetBusinessHours() {
+	m.business_hours = nil
+}
+
+// SetHolidays sets the "holidays" field.
+func (m *SLADefinitionMutation) SetHolidays(s string) {
+	m.holidays = &s
+}
+
+// Holidays returns the value of the "holidays" field in the mutation.
+func (m *SLADefinitionMutation) Holidays() (r string, exists bool) {
+	v := m.holidays
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHolidays returns the old "holidays" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldHolidays(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHolidays is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHolidays requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHolidays: %w", err)
+	}
+	return oldValue.Holidays, nil
+}
+
+// ResetHolidays resets all changes to the "holidays" field.
+func (m *SLADefinitionMutation) ResetHolidays() {
+	m.holidays = nil
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *SLADefinitionMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *SLADefinitionMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *SLADefinitionMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SLADefinitionMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SLADefinitionMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SLADefinitionMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SLADefinitionMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SLADefinitionMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *SLADefinitionMutation) SetCreatedBy(s string) {
+	m.created_by = &s
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *SLADefinitionMutation) CreatedBy() (r string, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldCreatedBy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *SLADefinitionMutation) ResetCreatedBy() {
+	m.created_by = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SLADefinitionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SLADefinitionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SLADefinitionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SLADefinitionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SLADefinitionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SLADefinitionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the SLADefinitionMutation builder.
+func (m *SLADefinitionMutation) Where(ps ...predicate.SLADefinition) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SLADefinitionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SLADefinitionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SLADefinition, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SLADefinitionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SLADefinitionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SLADefinition).
+func (m *SLADefinitionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SLADefinitionMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.create_time != nil {
+		fields = append(fields, sladefinition.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, sladefinition.FieldUpdateTime)
+	}
+	if m.name != nil {
+		fields = append(fields, sladefinition.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, sladefinition.FieldDescription)
+	}
+	if m.service_type != nil {
+		fields = append(fields, sladefinition.FieldServiceType)
+	}
+	if m.priority != nil {
+		fields = append(fields, sladefinition.FieldPriority)
+	}
+	if m.impact != nil {
+		fields = append(fields, sladefinition.FieldImpact)
+	}
+	if m.response_time != nil {
+		fields = append(fields, sladefinition.FieldResponseTime)
+	}
+	if m.resolution_time != nil {
+		fields = append(fields, sladefinition.FieldResolutionTime)
+	}
+	if m.business_hours != nil {
+		fields = append(fields, sladefinition.FieldBusinessHours)
+	}
+	if m.holidays != nil {
+		fields = append(fields, sladefinition.FieldHolidays)
+	}
+	if m.is_active != nil {
+		fields = append(fields, sladefinition.FieldIsActive)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, sladefinition.FieldTenantID)
+	}
+	if m.created_by != nil {
+		fields = append(fields, sladefinition.FieldCreatedBy)
+	}
+	if m.created_at != nil {
+		fields = append(fields, sladefinition.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, sladefinition.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SLADefinitionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case sladefinition.FieldCreateTime:
+		return m.CreateTime()
+	case sladefinition.FieldUpdateTime:
+		return m.UpdateTime()
+	case sladefinition.FieldName:
+		return m.Name()
+	case sladefinition.FieldDescription:
+		return m.Description()
+	case sladefinition.FieldServiceType:
+		return m.ServiceType()
+	case sladefinition.FieldPriority:
+		return m.Priority()
+	case sladefinition.FieldImpact:
+		return m.Impact()
+	case sladefinition.FieldResponseTime:
+		return m.ResponseTime()
+	case sladefinition.FieldResolutionTime:
+		return m.ResolutionTime()
+	case sladefinition.FieldBusinessHours:
+		return m.BusinessHours()
+	case sladefinition.FieldHolidays:
+		return m.Holidays()
+	case sladefinition.FieldIsActive:
+		return m.IsActive()
+	case sladefinition.FieldTenantID:
+		return m.TenantID()
+	case sladefinition.FieldCreatedBy:
+		return m.CreatedBy()
+	case sladefinition.FieldCreatedAt:
+		return m.CreatedAt()
+	case sladefinition.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SLADefinitionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case sladefinition.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case sladefinition.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case sladefinition.FieldName:
+		return m.OldName(ctx)
+	case sladefinition.FieldDescription:
+		return m.OldDescription(ctx)
+	case sladefinition.FieldServiceType:
+		return m.OldServiceType(ctx)
+	case sladefinition.FieldPriority:
+		return m.OldPriority(ctx)
+	case sladefinition.FieldImpact:
+		return m.OldImpact(ctx)
+	case sladefinition.FieldResponseTime:
+		return m.OldResponseTime(ctx)
+	case sladefinition.FieldResolutionTime:
+		return m.OldResolutionTime(ctx)
+	case sladefinition.FieldBusinessHours:
+		return m.OldBusinessHours(ctx)
+	case sladefinition.FieldHolidays:
+		return m.OldHolidays(ctx)
+	case sladefinition.FieldIsActive:
+		return m.OldIsActive(ctx)
+	case sladefinition.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case sladefinition.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case sladefinition.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case sladefinition.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SLADefinition field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SLADefinitionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case sladefinition.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case sladefinition.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case sladefinition.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case sladefinition.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case sladefinition.FieldServiceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceType(v)
+		return nil
+	case sladefinition.FieldPriority:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case sladefinition.FieldImpact:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImpact(v)
+		return nil
+	case sladefinition.FieldResponseTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResponseTime(v)
+		return nil
+	case sladefinition.FieldResolutionTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolutionTime(v)
+		return nil
+	case sladefinition.FieldBusinessHours:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBusinessHours(v)
+		return nil
+	case sladefinition.FieldHolidays:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHolidays(v)
+		return nil
+	case sladefinition.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
+		return nil
+	case sladefinition.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case sladefinition.FieldCreatedBy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case sladefinition.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case sladefinition.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SLADefinition field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SLADefinitionMutation) AddedFields() []string {
+	var fields []string
+	if m.addresponse_time != nil {
+		fields = append(fields, sladefinition.FieldResponseTime)
+	}
+	if m.addresolution_time != nil {
+		fields = append(fields, sladefinition.FieldResolutionTime)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, sladefinition.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SLADefinitionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case sladefinition.FieldResponseTime:
+		return m.AddedResponseTime()
+	case sladefinition.FieldResolutionTime:
+		return m.AddedResolutionTime()
+	case sladefinition.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SLADefinitionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case sladefinition.FieldResponseTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResponseTime(v)
+		return nil
+	case sladefinition.FieldResolutionTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResolutionTime(v)
+		return nil
+	case sladefinition.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SLADefinition numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SLADefinitionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(sladefinition.FieldDescription) {
+		fields = append(fields, sladefinition.FieldDescription)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SLADefinitionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SLADefinitionMutation) ClearField(name string) error {
+	switch name {
+	case sladefinition.FieldDescription:
+		m.ClearDescription()
+		return nil
+	}
+	return fmt.Errorf("unknown SLADefinition nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SLADefinitionMutation) ResetField(name string) error {
+	switch name {
+	case sladefinition.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case sladefinition.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case sladefinition.FieldName:
+		m.ResetName()
+		return nil
+	case sladefinition.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case sladefinition.FieldServiceType:
+		m.ResetServiceType()
+		return nil
+	case sladefinition.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case sladefinition.FieldImpact:
+		m.ResetImpact()
+		return nil
+	case sladefinition.FieldResponseTime:
+		m.ResetResponseTime()
+		return nil
+	case sladefinition.FieldResolutionTime:
+		m.ResetResolutionTime()
+		return nil
+	case sladefinition.FieldBusinessHours:
+		m.ResetBusinessHours()
+		return nil
+	case sladefinition.FieldHolidays:
+		m.ResetHolidays()
+		return nil
+	case sladefinition.FieldIsActive:
+		m.ResetIsActive()
+		return nil
+	case sladefinition.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case sladefinition.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case sladefinition.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case sladefinition.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SLADefinition field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SLADefinitionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SLADefinitionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SLADefinitionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SLADefinitionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SLADefinitionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SLADefinitionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SLADefinitionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SLADefinition unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SLADefinitionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SLADefinition edge %s", name)
+}
+
+// SLAMetricsMutation represents an operation that mutates the SLAMetrics nodes in the graph.
+type SLAMetricsMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int
+	create_time             *time.Time
+	update_time             *time.Time
+	service_type            *string
+	priority                *string
+	impact                  *string
+	total_tickets           *int
+	addtotal_tickets        *int
+	met_sla_tickets         *int
+	addmet_sla_tickets      *int
+	violated_sla_tickets    *int
+	addviolated_sla_tickets *int
+	sla_compliance_rate     *float64
+	addsla_compliance_rate  *float64
+	avg_response_time       *float64
+	addavg_response_time    *float64
+	avg_resolution_time     *float64
+	addavg_resolution_time  *float64
+	period                  *string
+	period_start            *time.Time
+	period_end              *time.Time
+	tenant_id               *int
+	addtenant_id            *int
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*SLAMetrics, error)
+	predicates              []predicate.SLAMetrics
+}
+
+var _ ent.Mutation = (*SLAMetricsMutation)(nil)
+
+// slametricsOption allows management of the mutation configuration using functional options.
+type slametricsOption func(*SLAMetricsMutation)
+
+// newSLAMetricsMutation creates new mutation for the SLAMetrics entity.
+func newSLAMetricsMutation(c config, op Op, opts ...slametricsOption) *SLAMetricsMutation {
+	m := &SLAMetricsMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSLAMetrics,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSLAMetricsID sets the ID field of the mutation.
+func withSLAMetricsID(id int) slametricsOption {
+	return func(m *SLAMetricsMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SLAMetrics
+		)
+		m.oldValue = func(ctx context.Context) (*SLAMetrics, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SLAMetrics.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSLAMetrics sets the old SLAMetrics of the mutation.
+func withSLAMetrics(node *SLAMetrics) slametricsOption {
+	return func(m *SLAMetricsMutation) {
+		m.oldValue = func(context.Context) (*SLAMetrics, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SLAMetricsMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SLAMetricsMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SLAMetricsMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SLAMetricsMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SLAMetrics.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *SLAMetricsMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *SLAMetricsMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *SLAMetricsMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *SLAMetricsMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *SLAMetricsMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *SLAMetricsMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetServiceType sets the "service_type" field.
+func (m *SLAMetricsMutation) SetServiceType(s string) {
+	m.service_type = &s
+}
+
+// ServiceType returns the value of the "service_type" field in the mutation.
+func (m *SLAMetricsMutation) ServiceType() (r string, exists bool) {
+	v := m.service_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceType returns the old "service_type" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldServiceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceType: %w", err)
+	}
+	return oldValue.ServiceType, nil
+}
+
+// ResetServiceType resets all changes to the "service_type" field.
+func (m *SLAMetricsMutation) ResetServiceType() {
+	m.service_type = nil
+}
+
+// SetPriority sets the "priority" field.
+func (m *SLAMetricsMutation) SetPriority(s string) {
+	m.priority = &s
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *SLAMetricsMutation) Priority() (r string, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldPriority(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *SLAMetricsMutation) ResetPriority() {
+	m.priority = nil
+}
+
+// SetImpact sets the "impact" field.
+func (m *SLAMetricsMutation) SetImpact(s string) {
+	m.impact = &s
+}
+
+// Impact returns the value of the "impact" field in the mutation.
+func (m *SLAMetricsMutation) Impact() (r string, exists bool) {
+	v := m.impact
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImpact returns the old "impact" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldImpact(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImpact is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImpact requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImpact: %w", err)
+	}
+	return oldValue.Impact, nil
+}
+
+// ResetImpact resets all changes to the "impact" field.
+func (m *SLAMetricsMutation) ResetImpact() {
+	m.impact = nil
+}
+
+// SetTotalTickets sets the "total_tickets" field.
+func (m *SLAMetricsMutation) SetTotalTickets(i int) {
+	m.total_tickets = &i
+	m.addtotal_tickets = nil
+}
+
+// TotalTickets returns the value of the "total_tickets" field in the mutation.
+func (m *SLAMetricsMutation) TotalTickets() (r int, exists bool) {
+	v := m.total_tickets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalTickets returns the old "total_tickets" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldTotalTickets(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalTickets is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalTickets requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalTickets: %w", err)
+	}
+	return oldValue.TotalTickets, nil
+}
+
+// AddTotalTickets adds i to the "total_tickets" field.
+func (m *SLAMetricsMutation) AddTotalTickets(i int) {
+	if m.addtotal_tickets != nil {
+		*m.addtotal_tickets += i
+	} else {
+		m.addtotal_tickets = &i
+	}
+}
+
+// AddedTotalTickets returns the value that was added to the "total_tickets" field in this mutation.
+func (m *SLAMetricsMutation) AddedTotalTickets() (r int, exists bool) {
+	v := m.addtotal_tickets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTotalTickets resets all changes to the "total_tickets" field.
+func (m *SLAMetricsMutation) ResetTotalTickets() {
+	m.total_tickets = nil
+	m.addtotal_tickets = nil
+}
+
+// SetMetSLATickets sets the "met_sla_tickets" field.
+func (m *SLAMetricsMutation) SetMetSLATickets(i int) {
+	m.met_sla_tickets = &i
+	m.addmet_sla_tickets = nil
+}
+
+// MetSLATickets returns the value of the "met_sla_tickets" field in the mutation.
+func (m *SLAMetricsMutation) MetSLATickets() (r int, exists bool) {
+	v := m.met_sla_tickets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetSLATickets returns the old "met_sla_tickets" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldMetSLATickets(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetSLATickets is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetSLATickets requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetSLATickets: %w", err)
+	}
+	return oldValue.MetSLATickets, nil
+}
+
+// AddMetSLATickets adds i to the "met_sla_tickets" field.
+func (m *SLAMetricsMutation) AddMetSLATickets(i int) {
+	if m.addmet_sla_tickets != nil {
+		*m.addmet_sla_tickets += i
+	} else {
+		m.addmet_sla_tickets = &i
+	}
+}
+
+// AddedMetSLATickets returns the value that was added to the "met_sla_tickets" field in this mutation.
+func (m *SLAMetricsMutation) AddedMetSLATickets() (r int, exists bool) {
+	v := m.addmet_sla_tickets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMetSLATickets resets all changes to the "met_sla_tickets" field.
+func (m *SLAMetricsMutation) ResetMetSLATickets() {
+	m.met_sla_tickets = nil
+	m.addmet_sla_tickets = nil
+}
+
+// SetViolatedSLATickets sets the "violated_sla_tickets" field.
+func (m *SLAMetricsMutation) SetViolatedSLATickets(i int) {
+	m.violated_sla_tickets = &i
+	m.addviolated_sla_tickets = nil
+}
+
+// ViolatedSLATickets returns the value of the "violated_sla_tickets" field in the mutation.
+func (m *SLAMetricsMutation) ViolatedSLATickets() (r int, exists bool) {
+	v := m.violated_sla_tickets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViolatedSLATickets returns the old "violated_sla_tickets" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldViolatedSLATickets(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViolatedSLATickets is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViolatedSLATickets requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViolatedSLATickets: %w", err)
+	}
+	return oldValue.ViolatedSLATickets, nil
+}
+
+// AddViolatedSLATickets adds i to the "violated_sla_tickets" field.
+func (m *SLAMetricsMutation) AddViolatedSLATickets(i int) {
+	if m.addviolated_sla_tickets != nil {
+		*m.addviolated_sla_tickets += i
+	} else {
+		m.addviolated_sla_tickets = &i
+	}
+}
+
+// AddedViolatedSLATickets returns the value that was added to the "violated_sla_tickets" field in this mutation.
+func (m *SLAMetricsMutation) AddedViolatedSLATickets() (r int, exists bool) {
+	v := m.addviolated_sla_tickets
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetViolatedSLATickets resets all changes to the "violated_sla_tickets" field.
+func (m *SLAMetricsMutation) ResetViolatedSLATickets() {
+	m.violated_sla_tickets = nil
+	m.addviolated_sla_tickets = nil
+}
+
+// SetSLAComplianceRate sets the "sla_compliance_rate" field.
+func (m *SLAMetricsMutation) SetSLAComplianceRate(f float64) {
+	m.sla_compliance_rate = &f
+	m.addsla_compliance_rate = nil
+}
+
+// SLAComplianceRate returns the value of the "sla_compliance_rate" field in the mutation.
+func (m *SLAMetricsMutation) SLAComplianceRate() (r float64, exists bool) {
+	v := m.sla_compliance_rate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAComplianceRate returns the old "sla_compliance_rate" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldSLAComplianceRate(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAComplianceRate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAComplianceRate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAComplianceRate: %w", err)
+	}
+	return oldValue.SLAComplianceRate, nil
+}
+
+// AddSLAComplianceRate adds f to the "sla_compliance_rate" field.
+func (m *SLAMetricsMutation) AddSLAComplianceRate(f float64) {
+	if m.addsla_compliance_rate != nil {
+		*m.addsla_compliance_rate += f
+	} else {
+		m.addsla_compliance_rate = &f
+	}
+}
+
+// AddedSLAComplianceRate returns the value that was added to the "sla_compliance_rate" field in this mutation.
+func (m *SLAMetricsMutation) AddedSLAComplianceRate() (r float64, exists bool) {
+	v := m.addsla_compliance_rate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSLAComplianceRate resets all changes to the "sla_compliance_rate" field.
+func (m *SLAMetricsMutation) ResetSLAComplianceRate() {
+	m.sla_compliance_rate = nil
+	m.addsla_compliance_rate = nil
+}
+
+// SetAvgResponseTime sets the "avg_response_time" field.
+func (m *SLAMetricsMutation) SetAvgResponseTime(f float64) {
+	m.avg_response_time = &f
+	m.addavg_response_time = nil
+}
+
+// AvgResponseTime returns the value of the "avg_response_time" field in the mutation.
+func (m *SLAMetricsMutation) AvgResponseTime() (r float64, exists bool) {
+	v := m.avg_response_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvgResponseTime returns the old "avg_response_time" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldAvgResponseTime(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAvgResponseTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAvgResponseTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvgResponseTime: %w", err)
+	}
+	return oldValue.AvgResponseTime, nil
+}
+
+// AddAvgResponseTime adds f to the "avg_response_time" field.
+func (m *SLAMetricsMutation) AddAvgResponseTime(f float64) {
+	if m.addavg_response_time != nil {
+		*m.addavg_response_time += f
+	} else {
+		m.addavg_response_time = &f
+	}
+}
+
+// AddedAvgResponseTime returns the value that was added to the "avg_response_time" field in this mutation.
+func (m *SLAMetricsMutation) AddedAvgResponseTime() (r float64, exists bool) {
+	v := m.addavg_response_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAvgResponseTime resets all changes to the "avg_response_time" field.
+func (m *SLAMetricsMutation) ResetAvgResponseTime() {
+	m.avg_response_time = nil
+	m.addavg_response_time = nil
+}
+
+// SetAvgResolutionTime sets the "avg_resolution_time" field.
+func (m *SLAMetricsMutation) SetAvgResolutionTime(f float64) {
+	m.avg_resolution_time = &f
+	m.addavg_resolution_time = nil
+}
+
+// AvgResolutionTime returns the value of the "avg_resolution_time" field in the mutation.
+func (m *SLAMetricsMutation) AvgResolutionTime() (r float64, exists bool) {
+	v := m.avg_resolution_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvgResolutionTime returns the old "avg_resolution_time" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldAvgResolutionTime(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAvgResolutionTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAvgResolutionTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvgResolutionTime: %w", err)
+	}
+	return oldValue.AvgResolutionTime, nil
+}
+
+// AddAvgResolutionTime adds f to the "avg_resolution_time" field.
+func (m *SLAMetricsMutation) AddAvgResolutionTime(f float64) {
+	if m.addavg_resolution_time != nil {
+		*m.addavg_resolution_time += f
+	} else {
+		m.addavg_resolution_time = &f
+	}
+}
+
+// AddedAvgResolutionTime returns the value that was added to the "avg_resolution_time" field in this mutation.
+func (m *SLAMetricsMutation) AddedAvgResolutionTime() (r float64, exists bool) {
+	v := m.addavg_resolution_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAvgResolutionTime resets all changes to the "avg_resolution_time" field.
+func (m *SLAMetricsMutation) ResetAvgResolutionTime() {
+	m.avg_resolution_time = nil
+	m.addavg_resolution_time = nil
+}
+
+// SetPeriod sets the "period" field.
+func (m *SLAMetricsMutation) SetPeriod(s string) {
+	m.period = &s
+}
+
+// Period returns the value of the "period" field in the mutation.
+func (m *SLAMetricsMutation) Period() (r string, exists bool) {
+	v := m.period
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriod returns the old "period" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldPeriod(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriod is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriod requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriod: %w", err)
+	}
+	return oldValue.Period, nil
+}
+
+// ResetPeriod resets all changes to the "period" field.
+func (m *SLAMetricsMutation) ResetPeriod() {
+	m.period = nil
+}
+
+// SetPeriodStart sets the "period_start" field.
+func (m *SLAMetricsMutation) SetPeriodStart(t time.Time) {
+	m.period_start = &t
+}
+
+// PeriodStart returns the value of the "period_start" field in the mutation.
+func (m *SLAMetricsMutation) PeriodStart() (r time.Time, exists bool) {
+	v := m.period_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriodStart returns the old "period_start" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldPeriodStart(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriodStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriodStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriodStart: %w", err)
+	}
+	return oldValue.PeriodStart, nil
+}
+
+// ResetPeriodStart resets all changes to the "period_start" field.
+func (m *SLAMetricsMutation) ResetPeriodStart() {
+	m.period_start = nil
+}
+
+// SetPeriodEnd sets the "period_end" field.
+func (m *SLAMetricsMutation) SetPeriodEnd(t time.Time) {
+	m.period_end = &t
+}
+
+// PeriodEnd returns the value of the "period_end" field in the mutation.
+func (m *SLAMetricsMutation) PeriodEnd() (r time.Time, exists bool) {
+	v := m.period_end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPeriodEnd returns the old "period_end" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldPeriodEnd(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPeriodEnd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPeriodEnd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPeriodEnd: %w", err)
+	}
+	return oldValue.PeriodEnd, nil
+}
+
+// ResetPeriodEnd resets all changes to the "period_end" field.
+func (m *SLAMetricsMutation) ResetPeriodEnd() {
+	m.period_end = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SLAMetricsMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SLAMetricsMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SLAMetricsMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SLAMetricsMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SLAMetricsMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SLAMetricsMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SLAMetricsMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SLAMetricsMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SLAMetricsMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SLAMetricsMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the SLAMetrics entity.
+// If the SLAMetrics object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAMetricsMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SLAMetricsMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the SLAMetricsMutation builder.
+func (m *SLAMetricsMutation) Where(ps ...predicate.SLAMetrics) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SLAMetricsMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SLAMetricsMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SLAMetrics, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SLAMetricsMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SLAMetricsMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SLAMetrics).
+func (m *SLAMetricsMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SLAMetricsMutation) Fields() []string {
+	fields := make([]string, 0, 17)
+	if m.create_time != nil {
+		fields = append(fields, slametrics.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, slametrics.FieldUpdateTime)
+	}
+	if m.service_type != nil {
+		fields = append(fields, slametrics.FieldServiceType)
+	}
+	if m.priority != nil {
+		fields = append(fields, slametrics.FieldPriority)
+	}
+	if m.impact != nil {
+		fields = append(fields, slametrics.FieldImpact)
+	}
+	if m.total_tickets != nil {
+		fields = append(fields, slametrics.FieldTotalTickets)
+	}
+	if m.met_sla_tickets != nil {
+		fields = append(fields, slametrics.FieldMetSLATickets)
+	}
+	if m.violated_sla_tickets != nil {
+		fields = append(fields, slametrics.FieldViolatedSLATickets)
+	}
+	if m.sla_compliance_rate != nil {
+		fields = append(fields, slametrics.FieldSLAComplianceRate)
+	}
+	if m.avg_response_time != nil {
+		fields = append(fields, slametrics.FieldAvgResponseTime)
+	}
+	if m.avg_resolution_time != nil {
+		fields = append(fields, slametrics.FieldAvgResolutionTime)
+	}
+	if m.period != nil {
+		fields = append(fields, slametrics.FieldPeriod)
+	}
+	if m.period_start != nil {
+		fields = append(fields, slametrics.FieldPeriodStart)
+	}
+	if m.period_end != nil {
+		fields = append(fields, slametrics.FieldPeriodEnd)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, slametrics.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, slametrics.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, slametrics.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SLAMetricsMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case slametrics.FieldCreateTime:
+		return m.CreateTime()
+	case slametrics.FieldUpdateTime:
+		return m.UpdateTime()
+	case slametrics.FieldServiceType:
+		return m.ServiceType()
+	case slametrics.FieldPriority:
+		return m.Priority()
+	case slametrics.FieldImpact:
+		return m.Impact()
+	case slametrics.FieldTotalTickets:
+		return m.TotalTickets()
+	case slametrics.FieldMetSLATickets:
+		return m.MetSLATickets()
+	case slametrics.FieldViolatedSLATickets:
+		return m.ViolatedSLATickets()
+	case slametrics.FieldSLAComplianceRate:
+		return m.SLAComplianceRate()
+	case slametrics.FieldAvgResponseTime:
+		return m.AvgResponseTime()
+	case slametrics.FieldAvgResolutionTime:
+		return m.AvgResolutionTime()
+	case slametrics.FieldPeriod:
+		return m.Period()
+	case slametrics.FieldPeriodStart:
+		return m.PeriodStart()
+	case slametrics.FieldPeriodEnd:
+		return m.PeriodEnd()
+	case slametrics.FieldTenantID:
+		return m.TenantID()
+	case slametrics.FieldCreatedAt:
+		return m.CreatedAt()
+	case slametrics.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SLAMetricsMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case slametrics.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case slametrics.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case slametrics.FieldServiceType:
+		return m.OldServiceType(ctx)
+	case slametrics.FieldPriority:
+		return m.OldPriority(ctx)
+	case slametrics.FieldImpact:
+		return m.OldImpact(ctx)
+	case slametrics.FieldTotalTickets:
+		return m.OldTotalTickets(ctx)
+	case slametrics.FieldMetSLATickets:
+		return m.OldMetSLATickets(ctx)
+	case slametrics.FieldViolatedSLATickets:
+		return m.OldViolatedSLATickets(ctx)
+	case slametrics.FieldSLAComplianceRate:
+		return m.OldSLAComplianceRate(ctx)
+	case slametrics.FieldAvgResponseTime:
+		return m.OldAvgResponseTime(ctx)
+	case slametrics.FieldAvgResolutionTime:
+		return m.OldAvgResolutionTime(ctx)
+	case slametrics.FieldPeriod:
+		return m.OldPeriod(ctx)
+	case slametrics.FieldPeriodStart:
+		return m.OldPeriodStart(ctx)
+	case slametrics.FieldPeriodEnd:
+		return m.OldPeriodEnd(ctx)
+	case slametrics.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case slametrics.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case slametrics.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SLAMetrics field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SLAMetricsMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case slametrics.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case slametrics.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case slametrics.FieldServiceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceType(v)
+		return nil
+	case slametrics.FieldPriority:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case slametrics.FieldImpact:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImpact(v)
+		return nil
+	case slametrics.FieldTotalTickets:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalTickets(v)
+		return nil
+	case slametrics.FieldMetSLATickets:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetSLATickets(v)
+		return nil
+	case slametrics.FieldViolatedSLATickets:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViolatedSLATickets(v)
+		return nil
+	case slametrics.FieldSLAComplianceRate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAComplianceRate(v)
+		return nil
+	case slametrics.FieldAvgResponseTime:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvgResponseTime(v)
+		return nil
+	case slametrics.FieldAvgResolutionTime:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvgResolutionTime(v)
+		return nil
+	case slametrics.FieldPeriod:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriod(v)
+		return nil
+	case slametrics.FieldPeriodStart:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriodStart(v)
+		return nil
+	case slametrics.FieldPeriodEnd:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPeriodEnd(v)
+		return nil
+	case slametrics.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case slametrics.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case slametrics.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SLAMetrics field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SLAMetricsMutation) AddedFields() []string {
+	var fields []string
+	if m.addtotal_tickets != nil {
+		fields = append(fields, slametrics.FieldTotalTickets)
+	}
+	if m.addmet_sla_tickets != nil {
+		fields = append(fields, slametrics.FieldMetSLATickets)
+	}
+	if m.addviolated_sla_tickets != nil {
+		fields = append(fields, slametrics.FieldViolatedSLATickets)
+	}
+	if m.addsla_compliance_rate != nil {
+		fields = append(fields, slametrics.FieldSLAComplianceRate)
+	}
+	if m.addavg_response_time != nil {
+		fields = append(fields, slametrics.FieldAvgResponseTime)
+	}
+	if m.addavg_resolution_time != nil {
+		fields = append(fields, slametrics.FieldAvgResolutionTime)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, slametrics.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SLAMetricsMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case slametrics.FieldTotalTickets:
+		return m.AddedTotalTickets()
+	case slametrics.FieldMetSLATickets:
+		return m.AddedMetSLATickets()
+	case slametrics.FieldViolatedSLATickets:
+		return m.AddedViolatedSLATickets()
+	case slametrics.FieldSLAComplianceRate:
+		return m.AddedSLAComplianceRate()
+	case slametrics.FieldAvgResponseTime:
+		return m.AddedAvgResponseTime()
+	case slametrics.FieldAvgResolutionTime:
+		return m.AddedAvgResolutionTime()
+	case slametrics.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SLAMetricsMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case slametrics.FieldTotalTickets:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalTickets(v)
+		return nil
+	case slametrics.FieldMetSLATickets:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMetSLATickets(v)
+		return nil
+	case slametrics.FieldViolatedSLATickets:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddViolatedSLATickets(v)
+		return nil
+	case slametrics.FieldSLAComplianceRate:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSLAComplianceRate(v)
+		return nil
+	case slametrics.FieldAvgResponseTime:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAvgResponseTime(v)
+		return nil
+	case slametrics.FieldAvgResolutionTime:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAvgResolutionTime(v)
+		return nil
+	case slametrics.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SLAMetrics numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SLAMetricsMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SLAMetricsMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SLAMetricsMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown SLAMetrics nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SLAMetricsMutation) ResetField(name string) error {
+	switch name {
+	case slametrics.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case slametrics.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case slametrics.FieldServiceType:
+		m.ResetServiceType()
+		return nil
+	case slametrics.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case slametrics.FieldImpact:
+		m.ResetImpact()
+		return nil
+	case slametrics.FieldTotalTickets:
+		m.ResetTotalTickets()
+		return nil
+	case slametrics.FieldMetSLATickets:
+		m.ResetMetSLATickets()
+		return nil
+	case slametrics.FieldViolatedSLATickets:
+		m.ResetViolatedSLATickets()
+		return nil
+	case slametrics.FieldSLAComplianceRate:
+		m.ResetSLAComplianceRate()
+		return nil
+	case slametrics.FieldAvgResponseTime:
+		m.ResetAvgResponseTime()
+		return nil
+	case slametrics.FieldAvgResolutionTime:
+		m.ResetAvgResolutionTime()
+		return nil
+	case slametrics.FieldPeriod:
+		m.ResetPeriod()
+		return nil
+	case slametrics.FieldPeriodStart:
+		m.ResetPeriodStart()
+		return nil
+	case slametrics.FieldPeriodEnd:
+		m.ResetPeriodEnd()
+		return nil
+	case slametrics.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case slametrics.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case slametrics.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SLAMetrics field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SLAMetricsMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SLAMetricsMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SLAMetricsMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SLAMetricsMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SLAMetricsMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SLAMetricsMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SLAMetricsMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SLAMetrics unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SLAMetricsMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SLAMetrics edge %s", name)
+}
+
+// SLAViolationMutation represents an operation that mutates the SLAViolation nodes in the graph.
+type SLAViolationMutation struct {
+	config
+	op                    Op
+	typ                   string
+	id                    *int
+	create_time           *time.Time
+	update_time           *time.Time
+	ticket_id             *int
+	addticket_id          *int
+	ticket_type           *string
+	violation_type        *string
+	sla_definition_id     *int
+	addsla_definition_id  *int
+	sla_name              *string
+	expected_time         *int
+	addexpected_time      *int
+	actual_time           *int
+	addactual_time        *int
+	overdue_minutes       *int
+	addoverdue_minutes    *int
+	status                *string
+	assigned_to           *string
+	violation_occurred_at *time.Time
+	resolved_at           *time.Time
+	resolution_note       *string
+	tenant_id             *int
+	addtenant_id          *int
+	created_by            *string
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	done                  bool
+	oldValue              func(context.Context) (*SLAViolation, error)
+	predicates            []predicate.SLAViolation
+}
+
+var _ ent.Mutation = (*SLAViolationMutation)(nil)
+
+// slaviolationOption allows management of the mutation configuration using functional options.
+type slaviolationOption func(*SLAViolationMutation)
+
+// newSLAViolationMutation creates new mutation for the SLAViolation entity.
+func newSLAViolationMutation(c config, op Op, opts ...slaviolationOption) *SLAViolationMutation {
+	m := &SLAViolationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSLAViolation,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSLAViolationID sets the ID field of the mutation.
+func withSLAViolationID(id int) slaviolationOption {
+	return func(m *SLAViolationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SLAViolation
+		)
+		m.oldValue = func(ctx context.Context) (*SLAViolation, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SLAViolation.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSLAViolation sets the old SLAViolation of the mutation.
+func withSLAViolation(node *SLAViolation) slaviolationOption {
+	return func(m *SLAViolationMutation) {
+		m.oldValue = func(context.Context) (*SLAViolation, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SLAViolationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SLAViolationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SLAViolationMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SLAViolationMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SLAViolation.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *SLAViolationMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *SLAViolationMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *SLAViolationMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *SLAViolationMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *SLAViolationMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *SLAViolationMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetTicketID sets the "ticket_id" field.
+func (m *SLAViolationMutation) SetTicketID(i int) {
+	m.ticket_id = &i
+	m.addticket_id = nil
+}
+
+// TicketID returns the value of the "ticket_id" field in the mutation.
+func (m *SLAViolationMutation) TicketID() (r int, exists bool) {
+	v := m.ticket_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketID returns the old "ticket_id" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldTicketID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketID: %w", err)
+	}
+	return oldValue.TicketID, nil
+}
+
+// AddTicketID adds i to the "ticket_id" field.
+func (m *SLAViolationMutation) AddTicketID(i int) {
+	if m.addticket_id != nil {
+		*m.addticket_id += i
+	} else {
+		m.addticket_id = &i
+	}
+}
+
+// AddedTicketID returns the value that was added to the "ticket_id" field in this mutation.
+func (m *SLAViolationMutation) AddedTicketID() (r int, exists bool) {
+	v := m.addticket_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTicketID resets all changes to the "ticket_id" field.
+func (m *SLAViolationMutation) ResetTicketID() {
+	m.ticket_id = nil
+	m.addticket_id = nil
+}
+
+// SetTicketType sets the "ticket_type" field.
+func (m *SLAViolationMutation) SetTicketType(s string) {
+	m.ticket_type = &s
+}
+
+// TicketType returns the value of the "ticket_type" field in the mutation.
+func (m *SLAViolationMutation) TicketType() (r string, exists bool) {
+	v := m.ticket_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketType returns the old "ticket_type" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldTicketType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketType: %w", err)
+	}
+	return oldValue.TicketType, nil
+}
+
+// ResetTicketType resets all changes to the "ticket_type" field.
+func (m *SLAViolationMutation) ResetTicketType() {
+	m.ticket_type = nil
+}
+
+// SetViolationType sets the "violation_type" field.
+func (m *SLAViolationMutation) SetViolationType(s string) {
+	m.violation_type = &s
+}
+
+// ViolationType returns the value of the "violation_type" field in the mutation.
+func (m *SLAViolationMutation) ViolationType() (r string, exists bool) {
+	v := m.violation_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViolationType returns the old "violation_type" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldViolationType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViolationType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViolationType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViolationType: %w", err)
+	}
+	return oldValue.ViolationType, nil
+}
+
+// ResetViolationType resets all changes to the "violation_type" field.
+func (m *SLAViolationMutation) ResetViolationType() {
+	m.violation_type = nil
+}
+
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (m *SLAViolationMutation) SetSLADefinitionID(i int) {
+	m.sla_definition_id = &i
+	m.addsla_definition_id = nil
+}
+
+// SLADefinitionID returns the value of the "sla_definition_id" field in the mutation.
+func (m *SLAViolationMutation) SLADefinitionID() (r int, exists bool) {
+	v := m.sla_definition_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLADefinitionID returns the old "sla_definition_id" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldSLADefinitionID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLADefinitionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLADefinitionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLADefinitionID: %w", err)
+	}
+	return oldValue.SLADefinitionID, nil
+}
+
+// AddSLADefinitionID adds i to the "sla_definition_id" field.
+func (m *SLAViolationMutation) AddSLADefinitionID(i int) {
+	if m.addsla_definition_id != nil {
+		*m.addsla_definition_id += i
+	} else {
+		m.addsla_definition_id = &i
+	}
+}
+
+// AddedSLADefinitionID returns the value that was added to the "sla_definition_id" field in this mutation.
+func (m *SLAViolationMutation) AddedSLADefinitionID() (r int, exists bool) {
+	v := m.addsla_definition_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSLADefinitionID resets all changes to the "sla_definition_id" field.
+func (m *SLAViolationMutation) ResetSLADefinitionID() {
+	m.sla_definition_id = nil
+	m.addsla_definition_id = nil
+}
+
+// SetSLAName sets the "sla_name" field.
+func (m *SLAViolationMutation) SetSLAName(s string) {
+	m.sla_name = &s
+}
+
+// SLAName returns the value of the "sla_name" field in the mutation.
+func (m *SLAViolationMutation) SLAName() (r string, exists bool) {
+	v := m.sla_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAName returns the old "sla_name" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldSLAName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAName: %w", err)
+	}
+	return oldValue.SLAName, nil
+}
+
+// ResetSLAName resets all changes to the "sla_name" field.
+func (m *SLAViolationMutation) ResetSLAName() {
+	m.sla_name = nil
+}
+
+// SetExpectedTime sets the "expected_time" field.
+func (m *SLAViolationMutation) SetExpectedTime(i int) {
+	m.expected_time = &i
+	m.addexpected_time = nil
+}
+
+// ExpectedTime returns the value of the "expected_time" field in the mutation.
+func (m *SLAViolationMutation) ExpectedTime() (r int, exists bool) {
+	v := m.expected_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedTime returns the old "expected_time" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldExpectedTime(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedTime: %w", err)
+	}
+	return oldValue.ExpectedTime, nil
+}
+
+// AddExpectedTime adds i to the "expected_time" field.
+func (m *SLAViolationMutation) AddExpectedTime(i int) {
+	if m.addexpected_time != nil {
+		*m.addexpected_time += i
+	} else {
+		m.addexpected_time = &i
+	}
+}
+
+// AddedExpectedTime returns the value that was added to the "expected_time" field in this mutation.
+func (m *SLAViolationMutation) AddedExpectedTime() (r int, exists bool) {
+	v := m.addexpected_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetExpectedTime resets all changes to the "expected_time" field.
+func (m *SLAViolationMutation) ResetExpectedTime() {
+	m.expected_time = nil
+	m.addexpected_time = nil
+}
+
+// SetActualTime sets the "actual_time" field.
+func (m *SLAViolationMutation) SetActualTime(i int) {
+	m.actual_time = &i
+	m.addactual_time = nil
+}
+
+// ActualTime returns the value of the "actual_time" field in the mutation.
+func (m *SLAViolationMutation) ActualTime() (r int, exists bool) {
+	v := m.actual_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActualTime returns the old "actual_time" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldActualTime(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActualTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActualTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActualTime: %w", err)
+	}
+	return oldValue.ActualTime, nil
+}
+
+// AddActualTime adds i to the "actual_time" field.
+func (m *SLAViolationMutation) AddActualTime(i int) {
+	if m.addactual_time != nil {
+		*m.addactual_time += i
+	} else {
+		m.addactual_time = &i
+	}
+}
+
+// AddedActualTime returns the value that was added to the "actual_time" field in this mutation.
+func (m *SLAViolationMutation) AddedActualTime() (r int, exists bool) {
+	v := m.addactual_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetActualTime resets all changes to the "actual_time" field.
+func (m *SLAViolationMutation) ResetActualTime() {
+	m.actual_time = nil
+	m.addactual_time = nil
+}
+
+// SetOverdueMinutes sets the "overdue_minutes" field.
+func (m *SLAViolationMutation) SetOverdueMinutes(i int) {
+	m.overdue_minutes = &i
+	m.addoverdue_minutes = nil
+}
+
+// OverdueMinutes returns the value of the "overdue_minutes" field in the mutation.
+func (m *SLAViolationMutation) OverdueMinutes() (r int, exists bool) {
+	v := m.overdue_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOverdueMinutes returns the old "overdue_minutes" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldOverdueMinutes(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOverdueMinutes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOverdueMinutes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOverdueMinutes: %w", err)
+	}
+	return oldValue.OverdueMinutes, nil
+}
+
+// AddOverdueMinutes adds i to the "overdue_minutes" field.
+func (m *SLAViolationMutation) AddOverdueMinutes(i int) {
+	if m.addoverdue_minutes != nil {
+		*m.addoverdue_minutes += i
+	} else {
+		m.addoverdue_minutes = &i
+	}
+}
+
+// AddedOverdueMinutes returns the value that was added to the "overdue_minutes" field in this mutation.
+func (m *SLAViolationMutation) AddedOverdueMinutes() (r int, exists bool) {
+	v := m.addoverdue_minutes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOverdueMinutes resets all changes to the "overdue_minutes" field.
+func (m *SLAViolationMutation) ResetOverdueMinutes() {
+	m.overdue_minutes = nil
+	m.addoverdue_minutes = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *SLAViolationMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *SLAViolationMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *SLAViolationMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAssignedTo sets the "assigned_to" field.
+func (m *SLAViolationMutation) SetAssignedTo(s string) {
+	m.assigned_to = &s
+}
+
+// AssignedTo returns the value of the "assigned_to" field in the mutation.
+func (m *SLAViolationMutation) AssignedTo() (r string, exists bool) {
+	v := m.assigned_to
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAssignedTo returns the old "assigned_to" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldAssignedTo(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAssignedTo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAssignedTo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAssignedTo: %w", err)
+	}
+	return oldValue.AssignedTo, nil
+}
+
+// ClearAssignedTo clears the value of the "assigned_to" field.
+func (m *SLAViolationMutation) ClearAssignedTo() {
+	m.assigned_to = nil
+	m.clearedFields[slaviolation.FieldAssignedTo] = struct{}{}
+}
+
+// AssignedToCleared returns if the "assigned_to" field was cleared in this mutation.
+func (m *SLAViolationMutation) AssignedToCleared() bool {
+	_, ok := m.clearedFields[slaviolation.FieldAssignedTo]
+	return ok
+}
+
+// ResetAssignedTo resets all changes to the "assigned_to" field.
+func (m *SLAViolationMutation) ResetAssignedTo() {
+	m.assigned_to = nil
+	delete(m.clearedFields, slaviolation.FieldAssignedTo)
+}
+
+// SetViolationOccurredAt sets the "violation_occurred_at" field.
+func (m *SLAViolationMutation) SetViolationOccurredAt(t time.Time) {
+	m.violation_occurred_at = &t
+}
+
+// ViolationOccurredAt returns the value of the "violation_occurred_at" field in the mutation.
+func (m *SLAViolationMutation) ViolationOccurredAt() (r time.Time, exists bool) {
+	v := m.violation_occurred_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViolationOccurredAt returns the old "violation_occurred_at" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldViolationOccurredAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViolationOccurredAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViolationOccurredAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViolationOccurredAt: %w", err)
+	}
+	return oldValue.ViolationOccurredAt, nil
+}
+
+// ResetViolationOccurredAt resets all changes to the "violation_occurred_at" field.
+func (m *SLAViolationMutation) ResetViolationOccurredAt() {
+	m.violation_occurred_at = nil
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (m *SLAViolationMutation) SetResolvedAt(t time.Time) {
+	m.resolved_at = &t
+}
+
+// ResolvedAt returns the value of the "resolved_at" field in the mutation.
+func (m *SLAViolationMutation) ResolvedAt() (r time.Time, exists bool) {
+	v := m.resolved_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolvedAt returns the old "resolved_at" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldResolvedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolvedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolvedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolvedAt: %w", err)
+	}
+	return oldValue.ResolvedAt, nil
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (m *SLAViolationMutation) ClearResolvedAt() {
+	m.resolved_at = nil
+	m.clearedFields[slaviolation.FieldResolvedAt] = struct{}{}
+}
+
+// ResolvedAtCleared returns if the "resolved_at" field was cleared in this mutation.
+func (m *SLAViolationMutation) ResolvedAtCleared() bool {
+	_, ok := m.clearedFields[slaviolation.FieldResolvedAt]
+	return ok
+}
+
+// ResetResolvedAt resets all changes to the "resolved_at" field.
+func (m *SLAViolationMutation) ResetResolvedAt() {
+	m.resolved_at = nil
+	delete(m.clearedFields, slaviolation.FieldResolvedAt)
+}
+
+// SetResolutionNote sets the "resolution_note" field.
+func (m *SLAViolationMutation) SetResolutionNote(s string) {
+	m.resolution_note = &s
+}
+
+// ResolutionNote returns the value of the "resolution_note" field in the mutation.
+func (m *SLAViolationMutation) ResolutionNote() (r string, exists bool) {
+	v := m.resolution_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolutionNote returns the old "resolution_note" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldResolutionNote(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolutionNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolutionNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolutionNote: %w", err)
+	}
+	return oldValue.ResolutionNote, nil
+}
+
+// ClearResolutionNote clears the value of the "resolution_note" field.
+func (m *SLAViolationMutation) ClearResolutionNote() {
+	m.resolution_note = nil
+	m.clearedFields[slaviolation.FieldResolutionNote] = struct{}{}
+}
+
+// ResolutionNoteCleared returns if the "resolution_note" field was cleared in this mutation.
+func (m *SLAViolationMutation) ResolutionNoteCleared() bool {
+	_, ok := m.clearedFields[slaviolation.FieldResolutionNote]
+	return ok
+}
+
+// ResetResolutionNote resets all changes to the "resolution_note" field.
+func (m *SLAViolationMutation) ResetResolutionNote() {
+	m.resolution_note = nil
+	delete(m.clearedFields, slaviolation.FieldResolutionNote)
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SLAViolationMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SLAViolationMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SLAViolationMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SLAViolationMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SLAViolationMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *SLAViolationMutation) SetCreatedBy(s string) {
+	m.created_by = &s
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *SLAViolationMutation) CreatedBy() (r string, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldCreatedBy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *SLAViolationMutation) ResetCreatedBy() {
+	m.created_by = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SLAViolationMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SLAViolationMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SLAViolationMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SLAViolationMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SLAViolationMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SLAViolationMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the SLAViolationMutation builder.
+func (m *SLAViolationMutation) Where(ps ...predicate.SLAViolation) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SLAViolationMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SLAViolationMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SLAViolation, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SLAViolationMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SLAViolationMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SLAViolation).
+func (m *SLAViolationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SLAViolationMutation) Fields() []string {
+	fields := make([]string, 0, 19)
+	if m.create_time != nil {
+		fields = append(fields, slaviolation.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, slaviolation.FieldUpdateTime)
+	}
+	if m.ticket_id != nil {
+		fields = append(fields, slaviolation.FieldTicketID)
+	}
+	if m.ticket_type != nil {
+		fields = append(fields, slaviolation.FieldTicketType)
+	}
+	if m.violation_type != nil {
+		fields = append(fields, slaviolation.FieldViolationType)
+	}
+	if m.sla_definition_id != nil {
+		fields = append(fields, slaviolation.FieldSLADefinitionID)
+	}
+	if m.sla_name != nil {
+		fields = append(fields, slaviolation.FieldSLAName)
+	}
+	if m.expected_time != nil {
+		fields = append(fields, slaviolation.FieldExpectedTime)
+	}
+	if m.actual_time != nil {
+		fields = append(fields, slaviolation.FieldActualTime)
+	}
+	if m.overdue_minutes != nil {
+		fields = append(fields, slaviolation.FieldOverdueMinutes)
+	}
+	if m.status != nil {
+		fields = append(fields, slaviolation.FieldStatus)
+	}
+	if m.assigned_to != nil {
+		fields = append(fields, slaviolation.FieldAssignedTo)
+	}
+	if m.violation_occurred_at != nil {
+		fields = append(fields, slaviolation.FieldViolationOccurredAt)
+	}
+	if m.resolved_at != nil {
+		fields = append(fields, slaviolation.FieldResolvedAt)
+	}
+	if m.resolution_note != nil {
+		fields = append(fields, slaviolation.FieldResolutionNote)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, slaviolation.FieldTenantID)
+	}
+	if m.created_by != nil {
+		fields = append(fields, slaviolation.FieldCreatedBy)
+	}
+	if m.created_at != nil {
+		fields = append(fields, slaviolation.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, slaviolation.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SLAViolationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case slaviolation.FieldCreateTime:
+		return m.CreateTime()
+	case slaviolation.FieldUpdateTime:
+		return m.UpdateTime()
+	case slaviolation.FieldTicketID:
+		return m.TicketID()
+	case slaviolation.FieldTicketType:
+		return m.TicketType()
+	case slaviolation.FieldViolationType:
+		return m.ViolationType()
+	case slaviolation.FieldSLADefinitionID:
+		return m.SLADefinitionID()
+	case slaviolation.FieldSLAName:
+		return m.SLAName()
+	case slaviolation.FieldExpectedTime:
+		return m.ExpectedTime()
+	case slaviolation.FieldActualTime:
+		return m.ActualTime()
+	case slaviolation.FieldOverdueMinutes:
+		return m.OverdueMinutes()
+	case slaviolation.FieldStatus:
+		return m.Status()
+	case slaviolation.FieldAssignedTo:
+		return m.AssignedTo()
+	case slaviolation.FieldViolationOccurredAt:
+		return m.ViolationOccurredAt()
+	case slaviolation.FieldResolvedAt:
+		return m.ResolvedAt()
+	case slaviolation.FieldResolutionNote:
+		return m.ResolutionNote()
+	case slaviolation.FieldTenantID:
+		return m.TenantID()
+	case slaviolation.FieldCreatedBy:
+		return m.CreatedBy()
+	case slaviolation.FieldCreatedAt:
+		return m.CreatedAt()
+	case slaviolation.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SLAViolationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case slaviolation.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case slaviolation.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case slaviolation.FieldTicketID:
+		return m.OldTicketID(ctx)
+	case slaviolation.FieldTicketType:
+		return m.OldTicketType(ctx)
+	case slaviolation.FieldViolationType:
+		return m.OldViolationType(ctx)
+	case slaviolation.FieldSLADefinitionID:
+		return m.OldSLADefinitionID(ctx)
+	case slaviolation.FieldSLAName:
+		return m.OldSLAName(ctx)
+	case slaviolation.FieldExpectedTime:
+		return m.OldExpectedTime(ctx)
+	case slaviolation.FieldActualTime:
+		return m.OldActualTime(ctx)
+	case slaviolation.FieldOverdueMinutes:
+		return m.OldOverdueMinutes(ctx)
+	case slaviolation.FieldStatus:
+		return m.OldStatus(ctx)
+	case slaviolation.FieldAssignedTo:
+		return m.OldAssignedTo(ctx)
+	case slaviolation.FieldViolationOccurredAt:
+		return m.OldViolationOccurredAt(ctx)
+	case slaviolation.FieldResolvedAt:
+		return m.OldResolvedAt(ctx)
+	case slaviolation.FieldResolutionNote:
+		return m.OldResolutionNote(ctx)
+	case slaviolation.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case slaviolation.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case slaviolation.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case slaviolation.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SLAViolation field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SLAViolationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case slaviolation.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case slaviolation.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case slaviolation.FieldTicketID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketID(v)
+		return nil
+	case slaviolation.FieldTicketType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketType(v)
+		return nil
+	case slaviolation.FieldViolationType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViolationType(v)
+		return nil
+	case slaviolation.FieldSLADefinitionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLADefinitionID(v)
+		return nil
+	case slaviolation.FieldSLAName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAName(v)
+		return nil
+	case slaviolation.FieldExpectedTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedTime(v)
+		return nil
+	case slaviolation.FieldActualTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActualTime(v)
+		return nil
+	case slaviolation.FieldOverdueMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOverdueMinutes(v)
+		return nil
+	case slaviolation.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case slaviolation.FieldAssignedTo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAssignedTo(v)
+		return nil
+	case slaviolation.FieldViolationOccurredAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViolationOccurredAt(v)
+		return nil
+	case slaviolation.FieldResolvedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolvedAt(v)
+		return nil
+	case slaviolation.FieldResolutionNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolutionNote(v)
+		return nil
+	case slaviolation.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case slaviolation.FieldCreatedBy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case slaviolation.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case slaviolation.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SLAViolation field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SLAViolationMutation) AddedFields() []string {
+	var fields []string
+	if m.addticket_id != nil {
+		fields = append(fields, slaviolation.FieldTicketID)
+	}
+	if m.addsla_definition_id != nil {
+		fields = append(fields, slaviolation.FieldSLADefinitionID)
+	}
+	if m.addexpected_time != nil {
+		fields = append(fields, slaviolation.FieldExpectedTime)
+	}
+	if m.addactual_time != nil {
+		fields = append(fields, slaviolation.FieldActualTime)
+	}
+	if m.addoverdue_minutes != nil {
+		fields = append(fields, slaviolation.FieldOverdueMinutes)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, slaviolation.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SLAViolationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case slaviolation.FieldTicketID:
+		return m.AddedTicketID()
+	case slaviolation.FieldSLADefinitionID:
+		return m.AddedSLADefinitionID()
+	case slaviolation.FieldExpectedTime:
+		return m.AddedExpectedTime()
+	case slaviolation.FieldActualTime:
+		return m.AddedActualTime()
+	case slaviolation.FieldOverdueMinutes:
+		return m.AddedOverdueMinutes()
+	case slaviolation.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SLAViolationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case slaviolation.FieldTicketID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTicketID(v)
+		return nil
+	case slaviolation.FieldSLADefinitionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSLADefinitionID(v)
+		return nil
+	case slaviolation.FieldExpectedTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddExpectedTime(v)
+		return nil
+	case slaviolation.FieldActualTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActualTime(v)
+		return nil
+	case slaviolation.FieldOverdueMinutes:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOverdueMinutes(v)
+		return nil
+	case slaviolation.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SLAViolation numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SLAViolationMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(slaviolation.FieldAssignedTo) {
+		fields = append(fields, slaviolation.FieldAssignedTo)
+	}
+	if m.FieldCleared(slaviolation.FieldResolvedAt) {
+		fields = append(fields, slaviolation.FieldResolvedAt)
+	}
+	if m.FieldCleared(slaviolation.FieldResolutionNote) {
+		fields = append(fields, slaviolation.FieldResolutionNote)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SLAViolationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SLAViolationMutation) ClearField(name string) error {
+	switch name {
+	case slaviolation.FieldAssignedTo:
+		m.ClearAssignedTo()
+		return nil
+	case slaviolation.FieldResolvedAt:
+		m.ClearResolvedAt()
+		return nil
+	case slaviolation.FieldResolutionNote:
+		m.ClearResolutionNote()
+		return nil
+	}
+	return fmt.Errorf("unknown SLAViolation nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SLAViolationMutation) ResetField(name string) error {
+	switch name {
+	case slaviolation.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case slaviolation.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case slaviolation.FieldTicketID:
+		m.ResetTicketID()
+		return nil
+	case slaviolation.FieldTicketType:
+		m.ResetTicketType()
+		return nil
+	case slaviolation.FieldViolationType:
+		m.ResetViolationType()
+		return nil
+	case slaviolation.FieldSLADefinitionID:
+		m.ResetSLADefinitionID()
+		return nil
+	case slaviolation.FieldSLAName:
+		m.ResetSLAName()
+		return nil
+	case slaviolation.FieldExpectedTime:
+		m.ResetExpectedTime()
+		return nil
+	case slaviolation.FieldActualTime:
+		m.ResetActualTime()
+		return nil
+	case slaviolation.FieldOverdueMinutes:
+		m.ResetOverdueMinutes()
+		return nil
+	case slaviolation.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case slaviolation.FieldAssignedTo:
+		m.ResetAssignedTo()
+		return nil
+	case slaviolation.FieldViolationOccurredAt:
+		m.ResetViolationOccurredAt()
+		return nil
+	case slaviolation.FieldResolvedAt:
+		m.ResetResolvedAt()
+		return nil
+	case slaviolation.FieldResolutionNote:
+		m.ResetResolutionNote()
+		return nil
+	case slaviolation.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case slaviolation.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case slaviolation.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case slaviolation.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SLAViolation field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SLAViolationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SLAViolationMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SLAViolationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SLAViolationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SLAViolationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SLAViolationMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SLAViolationMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SLAViolation unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SLAViolationMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SLAViolation edge %s", name)
 }
 
 // ServiceCatalogMutation represents an operation that mutates the ServiceCatalog nodes in the graph.

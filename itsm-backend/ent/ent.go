@@ -19,6 +19,9 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametrics"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/statuslog"
 	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
@@ -102,6 +105,9 @@ func checkColumn(table, column string) error {
 			flowinstance.Table:          flowinstance.ValidColumn,
 			incident.Table:              incident.ValidColumn,
 			knowledgearticle.Table:      knowledgearticle.ValidColumn,
+			sladefinition.Table:         sladefinition.ValidColumn,
+			slametrics.Table:            slametrics.ValidColumn,
+			slaviolation.Table:          slaviolation.ValidColumn,
 			servicecatalog.Table:        servicecatalog.ValidColumn,
 			servicerequest.Table:        servicerequest.ValidColumn,
 			statuslog.Table:             statuslog.ValidColumn,

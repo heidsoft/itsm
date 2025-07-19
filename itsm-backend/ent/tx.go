@@ -34,6 +34,12 @@ type Tx struct {
 	Incident *IncidentClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
+	// SLADefinition is the client for interacting with the SLADefinition builders.
+	SLADefinition *SLADefinitionClient
+	// SLAMetrics is the client for interacting with the SLAMetrics builders.
+	SLAMetrics *SLAMetricsClient
+	// SLAViolation is the client for interacting with the SLAViolation builders.
+	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
@@ -192,6 +198,9 @@ func (tx *Tx) init() {
 	tx.FlowInstance = NewFlowInstanceClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
+	tx.SLADefinition = NewSLADefinitionClient(tx.config)
+	tx.SLAMetrics = NewSLAMetricsClient(tx.config)
+	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.StatusLog = NewStatusLogClient(tx.config)

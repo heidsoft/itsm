@@ -13,15 +13,15 @@ interface FormFieldProps {
     | "file";
   label: string;
   name: string;
-  value: any;
-  onChange: (value: any) => void;
-  options?: Array<{ label: string; value: any }>;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  options?: Array<{ label: string; value: unknown }>;
   validation?: {
     required?: boolean;
     pattern?: RegExp;
     minLength?: number;
     maxLength?: number;
-    custom?: (value: any) => string | null;
+    custom?: (value: unknown) => string | null;
   };
   placeholder?: string;
   disabled?: boolean;
@@ -42,7 +42,7 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   const [error, setError] = React.useState<string | null>(null);
 
-  const validateField = (val: any) => {
+  const validateField = (val: unknown) => {
     if (!validation) return null;
 
     if (validation.required && (!val || val.toString().trim() === "")) {
@@ -60,7 +60,7 @@ export const FormField: React.FC<FormFieldProps> = ({
     return null;
   };
 
-  const handleChange = (newValue: any) => {
+  const handleChange = (newValue: unknown) => {
     const validationError = validateField(newValue);
     setError(validationError);
     onChange(newValue);

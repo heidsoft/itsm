@@ -1,18 +1,12 @@
 "use client";
 
+import { Plus, CheckCircle, Clock, Search, XCircle, AlertTriangle } from 'lucide-react';
+
 import React, { useState, useEffect } from "react";
 import { TicketApi } from "../lib/ticket-api";
 import { AuthService } from "../lib/auth-service"; // 添加这行
 import { Ticket, TicketListResponse } from "../lib/api-config";
-import {
-  AlertTriangle,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Search,
-  Filter,
-} from "lucide-react";
+import  from 'lucide-react';
 import Link from "next/link";
 
 const TicketsPage: React.FC = () => {
@@ -43,11 +37,11 @@ const TicketsPage: React.FC = () => {
 
       const response = await TicketApi.getTickets(params);
 
-      if (response.code === 0) {
-        setTickets(response.data.tickets);
-        setTotal(response.data.total);
+      if (response && response.tickets) {
+        setTickets(response.tickets);
+        setTotal(response.total);
       } else {
-        setError(response.message || "获取工单列表失败");
+        setError("获取工单列表失败");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "网络错误");

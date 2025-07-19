@@ -1,3 +1,6 @@
+//go:build create_user
+// +build create_user
+
 package main
 
 import (

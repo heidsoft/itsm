@@ -1,9 +1,11 @@
 
 'use client';
 
+import { Search, Filter, PlusCircle } from 'lucide-react';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Search, Filter, PlusCircle } from 'lucide-react';
+import  from 'lucide-react';
 
 // 模拟知识文章数据
 const mockArticles = [
