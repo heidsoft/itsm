@@ -1,6 +1,17 @@
 "use client";
 
-import { Search, Filter, Calendar, FileText, RefreshCw, ChevronRight, FileText } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Calendar,
+  FileText,
+  RefreshCw,
+  ChevronRight,
+  Clock,
+  Hourglass,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";

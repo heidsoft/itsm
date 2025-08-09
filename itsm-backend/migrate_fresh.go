@@ -10,7 +10,6 @@ import (
 	"itsm-backend/config"
 	"itsm-backend/database"
 	"itsm-backend/ent"
-	"itsm-backend/ent/tenant"
 	"log"
 	"time"
 
@@ -85,16 +84,8 @@ func createDefaultTenant(ctx context.Context, client *ent.Client) (*ent.Tenant, 
 		SetName("Default Tenant").
 		SetCode("default").
 		SetDomain("localhost").
-		SetStatus(tenant.StatusActive).
-		SetType(tenant.TypeEnterprise).
-		SetSettings(map[string]interface{}{
-			"max_users":   1000,
-			"max_tickets": 10000,
-		}).
-		SetQuota(map[string]interface{}{
-			"storage":   "10GB",
-			"bandwidth": "100GB",
-		}).
+		SetStatus("active").
+		SetType("enterprise").
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)

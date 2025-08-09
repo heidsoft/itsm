@@ -6,13 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/approvallog"
-	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
 
@@ -146,6 +140,7 @@ func (uu *UserUpdate) SetNillableActive(b *bool) *UserUpdate {
 
 // SetTenantID sets the "tenant_id" field.
 func (uu *UserUpdate) SetTenantID(i int) *UserUpdate {
+	uu.mutation.ResetTenantID()
 	uu.mutation.SetTenantID(i)
 	return uu
 }
@@ -158,278 +153,35 @@ func (uu *UserUpdate) SetNillableTenantID(i *int) *UserUpdate {
 	return uu
 }
 
+// AddTenantID adds i to the "tenant_id" field.
+func (uu *UserUpdate) AddTenantID(i int) *UserUpdate {
+	uu.mutation.AddTenantID(i)
+	return uu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (uu *UserUpdate) SetCreatedAt(t time.Time) *UserUpdate {
+	uu.mutation.SetCreatedAt(t)
+	return uu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableCreatedAt(t *time.Time) *UserUpdate {
+	if t != nil {
+		uu.SetCreatedAt(*t)
+	}
+	return uu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (uu *UserUpdate) SetUpdatedAt(t time.Time) *UserUpdate {
 	uu.mutation.SetUpdatedAt(t)
 	return uu
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (uu *UserUpdate) SetTenant(t *Tenant) *UserUpdate {
-	return uu.SetTenantID(t.ID)
-}
-
-// AddSubmittedTicketIDs adds the "submitted_tickets" edge to the Ticket entity by IDs.
-func (uu *UserUpdate) AddSubmittedTicketIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddSubmittedTicketIDs(ids...)
-	return uu
-}
-
-// AddSubmittedTickets adds the "submitted_tickets" edges to the Ticket entity.
-func (uu *UserUpdate) AddSubmittedTickets(t ...*Ticket) *UserUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.AddSubmittedTicketIDs(ids...)
-}
-
-// AddAssignedTicketIDs adds the "assigned_tickets" edge to the Ticket entity by IDs.
-func (uu *UserUpdate) AddAssignedTicketIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddAssignedTicketIDs(ids...)
-	return uu
-}
-
-// AddAssignedTickets adds the "assigned_tickets" edges to the Ticket entity.
-func (uu *UserUpdate) AddAssignedTickets(t ...*Ticket) *UserUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.AddAssignedTicketIDs(ids...)
-}
-
-// AddApprovalLogIDs adds the "approval_logs" edge to the ApprovalLog entity by IDs.
-func (uu *UserUpdate) AddApprovalLogIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddApprovalLogIDs(ids...)
-	return uu
-}
-
-// AddApprovalLogs adds the "approval_logs" edges to the ApprovalLog entity.
-func (uu *UserUpdate) AddApprovalLogs(a ...*ApprovalLog) *UserUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uu.AddApprovalLogIDs(ids...)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (uu *UserUpdate) AddStatusLogIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddStatusLogIDs(ids...)
-	return uu
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (uu *UserUpdate) AddStatusLogs(s ...*StatusLog) *UserUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uu.AddStatusLogIDs(ids...)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (uu *UserUpdate) AddServiceRequestIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddServiceRequestIDs(ids...)
-	return uu
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (uu *UserUpdate) AddServiceRequests(s ...*ServiceRequest) *UserUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uu.AddServiceRequestIDs(ids...)
-}
-
-// AddReportedIncidentIDs adds the "reported_incidents" edge to the Incident entity by IDs.
-func (uu *UserUpdate) AddReportedIncidentIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddReportedIncidentIDs(ids...)
-	return uu
-}
-
-// AddReportedIncidents adds the "reported_incidents" edges to the Incident entity.
-func (uu *UserUpdate) AddReportedIncidents(i ...*Incident) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.AddReportedIncidentIDs(ids...)
-}
-
-// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
-func (uu *UserUpdate) AddAssignedIncidentIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddAssignedIncidentIDs(ids...)
-	return uu
-}
-
-// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
-func (uu *UserUpdate) AddAssignedIncidents(i ...*Incident) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.AddAssignedIncidentIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (uu *UserUpdate) ClearTenant() *UserUpdate {
-	uu.mutation.ClearTenant()
-	return uu
-}
-
-// ClearSubmittedTickets clears all "submitted_tickets" edges to the Ticket entity.
-func (uu *UserUpdate) ClearSubmittedTickets() *UserUpdate {
-	uu.mutation.ClearSubmittedTickets()
-	return uu
-}
-
-// RemoveSubmittedTicketIDs removes the "submitted_tickets" edge to Ticket entities by IDs.
-func (uu *UserUpdate) RemoveSubmittedTicketIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveSubmittedTicketIDs(ids...)
-	return uu
-}
-
-// RemoveSubmittedTickets removes "submitted_tickets" edges to Ticket entities.
-func (uu *UserUpdate) RemoveSubmittedTickets(t ...*Ticket) *UserUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.RemoveSubmittedTicketIDs(ids...)
-}
-
-// ClearAssignedTickets clears all "assigned_tickets" edges to the Ticket entity.
-func (uu *UserUpdate) ClearAssignedTickets() *UserUpdate {
-	uu.mutation.ClearAssignedTickets()
-	return uu
-}
-
-// RemoveAssignedTicketIDs removes the "assigned_tickets" edge to Ticket entities by IDs.
-func (uu *UserUpdate) RemoveAssignedTicketIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveAssignedTicketIDs(ids...)
-	return uu
-}
-
-// RemoveAssignedTickets removes "assigned_tickets" edges to Ticket entities.
-func (uu *UserUpdate) RemoveAssignedTickets(t ...*Ticket) *UserUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uu.RemoveAssignedTicketIDs(ids...)
-}
-
-// ClearApprovalLogs clears all "approval_logs" edges to the ApprovalLog entity.
-func (uu *UserUpdate) ClearApprovalLogs() *UserUpdate {
-	uu.mutation.ClearApprovalLogs()
-	return uu
-}
-
-// RemoveApprovalLogIDs removes the "approval_logs" edge to ApprovalLog entities by IDs.
-func (uu *UserUpdate) RemoveApprovalLogIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveApprovalLogIDs(ids...)
-	return uu
-}
-
-// RemoveApprovalLogs removes "approval_logs" edges to ApprovalLog entities.
-func (uu *UserUpdate) RemoveApprovalLogs(a ...*ApprovalLog) *UserUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uu.RemoveApprovalLogIDs(ids...)
-}
-
-// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
-func (uu *UserUpdate) ClearStatusLogs() *UserUpdate {
-	uu.mutation.ClearStatusLogs()
-	return uu
-}
-
-// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
-func (uu *UserUpdate) RemoveStatusLogIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveStatusLogIDs(ids...)
-	return uu
-}
-
-// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
-func (uu *UserUpdate) RemoveStatusLogs(s ...*StatusLog) *UserUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uu.RemoveStatusLogIDs(ids...)
-}
-
-// ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
-func (uu *UserUpdate) ClearServiceRequests() *UserUpdate {
-	uu.mutation.ClearServiceRequests()
-	return uu
-}
-
-// RemoveServiceRequestIDs removes the "service_requests" edge to ServiceRequest entities by IDs.
-func (uu *UserUpdate) RemoveServiceRequestIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveServiceRequestIDs(ids...)
-	return uu
-}
-
-// RemoveServiceRequests removes "service_requests" edges to ServiceRequest entities.
-func (uu *UserUpdate) RemoveServiceRequests(s ...*ServiceRequest) *UserUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uu.RemoveServiceRequestIDs(ids...)
-}
-
-// ClearReportedIncidents clears all "reported_incidents" edges to the Incident entity.
-func (uu *UserUpdate) ClearReportedIncidents() *UserUpdate {
-	uu.mutation.ClearReportedIncidents()
-	return uu
-}
-
-// RemoveReportedIncidentIDs removes the "reported_incidents" edge to Incident entities by IDs.
-func (uu *UserUpdate) RemoveReportedIncidentIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveReportedIncidentIDs(ids...)
-	return uu
-}
-
-// RemoveReportedIncidents removes "reported_incidents" edges to Incident entities.
-func (uu *UserUpdate) RemoveReportedIncidents(i ...*Incident) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.RemoveReportedIncidentIDs(ids...)
-}
-
-// ClearAssignedIncidents clears all "assigned_incidents" edges to the Incident entity.
-func (uu *UserUpdate) ClearAssignedIncidents() *UserUpdate {
-	uu.mutation.ClearAssignedIncidents()
-	return uu
-}
-
-// RemoveAssignedIncidentIDs removes the "assigned_incidents" edge to Incident entities by IDs.
-func (uu *UserUpdate) RemoveAssignedIncidentIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveAssignedIncidentIDs(ids...)
-	return uu
-}
-
-// RemoveAssignedIncidents removes "assigned_incidents" edges to Incident entities.
-func (uu *UserUpdate) RemoveAssignedIncidents(i ...*Incident) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.RemoveAssignedIncidentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -485,23 +237,15 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
-	if v, ok := uu.mutation.Department(); ok {
-		if err := user.DepartmentValidator(v); err != nil {
-			return &ValidationError{Name: "department", err: fmt.Errorf(`ent: validator failed for field "User.department": %w`, err)}
-		}
-	}
-	if v, ok := uu.mutation.Phone(); ok {
-		if err := user.PhoneValidator(v); err != nil {
-			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
+	if v, ok := uu.mutation.PasswordHash(); ok {
+		if err := user.PasswordHashValidator(v); err != nil {
+			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
 		}
 	}
 	if v, ok := uu.mutation.TenantID(); ok {
 		if err := user.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "User.tenant_id": %w`, err)}
 		}
-	}
-	if uu.mutation.TenantCleared() && len(uu.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "User.tenant"`)
 	}
 	return nil
 }
@@ -545,352 +289,17 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Active(); ok {
 		_spec.SetField(user.FieldActive, field.TypeBool, value)
 	}
+	if value, ok := uu.mutation.TenantID(); ok {
+		_spec.SetField(user.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := uu.mutation.AddedTenantID(); ok {
+		_spec.AddField(user.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := uu.mutation.CreatedAt(); ok {
+		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
+	}
 	if value, ok := uu.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if uu.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.SubmittedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedSubmittedTicketsIDs(); len(nodes) > 0 && !uu.mutation.SubmittedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.SubmittedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.AssignedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedAssignedTicketsIDs(); len(nodes) > 0 && !uu.mutation.AssignedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.AssignedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.ApprovalLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedApprovalLogsIDs(); len(nodes) > 0 && !uu.mutation.ApprovalLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.ApprovalLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !uu.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedServiceRequestsIDs(); len(nodes) > 0 && !uu.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.ReportedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedReportedIncidentsIDs(); len(nodes) > 0 && !uu.mutation.ReportedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.ReportedIncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.AssignedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedAssignedIncidentsIDs(); len(nodes) > 0 && !uu.mutation.AssignedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1024,6 +433,7 @@ func (uuo *UserUpdateOne) SetNillableActive(b *bool) *UserUpdateOne {
 
 // SetTenantID sets the "tenant_id" field.
 func (uuo *UserUpdateOne) SetTenantID(i int) *UserUpdateOne {
+	uuo.mutation.ResetTenantID()
 	uuo.mutation.SetTenantID(i)
 	return uuo
 }
@@ -1036,278 +446,35 @@ func (uuo *UserUpdateOne) SetNillableTenantID(i *int) *UserUpdateOne {
 	return uuo
 }
 
+// AddTenantID adds i to the "tenant_id" field.
+func (uuo *UserUpdateOne) AddTenantID(i int) *UserUpdateOne {
+	uuo.mutation.AddTenantID(i)
+	return uuo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (uuo *UserUpdateOne) SetCreatedAt(t time.Time) *UserUpdateOne {
+	uuo.mutation.SetCreatedAt(t)
+	return uuo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableCreatedAt(t *time.Time) *UserUpdateOne {
+	if t != nil {
+		uuo.SetCreatedAt(*t)
+	}
+	return uuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (uuo *UserUpdateOne) SetUpdatedAt(t time.Time) *UserUpdateOne {
 	uuo.mutation.SetUpdatedAt(t)
 	return uuo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (uuo *UserUpdateOne) SetTenant(t *Tenant) *UserUpdateOne {
-	return uuo.SetTenantID(t.ID)
-}
-
-// AddSubmittedTicketIDs adds the "submitted_tickets" edge to the Ticket entity by IDs.
-func (uuo *UserUpdateOne) AddSubmittedTicketIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddSubmittedTicketIDs(ids...)
-	return uuo
-}
-
-// AddSubmittedTickets adds the "submitted_tickets" edges to the Ticket entity.
-func (uuo *UserUpdateOne) AddSubmittedTickets(t ...*Ticket) *UserUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.AddSubmittedTicketIDs(ids...)
-}
-
-// AddAssignedTicketIDs adds the "assigned_tickets" edge to the Ticket entity by IDs.
-func (uuo *UserUpdateOne) AddAssignedTicketIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddAssignedTicketIDs(ids...)
-	return uuo
-}
-
-// AddAssignedTickets adds the "assigned_tickets" edges to the Ticket entity.
-func (uuo *UserUpdateOne) AddAssignedTickets(t ...*Ticket) *UserUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.AddAssignedTicketIDs(ids...)
-}
-
-// AddApprovalLogIDs adds the "approval_logs" edge to the ApprovalLog entity by IDs.
-func (uuo *UserUpdateOne) AddApprovalLogIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddApprovalLogIDs(ids...)
-	return uuo
-}
-
-// AddApprovalLogs adds the "approval_logs" edges to the ApprovalLog entity.
-func (uuo *UserUpdateOne) AddApprovalLogs(a ...*ApprovalLog) *UserUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uuo.AddApprovalLogIDs(ids...)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (uuo *UserUpdateOne) AddStatusLogIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddStatusLogIDs(ids...)
-	return uuo
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (uuo *UserUpdateOne) AddStatusLogs(s ...*StatusLog) *UserUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uuo.AddStatusLogIDs(ids...)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (uuo *UserUpdateOne) AddServiceRequestIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddServiceRequestIDs(ids...)
-	return uuo
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (uuo *UserUpdateOne) AddServiceRequests(s ...*ServiceRequest) *UserUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uuo.AddServiceRequestIDs(ids...)
-}
-
-// AddReportedIncidentIDs adds the "reported_incidents" edge to the Incident entity by IDs.
-func (uuo *UserUpdateOne) AddReportedIncidentIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddReportedIncidentIDs(ids...)
-	return uuo
-}
-
-// AddReportedIncidents adds the "reported_incidents" edges to the Incident entity.
-func (uuo *UserUpdateOne) AddReportedIncidents(i ...*Incident) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.AddReportedIncidentIDs(ids...)
-}
-
-// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
-func (uuo *UserUpdateOne) AddAssignedIncidentIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddAssignedIncidentIDs(ids...)
-	return uuo
-}
-
-// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
-func (uuo *UserUpdateOne) AddAssignedIncidents(i ...*Incident) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.AddAssignedIncidentIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (uuo *UserUpdateOne) ClearTenant() *UserUpdateOne {
-	uuo.mutation.ClearTenant()
-	return uuo
-}
-
-// ClearSubmittedTickets clears all "submitted_tickets" edges to the Ticket entity.
-func (uuo *UserUpdateOne) ClearSubmittedTickets() *UserUpdateOne {
-	uuo.mutation.ClearSubmittedTickets()
-	return uuo
-}
-
-// RemoveSubmittedTicketIDs removes the "submitted_tickets" edge to Ticket entities by IDs.
-func (uuo *UserUpdateOne) RemoveSubmittedTicketIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveSubmittedTicketIDs(ids...)
-	return uuo
-}
-
-// RemoveSubmittedTickets removes "submitted_tickets" edges to Ticket entities.
-func (uuo *UserUpdateOne) RemoveSubmittedTickets(t ...*Ticket) *UserUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.RemoveSubmittedTicketIDs(ids...)
-}
-
-// ClearAssignedTickets clears all "assigned_tickets" edges to the Ticket entity.
-func (uuo *UserUpdateOne) ClearAssignedTickets() *UserUpdateOne {
-	uuo.mutation.ClearAssignedTickets()
-	return uuo
-}
-
-// RemoveAssignedTicketIDs removes the "assigned_tickets" edge to Ticket entities by IDs.
-func (uuo *UserUpdateOne) RemoveAssignedTicketIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveAssignedTicketIDs(ids...)
-	return uuo
-}
-
-// RemoveAssignedTickets removes "assigned_tickets" edges to Ticket entities.
-func (uuo *UserUpdateOne) RemoveAssignedTickets(t ...*Ticket) *UserUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uuo.RemoveAssignedTicketIDs(ids...)
-}
-
-// ClearApprovalLogs clears all "approval_logs" edges to the ApprovalLog entity.
-func (uuo *UserUpdateOne) ClearApprovalLogs() *UserUpdateOne {
-	uuo.mutation.ClearApprovalLogs()
-	return uuo
-}
-
-// RemoveApprovalLogIDs removes the "approval_logs" edge to ApprovalLog entities by IDs.
-func (uuo *UserUpdateOne) RemoveApprovalLogIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveApprovalLogIDs(ids...)
-	return uuo
-}
-
-// RemoveApprovalLogs removes "approval_logs" edges to ApprovalLog entities.
-func (uuo *UserUpdateOne) RemoveApprovalLogs(a ...*ApprovalLog) *UserUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uuo.RemoveApprovalLogIDs(ids...)
-}
-
-// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
-func (uuo *UserUpdateOne) ClearStatusLogs() *UserUpdateOne {
-	uuo.mutation.ClearStatusLogs()
-	return uuo
-}
-
-// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
-func (uuo *UserUpdateOne) RemoveStatusLogIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveStatusLogIDs(ids...)
-	return uuo
-}
-
-// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
-func (uuo *UserUpdateOne) RemoveStatusLogs(s ...*StatusLog) *UserUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uuo.RemoveStatusLogIDs(ids...)
-}
-
-// ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
-func (uuo *UserUpdateOne) ClearServiceRequests() *UserUpdateOne {
-	uuo.mutation.ClearServiceRequests()
-	return uuo
-}
-
-// RemoveServiceRequestIDs removes the "service_requests" edge to ServiceRequest entities by IDs.
-func (uuo *UserUpdateOne) RemoveServiceRequestIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveServiceRequestIDs(ids...)
-	return uuo
-}
-
-// RemoveServiceRequests removes "service_requests" edges to ServiceRequest entities.
-func (uuo *UserUpdateOne) RemoveServiceRequests(s ...*ServiceRequest) *UserUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uuo.RemoveServiceRequestIDs(ids...)
-}
-
-// ClearReportedIncidents clears all "reported_incidents" edges to the Incident entity.
-func (uuo *UserUpdateOne) ClearReportedIncidents() *UserUpdateOne {
-	uuo.mutation.ClearReportedIncidents()
-	return uuo
-}
-
-// RemoveReportedIncidentIDs removes the "reported_incidents" edge to Incident entities by IDs.
-func (uuo *UserUpdateOne) RemoveReportedIncidentIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveReportedIncidentIDs(ids...)
-	return uuo
-}
-
-// RemoveReportedIncidents removes "reported_incidents" edges to Incident entities.
-func (uuo *UserUpdateOne) RemoveReportedIncidents(i ...*Incident) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.RemoveReportedIncidentIDs(ids...)
-}
-
-// ClearAssignedIncidents clears all "assigned_incidents" edges to the Incident entity.
-func (uuo *UserUpdateOne) ClearAssignedIncidents() *UserUpdateOne {
-	uuo.mutation.ClearAssignedIncidents()
-	return uuo
-}
-
-// RemoveAssignedIncidentIDs removes the "assigned_incidents" edge to Incident entities by IDs.
-func (uuo *UserUpdateOne) RemoveAssignedIncidentIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveAssignedIncidentIDs(ids...)
-	return uuo
-}
-
-// RemoveAssignedIncidents removes "assigned_incidents" edges to Incident entities.
-func (uuo *UserUpdateOne) RemoveAssignedIncidents(i ...*Incident) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.RemoveAssignedIncidentIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1376,23 +543,15 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
-	if v, ok := uuo.mutation.Department(); ok {
-		if err := user.DepartmentValidator(v); err != nil {
-			return &ValidationError{Name: "department", err: fmt.Errorf(`ent: validator failed for field "User.department": %w`, err)}
-		}
-	}
-	if v, ok := uuo.mutation.Phone(); ok {
-		if err := user.PhoneValidator(v); err != nil {
-			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
+	if v, ok := uuo.mutation.PasswordHash(); ok {
+		if err := user.PasswordHashValidator(v); err != nil {
+			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
 		}
 	}
 	if v, ok := uuo.mutation.TenantID(); ok {
 		if err := user.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "User.tenant_id": %w`, err)}
 		}
-	}
-	if uuo.mutation.TenantCleared() && len(uuo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "User.tenant"`)
 	}
 	return nil
 }
@@ -1453,352 +612,17 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Active(); ok {
 		_spec.SetField(user.FieldActive, field.TypeBool, value)
 	}
+	if value, ok := uuo.mutation.TenantID(); ok {
+		_spec.SetField(user.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := uuo.mutation.AddedTenantID(); ok {
+		_spec.AddField(user.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := uuo.mutation.CreatedAt(); ok {
+		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
+	}
 	if value, ok := uuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if uuo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.SubmittedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedSubmittedTicketsIDs(); len(nodes) > 0 && !uuo.mutation.SubmittedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.SubmittedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.AssignedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedAssignedTicketsIDs(); len(nodes) > 0 && !uuo.mutation.AssignedTicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.AssignedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.ApprovalLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedApprovalLogsIDs(); len(nodes) > 0 && !uuo.mutation.ApprovalLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.ApprovalLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !uuo.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedServiceRequestsIDs(); len(nodes) > 0 && !uuo.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.ReportedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedReportedIncidentsIDs(); len(nodes) > 0 && !uuo.mutation.ReportedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.ReportedIncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.AssignedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedAssignedIncidentsIDs(); len(nodes) > 0 && !uuo.mutation.AssignedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

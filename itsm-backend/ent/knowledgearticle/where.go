@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -70,24 +69,24 @@ func Category(v string) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldCategory, v))
 }
 
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEQ(FieldStatus, v))
+// Tags applies equality check predicate on the "tags" field. It's identical to TagsEQ.
+func Tags(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldTags, v))
 }
 
-// Author applies equality check predicate on the "author" field. It's identical to AuthorEQ.
-func Author(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthor, v))
-}
-
-// Views applies equality check predicate on the "views" field. It's identical to ViewsEQ.
-func Views(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEQ(FieldViews, v))
+// AuthorID applies equality check predicate on the "author_id" field. It's identical to AuthorIDEQ.
+func AuthorID(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthorID, v))
 }
 
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldTenantID, v))
+}
+
+// IsPublished applies equality check predicate on the "is_published" field. It's identical to IsPublishedEQ.
+func IsPublished(v bool) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldIsPublished, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -295,6 +294,16 @@ func CategoryHasSuffix(v string) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldHasSuffix(FieldCategory, v))
 }
 
+// CategoryIsNil applies the IsNil predicate on the "category" field.
+func CategoryIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldCategory))
+}
+
+// CategoryNotNil applies the NotNil predicate on the "category" field.
+func CategoryNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldCategory))
+}
+
 // CategoryEqualFold applies the EqualFold predicate on the "category" field.
 func CategoryEqualFold(v string) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEqualFold(FieldCategory, v))
@@ -305,174 +314,59 @@ func CategoryContainsFold(v string) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldContainsFold(FieldCategory, v))
 }
 
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEQ(FieldStatus, v))
+// TagsEQ applies the EQ predicate on the "tags" field.
+func TagsEQ(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldTags, v))
 }
 
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldStatus, v))
+// TagsNEQ applies the NEQ predicate on the "tags" field.
+func TagsNEQ(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldTags, v))
 }
 
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldIn(FieldStatus, vs...))
+// TagsIn applies the In predicate on the "tags" field.
+func TagsIn(vs ...string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldTags, vs...))
 }
 
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldStatus, vs...))
+// TagsNotIn applies the NotIn predicate on the "tags" field.
+func TagsNotIn(vs ...string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldTags, vs...))
 }
 
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldGT(FieldStatus, v))
+// TagsGT applies the GT predicate on the "tags" field.
+func TagsGT(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldTags, v))
 }
 
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldGTE(FieldStatus, v))
+// TagsGTE applies the GTE predicate on the "tags" field.
+func TagsGTE(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldTags, v))
 }
 
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldLT(FieldStatus, v))
+// TagsLT applies the LT predicate on the "tags" field.
+func TagsLT(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldTags, v))
 }
 
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldLTE(FieldStatus, v))
+// TagsLTE applies the LTE predicate on the "tags" field.
+func TagsLTE(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldTags, v))
 }
 
-// StatusContains applies the Contains predicate on the "status" field.
-func StatusContains(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldContains(FieldStatus, v))
+// TagsContains applies the Contains predicate on the "tags" field.
+func TagsContains(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldContains(FieldTags, v))
 }
 
-// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
-func StatusHasPrefix(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldHasPrefix(FieldStatus, v))
+// TagsHasPrefix applies the HasPrefix predicate on the "tags" field.
+func TagsHasPrefix(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldHasPrefix(FieldTags, v))
 }
 
-// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
-func StatusHasSuffix(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldHasSuffix(FieldStatus, v))
-}
-
-// StatusEqualFold applies the EqualFold predicate on the "status" field.
-func StatusEqualFold(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEqualFold(FieldStatus, v))
-}
-
-// StatusContainsFold applies the ContainsFold predicate on the "status" field.
-func StatusContainsFold(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldContainsFold(FieldStatus, v))
-}
-
-// AuthorEQ applies the EQ predicate on the "author" field.
-func AuthorEQ(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthor, v))
-}
-
-// AuthorNEQ applies the NEQ predicate on the "author" field.
-func AuthorNEQ(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldAuthor, v))
-}
-
-// AuthorIn applies the In predicate on the "author" field.
-func AuthorIn(vs ...string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldIn(FieldAuthor, vs...))
-}
-
-// AuthorNotIn applies the NotIn predicate on the "author" field.
-func AuthorNotIn(vs ...string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldAuthor, vs...))
-}
-
-// AuthorGT applies the GT predicate on the "author" field.
-func AuthorGT(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldGT(FieldAuthor, v))
-}
-
-// AuthorGTE applies the GTE predicate on the "author" field.
-func AuthorGTE(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldGTE(FieldAuthor, v))
-}
-
-// AuthorLT applies the LT predicate on the "author" field.
-func AuthorLT(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldLT(FieldAuthor, v))
-}
-
-// AuthorLTE applies the LTE predicate on the "author" field.
-func AuthorLTE(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldLTE(FieldAuthor, v))
-}
-
-// AuthorContains applies the Contains predicate on the "author" field.
-func AuthorContains(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldContains(FieldAuthor, v))
-}
-
-// AuthorHasPrefix applies the HasPrefix predicate on the "author" field.
-func AuthorHasPrefix(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldHasPrefix(FieldAuthor, v))
-}
-
-// AuthorHasSuffix applies the HasSuffix predicate on the "author" field.
-func AuthorHasSuffix(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldHasSuffix(FieldAuthor, v))
-}
-
-// AuthorEqualFold applies the EqualFold predicate on the "author" field.
-func AuthorEqualFold(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEqualFold(FieldAuthor, v))
-}
-
-// AuthorContainsFold applies the ContainsFold predicate on the "author" field.
-func AuthorContainsFold(v string) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldContainsFold(FieldAuthor, v))
-}
-
-// ViewsEQ applies the EQ predicate on the "views" field.
-func ViewsEQ(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldEQ(FieldViews, v))
-}
-
-// ViewsNEQ applies the NEQ predicate on the "views" field.
-func ViewsNEQ(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldViews, v))
-}
-
-// ViewsIn applies the In predicate on the "views" field.
-func ViewsIn(vs ...int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldIn(FieldViews, vs...))
-}
-
-// ViewsNotIn applies the NotIn predicate on the "views" field.
-func ViewsNotIn(vs ...int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldViews, vs...))
-}
-
-// ViewsGT applies the GT predicate on the "views" field.
-func ViewsGT(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldGT(FieldViews, v))
-}
-
-// ViewsGTE applies the GTE predicate on the "views" field.
-func ViewsGTE(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldGTE(FieldViews, v))
-}
-
-// ViewsLT applies the LT predicate on the "views" field.
-func ViewsLT(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldLT(FieldViews, v))
-}
-
-// ViewsLTE applies the LTE predicate on the "views" field.
-func ViewsLTE(v int) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(sql.FieldLTE(FieldViews, v))
+// TagsHasSuffix applies the HasSuffix predicate on the "tags" field.
+func TagsHasSuffix(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldHasSuffix(FieldTags, v))
 }
 
 // TagsIsNil applies the IsNil predicate on the "tags" field.
@@ -483,6 +377,56 @@ func TagsIsNil() predicate.KnowledgeArticle {
 // TagsNotNil applies the NotNil predicate on the "tags" field.
 func TagsNotNil() predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldTags))
+}
+
+// TagsEqualFold applies the EqualFold predicate on the "tags" field.
+func TagsEqualFold(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEqualFold(FieldTags, v))
+}
+
+// TagsContainsFold applies the ContainsFold predicate on the "tags" field.
+func TagsContainsFold(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldContainsFold(FieldTags, v))
+}
+
+// AuthorIDEQ applies the EQ predicate on the "author_id" field.
+func AuthorIDEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthorID, v))
+}
+
+// AuthorIDNEQ applies the NEQ predicate on the "author_id" field.
+func AuthorIDNEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldAuthorID, v))
+}
+
+// AuthorIDIn applies the In predicate on the "author_id" field.
+func AuthorIDIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldAuthorID, vs...))
+}
+
+// AuthorIDNotIn applies the NotIn predicate on the "author_id" field.
+func AuthorIDNotIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldAuthorID, vs...))
+}
+
+// AuthorIDGT applies the GT predicate on the "author_id" field.
+func AuthorIDGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldAuthorID, v))
+}
+
+// AuthorIDGTE applies the GTE predicate on the "author_id" field.
+func AuthorIDGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldAuthorID, v))
+}
+
+// AuthorIDLT applies the LT predicate on the "author_id" field.
+func AuthorIDLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldAuthorID, v))
+}
+
+// AuthorIDLTE applies the LTE predicate on the "author_id" field.
+func AuthorIDLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldAuthorID, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
@@ -503,6 +447,36 @@ func TenantIDIn(vs ...int) predicate.KnowledgeArticle {
 // TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
 func TenantIDNotIn(vs ...int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldTenantID, v))
+}
+
+// IsPublishedEQ applies the EQ predicate on the "is_published" field.
+func IsPublishedEQ(v bool) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldIsPublished, v))
+}
+
+// IsPublishedNEQ applies the NEQ predicate on the "is_published" field.
+func IsPublishedNEQ(v bool) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldIsPublished, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -583,29 +557,6 @@ func UpdatedAtLT(v time.Time) predicate.KnowledgeArticle {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.KnowledgeArticle {
-	return predicate.KnowledgeArticle(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

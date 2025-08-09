@@ -8,813 +8,229 @@ import (
 )
 
 var (
-	// ApprovalLogsColumns holds the columns for the "approval_logs" table.
-	ApprovalLogsColumns = []*schema.Column{
+	// AuditLogsColumns holds the columns for the "audit_logs" table.
+	AuditLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "approved", "rejected", "skipped"}, Default: "pending"},
-		{Name: "step_order", Type: field.TypeInt},
-		{Name: "step_name", Type: field.TypeString, Nullable: true, Size: 100},
-		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
-		{Name: "approved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "ticket_id", Type: field.TypeInt},
-		{Name: "approver_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "request_id", Type: field.TypeString, Nullable: true},
+		{Name: "ip", Type: field.TypeString, Default: ""},
+		{Name: "resource", Type: field.TypeString, Default: ""},
+		{Name: "action", Type: field.TypeString, Default: ""},
+		{Name: "path", Type: field.TypeString},
+		{Name: "method", Type: field.TypeString},
+		{Name: "status_code", Type: field.TypeInt, Default: 0},
+		{Name: "request_body", Type: field.TypeString, Nullable: true, Size: 2147483647},
 	}
-	// ApprovalLogsTable holds the schema information for the "approval_logs" table.
-	ApprovalLogsTable = &schema.Table{
-		Name:       "approval_logs",
-		Columns:    ApprovalLogsColumns,
-		PrimaryKey: []*schema.Column{ApprovalLogsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "approval_logs_tickets_approval_logs",
-				Columns:    []*schema.Column{ApprovalLogsColumns[8]},
-				RefColumns: []*schema.Column{TicketsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "approval_logs_users_approval_logs",
-				Columns:    []*schema.Column{ApprovalLogsColumns[9]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "approvallog_ticket_id",
-				Unique:  false,
-				Columns: []*schema.Column{ApprovalLogsColumns[8]},
-			},
-			{
-				Name:    "approvallog_approver_id",
-				Unique:  false,
-				Columns: []*schema.Column{ApprovalLogsColumns[9]},
-			},
-			{
-				Name:    "approvallog_status",
-				Unique:  false,
-				Columns: []*schema.Column{ApprovalLogsColumns[2]},
-			},
-			{
-				Name:    "approvallog_step_order",
-				Unique:  false,
-				Columns: []*schema.Column{ApprovalLogsColumns[3]},
-			},
-			{
-				Name:    "approvallog_ticket_id_step_order",
-				Unique:  false,
-				Columns: []*schema.Column{ApprovalLogsColumns[8], ApprovalLogsColumns[3]},
-			},
-			{
-				Name:    "approvallog_approver_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{ApprovalLogsColumns[9], ApprovalLogsColumns[2]},
-			},
-		},
+	// AuditLogsTable holds the schema information for the "audit_logs" table.
+	AuditLogsTable = &schema.Table{
+		Name:       "audit_logs",
+		Columns:    AuditLogsColumns,
+		PrimaryKey: []*schema.Column{AuditLogsColumns[0]},
 	}
 	// CiAttributeDefinitionsColumns holds the columns for the "ci_attribute_definitions" table.
 	CiAttributeDefinitionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "display_name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "data_type", Type: field.TypeString},
-		{Name: "is_required", Type: field.TypeBool, Default: false},
-		{Name: "is_unique", Type: field.TypeBool, Default: false},
-		{Name: "default_value", Type: field.TypeString, Nullable: true},
-		{Name: "validation_rules", Type: field.TypeJSON, Nullable: true},
-		{Name: "enum_values", Type: field.TypeJSON, Nullable: true},
-		{Name: "reference_type", Type: field.TypeString, Nullable: true},
-		{Name: "display_order", Type: field.TypeInt, Default: 0},
-		{Name: "is_searchable", Type: field.TypeBool, Default: true},
-		{Name: "is_system", Type: field.TypeBool, Default: false},
+		{Name: "type", Type: field.TypeString},
+		{Name: "required", Type: field.TypeBool, Default: false},
+		{Name: "unique", Type: field.TypeBool, Default: false},
+		{Name: "default_value", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "validation_rules", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "ci_type_id", Type: field.TypeInt},
-		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// CiAttributeDefinitionsTable holds the schema information for the "ci_attribute_definitions" table.
 	CiAttributeDefinitionsTable = &schema.Table{
 		Name:       "ci_attribute_definitions",
 		Columns:    CiAttributeDefinitionsColumns,
 		PrimaryKey: []*schema.Column{CiAttributeDefinitionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "ci_attribute_definitions_ci_types_attribute_definitions",
-				Columns:    []*schema.Column{CiAttributeDefinitionsColumns[17]},
-				RefColumns: []*schema.Column{CiTypesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "ci_attribute_definitions_tenants_ci_attribute_definitions",
-				Columns:    []*schema.Column{CiAttributeDefinitionsColumns[18]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "ciattributedefinition_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiAttributeDefinitionsColumns[18]},
-			},
-			{
-				Name:    "ciattributedefinition_ci_type_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiAttributeDefinitionsColumns[17]},
-			},
-			{
-				Name:    "ciattributedefinition_data_type",
-				Unique:  false,
-				Columns: []*schema.Column{CiAttributeDefinitionsColumns[4]},
-			},
-			{
-				Name:    "ciattributedefinition_tenant_id_ci_type_id_name",
-				Unique:  true,
-				Columns: []*schema.Column{CiAttributeDefinitionsColumns[18], CiAttributeDefinitionsColumns[17], CiAttributeDefinitionsColumns[1]},
-			},
-		},
-	}
-	// CiChangeRecordsColumns holds the columns for the "ci_change_records" table.
-	CiChangeRecordsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "change_type", Type: field.TypeString},
-		{Name: "old_values", Type: field.TypeJSON, Nullable: true},
-		{Name: "new_values", Type: field.TypeJSON, Nullable: true},
-		{Name: "changed_by", Type: field.TypeString},
-		{Name: "change_source", Type: field.TypeString, Default: "manual"},
-		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "version_before", Type: field.TypeString, Nullable: true},
-		{Name: "version_after", Type: field.TypeString, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "ci_id", Type: field.TypeInt},
-		{Name: "tenant_id", Type: field.TypeInt},
-	}
-	// CiChangeRecordsTable holds the schema information for the "ci_change_records" table.
-	CiChangeRecordsTable = &schema.Table{
-		Name:       "ci_change_records",
-		Columns:    CiChangeRecordsColumns,
-		PrimaryKey: []*schema.Column{CiChangeRecordsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "ci_change_records_configuration_items_change_records",
-				Columns:    []*schema.Column{CiChangeRecordsColumns[10]},
-				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "ci_change_records_tenants_ci_change_records",
-				Columns:    []*schema.Column{CiChangeRecordsColumns[11]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "cichangerecord_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiChangeRecordsColumns[11]},
-			},
-			{
-				Name:    "cichangerecord_ci_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiChangeRecordsColumns[10]},
-			},
-			{
-				Name:    "cichangerecord_change_type",
-				Unique:  false,
-				Columns: []*schema.Column{CiChangeRecordsColumns[1]},
-			},
-			{
-				Name:    "cichangerecord_changed_by",
-				Unique:  false,
-				Columns: []*schema.Column{CiChangeRecordsColumns[4]},
-			},
-			{
-				Name:    "cichangerecord_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{CiChangeRecordsColumns[9]},
-			},
-		},
-	}
-	// CiLifecycleStatesColumns holds the columns for the "ci_lifecycle_states" table.
-	CiLifecycleStatesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "state", Type: field.TypeString},
-		{Name: "sub_state", Type: field.TypeString, Nullable: true},
-		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "changed_by", Type: field.TypeString},
-		{Name: "changed_at", Type: field.TypeTime},
-		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
-		{Name: "ci_id", Type: field.TypeInt},
-		{Name: "tenant_id", Type: field.TypeInt},
-	}
-	// CiLifecycleStatesTable holds the schema information for the "ci_lifecycle_states" table.
-	CiLifecycleStatesTable = &schema.Table{
-		Name:       "ci_lifecycle_states",
-		Columns:    CiLifecycleStatesColumns,
-		PrimaryKey: []*schema.Column{CiLifecycleStatesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "ci_lifecycle_states_configuration_items_lifecycle_states",
-				Columns:    []*schema.Column{CiLifecycleStatesColumns[7]},
-				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "ci_lifecycle_states_tenants_ci_lifecycle_states",
-				Columns:    []*schema.Column{CiLifecycleStatesColumns[8]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "cilifecyclestate_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiLifecycleStatesColumns[8]},
-			},
-			{
-				Name:    "cilifecyclestate_ci_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiLifecycleStatesColumns[7]},
-			},
-			{
-				Name:    "cilifecyclestate_state",
-				Unique:  false,
-				Columns: []*schema.Column{CiLifecycleStatesColumns[1]},
-			},
-			{
-				Name:    "cilifecyclestate_changed_at",
-				Unique:  false,
-				Columns: []*schema.Column{CiLifecycleStatesColumns[5]},
-			},
-		},
 	}
 	// CiRelationshipsColumns holds the columns for the "ci_relationships" table.
 	CiRelationshipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "properties", Type: field.TypeJSON, Nullable: true},
-		{Name: "status", Type: field.TypeString, Default: "active"},
-		{Name: "effective_from", Type: field.TypeTime},
-		{Name: "effective_to", Type: field.TypeTime, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "relationship_type_id", Type: field.TypeInt},
 		{Name: "source_ci_id", Type: field.TypeInt},
 		{Name: "target_ci_id", Type: field.TypeInt},
+		{Name: "relationship_type_id", Type: field.TypeInt},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// CiRelationshipsTable holds the schema information for the "ci_relationships" table.
 	CiRelationshipsTable = &schema.Table{
 		Name:       "ci_relationships",
 		Columns:    CiRelationshipsColumns,
 		PrimaryKey: []*schema.Column{CiRelationshipsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "ci_relationships_ci_relationship_types_relationships",
-				Columns:    []*schema.Column{CiRelationshipsColumns[7]},
-				RefColumns: []*schema.Column{CiRelationshipTypesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "ci_relationships_configuration_items_outgoing_relationships",
-				Columns:    []*schema.Column{CiRelationshipsColumns[8]},
-				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "ci_relationships_configuration_items_incoming_relationships",
-				Columns:    []*schema.Column{CiRelationshipsColumns[9]},
-				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "ci_relationships_tenants_ci_relationships",
-				Columns:    []*schema.Column{CiRelationshipsColumns[10]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "cirelationship_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiRelationshipsColumns[10]},
-			},
-			{
-				Name:    "cirelationship_source_ci_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiRelationshipsColumns[8]},
-			},
-			{
-				Name:    "cirelationship_target_ci_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiRelationshipsColumns[9]},
-			},
-			{
-				Name:    "cirelationship_relationship_type_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiRelationshipsColumns[7]},
-			},
-			{
-				Name:    "cirelationship_tenant_id_source_ci_id_target_ci_id_relationship_type_id",
-				Unique:  true,
-				Columns: []*schema.Column{CiRelationshipsColumns[10], CiRelationshipsColumns[8], CiRelationshipsColumns[9], CiRelationshipsColumns[7]},
-			},
-		},
-	}
-	// CiRelationshipTypesColumns holds the columns for the "ci_relationship_types" table.
-	CiRelationshipTypesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "display_name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "direction", Type: field.TypeString, Default: "bidirectional"},
-		{Name: "cardinality", Type: field.TypeString, Default: "many_to_many"},
-		{Name: "source_ci_types", Type: field.TypeJSON, Nullable: true},
-		{Name: "target_ci_types", Type: field.TypeJSON, Nullable: true},
-		{Name: "is_system", Type: field.TypeBool, Default: false},
-		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "ci_type_allowed_relationships", Type: field.TypeInt, Nullable: true},
-		{Name: "tenant_id", Type: field.TypeInt},
-	}
-	// CiRelationshipTypesTable holds the schema information for the "ci_relationship_types" table.
-	CiRelationshipTypesTable = &schema.Table{
-		Name:       "ci_relationship_types",
-		Columns:    CiRelationshipTypesColumns,
-		PrimaryKey: []*schema.Column{CiRelationshipTypesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "ci_relationship_types_ci_types_allowed_relationships",
-				Columns:    []*schema.Column{CiRelationshipTypesColumns[12]},
-				RefColumns: []*schema.Column{CiTypesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "ci_relationship_types_tenants_ci_relationship_types",
-				Columns:    []*schema.Column{CiRelationshipTypesColumns[13]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "cirelationshiptype_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiRelationshipTypesColumns[13]},
-			},
-			{
-				Name:    "cirelationshiptype_tenant_id_name",
-				Unique:  true,
-				Columns: []*schema.Column{CiRelationshipTypesColumns[13], CiRelationshipTypesColumns[1]},
-			},
-		},
 	}
 	// CiTypesColumns holds the columns for the "ci_types" table.
 	CiTypesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "display_name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "category", Type: field.TypeString},
 		{Name: "icon", Type: field.TypeString, Nullable: true},
-		{Name: "attribute_schema", Type: field.TypeJSON, Nullable: true},
-		{Name: "validation_rules", Type: field.TypeJSON, Nullable: true},
-		{Name: "is_system", Type: field.TypeBool, Default: false},
+		{Name: "color", Type: field.TypeString, Nullable: true},
+		{Name: "attribute_schema", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// CiTypesTable holds the schema information for the "ci_types" table.
 	CiTypesTable = &schema.Table{
 		Name:       "ci_types",
 		Columns:    CiTypesColumns,
 		PrimaryKey: []*schema.Column{CiTypesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "ci_types_tenants_ci_types",
-				Columns:    []*schema.Column{CiTypesColumns[12]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "citype_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{CiTypesColumns[12]},
-			},
-			{
-				Name:    "citype_category",
-				Unique:  false,
-				Columns: []*schema.Column{CiTypesColumns[4]},
-			},
-			{
-				Name:    "citype_tenant_id_name",
-				Unique:  true,
-				Columns: []*schema.Column{CiTypesColumns[12], CiTypesColumns[1]},
-			},
-		},
 	}
 	// ConfigurationItemsColumns holds the columns for the "configuration_items" table.
 	ConfigurationItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "display_name", Type: field.TypeString, Nullable: true},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "serial_number", Type: field.TypeString, Nullable: true},
-		{Name: "asset_tag", Type: field.TypeString, Nullable: true},
+		{Name: "type", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "active"},
-		{Name: "lifecycle_state", Type: field.TypeString, Default: "planned"},
-		{Name: "business_service", Type: field.TypeString, Nullable: true},
-		{Name: "owner", Type: field.TypeString, Nullable: true},
-		{Name: "environment", Type: field.TypeString, Nullable: true},
 		{Name: "location", Type: field.TypeString, Nullable: true},
-		{Name: "attributes", Type: field.TypeJSON, Nullable: true},
-		{Name: "monitoring_data", Type: field.TypeJSON, Nullable: true},
-		{Name: "discovery_source", Type: field.TypeJSON, Nullable: true},
-		{Name: "last_discovered", Type: field.TypeTime, Nullable: true},
-		{Name: "version", Type: field.TypeString, Default: "1.0"},
+		{Name: "serial_number", Type: field.TypeString, Nullable: true},
+		{Name: "model", Type: field.TypeString, Nullable: true},
+		{Name: "vendor", Type: field.TypeString, Nullable: true},
+		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "ci_type_id", Type: field.TypeInt},
-		{Name: "incident_affected_configuration_items", Type: field.TypeInt, Nullable: true},
-		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// ConfigurationItemsTable holds the schema information for the "configuration_items" table.
 	ConfigurationItemsTable = &schema.Table{
 		Name:       "configuration_items",
 		Columns:    ConfigurationItemsColumns,
 		PrimaryKey: []*schema.Column{ConfigurationItemsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "configuration_items_ci_types_configuration_items",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[19]},
-				RefColumns: []*schema.Column{CiTypesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "configuration_items_incidents_affected_configuration_items",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[20]},
-				RefColumns: []*schema.Column{IncidentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "configuration_items_tenants_configuration_items",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[21]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "configurationitem_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[21]},
-			},
-			{
-				Name:    "configurationitem_ci_type_id",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[19]},
-			},
-			{
-				Name:    "configurationitem_status",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[6]},
-			},
-			{
-				Name:    "configurationitem_lifecycle_state",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[7]},
-			},
-			{
-				Name:    "configurationitem_business_service",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[8]},
-			},
-			{
-				Name:    "configurationitem_tenant_id_name",
-				Unique:  true,
-				Columns: []*schema.Column{ConfigurationItemsColumns[21], ConfigurationItemsColumns[1]},
-			},
-			{
-				Name:    "configurationitem_tenant_id_serial_number",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[21], ConfigurationItemsColumns[4]},
-			},
-			{
-				Name:    "configurationitem_tenant_id_asset_tag",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[21], ConfigurationItemsColumns[5]},
-			},
-		},
 	}
-	// FlowInstancesColumns holds the columns for the "flow_instances" table.
-	FlowInstancesColumns = []*schema.Column{
+	// ConversationsColumns holds the columns for the "conversations" table.
+	ConversationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "flow_definition_id", Type: field.TypeString, Size: 100},
-		{Name: "flow_name", Type: field.TypeString, Size: 200},
-		{Name: "flow_version", Type: field.TypeString, Nullable: true, Size: 20, Default: "1.0"},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "completed", "terminated", "suspended"}, Default: "active"},
-		{Name: "current_step", Type: field.TypeInt, Default: 1},
-		{Name: "total_steps", Type: field.TypeInt},
-		{Name: "step_config", Type: field.TypeJSON, Nullable: true},
-		{Name: "variables", Type: field.TypeJSON, Nullable: true},
-		{Name: "execution_history", Type: field.TypeJSON, Nullable: true},
-		{Name: "started_at", Type: field.TypeTime},
-		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "ticket_id", Type: field.TypeInt, Unique: true},
-		{Name: "workflow_flow_instances", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "title", Type: field.TypeString, Default: ""},
 	}
-	// FlowInstancesTable holds the schema information for the "flow_instances" table.
-	FlowInstancesTable = &schema.Table{
-		Name:       "flow_instances",
-		Columns:    FlowInstancesColumns,
-		PrimaryKey: []*schema.Column{FlowInstancesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "flow_instances_tickets_flow_instance",
-				Columns:    []*schema.Column{FlowInstancesColumns[13]},
-				RefColumns: []*schema.Column{TicketsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "flow_instances_workflows_flow_instances",
-				Columns:    []*schema.Column{FlowInstancesColumns[14]},
-				RefColumns: []*schema.Column{WorkflowsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "flowinstance_ticket_id",
-				Unique:  false,
-				Columns: []*schema.Column{FlowInstancesColumns[13]},
-			},
-			{
-				Name:    "flowinstance_status",
-				Unique:  false,
-				Columns: []*schema.Column{FlowInstancesColumns[4]},
-			},
-			{
-				Name:    "flowinstance_flow_definition_id",
-				Unique:  false,
-				Columns: []*schema.Column{FlowInstancesColumns[1]},
-			},
-			{
-				Name:    "flowinstance_current_step",
-				Unique:  false,
-				Columns: []*schema.Column{FlowInstancesColumns[5]},
-			},
-			{
-				Name:    "flowinstance_flow_definition_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{FlowInstancesColumns[1], FlowInstancesColumns[4]},
-			},
-		},
+	// ConversationsTable holds the schema information for the "conversations" table.
+	ConversationsTable = &schema.Table{
+		Name:       "conversations",
+		Columns:    ConversationsColumns,
+		PrimaryKey: []*schema.Column{ConversationsColumns[0]},
 	}
 	// IncidentsColumns holds the columns for the "incidents" table.
 	IncidentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "title", Type: field.TypeString, Size: 255},
+		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"new", "assigned", "in_progress", "resolved", "closed", "suspended"}, Default: "new"},
-		{Name: "priority", Type: field.TypeEnum, Enums: []string{"low", "medium", "high", "critical"}, Default: "medium"},
-		{Name: "source", Type: field.TypeEnum, Enums: []string{"service_desk", "monitoring", "security", "user_report", "alibaba_cloud", "cloud_product", "security_event"}},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"infrastructure", "application", "security", "network", "database", "storage", "cloud_service"}},
-		{Name: "incident_number", Type: field.TypeString, Unique: true, Size: 50},
-		{Name: "is_major_incident", Type: field.TypeBool, Default: false},
-		{Name: "alibaba_cloud_instance_id", Type: field.TypeString, Nullable: true, Size: 100},
-		{Name: "alibaba_cloud_region", Type: field.TypeString, Nullable: true, Size: 50},
-		{Name: "alibaba_cloud_service", Type: field.TypeString, Nullable: true, Size: 100},
-		{Name: "alibaba_cloud_alert_data", Type: field.TypeJSON, Nullable: true},
-		{Name: "alibaba_cloud_metrics", Type: field.TypeJSON, Nullable: true},
-		{Name: "security_event_type", Type: field.TypeString, Nullable: true, Size: 100},
-		{Name: "security_event_source_ip", Type: field.TypeString, Nullable: true, Size: 50},
-		{Name: "security_event_target", Type: field.TypeString, Nullable: true, Size: 200},
-		{Name: "security_event_details", Type: field.TypeJSON, Nullable: true},
-		{Name: "detected_at", Type: field.TypeTime},
-		{Name: "confirmed_at", Type: field.TypeTime, Nullable: true},
-		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
-		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Default: "new"},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "incident_number", Type: field.TypeString, Unique: true},
 		{Name: "reporter_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "configuration_item_id", Type: field.TypeInt, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// IncidentsTable holds the schema information for the "incidents" table.
 	IncidentsTable = &schema.Table{
 		Name:       "incidents",
 		Columns:    IncidentsColumns,
 		PrimaryKey: []*schema.Column{IncidentsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "incidents_tenants_incidents",
-				Columns:    []*schema.Column{IncidentsColumns[24]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "incidents_users_reported_incidents",
-				Columns:    []*schema.Column{IncidentsColumns[25]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "incidents_users_assigned_incidents",
-				Columns:    []*schema.Column{IncidentsColumns[26]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "incident_status",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[3]},
-			},
-			{
-				Name:    "incident_priority",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[4]},
-			},
-			{
-				Name:    "incident_source",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[5]},
-			},
-			{
-				Name:    "incident_type",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[6]},
-			},
-			{
-				Name:    "incident_reporter_id",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[25]},
-			},
-			{
-				Name:    "incident_assignee_id",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[26]},
-			},
-			{
-				Name:    "incident_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[22]},
-			},
-			{
-				Name:    "incident_incident_number",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[7]},
-			},
-			{
-				Name:    "incident_is_major_incident",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[8]},
-			},
-			{
-				Name:    "incident_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[24]},
-			},
-			{
-				Name:    "incident_tenant_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[3]},
-			},
-			{
-				Name:    "incident_tenant_id_priority",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[4]},
-			},
-			{
-				Name:    "incident_alibaba_cloud_instance_id",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[9]},
-			},
-			{
-				Name:    "incident_alibaba_cloud_region",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[10]},
-			},
-			{
-				Name:    "incident_alibaba_cloud_service",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[11]},
-			},
-			{
-				Name:    "incident_security_event_type",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[14]},
-			},
-			{
-				Name:    "incident_security_event_source_ip",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[15]},
-			},
-			{
-				Name:    "incident_status_priority",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[3], IncidentsColumns[4]},
-			},
-			{
-				Name:    "incident_source_type",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[5], IncidentsColumns[6]},
-			},
-			{
-				Name:    "incident_tenant_id_source",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[5]},
-			},
-			{
-				Name:    "incident_tenant_id_is_major_incident",
-				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[24], IncidentsColumns[8]},
-			},
-		},
 	}
 	// KnowledgeArticlesColumns holds the columns for the "knowledge_articles" table.
 	KnowledgeArticlesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "content", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "category", Type: field.TypeString},
-		{Name: "status", Type: field.TypeString, Default: "draft"},
-		{Name: "author", Type: field.TypeString},
-		{Name: "views", Type: field.TypeInt, Default: 0},
-		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "tags", Type: field.TypeString, Nullable: true},
+		{Name: "author_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "is_published", Type: field.TypeBool, Default: false},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// KnowledgeArticlesTable holds the schema information for the "knowledge_articles" table.
 	KnowledgeArticlesTable = &schema.Table{
 		Name:       "knowledge_articles",
 		Columns:    KnowledgeArticlesColumns,
 		PrimaryKey: []*schema.Column{KnowledgeArticlesColumns[0]},
+	}
+	// MessagesColumns holds the columns for the "messages" table.
+	MessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "role", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "request_id", Type: field.TypeString, Nullable: true},
+		{Name: "conversation_id", Type: field.TypeInt},
+	}
+	// MessagesTable holds the schema information for the "messages" table.
+	MessagesTable = &schema.Table{
+		Name:       "messages",
+		Columns:    MessagesColumns,
+		PrimaryKey: []*schema.Column{MessagesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "knowledge_articles_tenants_knowledge_articles",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[10]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
+				Symbol:     "messages_conversations_messages",
+				Columns:    []*schema.Column{MessagesColumns[5]},
+				RefColumns: []*schema.Column{ConversationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "knowledgearticle_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticlesColumns[10]},
-			},
-			{
-				Name:    "knowledgearticle_category",
-				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticlesColumns[3]},
-			},
-			{
-				Name:    "knowledgearticle_status",
-				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticlesColumns[4]},
-			},
-			{
-				Name:    "knowledgearticle_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticlesColumns[8]},
-			},
-			{
-				Name:    "knowledgearticle_tenant_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticlesColumns[10], KnowledgeArticlesColumns[4]},
-			},
-		},
+	}
+	// NotificationsColumns holds the columns for the "notifications" table.
+	NotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "message", Type: field.TypeString, Size: 2147483647},
+		{Name: "type", Type: field.TypeString, Default: "info"},
+		{Name: "read", Type: field.TypeBool, Default: false},
+		{Name: "action_url", Type: field.TypeString, Nullable: true},
+		{Name: "action_text", Type: field.TypeString, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// NotificationsTable holds the schema information for the "notifications" table.
+	NotificationsTable = &schema.Table{
+		Name:       "notifications",
+		Columns:    NotificationsColumns,
+		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
+	}
+	// PromptTemplatesColumns holds the columns for the "prompt_templates" table.
+	PromptTemplatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "version", Type: field.TypeString, Default: "v1"},
+		{Name: "template", Type: field.TypeString, Size: 2147483647},
+		{Name: "description", Type: field.TypeString, Default: ""},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+	}
+	// PromptTemplatesTable holds the schema information for the "prompt_templates" table.
+	PromptTemplatesTable = &schema.Table{
+		Name:       "prompt_templates",
+		Columns:    PromptTemplatesColumns,
+		PrimaryKey: []*schema.Column{PromptTemplatesColumns[0]},
 	}
 	// SLADefinitionsColumns holds the columns for the "sla_definitions" table.
 	SLADefinitionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "create_time", Type: field.TypeTime},
-		{Name: "update_time", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "service_type", Type: field.TypeString},
-		{Name: "priority", Type: field.TypeString},
-		{Name: "impact", Type: field.TypeString},
-		{Name: "response_time", Type: field.TypeInt},
-		{Name: "resolution_time", Type: field.TypeInt},
-		{Name: "business_hours", Type: field.TypeString},
-		{Name: "holidays", Type: field.TypeString},
-		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "tenant_id", Type: field.TypeInt},
-		{Name: "created_by", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -823,78 +239,16 @@ var (
 		Name:       "sla_definitions",
 		Columns:    SLADefinitionsColumns,
 		PrimaryKey: []*schema.Column{SLADefinitionsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "sladefinition_tenant_id_service_type_priority_impact",
-				Unique:  false,
-				Columns: []*schema.Column{SLADefinitionsColumns[13], SLADefinitionsColumns[5], SLADefinitionsColumns[6], SLADefinitionsColumns[7]},
-			},
-			{
-				Name:    "sladefinition_tenant_id_is_active",
-				Unique:  false,
-				Columns: []*schema.Column{SLADefinitionsColumns[13], SLADefinitionsColumns[12]},
-			},
-		},
-	}
-	// SLAMetricsColumns holds the columns for the "sla_metrics" table.
-	SLAMetricsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "create_time", Type: field.TypeTime},
-		{Name: "update_time", Type: field.TypeTime},
-		{Name: "service_type", Type: field.TypeString},
-		{Name: "priority", Type: field.TypeString},
-		{Name: "impact", Type: field.TypeString},
-		{Name: "total_tickets", Type: field.TypeInt},
-		{Name: "met_sla_tickets", Type: field.TypeInt},
-		{Name: "violated_sla_tickets", Type: field.TypeInt},
-		{Name: "sla_compliance_rate", Type: field.TypeFloat64},
-		{Name: "avg_response_time", Type: field.TypeFloat64},
-		{Name: "avg_resolution_time", Type: field.TypeFloat64},
-		{Name: "period", Type: field.TypeString},
-		{Name: "period_start", Type: field.TypeTime},
-		{Name: "period_end", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-	}
-	// SLAMetricsTable holds the schema information for the "sla_metrics" table.
-	SLAMetricsTable = &schema.Table{
-		Name:       "sla_metrics",
-		Columns:    SLAMetricsColumns,
-		PrimaryKey: []*schema.Column{SLAMetricsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "slametrics_tenant_id_service_type_priority_impact",
-				Unique:  false,
-				Columns: []*schema.Column{SLAMetricsColumns[15], SLAMetricsColumns[3], SLAMetricsColumns[4], SLAMetricsColumns[5]},
-			},
-			{
-				Name:    "slametrics_tenant_id_period_period_start",
-				Unique:  false,
-				Columns: []*schema.Column{SLAMetricsColumns[15], SLAMetricsColumns[12], SLAMetricsColumns[13]},
-			},
-		},
 	}
 	// SLAViolationsColumns holds the columns for the "sla_violations" table.
 	SLAViolationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "create_time", Type: field.TypeTime},
-		{Name: "update_time", Type: field.TypeTime},
-		{Name: "ticket_id", Type: field.TypeInt},
-		{Name: "ticket_type", Type: field.TypeString},
-		{Name: "violation_type", Type: field.TypeString},
 		{Name: "sla_definition_id", Type: field.TypeInt},
-		{Name: "sla_name", Type: field.TypeString},
-		{Name: "expected_time", Type: field.TypeInt},
-		{Name: "actual_time", Type: field.TypeInt},
-		{Name: "overdue_minutes", Type: field.TypeInt},
-		{Name: "status", Type: field.TypeString},
-		{Name: "assigned_to", Type: field.TypeString, Nullable: true},
-		{Name: "violation_occurred_at", Type: field.TypeTime},
-		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
-		{Name: "resolution_note", Type: field.TypeString, Nullable: true},
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "violation_type", Type: field.TypeString},
+		{Name: "violation_time", Type: field.TypeTime},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "tenant_id", Type: field.TypeInt},
-		{Name: "created_by", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -903,268 +257,51 @@ var (
 		Name:       "sla_violations",
 		Columns:    SLAViolationsColumns,
 		PrimaryKey: []*schema.Column{SLAViolationsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "slaviolation_tenant_id_ticket_id",
-				Unique:  false,
-				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[3]},
-			},
-			{
-				Name:    "slaviolation_tenant_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[11]},
-			},
-			{
-				Name:    "slaviolation_tenant_id_violation_occurred_at",
-				Unique:  false,
-				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[13]},
-			},
-			{
-				Name:    "slaviolation_tenant_id_assigned_to",
-				Unique:  false,
-				Columns: []*schema.Column{SLAViolationsColumns[16], SLAViolationsColumns[12]},
-			},
-		},
 	}
 	// ServiceCatalogsColumns holds the columns for the "service_catalogs" table.
 	ServiceCatalogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Size: 255},
-		{Name: "category", Type: field.TypeString, Size: 100},
+		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "delivery_time", Type: field.TypeString, Size: 50},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"enabled", "disabled"}, Default: "enabled"},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "price", Type: field.TypeFloat64, Nullable: true},
+		{Name: "delivery_time", Type: field.TypeInt, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// ServiceCatalogsTable holds the schema information for the "service_catalogs" table.
 	ServiceCatalogsTable = &schema.Table{
 		Name:       "service_catalogs",
 		Columns:    ServiceCatalogsColumns,
 		PrimaryKey: []*schema.Column{ServiceCatalogsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "service_catalogs_tenants_service_catalogs",
-				Columns:    []*schema.Column{ServiceCatalogsColumns[8]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "servicecatalog_category",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[2]},
-			},
-			{
-				Name:    "servicecatalog_status",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[5]},
-			},
-			{
-				Name:    "servicecatalog_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[6]},
-			},
-			{
-				Name:    "servicecatalog_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[8]},
-			},
-			{
-				Name:    "servicecatalog_tenant_id_category",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[8], ServiceCatalogsColumns[2]},
-			},
-			{
-				Name:    "servicecatalog_category_status",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceCatalogsColumns[2], ServiceCatalogsColumns[5]},
-			},
-		},
 	}
 	// ServiceRequestsColumns holds the columns for the "service_requests" table.
 	ServiceRequestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "in_progress", "completed", "rejected"}, Default: "pending"},
-		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 500},
-		{Name: "created_at", Type: field.TypeTime},
 		{Name: "catalog_id", Type: field.TypeInt},
-		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "requester_id", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// ServiceRequestsTable holds the schema information for the "service_requests" table.
 	ServiceRequestsTable = &schema.Table{
 		Name:       "service_requests",
 		Columns:    ServiceRequestsColumns,
 		PrimaryKey: []*schema.Column{ServiceRequestsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "service_requests_service_catalogs_service_requests",
-				Columns:    []*schema.Column{ServiceRequestsColumns[4]},
-				RefColumns: []*schema.Column{ServiceCatalogsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "service_requests_tenants_service_requests",
-				Columns:    []*schema.Column{ServiceRequestsColumns[5]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "service_requests_users_service_requests",
-				Columns:    []*schema.Column{ServiceRequestsColumns[6]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "servicerequest_catalog_id",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[4]},
-			},
-			{
-				Name:    "servicerequest_requester_id",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[6]},
-			},
-			{
-				Name:    "servicerequest_status",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1]},
-			},
-			{
-				Name:    "servicerequest_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[3]},
-			},
-			{
-				Name:    "servicerequest_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[5]},
-			},
-			{
-				Name:    "servicerequest_tenant_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[5], ServiceRequestsColumns[1]},
-			},
-			{
-				Name:    "servicerequest_tenant_id_requester_id",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[5], ServiceRequestsColumns[6]},
-			},
-			{
-				Name:    "servicerequest_requester_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[6], ServiceRequestsColumns[1]},
-			},
-			{
-				Name:    "servicerequest_catalog_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[4], ServiceRequestsColumns[1]},
-			},
-		},
-	}
-	// StatusLogsColumns holds the columns for the "status_logs" table.
-	StatusLogsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "from_status", Type: field.TypeString, Size: 50},
-		{Name: "to_status", Type: field.TypeString, Size: 50},
-		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "incident_status_logs", Type: field.TypeInt, Nullable: true},
-		{Name: "ticket_id", Type: field.TypeInt},
-		{Name: "user_id", Type: field.TypeInt},
-	}
-	// StatusLogsTable holds the schema information for the "status_logs" table.
-	StatusLogsTable = &schema.Table{
-		Name:       "status_logs",
-		Columns:    StatusLogsColumns,
-		PrimaryKey: []*schema.Column{StatusLogsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "status_logs_incidents_status_logs",
-				Columns:    []*schema.Column{StatusLogsColumns[5]},
-				RefColumns: []*schema.Column{IncidentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "status_logs_tickets_status_logs",
-				Columns:    []*schema.Column{StatusLogsColumns[6]},
-				RefColumns: []*schema.Column{TicketsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "status_logs_users_status_logs",
-				Columns:    []*schema.Column{StatusLogsColumns[7]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "statuslog_ticket_id",
-				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[6]},
-			},
-			{
-				Name:    "statuslog_user_id",
-				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[7]},
-			},
-			{
-				Name:    "statuslog_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[4]},
-			},
-			{
-				Name:    "statuslog_ticket_id_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{StatusLogsColumns[6], StatusLogsColumns[4]},
-			},
-		},
-	}
-	// SubscriptionsColumns holds the columns for the "subscriptions" table.
-	SubscriptionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "plan_name", Type: field.TypeString, Size: 50},
-		{Name: "monthly_price", Type: field.TypeFloat64},
-		{Name: "yearly_price", Type: field.TypeFloat64},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "expired", "canceled"}, Default: "active"},
-		{Name: "starts_at", Type: field.TypeTime},
-		{Name: "expires_at", Type: field.TypeTime},
-		{Name: "features", Type: field.TypeJSON, Nullable: true},
-		{Name: "quota", Type: field.TypeJSON, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
-	}
-	// SubscriptionsTable holds the schema information for the "subscriptions" table.
-	SubscriptionsTable = &schema.Table{
-		Name:       "subscriptions",
-		Columns:    SubscriptionsColumns,
-		PrimaryKey: []*schema.Column{SubscriptionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "subscriptions_tenants_subscriptions",
-				Columns:    []*schema.Column{SubscriptionsColumns[11]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
 	}
 	// TenantsColumns holds the columns for the "tenants" table.
 	TenantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Size: 100},
-		{Name: "code", Type: field.TypeString, Unique: true, Size: 50},
-		{Name: "domain", Type: field.TypeString, Nullable: true, Size: 100},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "suspended", "expired", "deleted"}, Default: "active"},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"trial", "standard", "professional", "enterprise"}, Default: "trial"},
-		{Name: "settings", Type: field.TypeJSON, Nullable: true},
-		{Name: "quota", Type: field.TypeJSON, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "domain", Type: field.TypeString, Nullable: true},
+		{Name: "type", Type: field.TypeString, Default: "standard"},
+		{Name: "status", Type: field.TypeString, Default: "active"},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -1174,325 +311,104 @@ var (
 		Name:       "tenants",
 		Columns:    TenantsColumns,
 		PrimaryKey: []*schema.Column{TenantsColumns[0]},
-		Indexes: []*schema.Index{
-			{
-				Name:    "tenant_code",
-				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[2]},
-			},
-			{
-				Name:    "tenant_status",
-				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[4]},
-			},
-			{
-				Name:    "tenant_type",
-				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[5]},
-			},
-			{
-				Name:    "tenant_domain",
-				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[3]},
-			},
-			{
-				Name:    "tenant_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[9]},
-			},
-			{
-				Name:    "tenant_status_type",
-				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[4], TenantsColumns[5]},
-			},
-		},
 	}
 	// TicketsColumns holds the columns for the "tickets" table.
 	TicketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "title", Type: field.TypeString, Size: 255},
+		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "submitted", "in_progress", "pending", "approved", "rejected", "closed", "cancelled"}, Default: "draft"},
-		{Name: "priority", Type: field.TypeEnum, Enums: []string{"low", "medium", "high", "critical"}, Default: "medium"},
-		{Name: "form_fields", Type: field.TypeJSON, Nullable: true},
-		{Name: "ticket_number", Type: field.TypeString, Unique: true, Size: 50},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "configuration_item_incidents", Type: field.TypeInt, Nullable: true},
-		{Name: "configuration_item_changes", Type: field.TypeInt, Nullable: true},
-		{Name: "incident_related_problems", Type: field.TypeInt, Nullable: true},
-		{Name: "incident_related_changes", Type: field.TypeInt, Nullable: true},
-		{Name: "incident_comments", Type: field.TypeInt, Nullable: true},
-		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Default: "open"},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "ticket_number", Type: field.TypeString, Unique: true},
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// TicketsTable holds the schema information for the "tickets" table.
 	TicketsTable = &schema.Table{
 		Name:       "tickets",
 		Columns:    TicketsColumns,
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
+	}
+	// ToolInvocationsColumns holds the columns for the "tool_invocations" table.
+	ToolInvocationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "tool_name", Type: field.TypeString},
+		{Name: "arguments", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "result", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "status", Type: field.TypeString, Default: "success"},
+		{Name: "request_id", Type: field.TypeString, Nullable: true},
+		{Name: "needs_approval", Type: field.TypeBool, Default: false},
+		{Name: "approval_state", Type: field.TypeString, Default: "none"},
+		{Name: "approval_reason", Type: field.TypeString, Default: ""},
+		{Name: "approved_by", Type: field.TypeInt, Nullable: true},
+		{Name: "approved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "dry_run", Type: field.TypeBool, Default: false},
+		{Name: "error", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "conversation_id", Type: field.TypeInt},
+	}
+	// ToolInvocationsTable holds the schema information for the "tool_invocations" table.
+	ToolInvocationsTable = &schema.Table{
+		Name:       "tool_invocations",
+		Columns:    ToolInvocationsColumns,
+		PrimaryKey: []*schema.Column{ToolInvocationsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "tickets_configuration_items_incidents",
-				Columns:    []*schema.Column{TicketsColumns[9]},
-				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tickets_configuration_items_changes",
-				Columns:    []*schema.Column{TicketsColumns[10]},
-				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tickets_incidents_related_problems",
-				Columns:    []*schema.Column{TicketsColumns[11]},
-				RefColumns: []*schema.Column{IncidentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tickets_incidents_related_changes",
-				Columns:    []*schema.Column{TicketsColumns[12]},
-				RefColumns: []*schema.Column{IncidentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tickets_incidents_comments",
-				Columns:    []*schema.Column{TicketsColumns[13]},
-				RefColumns: []*schema.Column{IncidentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "tickets_tenants_tickets",
-				Columns:    []*schema.Column{TicketsColumns[14]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
+				Symbol:     "tool_invocations_conversations_tool_invocations",
+				Columns:    []*schema.Column{ToolInvocationsColumns[14]},
+				RefColumns: []*schema.Column{ConversationsColumns[0]},
 				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "tickets_users_submitted_tickets",
-				Columns:    []*schema.Column{TicketsColumns[15]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "tickets_users_assigned_tickets",
-				Columns:    []*schema.Column{TicketsColumns[16]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "ticket_status",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[3]},
-			},
-			{
-				Name:    "ticket_priority",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[4]},
-			},
-			{
-				Name:    "ticket_requester_id",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[15]},
-			},
-			{
-				Name:    "ticket_assignee_id",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[16]},
-			},
-			{
-				Name:    "ticket_created_at",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[7]},
-			},
-			{
-				Name:    "ticket_ticket_number",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[6]},
-			},
-			{
-				Name:    "ticket_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[14]},
-			},
-			{
-				Name:    "ticket_tenant_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[14], TicketsColumns[3]},
-			},
-			{
-				Name:    "ticket_tenant_id_requester_id",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[14], TicketsColumns[15]},
-			},
-			{
-				Name:    "ticket_status_priority",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[3], TicketsColumns[4]},
-			},
-			{
-				Name:    "ticket_requester_id_status",
-				Unique:  false,
-				Columns: []*schema.Column{TicketsColumns[15], TicketsColumns[3]},
 			},
 		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "username", Type: field.TypeString, Unique: true, Size: 50},
-		{Name: "email", Type: field.TypeString, Unique: true, Size: 100},
-		{Name: "name", Type: field.TypeString, Size: 100},
-		{Name: "department", Type: field.TypeString, Nullable: true, Size: 100},
-		{Name: "phone", Type: field.TypeString, Nullable: true, Size: 20},
+		{Name: "username", Type: field.TypeString, Unique: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "department", Type: field.TypeString, Nullable: true},
+		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "password_hash", Type: field.TypeString},
 		{Name: "active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "users_tenants_users",
-				Columns:    []*schema.Column{UsersColumns[10]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "user_email",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[2]},
-			},
-			{
-				Name:    "user_username",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[1]},
-			},
-			{
-				Name:    "user_department",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[4]},
-			},
-			{
-				Name:    "user_tenant_id",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[10]},
-			},
-			{
-				Name:    "user_tenant_id_username",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[10], UsersColumns[1]},
-			},
-			{
-				Name:    "user_tenant_id_email",
-				Unique:  false,
-				Columns: []*schema.Column{UsersColumns[10], UsersColumns[2]},
-			},
-		},
-	}
-	// WorkflowsColumns holds the columns for the "workflows" table.
-	WorkflowsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "type", Type: field.TypeString},
-		{Name: "definition", Type: field.TypeJSON},
-		{Name: "status", Type: field.TypeString, Default: "active"},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "tenant_id", Type: field.TypeInt},
-	}
-	// WorkflowsTable holds the schema information for the "workflows" table.
-	WorkflowsTable = &schema.Table{
-		Name:       "workflows",
-		Columns:    WorkflowsColumns,
-		PrimaryKey: []*schema.Column{WorkflowsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "workflows_tenants_workflows",
-				Columns:    []*schema.Column{WorkflowsColumns[7]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		ApprovalLogsTable,
+		AuditLogsTable,
 		CiAttributeDefinitionsTable,
-		CiChangeRecordsTable,
-		CiLifecycleStatesTable,
 		CiRelationshipsTable,
-		CiRelationshipTypesTable,
 		CiTypesTable,
 		ConfigurationItemsTable,
-		FlowInstancesTable,
+		ConversationsTable,
 		IncidentsTable,
 		KnowledgeArticlesTable,
+		MessagesTable,
+		NotificationsTable,
+		PromptTemplatesTable,
 		SLADefinitionsTable,
-		SLAMetricsTable,
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
-		StatusLogsTable,
-		SubscriptionsTable,
 		TenantsTable,
 		TicketsTable,
+		ToolInvocationsTable,
 		UsersTable,
-		WorkflowsTable,
 	}
 )
 
 func init() {
-	ApprovalLogsTable.ForeignKeys[0].RefTable = TicketsTable
-	ApprovalLogsTable.ForeignKeys[1].RefTable = UsersTable
-	CiAttributeDefinitionsTable.ForeignKeys[0].RefTable = CiTypesTable
-	CiAttributeDefinitionsTable.ForeignKeys[1].RefTable = TenantsTable
-	CiChangeRecordsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
-	CiChangeRecordsTable.ForeignKeys[1].RefTable = TenantsTable
-	CiLifecycleStatesTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
-	CiLifecycleStatesTable.ForeignKeys[1].RefTable = TenantsTable
-	CiRelationshipsTable.ForeignKeys[0].RefTable = CiRelationshipTypesTable
-	CiRelationshipsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
-	CiRelationshipsTable.ForeignKeys[2].RefTable = ConfigurationItemsTable
-	CiRelationshipsTable.ForeignKeys[3].RefTable = TenantsTable
-	CiRelationshipTypesTable.ForeignKeys[0].RefTable = CiTypesTable
-	CiRelationshipTypesTable.ForeignKeys[1].RefTable = TenantsTable
-	CiTypesTable.ForeignKeys[0].RefTable = TenantsTable
-	ConfigurationItemsTable.ForeignKeys[0].RefTable = CiTypesTable
-	ConfigurationItemsTable.ForeignKeys[1].RefTable = IncidentsTable
-	ConfigurationItemsTable.ForeignKeys[2].RefTable = TenantsTable
-	FlowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
-	FlowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
-	IncidentsTable.ForeignKeys[0].RefTable = TenantsTable
-	IncidentsTable.ForeignKeys[1].RefTable = UsersTable
-	IncidentsTable.ForeignKeys[2].RefTable = UsersTable
-	KnowledgeArticlesTable.ForeignKeys[0].RefTable = TenantsTable
-	ServiceCatalogsTable.ForeignKeys[0].RefTable = TenantsTable
-	ServiceRequestsTable.ForeignKeys[0].RefTable = ServiceCatalogsTable
-	ServiceRequestsTable.ForeignKeys[1].RefTable = TenantsTable
-	ServiceRequestsTable.ForeignKeys[2].RefTable = UsersTable
-	StatusLogsTable.ForeignKeys[0].RefTable = IncidentsTable
-	StatusLogsTable.ForeignKeys[1].RefTable = TicketsTable
-	StatusLogsTable.ForeignKeys[2].RefTable = UsersTable
-	SubscriptionsTable.ForeignKeys[0].RefTable = TenantsTable
-	TicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
-	TicketsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
-	TicketsTable.ForeignKeys[2].RefTable = IncidentsTable
-	TicketsTable.ForeignKeys[3].RefTable = IncidentsTable
-	TicketsTable.ForeignKeys[4].RefTable = IncidentsTable
-	TicketsTable.ForeignKeys[5].RefTable = TenantsTable
-	TicketsTable.ForeignKeys[6].RefTable = UsersTable
-	TicketsTable.ForeignKeys[7].RefTable = UsersTable
-	UsersTable.ForeignKeys[0].RefTable = TenantsTable
-	WorkflowsTable.ForeignKeys[0].RefTable = TenantsTable
+	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
+	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
 }

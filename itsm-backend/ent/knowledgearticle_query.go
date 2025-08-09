@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
 	"math"
 
 	"entgo.io/ent"
@@ -23,7 +22,6 @@ type KnowledgeArticleQuery struct {
 	order      []knowledgearticle.OrderOption
 	inters     []Interceptor
 	predicates []predicate.KnowledgeArticle
-	withTenant *TenantQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,28 +56,6 @@ func (kaq *KnowledgeArticleQuery) Unique(unique bool) *KnowledgeArticleQuery {
 func (kaq *KnowledgeArticleQuery) Order(o ...knowledgearticle.OrderOption) *KnowledgeArticleQuery {
 	kaq.order = append(kaq.order, o...)
 	return kaq
-}
-
-// QueryTenant chains the current query on the "tenant" edge.
-func (kaq *KnowledgeArticleQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: kaq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := kaq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := kaq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticle.TenantTable, knowledgearticle.TenantColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(kaq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // First returns the first KnowledgeArticle entity from the query.
@@ -274,22 +250,10 @@ func (kaq *KnowledgeArticleQuery) Clone() *KnowledgeArticleQuery {
 		order:      append([]knowledgearticle.OrderOption{}, kaq.order...),
 		inters:     append([]Interceptor{}, kaq.inters...),
 		predicates: append([]predicate.KnowledgeArticle{}, kaq.predicates...),
-		withTenant: kaq.withTenant.Clone(),
 		// clone intermediate query.
 		sql:  kaq.sql.Clone(),
 		path: kaq.path,
 	}
-}
-
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (kaq *KnowledgeArticleQuery) WithTenant(opts ...func(*TenantQuery)) *KnowledgeArticleQuery {
-	query := (&TenantClient{config: kaq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	kaq.withTenant = query
-	return kaq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -368,11 +332,8 @@ func (kaq *KnowledgeArticleQuery) prepareQuery(ctx context.Context) error {
 
 func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnowledgeArticle, error) {
 	var (
-		nodes       = []*KnowledgeArticle{}
-		_spec       = kaq.querySpec()
-		loadedTypes = [1]bool{
-			kaq.withTenant != nil,
-		}
+		nodes = []*KnowledgeArticle{}
+		_spec = kaq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*KnowledgeArticle).scanValues(nil, columns)
@@ -380,7 +341,6 @@ func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &KnowledgeArticle{config: kaq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -392,43 +352,7 @@ func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := kaq.withTenant; query != nil {
-		if err := kaq.loadTenant(ctx, query, nodes, nil,
-			func(n *KnowledgeArticle, e *Tenant) { n.Edges.Tenant = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (kaq *KnowledgeArticleQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *Tenant)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*KnowledgeArticle)
-	for i := range nodes {
-		fk := nodes[i].TenantID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tenant.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
 }
 
 func (kaq *KnowledgeArticleQuery) sqlCount(ctx context.Context) (int, error) {
@@ -455,9 +379,6 @@ func (kaq *KnowledgeArticleQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != knowledgearticle.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if kaq.withTenant != nil {
-			_spec.Node.AddColumnOnce(knowledgearticle.FieldTenantID)
 		}
 	}
 	if ps := kaq.predicates; len(ps) > 0 {

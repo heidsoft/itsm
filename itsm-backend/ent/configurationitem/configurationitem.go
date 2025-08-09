@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -16,160 +15,53 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldDisplayName holds the string denoting the display_name field in the database.
-	FieldDisplayName = "display_name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
-	FieldCiTypeID = "ci_type_id"
-	// FieldSerialNumber holds the string denoting the serial_number field in the database.
-	FieldSerialNumber = "serial_number"
-	// FieldAssetTag holds the string denoting the asset_tag field in the database.
-	FieldAssetTag = "asset_tag"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldLifecycleState holds the string denoting the lifecycle_state field in the database.
-	FieldLifecycleState = "lifecycle_state"
-	// FieldBusinessService holds the string denoting the business_service field in the database.
-	FieldBusinessService = "business_service"
-	// FieldOwner holds the string denoting the owner field in the database.
-	FieldOwner = "owner"
-	// FieldEnvironment holds the string denoting the environment field in the database.
-	FieldEnvironment = "environment"
 	// FieldLocation holds the string denoting the location field in the database.
 	FieldLocation = "location"
-	// FieldAttributes holds the string denoting the attributes field in the database.
-	FieldAttributes = "attributes"
-	// FieldMonitoringData holds the string denoting the monitoring_data field in the database.
-	FieldMonitoringData = "monitoring_data"
-	// FieldDiscoverySource holds the string denoting the discovery_source field in the database.
-	FieldDiscoverySource = "discovery_source"
-	// FieldLastDiscovered holds the string denoting the last_discovered field in the database.
-	FieldLastDiscovered = "last_discovered"
-	// FieldVersion holds the string denoting the version field in the database.
-	FieldVersion = "version"
+	// FieldSerialNumber holds the string denoting the serial_number field in the database.
+	FieldSerialNumber = "serial_number"
+	// FieldModel holds the string denoting the model field in the database.
+	FieldModel = "model"
+	// FieldVendor holds the string denoting the vendor field in the database.
+	FieldVendor = "vendor"
+	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
+	FieldCiTypeID = "ci_type_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeCiType holds the string denoting the ci_type edge name in mutations.
-	EdgeCiType = "ci_type"
-	// EdgeOutgoingRelationships holds the string denoting the outgoing_relationships edge name in mutations.
-	EdgeOutgoingRelationships = "outgoing_relationships"
-	// EdgeIncomingRelationships holds the string denoting the incoming_relationships edge name in mutations.
-	EdgeIncomingRelationships = "incoming_relationships"
-	// EdgeLifecycleStates holds the string denoting the lifecycle_states edge name in mutations.
-	EdgeLifecycleStates = "lifecycle_states"
-	// EdgeChangeRecords holds the string denoting the change_records edge name in mutations.
-	EdgeChangeRecords = "change_records"
-	// EdgeIncidents holds the string denoting the incidents edge name in mutations.
-	EdgeIncidents = "incidents"
-	// EdgeChanges holds the string denoting the changes edge name in mutations.
-	EdgeChanges = "changes"
 	// Table holds the table name of the configurationitem in the database.
 	Table = "configuration_items"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "configuration_items"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// CiTypeTable is the table that holds the ci_type relation/edge.
-	CiTypeTable = "configuration_items"
-	// CiTypeInverseTable is the table name for the CIType entity.
-	// It exists in this package in order to avoid circular dependency with the "citype" package.
-	CiTypeInverseTable = "ci_types"
-	// CiTypeColumn is the table column denoting the ci_type relation/edge.
-	CiTypeColumn = "ci_type_id"
-	// OutgoingRelationshipsTable is the table that holds the outgoing_relationships relation/edge.
-	OutgoingRelationshipsTable = "ci_relationships"
-	// OutgoingRelationshipsInverseTable is the table name for the CIRelationship entity.
-	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
-	OutgoingRelationshipsInverseTable = "ci_relationships"
-	// OutgoingRelationshipsColumn is the table column denoting the outgoing_relationships relation/edge.
-	OutgoingRelationshipsColumn = "source_ci_id"
-	// IncomingRelationshipsTable is the table that holds the incoming_relationships relation/edge.
-	IncomingRelationshipsTable = "ci_relationships"
-	// IncomingRelationshipsInverseTable is the table name for the CIRelationship entity.
-	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
-	IncomingRelationshipsInverseTable = "ci_relationships"
-	// IncomingRelationshipsColumn is the table column denoting the incoming_relationships relation/edge.
-	IncomingRelationshipsColumn = "target_ci_id"
-	// LifecycleStatesTable is the table that holds the lifecycle_states relation/edge.
-	LifecycleStatesTable = "ci_lifecycle_states"
-	// LifecycleStatesInverseTable is the table name for the CILifecycleState entity.
-	// It exists in this package in order to avoid circular dependency with the "cilifecyclestate" package.
-	LifecycleStatesInverseTable = "ci_lifecycle_states"
-	// LifecycleStatesColumn is the table column denoting the lifecycle_states relation/edge.
-	LifecycleStatesColumn = "ci_id"
-	// ChangeRecordsTable is the table that holds the change_records relation/edge.
-	ChangeRecordsTable = "ci_change_records"
-	// ChangeRecordsInverseTable is the table name for the CIChangeRecord entity.
-	// It exists in this package in order to avoid circular dependency with the "cichangerecord" package.
-	ChangeRecordsInverseTable = "ci_change_records"
-	// ChangeRecordsColumn is the table column denoting the change_records relation/edge.
-	ChangeRecordsColumn = "ci_id"
-	// IncidentsTable is the table that holds the incidents relation/edge.
-	IncidentsTable = "tickets"
-	// IncidentsInverseTable is the table name for the Ticket entity.
-	// It exists in this package in order to avoid circular dependency with the "ticket" package.
-	IncidentsInverseTable = "tickets"
-	// IncidentsColumn is the table column denoting the incidents relation/edge.
-	IncidentsColumn = "configuration_item_incidents"
-	// ChangesTable is the table that holds the changes relation/edge.
-	ChangesTable = "tickets"
-	// ChangesInverseTable is the table name for the Ticket entity.
-	// It exists in this package in order to avoid circular dependency with the "ticket" package.
-	ChangesInverseTable = "tickets"
-	// ChangesColumn is the table column denoting the changes relation/edge.
-	ChangesColumn = "configuration_item_changes"
 )
 
 // Columns holds all SQL columns for configurationitem fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
-	FieldDisplayName,
 	FieldDescription,
-	FieldCiTypeID,
-	FieldSerialNumber,
-	FieldAssetTag,
+	FieldType,
 	FieldStatus,
-	FieldLifecycleState,
-	FieldBusinessService,
-	FieldOwner,
-	FieldEnvironment,
 	FieldLocation,
-	FieldAttributes,
-	FieldMonitoringData,
-	FieldDiscoverySource,
-	FieldLastDiscovered,
-	FieldVersion,
+	FieldSerialNumber,
+	FieldModel,
+	FieldVendor,
+	FieldCiTypeID,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "configuration_items"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"incident_affected_configuration_items",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -181,10 +73,10 @@ var (
 	NameValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
-	// DefaultLifecycleState holds the default value on creation for the "lifecycle_state" field.
-	DefaultLifecycleState string
-	// DefaultVersion holds the default value on creation for the "version" field.
-	DefaultVersion string
+	// CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
+	CiTypeIDValidator func(int) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -206,29 +98,14 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByDisplayName orders the results by the display_name field.
-func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
-}
-
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByCiTypeID orders the results by the ci_type_id field.
-func ByCiTypeID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCiTypeID, opts...).ToFunc()
-}
-
-// BySerialNumber orders the results by the serial_number field.
-func BySerialNumber(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSerialNumber, opts...).ToFunc()
-}
-
-// ByAssetTag orders the results by the asset_tag field.
-func ByAssetTag(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAssetTag, opts...).ToFunc()
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -236,39 +113,29 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
-// ByLifecycleState orders the results by the lifecycle_state field.
-func ByLifecycleState(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLifecycleState, opts...).ToFunc()
-}
-
-// ByBusinessService orders the results by the business_service field.
-func ByBusinessService(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBusinessService, opts...).ToFunc()
-}
-
-// ByOwner orders the results by the owner field.
-func ByOwner(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOwner, opts...).ToFunc()
-}
-
-// ByEnvironment orders the results by the environment field.
-func ByEnvironment(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEnvironment, opts...).ToFunc()
-}
-
 // ByLocation orders the results by the location field.
 func ByLocation(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLocation, opts...).ToFunc()
 }
 
-// ByLastDiscovered orders the results by the last_discovered field.
-func ByLastDiscovered(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLastDiscovered, opts...).ToFunc()
+// BySerialNumber orders the results by the serial_number field.
+func BySerialNumber(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSerialNumber, opts...).ToFunc()
 }
 
-// ByVersion orders the results by the version field.
-func ByVersion(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldVersion, opts...).ToFunc()
+// ByModel orders the results by the model field.
+func ByModel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModel, opts...).ToFunc()
+}
+
+// ByVendor orders the results by the vendor field.
+func ByVendor(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVendor, opts...).ToFunc()
+}
+
+// ByCiTypeID orders the results by the ci_type_id field.
+func ByCiTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCiTypeID, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
@@ -284,158 +151,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByCiTypeField orders the results by ci_type field.
-func ByCiTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCiTypeStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByOutgoingRelationshipsCount orders the results by outgoing_relationships count.
-func ByOutgoingRelationshipsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newOutgoingRelationshipsStep(), opts...)
-	}
-}
-
-// ByOutgoingRelationships orders the results by outgoing_relationships terms.
-func ByOutgoingRelationships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOutgoingRelationshipsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByIncomingRelationshipsCount orders the results by incoming_relationships count.
-func ByIncomingRelationshipsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newIncomingRelationshipsStep(), opts...)
-	}
-}
-
-// ByIncomingRelationships orders the results by incoming_relationships terms.
-func ByIncomingRelationships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newIncomingRelationshipsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByLifecycleStatesCount orders the results by lifecycle_states count.
-func ByLifecycleStatesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newLifecycleStatesStep(), opts...)
-	}
-}
-
-// ByLifecycleStates orders the results by lifecycle_states terms.
-func ByLifecycleStates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newLifecycleStatesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByChangeRecordsCount orders the results by change_records count.
-func ByChangeRecordsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChangeRecordsStep(), opts...)
-	}
-}
-
-// ByChangeRecords orders the results by change_records terms.
-func ByChangeRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChangeRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByIncidentsCount orders the results by incidents count.
-func ByIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newIncidentsStep(), opts...)
-	}
-}
-
-// ByIncidents orders the results by incidents terms.
-func ByIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByChangesCount orders the results by changes count.
-func ByChangesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChangesStep(), opts...)
-	}
-}
-
-// ByChanges orders the results by changes terms.
-func ByChanges(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChangesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newCiTypeStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(CiTypeInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, CiTypeTable, CiTypeColumn),
-	)
-}
-func newOutgoingRelationshipsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OutgoingRelationshipsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, OutgoingRelationshipsTable, OutgoingRelationshipsColumn),
-	)
-}
-func newIncomingRelationshipsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(IncomingRelationshipsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, IncomingRelationshipsTable, IncomingRelationshipsColumn),
-	)
-}
-func newLifecycleStatesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(LifecycleStatesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, LifecycleStatesTable, LifecycleStatesColumn),
-	)
-}
-func newChangeRecordsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChangeRecordsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ChangeRecordsTable, ChangeRecordsColumn),
-	)
-}
-func newIncidentsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(IncidentsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, IncidentsTable, IncidentsColumn),
-	)
-}
-func newChangesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChangesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ChangesTable, ChangesColumn),
-	)
 }

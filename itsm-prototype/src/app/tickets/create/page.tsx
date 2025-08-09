@@ -4,8 +4,16 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TicketApi } from "../../lib/ticket-api";
 import { CreateTicketRequest } from "../../lib/api-config";
-import { ArrowLeft, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Brain,
+  Sparkles,
+  UserCircle,
+  BookOpen,
+} from "lucide-react";
 import Link from "next/link";
+import { aiSearchKB, aiSummarize, aiTriage, RagAnswer } from "../../lib/ai-api";
 
 const CreateTicketPage: React.FC = () => {
   const router = useRouter();
@@ -18,6 +26,17 @@ const CreateTicketPage: React.FC = () => {
     form_fields: {},
   });
 
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [kbAnswers, setKbAnswers] = useState<RagAnswer[]>([]);
+  const [triage, setTriage] = useState<{
+    category: string;
+    priority: string;
+    assignee_id: number;
+    confidence: number;
+  } | null>(null);
+  const [summary, setSummary] = useState<string>("");
+
   // 添加优先级映射函数
   const priorityMap: { [key: string]: string } = {
     低: "low",
@@ -26,13 +45,7 @@ const CreateTicketPage: React.FC = () => {
     紧急: "critical",
   };
 
-  // 反向映射，用于显示
-  const priorityDisplayMap: { [key: string]: string } = {
-    low: "低",
-    medium: "中",
-    high: "高",
-    critical: "紧急",
-  };
+  // 反向映射显示如需可启用
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,11 +79,56 @@ const CreateTicketPage: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: keyof CreateTicketRequest, value: unknown) => {
+  const handleInputChange = (
+    field: keyof CreateTicketRequest,
+    value: unknown
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleAISuggest = async () => {
+    if (!formData.title.trim() && !formData.description.trim()) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const [t, kb, sum] = await Promise.all([
+        aiTriage(formData.title, formData.description),
+        aiSearchKB(`${formData.title}\n${formData.description}`, 5),
+        aiSummarize(`${formData.title}\n${formData.description}`, 160),
+      ]);
+      setTriage(t);
+      setKbAnswers(kb.answers || []);
+      setSummary(sum.summary);
+      // 回填优先级
+      if (t?.priority) {
+        // triage 返回的可能是 low|medium|high|urgent，简单映射
+        const p = t.priority.toLowerCase();
+        const normalized =
+          p === "urgent"
+            ? "critical"
+            : ["low", "medium", "high", "critical"].includes(p)
+            ? p
+            : "medium";
+        setFormData((prev) => ({
+          ...prev,
+          priority: normalized as CreateTicketRequest["priority"],
+          assignee_id: t.assignee_id || prev.assignee_id,
+          form_fields: {
+            ...(prev.form_fields || {}),
+            category: t.category || (prev.form_fields as any)?.category || "",
+          },
+        }));
+      }
+      // TODO: 回填受理人（assignee_id）与分类（需要前端有对应字段/下拉）
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "智能建议失败";
+      setAiError(msg);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   return (
@@ -129,6 +187,47 @@ const CreateTicketPage: React.FC = () => {
             </select>
           </div>
 
+          {/* 受理人ID（可选） */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              受理人ID（可选）
+            </label>
+            <input
+              type="number"
+              value={formData.assignee_id ?? ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "assignee_id",
+                  e.target.value ? Number(e.target.value) : undefined
+                )
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="填写受理人用户ID"
+            />
+          </div>
+
+          {/* 分类（可选，写入表单字段） */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              分类（可选）
+            </label>
+            <input
+              type="text"
+              value={(formData.form_fields as any)?.category || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  form_fields: {
+                    ...(prev.form_fields || {}),
+                    category: e.target.value,
+                  },
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="如 database / network / general"
+            />
+          </div>
+
           {/* 描述 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -142,6 +241,56 @@ const CreateTicketPage: React.FC = () => {
               placeholder="请详细描述遇到的问题..."
               required
             />
+          </div>
+
+          {/* 智能建议 */}
+          <div className="p-4 border rounded-md bg-gray-50">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center">
+                <Brain className="w-4 h-4 mr-2" />
+                <span className="font-semibold">智能建议</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAISuggest}
+                disabled={aiLoading}
+                className="text-sm flex items-center px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4 mr-1" /> 一键生成
+              </button>
+            </div>
+            {aiError && (
+              <div className="text-sm text-red-600 mb-2">{aiError}</div>
+            )}
+            {triage && (
+              <div className="text-sm text-gray-700 mb-2 flex items-center">
+                <UserCircle className="w-4 h-4 mr-1" />
+                建议分类：{triage.category}，优先级：{triage.priority}
+                ，建议受理人ID：{triage.assignee_id}，置信度：
+                {Math.round((triage.confidence || 0) * 100)}%
+              </div>
+            )}
+            {summary && (
+              <div className="text-sm text-gray-600 mb-2">摘要：{summary}</div>
+            )}
+            {kbAnswers.length > 0 && (
+              <div>
+                <div className="text-sm font-semibold mb-2 flex items-center">
+                  <BookOpen className="w-4 h-4 mr-1" /> 知识推荐
+                </div>
+                <ul className="space-y-2">
+                  {kbAnswers.map((a, idx) => (
+                    <li
+                      key={idx}
+                      className="text-sm p-2 bg-white border rounded"
+                    >
+                      <div className="font-medium">{a.title || "相关内容"}</div>
+                      <div className="text-gray-600">{a.snippet}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* 提交按钮 */}

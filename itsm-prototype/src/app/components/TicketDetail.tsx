@@ -1,6 +1,17 @@
 "use client";
 
-import { CheckCircle, Clock, XCircle, Edit, FileText, Save, ChevronDown, X, ArrowRight, ChevronUp, ChevronDown, FileText } from 'lucide-react';
+import {
+  CheckCircle,
+  Clock,
+  XCircle,
+  Edit,
+  FileText,
+  Save,
+  ChevronDown,
+  X,
+  ArrowRight,
+  ChevronUp,
+} from "lucide-react";
 
 import React, { useState } from "react";
 // 工单详情组件的 Props 接口

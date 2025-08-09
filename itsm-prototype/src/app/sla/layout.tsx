@@ -1,14 +1,10 @@
-
-import React from 'react';
-import { Sidebar } from '../components/Sidebar';
+import React from "react";
+import AppLayout from "../components/AppLayout";
 
 export default function SLALayout({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex h-screen bg-gray-100 font-sans">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto">
-                {children}
-            </main>
-        </div>
-    );
+  return (
+    <AppLayout title="SLA管理" breadcrumb={[{ title: "SLA管理" }]}>
+      {children}
+    </AppLayout>
+  );
 }

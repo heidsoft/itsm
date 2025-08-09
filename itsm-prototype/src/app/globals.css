@@ -1,87 +1,808 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===== 动画定义 ===== */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
   }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===== 基础样式重置 ===== */
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
 }
 
-/* 自定义滚动条样式 */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: #374151;
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #6b7280;
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* 动画优化 */
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-/* 确保布局高度 */
+/* ===== 浏览器样式清除 ===== */
 html, body {
   height: 100%;
+  overflow-x: hidden;
+}
+
+/* 移除默认的列表样式 */
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 移除默认的链接样式 */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 移除默认的按钮样式 */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 移除默认的输入框样式 */
+input, textarea, select {
+  font-family: inherit;
+  outline: none;
+}
+
+/* ===== Ant Design 特殊优化 ===== */
+
+/* 1. 登录页面特殊样式 - 强制覆盖 Ant Design 默认样式 */
+.login-page .ant-input,
+.login-page .ant-input-password,
+.login-page .ant-input-affix-wrapper {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-radius: 12px !important;
+  color: #f1f5f9 !important;
+  transition: all 0.3s ease-in-out !important;
+  height: 48px !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  position: relative !important;
+  z-index: 1 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+/* 移除所有内部边框 */
+.login-page .ant-input-affix-wrapper .ant-input {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* 输入框内部 input 元素 */
+.login-page .ant-input input,
+.login-page .ant-input-password input,
+.login-page .ant-input-lg {
+  color: #f1f5f9 !important;
+  background: transparent !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  height: 48px !important;
+  padding: 0 16px !important;
+  border: none !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  line-height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.login-page .ant-input input::placeholder,
+.login-page .ant-input-password input::placeholder {
+  color: #64748b !important;
+}
+
+/* 特殊处理 ant-input-lg 类 */
+.login-page .ant-input-lg {
+  height: 48px !important;
+  font-size: 0.9rem !important;
+  line-height: 48px !important;
+  padding: 0 16px !important;
+}
+
+.login-page .ant-input-affix-wrapper-lg {
+  height: 48px !important;
+}
+
+.login-page .ant-input-affix-wrapper-lg .ant-input {
+  height: 48px !important;
+  line-height: 48px !important;
+}
+
+/* 密码框特殊处理 */
+.login-page .ant-input-password.ant-input-lg {
+  height: 48px !important;
+  font-size: 0.9rem !important;
+  line-height: 48px !important;
+}
+
+.login-page .ant-input-password-large {
+  height: 48px !important;
+}
+
+.login-page .ant-input-password-large .ant-input {
+  height: 48px !important;
+  line-height: 48px !important;
+}
+
+/* 输入框前缀和后缀容器 */
+.login-page .ant-input-prefix,
+.login-page .ant-input-suffix {
+  color: #64748b !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 48px !important;
+  padding: 0 12px !important;
+  position: relative !important;
+  z-index: 2 !important;
+  flex-shrink: 0 !important;
+  min-width: 42px !important;
+}
+
+.login-page .ant-input-prefix:hover,
+.login-page .ant-input-suffix:hover {
+  color: #94a3b8 !important;
+}
+
+/* 密码框眼睛图标 */
+.login-page .ant-input-password .ant-input-suffix .anticon {
+  color: #64748b !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+}
+
+.login-page .ant-input-password .ant-input-suffix .anticon:hover {
+  color: #94a3b8 !important;
+}
+
+/* 悬停状态 */
+.login-page .ant-input:hover,
+.login-page .ant-input-password:hover,
+.login-page .ant-input-affix-wrapper:hover {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* 焦点状态 */
+.login-page .ant-input:focus,
+.login-page .ant-input-password:focus,
+.login-page .ant-input-affix-wrapper-focused {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  z-index: 2 !important;
+}
+
+/* 输入状态 */
+.login-page .ant-input:not(:placeholder-shown),
+.login-page .ant-input-password:not(:placeholder-shown) {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* 表单项标签 */
+.login-page .ant-form-item-label > label {
+  color: #cbd5e1 !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+/* 表单错误提示 */
+.login-page .ant-form-item-explain-error {
+  color: #fca5a5 !important;
+  font-size: 0.8rem !important;
+  margin-top: 6px !important;
+}
+
+/* 按钮样式 */
+.login-page .ant-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3) !important;
+  transition: all 0.3s ease-in-out !important;
+  height: 52px !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+}
+
+.login-page .ant-btn-primary:hover {
+  background: linear-gradient(135deg, #40a9ff 0%, #2563eb 100%) !important;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4) !important;
+}
+
+.login-page .ant-btn-primary:active {
+  transform: scale(0.98) !important;
+}
+
+.login-page .ant-btn-link {
+  color: #94a3b8 !important;
+  transition: all 0.3s ease-in-out !important;
+  font-size: 0.9rem !important;
+  padding: 6px 12px !important;
+  height: auto !important;
+}
+
+.login-page .ant-btn-link:hover {
+  color: #cbd5e1 !important;
+}
+
+/* 卡片样式 */
+.login-page .ant-card {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  backdrop-filter: blur(24px) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* 警告框样式 */
+.login-page .ant-alert {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  border-radius: 12px !important;
+}
+
+.login-page .ant-alert .ant-alert-message {
+  color: #fca5a5 !important;
+}
+
+.login-page .ant-alert .ant-alert-icon {
+  color: #f87171 !important;
+}
+
+/* 强制覆盖 Ant Design 默认样式 */
+.login-page .ant-form-item {
+  margin-bottom: 0 !important;
+}
+
+.login-page .ant-form-item-control {
+  line-height: 1 !important;
+}
+
+.login-page .ant-form-item-control-input {
+  min-height: 48px !important;
+}
+
+.login-page .ant-form-item-control-input-content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 特殊处理 Input.Password 组件 */
+.login-page .ant-input-password .ant-input {
+  padding-right: 40px !important;
+}
+
+.login-page .ant-input-password .ant-input-suffix {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+
+/* 移除所有可能的内部边框和阴影 */
+.login-page .ant-input-affix-wrapper .ant-input,
+.login-page .ant-input-affix-wrapper .ant-input-password {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* 确保密码框底部边框不被遮挡 */
+.login-page .ant-input-password {
+  overflow: visible !important;
+}
+
+.login-page .ant-input-password .ant-input-affix-wrapper {
+  overflow: visible !important;
+}
+
+/* 确保输入框内容垂直居中 */
+.login-page .ant-input-affix-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+.login-page .ant-input-affix-wrapper > * {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 确保输入框内容在输入状态下对齐 */
+.login-page .ant-input-affix-wrapper .ant-input {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* 确保图标和文字在同一水平线上 */
+.login-page .ant-input-prefix,
+.login-page .ant-input-suffix {
+  line-height: 1 !important;
+}
+
+.login-page .ant-input input,
+.login-page .ant-input-password input {
+  line-height: 1.5 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* 特殊处理 Ant Design 的 outline 样式 */
+.login-page .ant-input-outlined {
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  box-shadow: none !important;
+}
+
+.login-page .ant-input-outlined:hover {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+.login-page .ant-input-outlined:focus,
+.login-page .ant-input-outlined-focused {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* 确保 SVG 图标正确对齐 */
+.login-page .ant-input-prefix svg,
+.login-page .ant-input-suffix svg {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 确保密码框的图标正确显示 */
+.login-page .ant-input-password .ant-input-suffix .anticon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* 2. 布局组件特殊优化 */
+.ant-layout-sider {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ant-layout-header {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.ant-layout-content {
+  background: #f5f5f5;
+}
+
+/* 3. 菜单组件特殊优化 */
+.ant-menu-inline .ant-menu-item {
+  margin: 2px 8px;
+  border-radius: 6px;
+  height: 36px;
+  line-height: 36px;
+}
+
+.ant-menu-inline .ant-menu-item:hover {
+  background-color: #f0f9ff;
+}
+
+.ant-menu-inline .ant-menu-item-selected {
+  background-color: #e6f4ff;
+  border-right: 2px solid #1890ff;
+}
+
+/* 4. 卡片组件特殊优化 */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f0f0f0;
+}
+
+.ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+/* 5. 按钮组件特殊优化 */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #1890ff, #722ed1);
+  border: none;
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #40a9ff, #9254de);
+  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* 6. 表格组件特殊优化 */
+.ant-table {
+  border-radius: 8px;
   overflow: hidden;
 }
 
-#__next {
-  height: 100%;
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+  color: #262626;
 }
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+/* 7. 表单组件特殊优化 */
+.ant-input,
+.ant-select-selector {
+  border-radius: 6px;
+  border-color: #d9d9d9;
+}
+
+.ant-input:hover,
+.ant-select-selector:hover {
+  border-color: #40a9ff;
+}
+
+.ant-input:focus,
+.ant-select-focused .ant-select-selector {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 8. 标签组件特殊优化 */
+.ant-tag {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* 9. 统计组件特殊优化 */
+.ant-statistic-title {
+  color: #8c8c8c;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ant-statistic-content {
+  color: #262626;
+  font-weight: 600;
+}
+
+/* 10. 头像组件特殊优化 */
+.ant-avatar {
+  border-radius: 6px;
+}
+
+/* 11. 徽章组件特殊优化 */
+.ant-badge-count {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* 12. 下拉菜单特殊优化 */
+.ant-dropdown-menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+}
+
+.ant-dropdown-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* 13. 模态框特殊优化 */
+.ant-modal-content {
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.ant-modal-title {
+  font-weight: 600;
+  color: #262626;
+}
+
+.ant-modal-body {
+  padding: 24px;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+/* 14. 分页组件特殊优化 */
+.ant-pagination-item {
+  border-radius: 6px;
+  border-color: #d9d9d9;
+}
+
+.ant-pagination-item:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.ant-pagination-item-active {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+/* 15. 进度条特殊优化 */
+.ant-progress-bg {
+  border-radius: 4px;
+}
+
+/* 16. 时间轴特殊优化 */
+.ant-timeline-item-head {
+  border-radius: 50%;
+}
+
+/* 17. 警告组件特殊优化 */
+.ant-alert {
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+/* 18. 消息组件特殊优化 */
+.ant-message-notice-content {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 19. 通知组件特殊优化 */
+.ant-notification-notice {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 20. 工具提示特殊优化 */
+.ant-tooltip-inner {
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+/* 21. 选择器特殊优化 */
+.ant-select-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-select-item {
+  border-radius: 4px;
+  margin: 2px 8px;
+}
+
+.ant-select-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* 22. 日期选择器特殊优化 */
+.ant-picker-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-picker-panel {
+  border-radius: 8px;
+}
+
+/* 23. 树形组件特殊优化 */
+.ant-tree {
+  background: transparent;
+}
+
+.ant-tree-node-content-wrapper:hover {
+  background-color: #f5f5f5;
+}
+
+.ant-tree-node-selected {
+  background-color: #e6f4ff;
+}
+
+/* 24. 步骤条特殊优化 */
+.ant-steps-item-icon {
+  border-radius: 50%;
+}
+
+.ant-steps-item-process .ant-steps-item-icon {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+/* 25. 评分组件特殊优化 */
+.ant-rate-star {
+  color: #fadb14;
+}
+
+/* 26. 滑块组件特殊优化 */
+.ant-slider-rail {
+  background-color: #f0f0f0;
+}
+
+.ant-slider-track {
+  background-color: #1890ff;
+}
+
+.ant-slider-handle {
+  border-color: #1890ff;
+}
+
+/* 27. 开关组件特殊优化 */
+.ant-switch {
+  border-radius: 12px;
+}
+
+.ant-switch-checked {
+  background-color: #1890ff;
+}
+
+/* ===== 响应式设计 ===== */
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+  }
+  
+  .ant-layout-content {
+    margin-left: 0;
+  }
+  
+  .ant-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* ===== 暗色模式支持 ===== */
+@media (prefers-color-scheme: dark) {
+  .ant-layout-content {
+    background: #141414;
+  }
+  
+  .ant-card {
+    background: #1f1f1f;
+    border-color: #303030;
+  }
+  
+  .ant-table-thead > tr > th {
+    background-color: #1f1f1f;
+    color: #d9d9d9;
+  }
+  
+  .ant-table-tbody > tr > td {
+    color: #d9d9d9;
+  }
+}
+
+/* ===== 动画效果 ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== 滚动条优化 ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ===== 特殊系统优化 ===== */
+
+/* 1. 打印样式优化 */
+@media print {
+  .ant-layout-sider,
+  .ant-layout-header {
+    display: none !important;
+  }
+  
+  .ant-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* 2. 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .ant-btn {
+    border-width: 2px;
+  }
+  
+  .ant-input {
+    border-width: 2px;
+  }
+}
+
+/* 3. 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 4. 焦点可见性优化 */
+.ant-btn:focus-visible,
+.ant-input:focus-visible,
+.ant-select:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 5. 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .ant-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .ant-input {
+    min-height: 44px;
+  }
+}
+
+

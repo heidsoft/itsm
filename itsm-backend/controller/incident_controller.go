@@ -27,56 +27,44 @@ func NewIncidentController(incidentService *service.IncidentService, logger *zap
 func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("创建事件请求参数错误", "error", err)
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	// 从JWT中获取用户信息
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		common.Fail(ctx, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息缺失")
-		return
-	}
-
-	incident, err := c.incidentService.CreateIncident(ctx, &req, userID.(int), tenantID.(int))
+	// 获取当前用户ID
+	reporterID, err := c.incidentService.GetCurrentUserID(ctx)
 	if err != nil {
-		c.logger.Errorw("Failed to create incident", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.logger.Errorw("获取当前用户ID失败", "error", err)
+		common.Fail(ctx, common.AuthFailedCode, "用户未登录: "+err.Error())
 		return
 	}
 
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		return
+	}
+
+	// 创建事件
+	incident, err := c.incidentService.CreateIncident(ctx, &req, reporterID, tenantID)
+	if err != nil {
+		c.logger.Errorw("创建事件失败", "error", err, "reporter_id", reporterID, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "创建事件失败: "+err.Error())
+		return
+	}
+
+	c.logger.Infow("事件创建成功", "incident_id", incident.ID, "incident_number", incident.IncidentNumber)
 	common.Success(ctx, incident)
 }
 
-// GetIncident 获取事件详情
-func (c *IncidentController) GetIncident(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
-		return
-	}
-
-	incident, err := c.incidentService.GetIncidentByID(ctx, id)
-	if err != nil {
-		c.logger.Errorw("Failed to get incident", "incident_id", id, "error", err)
-		common.Fail(ctx, common.NotFoundCode, err.Error())
-		return
-	}
-
-	common.Success(ctx, incident)
-}
-
-// ListIncidents 获取事件列表
-func (c *IncidentController) ListIncidents(ctx *gin.Context) {
-	var req dto.ListIncidentsRequest
+// GetIncidents 获取事件列表
+func (c *IncidentController) GetIncidents(ctx *gin.Context) {
+	var req dto.GetIncidentsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
+		c.logger.Errorw("获取事件列表请求参数错误", "error", err)
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
@@ -85,183 +73,146 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
+	if req.Size <= 0 {
+		req.Size = 20
 	}
 
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息缺失")
-		return
-	}
-
-	response, err := c.incidentService.ListIncidents(ctx, &req, tenantID.(int))
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
 	if err != nil {
-		c.logger.Errorw("Failed to list incidents", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		return
+	}
+	req.TenantID = tenantID
+
+	// 获取事件列表
+	result, err := c.incidentService.GetIncidents(ctx, &req)
+	if err != nil {
+		c.logger.Errorw("获取事件列表失败", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件列表失败: "+err.Error())
 		return
 	}
 
-	common.Success(ctx, response)
+	c.logger.Infow("获取事件列表成功", "total", result.Total, "page", req.Page, "size", req.Size)
+	common.Success(ctx, result)
+}
+
+// GetIncident 获取单个事件
+func (c *IncidentController) GetIncident(ctx *gin.Context) {
+	incidentIDStr := ctx.Param("id")
+	incidentID, err := strconv.Atoi(incidentIDStr)
+	if err != nil {
+		c.logger.Errorw("事件ID参数错误", "error", err, "incident_id", incidentIDStr)
+		common.Fail(ctx, common.ParamErrorCode, "事件ID参数错误: "+err.Error())
+		return
+	}
+
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		return
+	}
+
+	// 获取事件详情
+	incident, err := c.incidentService.GetIncident(ctx, incidentID, tenantID)
+	if err != nil {
+		c.logger.Errorw("获取事件详情失败", "error", err, "incident_id", incidentID, "tenant_id", tenantID)
+		common.Fail(ctx, common.NotFoundCode, "事件不存在或无权限: "+err.Error())
+		return
+	}
+
+	c.logger.Infow("获取事件详情成功", "incident_id", incidentID)
+	common.Success(ctx, incident)
 }
 
 // UpdateIncident 更新事件
 func (c *IncidentController) UpdateIncident(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
+	incidentIDStr := ctx.Param("id")
+	incidentID, err := strconv.Atoi(incidentIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		c.logger.Errorw("事件ID参数错误", "error", err, "incident_id", incidentIDStr)
+		common.Fail(ctx, common.ParamErrorCode, "事件ID参数错误: "+err.Error())
 		return
 	}
 
 	var req dto.UpdateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.logger.Errorw("更新事件请求参数错误", "error", err)
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	incident, err := c.incidentService.UpdateIncident(ctx, id, &req)
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
 	if err != nil {
-		c.logger.Errorw("Failed to update incident", "incident_id", id, "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
 		return
 	}
 
+	// 更新事件
+	incident, err := c.incidentService.UpdateIncident(ctx, incidentID, &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("更新事件失败", "error", err, "incident_id", incidentID, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "更新事件失败: "+err.Error())
+		return
+	}
+
+	c.logger.Infow("事件更新成功", "incident_id", incidentID)
 	common.Success(ctx, incident)
 }
 
-// UpdateIncidentStatus 更新事件状态
-func (c *IncidentController) UpdateIncidentStatus(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr)
+// CloseIncident 关闭事件
+func (c *IncidentController) CloseIncident(ctx *gin.Context) {
+	incidentIDStr := ctx.Param("id")
+	incidentID, err := strconv.Atoi(incidentIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		c.logger.Errorw("事件ID参数错误", "error", err, "incident_id", incidentIDStr)
+		common.Fail(ctx, common.ParamErrorCode, "事件ID参数错误: "+err.Error())
 		return
 	}
 
-	var req dto.UpdateIncidentStatusRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-
-	incident, err := c.incidentService.UpdateIncidentStatus(ctx, id, &req)
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
 	if err != nil {
-		c.logger.Errorw("Failed to update incident status", "incident_id", id, "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
 		return
 	}
 
-	common.Success(ctx, incident)
+	// 关闭事件
+	err = c.incidentService.CloseIncident(ctx, incidentID, tenantID)
+	if err != nil {
+		c.logger.Errorw("关闭事件失败", "error", err, "incident_id", incidentID, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "关闭事件失败: "+err.Error())
+		return
+	}
+
+	c.logger.Infow("事件关闭成功", "incident_id", incidentID)
+	common.Success(ctx, nil)
 }
 
-// GetIncidentMetrics 获取事件指标
-func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息缺失")
-		return
-	}
-
-	metrics, err := c.incidentService.GetIncidentMetrics(ctx, tenantID.(int))
+// GetIncidentStats 获取事件统计
+func (c *IncidentController) GetIncidentStats(ctx *gin.Context) {
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
 	if err != nil {
-		c.logger.Errorw("Failed to get incident metrics", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
 		return
 	}
 
-	common.Success(ctx, metrics)
-}
-
-// CreateIncidentFromAlibabaCloudAlert 从阿里云告警创建事件
-func (c *IncidentController) CreateIncidentFromAlibabaCloudAlert(ctx *gin.Context) {
-	var req dto.AlibabaCloudAlertRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-
-	// 从JWT中获取用户信息
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		common.Fail(ctx, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息缺失")
-		return
-	}
-
-	incident, err := c.incidentService.CreateIncidentFromAlibabaCloudAlert(ctx, &req, userID.(int), tenantID.(int))
+	// 获取事件统计
+	stats, err := c.incidentService.GetIncidentStats(ctx, tenantID)
 	if err != nil {
-		c.logger.Errorw("Failed to create incident from Alibaba Cloud alert", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		c.logger.Errorw("获取事件统计失败", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件统计失败: "+err.Error())
 		return
 	}
 
-	common.Success(ctx, incident)
-}
-
-// CreateIncidentFromSecurityEvent 从安全事件创建事件
-func (c *IncidentController) CreateIncidentFromSecurityEvent(ctx *gin.Context) {
-	var req dto.SecurityEventRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-
-	// 从JWT中获取用户信息
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		common.Fail(ctx, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息缺失")
-		return
-	}
-
-	incident, err := c.incidentService.CreateIncidentFromSecurityEvent(ctx, &req, userID.(int), tenantID.(int))
-	if err != nil {
-		c.logger.Errorw("Failed to create incident from security event", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
-		return
-	}
-
-	common.Success(ctx, incident)
-}
-
-// CreateIncidentFromCloudProductEvent 从云产品事件创建事件
-func (c *IncidentController) CreateIncidentFromCloudProductEvent(ctx *gin.Context) {
-	var req dto.CloudProductEventRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-
-	// 从JWT中获取用户信息
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		common.Fail(ctx, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息缺失")
-		return
-	}
-
-	incident, err := c.incidentService.CreateIncidentFromCloudProductEvent(ctx, &req, userID.(int), tenantID.(int))
-	if err != nil {
-		c.logger.Errorw("Failed to create incident from cloud product event", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
-		return
-	}
-
-	common.Success(ctx, incident)
+	c.logger.Infow("获取事件统计成功", "tenant_id", tenantID)
+	common.Success(ctx, stats)
 }

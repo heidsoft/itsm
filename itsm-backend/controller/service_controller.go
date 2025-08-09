@@ -25,18 +25,17 @@ func NewServiceController(catalogService *service.ServiceCatalogService, request
 
 // GetServiceCatalogs 获取服务目录列表
 // @Summary 获取服务目录列表
-// @Description 获取服务目录列表，支持分类和状态筛选
+// @Description 分页获取服务目录列表
 // @Tags 服务目录
 // @Accept json
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(10)
-// @Param category query string false "服务分类"
-// @Param status query string false "状态" Enums(enabled,disabled)
+// @Param category query string false "分类过滤"
+// @Param status query string false "状态过滤"
 // @Success 200 {object} common.Response{data=dto.ServiceCatalogListResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Security BearerAuth
 // @Router /api/service-catalogs [get]
 func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 	var req dto.GetServiceCatalogsRequest
@@ -44,13 +43,20 @@ func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
-	
-	result, err := sc.serviceCatalogService.GetServiceCatalogs(c.Request.Context(), &req)
+
+	// 从上下文获取租户ID
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	result, err := sc.serviceCatalogService.ListServiceCatalogs(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
-	
+
 	common.Success(c, result)
 }
 
@@ -72,28 +78,27 @@ func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
-	
-	// 从上下文获取用户ID
+
+	// 从上下文获取用户ID和租户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
 		common.Fail(c, 2001, "用户未认证")
 		return
 	}
-	
-	serviceRequest, err := sc.serviceRequestService.CreateServiceRequest(c.Request.Context(), &req, userID.(int))
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	serviceRequest, err := sc.serviceRequestService.CreateServiceRequest(c.Request.Context(), &req, userID.(int), tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
-	
-	// 获取完整信息用于响应
-	fullRequest, err := sc.serviceRequestService.GetServiceRequestByID(c.Request.Context(), serviceRequest.ID)
-	if err != nil {
-		common.Fail(c, 5001, "获取创建的服务请求失败")
-		return
-	}
-	
-	common.Success(c, dto.ToServiceRequestResponse(fullRequest))
+
+	common.Success(c, serviceRequest)
 }
 
 // GetUserServiceRequests 获取当前用户的服务请求列表
@@ -116,28 +121,34 @@ func (sc *ServiceController) GetUserServiceRequests(c *gin.Context) {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
-	
-	// 从上下文获取用户ID
+
+	// 从上下文获取用户ID和租户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
 		common.Fail(c, 2001, "用户未认证")
 		return
 	}
-	
+
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
 	req.UserID = userID.(int)
-	
-	result, err := sc.serviceRequestService.GetUserServiceRequests(c.Request.Context(), &req)
+
+	result, err := sc.serviceRequestService.ListServiceRequests(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
-	
+
 	common.Success(c, result)
 }
 
 // GetServiceRequestByID 获取服务请求详情
 // @Summary 获取服务请求详情
-// @Description 根据ID获取服务请求的详细信息
+// @Description 根据ID获取服务请求详情
 // @Tags 服务请求
 // @Accept json
 // @Produce json
@@ -155,19 +166,26 @@ func (sc *ServiceController) GetServiceRequestByID(c *gin.Context) {
 		common.Fail(c, 1001, "无效的服务请求ID")
 		return
 	}
-	
-	serviceRequest, err := sc.serviceRequestService.GetServiceRequestByID(c.Request.Context(), id)
+
+	// 从上下文获取租户ID
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	serviceRequest, err := sc.serviceRequestService.GetServiceRequest(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
-	
-	common.Success(c, dto.ToServiceRequestResponse(serviceRequest))
+
+	common.Success(c, serviceRequest)
 }
 
 // UpdateServiceRequestStatus 更新服务请求状态
 // @Summary 更新服务请求状态
-// @Description 更新服务请求的状态（审批人/管理员操作）
+// @Description 更新服务请求的状态
 // @Tags 服务请求
 // @Accept json
 // @Produce json
@@ -186,37 +204,48 @@ func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 		common.Fail(c, 1001, "无效的服务请求ID")
 		return
 	}
-	
+
 	var req dto.UpdateServiceRequestStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
-	
-	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
+
+	// 从上下文获取租户ID
+	tenantID, exists := c.Get("tenant_id")
 	if !exists {
-		common.Fail(c, 2001, "用户未认证")
+		common.Fail(c, 2001, "租户信息缺失")
 		return
 	}
-	
-	_, err = sc.serviceRequestService.UpdateServiceRequestStatus(c.Request.Context(), id, req.Status, userID.(int))
+
+	err = sc.serviceRequestService.UpdateServiceRequestStatus(c.Request.Context(), id, req.Status, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
-	
-	// 获取更新后的完整信息
-	updatedRequest, err := sc.serviceRequestService.GetServiceRequestByID(c.Request.Context(), id)
+
+	// 获取更新后的服务请求
+	serviceRequest, err := sc.serviceRequestService.GetServiceRequest(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, "获取更新后的服务请求失败")
 		return
 	}
-	
-	common.Success(c, dto.ToServiceRequestResponse(updatedRequest))
+
+	common.Success(c, serviceRequest)
 }
 
 // CreateServiceCatalog 创建服务目录
+// @Summary 创建服务目录
+// @Description 创建新的服务目录
+// @Tags 服务目录
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateServiceCatalogRequest true "服务目录信息"
+// @Success 200 {object} common.Response{data=dto.ServiceCatalogResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/service-catalogs [post]
 func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 	var req dto.CreateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -224,18 +253,39 @@ func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 		return
 	}
 
-	catalog, err := sc.serviceCatalogService.CreateServiceCatalog(c.Request.Context(), &req)
+	// 从上下文获取租户ID
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	catalog, err := sc.serviceCatalogService.CreateServiceCatalog(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
 
-	common.Success(c, dto.ToServiceCatalogResponse(catalog))
+	common.Success(c, catalog)
 }
 
 // UpdateServiceCatalog 更新服务目录
+// @Summary 更新服务目录
+// @Description 更新指定的服务目录
+// @Tags 服务目录
+// @Accept json
+// @Produce json
+// @Param id path int true "服务目录ID"
+// @Param request body dto.UpdateServiceCatalogRequest true "服务目录更新信息"
+// @Success 200 {object} common.Response{data=dto.ServiceCatalogResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/service-catalogs/{id} [put]
 func (sc *ServiceController) UpdateServiceCatalog(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		common.Fail(c, 1001, "无效的服务目录ID")
 		return
@@ -247,13 +297,20 @@ func (sc *ServiceController) UpdateServiceCatalog(c *gin.Context) {
 		return
 	}
 
-	catalog, err := sc.serviceCatalogService.UpdateServiceCatalog(c.Request.Context(), id, &req)
+	// 从上下文获取租户ID
+	tenantID, exists := c.Get("tenant_id")
+	if !exists {
+		common.Fail(c, 2001, "租户信息缺失")
+		return
+	}
+
+	catalog, err := sc.serviceCatalogService.UpdateServiceCatalog(c.Request.Context(), id, &req, tenantID.(int))
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
 		return
 	}
 
-	common.Success(c, dto.ToServiceCatalogResponse(catalog))
+	common.Success(c, catalog)
 }
 
 // DeleteServiceCatalog 删除服务目录
@@ -287,5 +344,5 @@ func (sc *ServiceController) GetServiceCatalogByID(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.ToServiceCatalogResponse(catalog))
+	common.Success(c, catalog)
 }

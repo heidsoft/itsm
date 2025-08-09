@@ -1,0 +1,2376 @@
+definitions:
+  common.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  controller.ApproveRequest:
+    properties:
+      approve:
+        type: boolean
+      reason:
+        type: string
+    type: object
+  controller.ChatRequest:
+    properties:
+      conversation_id:
+        type: integer
+      limit:
+        type: integer
+      query:
+        type: string
+    required:
+    - query
+    type: object
+  controller.ToolExecRequest:
+    properties:
+      args:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.BatchUpdateUsersRequest:
+    properties:
+      action:
+        enum:
+        - activate
+        - deactivate
+        - department
+        type: string
+      department:
+        type: string
+      user_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    required:
+    - action
+    - user_ids
+    type: object
+  dto.CIAttributeDefinitionRequest:
+    properties:
+      ci_type_id:
+        type: integer
+      data_type:
+        enum:
+        - string
+        - integer
+        - float
+        - boolean
+        - date
+        - datetime
+        - json
+        - enum
+        - reference
+        type: string
+      default_value:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      display_order:
+        type: integer
+      enum_values:
+        items:
+          type: string
+        type: array
+      is_required:
+        type: boolean
+      is_searchable:
+        type: boolean
+      is_unique:
+        type: boolean
+      name:
+        type: string
+      reference_type:
+        type: string
+      validation_rules:
+        additionalProperties: true
+        type: object
+    required:
+    - ci_type_id
+    - data_type
+    - display_name
+    - name
+    type: object
+  dto.CIAttributeDefinitionResponse:
+    properties:
+      ci_type_id:
+        type: integer
+      created_at:
+        type: string
+      data_type:
+        type: string
+      default_value:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      display_order:
+        type: integer
+      enum_values:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_required:
+        type: boolean
+      is_searchable:
+        type: boolean
+      is_system:
+        description: 添加这个字段
+        type: boolean
+      is_unique:
+        type: boolean
+      name:
+        type: string
+      reference_type:
+        type: string
+      tenant_id:
+        type: integer
+      updated_at:
+        type: string
+      validation_rules:
+        additionalProperties: true
+        type: object
+    type: object
+  dto.CIAttributeSearchRequest:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      ci_type_id:
+        type: integer
+      limit:
+        type: integer
+      offset:
+        type: integer
+    required:
+    - attributes
+    type: object
+  dto.CIResponse:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      ci_type_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: string
+      tenant_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  dto.CITypeWithAttributesResponse:
+    properties:
+      attribute_definitions:
+        items:
+          $ref: '#/definitions/dto.CIAttributeDefinitionResponse'
+        type: array
+      category:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_system:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.ChangeUserStatusRequest:
+    properties:
+      active:
+        type: boolean
+    type: object
+  dto.CreateCIRequest:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      ci_type_id:
+        type: integer
+      description:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - maintenance
+        type: string
+      tenant_id:
+        type: integer
+    required:
+    - ci_type_id
+    - name
+    - status
+    - tenant_id
+    type: object
+  dto.CreateKnowledgeArticleRequest:
+    properties:
+      category:
+        type: string
+      content:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - category
+    - title
+    type: object
+  dto.CreateServiceCatalogRequest:
+    properties:
+      category:
+        maxLength: 100
+        type: string
+      delivery_time:
+        maxLength: 50
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      status:
+        enum:
+        - enabled
+        - disabled
+        type: string
+    required:
+    - category
+    - delivery_time
+    - name
+    type: object
+  dto.CreateServiceRequestRequest:
+    properties:
+      catalog_id:
+        minimum: 1
+        type: integer
+      reason:
+        maxLength: 500
+        type: string
+    required:
+    - catalog_id
+    type: object
+  dto.CreateTenantRequest:
+    properties:
+      code:
+        maxLength: 50
+        type: string
+      domain:
+        maxLength: 100
+        type: string
+      expires_at:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      quota:
+        additionalProperties: true
+        type: object
+      settings:
+        additionalProperties: true
+        type: object
+      type:
+        enum:
+        - trial
+        - standard
+        - professional
+        - enterprise
+        type: string
+    required:
+    - code
+    - name
+    - type
+    type: object
+  dto.CreateUserRequest:
+    properties:
+      department:
+        type: string
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      tenant_id:
+        minimum: 1
+        type: integer
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - tenant_id
+    - username
+    type: object
+  dto.DashboardKPIResponse:
+    properties:
+      color:
+        type: string
+      period:
+        type: string
+      title:
+        type: string
+      trend:
+        type: string
+      value:
+        type: string
+    type: object
+  dto.DashboardResponse:
+    properties:
+      kpis:
+        items:
+          $ref: '#/definitions/dto.DashboardKPIResponse'
+        type: array
+      last_updated:
+        type: string
+      multi_cloud_resources:
+        items:
+          $ref: '#/definitions/dto.MultiCloudResourceData'
+        type: array
+      resource_health:
+        items:
+          $ref: '#/definitions/dto.ResourceHealthData'
+        type: array
+    type: object
+  dto.KnowledgeArticleListResponse:
+    properties:
+      articles:
+        items:
+          $ref: '#/definitions/dto.KnowledgeArticleResponse'
+        type: array
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.KnowledgeArticleResponse:
+    properties:
+      author:
+        type: string
+      category:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      tenant_id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      views:
+        type: integer
+    type: object
+  dto.ListCIsResponse:
+    properties:
+      cis:
+        items:
+          $ref: '#/definitions/dto.CIResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.MultiCloudResourceData:
+    properties:
+      name:
+        type: string
+      私有云:
+        type: integer
+      腾讯云:
+        type: integer
+      阿里云:
+        type: integer
+    type: object
+  dto.PagedUsersResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/dto.PaginationResponse'
+      users:
+        items:
+          $ref: '#/definitions/dto.UserDetailResponse'
+        type: array
+    type: object
+  dto.PaginationResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_page:
+        type: integer
+    type: object
+  dto.ResetPasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    type: object
+  dto.ResourceHealthData:
+    properties:
+      name:
+        type: string
+      value:
+        type: integer
+    type: object
+  dto.ServiceCatalogListResponse:
+    properties:
+      catalogs:
+        items:
+          $ref: '#/definitions/dto.ServiceCatalogResponse'
+        type: array
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.ServiceCatalogResponse:
+    properties:
+      category:
+        type: string
+      created_at:
+        type: string
+      delivery_time:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.ServiceRequestListResponse:
+    properties:
+      page:
+        type: integer
+      requests:
+        items:
+          $ref: '#/definitions/dto.ServiceRequestResponse'
+        type: array
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.ServiceRequestResponse:
+    properties:
+      catalog:
+        $ref: '#/definitions/dto.ServiceCatalogResponse'
+      catalog_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      reason:
+        type: string
+      requester:
+        $ref: '#/definitions/dto.UserResponse'
+      requester_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  dto.TenantListResponse:
+    properties:
+      page:
+        type: integer
+      size:
+        type: integer
+      tenants:
+        items:
+          $ref: '#/definitions/dto.TenantResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.TenantResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      domain:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      quota:
+        additionalProperties: true
+        type: object
+      settings:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.UpdateCIRequest:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      description:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.UpdateKnowledgeArticleRequest:
+    properties:
+      category:
+        type: string
+      content:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
+  dto.UpdateServiceCatalogRequest:
+    properties:
+      category:
+        maxLength: 100
+        type: string
+      delivery_time:
+        maxLength: 50
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      status:
+        enum:
+        - enabled
+        - disabled
+        type: string
+    type: object
+  dto.UpdateServiceRequestStatusRequest:
+    properties:
+      status:
+        enum:
+        - pending
+        - in_progress
+        - completed
+        - rejected
+        type: string
+    required:
+    - status
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      department:
+        type: string
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      phone:
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    type: object
+  dto.UserDetailResponse:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      department:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+      tenant_id:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UserStatsResponse:
+    properties:
+      active:
+        type: integer
+      inactive:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.ValidateCIAttributesRequest:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      ci_type_id:
+        type: integer
+    required:
+    - attributes
+    - ci_type_id
+    type: object
+  dto.ValidateCIAttributesResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+      is_valid:
+        type: boolean
+      normalized_attributes:
+        additionalProperties: true
+        type: object
+      warnings:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+info:
+  contact: {}
+paths:
+  /ai/chat:
+    post:
+      consumes:
+      - application/json
+      description: 基于知识库的检索增强问答
+      parameters:
+      - description: 查询参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ChatRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: AI 问答（RAG）
+      tags:
+      - ai
+  /ai/search:
+    post:
+      consumes:
+      - application/json
+      description: RAG 搜索（支持 type=kb|incident）
+      parameters:
+      - description: 查询参数
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            query:
+              type: string
+            limit:
+              type: integer
+            type:
+              type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: AI 搜索（RAG）
+      tags:
+      - ai
+  /ai/triage:
+    post:
+      consumes:
+      - application/json
+      description: 智能分派与定级建议
+      parameters:
+      - description: 请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+          required:
+          - title
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 智能分派
+      tags:
+      - ai
+  /ai/summarize:
+    post:
+      consumes:
+      - application/json
+      description: 文本摘要
+      parameters:
+      - description: 请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            text:
+              type: string
+            max_len:
+              type: integer
+          required:
+          - text
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 摘要
+      tags:
+      - ai
+  /ai/similar-incidents:
+    post:
+      consumes:
+      - application/json
+      description: 相似事件检索
+      parameters:
+      - description: 请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            query:
+              type: string
+            limit:
+              type: integer
+          required:
+          - query
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 相似事件
+      tags:
+      - ai
+  /ai/tools:
+    get:
+      description: 列出可用工具
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 工具清单
+      tags:
+      - ai
+  /ai/tools/{id}/approve:
+    post:
+      consumes:
+      - application/json
+      description: 管理员审批危险工具执行请求
+      parameters:
+      - description: invocation id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 审批参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ApproveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 审批工具执行
+      tags:
+      - ai
+  /ai/tools/execute:
+    post:
+      consumes:
+      - application/json
+      description: 只读工具直接执行，危险工具生成审批记录
+      parameters:
+      - description: 执行参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ToolExecRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 执行工具
+      tags:
+      - ai
+  /api/admin/tenants:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取租户列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 状态过滤
+        in: query
+        name: status
+        type: string
+      - description: 类型过滤
+        in: query
+        name: type
+        type: string
+      - description: 搜索关键词
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TenantListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取租户列表
+      tags:
+      - 租户管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的租户
+      parameters:
+      - description: 租户信息
+        in: body
+        name: tenant
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTenantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TenantResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建租户
+      tags:
+      - 租户管理
+  /api/admin/tenants/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 更新指定租户的状态
+      parameters:
+      - description: 租户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态信息
+        in: body
+        name: status
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新租户状态
+      tags:
+      - 租户管理
+  /api/cmdb/ci-attributes/validate:
+    post:
+      consumes:
+      - application/json
+      description: 根据CI类型的属性定义验证提供的属性值
+      parameters:
+      - description: 验证请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ValidateCIAttributesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ValidateCIAttributesResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 验证CI属性
+      tags:
+      - CMDB
+  /api/cmdb/ci-types/{id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定CI类型的详细信息及其所有属性定义
+      parameters:
+      - description: CI类型ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CITypeWithAttributesResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取CI类型及其属性定义
+      tags:
+      - CMDB
+  /api/cmdb/ci-types/attributes:
+    post:
+      consumes:
+      - application/json
+      description: 为指定的CI类型创建新的属性定义
+      parameters:
+      - description: 属性定义信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CIAttributeDefinitionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CIAttributeDefinitionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建CI属性定义
+      tags:
+      - CMDB
+  /api/cmdb/cis/search-by-attributes:
+    post:
+      consumes:
+      - application/json
+      description: 使用动态属性条件搜索配置项
+      parameters:
+      - description: 搜索条件
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CIAttributeSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ListCIsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 根据属性搜索CI
+      tags:
+      - CMDB
+  /api/cmdb/configuration-items:
+    get:
+      description: 分页获取配置项列表，支持多种过滤条件
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      - description: 配置项类型
+        enum:
+        - server
+        - database
+        - application
+        - network
+        - storage
+        in: query
+        name: type
+        type: string
+      - description: 状态
+        enum:
+        - active
+        - inactive
+        - maintenance
+        in: query
+        name: status
+        type: string
+      - description: 业务服务
+        in: query
+        name: business_service
+        type: string
+      - description: 负责人
+        in: query
+        name: owner
+        type: string
+      - description: 环境
+        enum:
+        - production
+        - staging
+        - development
+        in: query
+        name: environment
+        type: string
+      - description: 搜索关键词
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ListCIsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取配置项列表
+      tags:
+      - CMDB
+    post:
+      consumes:
+      - application/json
+      description: 创建新的配置项
+      parameters:
+      - description: 创建配置项请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCIRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CIResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建配置项
+      tags:
+      - CMDB
+  /api/cmdb/configuration-items/{id}:
+    delete:
+      description: 删除指定的配置项
+      parameters:
+      - description: 配置项ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除配置项
+      tags:
+      - CMDB
+    get:
+      description: 根据ID获取配置项详情
+      parameters:
+      - description: 配置项ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CIResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取配置项详情
+      tags:
+      - CMDB
+    put:
+      consumes:
+      - application/json
+      description: 更新配置项信息
+      parameters:
+      - description: 配置项ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新配置项请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCIRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CIResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新配置项
+      tags:
+      - CMDB
+  /api/dashboard:
+    get:
+      description: 获取仪表盘KPI指标、资源分布和健康状态数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.DashboardResponse'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取仪表盘数据
+      tags:
+      - dashboard
+  /api/dashboard/kpis:
+    get:
+      description: 获取仪表盘KPI指标数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.DashboardKPIResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取KPI指标
+      tags:
+      - dashboard
+  /api/dashboard/resources/distribution:
+    get:
+      description: 获取多云资源分布数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MultiCloudResourceData'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取资源分布数据
+      tags:
+      - dashboard
+  /api/dashboard/resources/health:
+    get:
+      description: 获取资源健康状态数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ResourceHealthData'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取资源健康状态
+      tags:
+      - dashboard
+  /api/knowledge-articles:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取知识库文章列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 分类过滤
+        in: query
+        name: category
+        type: string
+      - description: 状态过滤
+        in: query
+        name: status
+        type: string
+      - description: 搜索关键词
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KnowledgeArticleListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取知识库文章列表
+      tags:
+      - 知识库
+    post:
+      consumes:
+      - application/json
+      description: 创建新的知识库文章
+      parameters:
+      - description: 文章信息
+        in: body
+        name: article
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKnowledgeArticleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KnowledgeArticleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建知识库文章
+      tags:
+      - 知识库
+  /api/knowledge-articles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的知识库文章
+      parameters:
+      - description: 文章ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除知识库文章
+      tags:
+      - 知识库
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取知识库文章详情
+      parameters:
+      - description: 文章ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KnowledgeArticleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取知识库文章详情
+      tags:
+      - 知识库
+    put:
+      consumes:
+      - application/json
+      description: 更新指定的知识库文章
+      parameters:
+      - description: 文章ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文章信息
+        in: body
+        name: article
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKnowledgeArticleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KnowledgeArticleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新知识库文章
+      tags:
+      - 知识库
+  /api/knowledge-articles/categories:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前租户的知识库分类列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取知识库分类列表
+      tags:
+      - 知识库
+  /api/service-catalogs:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取服务目录列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      - description: 分类过滤
+        in: query
+        name: category
+        type: string
+      - description: 状态过滤
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceCatalogListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取服务目录列表
+      tags:
+      - 服务目录
+    post:
+      consumes:
+      - application/json
+      description: 创建新的服务目录
+      parameters:
+      - description: 服务目录信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateServiceCatalogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceCatalogResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建服务目录
+      tags:
+      - 服务目录
+  /api/service-catalogs/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 更新指定的服务目录
+      parameters:
+      - description: 服务目录ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 服务目录更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateServiceCatalogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceCatalogResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新服务目录
+      tags:
+      - 服务目录
+  /api/service-requests:
+    post:
+      consumes:
+      - application/json
+      description: 发起新的服务请求
+      parameters:
+      - description: 服务请求信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateServiceRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建服务请求
+      tags:
+      - 服务请求
+  /api/service-requests/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取服务请求详情
+      parameters:
+      - description: 服务请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取服务请求详情
+      tags:
+      - 服务请求
+  /api/service-requests/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 更新服务请求的状态
+      parameters:
+      - description: 服务请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateServiceRequestStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新服务请求状态
+      tags:
+      - 服务请求
+  /api/service-requests/me:
+    get:
+      consumes:
+      - application/json
+      description: 查询当前登录用户的服务请求列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      - description: 状态
+        enum:
+        - pending
+        - in_progress
+        - completed
+        - rejected
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取当前用户的服务请求列表
+      tags:
+      - 服务请求
+  /api/v1/users:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取用户列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 租户ID
+        in: query
+        name: tenant_id
+        type: integer
+      - description: 状态过滤
+        enum:
+        - active
+        - inactive
+        in: query
+        name: status
+        type: string
+      - description: 部门过滤
+        in: query
+        name: department
+        type: string
+      - description: 搜索关键词
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PagedUsersResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取用户列表
+      tags:
+      - 用户管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新用户
+      parameters:
+      - description: 用户信息
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建用户
+      tags:
+      - 用户管理
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除用户（软删除）
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除用户
+      tags:
+      - 用户管理
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取用户详情
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取用户详情
+      tags:
+      - 用户管理
+    put:
+      consumes:
+      - application/json
+      description: 更新用户信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 用户信息
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新用户信息
+      tags:
+      - 用户管理
+  /api/v1/users/{id}/reset-password:
+    put:
+      consumes:
+      - application/json
+      description: 管理员重置用户密码
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 新密码
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 重置用户密码
+      tags:
+      - 用户管理
+  /api/v1/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 激活或禁用用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态信息
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangeUserStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更改用户状态
+      tags:
+      - 用户管理
+  /api/v1/users/batch:
+    put:
+      consumes:
+      - application/json
+      description: 批量更新用户状态或部门
+      parameters:
+      - description: 批量更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BatchUpdateUsersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 批量更新用户
+      tags:
+      - 用户管理
+  /api/v1/users/search:
+    get:
+      consumes:
+      - application/json
+      description: 搜索用户
+      parameters:
+      - description: 搜索关键词
+        in: query
+        name: keyword
+        required: true
+        type: string
+      - description: 租户ID
+        in: query
+        name: tenant_id
+        type: integer
+      - default: 10
+        description: 限制数量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.UserResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 搜索用户
+      tags:
+      - 用户管理
+  /api/v1/users/stats:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户统计信息
+      parameters:
+      - description: 租户ID
+        in: query
+        name: tenant_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserStatsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取用户统计
+      tags:
+      - 用户管理
+swagger: "2.0"

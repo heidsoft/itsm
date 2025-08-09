@@ -2,179 +2,122 @@ package dto
 
 import (
 	"time"
+
+	"itsm-backend/ent"
 )
+
+// Incident 事件DTO
+type Incident struct {
+	ID                  int        `json:"id"`
+	IncidentNumber      string     `json:"incident_number"`
+	Title               string     `json:"title"`
+	Description         string     `json:"description"`
+	Status              string     `json:"status"`
+	Priority            string     `json:"priority"`
+	ReporterID          int        `json:"reporter_id"`
+	AssigneeID          *int       `json:"assignee_id,omitempty"`
+	ConfigurationItemID *int       `json:"configuration_item_id,omitempty"`
+	TenantID            int        `json:"tenant_id"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+	ResolvedAt          *time.Time `json:"resolved_at,omitempty"`
+	ClosedAt            *time.Time `json:"closed_at,omitempty"`
+}
 
 // CreateIncidentRequest 创建事件请求
 type CreateIncidentRequest struct {
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description"`
-	Priority    string `json:"priority" binding:"required"`
-	Source      string `json:"source" binding:"required"`
-	Type        string `json:"type" binding:"required"`
-	IsMajor     bool   `json:"is_major_incident"`
-	AssigneeID  *int   `json:"assignee_id"`
-	// 阿里云相关字段
-	AlibabaCloudInstanceID string                 `json:"alibaba_cloud_instance_id"`
-	AlibabaCloudRegion     string                 `json:"alibaba_cloud_region"`
-	AlibabaCloudService    string                 `json:"alibaba_cloud_service"`
-	AlibabaCloudAlertData  map[string]interface{} `json:"alibaba_cloud_alert_data"`
-	AlibabaCloudMetrics    map[string]interface{} `json:"alibaba_cloud_metrics"`
-	// 安全事件相关字段
-	SecurityEventType     string                 `json:"security_event_type"`
-	SecurityEventSourceIP string                 `json:"security_event_source_ip"`
-	SecurityEventTarget   string                 `json:"security_event_target"`
-	SecurityEventDetails  map[string]interface{} `json:"security_event_details"`
-	// 关联的配置项
-	AffectedConfigurationItemIDs []int `json:"affected_configuration_item_ids"`
+	Title               string `json:"title" binding:"required,max=255"`
+	Description         string `json:"description" binding:"required"`
+	Priority            string `json:"priority" binding:"required,oneof=low medium high urgent"`
+	AssigneeID          *int   `json:"assignee_id,omitempty"`
+	ConfigurationItemID *int   `json:"configuration_item_id,omitempty"`
 }
 
 // UpdateIncidentRequest 更新事件请求
 type UpdateIncidentRequest struct {
-	Title       *string `json:"title"`
-	Description *string `json:"description"`
-	Priority    *string `json:"priority"`
-	Type        *string `json:"type"`
-	AssigneeID  *int    `json:"assignee_id"`
-	IsMajor     *bool   `json:"is_major_incident"`
+	Title               *string `json:"title,omitempty" binding:"omitempty,max=255"`
+	Description         *string `json:"description,omitempty"`
+	Status              *string `json:"status,omitempty" binding:"omitempty,oneof=new in_progress waiting_customer resolved closed"`
+	Priority            *string `json:"priority,omitempty" binding:"omitempty,oneof=low medium high urgent"`
+	AssigneeID          *int    `json:"assignee_id,omitempty"`
+	ConfigurationItemID *int    `json:"configuration_item_id,omitempty"`
 }
 
-// UpdateIncidentStatusRequest 更新事件状态请求
-type UpdateIncidentStatusRequest struct {
-	Status         string `json:"status" binding:"required"`
-	ResolutionNote string `json:"resolution_note"`
-	SuspendReason  string `json:"suspend_reason"`
+// GetIncidentsRequest 获取事件列表请求
+type GetIncidentsRequest struct {
+	Page                int    `form:"page" binding:"min=1"`
+	Size                int    `form:"size" binding:"min=1,max=100"`
+	Status              string `form:"status"`
+	Priority            string `form:"priority"`
+	ReporterID          int    `form:"reporter_id"`
+	AssigneeID          int    `form:"assignee_id"`
+	ConfigurationItemID int    `form:"configuration_item_id"`
+	TenantID            int    `form:"tenant_id"`
 }
 
-// IncidentResponse 事件响应
-type IncidentResponse struct {
-	ID              int           `json:"id"`
-	Title           string        `json:"title"`
-	Description     string        `json:"description"`
-	Status          string        `json:"status"`
-	Priority        string        `json:"priority"`
-	Source          string        `json:"source"`
-	Type            string        `json:"type"`
-	IncidentNumber  string        `json:"incident_number"`
-	IsMajorIncident bool          `json:"is_major_incident"`
-	Reporter        *UserResponse `json:"reporter"`
-	Assignee        *UserResponse `json:"assignee"`
-	// 阿里云相关字段
-	AlibabaCloudInstanceID string                 `json:"alibaba_cloud_instance_id"`
-	AlibabaCloudRegion     string                 `json:"alibaba_cloud_region"`
-	AlibabaCloudService    string                 `json:"alibaba_cloud_service"`
-	AlibabaCloudAlertData  map[string]interface{} `json:"alibaba_cloud_alert_data"`
-	AlibabaCloudMetrics    map[string]interface{} `json:"alibaba_cloud_metrics"`
-	// 安全事件相关字段
-	SecurityEventType     string                 `json:"security_event_type"`
-	SecurityEventSourceIP string                 `json:"security_event_source_ip"`
-	SecurityEventTarget   string                 `json:"security_event_target"`
-	SecurityEventDetails  map[string]interface{} `json:"security_event_details"`
-	// 时间字段
-	DetectedAt  *time.Time `json:"detected_at"`
-	ConfirmedAt *time.Time `json:"confirmed_at"`
-	ResolvedAt  *time.Time `json:"resolved_at"`
-	ClosedAt    *time.Time `json:"closed_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	// 关联数据
-	AffectedConfigurationItems []ConfigurationItemResponse `json:"affected_configuration_items"`
-	StatusLogs                 []interface{}               `json:"status_logs"`
-	Comments                   []interface{}               `json:"comments"`
+// IncidentListResponse 事件列表响应
+type IncidentListResponse struct {
+	Incidents []Incident `json:"incidents"`
+	Total     int        `json:"total"`
+	Page      int        `json:"page"`
+	Size      int        `json:"size"`
 }
 
-// ListIncidentsRequest 获取事件列表请求
-type ListIncidentsRequest struct {
-	Page       int    `form:"page" binding:"min=1"`
-	PageSize   int    `form:"page_size" binding:"min=1,max=100"`
-	Status     string `form:"status"`
-	Priority   string `form:"priority"`
-	Source     string `form:"source"`
-	Type       string `form:"type"`
-	AssigneeID int    `form:"assignee_id"`
-	IsMajor    *bool  `form:"is_major_incident"`
-	Keyword    string `form:"keyword"`
+// IncidentStatsResponse 事件统计响应
+type IncidentStatsResponse struct {
+	TotalIncidents        int `json:"total_incidents"`
+	OpenIncidents         int `json:"open_incidents"`
+	ResolvedIncidents     int `json:"resolved_incidents"`
+	ClosedIncidents       int `json:"closed_incidents"`
+	UrgentIncidents       int `json:"urgent_incidents"`
+	HighPriorityIncidents int `json:"high_priority_incidents"`
 }
 
-// ListIncidentsResponse 事件列表响应
-type ListIncidentsResponse struct {
-	Incidents []IncidentResponse `json:"incidents"`
-	Total     int                `json:"total"`
-	Page      int                `json:"page"`
-	PageSize  int                `json:"page_size"`
+// ToIncidentResponse 转换为事件响应
+func ToIncidentResponse(incident *ent.Incident) *Incident {
+	resp := &Incident{
+		ID:             incident.ID,
+		IncidentNumber: incident.IncidentNumber,
+		Title:          incident.Title,
+		Description:    incident.Description,
+		Status:         incident.Status,
+		Priority:       incident.Priority,
+		ReporterID:     incident.ReporterID,
+		TenantID:       incident.TenantID,
+		CreatedAt:      incident.CreatedAt,
+		UpdatedAt:      incident.UpdatedAt,
+	}
+
+	// 处理可选字段 - 检查是否为0值
+	if incident.AssigneeID > 0 {
+		resp.AssigneeID = &incident.AssigneeID
+	}
+	if incident.ConfigurationItemID > 0 {
+		resp.ConfigurationItemID = &incident.ConfigurationItemID
+	}
+	if !incident.ResolvedAt.IsZero() {
+		resp.ResolvedAt = &incident.ResolvedAt
+	}
+	if !incident.ClosedAt.IsZero() {
+		resp.ClosedAt = &incident.ClosedAt
+	}
+
+	return resp
 }
 
-// AlibabaCloudAlertRequest 阿里云告警请求
-type AlibabaCloudAlertRequest struct {
-	AlertID          string                 `json:"alert_id"`
-	AlertName        string                 `json:"alert_name"`
-	AlertDescription string                 `json:"alert_description"`
-	AlertLevel       string                 `json:"alert_level"`
-	InstanceID       string                 `json:"instance_id"`
-	Region           string                 `json:"region"`
-	Service          string                 `json:"service"`
-	Metrics          map[string]interface{} `json:"metrics"`
-	AlertData        map[string]interface{} `json:"alert_data"`
-	DetectedAt       time.Time              `json:"detected_at"`
-}
+// IncidentStatus 事件状态常量
+const (
+	IncidentStatusNew             = "new"
+	IncidentStatusInProgress      = "in_progress"
+	IncidentStatusWaitingCustomer = "waiting_customer"
+	IncidentStatusResolved        = "resolved"
+	IncidentStatusClosed          = "closed"
+)
 
-// SecurityEventRequest 安全事件请求
-type SecurityEventRequest struct {
-	EventID          string                 `json:"event_id"`
-	EventType        string                 `json:"event_type"`
-	EventName        string                 `json:"event_name"`
-	EventDescription string                 `json:"event_description"`
-	SourceIP         string                 `json:"source_ip"`
-	Target           string                 `json:"target"`
-	Severity         string                 `json:"severity"`
-	EventDetails     map[string]interface{} `json:"event_details"`
-	DetectedAt       time.Time              `json:"detected_at"`
-}
-
-// CloudProductEventRequest 云产品事件请求
-type CloudProductEventRequest struct {
-	EventID          string                 `json:"event_id"`
-	EventType        string                 `json:"event_type"`
-	EventName        string                 `json:"event_name"`
-	EventDescription string                 `json:"event_description"`
-	Product          string                 `json:"product"`
-	InstanceID       string                 `json:"instance_id"`
-	Region           string                 `json:"region"`
-	EventData        map[string]interface{} `json:"event_data"`
-	DetectedAt       time.Time              `json:"detected_at"`
-}
-
-// IncidentManagementMetrics 事件管理指标
-type IncidentManagementMetrics struct {
-	TotalIncidents    int     `json:"total_incidents"`
-	OpenIncidents     int     `json:"open_incidents"`
-	CriticalIncidents int     `json:"critical_incidents"`
-	MajorIncidents    int     `json:"major_incidents"`
-	AvgResolutionTime float64 `json:"avg_resolution_time"` // 小时
-	MTTA              float64 `json:"mtta"`                // 平均确认时间（小时）
-	MTTR              float64 `json:"mttr"`                // 平均恢复时间（小时）
-}
-
-// IncidentSourceStats 事件来源统计
-type IncidentSourceStats struct {
-	Source        string `json:"source"`
-	Count         int    `json:"count"`
-	CriticalCount int    `json:"critical_count"`
-	MajorCount    int    `json:"major_count"`
-}
-
-// IncidentTypeStats 事件类型统计
-type IncidentTypeStats struct {
-	Type          string `json:"type"`
-	Count         int    `json:"count"`
-	CriticalCount int    `json:"critical_count"`
-	MajorCount    int    `json:"major_count"`
-}
-
-// IncidentTrend 事件趋势
-type IncidentTrend struct {
-	Date          string `json:"date"`
-	TotalCount    int    `json:"total_count"`
-	ResolvedCount int    `json:"resolved_count"`
-	CriticalCount int    `json:"critical_count"`
-	MajorCount    int    `json:"major_count"`
-}
+// IncidentPriority 事件优先级常量
+const (
+	IncidentPriorityLow    = "low"
+	IncidentPriorityMedium = "medium"
+	IncidentPriorityHigh   = "high"
+	IncidentPriorityUrgent = "urgent"
+)

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -65,19 +64,24 @@ func RequesterID(v int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldRequesterID, v))
 }
 
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldStatus, v))
+}
+
 // Reason applies equality check predicate on the "reason" field. It's identical to ReasonEQ.
 func Reason(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldReason, v))
 }
 
-// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
-func TenantID(v int) predicate.ServiceRequest {
-	return predicate.ServiceRequest(sql.FieldEQ(FieldTenantID, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
 // CatalogIDEQ applies the EQ predicate on the "catalog_id" field.
@@ -100,6 +104,26 @@ func CatalogIDNotIn(vs ...int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldNotIn(FieldCatalogID, vs...))
 }
 
+// CatalogIDGT applies the GT predicate on the "catalog_id" field.
+func CatalogIDGT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldCatalogID, v))
+}
+
+// CatalogIDGTE applies the GTE predicate on the "catalog_id" field.
+func CatalogIDGTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldCatalogID, v))
+}
+
+// CatalogIDLT applies the LT predicate on the "catalog_id" field.
+func CatalogIDLT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldCatalogID, v))
+}
+
+// CatalogIDLTE applies the LTE predicate on the "catalog_id" field.
+func CatalogIDLTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldCatalogID, v))
+}
+
 // RequesterIDEQ applies the EQ predicate on the "requester_id" field.
 func RequesterIDEQ(v int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldRequesterID, v))
@@ -120,24 +144,89 @@ func RequesterIDNotIn(vs ...int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldNotIn(FieldRequesterID, vs...))
 }
 
+// RequesterIDGT applies the GT predicate on the "requester_id" field.
+func RequesterIDGT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldRequesterID, v))
+}
+
+// RequesterIDGTE applies the GTE predicate on the "requester_id" field.
+func RequesterIDGTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldRequesterID, v))
+}
+
+// RequesterIDLT applies the LT predicate on the "requester_id" field.
+func RequesterIDLT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldRequesterID, v))
+}
+
+// RequesterIDLTE applies the LTE predicate on the "requester_id" field.
+func RequesterIDLTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldRequesterID, v))
+}
+
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.ServiceRequest {
+func StatusEQ(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.ServiceRequest {
+func StatusNEQ(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.ServiceRequest {
+func StatusIn(vs ...string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.ServiceRequest {
+func StatusNotIn(vs ...string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // ReasonEQ applies the EQ predicate on the "reason" field.
@@ -215,26 +304,6 @@ func ReasonContainsFold(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldContainsFold(FieldReason, v))
 }
 
-// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
-func TenantIDEQ(v int) predicate.ServiceRequest {
-	return predicate.ServiceRequest(sql.FieldEQ(FieldTenantID, v))
-}
-
-// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
-func TenantIDNEQ(v int) predicate.ServiceRequest {
-	return predicate.ServiceRequest(sql.FieldNEQ(FieldTenantID, v))
-}
-
-// TenantIDIn applies the In predicate on the "tenant_id" field.
-func TenantIDIn(vs ...int) predicate.ServiceRequest {
-	return predicate.ServiceRequest(sql.FieldIn(FieldTenantID, vs...))
-}
-
-// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
-func TenantIDNotIn(vs ...int) predicate.ServiceRequest {
-	return predicate.ServiceRequest(sql.FieldNotIn(FieldTenantID, vs...))
-}
-
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldCreatedAt, v))
@@ -275,73 +344,44 @@ func CreatedAtLTE(v time.Time) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.ServiceRequest {
-	return predicate.ServiceRequest(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.ServiceRequest {
-	return predicate.ServiceRequest(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldUpdatedAt, v))
 }
 
-// HasCatalog applies the HasEdge predicate on the "catalog" edge.
-func HasCatalog() predicate.ServiceRequest {
-	return predicate.ServiceRequest(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CatalogTable, CatalogColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldUpdatedAt, vs...))
 }
 
-// HasCatalogWith applies the HasEdge predicate on the "catalog" edge with a given conditions (other predicates).
-func HasCatalogWith(preds ...predicate.ServiceCatalog) predicate.ServiceRequest {
-	return predicate.ServiceRequest(func(s *sql.Selector) {
-		step := newCatalogStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldUpdatedAt, vs...))
 }
 
-// HasRequester applies the HasEdge predicate on the "requester" edge.
-func HasRequester() predicate.ServiceRequest {
-	return predicate.ServiceRequest(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldUpdatedAt, v))
 }
 
-// HasRequesterWith applies the HasEdge predicate on the "requester" edge with a given conditions (other predicates).
-func HasRequesterWith(preds ...predicate.User) predicate.ServiceRequest {
-	return predicate.ServiceRequest(func(s *sql.Selector) {
-		step := newRequesterStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
 // And groups predicates with the AND operator between them.

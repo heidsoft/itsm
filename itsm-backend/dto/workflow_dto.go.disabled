@@ -1,0 +1,284 @@
+package dto
+
+import (
+	"itsm-backend/ent"
+	"time"
+)
+
+// CreateWorkflowRequest 创建工作流请求
+type CreateWorkflowRequest struct {
+	Name             string                 `json:"name" binding:"required,min=2,max=100"`
+	Description      string                 `json:"description"`
+	Category         string                 `json:"category"`
+	BPMNXML          string                 `json:"bpmn_xml" binding:"required"`
+	ProcessVariables map[string]interface{} `json:"process_variables"`
+	IsTemplate       bool                   `json:"is_template"`
+	TemplateCategory string                 `json:"template_category"`
+	Metadata         map[string]interface{} `json:"metadata"`
+}
+
+// UpdateWorkflowRequest 更新工作流请求
+type UpdateWorkflowRequest struct {
+	Name             string                 `json:"name" binding:"omitempty,min=2,max=100"`
+	Description      string                 `json:"description"`
+	Category         string                 `json:"category"`
+	BPMNXML          string                 `json:"bpmn_xml"`
+	ProcessVariables map[string]interface{} `json:"process_variables"`
+	Status           string                 `json:"status" binding:"omitempty,oneof=draft active inactive archived"`
+	Metadata         map[string]interface{} `json:"metadata"`
+}
+
+// ListWorkflowsRequest 获取工作流列表请求
+type ListWorkflowsRequest struct {
+	Page       int    `json:"page" form:"page"`
+	PageSize   int    `json:"page_size" form:"page_size"`
+	Category   string `json:"category" form:"category"`
+	Status     string `json:"status" form:"status"`
+	IsTemplate *bool  `json:"is_template" form:"is_template"`
+	Keyword    string `json:"keyword" form:"keyword"`
+	SortBy     string `json:"sort_by" form:"sort_by"`
+	SortOrder  string `json:"sort_order" form:"sort_order"`
+}
+
+// ListWorkflowsResponse 工作流列表响应
+type ListWorkflowsResponse struct {
+	Workflows []*ent.Workflow `json:"workflows"`
+	Total     int             `json:"total"`
+	Page      int             `json:"page"`
+	PageSize  int             `json:"page_size"`
+}
+
+// WorkflowDetailResponse 工作流详情响应
+type WorkflowDetailResponse struct {
+	Workflow       *ent.Workflow           `json:"workflow"`
+	CurrentVersion *ent.WorkflowVersion    `json:"current_version"`
+	Versions       []*ent.WorkflowVersion  `json:"versions"`
+	Instances      []*ent.WorkflowInstance `json:"instances"`
+	Forms          []*ent.WorkflowForm     `json:"forms"`
+}
+
+// StartWorkflowRequest 启动工作流请求
+type StartWorkflowRequest struct {
+	WorkflowID  int                    `json:"workflow_id" binding:"required"`
+	BusinessKey string                 `json:"business_key"`
+	Variables   map[string]interface{} `json:"variables"`
+	Priority    string                 `json:"priority" binding:"omitempty,oneof=low normal high critical"`
+	DueDate     *time.Time             `json:"due_date"`
+	Assignee    string                 `json:"assignee"`
+	Comment     string                 `json:"comment"`
+}
+
+// StartWorkflowResponse 启动工作流响应
+type StartWorkflowResponse struct {
+	InstanceID  string                 `json:"instance_id"`
+	BusinessKey string                 `json:"business_key"`
+	Status      string                 `json:"status"`
+	CurrentTask *WorkflowTaskResponse  `json:"current_task"`
+	Variables   map[string]interface{} `json:"variables"`
+	StartedAt   time.Time              `json:"started_at"`
+}
+
+// WorkflowTaskResponse 工作流任务响应
+type WorkflowTaskResponse struct {
+	TaskID          string                 `json:"task_id"`
+	ActivityID      string                 `json:"activity_id"`
+	Name            string                 `json:"name"`
+	Type            string                 `json:"type"`
+	Assignee        string                 `json:"assignee"`
+	CandidateUsers  []string               `json:"candidate_users"`
+	CandidateGroups []string               `json:"candidate_groups"`
+	Status          string                 `json:"status"`
+	Priority        string                 `json:"priority"`
+	CreatedAt       time.Time              `json:"created_at"`
+	DueDate         *time.Time             `json:"due_date"`
+	FormData        map[string]interface{} `json:"form_data"`
+	Variables       map[string]interface{} `json:"variables"`
+}
+
+// CompleteTaskRequest 完成任务请求
+type CompleteTaskRequest struct {
+	TaskID    string                 `json:"task_id" binding:"required"`
+	Variables map[string]interface{} `json:"variables"`
+	FormData  map[string]interface{} `json:"form_data"`
+	Comment   string                 `json:"comment"`
+	Outcome   string                 `json:"outcome"`
+}
+
+// ClaimTaskRequest 认领任务请求
+type ClaimTaskRequest struct {
+	TaskID string `json:"task_id" binding:"required"`
+	UserID string `json:"user_id" binding:"required"`
+}
+
+// UnclaimTaskRequest 取消认领任务请求
+type UnclaimTaskRequest struct {
+	TaskID string `json:"task_id" binding:"required"`
+}
+
+// DelegateTaskRequest 委派任务请求
+type DelegateTaskRequest struct {
+	TaskID     string `json:"task_id" binding:"required"`
+	DelegateTo string `json:"delegate_to" binding:"required"`
+	Comment    string `json:"comment"`
+}
+
+// SuspendWorkflowRequest 暂停工作流请求
+type SuspendWorkflowRequest struct {
+	InstanceID string `json:"instance_id" binding:"required"`
+	Reason     string `json:"reason"`
+}
+
+// ResumeWorkflowRequest 恢复工作流请求
+type ResumeWorkflowRequest struct {
+	InstanceID string `json:"instance_id" binding:"required"`
+	Comment    string `json:"comment"`
+}
+
+// TerminateWorkflowRequest 终止工作流请求
+type TerminateWorkflowRequest struct {
+	InstanceID string `json:"instance_id" binding:"required"`
+	Reason     string `json:"reason"`
+}
+
+// ListWorkflowInstancesRequest 获取工作流实例列表请求
+type ListWorkflowInstancesRequest struct {
+	Page        int        `json:"page" form:"page"`
+	PageSize    int        `json:"page_size" form:"page_size"`
+	WorkflowID  int        `json:"workflow_id" form:"workflow_id"`
+	Status      string     `json:"status" form:"status"`
+	BusinessKey string     `json:"business_key" form:"business_key"`
+	StartedBy   string     `json:"started_by" form:"started_by"`
+	DateFrom    *time.Time `json:"date_from" form:"date_from"`
+	DateTo      *time.Time `json:"date_to" form:"date_to"`
+	SortBy      string     `json:"sort_by" form:"sort_by"`
+	SortOrder   string     `json:"sort_order" form:"sort_order"`
+}
+
+// ListWorkflowInstancesResponse 工作流实例列表响应
+type ListWorkflowInstancesResponse struct {
+	Instances []*ent.WorkflowInstance `json:"instances"`
+	Total     int                     `json:"total"`
+	Page      int                     `json:"page"`
+	PageSize  int                     `json:"page_size"`
+}
+
+// ListWorkflowTasksRequest 获取工作流任务列表请求
+type ListWorkflowTasksRequest struct {
+	Page       int        `json:"page" form:"page"`
+	PageSize   int        `json:"page_size" form:"page_size"`
+	InstanceID int        `json:"instance_id" form:"instance_id"`
+	Assignee   string     `json:"assignee" form:"assignee"`
+	Status     string     `json:"status" form:"status"`
+	Priority   string     `json:"priority" form:"priority"`
+	DateFrom   *time.Time `json:"date_from" form:"date_from"`
+	DateTo     *time.Time `json:"date_to" form:"date_to"`
+	SortBy     string     `json:"sort_by" form:"sort_by"`
+	SortOrder  string     `json:"sort_order" form:"sort_order"`
+}
+
+// ListWorkflowTasksResponse 工作流任务列表响应
+type ListWorkflowTasksResponse struct {
+	Tasks    []*ent.WorkflowTask `json:"tasks"`
+	Total    int                 `json:"total"`
+	Page     int                 `json:"page"`
+	PageSize int                 `json:"page_size"`
+}
+
+// WorkflowInstanceDetailResponse 工作流实例详情响应
+type WorkflowInstanceDetailResponse struct {
+	Instance   *ent.WorkflowInstance   `json:"instance"`
+	Workflow   *ent.Workflow           `json:"workflow"`
+	Tasks      []*ent.WorkflowTask     `json:"tasks"`
+	Activities []*ent.WorkflowActivity `json:"activities"`
+	Variables  map[string]interface{}  `json:"variables"`
+}
+
+// CreateWorkflowVersionRequest 创建工作流版本请求
+type CreateWorkflowVersionRequest struct {
+	WorkflowID       int                    `json:"workflow_id" binding:"required"`
+	Version          string                 `json:"version" binding:"required"`
+	BPMNXML          string                 `json:"bpmn_xml" binding:"required"`
+	ProcessVariables map[string]interface{} `json:"process_variables"`
+	ChangeLog        string                 `json:"change_log"`
+	Metadata         map[string]interface{} `json:"metadata"`
+}
+
+// DeployWorkflowRequest 部署工作流请求
+type DeployWorkflowRequest struct {
+	WorkflowID int    `json:"workflow_id" binding:"required"`
+	Version    string `json:"version" binding:"required"`
+	Comment    string `json:"comment"`
+}
+
+// ValidateBPMNRequest BPMN验证请求
+type ValidateBPMNRequest struct {
+	BPMNXML string `json:"bpmn_xml" binding:"required"`
+}
+
+// ValidateBPMNResponse BPMN验证响应
+type ValidateBPMNResponse struct {
+	IsValid  bool     `json:"is_valid"`
+	Errors   []string `json:"errors"`
+	Warnings []string `json:"warnings"`
+	Info     []string `json:"info"`
+}
+
+// WorkflowStatisticsResponse 工作流统计响应
+type WorkflowStatisticsResponse struct {
+	TotalWorkflows     int     `json:"total_workflows"`
+	ActiveWorkflows    int     `json:"active_workflows"`
+	RunningInstances   int     `json:"running_instances"`
+	CompletedInstances int     `json:"completed_instances"`
+	PendingTasks       int     `json:"pending_tasks"`
+	OverdueTasks       int     `json:"overdue_tasks"`
+	AvgCompletionTime  float64 `json:"avg_completion_time"`
+}
+
+// WorkflowTemplateResponse 工作流模板响应
+type WorkflowTemplateResponse struct {
+	ID               int                    `json:"id"`
+	Name             string                 `json:"name"`
+	Description      string                 `json:"description"`
+	Category         string                 `json:"category"`
+	BPMNXML          string                 `json:"bpmn_xml"`
+	FormSchema       map[string]interface{} `json:"form_schema"`
+	ProcessVariables map[string]interface{} `json:"process_variables"`
+	UsageCount       int                    `json:"usage_count"`
+	CreatedAt        time.Time              `json:"created_at"`
+}
+
+// ImportWorkflowRequest 导入工作流请求
+type ImportWorkflowRequest struct {
+	Name             string                 `json:"name" binding:"required"`
+	Description      string                 `json:"description"`
+	Category         string                 `json:"category"`
+	BPMNXML          string                 `json:"bpmn_xml" binding:"required"`
+	ProcessVariables map[string]interface{} `json:"process_variables"`
+	Forms            []WorkflowFormRequest  `json:"forms"`
+	Metadata         map[string]interface{} `json:"metadata"`
+}
+
+// WorkflowFormRequest 工作流表单请求
+type WorkflowFormRequest struct {
+	ActivityID      string                 `json:"activity_id" binding:"required"`
+	Name            string                 `json:"name" binding:"required"`
+	Type            string                 `json:"type" binding:"required"`
+	Schema          map[string]interface{} `json:"schema" binding:"required"`
+	UISchema        map[string]interface{} `json:"ui_schema"`
+	ValidationRules map[string]interface{} `json:"validation_rules"`
+	IsRequired      bool                   `json:"is_required"`
+}
+
+// ExportWorkflowRequest 导出工作流请求
+type ExportWorkflowRequest struct {
+	WorkflowID int    `json:"workflow_id" binding:"required"`
+	Version    string `json:"version"`
+	Format     string `json:"format" binding:"required,oneof=json xml bpmn"`
+}
+
+// ExportWorkflowResponse 导出工作流响应
+type ExportWorkflowResponse struct {
+	Data     string `json:"data"`
+	Format   string `json:"format"`
+	Filename string `json:"filename"`
+}

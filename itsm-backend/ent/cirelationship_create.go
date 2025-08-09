@@ -7,9 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/cirelationshiptype"
-	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -41,50 +38,16 @@ func (crc *CIRelationshipCreate) SetRelationshipTypeID(i int) *CIRelationshipCre
 	return crc
 }
 
-// SetProperties sets the "properties" field.
-func (crc *CIRelationshipCreate) SetProperties(m map[string]interface{}) *CIRelationshipCreate {
-	crc.mutation.SetProperties(m)
+// SetDescription sets the "description" field.
+func (crc *CIRelationshipCreate) SetDescription(s string) *CIRelationshipCreate {
+	crc.mutation.SetDescription(s)
 	return crc
 }
 
-// SetStatus sets the "status" field.
-func (crc *CIRelationshipCreate) SetStatus(s string) *CIRelationshipCreate {
-	crc.mutation.SetStatus(s)
-	return crc
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (crc *CIRelationshipCreate) SetNillableStatus(s *string) *CIRelationshipCreate {
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (crc *CIRelationshipCreate) SetNillableDescription(s *string) *CIRelationshipCreate {
 	if s != nil {
-		crc.SetStatus(*s)
-	}
-	return crc
-}
-
-// SetEffectiveFrom sets the "effective_from" field.
-func (crc *CIRelationshipCreate) SetEffectiveFrom(t time.Time) *CIRelationshipCreate {
-	crc.mutation.SetEffectiveFrom(t)
-	return crc
-}
-
-// SetNillableEffectiveFrom sets the "effective_from" field if the given value is not nil.
-func (crc *CIRelationshipCreate) SetNillableEffectiveFrom(t *time.Time) *CIRelationshipCreate {
-	if t != nil {
-		crc.SetEffectiveFrom(*t)
-	}
-	return crc
-}
-
-// SetEffectiveTo sets the "effective_to" field.
-func (crc *CIRelationshipCreate) SetEffectiveTo(t time.Time) *CIRelationshipCreate {
-	crc.mutation.SetEffectiveTo(t)
-	return crc
-}
-
-// SetNillableEffectiveTo sets the "effective_to" field if the given value is not nil.
-func (crc *CIRelationshipCreate) SetNillableEffectiveTo(t *time.Time) *CIRelationshipCreate {
-	if t != nil {
-		crc.SetEffectiveTo(*t)
+		crc.SetDescription(*s)
 	}
 	return crc
 }
@@ -123,26 +86,6 @@ func (crc *CIRelationshipCreate) SetNillableUpdatedAt(t *time.Time) *CIRelations
 	return crc
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (crc *CIRelationshipCreate) SetTenant(t *Tenant) *CIRelationshipCreate {
-	return crc.SetTenantID(t.ID)
-}
-
-// SetSourceCi sets the "source_ci" edge to the ConfigurationItem entity.
-func (crc *CIRelationshipCreate) SetSourceCi(c *ConfigurationItem) *CIRelationshipCreate {
-	return crc.SetSourceCiID(c.ID)
-}
-
-// SetTargetCi sets the "target_ci" edge to the ConfigurationItem entity.
-func (crc *CIRelationshipCreate) SetTargetCi(c *ConfigurationItem) *CIRelationshipCreate {
-	return crc.SetTargetCiID(c.ID)
-}
-
-// SetRelationshipType sets the "relationship_type" edge to the CIRelationshipType entity.
-func (crc *CIRelationshipCreate) SetRelationshipType(c *CIRelationshipType) *CIRelationshipCreate {
-	return crc.SetRelationshipTypeID(c.ID)
-}
-
 // Mutation returns the CIRelationshipMutation object of the builder.
 func (crc *CIRelationshipCreate) Mutation() *CIRelationshipMutation {
 	return crc.mutation
@@ -178,14 +121,6 @@ func (crc *CIRelationshipCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (crc *CIRelationshipCreate) defaults() {
-	if _, ok := crc.mutation.Status(); !ok {
-		v := cirelationship.DefaultStatus
-		crc.mutation.SetStatus(v)
-	}
-	if _, ok := crc.mutation.EffectiveFrom(); !ok {
-		v := cirelationship.DefaultEffectiveFrom()
-		crc.mutation.SetEffectiveFrom(v)
-	}
 	if _, ok := crc.mutation.CreatedAt(); !ok {
 		v := cirelationship.DefaultCreatedAt()
 		crc.mutation.SetCreatedAt(v)
@@ -201,38 +136,40 @@ func (crc *CIRelationshipCreate) check() error {
 	if _, ok := crc.mutation.SourceCiID(); !ok {
 		return &ValidationError{Name: "source_ci_id", err: errors.New(`ent: missing required field "CIRelationship.source_ci_id"`)}
 	}
+	if v, ok := crc.mutation.SourceCiID(); ok {
+		if err := cirelationship.SourceCiIDValidator(v); err != nil {
+			return &ValidationError{Name: "source_ci_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.source_ci_id": %w`, err)}
+		}
+	}
 	if _, ok := crc.mutation.TargetCiID(); !ok {
 		return &ValidationError{Name: "target_ci_id", err: errors.New(`ent: missing required field "CIRelationship.target_ci_id"`)}
+	}
+	if v, ok := crc.mutation.TargetCiID(); ok {
+		if err := cirelationship.TargetCiIDValidator(v); err != nil {
+			return &ValidationError{Name: "target_ci_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.target_ci_id": %w`, err)}
+		}
 	}
 	if _, ok := crc.mutation.RelationshipTypeID(); !ok {
 		return &ValidationError{Name: "relationship_type_id", err: errors.New(`ent: missing required field "CIRelationship.relationship_type_id"`)}
 	}
-	if _, ok := crc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "CIRelationship.status"`)}
-	}
-	if _, ok := crc.mutation.EffectiveFrom(); !ok {
-		return &ValidationError{Name: "effective_from", err: errors.New(`ent: missing required field "CIRelationship.effective_from"`)}
+	if v, ok := crc.mutation.RelationshipTypeID(); ok {
+		if err := cirelationship.RelationshipTypeIDValidator(v); err != nil {
+			return &ValidationError{Name: "relationship_type_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.relationship_type_id": %w`, err)}
+		}
 	}
 	if _, ok := crc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CIRelationship.tenant_id"`)}
+	}
+	if v, ok := crc.mutation.TenantID(); ok {
+		if err := cirelationship.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.tenant_id": %w`, err)}
+		}
 	}
 	if _, ok := crc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CIRelationship.created_at"`)}
 	}
 	if _, ok := crc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CIRelationship.updated_at"`)}
-	}
-	if len(crc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "CIRelationship.tenant"`)}
-	}
-	if len(crc.mutation.SourceCiIDs()) == 0 {
-		return &ValidationError{Name: "source_ci", err: errors.New(`ent: missing required edge "CIRelationship.source_ci"`)}
-	}
-	if len(crc.mutation.TargetCiIDs()) == 0 {
-		return &ValidationError{Name: "target_ci", err: errors.New(`ent: missing required edge "CIRelationship.target_ci"`)}
-	}
-	if len(crc.mutation.RelationshipTypeIDs()) == 0 {
-		return &ValidationError{Name: "relationship_type", err: errors.New(`ent: missing required edge "CIRelationship.relationship_type"`)}
 	}
 	return nil
 }
@@ -260,21 +197,25 @@ func (crc *CIRelationshipCreate) createSpec() (*CIRelationship, *sqlgraph.Create
 		_node = &CIRelationship{config: crc.config}
 		_spec = sqlgraph.NewCreateSpec(cirelationship.Table, sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt))
 	)
-	if value, ok := crc.mutation.Properties(); ok {
-		_spec.SetField(cirelationship.FieldProperties, field.TypeJSON, value)
-		_node.Properties = value
+	if value, ok := crc.mutation.SourceCiID(); ok {
+		_spec.SetField(cirelationship.FieldSourceCiID, field.TypeInt, value)
+		_node.SourceCiID = value
 	}
-	if value, ok := crc.mutation.Status(); ok {
-		_spec.SetField(cirelationship.FieldStatus, field.TypeString, value)
-		_node.Status = value
+	if value, ok := crc.mutation.TargetCiID(); ok {
+		_spec.SetField(cirelationship.FieldTargetCiID, field.TypeInt, value)
+		_node.TargetCiID = value
 	}
-	if value, ok := crc.mutation.EffectiveFrom(); ok {
-		_spec.SetField(cirelationship.FieldEffectiveFrom, field.TypeTime, value)
-		_node.EffectiveFrom = value
+	if value, ok := crc.mutation.RelationshipTypeID(); ok {
+		_spec.SetField(cirelationship.FieldRelationshipTypeID, field.TypeInt, value)
+		_node.RelationshipTypeID = value
 	}
-	if value, ok := crc.mutation.EffectiveTo(); ok {
-		_spec.SetField(cirelationship.FieldEffectiveTo, field.TypeTime, value)
-		_node.EffectiveTo = value
+	if value, ok := crc.mutation.Description(); ok {
+		_spec.SetField(cirelationship.FieldDescription, field.TypeString, value)
+		_node.Description = value
+	}
+	if value, ok := crc.mutation.TenantID(); ok {
+		_spec.SetField(cirelationship.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := crc.mutation.CreatedAt(); ok {
 		_spec.SetField(cirelationship.FieldCreatedAt, field.TypeTime, value)
@@ -283,74 +224,6 @@ func (crc *CIRelationshipCreate) createSpec() (*CIRelationship, *sqlgraph.Create
 	if value, ok := crc.mutation.UpdatedAt(); ok {
 		_spec.SetField(cirelationship.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := crc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   cirelationship.TenantTable,
-			Columns: []string{cirelationship.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := crc.mutation.SourceCiIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   cirelationship.SourceCiTable,
-			Columns: []string{cirelationship.SourceCiColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.SourceCiID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := crc.mutation.TargetCiIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   cirelationship.TargetCiTable,
-			Columns: []string{cirelationship.TargetCiColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TargetCiID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := crc.mutation.RelationshipTypeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   cirelationship.RelationshipTypeTable,
-			Columns: []string{cirelationship.RelationshipTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.RelationshipTypeID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

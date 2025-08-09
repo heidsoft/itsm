@@ -1,12 +1,47 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Search, Settings, Trash2, Edit, Filter, Eye, AlertTriangle, Target } from 'lucide-react';
-
 import React, { useState } from "react";
-import Link from "next/link";
-import  from 'lucide-react';
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Typography,
+  Tag,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Statistic,
+  Tooltip,
+  Popconfirm,
+  message,
+  Progress,
+  List,
+  Badge,
+} from "antd";
+import {
+  Plus,
+  CheckCircle,
+  Clock,
+  Search,
+  Target,
+  Edit,
+  Eye,
+  Trash2,
+  AlertTriangle,
+  Activity,
+  Timer,
+  TrendingUp,
+  Shield,
+} from "lucide-react";
 
-// SLA定义的数据类型
+const { Title, Text } = Typography;
+const { Option } = Select;
+
+// SLA定义数据类型
 interface SLADefinition {
   id: string;
   name: string;
@@ -101,300 +136,660 @@ const mockSLADefinitions: SLADefinition[] = [
   },
 ];
 
-// 优先级颜色映射
-const priorityColors = {
-  P1: "bg-red-100 text-red-800",
-  P2: "bg-orange-100 text-orange-800",
-  P3: "bg-yellow-100 text-yellow-800",
-  P4: "bg-green-100 text-green-800",
+// 优先级配置
+const PRIORITY_CONFIG = {
+  P1: { label: "P1 - 紧急", color: "red" },
+  P2: { label: "P2 - 高", color: "orange" },
+  P3: { label: "P3 - 中", color: "yellow" },
+  P4: { label: "P4 - 低", color: "green" },
 };
 
-// 状态颜色映射
-const statusColors = {
-  active: "bg-green-100 text-green-800",
-  inactive: "bg-gray-100 text-gray-800",
-  draft: "bg-blue-100 text-blue-800",
+// 状态配置
+const STATUS_CONFIG = {
+  active: {
+    label: "已启用",
+    color: "success",
+    icon: <CheckCircle className="w-3 h-3" />,
+  },
+  inactive: {
+    label: "已停用",
+    color: "default",
+    icon: <Clock className="w-3 h-3" />,
+  },
+  draft: {
+    label: "草稿",
+    color: "processing",
+    icon: <Edit className="w-3 h-3" />,
+  },
 };
 
-// 状态标签映射
-const statusLabels = {
-  active: "启用",
-  inactive: "停用",
-  draft: "草稿",
-};
-
-const SLADefinitionsPage = () => {
+const SLADefinitionManagement = () => {
+  const [slaDefinitions, setSlaDefinitions] = useState(mockSLADefinitions);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterPriority, setFilterPriority] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedSLA, setSelectedSLA] = useState<SLADefinition | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  // 过滤SLA定义
-  const filteredSLAs = mockSLADefinitions.filter((sla) => {
-    const matchesSearch =
-      sla.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sla.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sla.serviceType.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || sla.status === filterStatus;
-    const matchesPriority =
-      filterPriority === "all" || sla.priority === filterPriority;
-
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
-
-  // 统计数据
+  // 统计信息
   const stats = {
-    total: mockSLADefinitions.length,
-    active: mockSLADefinitions.filter((sla) => sla.status === "active").length,
-    draft: mockSLADefinitions.filter((sla) => sla.status === "draft").length,
-    inactive: mockSLADefinitions.filter((sla) => sla.status === "inactive")
-      .length,
+    total: slaDefinitions.length,
+    active: slaDefinitions.filter((sla) => sla.status === "active").length,
+    draft: slaDefinitions.filter((sla) => sla.status === "draft").length,
+    avgAvailability: (
+      slaDefinitions.reduce(
+        (sum, sla) => sum + parseFloat(sla.availability),
+        0
+      ) / slaDefinitions.length
+    ).toFixed(1),
   };
 
+  // 获取所有服务类型
+  const serviceTypes = Array.from(
+    new Set(slaDefinitions.map((sla) => sla.serviceType))
+  );
+
+  // 过滤SLA定义
+  const filteredSLAs = slaDefinitions.filter((sla) => {
+    const matchesSearch =
+      sla.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sla.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPriority =
+      priorityFilter === "all" || sla.priority === priorityFilter;
+    const matchesStatus = statusFilter === "all" || sla.status === statusFilter;
+    const matchesServiceType =
+      serviceTypeFilter === "all" || sla.serviceType === serviceTypeFilter;
+
+    return (
+      matchesSearch && matchesPriority && matchesStatus && matchesServiceType
+    );
+  });
+
+  // 处理状态切换
+  const handleStatusToggle = (slaId: string) => {
+    setSlaDefinitions((prev) =>
+      prev.map((sla) => {
+        if (sla.id === slaId) {
+          const newStatus = sla.status === "active" ? "inactive" : "active";
+          return { ...sla, status: newStatus };
+        }
+        return sla;
+      })
+    );
+    message.success("SLA状态已更新");
+  };
+
+  // 处理删除
+  const handleDelete = (slaId: string) => {
+    setSlaDefinitions((prev) => prev.filter((sla) => sla.id !== slaId));
+    message.success("SLA定义已删除");
+  };
+
+  // 查看详情
+  const handleViewDetail = (sla: SLADefinition) => {
+    setSelectedSLA(sla);
+    setShowDetailModal(true);
+  };
+
+  // 保存SLA定义
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (selectedSLA) {
+        // 编辑
+        setSlaDefinitions((prev) =>
+          prev.map((sla) =>
+            sla.id === selectedSLA.id
+              ? {
+                  ...sla,
+                  ...values,
+                  updatedAt: new Date().toLocaleDateString(),
+                }
+              : sla
+          )
+        );
+        message.success("SLA定义更新成功");
+      } else {
+        // 新建
+        const newSLA: SLADefinition = {
+          id: `SLA-DEF-${String(slaDefinitions.length + 1).padStart(3, "0")}`,
+          ...values,
+          status: "draft",
+          createdBy: "当前用户",
+          createdAt: new Date().toLocaleDateString(),
+          updatedAt: new Date().toLocaleDateString(),
+          escalationRules: [],
+          applicableServices: [],
+        };
+        setSlaDefinitions((prev) => [newSLA, ...prev]);
+        message.success("SLA定义创建成功");
+      }
+
+      setShowCreateModal(false);
+      setSelectedSLA(null);
+      form.resetFields();
+    } catch (error) {
+      message.error("保存失败，请检查必填项");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 表格列定义
+  const columns = [
+    {
+      title: "SLA定义",
+      dataIndex: "name",
+      key: "name",
+      render: (_: any, record: SLADefinition) => (
+        <div>
+          <div className="flex items-center gap-2">
+            <Text strong>{record.name}</Text>
+            <Tag color={PRIORITY_CONFIG[record.priority]?.color}>
+              {PRIORITY_CONFIG[record.priority]?.label}
+            </Tag>
+          </div>
+          <Text type="secondary" className="text-sm">
+            {record.description}
+          </Text>
+          <div className="flex items-center gap-4 mt-1">
+            <span className="text-xs text-gray-500">ID: {record.id}</span>
+            <span className="text-xs text-gray-500">
+              类型: {record.serviceType}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "服务指标",
+      key: "metrics",
+      render: (_: any, record: SLADefinition) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Timer className="w-3 h-3 text-blue-500" />
+            <span className="text-xs">响应: {record.responseTime}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Target className="w-3 h-3 text-green-500" />
+            <span className="text-xs">解决: {record.resolutionTime}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-3 h-3 text-purple-500" />
+            <span className="text-xs">可用性: {record.availability}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="w-3 h-3 text-orange-500" />
+            <span className="text-xs">{record.businessHours}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "适用服务",
+      dataIndex: "applicableServices",
+      key: "applicableServices",
+      render: (services: string[]) => (
+        <div className="space-y-1">
+          {services.slice(0, 2).map((service) => (
+            <Tag key={service} size="small">
+              {service}
+            </Tag>
+          ))}
+          {services.length > 2 && (
+            <Text type="secondary" className="text-xs">
+              +{services.length - 2} 更多
+            </Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      align: "center" as const,
+      render: (status: string) => (
+        <Tag
+          color={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color}
+          icon={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.icon}
+        >
+          {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
+        </Tag>
+      ),
+    },
+    {
+      title: "更新信息",
+      key: "updateInfo",
+      align: "center" as const,
+      render: (_: any, record: SLADefinition) => (
+        <div className="text-center">
+          <div className="text-sm">{record.updatedAt}</div>
+          <div className="text-xs text-gray-500">由 {record.createdBy}</div>
+        </div>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      align: "center" as const,
+      render: (_: any, record: SLADefinition) => (
+        <Space>
+          <Tooltip title="查看详情">
+            <Button
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
+              onClick={() => handleViewDetail(record)}
+            />
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedSLA(record);
+                form.setFieldsValue(record);
+                setShowCreateModal(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title={record.status === "active" ? "停用" : "启用"}>
+            <Button
+              type="text"
+              icon={
+                record.status === "active" ? (
+                  <Clock className="w-4 h-4" />
+                ) : (
+                  <CheckCircle className="w-4 h-4" />
+                )
+              }
+              onClick={() => handleStatusToggle(record.id)}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="确定要删除这个SLA定义吗？"
+            description="删除后无法恢复，相关的服务将失去SLA保障。"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定删除"
+            cancelText="取消"
+            okType="danger"
+          >
+            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className="p-8 bg-gray-50 min-h-full">
-      {/* 页面头部 */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              SLA定义管理
-            </h1>
-            <p className="text-gray-600">
-              定义和管理服务级别协议，确保服务质量标准
-            </p>
-          </div>
-          <button className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            <Plus className="w-5 h-5 mr-2" />
-            新建SLA定义
-          </button>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">总计</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.total}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Target className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">启用中</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats.active}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">草稿</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {stats.draft}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Settings className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">停用</p>
-                <p className="text-2xl font-bold text-gray-600">
-                  {stats.inactive}
-                </p>
-              </div>
-              <div className="p-3 bg-gray-100 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-gray-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="p-6">
+      {/* 页面标题 */}
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Target className="inline-block w-6 h-6 mr-2" />
+          SLA定义管理
+        </Title>
+        <Text type="secondary">定义和管理服务级别协议，确保服务质量标准</Text>
       </div>
+
+      {/* 统计卡片 */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="SLA定义总数"
+              value={stats.total}
+              prefix={<Target className="w-5 h-5" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="已启用"
+              value={stats.active}
+              prefix={<CheckCircle className="w-5 h-5" />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="草稿状态"
+              value={stats.draft}
+              prefix={<Edit className="w-5 h-5" />}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="平均可用性"
+              value={stats.avgAvailability}
+              suffix="%"
+              prefix={<TrendingUp className="w-5 h-5" />}
+              valueStyle={{ color: "#722ed1" }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* 搜索和过滤 */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* 搜索框 */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="搜索SLA定义名称、描述或服务类型..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={8}>
+            <Input
+              placeholder="搜索SLA定义名称或描述..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              allowClear
             />
-          </div>
-
-          {/* 状态过滤 */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="优先级"
+              value={priorityFilter}
+              onChange={setPriorityFilter}
+              style={{ width: "100%" }}
             >
-              <option value="all">所有状态</option>
-              <option value="active">启用</option>
-              <option value="draft">草稿</option>
-              <option value="inactive">停用</option>
-            </select>
-          </div>
-
-          {/* 优先级过滤 */}
-          <div>
-            <select
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
+              <Option value="all">全部优先级</Option>
+              {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
+                <Option key={key} value={key}>
+                  {config.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="状态"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: "100%" }}
             >
-              <option value="all">所有优先级</option>
-              <option value="P1">P1 - 紧急</option>
-              <option value="P2">P2 - 高</option>
-              <option value="P3">P3 - 中</option>
-              <option value="P4">P4 - 低</option>
-            </select>
-          </div>
-        </div>
-      </div>
+              <Option value="all">全部状态</Option>
+              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                <Option key={key} value={key}>
+                  {config.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="服务类型"
+              value={serviceTypeFilter}
+              onChange={setServiceTypeFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部类型</Option>
+              {serviceTypes.map((type) => (
+                <Option key={type} value={type}>
+                  {type}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4} className="text-right">
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedSLA(null);
+                form.resetFields();
+                setShowCreateModal(true);
+              }}
+            >
+              新建SLA
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
       {/* SLA定义列表 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  SLA定义
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  服务类型
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  优先级
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  响应时间
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  解决时间
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  可用性
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  状态
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredSLAs.map((sla) => (
-                <tr key={sla.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {sla.name}
-                      </div>
-                      <div className="text-sm text-gray-500 max-w-xs truncate">
-                        {sla.description}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        ID: {sla.id}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
-                      {sla.serviceType}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        priorityColors[sla.priority]
-                      }`}
-                    >
-                      {sla.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Clock className="w-4 h-4 mr-1 text-gray-400" />
-                      {sla.responseTime}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Target className="w-4 h-4 mr-1 text-gray-400" />
-                      {sla.resolutionTime}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
-                      {sla.availability}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        statusColors[sla.status]
-                      }`}
-                    >
-                      {statusLabels[sla.status]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-800 p-1">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-800 p-1">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-800 p-1">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <Card className="enterprise-card">
+        <Table
+          columns={columns}
+          dataSource={filteredSLAs}
+          rowKey="id"
+          pagination={{
+            total: filteredSLAs.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
+          className="enterprise-table"
+        />
+      </Card>
 
-        {filteredSLAs.length === 0 && (
-          <div className="text-center py-12">
-            <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              没有找到SLA定义
-            </h3>
-            <p className="text-gray-500">尝试调整搜索条件或创建新的SLA定义</p>
+      {/* 创建/编辑模态框 */}
+      <Modal
+        title={
+          <span>
+            <Target className="w-4 h-4 mr-2" />
+            {selectedSLA ? "编辑SLA定义" : "新建SLA定义"}
+          </span>
+        }
+        open={showCreateModal}
+        onOk={handleSave}
+        onCancel={() => {
+          setShowCreateModal(false);
+          setSelectedSLA(null);
+          form.resetFields();
+        }}
+        width={800}
+        confirmLoading={loading}
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="SLA名称"
+                name="name"
+                rules={[{ required: true, message: "请输入SLA名称" }]}
+              >
+                <Input placeholder="请输入SLA名称" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="服务类型"
+                name="serviceType"
+                rules={[{ required: true, message: "请选择服务类型" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="选择或输入服务类型"
+                  mode="combobox"
+                >
+                  {serviceTypes.map((type) => (
+                    <Option key={type} value={type}>
+                      {type}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item
+            label="描述"
+            name="description"
+            rules={[{ required: true, message: "请输入SLA描述" }]}
+          >
+            <Input.TextArea rows={3} placeholder="请输入SLA描述" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                label="优先级"
+                name="priority"
+                rules={[{ required: true, message: "请选择优先级" }]}
+                initialValue="P3"
+              >
+                <Select>
+                  {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
+                    <Option key={key} value={key}>
+                      {config.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="响应时间"
+                name="responseTime"
+                rules={[{ required: true, message: "请输入响应时间" }]}
+              >
+                <Input placeholder="如: 30分钟" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="解决时间"
+                name="resolutionTime"
+                rules={[{ required: true, message: "请输入解决时间" }]}
+              >
+                <Input placeholder="如: 4小时" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                label="可用性"
+                name="availability"
+                rules={[{ required: true, message: "请输入可用性" }]}
+              >
+                <Input placeholder="如: 99.9%" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="业务时间"
+                name="businessHours"
+                rules={[{ required: true, message: "请输入业务时间" }]}
+              >
+                <Select>
+                  <Option value="7x24">7x24小时</Option>
+                  <Option value="工作时间">工作时间</Option>
+                  <Option value="5x8">5x8小时</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="状态" name="status" initialValue="draft">
+                <Select>
+                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                    <Option key={key} value={key}>
+                      {config.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+
+      {/* 详情模态框 */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            <span>SLA定义详情</span>
+          </div>
+        }
+        open={showDetailModal}
+        onCancel={() => setShowDetailModal(false)}
+        width={800}
+        footer={[
+          <Button key="close" onClick={() => setShowDetailModal(false)}>
+            关闭
+          </Button>,
+        ]}
+      >
+        {selectedSLA && (
+          <div className="space-y-6">
+            <div>
+              <Title level={4}>{selectedSLA.name}</Title>
+              <Text type="secondary">{selectedSLA.description}</Text>
+            </div>
+
+            <Row gutter={16}>
+              <Col span={8}>
+                <Card size="small">
+                  <Statistic
+                    title="响应时间"
+                    value={selectedSLA.responseTime}
+                    prefix={<Timer className="w-4 h-4" />}
+                  />
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card size="small">
+                  <Statistic
+                    title="解决时间"
+                    value={selectedSLA.resolutionTime}
+                    prefix={<Target className="w-4 h-4" />}
+                  />
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card size="small">
+                  <Statistic
+                    title="可用性"
+                    value={selectedSLA.availability}
+                    prefix={<TrendingUp className="w-4 h-4" />}
+                  />
+                </Card>
+              </Col>
+            </Row>
+
+            <div>
+              <Title level={5}>升级规则</Title>
+              <List
+                size="small"
+                dataSource={selectedSLA.escalationRules}
+                renderItem={(rule, index) => (
+                  <List.Item>
+                    <Badge count={index + 1} color="blue" />
+                    <span className="ml-2">{rule}</span>
+                  </List.Item>
+                )}
+              />
+            </div>
+
+            <div>
+              <Title level={5}>适用服务</Title>
+              <div className="flex flex-wrap gap-2">
+                {selectedSLA.applicableServices.map((service) => (
+                  <Tag key={service} color="blue">
+                    {service}
+                  </Tag>
+                ))}
+              </div>
+            </div>
           </div>
         )}
-      </div>
+      </Modal>
     </div>
   );
 };
 
-export default SLADefinitionsPage;
+export default SLADefinitionManagement;

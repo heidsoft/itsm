@@ -1,9 +1,51 @@
 "use client";
 
-import { Plus, CheckCircle, Users, Search, Trash2, XCircle, Edit, Eye, Lock, Unlock, Key, Shield } from 'lucide-react';
-
 import React, { useState } from "react";
-import  from 'lucide-react';
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Typography,
+  Tag,
+  Modal,
+  Form,
+  Switch,
+  Checkbox,
+  Row,
+  Col,
+  Statistic,
+  Badge,
+  Tooltip,
+  Popconfirm,
+  message,
+  Divider,
+  Alert,
+  Tabs,
+} from "antd";
+import {
+  Plus,
+  CheckCircle,
+  Users,
+  Search,
+  Trash2,
+  XCircle,
+  Edit,
+  Eye,
+  Lock,
+  Unlock,
+  Key,
+  Shield,
+  Settings,
+  UserCheck,
+  Activity,
+  Crown,
+} from "lucide-react";
+
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 // 权限模块定义
 const PERMISSION_MODULES = {
@@ -62,11 +104,11 @@ const mockRoles = [
   {
     id: 2,
     name: "IT支持工程师",
-    description: "处理日常IT支持请求和事件",
-    userCount: 8,
+    description: "负责日常IT支持和工单处理",
+    userCount: 15,
     isSystem: false,
     isActive: true,
-    createdAt: "2024-01-05 10:30",
+    createdAt: "2024-01-15 10:30",
     permissions: {
       [PERMISSION_MODULES.DASHBOARD]: [PERMISSION_ACTIONS.VIEW],
       [PERMISSION_MODULES.TICKETS]: [
@@ -80,7 +122,6 @@ const mockRoles = [
         PERMISSION_ACTIONS.CREATE,
         PERMISSION_ACTIONS.EDIT,
       ],
-      [PERMISSION_MODULES.SERVICE_CATALOG]: [PERMISSION_ACTIONS.VIEW],
       [PERMISSION_MODULES.KNOWLEDGE_BASE]: [
         PERMISSION_ACTIONS.VIEW,
         PERMISSION_ACTIONS.CREATE,
@@ -91,25 +132,36 @@ const mockRoles = [
   },
   {
     id: 3,
-    name: "业务分析师",
-    description: "分析业务需求和生成报告",
+    name: "服务台经理",
+    description: "管理服务台团队和审批流程",
     userCount: 5,
     isSystem: false,
     isActive: true,
-    createdAt: "2024-01-08 14:15",
+    createdAt: "2024-01-20 14:20",
     permissions: {
       [PERMISSION_MODULES.DASHBOARD]: [PERMISSION_ACTIONS.VIEW],
-      [PERMISSION_MODULES.TICKETS]: [PERMISSION_ACTIONS.VIEW],
+      [PERMISSION_MODULES.TICKETS]: Object.values(PERMISSION_ACTIONS),
+      [PERMISSION_MODULES.INCIDENTS]: Object.values(PERMISSION_ACTIONS),
+      [PERMISSION_MODULES.PROBLEMS]: [
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.APPROVE,
+      ],
+      [PERMISSION_MODULES.CHANGES]: [
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.APPROVE,
+      ],
       [PERMISSION_MODULES.SERVICE_CATALOG]: [
         PERMISSION_ACTIONS.VIEW,
-        PERMISSION_ACTIONS.CREATE,
         PERMISSION_ACTIONS.EDIT,
       ],
-      [PERMISSION_MODULES.KNOWLEDGE_BASE]: [PERMISSION_ACTIONS.VIEW],
+      [PERMISSION_MODULES.KNOWLEDGE_BASE]: Object.values(PERMISSION_ACTIONS),
       [PERMISSION_MODULES.REPORTS]: [
         PERMISSION_ACTIONS.VIEW,
-        PERMISSION_ACTIONS.CREATE,
         PERMISSION_ACTIONS.EXPORT,
+      ],
+      [PERMISSION_MODULES.USERS]: [
+        PERMISSION_ACTIONS.VIEW,
+        PERMISSION_ACTIONS.EDIT,
       ],
     },
   },
@@ -135,30 +187,82 @@ const mockRoles = [
 
 // 权限模块配置
 const MODULE_CONFIG = {
-  [PERMISSION_MODULES.DASHBOARD]: { label: "仪表盘", icon: "📊" },
-  [PERMISSION_MODULES.TICKETS]: { label: "工单管理", icon: "🎫" },
-  [PERMISSION_MODULES.INCIDENTS]: { label: "事件管理", icon: "🚨" },
-  [PERMISSION_MODULES.PROBLEMS]: { label: "问题管理", icon: "🔧" },
-  [PERMISSION_MODULES.CHANGES]: { label: "变更管理", icon: "🔄" },
-  [PERMISSION_MODULES.SERVICE_CATALOG]: { label: "服务目录", icon: "📋" },
-  [PERMISSION_MODULES.KNOWLEDGE_BASE]: { label: "知识库", icon: "📚" },
-  [PERMISSION_MODULES.REPORTS]: { label: "报告分析", icon: "📈" },
-  [PERMISSION_MODULES.ADMIN]: { label: "系统管理", icon: "⚙️" },
-  [PERMISSION_MODULES.USERS]: { label: "用户管理", icon: "👥" },
-  [PERMISSION_MODULES.ROLES]: { label: "角色管理", icon: "🛡️" },
-  [PERMISSION_MODULES.WORKFLOWS]: { label: "工作流", icon: "🔀" },
-  [PERMISSION_MODULES.SYSTEM_CONFIG]: { label: "系统配置", icon: "🔧" },
+  [PERMISSION_MODULES.DASHBOARD]: {
+    label: "仪表盘",
+    icon: "📊",
+    category: "核心功能",
+  },
+  [PERMISSION_MODULES.TICKETS]: {
+    label: "工单管理",
+    icon: "🎫",
+    category: "核心功能",
+  },
+  [PERMISSION_MODULES.INCIDENTS]: {
+    label: "事件管理",
+    icon: "🚨",
+    category: "核心功能",
+  },
+  [PERMISSION_MODULES.PROBLEMS]: {
+    label: "问题管理",
+    icon: "🔧",
+    category: "核心功能",
+  },
+  [PERMISSION_MODULES.CHANGES]: {
+    label: "变更管理",
+    icon: "🔄",
+    category: "核心功能",
+  },
+  [PERMISSION_MODULES.SERVICE_CATALOG]: {
+    label: "服务目录",
+    icon: "📋",
+    category: "服务管理",
+  },
+  [PERMISSION_MODULES.KNOWLEDGE_BASE]: {
+    label: "知识库",
+    icon: "📚",
+    category: "服务管理",
+  },
+  [PERMISSION_MODULES.REPORTS]: {
+    label: "报告分析",
+    icon: "📈",
+    category: "分析工具",
+  },
+  [PERMISSION_MODULES.ADMIN]: {
+    label: "系统管理",
+    icon: "⚙️",
+    category: "系统管理",
+  },
+  [PERMISSION_MODULES.USERS]: {
+    label: "用户管理",
+    icon: "👥",
+    category: "系统管理",
+  },
+  [PERMISSION_MODULES.ROLES]: {
+    label: "角色管理",
+    icon: "🛡️",
+    category: "系统管理",
+  },
+  [PERMISSION_MODULES.WORKFLOWS]: {
+    label: "工作流",
+    icon: "🔀",
+    category: "系统管理",
+  },
+  [PERMISSION_MODULES.SYSTEM_CONFIG]: {
+    label: "系统配置",
+    icon: "🔧",
+    category: "系统管理",
+  },
 };
 
 // 权限操作配置
 const ACTION_CONFIG = {
-  [PERMISSION_ACTIONS.VIEW]: { label: "查看", color: "text-blue-600" },
-  [PERMISSION_ACTIONS.CREATE]: { label: "创建", color: "text-green-600" },
-  [PERMISSION_ACTIONS.EDIT]: { label: "编辑", color: "text-yellow-600" },
-  [PERMISSION_ACTIONS.DELETE]: { label: "删除", color: "text-red-600" },
-  [PERMISSION_ACTIONS.APPROVE]: { label: "审批", color: "text-purple-600" },
-  [PERMISSION_ACTIONS.ASSIGN]: { label: "分配", color: "text-indigo-600" },
-  [PERMISSION_ACTIONS.EXPORT]: { label: "导出", color: "text-gray-600" },
+  [PERMISSION_ACTIONS.VIEW]: { label: "查看", color: "blue" },
+  [PERMISSION_ACTIONS.CREATE]: { label: "创建", color: "green" },
+  [PERMISSION_ACTIONS.EDIT]: { label: "编辑", color: "orange" },
+  [PERMISSION_ACTIONS.DELETE]: { label: "删除", color: "red" },
+  [PERMISSION_ACTIONS.APPROVE]: { label: "审批", color: "purple" },
+  [PERMISSION_ACTIONS.ASSIGN]: { label: "分配", color: "cyan" },
+  [PERMISSION_ACTIONS.EXPORT]: { label: "导出", color: "geekblue" },
 };
 
 const RoleManagement = () => {
@@ -167,8 +271,18 @@ const RoleManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+
+  // 统计数据
+  const stats = {
+    total: roles.length,
+    active: roles.filter((r) => r.isActive).length,
+    system: roles.filter((r) => r.isSystem).length,
+    totalUsers: roles.reduce((sum, role) => sum + role.userCount, 0),
+  };
 
   // 过滤角色
   const filteredRoles = roles.filter((role) => {
@@ -183,324 +297,488 @@ const RoleManagement = () => {
   });
 
   // 处理角色状态切换
-  const handleToggleStatus = (roleId) => {
+  const handleToggleStatus = (roleId: number) => {
     setRoles(
       roles.map((role) =>
         role.id === roleId ? { ...role, isActive: !role.isActive } : role
       )
     );
+    message.success("角色状态已更新");
   };
 
   // 处理删除角色
-  const handleDeleteRole = (roleId) => {
-    if (window.confirm("确定要删除这个角色吗？")) {
-      setRoles(roles.filter((role) => role.id !== roleId));
-    }
+  const handleDeleteRole = (roleId: number) => {
+    setRoles(roles.filter((role) => role.id !== roleId));
+    message.success("角色已删除");
   };
 
   // 处理编辑角色
-  const handleEditRole = (role) => {
+  const handleEditRole = (role: any) => {
     setSelectedRole(role);
+    form.setFieldsValue(role);
     setShowModal(true);
   };
 
   // 查看权限详情
-  const handleViewPermissions = (role) => {
+  const handleViewPermissions = (role: any) => {
     setSelectedRole(role);
     setShowPermissionModal(true);
   };
 
-  return (
-    <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="flex justify-between items-center">
+  // 保存角色
+  const handleSaveRole = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (selectedRole) {
+        // 编辑角色
+        setRoles(
+          roles.map((role) =>
+            role.id === selectedRole.id
+              ? { ...role, ...values, permissions: selectedRole.permissions }
+              : role
+          )
+        );
+        message.success("角色更新成功");
+      } else {
+        // 新建角色
+        const newRole = {
+          id: Math.max(...roles.map((r) => r.id)) + 1,
+          ...values,
+          userCount: 0,
+          isSystem: false,
+          createdAt: new Date().toLocaleString("zh-CN"),
+          permissions: {},
+        };
+        setRoles([...roles, newRole]);
+        message.success("角色创建成功");
+      }
+
+      setShowModal(false);
+      setSelectedRole(null);
+      form.resetFields();
+    } catch (error) {
+      message.error("保存失败，请检查必填项");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 权限组织化显示
+  const renderPermissionsByCategory = (permissions: any) => {
+    const categories = {} as any;
+
+    Object.entries(permissions).forEach(([moduleKey, actions]) => {
+      const moduleConfig =
+        MODULE_CONFIG[moduleKey as keyof typeof MODULE_CONFIG];
+      if (moduleConfig && Array.isArray(actions) && actions.length > 0) {
+        const category = moduleConfig.category;
+        if (!categories[category]) {
+          categories[category] = [];
+        }
+        categories[category].push({
+          moduleKey,
+          moduleConfig,
+          actions,
+        });
+      }
+    });
+
+    return Object.entries(categories).map(
+      ([category, modules]: [string, any]) => ({
+        key: category,
+        label: (
+          <span>
+            <Settings className="w-4 h-4 mr-1" />
+            {category}
+          </span>
+        ),
+        children: (
+          <Row gutter={[16, 16]}>
+            {modules.map((module: any) => (
+              <Col xs={24} md={12} lg={8} key={module.moduleKey}>
+                <Card size="small" className="h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{module.moduleConfig.icon}</span>
+                    <Text strong>{module.moduleConfig.label}</Text>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {module.actions.map((action: string) => (
+                      <Tag
+                        key={action}
+                        color={
+                          ACTION_CONFIG[action as keyof typeof ACTION_CONFIG]
+                            ?.color
+                        }
+                        size="small"
+                      >
+                        {ACTION_CONFIG[action as keyof typeof ACTION_CONFIG]
+                          ?.label || action}
+                      </Tag>
+                    ))}
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        ),
+      })
+    );
+  };
+
+  // 表格列定义
+  const columns = [
+    {
+      title: "角色信息",
+      dataIndex: "name",
+      key: "name",
+      render: (_: any, record: any) => (
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">角色权限管理</h1>
-          <p className="text-gray-600 mt-1">
-            管理系统角色和权限分配，控制用户访问范围
-          </p>
+          <div className="flex items-center gap-2">
+            <Text strong>{record.name}</Text>
+            {record.isSystem && (
+              <Tooltip title="系统角色">
+                <Crown className="w-4 h-4 text-amber-500" />
+              </Tooltip>
+            )}
+          </div>
+          <Text type="secondary" className="text-sm">
+            {record.description}
+          </Text>
         </div>
-        <button
-          onClick={() => {
-            setSelectedRole(null);
-            setShowModal(true);
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+      ),
+    },
+    {
+      title: "用户数量",
+      dataIndex: "userCount",
+      key: "userCount",
+      align: "center" as const,
+      render: (count: number) => (
+        <div className="flex items-center justify-center gap-1">
+          <Users className="w-4 h-4 text-gray-400" />
+          <Badge
+            count={count}
+            showZero
+            color={count > 0 ? "#1890ff" : "#d9d9d9"}
+          />
+        </div>
+      ),
+    },
+    {
+      title: "状态",
+      dataIndex: "isActive",
+      key: "isActive",
+      align: "center" as const,
+      render: (isActive: boolean) => (
+        <Tag
+          icon={
+            isActive ? (
+              <CheckCircle className="w-3 h-3" />
+            ) : (
+              <XCircle className="w-3 h-3" />
+            )
+          }
+          color={isActive ? "success" : "error"}
         >
-          <Plus className="w-4 h-4" />
-          新建角色
-        </button>
+          {isActive ? "启用" : "禁用"}
+        </Tag>
+      ),
+    },
+    {
+      title: "类型",
+      dataIndex: "isSystem",
+      key: "isSystem",
+      align: "center" as const,
+      render: (isSystem: boolean) => (
+        <Tag
+          icon={
+            isSystem ? (
+              <Lock className="w-3 h-3" />
+            ) : (
+              <Unlock className="w-3 h-3" />
+            )
+          }
+          color={isSystem ? "purple" : "blue"}
+        >
+          {isSystem ? "系统角色" : "自定义角色"}
+        </Tag>
+      ),
+    },
+    {
+      title: "创建时间",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      align: "center" as const,
+    },
+    {
+      title: "操作",
+      key: "actions",
+      align: "center" as const,
+      render: (_: any, record: any) => (
+        <Space>
+          <Tooltip title="查看权限">
+            <Button
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
+              onClick={() => handleViewPermissions(record)}
+            />
+          </Tooltip>
+          {!record.isSystem && (
+            <>
+              <Tooltip title="编辑角色">
+                <Button
+                  type="text"
+                  icon={<Edit className="w-4 h-4" />}
+                  onClick={() => handleEditRole(record)}
+                />
+              </Tooltip>
+              <Tooltip title={record.isActive ? "禁用角色" : "启用角色"}>
+                <Button
+                  type="text"
+                  icon={
+                    record.isActive ? (
+                      <XCircle className="w-4 h-4" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4" />
+                    )
+                  }
+                  onClick={() => handleToggleStatus(record.id)}
+                />
+              </Tooltip>
+              <Popconfirm
+                title="确定要删除这个角色吗？"
+                description="删除后无法恢复，关联的用户将失去此角色权限。"
+                onConfirm={() => handleDeleteRole(record.id)}
+                okText="确定删除"
+                cancelText="取消"
+                okType="danger"
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={<Trash2 className="w-4 h-4" />}
+                />
+              </Popconfirm>
+            </>
+          )}
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div className="p-6">
+      {/* 页面标题 */}
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Shield className="inline-block w-6 h-6 mr-2" />
+          角色权限管理
+        </Title>
+        <Text type="secondary">管理系统角色和权限分配，控制用户访问范围</Text>
       </div>
+
+      {/* 统计卡片 */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="总角色数"
+              value={stats.total}
+              prefix={<Shield className="w-5 h-5" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="启用角色"
+              value={stats.active}
+              prefix={<CheckCircle className="w-5 h-5" />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="系统角色"
+              value={stats.system}
+              prefix={<Key className="w-5 h-5" />}
+              valueStyle={{ color: "#722ed1" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="关联用户"
+              value={stats.totalUsers}
+              prefix={<Users className="w-5 h-5" />}
+              valueStyle={{ color: "#fa8c16" }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* 搜索和过滤 */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={12} lg={8}>
+            <Input
               placeholder="搜索角色名称..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              allowClear
             />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">全部状态</option>
-            <option value="active">启用</option>
-            <option value="inactive">禁用</option>
-          </select>
-        </div>
-      </div>
-
-      {/* 角色统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">总角色数</p>
-              <p className="text-2xl font-bold text-gray-900">{roles.length}</p>
-            </div>
-            <Shield className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">启用角色</p>
-              <p className="text-2xl font-bold text-green-600">
-                {roles.filter((r) => r.isActive).length}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">系统角色</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {roles.filter((r) => r.isSystem).length}
-              </p>
-            </div>
-            <Key className="w-8 h-8 text-purple-600" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">关联用户</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {roles.reduce((sum, role) => sum + role.userCount, 0)}
-              </p>
-            </div>
-            <Users className="w-8 h-8 text-orange-600" />
-          </div>
-        </div>
-      </div>
+          </Col>
+          <Col xs={24} md={8} lg={6}>
+            <Select
+              placeholder="筛选状态"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部状态</Option>
+              <Option value="active">启用</Option>
+              <Option value="inactive">禁用</Option>
+            </Select>
+          </Col>
+          <Col xs={24} md={4} lg={10} className="text-right">
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedRole(null);
+                form.resetFields();
+                setShowModal(true);
+              }}
+            >
+              新建角色
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
       {/* 角色列表 */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  角色信息
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  用户数量
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  状态
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  类型
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  创建时间
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRoles.map((role) => (
-                <tr key={role.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {role.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {role.description}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-900">
-                        {role.userCount}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        role.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {role.isActive ? (
-                        <>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          启用
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-3 h-3 mr-1" />
-                          禁用
-                        </>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        role.isSystem
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {role.isSystem ? (
-                        <>
-                          <Lock className="w-3 h-3 mr-1" />
-                          系统角色
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="w-3 h-3 mr-1" />
-                          自定义角色
-                        </>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {role.createdAt}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleViewPermissions(role)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                        title="查看权限"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {!role.isSystem && (
-                        <>
-                          <button
-                            onClick={() => handleEditRole(role)}
-                            className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
-                            title="编辑角色"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleToggleStatus(role.id)}
-                            className={`p-1 rounded ${
-                              role.isActive
-                                ? "text-red-600 hover:text-red-900"
-                                : "text-green-600 hover:text-green-900"
-                            }`}
-                            title={role.isActive ? "禁用角色" : "启用角色"}
-                          >
-                            {role.isActive ? (
-                              <XCircle className="w-4 h-4" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteRole(role.id)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded"
-                            title="删除角色"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card className="enterprise-card">
+        <Table
+          columns={columns}
+          dataSource={filteredRoles}
+          rowKey="id"
+          pagination={{
+            total: filteredRoles.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
+          className="enterprise-table"
+        />
+      </Card>
+
+      {/* 角色编辑模态框 */}
+      <Modal
+        title={
+          <span>
+            <Edit className="w-4 h-4 mr-2" />
+            {selectedRole ? "编辑角色" : "新建角色"}
+          </span>
+        }
+        open={showModal}
+        onOk={handleSaveRole}
+        onCancel={() => {
+          setShowModal(false);
+          setSelectedRole(null);
+          form.resetFields();
+        }}
+        width={600}
+        confirmLoading={loading}
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item
+            label="角色名称"
+            name="name"
+            rules={[{ required: true, message: "请输入角色名称" }]}
+          >
+            <Input placeholder="请输入角色名称" />
+          </Form.Item>
+          <Form.Item
+            label="角色描述"
+            name="description"
+            rules={[{ required: true, message: "请输入角色描述" }]}
+          >
+            <Input.TextArea rows={3} placeholder="请输入角色描述" />
+          </Form.Item>
+          <Form.Item
+            label="角色状态"
+            name="isActive"
+            valuePropName="checked"
+            initialValue={true}
+          >
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+          </Form.Item>
+        </Form>
+
+        {selectedRole && (
+          <Alert
+            message="权限配置"
+            description="角色权限需要在专门的权限配置页面进行设置。"
+            type="info"
+            showIcon
+            className="mt-4"
+          />
+        )}
+      </Modal>
 
       {/* 权限详情模态框 */}
-      {showPermissionModal && selectedRole && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {selectedRole.name} - 权限详情
-              </h3>
-              <button
-                onClick={() => setShowPermissionModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {Object.entries(MODULE_CONFIG).map(([moduleKey, moduleInfo]) => {
-                const permissions = selectedRole.permissions[moduleKey] || [];
-                if (permissions.length === 0) return null;
-
-                return (
-                  <div key={moduleKey} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-lg">{moduleInfo.icon}</span>
-                      <h4 className="font-medium text-gray-900">
-                        {moduleInfo.label}
-                      </h4>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {permissions.map((action) => (
-                        <span
-                          key={action}
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}
-                        >
-                          {ACTION_CONFIG[action]?.label || action}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setShowPermissionModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-              >
-                关闭
-              </button>
-            </div>
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            <span>{selectedRole?.name} - 权限详情</span>
+            <Tag color={selectedRole?.isSystem ? "purple" : "blue"}>
+              {selectedRole?.isSystem ? "系统角色" : "自定义角色"}
+            </Tag>
           </div>
-        </div>
-      )}
+        }
+        open={showPermissionModal}
+        onCancel={() => setShowPermissionModal(false)}
+        width={1000}
+        footer={[
+          <Button key="close" onClick={() => setShowPermissionModal(false)}>
+            关闭
+          </Button>,
+        ]}
+      >
+        {selectedRole && (
+          <div className="mt-4">
+            <div className="mb-4">
+              <Text type="secondary">{selectedRole.description}</Text>
+            </div>
+
+            {Object.keys(selectedRole.permissions).length > 0 ? (
+              <Tabs
+                items={renderPermissionsByCategory(selectedRole.permissions)}
+                className="custom-tabs"
+              />
+            ) : (
+              <Alert
+                message="暂无权限"
+                description="此角色还未配置任何权限。"
+                type="info"
+                showIcon
+              />
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

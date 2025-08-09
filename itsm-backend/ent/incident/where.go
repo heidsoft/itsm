@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -65,14 +64,19 @@ func Description(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldDescription, v))
 }
 
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldStatus, v))
+}
+
+// Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
+func Priority(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldPriority, v))
+}
+
 // IncidentNumber applies equality check predicate on the "incident_number" field. It's identical to IncidentNumberEQ.
 func IncidentNumber(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldIncidentNumber, v))
-}
-
-// IsMajorIncident applies equality check predicate on the "is_major_incident" field. It's identical to IsMajorIncidentEQ.
-func IsMajorIncident(v bool) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldIsMajorIncident, v))
 }
 
 // ReporterID applies equality check predicate on the "reporter_id" field. It's identical to ReporterIDEQ.
@@ -85,49 +89,9 @@ func AssigneeID(v int) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldAssigneeID, v))
 }
 
-// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
-func TenantID(v int) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldTenantID, v))
-}
-
-// AlibabaCloudInstanceID applies equality check predicate on the "alibaba_cloud_instance_id" field. It's identical to AlibabaCloudInstanceIDEQ.
-func AlibabaCloudInstanceID(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudRegion applies equality check predicate on the "alibaba_cloud_region" field. It's identical to AlibabaCloudRegionEQ.
-func AlibabaCloudRegion(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudService applies equality check predicate on the "alibaba_cloud_service" field. It's identical to AlibabaCloudServiceEQ.
-func AlibabaCloudService(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldAlibabaCloudService, v))
-}
-
-// SecurityEventType applies equality check predicate on the "security_event_type" field. It's identical to SecurityEventTypeEQ.
-func SecurityEventType(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSecurityEventType, v))
-}
-
-// SecurityEventSourceIP applies equality check predicate on the "security_event_source_ip" field. It's identical to SecurityEventSourceIPEQ.
-func SecurityEventSourceIP(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventTarget applies equality check predicate on the "security_event_target" field. It's identical to SecurityEventTargetEQ.
-func SecurityEventTarget(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSecurityEventTarget, v))
-}
-
-// DetectedAt applies equality check predicate on the "detected_at" field. It's identical to DetectedAtEQ.
-func DetectedAt(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldDetectedAt, v))
-}
-
-// ConfirmedAt applies equality check predicate on the "confirmed_at" field. It's identical to ConfirmedAtEQ.
-func ConfirmedAt(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldConfirmedAt, v))
+// ConfigurationItemID applies equality check predicate on the "configuration_item_id" field. It's identical to ConfigurationItemIDEQ.
+func ConfigurationItemID(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldConfigurationItemID, v))
 }
 
 // ResolvedAt applies equality check predicate on the "resolved_at" field. It's identical to ResolvedAtEQ.
@@ -138,6 +102,11 @@ func ResolvedAt(v time.Time) predicate.Incident {
 // ClosedAt applies equality check predicate on the "closed_at" field. It's identical to ClosedAtEQ.
 func ClosedAt(v time.Time) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldClosedAt, v))
+}
+
+// TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
+func TenantID(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldTenantID, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -291,83 +260,133 @@ func DescriptionContainsFold(v string) predicate.Incident {
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.Incident {
+func StatusEQ(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.Incident {
+func StatusNEQ(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.Incident {
+func StatusIn(vs ...string) predicate.Incident {
 	return predicate.Incident(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.Incident {
+func StatusNotIn(vs ...string) predicate.Incident {
 	return predicate.Incident(sql.FieldNotIn(FieldStatus, vs...))
 }
 
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldStatus, v))
+}
+
 // PriorityEQ applies the EQ predicate on the "priority" field.
-func PriorityEQ(v Priority) predicate.Incident {
+func PriorityEQ(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldPriority, v))
 }
 
 // PriorityNEQ applies the NEQ predicate on the "priority" field.
-func PriorityNEQ(v Priority) predicate.Incident {
+func PriorityNEQ(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldNEQ(FieldPriority, v))
 }
 
 // PriorityIn applies the In predicate on the "priority" field.
-func PriorityIn(vs ...Priority) predicate.Incident {
+func PriorityIn(vs ...string) predicate.Incident {
 	return predicate.Incident(sql.FieldIn(FieldPriority, vs...))
 }
 
 // PriorityNotIn applies the NotIn predicate on the "priority" field.
-func PriorityNotIn(vs ...Priority) predicate.Incident {
+func PriorityNotIn(vs ...string) predicate.Incident {
 	return predicate.Incident(sql.FieldNotIn(FieldPriority, vs...))
 }
 
-// SourceEQ applies the EQ predicate on the "source" field.
-func SourceEQ(v Source) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSource, v))
+// PriorityGT applies the GT predicate on the "priority" field.
+func PriorityGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldPriority, v))
 }
 
-// SourceNEQ applies the NEQ predicate on the "source" field.
-func SourceNEQ(v Source) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldSource, v))
+// PriorityGTE applies the GTE predicate on the "priority" field.
+func PriorityGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldPriority, v))
 }
 
-// SourceIn applies the In predicate on the "source" field.
-func SourceIn(vs ...Source) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldSource, vs...))
+// PriorityLT applies the LT predicate on the "priority" field.
+func PriorityLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldPriority, v))
 }
 
-// SourceNotIn applies the NotIn predicate on the "source" field.
-func SourceNotIn(vs ...Source) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldSource, vs...))
+// PriorityLTE applies the LTE predicate on the "priority" field.
+func PriorityLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldPriority, v))
 }
 
-// TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v Type) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldType, v))
+// PriorityContains applies the Contains predicate on the "priority" field.
+func PriorityContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldPriority, v))
 }
 
-// TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v Type) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldType, v))
+// PriorityHasPrefix applies the HasPrefix predicate on the "priority" field.
+func PriorityHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldPriority, v))
 }
 
-// TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...Type) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldType, vs...))
+// PriorityHasSuffix applies the HasSuffix predicate on the "priority" field.
+func PriorityHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldPriority, v))
 }
 
-// TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...Type) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldType, vs...))
+// PriorityEqualFold applies the EqualFold predicate on the "priority" field.
+func PriorityEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldPriority, v))
+}
+
+// PriorityContainsFold applies the ContainsFold predicate on the "priority" field.
+func PriorityContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldPriority, v))
 }
 
 // IncidentNumberEQ applies the EQ predicate on the "incident_number" field.
@@ -435,16 +454,6 @@ func IncidentNumberContainsFold(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldContainsFold(FieldIncidentNumber, v))
 }
 
-// IsMajorIncidentEQ applies the EQ predicate on the "is_major_incident" field.
-func IsMajorIncidentEQ(v bool) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldIsMajorIncident, v))
-}
-
-// IsMajorIncidentNEQ applies the NEQ predicate on the "is_major_incident" field.
-func IsMajorIncidentNEQ(v bool) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldIsMajorIncident, v))
-}
-
 // ReporterIDEQ applies the EQ predicate on the "reporter_id" field.
 func ReporterIDEQ(v int) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldReporterID, v))
@@ -463,6 +472,26 @@ func ReporterIDIn(vs ...int) predicate.Incident {
 // ReporterIDNotIn applies the NotIn predicate on the "reporter_id" field.
 func ReporterIDNotIn(vs ...int) predicate.Incident {
 	return predicate.Incident(sql.FieldNotIn(FieldReporterID, vs...))
+}
+
+// ReporterIDGT applies the GT predicate on the "reporter_id" field.
+func ReporterIDGT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldReporterID, v))
+}
+
+// ReporterIDGTE applies the GTE predicate on the "reporter_id" field.
+func ReporterIDGTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldReporterID, v))
+}
+
+// ReporterIDLT applies the LT predicate on the "reporter_id" field.
+func ReporterIDLT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldReporterID, v))
+}
+
+// ReporterIDLTE applies the LTE predicate on the "reporter_id" field.
+func ReporterIDLTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldReporterID, v))
 }
 
 // AssigneeIDEQ applies the EQ predicate on the "assignee_id" field.
@@ -485,6 +514,26 @@ func AssigneeIDNotIn(vs ...int) predicate.Incident {
 	return predicate.Incident(sql.FieldNotIn(FieldAssigneeID, vs...))
 }
 
+// AssigneeIDGT applies the GT predicate on the "assignee_id" field.
+func AssigneeIDGT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldAssigneeID, v))
+}
+
+// AssigneeIDGTE applies the GTE predicate on the "assignee_id" field.
+func AssigneeIDGTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldAssigneeID, v))
+}
+
+// AssigneeIDLT applies the LT predicate on the "assignee_id" field.
+func AssigneeIDLT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldAssigneeID, v))
+}
+
+// AssigneeIDLTE applies the LTE predicate on the "assignee_id" field.
+func AssigneeIDLTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldAssigneeID, v))
+}
+
 // AssigneeIDIsNil applies the IsNil predicate on the "assignee_id" field.
 func AssigneeIDIsNil() predicate.Incident {
 	return predicate.Incident(sql.FieldIsNull(FieldAssigneeID))
@@ -495,594 +544,54 @@ func AssigneeIDNotNil() predicate.Incident {
 	return predicate.Incident(sql.FieldNotNull(FieldAssigneeID))
 }
 
-// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
-func TenantIDEQ(v int) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldTenantID, v))
+// ConfigurationItemIDEQ applies the EQ predicate on the "configuration_item_id" field.
+func ConfigurationItemIDEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldConfigurationItemID, v))
 }
 
-// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
-func TenantIDNEQ(v int) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldTenantID, v))
+// ConfigurationItemIDNEQ applies the NEQ predicate on the "configuration_item_id" field.
+func ConfigurationItemIDNEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldConfigurationItemID, v))
 }
 
-// TenantIDIn applies the In predicate on the "tenant_id" field.
-func TenantIDIn(vs ...int) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldTenantID, vs...))
+// ConfigurationItemIDIn applies the In predicate on the "configuration_item_id" field.
+func ConfigurationItemIDIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldConfigurationItemID, vs...))
 }
 
-// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
-func TenantIDNotIn(vs ...int) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldTenantID, vs...))
+// ConfigurationItemIDNotIn applies the NotIn predicate on the "configuration_item_id" field.
+func ConfigurationItemIDNotIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldConfigurationItemID, vs...))
 }
 
-// AlibabaCloudInstanceIDEQ applies the EQ predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldAlibabaCloudInstanceID, v))
+// ConfigurationItemIDGT applies the GT predicate on the "configuration_item_id" field.
+func ConfigurationItemIDGT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldConfigurationItemID, v))
 }
 
-// AlibabaCloudInstanceIDNEQ applies the NEQ predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDNEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldAlibabaCloudInstanceID, v))
+// ConfigurationItemIDGTE applies the GTE predicate on the "configuration_item_id" field.
+func ConfigurationItemIDGTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldConfigurationItemID, v))
 }
 
-// AlibabaCloudInstanceIDIn applies the In predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldAlibabaCloudInstanceID, vs...))
+// ConfigurationItemIDLT applies the LT predicate on the "configuration_item_id" field.
+func ConfigurationItemIDLT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldConfigurationItemID, v))
 }
 
-// AlibabaCloudInstanceIDNotIn applies the NotIn predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDNotIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldAlibabaCloudInstanceID, vs...))
+// ConfigurationItemIDLTE applies the LTE predicate on the "configuration_item_id" field.
+func ConfigurationItemIDLTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldConfigurationItemID, v))
 }
 
-// AlibabaCloudInstanceIDGT applies the GT predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDGT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldAlibabaCloudInstanceID, v))
+// ConfigurationItemIDIsNil applies the IsNil predicate on the "configuration_item_id" field.
+func ConfigurationItemIDIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldConfigurationItemID))
 }
 
-// AlibabaCloudInstanceIDGTE applies the GTE predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDGTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDLT applies the LT predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDLT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDLTE applies the LTE predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDLTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDContains applies the Contains predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDContains(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContains(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDHasPrefix applies the HasPrefix predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDHasPrefix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasPrefix(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDHasSuffix applies the HasSuffix predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDHasSuffix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasSuffix(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDIsNil applies the IsNil predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldAlibabaCloudInstanceID))
-}
-
-// AlibabaCloudInstanceIDNotNil applies the NotNil predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldAlibabaCloudInstanceID))
-}
-
-// AlibabaCloudInstanceIDEqualFold applies the EqualFold predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDEqualFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEqualFold(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudInstanceIDContainsFold applies the ContainsFold predicate on the "alibaba_cloud_instance_id" field.
-func AlibabaCloudInstanceIDContainsFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContainsFold(FieldAlibabaCloudInstanceID, v))
-}
-
-// AlibabaCloudRegionEQ applies the EQ predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionNEQ applies the NEQ predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionNEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionIn applies the In predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldAlibabaCloudRegion, vs...))
-}
-
-// AlibabaCloudRegionNotIn applies the NotIn predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionNotIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldAlibabaCloudRegion, vs...))
-}
-
-// AlibabaCloudRegionGT applies the GT predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionGT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionGTE applies the GTE predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionGTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionLT applies the LT predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionLT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionLTE applies the LTE predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionLTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionContains applies the Contains predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionContains(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContains(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionHasPrefix applies the HasPrefix predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionHasPrefix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasPrefix(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionHasSuffix applies the HasSuffix predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionHasSuffix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasSuffix(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionIsNil applies the IsNil predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldAlibabaCloudRegion))
-}
-
-// AlibabaCloudRegionNotNil applies the NotNil predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldAlibabaCloudRegion))
-}
-
-// AlibabaCloudRegionEqualFold applies the EqualFold predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionEqualFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEqualFold(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudRegionContainsFold applies the ContainsFold predicate on the "alibaba_cloud_region" field.
-func AlibabaCloudRegionContainsFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContainsFold(FieldAlibabaCloudRegion, v))
-}
-
-// AlibabaCloudServiceEQ applies the EQ predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceNEQ applies the NEQ predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceNEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceIn applies the In predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldAlibabaCloudService, vs...))
-}
-
-// AlibabaCloudServiceNotIn applies the NotIn predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceNotIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldAlibabaCloudService, vs...))
-}
-
-// AlibabaCloudServiceGT applies the GT predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceGT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceGTE applies the GTE predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceGTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceLT applies the LT predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceLT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceLTE applies the LTE predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceLTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceContains applies the Contains predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceContains(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContains(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceHasPrefix applies the HasPrefix predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceHasPrefix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasPrefix(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceHasSuffix applies the HasSuffix predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceHasSuffix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasSuffix(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceIsNil applies the IsNil predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldAlibabaCloudService))
-}
-
-// AlibabaCloudServiceNotNil applies the NotNil predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldAlibabaCloudService))
-}
-
-// AlibabaCloudServiceEqualFold applies the EqualFold predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceEqualFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEqualFold(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudServiceContainsFold applies the ContainsFold predicate on the "alibaba_cloud_service" field.
-func AlibabaCloudServiceContainsFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContainsFold(FieldAlibabaCloudService, v))
-}
-
-// AlibabaCloudAlertDataIsNil applies the IsNil predicate on the "alibaba_cloud_alert_data" field.
-func AlibabaCloudAlertDataIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldAlibabaCloudAlertData))
-}
-
-// AlibabaCloudAlertDataNotNil applies the NotNil predicate on the "alibaba_cloud_alert_data" field.
-func AlibabaCloudAlertDataNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldAlibabaCloudAlertData))
-}
-
-// AlibabaCloudMetricsIsNil applies the IsNil predicate on the "alibaba_cloud_metrics" field.
-func AlibabaCloudMetricsIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldAlibabaCloudMetrics))
-}
-
-// AlibabaCloudMetricsNotNil applies the NotNil predicate on the "alibaba_cloud_metrics" field.
-func AlibabaCloudMetricsNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldAlibabaCloudMetrics))
-}
-
-// SecurityEventTypeEQ applies the EQ predicate on the "security_event_type" field.
-func SecurityEventTypeEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeNEQ applies the NEQ predicate on the "security_event_type" field.
-func SecurityEventTypeNEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeIn applies the In predicate on the "security_event_type" field.
-func SecurityEventTypeIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldSecurityEventType, vs...))
-}
-
-// SecurityEventTypeNotIn applies the NotIn predicate on the "security_event_type" field.
-func SecurityEventTypeNotIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldSecurityEventType, vs...))
-}
-
-// SecurityEventTypeGT applies the GT predicate on the "security_event_type" field.
-func SecurityEventTypeGT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeGTE applies the GTE predicate on the "security_event_type" field.
-func SecurityEventTypeGTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeLT applies the LT predicate on the "security_event_type" field.
-func SecurityEventTypeLT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeLTE applies the LTE predicate on the "security_event_type" field.
-func SecurityEventTypeLTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeContains applies the Contains predicate on the "security_event_type" field.
-func SecurityEventTypeContains(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContains(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeHasPrefix applies the HasPrefix predicate on the "security_event_type" field.
-func SecurityEventTypeHasPrefix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasPrefix(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeHasSuffix applies the HasSuffix predicate on the "security_event_type" field.
-func SecurityEventTypeHasSuffix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasSuffix(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeIsNil applies the IsNil predicate on the "security_event_type" field.
-func SecurityEventTypeIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldSecurityEventType))
-}
-
-// SecurityEventTypeNotNil applies the NotNil predicate on the "security_event_type" field.
-func SecurityEventTypeNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldSecurityEventType))
-}
-
-// SecurityEventTypeEqualFold applies the EqualFold predicate on the "security_event_type" field.
-func SecurityEventTypeEqualFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEqualFold(FieldSecurityEventType, v))
-}
-
-// SecurityEventTypeContainsFold applies the ContainsFold predicate on the "security_event_type" field.
-func SecurityEventTypeContainsFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContainsFold(FieldSecurityEventType, v))
-}
-
-// SecurityEventSourceIPEQ applies the EQ predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPNEQ applies the NEQ predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPNEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPIn applies the In predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldSecurityEventSourceIP, vs...))
-}
-
-// SecurityEventSourceIPNotIn applies the NotIn predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPNotIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldSecurityEventSourceIP, vs...))
-}
-
-// SecurityEventSourceIPGT applies the GT predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPGT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPGTE applies the GTE predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPGTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPLT applies the LT predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPLT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPLTE applies the LTE predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPLTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPContains applies the Contains predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPContains(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContains(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPHasPrefix applies the HasPrefix predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPHasPrefix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasPrefix(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPHasSuffix applies the HasSuffix predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPHasSuffix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasSuffix(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPIsNil applies the IsNil predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldSecurityEventSourceIP))
-}
-
-// SecurityEventSourceIPNotNil applies the NotNil predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldSecurityEventSourceIP))
-}
-
-// SecurityEventSourceIPEqualFold applies the EqualFold predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPEqualFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEqualFold(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventSourceIPContainsFold applies the ContainsFold predicate on the "security_event_source_ip" field.
-func SecurityEventSourceIPContainsFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContainsFold(FieldSecurityEventSourceIP, v))
-}
-
-// SecurityEventTargetEQ applies the EQ predicate on the "security_event_target" field.
-func SecurityEventTargetEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetNEQ applies the NEQ predicate on the "security_event_target" field.
-func SecurityEventTargetNEQ(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetIn applies the In predicate on the "security_event_target" field.
-func SecurityEventTargetIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldSecurityEventTarget, vs...))
-}
-
-// SecurityEventTargetNotIn applies the NotIn predicate on the "security_event_target" field.
-func SecurityEventTargetNotIn(vs ...string) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldSecurityEventTarget, vs...))
-}
-
-// SecurityEventTargetGT applies the GT predicate on the "security_event_target" field.
-func SecurityEventTargetGT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetGTE applies the GTE predicate on the "security_event_target" field.
-func SecurityEventTargetGTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetLT applies the LT predicate on the "security_event_target" field.
-func SecurityEventTargetLT(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetLTE applies the LTE predicate on the "security_event_target" field.
-func SecurityEventTargetLTE(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetContains applies the Contains predicate on the "security_event_target" field.
-func SecurityEventTargetContains(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContains(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetHasPrefix applies the HasPrefix predicate on the "security_event_target" field.
-func SecurityEventTargetHasPrefix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasPrefix(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetHasSuffix applies the HasSuffix predicate on the "security_event_target" field.
-func SecurityEventTargetHasSuffix(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldHasSuffix(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetIsNil applies the IsNil predicate on the "security_event_target" field.
-func SecurityEventTargetIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldSecurityEventTarget))
-}
-
-// SecurityEventTargetNotNil applies the NotNil predicate on the "security_event_target" field.
-func SecurityEventTargetNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldSecurityEventTarget))
-}
-
-// SecurityEventTargetEqualFold applies the EqualFold predicate on the "security_event_target" field.
-func SecurityEventTargetEqualFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldEqualFold(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventTargetContainsFold applies the ContainsFold predicate on the "security_event_target" field.
-func SecurityEventTargetContainsFold(v string) predicate.Incident {
-	return predicate.Incident(sql.FieldContainsFold(FieldSecurityEventTarget, v))
-}
-
-// SecurityEventDetailsIsNil applies the IsNil predicate on the "security_event_details" field.
-func SecurityEventDetailsIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldSecurityEventDetails))
-}
-
-// SecurityEventDetailsNotNil applies the NotNil predicate on the "security_event_details" field.
-func SecurityEventDetailsNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldSecurityEventDetails))
-}
-
-// DetectedAtEQ applies the EQ predicate on the "detected_at" field.
-func DetectedAtEQ(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldDetectedAt, v))
-}
-
-// DetectedAtNEQ applies the NEQ predicate on the "detected_at" field.
-func DetectedAtNEQ(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldDetectedAt, v))
-}
-
-// DetectedAtIn applies the In predicate on the "detected_at" field.
-func DetectedAtIn(vs ...time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldDetectedAt, vs...))
-}
-
-// DetectedAtNotIn applies the NotIn predicate on the "detected_at" field.
-func DetectedAtNotIn(vs ...time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldDetectedAt, vs...))
-}
-
-// DetectedAtGT applies the GT predicate on the "detected_at" field.
-func DetectedAtGT(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldDetectedAt, v))
-}
-
-// DetectedAtGTE applies the GTE predicate on the "detected_at" field.
-func DetectedAtGTE(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldDetectedAt, v))
-}
-
-// DetectedAtLT applies the LT predicate on the "detected_at" field.
-func DetectedAtLT(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldDetectedAt, v))
-}
-
-// DetectedAtLTE applies the LTE predicate on the "detected_at" field.
-func DetectedAtLTE(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldDetectedAt, v))
-}
-
-// ConfirmedAtEQ applies the EQ predicate on the "confirmed_at" field.
-func ConfirmedAtEQ(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldEQ(FieldConfirmedAt, v))
-}
-
-// ConfirmedAtNEQ applies the NEQ predicate on the "confirmed_at" field.
-func ConfirmedAtNEQ(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldNEQ(FieldConfirmedAt, v))
-}
-
-// ConfirmedAtIn applies the In predicate on the "confirmed_at" field.
-func ConfirmedAtIn(vs ...time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldIn(FieldConfirmedAt, vs...))
-}
-
-// ConfirmedAtNotIn applies the NotIn predicate on the "confirmed_at" field.
-func ConfirmedAtNotIn(vs ...time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldNotIn(FieldConfirmedAt, vs...))
-}
-
-// ConfirmedAtGT applies the GT predicate on the "confirmed_at" field.
-func ConfirmedAtGT(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldGT(FieldConfirmedAt, v))
-}
-
-// ConfirmedAtGTE applies the GTE predicate on the "confirmed_at" field.
-func ConfirmedAtGTE(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldGTE(FieldConfirmedAt, v))
-}
-
-// ConfirmedAtLT applies the LT predicate on the "confirmed_at" field.
-func ConfirmedAtLT(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldLT(FieldConfirmedAt, v))
-}
-
-// ConfirmedAtLTE applies the LTE predicate on the "confirmed_at" field.
-func ConfirmedAtLTE(v time.Time) predicate.Incident {
-	return predicate.Incident(sql.FieldLTE(FieldConfirmedAt, v))
-}
-
-// ConfirmedAtIsNil applies the IsNil predicate on the "confirmed_at" field.
-func ConfirmedAtIsNil() predicate.Incident {
-	return predicate.Incident(sql.FieldIsNull(FieldConfirmedAt))
-}
-
-// ConfirmedAtNotNil applies the NotNil predicate on the "confirmed_at" field.
-func ConfirmedAtNotNil() predicate.Incident {
-	return predicate.Incident(sql.FieldNotNull(FieldConfirmedAt))
+// ConfigurationItemIDNotNil applies the NotNil predicate on the "configuration_item_id" field.
+func ConfigurationItemIDNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldConfigurationItemID))
 }
 
 // ResolvedAtEQ applies the EQ predicate on the "resolved_at" field.
@@ -1185,6 +694,46 @@ func ClosedAtNotNil() predicate.Incident {
 	return predicate.Incident(sql.FieldNotNull(FieldClosedAt))
 }
 
+// TenantIDEQ applies the EQ predicate on the "tenant_id" field.
+func TenantIDEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TenantIDNEQ applies the NEQ predicate on the "tenant_id" field.
+func TenantIDNEQ(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldTenantID, v))
+}
+
+// TenantIDIn applies the In predicate on the "tenant_id" field.
+func TenantIDIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldTenantID, vs...))
+}
+
+// TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
+func TenantIDNotIn(vs ...int) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldTenantID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldCreatedAt, v))
@@ -1263,190 +812,6 @@ func UpdatedAtLT(v time.Time) predicate.Incident {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Incident {
 	return predicate.Incident(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasReporter applies the HasEdge predicate on the "reporter" edge.
-func HasReporter() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ReporterTable, ReporterColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasReporterWith applies the HasEdge predicate on the "reporter" edge with a given conditions (other predicates).
-func HasReporterWith(preds ...predicate.User) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newReporterStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasAssignee applies the HasEdge predicate on the "assignee" edge.
-func HasAssignee() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, AssigneeTable, AssigneeColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAssigneeWith applies the HasEdge predicate on the "assignee" edge with a given conditions (other predicates).
-func HasAssigneeWith(preds ...predicate.User) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newAssigneeStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasAffectedConfigurationItems applies the HasEdge predicate on the "affected_configuration_items" edge.
-func HasAffectedConfigurationItems() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, AffectedConfigurationItemsTable, AffectedConfigurationItemsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAffectedConfigurationItemsWith applies the HasEdge predicate on the "affected_configuration_items" edge with a given conditions (other predicates).
-func HasAffectedConfigurationItemsWith(preds ...predicate.ConfigurationItem) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newAffectedConfigurationItemsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasRelatedProblems applies the HasEdge predicate on the "related_problems" edge.
-func HasRelatedProblems() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RelatedProblemsTable, RelatedProblemsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasRelatedProblemsWith applies the HasEdge predicate on the "related_problems" edge with a given conditions (other predicates).
-func HasRelatedProblemsWith(preds ...predicate.Ticket) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newRelatedProblemsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasRelatedChanges applies the HasEdge predicate on the "related_changes" edge.
-func HasRelatedChanges() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RelatedChangesTable, RelatedChangesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasRelatedChangesWith applies the HasEdge predicate on the "related_changes" edge with a given conditions (other predicates).
-func HasRelatedChangesWith(preds ...predicate.Ticket) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newRelatedChangesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasStatusLogs applies the HasEdge predicate on the "status_logs" edge.
-func HasStatusLogs() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasStatusLogsWith applies the HasEdge predicate on the "status_logs" edge with a given conditions (other predicates).
-func HasStatusLogsWith(preds ...predicate.StatusLog) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newStatusLogsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasComments applies the HasEdge predicate on the "comments" edge.
-func HasComments() predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCommentsWith applies the HasEdge predicate on the "comments" edge with a given conditions (other predicates).
-func HasCommentsWith(preds ...predicate.Ticket) predicate.Incident {
-	return predicate.Incident(func(s *sql.Selector) {
-		step := newCommentsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

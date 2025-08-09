@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/citype"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -34,50 +32,36 @@ func (cadc *CIAttributeDefinitionCreate) SetDisplayName(s string) *CIAttributeDe
 	return cadc
 }
 
-// SetDescription sets the "description" field.
-func (cadc *CIAttributeDefinitionCreate) SetDescription(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetDescription(s)
+// SetType sets the "type" field.
+func (cadc *CIAttributeDefinitionCreate) SetType(s string) *CIAttributeDefinitionCreate {
+	cadc.mutation.SetType(s)
 	return cadc
 }
 
-// SetNillableDescription sets the "description" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableDescription(s *string) *CIAttributeDefinitionCreate {
-	if s != nil {
-		cadc.SetDescription(*s)
+// SetRequired sets the "required" field.
+func (cadc *CIAttributeDefinitionCreate) SetRequired(b bool) *CIAttributeDefinitionCreate {
+	cadc.mutation.SetRequired(b)
+	return cadc
+}
+
+// SetNillableRequired sets the "required" field if the given value is not nil.
+func (cadc *CIAttributeDefinitionCreate) SetNillableRequired(b *bool) *CIAttributeDefinitionCreate {
+	if b != nil {
+		cadc.SetRequired(*b)
 	}
 	return cadc
 }
 
-// SetDataType sets the "data_type" field.
-func (cadc *CIAttributeDefinitionCreate) SetDataType(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetDataType(s)
+// SetUnique sets the "unique" field.
+func (cadc *CIAttributeDefinitionCreate) SetUnique(b bool) *CIAttributeDefinitionCreate {
+	cadc.mutation.SetUnique(b)
 	return cadc
 }
 
-// SetIsRequired sets the "is_required" field.
-func (cadc *CIAttributeDefinitionCreate) SetIsRequired(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetIsRequired(b)
-	return cadc
-}
-
-// SetNillableIsRequired sets the "is_required" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableIsRequired(b *bool) *CIAttributeDefinitionCreate {
+// SetNillableUnique sets the "unique" field if the given value is not nil.
+func (cadc *CIAttributeDefinitionCreate) SetNillableUnique(b *bool) *CIAttributeDefinitionCreate {
 	if b != nil {
-		cadc.SetIsRequired(*b)
-	}
-	return cadc
-}
-
-// SetIsUnique sets the "is_unique" field.
-func (cadc *CIAttributeDefinitionCreate) SetIsUnique(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetIsUnique(b)
-	return cadc
-}
-
-// SetNillableIsUnique sets the "is_unique" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableIsUnique(b *bool) *CIAttributeDefinitionCreate {
-	if b != nil {
-		cadc.SetIsUnique(*b)
+		cadc.SetUnique(*b)
 	}
 	return cadc
 }
@@ -97,70 +81,28 @@ func (cadc *CIAttributeDefinitionCreate) SetNillableDefaultValue(s *string) *CIA
 }
 
 // SetValidationRules sets the "validation_rules" field.
-func (cadc *CIAttributeDefinitionCreate) SetValidationRules(m map[string]interface{}) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetValidationRules(m)
+func (cadc *CIAttributeDefinitionCreate) SetValidationRules(s string) *CIAttributeDefinitionCreate {
+	cadc.mutation.SetValidationRules(s)
 	return cadc
 }
 
-// SetEnumValues sets the "enum_values" field.
-func (cadc *CIAttributeDefinitionCreate) SetEnumValues(s []string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetEnumValues(s)
-	return cadc
-}
-
-// SetReferenceType sets the "reference_type" field.
-func (cadc *CIAttributeDefinitionCreate) SetReferenceType(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetReferenceType(s)
-	return cadc
-}
-
-// SetNillableReferenceType sets the "reference_type" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableReferenceType(s *string) *CIAttributeDefinitionCreate {
+// SetNillableValidationRules sets the "validation_rules" field if the given value is not nil.
+func (cadc *CIAttributeDefinitionCreate) SetNillableValidationRules(s *string) *CIAttributeDefinitionCreate {
 	if s != nil {
-		cadc.SetReferenceType(*s)
+		cadc.SetValidationRules(*s)
 	}
 	return cadc
 }
 
-// SetDisplayOrder sets the "display_order" field.
-func (cadc *CIAttributeDefinitionCreate) SetDisplayOrder(i int) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetDisplayOrder(i)
+// SetCiTypeID sets the "ci_type_id" field.
+func (cadc *CIAttributeDefinitionCreate) SetCiTypeID(i int) *CIAttributeDefinitionCreate {
+	cadc.mutation.SetCiTypeID(i)
 	return cadc
 }
 
-// SetNillableDisplayOrder sets the "display_order" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableDisplayOrder(i *int) *CIAttributeDefinitionCreate {
-	if i != nil {
-		cadc.SetDisplayOrder(*i)
-	}
-	return cadc
-}
-
-// SetIsSearchable sets the "is_searchable" field.
-func (cadc *CIAttributeDefinitionCreate) SetIsSearchable(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetIsSearchable(b)
-	return cadc
-}
-
-// SetNillableIsSearchable sets the "is_searchable" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableIsSearchable(b *bool) *CIAttributeDefinitionCreate {
-	if b != nil {
-		cadc.SetIsSearchable(*b)
-	}
-	return cadc
-}
-
-// SetIsSystem sets the "is_system" field.
-func (cadc *CIAttributeDefinitionCreate) SetIsSystem(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetIsSystem(b)
-	return cadc
-}
-
-// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableIsSystem(b *bool) *CIAttributeDefinitionCreate {
-	if b != nil {
-		cadc.SetIsSystem(*b)
-	}
+// SetTenantID sets the "tenant_id" field.
+func (cadc *CIAttributeDefinitionCreate) SetTenantID(i int) *CIAttributeDefinitionCreate {
+	cadc.mutation.SetTenantID(i)
 	return cadc
 }
 
@@ -175,18 +117,6 @@ func (cadc *CIAttributeDefinitionCreate) SetNillableIsActive(b *bool) *CIAttribu
 	if b != nil {
 		cadc.SetIsActive(*b)
 	}
-	return cadc
-}
-
-// SetCiTypeID sets the "ci_type_id" field.
-func (cadc *CIAttributeDefinitionCreate) SetCiTypeID(i int) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetCiTypeID(i)
-	return cadc
-}
-
-// SetTenantID sets the "tenant_id" field.
-func (cadc *CIAttributeDefinitionCreate) SetTenantID(i int) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetTenantID(i)
 	return cadc
 }
 
@@ -216,16 +146,6 @@ func (cadc *CIAttributeDefinitionCreate) SetNillableUpdatedAt(t *time.Time) *CIA
 		cadc.SetUpdatedAt(*t)
 	}
 	return cadc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (cadc *CIAttributeDefinitionCreate) SetTenant(t *Tenant) *CIAttributeDefinitionCreate {
-	return cadc.SetTenantID(t.ID)
-}
-
-// SetCiType sets the "ci_type" edge to the CIType entity.
-func (cadc *CIAttributeDefinitionCreate) SetCiType(c *CIType) *CIAttributeDefinitionCreate {
-	return cadc.SetCiTypeID(c.ID)
 }
 
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
@@ -263,25 +183,13 @@ func (cadc *CIAttributeDefinitionCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cadc *CIAttributeDefinitionCreate) defaults() {
-	if _, ok := cadc.mutation.IsRequired(); !ok {
-		v := ciattributedefinition.DefaultIsRequired
-		cadc.mutation.SetIsRequired(v)
+	if _, ok := cadc.mutation.Required(); !ok {
+		v := ciattributedefinition.DefaultRequired
+		cadc.mutation.SetRequired(v)
 	}
-	if _, ok := cadc.mutation.IsUnique(); !ok {
-		v := ciattributedefinition.DefaultIsUnique
-		cadc.mutation.SetIsUnique(v)
-	}
-	if _, ok := cadc.mutation.DisplayOrder(); !ok {
-		v := ciattributedefinition.DefaultDisplayOrder
-		cadc.mutation.SetDisplayOrder(v)
-	}
-	if _, ok := cadc.mutation.IsSearchable(); !ok {
-		v := ciattributedefinition.DefaultIsSearchable
-		cadc.mutation.SetIsSearchable(v)
-	}
-	if _, ok := cadc.mutation.IsSystem(); !ok {
-		v := ciattributedefinition.DefaultIsSystem
-		cadc.mutation.SetIsSystem(v)
+	if _, ok := cadc.mutation.Unique(); !ok {
+		v := ciattributedefinition.DefaultUnique
+		cadc.mutation.SetUnique(v)
 	}
 	if _, ok := cadc.mutation.IsActive(); !ok {
 		v := ciattributedefinition.DefaultIsActive
@@ -315,49 +223,44 @@ func (cadc *CIAttributeDefinitionCreate) check() error {
 			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.display_name": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.DataType(); !ok {
-		return &ValidationError{Name: "data_type", err: errors.New(`ent: missing required field "CIAttributeDefinition.data_type"`)}
+	if _, ok := cadc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "CIAttributeDefinition.type"`)}
 	}
-	if v, ok := cadc.mutation.DataType(); ok {
-		if err := ciattributedefinition.DataTypeValidator(v); err != nil {
-			return &ValidationError{Name: "data_type", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.data_type": %w`, err)}
+	if v, ok := cadc.mutation.GetType(); ok {
+		if err := ciattributedefinition.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.type": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.IsRequired(); !ok {
-		return &ValidationError{Name: "is_required", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_required"`)}
+	if _, ok := cadc.mutation.Required(); !ok {
+		return &ValidationError{Name: "required", err: errors.New(`ent: missing required field "CIAttributeDefinition.required"`)}
 	}
-	if _, ok := cadc.mutation.IsUnique(); !ok {
-		return &ValidationError{Name: "is_unique", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_unique"`)}
-	}
-	if _, ok := cadc.mutation.DisplayOrder(); !ok {
-		return &ValidationError{Name: "display_order", err: errors.New(`ent: missing required field "CIAttributeDefinition.display_order"`)}
-	}
-	if _, ok := cadc.mutation.IsSearchable(); !ok {
-		return &ValidationError{Name: "is_searchable", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_searchable"`)}
-	}
-	if _, ok := cadc.mutation.IsSystem(); !ok {
-		return &ValidationError{Name: "is_system", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_system"`)}
-	}
-	if _, ok := cadc.mutation.IsActive(); !ok {
-		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_active"`)}
+	if _, ok := cadc.mutation.Unique(); !ok {
+		return &ValidationError{Name: "unique", err: errors.New(`ent: missing required field "CIAttributeDefinition.unique"`)}
 	}
 	if _, ok := cadc.mutation.CiTypeID(); !ok {
 		return &ValidationError{Name: "ci_type_id", err: errors.New(`ent: missing required field "CIAttributeDefinition.ci_type_id"`)}
 	}
+	if v, ok := cadc.mutation.CiTypeID(); ok {
+		if err := ciattributedefinition.CiTypeIDValidator(v); err != nil {
+			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.ci_type_id": %w`, err)}
+		}
+	}
 	if _, ok := cadc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CIAttributeDefinition.tenant_id"`)}
+	}
+	if v, ok := cadc.mutation.TenantID(); ok {
+		if err := ciattributedefinition.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.tenant_id": %w`, err)}
+		}
+	}
+	if _, ok := cadc.mutation.IsActive(); !ok {
+		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_active"`)}
 	}
 	if _, ok := cadc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CIAttributeDefinition.created_at"`)}
 	}
 	if _, ok := cadc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CIAttributeDefinition.updated_at"`)}
-	}
-	if len(cadc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "CIAttributeDefinition.tenant"`)}
-	}
-	if len(cadc.mutation.CiTypeIDs()) == 0 {
-		return &ValidationError{Name: "ci_type", err: errors.New(`ent: missing required edge "CIAttributeDefinition.ci_type"`)}
 	}
 	return nil
 }
@@ -393,49 +296,33 @@ func (cadc *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
-	if value, ok := cadc.mutation.Description(); ok {
-		_spec.SetField(ciattributedefinition.FieldDescription, field.TypeString, value)
-		_node.Description = value
+	if value, ok := cadc.mutation.GetType(); ok {
+		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
+		_node.Type = value
 	}
-	if value, ok := cadc.mutation.DataType(); ok {
-		_spec.SetField(ciattributedefinition.FieldDataType, field.TypeString, value)
-		_node.DataType = value
+	if value, ok := cadc.mutation.Required(); ok {
+		_spec.SetField(ciattributedefinition.FieldRequired, field.TypeBool, value)
+		_node.Required = value
 	}
-	if value, ok := cadc.mutation.IsRequired(); ok {
-		_spec.SetField(ciattributedefinition.FieldIsRequired, field.TypeBool, value)
-		_node.IsRequired = value
-	}
-	if value, ok := cadc.mutation.IsUnique(); ok {
-		_spec.SetField(ciattributedefinition.FieldIsUnique, field.TypeBool, value)
-		_node.IsUnique = value
+	if value, ok := cadc.mutation.Unique(); ok {
+		_spec.SetField(ciattributedefinition.FieldUnique, field.TypeBool, value)
+		_node.Unique = value
 	}
 	if value, ok := cadc.mutation.DefaultValue(); ok {
 		_spec.SetField(ciattributedefinition.FieldDefaultValue, field.TypeString, value)
 		_node.DefaultValue = value
 	}
 	if value, ok := cadc.mutation.ValidationRules(); ok {
-		_spec.SetField(ciattributedefinition.FieldValidationRules, field.TypeJSON, value)
+		_spec.SetField(ciattributedefinition.FieldValidationRules, field.TypeString, value)
 		_node.ValidationRules = value
 	}
-	if value, ok := cadc.mutation.EnumValues(); ok {
-		_spec.SetField(ciattributedefinition.FieldEnumValues, field.TypeJSON, value)
-		_node.EnumValues = value
+	if value, ok := cadc.mutation.CiTypeID(); ok {
+		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
+		_node.CiTypeID = value
 	}
-	if value, ok := cadc.mutation.ReferenceType(); ok {
-		_spec.SetField(ciattributedefinition.FieldReferenceType, field.TypeString, value)
-		_node.ReferenceType = value
-	}
-	if value, ok := cadc.mutation.DisplayOrder(); ok {
-		_spec.SetField(ciattributedefinition.FieldDisplayOrder, field.TypeInt, value)
-		_node.DisplayOrder = value
-	}
-	if value, ok := cadc.mutation.IsSearchable(); ok {
-		_spec.SetField(ciattributedefinition.FieldIsSearchable, field.TypeBool, value)
-		_node.IsSearchable = value
-	}
-	if value, ok := cadc.mutation.IsSystem(); ok {
-		_spec.SetField(ciattributedefinition.FieldIsSystem, field.TypeBool, value)
-		_node.IsSystem = value
+	if value, ok := cadc.mutation.TenantID(); ok {
+		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := cadc.mutation.IsActive(); ok {
 		_spec.SetField(ciattributedefinition.FieldIsActive, field.TypeBool, value)
@@ -448,40 +335,6 @@ func (cadc *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *
 	if value, ok := cadc.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := cadc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ciattributedefinition.TenantTable,
-			Columns: []string{ciattributedefinition.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cadc.mutation.CiTypeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ciattributedefinition.CiTypeTable,
-			Columns: []string{ciattributedefinition.CiTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.CiTypeID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

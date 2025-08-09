@@ -3,11 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/incident"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/user"
 	"strings"
 	"time"
 
@@ -24,159 +21,29 @@ type Incident struct {
 	Title string `json:"title,omitempty"`
 	// 事件描述
 	Description string `json:"description,omitempty"`
-	// 事件状态
-	Status incident.Status `json:"status,omitempty"`
-	// 事件优先级
-	Priority incident.Priority `json:"priority,omitempty"`
-	// 事件来源
-	Source incident.Source `json:"source,omitempty"`
-	// 事件类型
-	Type incident.Type `json:"type,omitempty"`
+	// 状态
+	Status string `json:"status,omitempty"`
+	// 优先级
+	Priority string `json:"priority,omitempty"`
 	// 事件编号
 	IncidentNumber string `json:"incident_number,omitempty"`
-	// 是否重大事件
-	IsMajorIncident bool `json:"is_major_incident,omitempty"`
 	// 报告人ID
 	ReporterID int `json:"reporter_id,omitempty"`
 	// 处理人ID
-	AssigneeID *int `json:"assignee_id,omitempty"`
+	AssigneeID int `json:"assignee_id,omitempty"`
+	// 配置项ID
+	ConfigurationItemID int `json:"configuration_item_id,omitempty"`
+	// 解决时间
+	ResolvedAt time.Time `json:"resolved_at,omitempty"`
+	// 关闭时间
+	ClosedAt time.Time `json:"closed_at,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// 阿里云实例ID
-	AlibabaCloudInstanceID string `json:"alibaba_cloud_instance_id,omitempty"`
-	// 阿里云地域
-	AlibabaCloudRegion string `json:"alibaba_cloud_region,omitempty"`
-	// 阿里云服务名称
-	AlibabaCloudService string `json:"alibaba_cloud_service,omitempty"`
-	// 阿里云告警原始数据
-	AlibabaCloudAlertData map[string]interface{} `json:"alibaba_cloud_alert_data,omitempty"`
-	// 阿里云监控指标数据
-	AlibabaCloudMetrics map[string]interface{} `json:"alibaba_cloud_metrics,omitempty"`
-	// 安全事件类型
-	SecurityEventType string `json:"security_event_type,omitempty"`
-	// 安全事件源IP
-	SecurityEventSourceIP string `json:"security_event_source_ip,omitempty"`
-	// 安全事件目标
-	SecurityEventTarget string `json:"security_event_target,omitempty"`
-	// 安全事件详细信息
-	SecurityEventDetails map[string]interface{} `json:"security_event_details,omitempty"`
-	// 检测时间
-	DetectedAt time.Time `json:"detected_at,omitempty"`
-	// 确认时间
-	ConfirmedAt *time.Time `json:"confirmed_at,omitempty"`
-	// 解决时间
-	ResolvedAt *time.Time `json:"resolved_at,omitempty"`
-	// 关闭时间
-	ClosedAt *time.Time `json:"closed_at,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the IncidentQuery when eager-loading is set.
-	Edges        IncidentEdges `json:"edges"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// IncidentEdges holds the relations/edges for other nodes in the graph.
-type IncidentEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// Reporter holds the value of the reporter edge.
-	Reporter *User `json:"reporter,omitempty"`
-	// Assignee holds the value of the assignee edge.
-	Assignee *User `json:"assignee,omitempty"`
-	// AffectedConfigurationItems holds the value of the affected_configuration_items edge.
-	AffectedConfigurationItems []*ConfigurationItem `json:"affected_configuration_items,omitempty"`
-	// RelatedProblems holds the value of the related_problems edge.
-	RelatedProblems []*Ticket `json:"related_problems,omitempty"`
-	// RelatedChanges holds the value of the related_changes edge.
-	RelatedChanges []*Ticket `json:"related_changes,omitempty"`
-	// StatusLogs holds the value of the status_logs edge.
-	StatusLogs []*StatusLog `json:"status_logs,omitempty"`
-	// Comments holds the value of the comments edge.
-	Comments []*Ticket `json:"comments,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e IncidentEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// ReporterOrErr returns the Reporter value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e IncidentEdges) ReporterOrErr() (*User, error) {
-	if e.Reporter != nil {
-		return e.Reporter, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: user.Label}
-	}
-	return nil, &NotLoadedError{edge: "reporter"}
-}
-
-// AssigneeOrErr returns the Assignee value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e IncidentEdges) AssigneeOrErr() (*User, error) {
-	if e.Assignee != nil {
-		return e.Assignee, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: user.Label}
-	}
-	return nil, &NotLoadedError{edge: "assignee"}
-}
-
-// AffectedConfigurationItemsOrErr returns the AffectedConfigurationItems value or an error if the edge
-// was not loaded in eager-loading.
-func (e IncidentEdges) AffectedConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
-	if e.loadedTypes[3] {
-		return e.AffectedConfigurationItems, nil
-	}
-	return nil, &NotLoadedError{edge: "affected_configuration_items"}
-}
-
-// RelatedProblemsOrErr returns the RelatedProblems value or an error if the edge
-// was not loaded in eager-loading.
-func (e IncidentEdges) RelatedProblemsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[4] {
-		return e.RelatedProblems, nil
-	}
-	return nil, &NotLoadedError{edge: "related_problems"}
-}
-
-// RelatedChangesOrErr returns the RelatedChanges value or an error if the edge
-// was not loaded in eager-loading.
-func (e IncidentEdges) RelatedChangesOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[5] {
-		return e.RelatedChanges, nil
-	}
-	return nil, &NotLoadedError{edge: "related_changes"}
-}
-
-// StatusLogsOrErr returns the StatusLogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e IncidentEdges) StatusLogsOrErr() ([]*StatusLog, error) {
-	if e.loadedTypes[6] {
-		return e.StatusLogs, nil
-	}
-	return nil, &NotLoadedError{edge: "status_logs"}
-}
-
-// CommentsOrErr returns the Comments value or an error if the edge
-// was not loaded in eager-loading.
-func (e IncidentEdges) CommentsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[7] {
-		return e.Comments, nil
-	}
-	return nil, &NotLoadedError{edge: "comments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -184,15 +51,11 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case incident.FieldAlibabaCloudAlertData, incident.FieldAlibabaCloudMetrics, incident.FieldSecurityEventDetails:
-			values[i] = new([]byte)
-		case incident.FieldIsMajorIncident:
-			values[i] = new(sql.NullBool)
-		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldTenantID:
+		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldPriority, incident.FieldSource, incident.FieldType, incident.FieldIncidentNumber, incident.FieldAlibabaCloudInstanceID, incident.FieldAlibabaCloudRegion, incident.FieldAlibabaCloudService, incident.FieldSecurityEventType, incident.FieldSecurityEventSourceIP, incident.FieldSecurityEventTarget:
+		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldPriority, incident.FieldIncidentNumber:
 			values[i] = new(sql.NullString)
-		case incident.FieldDetectedAt, incident.FieldConfirmedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt:
+		case incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -231,37 +94,19 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[j])
 			} else if value.Valid {
-				i.Status = incident.Status(value.String)
+				i.Status = value.String
 			}
 		case incident.FieldPriority:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[j])
 			} else if value.Valid {
-				i.Priority = incident.Priority(value.String)
-			}
-		case incident.FieldSource:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field source", values[j])
-			} else if value.Valid {
-				i.Source = incident.Source(value.String)
-			}
-		case incident.FieldType:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[j])
-			} else if value.Valid {
-				i.Type = incident.Type(value.String)
+				i.Priority = value.String
 			}
 		case incident.FieldIncidentNumber:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field incident_number", values[j])
 			} else if value.Valid {
 				i.IncidentNumber = value.String
-			}
-		case incident.FieldIsMajorIncident:
-			if value, ok := values[j].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_major_incident", values[j])
-			} else if value.Valid {
-				i.IsMajorIncident = value.Bool
 			}
 		case incident.FieldReporterID:
 			if value, ok := values[j].(*sql.NullInt64); !ok {
@@ -273,101 +118,31 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 			if value, ok := values[j].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee_id", values[j])
 			} else if value.Valid {
-				i.AssigneeID = new(int)
-				*i.AssigneeID = int(value.Int64)
+				i.AssigneeID = int(value.Int64)
+			}
+		case incident.FieldConfigurationItemID:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field configuration_item_id", values[j])
+			} else if value.Valid {
+				i.ConfigurationItemID = int(value.Int64)
+			}
+		case incident.FieldResolvedAt:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field resolved_at", values[j])
+			} else if value.Valid {
+				i.ResolvedAt = value.Time
+			}
+		case incident.FieldClosedAt:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field closed_at", values[j])
+			} else if value.Valid {
+				i.ClosedAt = value.Time
 			}
 		case incident.FieldTenantID:
 			if value, ok := values[j].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[j])
 			} else if value.Valid {
 				i.TenantID = int(value.Int64)
-			}
-		case incident.FieldAlibabaCloudInstanceID:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field alibaba_cloud_instance_id", values[j])
-			} else if value.Valid {
-				i.AlibabaCloudInstanceID = value.String
-			}
-		case incident.FieldAlibabaCloudRegion:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field alibaba_cloud_region", values[j])
-			} else if value.Valid {
-				i.AlibabaCloudRegion = value.String
-			}
-		case incident.FieldAlibabaCloudService:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field alibaba_cloud_service", values[j])
-			} else if value.Valid {
-				i.AlibabaCloudService = value.String
-			}
-		case incident.FieldAlibabaCloudAlertData:
-			if value, ok := values[j].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field alibaba_cloud_alert_data", values[j])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &i.AlibabaCloudAlertData); err != nil {
-					return fmt.Errorf("unmarshal field alibaba_cloud_alert_data: %w", err)
-				}
-			}
-		case incident.FieldAlibabaCloudMetrics:
-			if value, ok := values[j].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field alibaba_cloud_metrics", values[j])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &i.AlibabaCloudMetrics); err != nil {
-					return fmt.Errorf("unmarshal field alibaba_cloud_metrics: %w", err)
-				}
-			}
-		case incident.FieldSecurityEventType:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field security_event_type", values[j])
-			} else if value.Valid {
-				i.SecurityEventType = value.String
-			}
-		case incident.FieldSecurityEventSourceIP:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field security_event_source_ip", values[j])
-			} else if value.Valid {
-				i.SecurityEventSourceIP = value.String
-			}
-		case incident.FieldSecurityEventTarget:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field security_event_target", values[j])
-			} else if value.Valid {
-				i.SecurityEventTarget = value.String
-			}
-		case incident.FieldSecurityEventDetails:
-			if value, ok := values[j].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field security_event_details", values[j])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &i.SecurityEventDetails); err != nil {
-					return fmt.Errorf("unmarshal field security_event_details: %w", err)
-				}
-			}
-		case incident.FieldDetectedAt:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field detected_at", values[j])
-			} else if value.Valid {
-				i.DetectedAt = value.Time
-			}
-		case incident.FieldConfirmedAt:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field confirmed_at", values[j])
-			} else if value.Valid {
-				i.ConfirmedAt = new(time.Time)
-				*i.ConfirmedAt = value.Time
-			}
-		case incident.FieldResolvedAt:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field resolved_at", values[j])
-			} else if value.Valid {
-				i.ResolvedAt = new(time.Time)
-				*i.ResolvedAt = value.Time
-			}
-		case incident.FieldClosedAt:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field closed_at", values[j])
-			} else if value.Valid {
-				i.ClosedAt = new(time.Time)
-				*i.ClosedAt = value.Time
 			}
 		case incident.FieldCreatedAt:
 			if value, ok := values[j].(*sql.NullTime); !ok {
@@ -392,46 +167,6 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (i *Incident) Value(name string) (ent.Value, error) {
 	return i.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the Incident entity.
-func (i *Incident) QueryTenant() *TenantQuery {
-	return NewIncidentClient(i.config).QueryTenant(i)
-}
-
-// QueryReporter queries the "reporter" edge of the Incident entity.
-func (i *Incident) QueryReporter() *UserQuery {
-	return NewIncidentClient(i.config).QueryReporter(i)
-}
-
-// QueryAssignee queries the "assignee" edge of the Incident entity.
-func (i *Incident) QueryAssignee() *UserQuery {
-	return NewIncidentClient(i.config).QueryAssignee(i)
-}
-
-// QueryAffectedConfigurationItems queries the "affected_configuration_items" edge of the Incident entity.
-func (i *Incident) QueryAffectedConfigurationItems() *ConfigurationItemQuery {
-	return NewIncidentClient(i.config).QueryAffectedConfigurationItems(i)
-}
-
-// QueryRelatedProblems queries the "related_problems" edge of the Incident entity.
-func (i *Incident) QueryRelatedProblems() *TicketQuery {
-	return NewIncidentClient(i.config).QueryRelatedProblems(i)
-}
-
-// QueryRelatedChanges queries the "related_changes" edge of the Incident entity.
-func (i *Incident) QueryRelatedChanges() *TicketQuery {
-	return NewIncidentClient(i.config).QueryRelatedChanges(i)
-}
-
-// QueryStatusLogs queries the "status_logs" edge of the Incident entity.
-func (i *Incident) QueryStatusLogs() *StatusLogQuery {
-	return NewIncidentClient(i.config).QueryStatusLogs(i)
-}
-
-// QueryComments queries the "comments" edge of the Incident entity.
-func (i *Incident) QueryComments() *TicketQuery {
-	return NewIncidentClient(i.config).QueryComments(i)
 }
 
 // Update returns a builder for updating this Incident.
@@ -464,78 +199,31 @@ func (i *Incident) String() string {
 	builder.WriteString(i.Description)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", i.Status))
+	builder.WriteString(i.Status)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(fmt.Sprintf("%v", i.Priority))
-	builder.WriteString(", ")
-	builder.WriteString("source=")
-	builder.WriteString(fmt.Sprintf("%v", i.Source))
-	builder.WriteString(", ")
-	builder.WriteString("type=")
-	builder.WriteString(fmt.Sprintf("%v", i.Type))
+	builder.WriteString(i.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("incident_number=")
 	builder.WriteString(i.IncidentNumber)
 	builder.WriteString(", ")
-	builder.WriteString("is_major_incident=")
-	builder.WriteString(fmt.Sprintf("%v", i.IsMajorIncident))
-	builder.WriteString(", ")
 	builder.WriteString("reporter_id=")
 	builder.WriteString(fmt.Sprintf("%v", i.ReporterID))
 	builder.WriteString(", ")
-	if v := i.AssigneeID; v != nil {
-		builder.WriteString("assignee_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
+	builder.WriteString("assignee_id=")
+	builder.WriteString(fmt.Sprintf("%v", i.AssigneeID))
+	builder.WriteString(", ")
+	builder.WriteString("configuration_item_id=")
+	builder.WriteString(fmt.Sprintf("%v", i.ConfigurationItemID))
+	builder.WriteString(", ")
+	builder.WriteString("resolved_at=")
+	builder.WriteString(i.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("closed_at=")
+	builder.WriteString(i.ClosedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", i.TenantID))
-	builder.WriteString(", ")
-	builder.WriteString("alibaba_cloud_instance_id=")
-	builder.WriteString(i.AlibabaCloudInstanceID)
-	builder.WriteString(", ")
-	builder.WriteString("alibaba_cloud_region=")
-	builder.WriteString(i.AlibabaCloudRegion)
-	builder.WriteString(", ")
-	builder.WriteString("alibaba_cloud_service=")
-	builder.WriteString(i.AlibabaCloudService)
-	builder.WriteString(", ")
-	builder.WriteString("alibaba_cloud_alert_data=")
-	builder.WriteString(fmt.Sprintf("%v", i.AlibabaCloudAlertData))
-	builder.WriteString(", ")
-	builder.WriteString("alibaba_cloud_metrics=")
-	builder.WriteString(fmt.Sprintf("%v", i.AlibabaCloudMetrics))
-	builder.WriteString(", ")
-	builder.WriteString("security_event_type=")
-	builder.WriteString(i.SecurityEventType)
-	builder.WriteString(", ")
-	builder.WriteString("security_event_source_ip=")
-	builder.WriteString(i.SecurityEventSourceIP)
-	builder.WriteString(", ")
-	builder.WriteString("security_event_target=")
-	builder.WriteString(i.SecurityEventTarget)
-	builder.WriteString(", ")
-	builder.WriteString("security_event_details=")
-	builder.WriteString(fmt.Sprintf("%v", i.SecurityEventDetails))
-	builder.WriteString(", ")
-	builder.WriteString("detected_at=")
-	builder.WriteString(i.DetectedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	if v := i.ConfirmedAt; v != nil {
-		builder.WriteString("confirmed_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
-	builder.WriteString(", ")
-	if v := i.ResolvedAt; v != nil {
-		builder.WriteString("resolved_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
-	builder.WriteString(", ")
-	if v := i.ClosedAt; v != nil {
-		builder.WriteString("closed_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(i.CreatedAt.Format(time.ANSIC))

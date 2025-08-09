@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -20,58 +19,16 @@ const (
 	FieldTargetCiID = "target_ci_id"
 	// FieldRelationshipTypeID holds the string denoting the relationship_type_id field in the database.
 	FieldRelationshipTypeID = "relationship_type_id"
-	// FieldProperties holds the string denoting the properties field in the database.
-	FieldProperties = "properties"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
-	// FieldEffectiveFrom holds the string denoting the effective_from field in the database.
-	FieldEffectiveFrom = "effective_from"
-	// FieldEffectiveTo holds the string denoting the effective_to field in the database.
-	FieldEffectiveTo = "effective_to"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeSourceCi holds the string denoting the source_ci edge name in mutations.
-	EdgeSourceCi = "source_ci"
-	// EdgeTargetCi holds the string denoting the target_ci edge name in mutations.
-	EdgeTargetCi = "target_ci"
-	// EdgeRelationshipType holds the string denoting the relationship_type edge name in mutations.
-	EdgeRelationshipType = "relationship_type"
 	// Table holds the table name of the cirelationship in the database.
 	Table = "ci_relationships"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "ci_relationships"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// SourceCiTable is the table that holds the source_ci relation/edge.
-	SourceCiTable = "ci_relationships"
-	// SourceCiInverseTable is the table name for the ConfigurationItem entity.
-	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
-	SourceCiInverseTable = "configuration_items"
-	// SourceCiColumn is the table column denoting the source_ci relation/edge.
-	SourceCiColumn = "source_ci_id"
-	// TargetCiTable is the table that holds the target_ci relation/edge.
-	TargetCiTable = "ci_relationships"
-	// TargetCiInverseTable is the table name for the ConfigurationItem entity.
-	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
-	TargetCiInverseTable = "configuration_items"
-	// TargetCiColumn is the table column denoting the target_ci relation/edge.
-	TargetCiColumn = "target_ci_id"
-	// RelationshipTypeTable is the table that holds the relationship_type relation/edge.
-	RelationshipTypeTable = "ci_relationships"
-	// RelationshipTypeInverseTable is the table name for the CIRelationshipType entity.
-	// It exists in this package in order to avoid circular dependency with the "cirelationshiptype" package.
-	RelationshipTypeInverseTable = "ci_relationship_types"
-	// RelationshipTypeColumn is the table column denoting the relationship_type relation/edge.
-	RelationshipTypeColumn = "relationship_type_id"
 )
 
 // Columns holds all SQL columns for cirelationship fields.
@@ -80,10 +37,7 @@ var Columns = []string{
 	FieldSourceCiID,
 	FieldTargetCiID,
 	FieldRelationshipTypeID,
-	FieldProperties,
-	FieldStatus,
-	FieldEffectiveFrom,
-	FieldEffectiveTo,
+	FieldDescription,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -100,10 +54,14 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
-	// DefaultEffectiveFrom holds the default value on creation for the "effective_from" field.
-	DefaultEffectiveFrom func() time.Time
+	// SourceCiIDValidator is a validator for the "source_ci_id" field. It is called by the builders before save.
+	SourceCiIDValidator func(int) error
+	// TargetCiIDValidator is a validator for the "target_ci_id" field. It is called by the builders before save.
+	TargetCiIDValidator func(int) error
+	// RelationshipTypeIDValidator is a validator for the "relationship_type_id" field. It is called by the builders before save.
+	RelationshipTypeIDValidator func(int) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -135,19 +93,9 @@ func ByRelationshipTypeID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRelationshipTypeID, opts...).ToFunc()
 }
 
-// ByStatus orders the results by the status field.
-func ByStatus(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStatus, opts...).ToFunc()
-}
-
-// ByEffectiveFrom orders the results by the effective_from field.
-func ByEffectiveFrom(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEffectiveFrom, opts...).ToFunc()
-}
-
-// ByEffectiveTo orders the results by the effective_to field.
-func ByEffectiveTo(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEffectiveTo, opts...).ToFunc()
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
@@ -163,60 +111,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// BySourceCiField orders the results by source_ci field.
-func BySourceCiField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSourceCiStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByTargetCiField orders the results by target_ci field.
-func ByTargetCiField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTargetCiStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByRelationshipTypeField orders the results by relationship_type field.
-func ByRelationshipTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRelationshipTypeStep(), sql.OrderByField(field, opts...))
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newSourceCiStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SourceCiInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, SourceCiTable, SourceCiColumn),
-	)
-}
-func newTargetCiStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TargetCiInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TargetCiTable, TargetCiColumn),
-	)
-}
-func newRelationshipTypeStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RelationshipTypeInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, RelationshipTypeTable, RelationshipTypeColumn),
-	)
 }

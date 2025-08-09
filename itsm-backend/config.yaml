@@ -18,3 +18,10 @@ jwt:
 log:
   level: debug  # 开发环境使用 debug 级别
   path: ./logs/app.log
+
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  api_key: ""
+  endpoint: ""
+  token_cap: 8000

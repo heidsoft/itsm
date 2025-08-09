@@ -26,8 +26,7 @@ func NewTenantService(client *ent.Client, logger *zap.SugaredLogger) *TenantServ
 // CreateTenant 创建租户
 func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantRequest) (*ent.Tenant, error) {
 	// 检查租户代码是否已存在
-	exists, err := s.client.Tenant.
-		Query().
+	exists, err := s.client.Tenant.Query().
 		Where(tenant.CodeEQ(req.Code)).
 		Exist(ctx)
 	if err != nil {
@@ -44,10 +43,8 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		SetName(req.Name).
 		SetCode(req.Code).
 		SetNillableDomain(req.Domain).
-		SetType(tenant.Type(req.Type)).
-		SetStatus(tenant.StatusActive).
-		SetSettings(req.Settings).
-		SetQuota(req.Quota).
+		SetType(req.Type).
+		SetStatus("active").
 		SetNillableExpiresAt(req.ExpiresAt).
 		Save(ctx)
 	if err != nil {
@@ -79,7 +76,7 @@ func (s *TenantService) GetTenantByCode(ctx context.Context, code string) (*ent.
 func (s *TenantService) UpdateTenantStatus(ctx context.Context, tenantID int, status string) error {
 	err := s.client.Tenant.
 		UpdateOneID(tenantID).
-		SetStatus(tenant.Status(status)).
+		SetStatus(status).
 		SetUpdatedAt(time.Now()).
 		Exec(ctx)
 	if err != nil {
@@ -97,12 +94,12 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 
 	// 状态过滤
 	if req.Status != "" {
-		query = query.Where(tenant.StatusEQ(tenant.Status(req.Status)))
+		query = query.Where(tenant.StatusEQ(req.Status))
 	}
 
 	// 类型过滤
 	if req.Type != "" {
-		query = query.Where(tenant.TypeEQ(tenant.Type(req.Type)))
+		query = query.Where(tenant.TypeEQ(req.Type))
 	}
 
 	// 搜索过滤

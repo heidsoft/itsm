@@ -5,6 +5,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,20 +22,39 @@ const TenantContextKey = "tenant_context"
 // TenantMiddleware 租户中间件
 func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 从请求头或子域名获取租户信息
+		// 优先从头部读取租户代码
 		tenantCode := c.GetHeader("X-Tenant-Code")
+		var tenantEntity *ent.Tenant
+		var err error
+		// 1) 如果没有提供租户代码，尝试从 JWT 的 tenant_id 或 X-Tenant-ID 解析
 		if tenantCode == "" {
-			// 从子域名提取租户代码
+			claimedTenantID := c.GetInt("tenant_id")
+			if claimedTenantID <= 0 {
+				// 尝试从头部 X-Tenant-ID 读取
+				if s := c.GetHeader("X-Tenant-ID"); s != "" {
+					if id, convErr := strconv.Atoi(s); convErr == nil {
+						claimedTenantID = id
+					}
+				}
+			}
+			if claimedTenantID > 0 {
+				tenantEntity, err = client.Tenant.Get(c.Request.Context(), claimedTenantID)
+				if err == nil {
+					tenantCode = tenantEntity.Code
+				}
+			}
+		}
+		// 2) 如果仍未获取到，尝试从子域名提取
+		if tenantCode == "" {
 			host := c.Request.Host
 			tenantCode = extractTenantFromHost(host)
 		}
-
-		// 如果还是没有，尝试从路径参数获取
+		// 3) 如果仍未获取到，尝试从路径参数获取
 		if tenantCode == "" {
 			tenantCode = c.Param("tenant")
 		}
-
-		if tenantCode == "" {
+		// 4) 若依然缺失，则报错
+		if tenantCode == "" && tenantEntity == nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code":    1001,
 				"message": "租户信息缺失",
@@ -43,24 +63,25 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		// 查询租户信息
-		tenantEntity, err := client.Tenant.
-			Query().
-			Where(tenant.CodeEQ(tenantCode)).
-			First(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{
-				"code":    1002,
-				"message": "租户不存在",
-				"data":    nil,
-			})
-			c.Abort()
-			return
+		// 按租户代码查询（若之前未通过 ID 查询到）
+		if tenantEntity == nil {
+			tenantEntity, err = client.Tenant.
+				Query().
+				Where(tenant.CodeEQ(tenantCode)).
+				First(c.Request.Context())
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{
+					"code":    1002,
+					"message": "租户不存在",
+					"data":    nil,
+				})
+				c.Abort()
+				return
+			}
 		}
 
 		// 检查租户状态
-		if tenantEntity.Status != tenant.StatusActive {
+		if tenantEntity.Status != "active" {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    1003,
 				"message": "租户已被暂停或过期",
@@ -71,7 +92,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		// 检查租户是否过期
-		if tenantEntity.ExpiresAt != nil && tenantEntity.ExpiresAt.Before(time.Now()) {
+		if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    1004,
 				"message": "租户已过期",

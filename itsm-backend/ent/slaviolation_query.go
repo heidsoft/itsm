@@ -262,12 +262,12 @@ func (svq *SLAViolationQuery) Clone() *SLAViolationQuery {
 // Example:
 //
 //	var v []struct {
-//		CreateTime time.Time `json:"create_time,omitempty"`
+//		SLADefinitionID int `json:"sla_definition_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.SLAViolation.Query().
-//		GroupBy(slaviolation.FieldCreateTime).
+//		GroupBy(slaviolation.FieldSLADefinitionID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (svq *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolationGroupBy {
@@ -285,11 +285,11 @@ func (svq *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolat
 // Example:
 //
 //	var v []struct {
-//		CreateTime time.Time `json:"create_time,omitempty"`
+//		SLADefinitionID int `json:"sla_definition_id,omitempty"`
 //	}
 //
 //	client.SLAViolation.Query().
-//		Select(slaviolation.FieldCreateTime).
+//		Select(slaviolation.FieldSLADefinitionID).
 //		Scan(ctx, &v)
 func (svq *SLAViolationQuery) Select(fields ...string) *SLAViolationSelect {
 	svq.ctx.Fields = append(svq.ctx.Fields, fields...)

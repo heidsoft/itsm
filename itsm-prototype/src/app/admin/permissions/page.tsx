@@ -1,8 +1,50 @@
 "use client";
 
-import { CheckCircle, Users, Search, Settings, XCircle, Key, Shield, RefreshCw, Save } from 'lucide-react';
-
 import React, { useState } from "react";
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Typography,
+  Tag,
+  Switch,
+  Row,
+  Col,
+  Statistic,
+  Collapse,
+  Checkbox,
+  Badge,
+  Tooltip,
+  Alert,
+  message,
+  Tabs,
+  Tree,
+} from "antd";
+import {
+  CheckCircle,
+  Users,
+  Search,
+  Settings,
+  XCircle,
+  Key,
+  Shield,
+  RefreshCw,
+  Save,
+  Lock,
+  Unlock,
+  Activity,
+  Layers,
+  BarChart3,
+  Globe,
+} from "lucide-react";
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { Panel } = Collapse;
+
 // 权限模块定义
 const PERMISSION_MODULES = {
   DASHBOARD: "dashboard",
@@ -117,44 +159,37 @@ const MODULE_CONFIG = {
 const ACTION_CONFIG = {
   [PERMISSION_ACTIONS.VIEW]: {
     label: "查看",
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
+    color: "blue",
     description: "查看和浏览权限",
   },
   [PERMISSION_ACTIONS.CREATE]: {
     label: "创建",
-    color: "text-green-600",
-    bgColor: "bg-green-50",
+    color: "green",
     description: "创建新记录权限",
   },
   [PERMISSION_ACTIONS.EDIT]: {
     label: "编辑",
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50",
+    color: "orange",
     description: "修改现有记录权限",
   },
   [PERMISSION_ACTIONS.DELETE]: {
     label: "删除",
-    color: "text-red-600",
-    bgColor: "bg-red-50",
+    color: "red",
     description: "删除记录权限",
   },
   [PERMISSION_ACTIONS.APPROVE]: {
     label: "审批",
-    color: "text-purple-600",
-    bgColor: "bg-purple-50",
+    color: "purple",
     description: "审批和批准权限",
   },
   [PERMISSION_ACTIONS.ASSIGN]: {
     label: "分配",
-    color: "text-indigo-600",
-    bgColor: "bg-indigo-50",
+    color: "cyan",
     description: "分配和指派权限",
   },
   [PERMISSION_ACTIONS.EXPORT]: {
     label: "导出",
-    color: "text-gray-600",
-    bgColor: "bg-gray-50",
+    color: "geekblue",
     description: "数据导出权限",
   },
 };
@@ -172,14 +207,35 @@ const mockPermissionConfig = {
       id: actionKey,
       name: ACTION_CONFIG[actionKey].label,
       description: ACTION_CONFIG[actionKey].description,
+      color: ACTION_CONFIG[actionKey].color,
       isEnabled: true,
     })),
   })),
   categories: [
-    { id: "core", name: "核心功能", description: "系统核心业务功能" },
-    { id: "service", name: "服务管理", description: "IT服务相关功能" },
-    { id: "analysis", name: "分析工具", description: "数据分析和报告" },
-    { id: "system", name: "系统管理", description: "系统配置和管理" },
+    {
+      id: "核心功能",
+      name: "核心功能",
+      description: "系统核心业务功能",
+      icon: <Activity className="w-4 h-4" />,
+    },
+    {
+      id: "服务管理",
+      name: "服务管理",
+      description: "IT服务相关功能",
+      icon: <Globe className="w-4 h-4" />,
+    },
+    {
+      id: "分析工具",
+      name: "分析工具",
+      description: "数据分析和报告",
+      icon: <BarChart3 className="w-4 h-4" />,
+    },
+    {
+      id: "系统管理",
+      name: "系统管理",
+      description: "系统配置和管理",
+      icon: <Settings className="w-4 h-4" />,
+    },
   ],
 };
 
@@ -188,10 +244,9 @@ const PermissionConfiguration = () => {
     useState(mockPermissionConfig);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [showModuleModal, setShowModuleModal] = useState(false);
-  const [selectedModule, setSelectedModule] = useState(null);
-  const [showActionModal, setShowActionModal] = useState(false);
-  const [selectedAction, setSelectedAction] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<"card" | "tree">("card");
 
   // 过滤模块
   const filteredModules = permissionConfig.modules.filter((module) => {
@@ -204,7 +259,7 @@ const PermissionConfiguration = () => {
   });
 
   // 按分类分组模块
-  const modulesByCategory = filteredModules.reduce((acc, module) => {
+  const modulesByCategory = filteredModules.reduce((acc: any, module) => {
     if (!acc[module.category]) {
       acc[module.category] = [];
     }
@@ -213,7 +268,7 @@ const PermissionConfiguration = () => {
   }, {});
 
   // 处理模块状态切换
-  const handleToggleModule = (moduleId) => {
+  const handleToggleModule = (moduleId: string) => {
     setPermissionConfig((prev) => ({
       ...prev,
       modules: prev.modules.map((module) =>
@@ -222,10 +277,11 @@ const PermissionConfiguration = () => {
           : module
       ),
     }));
+    setHasChanges(true);
   };
 
   // 处理操作状态切换
-  const handleToggleAction = (moduleId, actionId) => {
+  const handleToggleAction = (moduleId: string, actionId: string) => {
     setPermissionConfig((prev) => ({
       ...prev,
       modules: prev.modules.map((module) =>
@@ -241,6 +297,41 @@ const PermissionConfiguration = () => {
           : module
       ),
     }));
+    setHasChanges(true);
+  };
+
+  // 批量操作
+  const handleBatchToggle = (category: string, enabled: boolean) => {
+    setPermissionConfig((prev) => ({
+      ...prev,
+      modules: prev.modules.map((module) =>
+        module.category === category
+          ? { ...module, isEnabled: enabled }
+          : module
+      ),
+    }));
+    setHasChanges(true);
+  };
+
+  // 保存配置
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setHasChanges(false);
+      message.success("权限配置保存成功！");
+    } catch (error) {
+      message.error("保存失败，请重试！");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 重置配置
+  const handleReset = () => {
+    setPermissionConfig(mockPermissionConfig);
+    setHasChanges(false);
+    message.info("配置已重置");
   };
 
   // 统计信息
@@ -248,249 +339,325 @@ const PermissionConfiguration = () => {
     totalModules: permissionConfig.modules.length,
     enabledModules: permissionConfig.modules.filter((m) => m.isEnabled).length,
     totalActions: permissionConfig.modules.reduce(
-      (sum, m) => sum + m.actions.length,
+      (sum, module) => sum + module.actions.length,
       0
     ),
     enabledActions: permissionConfig.modules.reduce(
-      (sum, m) => sum + m.actions.filter((a) => a.isEnabled).length,
+      (sum, module) => sum + module.actions.filter((a) => a.isEnabled).length,
       0
     ),
   };
 
-  return (
-    <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Shield className="w-8 h-8 text-blue-600 mr-3" />
-              权限配置
-            </h1>
-            <p className="text-gray-600 mt-2">
-              管理系统权限模块和操作，配置细粒度的访问控制
-            </p>
-          </div>
-          <div className="flex space-x-3">
-            <button className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              重置配置
-            </button>
-            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              <Save className="w-4 h-4 mr-2" />
-              保存配置
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Shield className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">权限模块</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.enabledModules}/{stats.totalModules}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Key className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">权限操作</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.enabledActions}/{stats.totalActions}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Settings className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">功能分类</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {permissionConfig.categories.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Users className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">配置完整度</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {Math.round((stats.enabledActions / stats.totalActions) * 100)}%
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 搜索和过滤 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="搜索权限模块..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="sm:w-48">
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+  // 生成权限树数据
+  const generateTreeData = () => {
+    return permissionConfig.categories.map((category) => ({
+      title: (
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            {category.icon}
+            <Text strong>{category.name}</Text>
+          </span>
+          <div className="flex gap-2">
+            <Button
+              size="small"
+              type="link"
+              onClick={() => handleBatchToggle(category.id, true)}
             >
-              <option value="all">所有分类</option>
-              {permissionConfig.categories.map((category) => (
-                <option key={category.id} value={category.name}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              全部启用
+            </Button>
+            <Button
+              size="small"
+              type="link"
+              onClick={() => handleBatchToggle(category.id, false)}
+            >
+              全部禁用
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* 权限模块列表 */}
-      <div className="space-y-6">
-        {Object.entries(modulesByCategory).map(([category, modules]) => (
-          <div
-            key={category}
-            className="bg-white rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {category}
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {
-                  permissionConfig.categories.find((c) => c.name === category)
-                    ?.description
-                }
-              </p>
+      ),
+      key: category.id,
+      children:
+        modulesByCategory[category.id]?.map((module: any) => ({
+          title: (
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <span>{module.icon}</span>
+                <span>{module.name}</span>
+                <Switch
+                  size="small"
+                  checked={module.isEnabled}
+                  onChange={() => handleToggleModule(module.id)}
+                />
+              </div>
             </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {modules.map((module) => (
-                  <div
-                    key={module.id}
-                    className="border border-gray-200 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
-                        <span className="text-2xl mr-3">{module.icon}</span>
-                        <div>
-                          <h4 className="text-lg font-medium text-gray-900">
-                            {module.name}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {module.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => handleToggleModule(module.id)}
-                          className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            module.isEnabled
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {module.isEnabled ? (
-                            <>
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              已启用
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="w-4 h-4 mr-1" />
-                              已禁用
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
+          ),
+          key: module.id,
+          children: module.actions.map((action: any) => ({
+            title: (
+              <div className="flex items-center justify-between w-full">
+                <Tag color={action.color}>{action.name}</Tag>
+                <Switch
+                  size="small"
+                  checked={action.isEnabled}
+                  onChange={() => handleToggleAction(module.id, action.id)}
+                />
+              </div>
+            ),
+            key: `${module.id}-${action.id}`,
+          })),
+        })) || [],
+    }));
+  };
 
-                    {/* 权限操作 */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                      {module.actions.map((action) => (
+  // 渲染权限卡片视图
+  const renderCardView = () => (
+    <div className="space-y-6">
+      {permissionConfig.categories.map((category) => {
+        const categoryModules = modulesByCategory[category.id] || [];
+        if (categoryModules.length === 0) return null;
+
+        return (
+          <Card
+            key={category.id}
+            title={
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {category.icon}
+                  <span>{category.name}</span>
+                  <Badge count={categoryModules.length} color="blue" />
+                </div>
+                <Space>
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => handleBatchToggle(category.id, true)}
+                  >
+                    全部启用
+                  </Button>
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => handleBatchToggle(category.id, false)}
+                  >
+                    全部禁用
+                  </Button>
+                </Space>
+              </div>
+            }
+            className="enterprise-card"
+          >
+            <Row gutter={[16, 16]}>
+              {categoryModules.map((module: any) => (
+                <Col xs={24} md={12} lg={8} key={module.id}>
+                  <Card
+                    size="small"
+                    className="h-full"
+                    title={
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span>{module.icon}</span>
+                          <span className="text-sm">{module.name}</span>
+                        </div>
+                        <Switch
+                          size="small"
+                          checked={module.isEnabled}
+                          onChange={() => handleToggleModule(module.id)}
+                        />
+                      </div>
+                    }
+                  >
+                    <Text type="secondary" className="text-xs mb-3 block">
+                      {module.description}
+                    </Text>
+                    <div className="space-y-2">
+                      {module.actions.map((action: any) => (
                         <div
                           key={action.id}
-                          className={`p-3 rounded-lg border-2 transition-all ${
-                            action.isEnabled
-                              ? "border-blue-200 bg-blue-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
+                          className="flex items-center justify-between"
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <span
-                              className={`text-sm font-medium ${
-                                action.isEnabled
-                                  ? "text-blue-700"
-                                  : "text-gray-500"
-                              }`}
+                          <Tooltip title={action.description}>
+                            <Tag
+                              color={
+                                action.isEnabled ? action.color : "default"
+                              }
+                              className="text-xs cursor-help"
                             >
                               {action.name}
-                            </span>
-                            <button
-                              onClick={() =>
-                                handleToggleAction(module.id, action.id)
-                              }
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                action.isEnabled
-                                  ? "border-blue-500 bg-blue-500"
-                                  : "border-gray-300 bg-white"
-                              }`}
-                            >
-                              {action.isEnabled && (
-                                <CheckCircle className="w-3 h-3 text-white" />
-                              )}
-                            </button>
-                          </div>
-                          <p
-                            className={`text-xs ${
-                              action.isEnabled
-                                ? "text-blue-600"
-                                : "text-gray-400"
-                            }`}
-                          >
-                            {action.description}
-                          </p>
+                            </Tag>
+                          </Tooltip>
+                          <Switch
+                            size="small"
+                            checked={action.isEnabled}
+                            onChange={() =>
+                              handleToggleAction(module.id, action.id)
+                            }
+                            disabled={!module.isEnabled}
+                          />
                         </div>
                       ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="p-6">
+      {/* 页面标题 */}
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Key className="inline-block w-6 h-6 mr-2" />
+          权限配置管理
+        </Title>
+        <Text type="secondary">
+          配置系统功能模块和操作权限，定义访问控制策略
+        </Text>
       </div>
+
+      {/* 统计卡片 */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="功能模块"
+              value={stats.enabledModules}
+              suffix={`/ ${stats.totalModules}`}
+              prefix={<Layers className="w-5 h-5" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="操作权限"
+              value={stats.enabledActions}
+              suffix={`/ ${stats.totalActions}`}
+              prefix={<Activity className="w-5 h-5" />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="启用模块"
+              value={(
+                (stats.enabledModules / stats.totalModules) *
+                100
+              ).toFixed(1)}
+              suffix="%"
+              prefix={<CheckCircle className="w-5 h-5" />}
+              valueStyle={{ color: "#722ed1" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="权限覆盖率"
+              value={(
+                (stats.enabledActions / stats.totalActions) *
+                100
+              ).toFixed(1)}
+              suffix="%"
+              prefix={<Shield className="w-5 h-5" />}
+              valueStyle={{ color: "#fa8c16" }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 配置变更提醒 */}
+      {hasChanges && (
+        <Alert
+          message="配置已修改"
+          description="您有未保存的权限配置更改，请及时保存。"
+          type="warning"
+          showIcon
+          closable
+          className="mb-6"
+        />
+      )}
+
+      {/* 搜索和操作栏 */}
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={8}>
+            <Input
+              placeholder="搜索模块或权限..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              allowClear
+            />
+          </Col>
+          <Col xs={24} md={6}>
+            <Select
+              placeholder="筛选分类"
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部分类</Option>
+              {permissionConfig.categories.map((category) => (
+                <Option key={category.id} value={category.id}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="视图模式"
+              value={viewMode}
+              onChange={setViewMode}
+              style={{ width: "100%" }}
+            >
+              <Option value="card">卡片视图</Option>
+              <Option value="tree">树形视图</Option>
+            </Select>
+          </Col>
+          <Col xs={24} md={6} className="text-right">
+            <Space>
+              <Button
+                icon={<RefreshCw className="w-4 h-4" />}
+                onClick={handleReset}
+              >
+                重置
+              </Button>
+              <Button
+                type="primary"
+                icon={<Save className="w-4 h-4" />}
+                loading={saving}
+                onClick={handleSave}
+                disabled={!hasChanges}
+              >
+                {saving ? "保存中..." : "保存配置"}
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 权限配置内容 */}
+      <Card className="enterprise-card">
+        {viewMode === "card" ? (
+          renderCardView()
+        ) : (
+          <Tree
+            treeData={generateTreeData()}
+            defaultExpandAll
+            showLine
+            className="enterprise-tree"
+          />
+        )}
+      </Card>
     </div>
   );
 };

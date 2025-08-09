@@ -1,125 +1,294 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React, { useState } from "react";
+import { AppLayout } from "../components/AppLayout";
 import {
-    Target,
-    AlertTriangle,
-    GitMerge,
-    Database,
-    BarChart2,
-    PieChart,
-    FileText,
-    Zap
-} from 'lucide-react';
-import { Sidebar } from '../components/Sidebar';
-import { ResourceDistributionChart, ResourceHealthPieChart } from './charts';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Progress,
+  Alert,
+  List,
+  Tag,
+  Timeline,
+  Button,
+} from "antd";
+import {
+  Users,
+  Clock,
+  CheckCircle,
+  Activity,
+  BarChart3,
+  FileText,
+  AlertTriangle,
+  Settings,
+} from "lucide-react";
 
-// KPI卡片组件 (代码无变化)
-const KpiCard = ({ title, value, icon: Icon, trend, period, color }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-        <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-600">{title}</h3>
-            <div className={`p-2 rounded-full ${color} bg-opacity-20`}>
-                <Icon className={`w-6 h-6 ${color}`} />
-            </div>
-        </div>
-        <p className="text-4xl font-bold text-gray-800">{value}</p>
-        {trend && (
-            <div className="flex items-center mt-2 text-sm text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 mr-1 ${trend.startsWith('+') ? 'text-green-500' : 'text-red-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                <span>{trend}</span>
-                <span className="ml-1">vs {period}</span>
-            </div>
-        )}
-    </div>
-);
+export default function DashboardPage() {
+  const [systemAlerts] = useState([
+    {
+      type: "warning",
+      message: "系统负载较高，建议检查服务器状态",
+      time: "2分钟前",
+    },
+    {
+      type: "info",
+      message: "数据库备份已完成",
+      time: "5分钟前",
+    },
+  ]);
 
-// 图表容器组件 (代码无变化)
-const ChartContainer = ({ title, icon: Icon, children }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg">
-        <div className="flex items-center mb-4">
-            <Icon className="w-6 h-6 mr-3 text-gray-700" />
-            <h3 className="text-xl font-semibold text-gray-700">{title}</h3>
-        </div>
-        {children}
-    </div>
-);
+  const [recentTickets] = useState([
+    {
+      id: "T-2024-001",
+      title: "网络连接异常",
+      priority: "high",
+      status: "processing",
+      assignee: "张三",
+      time: "10分钟前",
+    },
+    {
+      id: "T-2024-002",
+      title: "软件安装失败",
+      priority: "medium",
+      status: "pending",
+      assignee: "李四",
+      time: "30分钟前",
+    },
+    {
+      id: "T-2024-003",
+      title: "权限申请",
+      priority: "low",
+      status: "resolved",
+      assignee: "王五",
+      time: "1小时前",
+    },
+  ]);
 
-const ITSMDashboard = () => {
-    const router = useRouter();
-    const kpis = [
-        { title: "SLA 达成率", value: "98.7%", icon: Target, trend: "+1.2%", period: "上月", color: "text-green-500" },
-        { title: "高优先级事件", value: "8", icon: AlertTriangle, trend: "-3", period: "上周", color: "text-red-500" },
-        { title: "待审批变更", value: "4", icon: GitMerge, trend: "+1", period: "昨天", color: "text-yellow-500" },
-        { title: "纳管云资源", value: "325", icon: Database, trend: "+28", period: "上周", color: "text-blue-500" },
-    ];
+  const [recentActivities] = useState([
+    {
+      operator: "张三",
+      action: "处理了工单",
+      target: "T-2024-001",
+      time: "10分钟前",
+    },
+    {
+      operator: "系统",
+      action: "自动分配工单",
+      target: "T-2024-002",
+      time: "30分钟前",
+    },
+    {
+      operator: "李四",
+      action: "更新了配置",
+      target: "数据库配置",
+      time: "1小时前",
+    },
+  ]);
 
-    const handleSimulateAlert = () => {
-        const newIncidentId = `INC-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
-        alert(`模拟外部告警：已创建新的P1事件 ${newIncidentId}！\n（实际场景中，事件会直接进入事件管理列表）`);
-        // 模拟将新事件添加到事件列表数据中
-        // 在真实应用中，这里会调用API向后端发送告警数据
-        router.push('/incidents'); // 跳转到事件列表页
-    };
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "red";
+      case "medium":
+        return "orange";
+      case "low":
+        return "blue";
+      default:
+        return "default";
+    }
+  };
 
-    return (
-        <div className="flex h-screen bg-gray-100 font-sans">
-            <Sidebar />
-            <main className="flex-1 p-10 overflow-y-auto">
-                <header className="mb-8 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-4xl font-bold text-gray-800">指挥中心仪表盘</h2>
-                        <p className="text-gray-500 mt-1">实时洞察多云IT服务运营状况</p>
+  return (
+    <AppLayout title="仪表盘">
+      {/* 系统状态 */}
+      {systemAlerts.length > 0 && (
+        <Alert
+          message="系统状态"
+          description="当前系统运行状态良好，但有需要注意的事项"
+          type="info"
+          showIcon
+          className="mb-6"
+        />
+      )}
+
+      {/* 统计卡片 */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="总工单数"
+              value={1128}
+              prefix={<FileText size={20} className="text-blue-500" />}
+              valueStyle={{ color: "#3f8600" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="待处理事件"
+              value={93}
+              prefix={<AlertTriangle size={20} className="text-red-500" />}
+              valueStyle={{ color: "#cf1322" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="活跃用户"
+              value={256}
+              prefix={<Users size={20} className="text-green-500" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="平均响应时间"
+              value="2.5"
+              suffix="小时"
+              prefix={<Clock size={20} className="text-purple-500" />}
+              valueStyle={{ color: "#722ed1" }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        {/* 最近工单 */}
+        <Col xs={24} lg={12}>
+          <Card title="最近工单" className="h-full">
+            <List
+              dataSource={recentTickets}
+              renderItem={(item) => (
+                <List.Item>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">
+                          {item.title}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {item.id} • {item.assignee}
+                        </span>
+                      </div>
                     </div>
-                    <button 
-                        onClick={handleSimulateAlert}
-                        className="flex items-center bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors animate-pulse"
-                    >
-                        <Zap className="w-5 h-5 mr-2" />
-                        模拟外部告警 (P1事件)
-                    </button>
-                </header>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-                    {kpis.map((kpi, index) => (
-                        <KpiCard key={index} {...kpi} />
-                    ))}
-                </div>
-
-                <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <ChartContainer title="多云资源分布概览" icon={BarChart2}>
-                        <ResourceDistributionChart />
-                    </ChartContainer>
-                    <ChartContainer title="全局资源健康状态" icon={PieChart}>
-                        <ResourceHealthPieChart />
-                    </ChartContainer>
-                </div>
-
-                {/* 高级报告入口 */}
-                <div className="mt-12 bg-white p-6 rounded-2xl shadow-lg">
-                    <h3 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
-                        <FileText className="w-6 h-6 mr-3" /> 高级报告与分析
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Link href="#" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <h4 className="font-semibold text-gray-800">服务绩效报告</h4>
-                            <p className="text-sm text-gray-600">查看SLA达成情况和趋势分析。</p>
-                        </Link>
-                        <Link href="#" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <h4 className="font-semibold text-gray-800">事件趋势分析</h4>
-                            <p className="text-sm text-gray-600">分析事件发生频率、类型和解决时间。</p>
-                        </Link>
-                        <Link href="#" className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <h4 className="font-semibold text-gray-800">变更成功率报告</h4>
-                            <p className="text-sm text-gray-600">评估变更的成功率和对服务的影响。</p>
-                        </Link>
+                    <div className="flex items-center space-x-2">
+                      <Tag color={getPriorityColor(item.priority)}>
+                        {item.priority}
+                      </Tag>
+                      <span className="text-xs text-gray-400">{item.time}</span>
                     </div>
-                </div>
-            </main>
-        </div>
-    );
-};
+                  </div>
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
 
-export default ITSMDashboard;
+        {/* 最近活动 */}
+        <Col xs={24} lg={12}>
+          <Card title="最近活动" className="h-full">
+            <Timeline
+              items={recentActivities.map((activity) => ({
+                children: (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-gray-900">
+                      {activity.operator}
+                    </span>
+                    <span className="text-gray-600">{activity.action}</span>
+                    <span className="text-blue-600">{activity.target}</span>
+                    <span className="text-xs text-gray-400">
+                      {activity.time}
+                    </span>
+                  </div>
+                ),
+              }))}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} className="mt-6">
+        {/* 系统性能 */}
+        <Col xs={24} lg={12}>
+          <Card title="系统性能">
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">CPU 使用率</span>
+                  <span className="text-sm text-gray-500">65%</span>
+                </div>
+                <Progress percent={65} strokeColor="#52c41a" />
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">内存使用率</span>
+                  <span className="text-sm text-gray-500">78%</span>
+                </div>
+                <Progress percent={78} strokeColor="#1890ff" />
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">磁盘使用率</span>
+                  <span className="text-sm text-gray-500">45%</span>
+                </div>
+                <Progress percent={45} strokeColor="#722ed1" />
+              </div>
+            </div>
+          </Card>
+        </Col>
+
+        {/* SLA监控 */}
+        <Col xs={24} lg={12}>
+          <Card title="SLA监控">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-sm">响应时间 SLA</span>
+                </div>
+                <span className="text-sm font-medium text-green-600">
+                  98.5%
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Activity size={16} className="text-blue-500" />
+                  <span className="text-sm">解决时间 SLA</span>
+                </div>
+                <span className="text-sm font-medium text-blue-600">95.2%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <BarChart3 size={16} className="text-purple-500" />
+                  <span className="text-sm">可用性 SLA</span>
+                </div>
+                <span className="text-sm font-medium text-purple-600">
+                  99.9%
+                </span>
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 快速操作 */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <h3 className="text-lg font-medium mb-4">快速操作</h3>
+        <div className="flex flex-wrap gap-3">
+          <Button type="primary" icon={<FileText size={16} />}>
+            创建工单
+          </Button>
+          <Button icon={<AlertTriangle size={16} />}>报告事件</Button>
+          <Button icon={<Settings size={16} />}>系统设置</Button>
+          <Button icon={<BarChart3 size={16} />}>查看报表</Button>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}

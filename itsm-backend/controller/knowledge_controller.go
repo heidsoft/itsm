@@ -5,6 +5,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/service"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -40,15 +41,21 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	// 从上下文获取租户ID和用户信息
-	tenantID, _ := c.Get("tenantId")
-	userName, _ := c.Get("userName")
+	// 从上下文获取租户ID和用户信息（与中间件键名保持一致）
+	tenantID, _ := c.Get("tenant_id")
+	userId, _ := c.Get("user_id")
 
-	article, err := kc.knowledgeService.CreateArticle(c.Request.Context(), &req, tenantID.(int), userName.(string))
+	article, err := kc.knowledgeService.CreateArticle(c.Request.Context(), &req, tenantID.(int), userId.(int))
 	if err != nil {
 		kc.logger.Errorf("创建知识库文章失败: %v", err)
 		common.Fail(c, 5001, "创建文章失败: "+err.Error())
 		return
+	}
+
+	// tags为string转[]string
+	tags := []string{}
+	if article.Tags != "" {
+		tags = strings.Split(article.Tags, ",")
 	}
 
 	response := &dto.KnowledgeArticleResponse{
@@ -56,10 +63,7 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 		Title:     article.Title,
 		Content:   article.Content,
 		Category:  article.Category,
-		Status:    article.Status,
-		Author:    article.Author,
-		Views:     article.Views,
-		Tags:      article.Tags,
+		Tags:      tags,
 		TenantID:  article.TenantID,
 		CreatedAt: article.CreatedAt,
 		UpdatedAt: article.UpdatedAt,
@@ -86,7 +90,7 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenantId")
+	tenantID, _ := c.Get("tenant_id")
 
 	article, err := kc.knowledgeService.GetArticle(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
@@ -95,15 +99,17 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 		return
 	}
 
+	// tags为string转[]string
+	tags := []string{}
+	if article.Tags != "" {
+		tags = strings.Split(article.Tags, ",")
+	}
 	response := &dto.KnowledgeArticleResponse{
 		ID:        article.ID,
 		Title:     article.Title,
 		Content:   article.Content,
 		Category:  article.Category,
-		Status:    article.Status,
-		Author:    article.Author,
-		Views:     article.Views,
-		Tags:      article.Tags,
+		Tags:      tags,
 		TenantID:  article.TenantID,
 		CreatedAt: article.CreatedAt,
 		UpdatedAt: article.UpdatedAt,
@@ -142,7 +148,7 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 		req.PageSize = 10
 	}
 
-	tenantID, _ := c.Get("tenantId")
+	tenantID, _ := c.Get("tenant_id")
 
 	articles, total, err := kc.knowledgeService.ListArticles(c.Request.Context(), &req, tenantID.(int))
 	if err != nil {
@@ -154,15 +160,16 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 	// 转换响应格式
 	articleResponses := make([]dto.KnowledgeArticleResponse, len(articles))
 	for i, article := range articles {
+		tags := []string{}
+		if article.Tags != "" {
+			tags = strings.Split(article.Tags, ",")
+		}
 		articleResponses[i] = dto.KnowledgeArticleResponse{
 			ID:        article.ID,
 			Title:     article.Title,
 			Content:   article.Content,
 			Category:  article.Category,
-			Status:    article.Status,
-			Author:    article.Author,
-			Views:     article.Views,
-			Tags:      article.Tags,
+			Tags:      tags,
 			TenantID:  article.TenantID,
 			CreatedAt: article.CreatedAt,
 			UpdatedAt: article.UpdatedAt,
@@ -205,7 +212,7 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenantId")
+	tenantID, _ := c.Get("tenant_id")
 
 	article, err := kc.knowledgeService.UpdateArticle(c.Request.Context(), id, &req, tenantID.(int))
 	if err != nil {
@@ -214,15 +221,17 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 		return
 	}
 
+	// tags为string转[]string
+	tags := []string{}
+	if article.Tags != "" {
+		tags = strings.Split(article.Tags, ",")
+	}
 	response := &dto.KnowledgeArticleResponse{
 		ID:        article.ID,
 		Title:     article.Title,
 		Content:   article.Content,
 		Category:  article.Category,
-		Status:    article.Status,
-		Author:    article.Author,
-		Views:     article.Views,
-		Tags:      article.Tags,
+		Tags:      tags,
 		TenantID:  article.TenantID,
 		CreatedAt: article.CreatedAt,
 		UpdatedAt: article.UpdatedAt,

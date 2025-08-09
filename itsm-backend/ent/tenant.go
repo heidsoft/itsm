@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/tenant"
 	"strings"
@@ -22,198 +21,19 @@ type Tenant struct {
 	Name string `json:"name,omitempty"`
 	// 租户代码
 	Code string `json:"code,omitempty"`
-	// 自定义域名
+	// 域名
 	Domain string `json:"domain,omitempty"`
-	// 租户状态
-	Status tenant.Status `json:"status,omitempty"`
 	// 租户类型
-	Type tenant.Type `json:"type,omitempty"`
-	// 租户配置
-	Settings map[string]interface{} `json:"settings,omitempty"`
-	// 资源配额
-	Quota map[string]interface{} `json:"quota,omitempty"`
+	Type string `json:"type,omitempty"`
+	// 状态
+	Status string `json:"status,omitempty"`
 	// 过期时间
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	ExpiresAt time.Time `json:"expires_at,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the TenantQuery when eager-loading is set.
-	Edges        TenantEdges `json:"edges"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// TenantEdges holds the relations/edges for other nodes in the graph.
-type TenantEdges struct {
-	// Users holds the value of the users edge.
-	Users []*User `json:"users,omitempty"`
-	// Tickets holds the value of the tickets edge.
-	Tickets []*Ticket `json:"tickets,omitempty"`
-	// ServiceCatalogs holds the value of the service_catalogs edge.
-	ServiceCatalogs []*ServiceCatalog `json:"service_catalogs,omitempty"`
-	// ServiceRequests holds the value of the service_requests edge.
-	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
-	// Subscriptions holds the value of the subscriptions edge.
-	Subscriptions []*Subscription `json:"subscriptions,omitempty"`
-	// ConfigurationItems holds the value of the configuration_items edge.
-	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
-	// KnowledgeArticles holds the value of the knowledge_articles edge.
-	KnowledgeArticles []*KnowledgeArticle `json:"knowledge_articles,omitempty"`
-	// Workflows holds the value of the workflows edge.
-	Workflows []*Workflow `json:"workflows,omitempty"`
-	// CiTypes holds the value of the ci_types edge.
-	CiTypes []*CIType `json:"ci_types,omitempty"`
-	// CiRelationshipTypes holds the value of the ci_relationship_types edge.
-	CiRelationshipTypes []*CIRelationshipType `json:"ci_relationship_types,omitempty"`
-	// CiRelationships holds the value of the ci_relationships edge.
-	CiRelationships []*CIRelationship `json:"ci_relationships,omitempty"`
-	// CiLifecycleStates holds the value of the ci_lifecycle_states edge.
-	CiLifecycleStates []*CILifecycleState `json:"ci_lifecycle_states,omitempty"`
-	// CiChangeRecords holds the value of the ci_change_records edge.
-	CiChangeRecords []*CIChangeRecord `json:"ci_change_records,omitempty"`
-	// CiAttributeDefinitions holds the value of the ci_attribute_definitions edge.
-	CiAttributeDefinitions []*CIAttributeDefinition `json:"ci_attribute_definitions,omitempty"`
-	// Incidents holds the value of the incidents edge.
-	Incidents []*Incident `json:"incidents,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [15]bool
-}
-
-// UsersOrErr returns the Users value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[0] {
-		return e.Users, nil
-	}
-	return nil, &NotLoadedError{edge: "users"}
-}
-
-// TicketsOrErr returns the Tickets value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) TicketsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[1] {
-		return e.Tickets, nil
-	}
-	return nil, &NotLoadedError{edge: "tickets"}
-}
-
-// ServiceCatalogsOrErr returns the ServiceCatalogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) ServiceCatalogsOrErr() ([]*ServiceCatalog, error) {
-	if e.loadedTypes[2] {
-		return e.ServiceCatalogs, nil
-	}
-	return nil, &NotLoadedError{edge: "service_catalogs"}
-}
-
-// ServiceRequestsOrErr returns the ServiceRequests value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) ServiceRequestsOrErr() ([]*ServiceRequest, error) {
-	if e.loadedTypes[3] {
-		return e.ServiceRequests, nil
-	}
-	return nil, &NotLoadedError{edge: "service_requests"}
-}
-
-// SubscriptionsOrErr returns the Subscriptions value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) SubscriptionsOrErr() ([]*Subscription, error) {
-	if e.loadedTypes[4] {
-		return e.Subscriptions, nil
-	}
-	return nil, &NotLoadedError{edge: "subscriptions"}
-}
-
-// ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
-	if e.loadedTypes[5] {
-		return e.ConfigurationItems, nil
-	}
-	return nil, &NotLoadedError{edge: "configuration_items"}
-}
-
-// KnowledgeArticlesOrErr returns the KnowledgeArticles value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) KnowledgeArticlesOrErr() ([]*KnowledgeArticle, error) {
-	if e.loadedTypes[6] {
-		return e.KnowledgeArticles, nil
-	}
-	return nil, &NotLoadedError{edge: "knowledge_articles"}
-}
-
-// WorkflowsOrErr returns the Workflows value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) WorkflowsOrErr() ([]*Workflow, error) {
-	if e.loadedTypes[7] {
-		return e.Workflows, nil
-	}
-	return nil, &NotLoadedError{edge: "workflows"}
-}
-
-// CiTypesOrErr returns the CiTypes value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) CiTypesOrErr() ([]*CIType, error) {
-	if e.loadedTypes[8] {
-		return e.CiTypes, nil
-	}
-	return nil, &NotLoadedError{edge: "ci_types"}
-}
-
-// CiRelationshipTypesOrErr returns the CiRelationshipTypes value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) CiRelationshipTypesOrErr() ([]*CIRelationshipType, error) {
-	if e.loadedTypes[9] {
-		return e.CiRelationshipTypes, nil
-	}
-	return nil, &NotLoadedError{edge: "ci_relationship_types"}
-}
-
-// CiRelationshipsOrErr returns the CiRelationships value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) CiRelationshipsOrErr() ([]*CIRelationship, error) {
-	if e.loadedTypes[10] {
-		return e.CiRelationships, nil
-	}
-	return nil, &NotLoadedError{edge: "ci_relationships"}
-}
-
-// CiLifecycleStatesOrErr returns the CiLifecycleStates value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) CiLifecycleStatesOrErr() ([]*CILifecycleState, error) {
-	if e.loadedTypes[11] {
-		return e.CiLifecycleStates, nil
-	}
-	return nil, &NotLoadedError{edge: "ci_lifecycle_states"}
-}
-
-// CiChangeRecordsOrErr returns the CiChangeRecords value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) CiChangeRecordsOrErr() ([]*CIChangeRecord, error) {
-	if e.loadedTypes[12] {
-		return e.CiChangeRecords, nil
-	}
-	return nil, &NotLoadedError{edge: "ci_change_records"}
-}
-
-// CiAttributeDefinitionsOrErr returns the CiAttributeDefinitions value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) CiAttributeDefinitionsOrErr() ([]*CIAttributeDefinition, error) {
-	if e.loadedTypes[13] {
-		return e.CiAttributeDefinitions, nil
-	}
-	return nil, &NotLoadedError{edge: "ci_attribute_definitions"}
-}
-
-// IncidentsOrErr returns the Incidents value or an error if the edge
-// was not loaded in eager-loading.
-func (e TenantEdges) IncidentsOrErr() ([]*Incident, error) {
-	if e.loadedTypes[14] {
-		return e.Incidents, nil
-	}
-	return nil, &NotLoadedError{edge: "incidents"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -221,11 +41,9 @@ func (*Tenant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tenant.FieldSettings, tenant.FieldQuota:
-			values[i] = new([]byte)
 		case tenant.FieldID:
 			values[i] = new(sql.NullInt64)
-		case tenant.FieldName, tenant.FieldCode, tenant.FieldDomain, tenant.FieldStatus, tenant.FieldType:
+		case tenant.FieldName, tenant.FieldCode, tenant.FieldDomain, tenant.FieldType, tenant.FieldStatus:
 			values[i] = new(sql.NullString)
 		case tenant.FieldExpiresAt, tenant.FieldCreatedAt, tenant.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -268,40 +86,23 @@ func (t *Tenant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Domain = value.String
 			}
-		case tenant.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				t.Status = tenant.Status(value.String)
-			}
 		case tenant.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				t.Type = tenant.Type(value.String)
+				t.Type = value.String
 			}
-		case tenant.FieldSettings:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field settings", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &t.Settings); err != nil {
-					return fmt.Errorf("unmarshal field settings: %w", err)
-				}
-			}
-		case tenant.FieldQuota:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field quota", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &t.Quota); err != nil {
-					return fmt.Errorf("unmarshal field quota: %w", err)
-				}
+		case tenant.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				t.Status = value.String
 			}
 		case tenant.FieldExpiresAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field expires_at", values[i])
 			} else if value.Valid {
-				t.ExpiresAt = new(time.Time)
-				*t.ExpiresAt = value.Time
+				t.ExpiresAt = value.Time
 			}
 		case tenant.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -326,81 +127,6 @@ func (t *Tenant) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (t *Tenant) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
-}
-
-// QueryUsers queries the "users" edge of the Tenant entity.
-func (t *Tenant) QueryUsers() *UserQuery {
-	return NewTenantClient(t.config).QueryUsers(t)
-}
-
-// QueryTickets queries the "tickets" edge of the Tenant entity.
-func (t *Tenant) QueryTickets() *TicketQuery {
-	return NewTenantClient(t.config).QueryTickets(t)
-}
-
-// QueryServiceCatalogs queries the "service_catalogs" edge of the Tenant entity.
-func (t *Tenant) QueryServiceCatalogs() *ServiceCatalogQuery {
-	return NewTenantClient(t.config).QueryServiceCatalogs(t)
-}
-
-// QueryServiceRequests queries the "service_requests" edge of the Tenant entity.
-func (t *Tenant) QueryServiceRequests() *ServiceRequestQuery {
-	return NewTenantClient(t.config).QueryServiceRequests(t)
-}
-
-// QuerySubscriptions queries the "subscriptions" edge of the Tenant entity.
-func (t *Tenant) QuerySubscriptions() *SubscriptionQuery {
-	return NewTenantClient(t.config).QuerySubscriptions(t)
-}
-
-// QueryConfigurationItems queries the "configuration_items" edge of the Tenant entity.
-func (t *Tenant) QueryConfigurationItems() *ConfigurationItemQuery {
-	return NewTenantClient(t.config).QueryConfigurationItems(t)
-}
-
-// QueryKnowledgeArticles queries the "knowledge_articles" edge of the Tenant entity.
-func (t *Tenant) QueryKnowledgeArticles() *KnowledgeArticleQuery {
-	return NewTenantClient(t.config).QueryKnowledgeArticles(t)
-}
-
-// QueryWorkflows queries the "workflows" edge of the Tenant entity.
-func (t *Tenant) QueryWorkflows() *WorkflowQuery {
-	return NewTenantClient(t.config).QueryWorkflows(t)
-}
-
-// QueryCiTypes queries the "ci_types" edge of the Tenant entity.
-func (t *Tenant) QueryCiTypes() *CITypeQuery {
-	return NewTenantClient(t.config).QueryCiTypes(t)
-}
-
-// QueryCiRelationshipTypes queries the "ci_relationship_types" edge of the Tenant entity.
-func (t *Tenant) QueryCiRelationshipTypes() *CIRelationshipTypeQuery {
-	return NewTenantClient(t.config).QueryCiRelationshipTypes(t)
-}
-
-// QueryCiRelationships queries the "ci_relationships" edge of the Tenant entity.
-func (t *Tenant) QueryCiRelationships() *CIRelationshipQuery {
-	return NewTenantClient(t.config).QueryCiRelationships(t)
-}
-
-// QueryCiLifecycleStates queries the "ci_lifecycle_states" edge of the Tenant entity.
-func (t *Tenant) QueryCiLifecycleStates() *CILifecycleStateQuery {
-	return NewTenantClient(t.config).QueryCiLifecycleStates(t)
-}
-
-// QueryCiChangeRecords queries the "ci_change_records" edge of the Tenant entity.
-func (t *Tenant) QueryCiChangeRecords() *CIChangeRecordQuery {
-	return NewTenantClient(t.config).QueryCiChangeRecords(t)
-}
-
-// QueryCiAttributeDefinitions queries the "ci_attribute_definitions" edge of the Tenant entity.
-func (t *Tenant) QueryCiAttributeDefinitions() *CIAttributeDefinitionQuery {
-	return NewTenantClient(t.config).QueryCiAttributeDefinitions(t)
-}
-
-// QueryIncidents queries the "incidents" edge of the Tenant entity.
-func (t *Tenant) QueryIncidents() *IncidentQuery {
-	return NewTenantClient(t.config).QueryIncidents(t)
 }
 
 // Update returns a builder for updating this Tenant.
@@ -435,22 +161,14 @@ func (t *Tenant) String() string {
 	builder.WriteString("domain=")
 	builder.WriteString(t.Domain)
 	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", t.Status))
-	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(fmt.Sprintf("%v", t.Type))
+	builder.WriteString(t.Type)
 	builder.WriteString(", ")
-	builder.WriteString("settings=")
-	builder.WriteString(fmt.Sprintf("%v", t.Settings))
+	builder.WriteString("status=")
+	builder.WriteString(t.Status)
 	builder.WriteString(", ")
-	builder.WriteString("quota=")
-	builder.WriteString(fmt.Sprintf("%v", t.Quota))
-	builder.WriteString(", ")
-	if v := t.ExpiresAt; v != nil {
-		builder.WriteString("expires_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
+	builder.WriteString("expires_at=")
+	builder.WriteString(t.ExpiresAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(t.CreatedAt.Format(time.ANSIC))

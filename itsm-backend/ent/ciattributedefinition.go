@@ -3,11 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/citype"
-	"itsm-backend/ent/tenant"
 	"strings"
 	"time"
 
@@ -20,79 +17,31 @@ type CIAttributeDefinition struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
+	// 属性名称
 	Name string `json:"name,omitempty"`
-	// DisplayName holds the value of the "display_name" field.
+	// 显示名称
 	DisplayName string `json:"display_name,omitempty"`
-	// Description holds the value of the "description" field.
-	Description string `json:"description,omitempty"`
-	// DataType holds the value of the "data_type" field.
-	DataType string `json:"data_type,omitempty"`
-	// IsRequired holds the value of the "is_required" field.
-	IsRequired bool `json:"is_required,omitempty"`
-	// IsUnique holds the value of the "is_unique" field.
-	IsUnique bool `json:"is_unique,omitempty"`
-	// DefaultValue holds the value of the "default_value" field.
+	// 属性类型
+	Type string `json:"type,omitempty"`
+	// 是否必填
+	Required bool `json:"required,omitempty"`
+	// 是否唯一
+	Unique bool `json:"unique,omitempty"`
+	// 默认值
 	DefaultValue string `json:"default_value,omitempty"`
-	// ValidationRules holds the value of the "validation_rules" field.
-	ValidationRules map[string]interface{} `json:"validation_rules,omitempty"`
-	// EnumValues holds the value of the "enum_values" field.
-	EnumValues []string `json:"enum_values,omitempty"`
-	// ReferenceType holds the value of the "reference_type" field.
-	ReferenceType string `json:"reference_type,omitempty"`
-	// DisplayOrder holds the value of the "display_order" field.
-	DisplayOrder int `json:"display_order,omitempty"`
-	// IsSearchable holds the value of the "is_searchable" field.
-	IsSearchable bool `json:"is_searchable,omitempty"`
-	// IsSystem holds the value of the "is_system" field.
-	IsSystem bool `json:"is_system,omitempty"`
-	// IsActive holds the value of the "is_active" field.
-	IsActive bool `json:"is_active,omitempty"`
-	// CiTypeID holds the value of the "ci_type_id" field.
+	// 验证规则
+	ValidationRules string `json:"validation_rules,omitempty"`
+	// CI类型ID
 	CiTypeID int `json:"ci_type_id,omitempty"`
-	// TenantID holds the value of the "tenant_id" field.
+	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 是否激活
+	IsActive bool `json:"is_active,omitempty"`
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the CIAttributeDefinitionQuery when eager-loading is set.
-	Edges        CIAttributeDefinitionEdges `json:"edges"`
+	// 更新时间
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// CIAttributeDefinitionEdges holds the relations/edges for other nodes in the graph.
-type CIAttributeDefinitionEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// CiType holds the value of the ci_type edge.
-	CiType *CIType `json:"ci_type,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CIAttributeDefinitionEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// CiTypeOrErr returns the CiType value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CIAttributeDefinitionEdges) CiTypeOrErr() (*CIType, error) {
-	if e.CiType != nil {
-		return e.CiType, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: citype.Label}
-	}
-	return nil, &NotLoadedError{edge: "ci_type"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -100,13 +49,11 @@ func (*CIAttributeDefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ciattributedefinition.FieldValidationRules, ciattributedefinition.FieldEnumValues:
-			values[i] = new([]byte)
-		case ciattributedefinition.FieldIsRequired, ciattributedefinition.FieldIsUnique, ciattributedefinition.FieldIsSearchable, ciattributedefinition.FieldIsSystem, ciattributedefinition.FieldIsActive:
+		case ciattributedefinition.FieldRequired, ciattributedefinition.FieldUnique, ciattributedefinition.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case ciattributedefinition.FieldID, ciattributedefinition.FieldDisplayOrder, ciattributedefinition.FieldCiTypeID, ciattributedefinition.FieldTenantID:
+		case ciattributedefinition.FieldID, ciattributedefinition.FieldCiTypeID, ciattributedefinition.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case ciattributedefinition.FieldName, ciattributedefinition.FieldDisplayName, ciattributedefinition.FieldDescription, ciattributedefinition.FieldDataType, ciattributedefinition.FieldDefaultValue, ciattributedefinition.FieldReferenceType:
+		case ciattributedefinition.FieldName, ciattributedefinition.FieldDisplayName, ciattributedefinition.FieldType, ciattributedefinition.FieldDefaultValue, ciattributedefinition.FieldValidationRules:
 			values[i] = new(sql.NullString)
 		case ciattributedefinition.FieldCreatedAt, ciattributedefinition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -143,29 +90,23 @@ func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) e
 			} else if value.Valid {
 				cad.DisplayName = value.String
 			}
-		case ciattributedefinition.FieldDescription:
+		case ciattributedefinition.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field description", values[i])
+				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				cad.Description = value.String
+				cad.Type = value.String
 			}
-		case ciattributedefinition.FieldDataType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field data_type", values[i])
-			} else if value.Valid {
-				cad.DataType = value.String
-			}
-		case ciattributedefinition.FieldIsRequired:
+		case ciattributedefinition.FieldRequired:
 			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_required", values[i])
+				return fmt.Errorf("unexpected type %T for field required", values[i])
 			} else if value.Valid {
-				cad.IsRequired = value.Bool
+				cad.Required = value.Bool
 			}
-		case ciattributedefinition.FieldIsUnique:
+		case ciattributedefinition.FieldUnique:
 			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_unique", values[i])
+				return fmt.Errorf("unexpected type %T for field unique", values[i])
 			} else if value.Valid {
-				cad.IsUnique = value.Bool
+				cad.Unique = value.Bool
 			}
 		case ciattributedefinition.FieldDefaultValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -174,50 +115,10 @@ func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) e
 				cad.DefaultValue = value.String
 			}
 		case ciattributedefinition.FieldValidationRules:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field validation_rules", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cad.ValidationRules); err != nil {
-					return fmt.Errorf("unmarshal field validation_rules: %w", err)
-				}
-			}
-		case ciattributedefinition.FieldEnumValues:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field enum_values", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cad.EnumValues); err != nil {
-					return fmt.Errorf("unmarshal field enum_values: %w", err)
-				}
-			}
-		case ciattributedefinition.FieldReferenceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field reference_type", values[i])
+				return fmt.Errorf("unexpected type %T for field validation_rules", values[i])
 			} else if value.Valid {
-				cad.ReferenceType = value.String
-			}
-		case ciattributedefinition.FieldDisplayOrder:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field display_order", values[i])
-			} else if value.Valid {
-				cad.DisplayOrder = int(value.Int64)
-			}
-		case ciattributedefinition.FieldIsSearchable:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_searchable", values[i])
-			} else if value.Valid {
-				cad.IsSearchable = value.Bool
-			}
-		case ciattributedefinition.FieldIsSystem:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_system", values[i])
-			} else if value.Valid {
-				cad.IsSystem = value.Bool
-			}
-		case ciattributedefinition.FieldIsActive:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_active", values[i])
-			} else if value.Valid {
-				cad.IsActive = value.Bool
+				cad.ValidationRules = value.String
 			}
 		case ciattributedefinition.FieldCiTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -230,6 +131,12 @@ func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) e
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				cad.TenantID = int(value.Int64)
+			}
+		case ciattributedefinition.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				cad.IsActive = value.Bool
 			}
 		case ciattributedefinition.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -254,16 +161,6 @@ func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) e
 // This includes values selected through modifiers, order, etc.
 func (cad *CIAttributeDefinition) Value(name string) (ent.Value, error) {
 	return cad.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the CIAttributeDefinition entity.
-func (cad *CIAttributeDefinition) QueryTenant() *TenantQuery {
-	return NewCIAttributeDefinitionClient(cad.config).QueryTenant(cad)
-}
-
-// QueryCiType queries the "ci_type" edge of the CIAttributeDefinition entity.
-func (cad *CIAttributeDefinition) QueryCiType() *CITypeQuery {
-	return NewCIAttributeDefinitionClient(cad.config).QueryCiType(cad)
 }
 
 // Update returns a builder for updating this CIAttributeDefinition.
@@ -295,47 +192,29 @@ func (cad *CIAttributeDefinition) String() string {
 	builder.WriteString("display_name=")
 	builder.WriteString(cad.DisplayName)
 	builder.WriteString(", ")
-	builder.WriteString("description=")
-	builder.WriteString(cad.Description)
+	builder.WriteString("type=")
+	builder.WriteString(cad.Type)
 	builder.WriteString(", ")
-	builder.WriteString("data_type=")
-	builder.WriteString(cad.DataType)
+	builder.WriteString("required=")
+	builder.WriteString(fmt.Sprintf("%v", cad.Required))
 	builder.WriteString(", ")
-	builder.WriteString("is_required=")
-	builder.WriteString(fmt.Sprintf("%v", cad.IsRequired))
-	builder.WriteString(", ")
-	builder.WriteString("is_unique=")
-	builder.WriteString(fmt.Sprintf("%v", cad.IsUnique))
+	builder.WriteString("unique=")
+	builder.WriteString(fmt.Sprintf("%v", cad.Unique))
 	builder.WriteString(", ")
 	builder.WriteString("default_value=")
 	builder.WriteString(cad.DefaultValue)
 	builder.WriteString(", ")
 	builder.WriteString("validation_rules=")
-	builder.WriteString(fmt.Sprintf("%v", cad.ValidationRules))
-	builder.WriteString(", ")
-	builder.WriteString("enum_values=")
-	builder.WriteString(fmt.Sprintf("%v", cad.EnumValues))
-	builder.WriteString(", ")
-	builder.WriteString("reference_type=")
-	builder.WriteString(cad.ReferenceType)
-	builder.WriteString(", ")
-	builder.WriteString("display_order=")
-	builder.WriteString(fmt.Sprintf("%v", cad.DisplayOrder))
-	builder.WriteString(", ")
-	builder.WriteString("is_searchable=")
-	builder.WriteString(fmt.Sprintf("%v", cad.IsSearchable))
-	builder.WriteString(", ")
-	builder.WriteString("is_system=")
-	builder.WriteString(fmt.Sprintf("%v", cad.IsSystem))
-	builder.WriteString(", ")
-	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", cad.IsActive))
+	builder.WriteString(cad.ValidationRules)
 	builder.WriteString(", ")
 	builder.WriteString("ci_type_id=")
 	builder.WriteString(fmt.Sprintf("%v", cad.CiTypeID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", cad.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", cad.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(cad.CreatedAt.Format(time.ANSIC))

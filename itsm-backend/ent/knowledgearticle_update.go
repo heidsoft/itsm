@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -78,64 +76,23 @@ func (kau *KnowledgeArticleUpdate) SetNillableCategory(s *string) *KnowledgeArti
 	return kau
 }
 
-// SetStatus sets the "status" field.
-func (kau *KnowledgeArticleUpdate) SetStatus(s string) *KnowledgeArticleUpdate {
-	kau.mutation.SetStatus(s)
-	return kau
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (kau *KnowledgeArticleUpdate) SetNillableStatus(s *string) *KnowledgeArticleUpdate {
-	if s != nil {
-		kau.SetStatus(*s)
-	}
-	return kau
-}
-
-// SetAuthor sets the "author" field.
-func (kau *KnowledgeArticleUpdate) SetAuthor(s string) *KnowledgeArticleUpdate {
-	kau.mutation.SetAuthor(s)
-	return kau
-}
-
-// SetNillableAuthor sets the "author" field if the given value is not nil.
-func (kau *KnowledgeArticleUpdate) SetNillableAuthor(s *string) *KnowledgeArticleUpdate {
-	if s != nil {
-		kau.SetAuthor(*s)
-	}
-	return kau
-}
-
-// SetViews sets the "views" field.
-func (kau *KnowledgeArticleUpdate) SetViews(i int) *KnowledgeArticleUpdate {
-	kau.mutation.ResetViews()
-	kau.mutation.SetViews(i)
-	return kau
-}
-
-// SetNillableViews sets the "views" field if the given value is not nil.
-func (kau *KnowledgeArticleUpdate) SetNillableViews(i *int) *KnowledgeArticleUpdate {
-	if i != nil {
-		kau.SetViews(*i)
-	}
-	return kau
-}
-
-// AddViews adds i to the "views" field.
-func (kau *KnowledgeArticleUpdate) AddViews(i int) *KnowledgeArticleUpdate {
-	kau.mutation.AddViews(i)
+// ClearCategory clears the value of the "category" field.
+func (kau *KnowledgeArticleUpdate) ClearCategory() *KnowledgeArticleUpdate {
+	kau.mutation.ClearCategory()
 	return kau
 }
 
 // SetTags sets the "tags" field.
-func (kau *KnowledgeArticleUpdate) SetTags(s []string) *KnowledgeArticleUpdate {
+func (kau *KnowledgeArticleUpdate) SetTags(s string) *KnowledgeArticleUpdate {
 	kau.mutation.SetTags(s)
 	return kau
 }
 
-// AppendTags appends s to the "tags" field.
-func (kau *KnowledgeArticleUpdate) AppendTags(s []string) *KnowledgeArticleUpdate {
-	kau.mutation.AppendTags(s)
+// SetNillableTags sets the "tags" field if the given value is not nil.
+func (kau *KnowledgeArticleUpdate) SetNillableTags(s *string) *KnowledgeArticleUpdate {
+	if s != nil {
+		kau.SetTags(*s)
+	}
 	return kau
 }
 
@@ -145,8 +102,30 @@ func (kau *KnowledgeArticleUpdate) ClearTags() *KnowledgeArticleUpdate {
 	return kau
 }
 
+// SetAuthorID sets the "author_id" field.
+func (kau *KnowledgeArticleUpdate) SetAuthorID(i int) *KnowledgeArticleUpdate {
+	kau.mutation.ResetAuthorID()
+	kau.mutation.SetAuthorID(i)
+	return kau
+}
+
+// SetNillableAuthorID sets the "author_id" field if the given value is not nil.
+func (kau *KnowledgeArticleUpdate) SetNillableAuthorID(i *int) *KnowledgeArticleUpdate {
+	if i != nil {
+		kau.SetAuthorID(*i)
+	}
+	return kau
+}
+
+// AddAuthorID adds i to the "author_id" field.
+func (kau *KnowledgeArticleUpdate) AddAuthorID(i int) *KnowledgeArticleUpdate {
+	kau.mutation.AddAuthorID(i)
+	return kau
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (kau *KnowledgeArticleUpdate) SetTenantID(i int) *KnowledgeArticleUpdate {
+	kau.mutation.ResetTenantID()
 	kau.mutation.SetTenantID(i)
 	return kau
 }
@@ -155,6 +134,26 @@ func (kau *KnowledgeArticleUpdate) SetTenantID(i int) *KnowledgeArticleUpdate {
 func (kau *KnowledgeArticleUpdate) SetNillableTenantID(i *int) *KnowledgeArticleUpdate {
 	if i != nil {
 		kau.SetTenantID(*i)
+	}
+	return kau
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (kau *KnowledgeArticleUpdate) AddTenantID(i int) *KnowledgeArticleUpdate {
+	kau.mutation.AddTenantID(i)
+	return kau
+}
+
+// SetIsPublished sets the "is_published" field.
+func (kau *KnowledgeArticleUpdate) SetIsPublished(b bool) *KnowledgeArticleUpdate {
+	kau.mutation.SetIsPublished(b)
+	return kau
+}
+
+// SetNillableIsPublished sets the "is_published" field if the given value is not nil.
+func (kau *KnowledgeArticleUpdate) SetNillableIsPublished(b *bool) *KnowledgeArticleUpdate {
+	if b != nil {
+		kau.SetIsPublished(*b)
 	}
 	return kau
 }
@@ -179,20 +178,9 @@ func (kau *KnowledgeArticleUpdate) SetUpdatedAt(t time.Time) *KnowledgeArticleUp
 	return kau
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (kau *KnowledgeArticleUpdate) SetTenant(t *Tenant) *KnowledgeArticleUpdate {
-	return kau.SetTenantID(t.ID)
-}
-
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (kau *KnowledgeArticleUpdate) Mutation() *KnowledgeArticleMutation {
 	return kau.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (kau *KnowledgeArticleUpdate) ClearTenant() *KnowledgeArticleUpdate {
-	kau.mutation.ClearTenant()
-	return kau
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -238,18 +226,15 @@ func (kau *KnowledgeArticleUpdate) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.title": %w`, err)}
 		}
 	}
-	if v, ok := kau.mutation.Category(); ok {
-		if err := knowledgearticle.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.category": %w`, err)}
+	if v, ok := kau.mutation.AuthorID(); ok {
+		if err := knowledgearticle.AuthorIDValidator(v); err != nil {
+			return &ValidationError{Name: "author_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author_id": %w`, err)}
 		}
 	}
-	if v, ok := kau.mutation.Author(); ok {
-		if err := knowledgearticle.AuthorValidator(v); err != nil {
-			return &ValidationError{Name: "author", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author": %w`, err)}
+	if v, ok := kau.mutation.TenantID(); ok {
+		if err := knowledgearticle.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.tenant_id": %w`, err)}
 		}
-	}
-	if kau.mutation.TenantCleared() && len(kau.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "KnowledgeArticle.tenant"`)
 	}
 	return nil
 }
@@ -278,63 +263,35 @@ func (kau *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (n int, err erro
 	if value, ok := kau.mutation.Category(); ok {
 		_spec.SetField(knowledgearticle.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := kau.mutation.Status(); ok {
-		_spec.SetField(knowledgearticle.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := kau.mutation.Author(); ok {
-		_spec.SetField(knowledgearticle.FieldAuthor, field.TypeString, value)
-	}
-	if value, ok := kau.mutation.Views(); ok {
-		_spec.SetField(knowledgearticle.FieldViews, field.TypeInt, value)
-	}
-	if value, ok := kau.mutation.AddedViews(); ok {
-		_spec.AddField(knowledgearticle.FieldViews, field.TypeInt, value)
+	if kau.mutation.CategoryCleared() {
+		_spec.ClearField(knowledgearticle.FieldCategory, field.TypeString)
 	}
 	if value, ok := kau.mutation.Tags(); ok {
-		_spec.SetField(knowledgearticle.FieldTags, field.TypeJSON, value)
-	}
-	if value, ok := kau.mutation.AppendedTags(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, knowledgearticle.FieldTags, value)
-		})
+		_spec.SetField(knowledgearticle.FieldTags, field.TypeString, value)
 	}
 	if kau.mutation.TagsCleared() {
-		_spec.ClearField(knowledgearticle.FieldTags, field.TypeJSON)
+		_spec.ClearField(knowledgearticle.FieldTags, field.TypeString)
+	}
+	if value, ok := kau.mutation.AuthorID(); ok {
+		_spec.SetField(knowledgearticle.FieldAuthorID, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.AddedAuthorID(); ok {
+		_spec.AddField(knowledgearticle.FieldAuthorID, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.TenantID(); ok {
+		_spec.SetField(knowledgearticle.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.AddedTenantID(); ok {
+		_spec.AddField(knowledgearticle.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.IsPublished(); ok {
+		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 	}
 	if value, ok := kau.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := kau.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if kau.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   knowledgearticle.TenantTable,
-			Columns: []string{knowledgearticle.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := kau.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   knowledgearticle.TenantTable,
-			Columns: []string{knowledgearticle.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, kau.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -404,64 +361,23 @@ func (kauo *KnowledgeArticleUpdateOne) SetNillableCategory(s *string) *Knowledge
 	return kauo
 }
 
-// SetStatus sets the "status" field.
-func (kauo *KnowledgeArticleUpdateOne) SetStatus(s string) *KnowledgeArticleUpdateOne {
-	kauo.mutation.SetStatus(s)
-	return kauo
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (kauo *KnowledgeArticleUpdateOne) SetNillableStatus(s *string) *KnowledgeArticleUpdateOne {
-	if s != nil {
-		kauo.SetStatus(*s)
-	}
-	return kauo
-}
-
-// SetAuthor sets the "author" field.
-func (kauo *KnowledgeArticleUpdateOne) SetAuthor(s string) *KnowledgeArticleUpdateOne {
-	kauo.mutation.SetAuthor(s)
-	return kauo
-}
-
-// SetNillableAuthor sets the "author" field if the given value is not nil.
-func (kauo *KnowledgeArticleUpdateOne) SetNillableAuthor(s *string) *KnowledgeArticleUpdateOne {
-	if s != nil {
-		kauo.SetAuthor(*s)
-	}
-	return kauo
-}
-
-// SetViews sets the "views" field.
-func (kauo *KnowledgeArticleUpdateOne) SetViews(i int) *KnowledgeArticleUpdateOne {
-	kauo.mutation.ResetViews()
-	kauo.mutation.SetViews(i)
-	return kauo
-}
-
-// SetNillableViews sets the "views" field if the given value is not nil.
-func (kauo *KnowledgeArticleUpdateOne) SetNillableViews(i *int) *KnowledgeArticleUpdateOne {
-	if i != nil {
-		kauo.SetViews(*i)
-	}
-	return kauo
-}
-
-// AddViews adds i to the "views" field.
-func (kauo *KnowledgeArticleUpdateOne) AddViews(i int) *KnowledgeArticleUpdateOne {
-	kauo.mutation.AddViews(i)
+// ClearCategory clears the value of the "category" field.
+func (kauo *KnowledgeArticleUpdateOne) ClearCategory() *KnowledgeArticleUpdateOne {
+	kauo.mutation.ClearCategory()
 	return kauo
 }
 
 // SetTags sets the "tags" field.
-func (kauo *KnowledgeArticleUpdateOne) SetTags(s []string) *KnowledgeArticleUpdateOne {
+func (kauo *KnowledgeArticleUpdateOne) SetTags(s string) *KnowledgeArticleUpdateOne {
 	kauo.mutation.SetTags(s)
 	return kauo
 }
 
-// AppendTags appends s to the "tags" field.
-func (kauo *KnowledgeArticleUpdateOne) AppendTags(s []string) *KnowledgeArticleUpdateOne {
-	kauo.mutation.AppendTags(s)
+// SetNillableTags sets the "tags" field if the given value is not nil.
+func (kauo *KnowledgeArticleUpdateOne) SetNillableTags(s *string) *KnowledgeArticleUpdateOne {
+	if s != nil {
+		kauo.SetTags(*s)
+	}
 	return kauo
 }
 
@@ -471,8 +387,30 @@ func (kauo *KnowledgeArticleUpdateOne) ClearTags() *KnowledgeArticleUpdateOne {
 	return kauo
 }
 
+// SetAuthorID sets the "author_id" field.
+func (kauo *KnowledgeArticleUpdateOne) SetAuthorID(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.ResetAuthorID()
+	kauo.mutation.SetAuthorID(i)
+	return kauo
+}
+
+// SetNillableAuthorID sets the "author_id" field if the given value is not nil.
+func (kauo *KnowledgeArticleUpdateOne) SetNillableAuthorID(i *int) *KnowledgeArticleUpdateOne {
+	if i != nil {
+		kauo.SetAuthorID(*i)
+	}
+	return kauo
+}
+
+// AddAuthorID adds i to the "author_id" field.
+func (kauo *KnowledgeArticleUpdateOne) AddAuthorID(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.AddAuthorID(i)
+	return kauo
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (kauo *KnowledgeArticleUpdateOne) SetTenantID(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.ResetTenantID()
 	kauo.mutation.SetTenantID(i)
 	return kauo
 }
@@ -481,6 +419,26 @@ func (kauo *KnowledgeArticleUpdateOne) SetTenantID(i int) *KnowledgeArticleUpdat
 func (kauo *KnowledgeArticleUpdateOne) SetNillableTenantID(i *int) *KnowledgeArticleUpdateOne {
 	if i != nil {
 		kauo.SetTenantID(*i)
+	}
+	return kauo
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (kauo *KnowledgeArticleUpdateOne) AddTenantID(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.AddTenantID(i)
+	return kauo
+}
+
+// SetIsPublished sets the "is_published" field.
+func (kauo *KnowledgeArticleUpdateOne) SetIsPublished(b bool) *KnowledgeArticleUpdateOne {
+	kauo.mutation.SetIsPublished(b)
+	return kauo
+}
+
+// SetNillableIsPublished sets the "is_published" field if the given value is not nil.
+func (kauo *KnowledgeArticleUpdateOne) SetNillableIsPublished(b *bool) *KnowledgeArticleUpdateOne {
+	if b != nil {
+		kauo.SetIsPublished(*b)
 	}
 	return kauo
 }
@@ -505,20 +463,9 @@ func (kauo *KnowledgeArticleUpdateOne) SetUpdatedAt(t time.Time) *KnowledgeArtic
 	return kauo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (kauo *KnowledgeArticleUpdateOne) SetTenant(t *Tenant) *KnowledgeArticleUpdateOne {
-	return kauo.SetTenantID(t.ID)
-}
-
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (kauo *KnowledgeArticleUpdateOne) Mutation() *KnowledgeArticleMutation {
 	return kauo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (kauo *KnowledgeArticleUpdateOne) ClearTenant() *KnowledgeArticleUpdateOne {
-	kauo.mutation.ClearTenant()
-	return kauo
 }
 
 // Where appends a list predicates to the KnowledgeArticleUpdate builder.
@@ -577,18 +524,15 @@ func (kauo *KnowledgeArticleUpdateOne) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.title": %w`, err)}
 		}
 	}
-	if v, ok := kauo.mutation.Category(); ok {
-		if err := knowledgearticle.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.category": %w`, err)}
+	if v, ok := kauo.mutation.AuthorID(); ok {
+		if err := knowledgearticle.AuthorIDValidator(v); err != nil {
+			return &ValidationError{Name: "author_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author_id": %w`, err)}
 		}
 	}
-	if v, ok := kauo.mutation.Author(); ok {
-		if err := knowledgearticle.AuthorValidator(v); err != nil {
-			return &ValidationError{Name: "author", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author": %w`, err)}
+	if v, ok := kauo.mutation.TenantID(); ok {
+		if err := knowledgearticle.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.tenant_id": %w`, err)}
 		}
-	}
-	if kauo.mutation.TenantCleared() && len(kauo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "KnowledgeArticle.tenant"`)
 	}
 	return nil
 }
@@ -634,63 +578,35 @@ func (kauo *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Know
 	if value, ok := kauo.mutation.Category(); ok {
 		_spec.SetField(knowledgearticle.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := kauo.mutation.Status(); ok {
-		_spec.SetField(knowledgearticle.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := kauo.mutation.Author(); ok {
-		_spec.SetField(knowledgearticle.FieldAuthor, field.TypeString, value)
-	}
-	if value, ok := kauo.mutation.Views(); ok {
-		_spec.SetField(knowledgearticle.FieldViews, field.TypeInt, value)
-	}
-	if value, ok := kauo.mutation.AddedViews(); ok {
-		_spec.AddField(knowledgearticle.FieldViews, field.TypeInt, value)
+	if kauo.mutation.CategoryCleared() {
+		_spec.ClearField(knowledgearticle.FieldCategory, field.TypeString)
 	}
 	if value, ok := kauo.mutation.Tags(); ok {
-		_spec.SetField(knowledgearticle.FieldTags, field.TypeJSON, value)
-	}
-	if value, ok := kauo.mutation.AppendedTags(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, knowledgearticle.FieldTags, value)
-		})
+		_spec.SetField(knowledgearticle.FieldTags, field.TypeString, value)
 	}
 	if kauo.mutation.TagsCleared() {
-		_spec.ClearField(knowledgearticle.FieldTags, field.TypeJSON)
+		_spec.ClearField(knowledgearticle.FieldTags, field.TypeString)
+	}
+	if value, ok := kauo.mutation.AuthorID(); ok {
+		_spec.SetField(knowledgearticle.FieldAuthorID, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.AddedAuthorID(); ok {
+		_spec.AddField(knowledgearticle.FieldAuthorID, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.TenantID(); ok {
+		_spec.SetField(knowledgearticle.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.AddedTenantID(); ok {
+		_spec.AddField(knowledgearticle.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.IsPublished(); ok {
+		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 	}
 	if value, ok := kauo.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := kauo.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if kauo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   knowledgearticle.TenantTable,
-			Columns: []string{knowledgearticle.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := kauo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   knowledgearticle.TenantTable,
-			Columns: []string{knowledgearticle.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &KnowledgeArticle{config: kauo.config}
 	_spec.Assign = _node.assignValues

@@ -112,7 +112,7 @@ func (s *DashboardService) getSLAMetrics(ctx context.Context) (*dto.SLAMetrics, 
 	resolvedOnTime, err := s.client.Ticket.Query().
 		Where(
 			ticket.CreatedAtGTE(thirtyDaysAgo),
-			ticket.StatusEQ(ticket.StatusClosed),
+			ticket.StatusEQ("closed"),
 		).
 		Count(ctx)
 	if err != nil {
@@ -138,8 +138,8 @@ func (s *DashboardService) getIncidentMetrics(ctx context.Context) (*dto.Inciden
 	// 获取高优先级事件数量
 	highPriorityCount, err := s.client.Ticket.Query().
 		Where(
-			ticket.PriorityIn(ticket.PriorityHigh, ticket.PriorityCritical),
-			ticket.StatusNEQ(ticket.StatusClosed),
+			ticket.PriorityIn("high", "critical"),
+			ticket.StatusNEQ("closed"),
 		).
 		Count(ctx)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *DashboardService) getIncidentMetrics(ctx context.Context) (*dto.Inciden
 func (s *DashboardService) getChangeMetrics(ctx context.Context) (*dto.ChangeMetrics, error) {
 	// 获取待审批的变更数量
 	pendingApproval, err := s.client.Ticket.Query().
-		Where(ticket.StatusEQ(ticket.StatusPending)).
+		Where(ticket.StatusEQ("pending")).
 		Count(ctx)
 	if err != nil {
 		return nil, err

@@ -2,8 +2,18 @@ package dto
 
 import (
 	"itsm-backend/ent"
+	"strconv"
 	"time"
 )
+
+// UserResponse 用户响应
+type UserResponse struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+}
 
 // CreateServiceRequestRequest 创建服务请求请求
 type CreateServiceRequestRequest struct {
@@ -26,10 +36,10 @@ type GetServiceCatalogsRequest struct {
 
 // GetServiceRequestsRequest 获取服务请求列表请求
 type GetServiceRequestsRequest struct {
-	Page      int    `json:"page" form:"page" binding:"omitempty,min=1"`
-	Size      int    `json:"size" form:"size" binding:"omitempty,min=1,max=100"`
-	Status    string `json:"status" form:"status" binding:"omitempty,oneof=pending in_progress completed rejected"`
-	UserID    int    `json:"-"` // 从认证中间件获取
+	Page   int    `json:"page" form:"page" binding:"omitempty,min=1"`
+	Size   int    `json:"size" form:"size" binding:"omitempty,min=1,max=100"`
+	Status string `json:"status" form:"status" binding:"omitempty,oneof=pending in_progress completed rejected"`
+	UserID int    `json:"-"` // 从认证中间件获取
 }
 
 // ServiceCatalogResponse 服务目录响应
@@ -46,14 +56,14 @@ type ServiceCatalogResponse struct {
 
 // ServiceRequestResponse 服务请求响应
 type ServiceRequestResponse struct {
-	ID          int                      `json:"id"`
-	CatalogID   int                      `json:"catalog_id"`
-	RequesterID int                      `json:"requester_id"`
-	Status      string                   `json:"status"`
-	Reason      string                   `json:"reason"`
-	CreatedAt   time.Time                `json:"created_at"`
-	Catalog     *ServiceCatalogResponse  `json:"catalog,omitempty"`
-	Requester   *UserResponse            `json:"requester,omitempty"`
+	ID          int                     `json:"id"`
+	CatalogID   int                     `json:"catalog_id"`
+	RequesterID int                     `json:"requester_id"`
+	Status      string                  `json:"status"`
+	Reason      string                  `json:"reason"`
+	CreatedAt   time.Time               `json:"created_at"`
+	Catalog     *ServiceCatalogResponse `json:"catalog,omitempty"`
+	Requester   *UserResponse           `json:"requester,omitempty"`
 }
 
 // ServiceCatalogListResponse 服务目录列表响应
@@ -79,7 +89,7 @@ func ToServiceCatalogResponse(catalog *ent.ServiceCatalog) *ServiceCatalogRespon
 		Name:         catalog.Name,
 		Category:     catalog.Category,
 		Description:  catalog.Description,
-		DeliveryTime: catalog.DeliveryTime,
+		DeliveryTime: strconv.Itoa(catalog.DeliveryTime),
 		Status:       string(catalog.Status),
 		CreatedAt:    catalog.CreatedAt,
 		UpdatedAt:    catalog.UpdatedAt,
@@ -96,22 +106,7 @@ func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestRespon
 		Reason:      request.Reason,
 		CreatedAt:   request.CreatedAt,
 	}
-	
-	// 关联数据
-	if request.Edges.Catalog != nil {
-		resp.Catalog = ToServiceCatalogResponse(request.Edges.Catalog)
-	}
-	
-	if request.Edges.Requester != nil {
-		resp.Requester = &UserResponse{
-			ID:         request.Edges.Requester.ID,
-			Username:   request.Edges.Requester.Username,
-			Name:       request.Edges.Requester.Name,
-			Email:      request.Edges.Requester.Email,
-			Department: request.Edges.Requester.Department,
-		}
-	}
-	
+
 	return resp
 }
 
@@ -132,4 +127,3 @@ type UpdateServiceCatalogRequest struct {
 	DeliveryTime string `json:"delivery_time" binding:"omitempty,max=50"`
 	Status       string `json:"status" binding:"omitempty,oneof=enabled disabled"`
 }
-

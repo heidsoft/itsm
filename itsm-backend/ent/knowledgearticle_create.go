@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -47,49 +46,51 @@ func (kac *KnowledgeArticleCreate) SetCategory(s string) *KnowledgeArticleCreate
 	return kac
 }
 
-// SetStatus sets the "status" field.
-func (kac *KnowledgeArticleCreate) SetStatus(s string) *KnowledgeArticleCreate {
-	kac.mutation.SetStatus(s)
-	return kac
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableStatus(s *string) *KnowledgeArticleCreate {
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (kac *KnowledgeArticleCreate) SetNillableCategory(s *string) *KnowledgeArticleCreate {
 	if s != nil {
-		kac.SetStatus(*s)
-	}
-	return kac
-}
-
-// SetAuthor sets the "author" field.
-func (kac *KnowledgeArticleCreate) SetAuthor(s string) *KnowledgeArticleCreate {
-	kac.mutation.SetAuthor(s)
-	return kac
-}
-
-// SetViews sets the "views" field.
-func (kac *KnowledgeArticleCreate) SetViews(i int) *KnowledgeArticleCreate {
-	kac.mutation.SetViews(i)
-	return kac
-}
-
-// SetNillableViews sets the "views" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableViews(i *int) *KnowledgeArticleCreate {
-	if i != nil {
-		kac.SetViews(*i)
+		kac.SetCategory(*s)
 	}
 	return kac
 }
 
 // SetTags sets the "tags" field.
-func (kac *KnowledgeArticleCreate) SetTags(s []string) *KnowledgeArticleCreate {
+func (kac *KnowledgeArticleCreate) SetTags(s string) *KnowledgeArticleCreate {
 	kac.mutation.SetTags(s)
+	return kac
+}
+
+// SetNillableTags sets the "tags" field if the given value is not nil.
+func (kac *KnowledgeArticleCreate) SetNillableTags(s *string) *KnowledgeArticleCreate {
+	if s != nil {
+		kac.SetTags(*s)
+	}
+	return kac
+}
+
+// SetAuthorID sets the "author_id" field.
+func (kac *KnowledgeArticleCreate) SetAuthorID(i int) *KnowledgeArticleCreate {
+	kac.mutation.SetAuthorID(i)
 	return kac
 }
 
 // SetTenantID sets the "tenant_id" field.
 func (kac *KnowledgeArticleCreate) SetTenantID(i int) *KnowledgeArticleCreate {
 	kac.mutation.SetTenantID(i)
+	return kac
+}
+
+// SetIsPublished sets the "is_published" field.
+func (kac *KnowledgeArticleCreate) SetIsPublished(b bool) *KnowledgeArticleCreate {
+	kac.mutation.SetIsPublished(b)
+	return kac
+}
+
+// SetNillableIsPublished sets the "is_published" field if the given value is not nil.
+func (kac *KnowledgeArticleCreate) SetNillableIsPublished(b *bool) *KnowledgeArticleCreate {
+	if b != nil {
+		kac.SetIsPublished(*b)
+	}
 	return kac
 }
 
@@ -119,11 +120,6 @@ func (kac *KnowledgeArticleCreate) SetNillableUpdatedAt(t *time.Time) *Knowledge
 		kac.SetUpdatedAt(*t)
 	}
 	return kac
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (kac *KnowledgeArticleCreate) SetTenant(t *Tenant) *KnowledgeArticleCreate {
-	return kac.SetTenantID(t.ID)
 }
 
 // Mutation returns the KnowledgeArticleMutation object of the builder.
@@ -161,13 +157,9 @@ func (kac *KnowledgeArticleCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (kac *KnowledgeArticleCreate) defaults() {
-	if _, ok := kac.mutation.Status(); !ok {
-		v := knowledgearticle.DefaultStatus
-		kac.mutation.SetStatus(v)
-	}
-	if _, ok := kac.mutation.Views(); !ok {
-		v := knowledgearticle.DefaultViews
-		kac.mutation.SetViews(v)
+	if _, ok := kac.mutation.IsPublished(); !ok {
+		v := knowledgearticle.DefaultIsPublished
+		kac.mutation.SetIsPublished(v)
 	}
 	if _, ok := kac.mutation.CreatedAt(); !ok {
 		v := knowledgearticle.DefaultCreatedAt()
@@ -189,39 +181,30 @@ func (kac *KnowledgeArticleCreate) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.title": %w`, err)}
 		}
 	}
-	if _, ok := kac.mutation.Category(); !ok {
-		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "KnowledgeArticle.category"`)}
+	if _, ok := kac.mutation.AuthorID(); !ok {
+		return &ValidationError{Name: "author_id", err: errors.New(`ent: missing required field "KnowledgeArticle.author_id"`)}
 	}
-	if v, ok := kac.mutation.Category(); ok {
-		if err := knowledgearticle.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.category": %w`, err)}
+	if v, ok := kac.mutation.AuthorID(); ok {
+		if err := knowledgearticle.AuthorIDValidator(v); err != nil {
+			return &ValidationError{Name: "author_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author_id": %w`, err)}
 		}
-	}
-	if _, ok := kac.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "KnowledgeArticle.status"`)}
-	}
-	if _, ok := kac.mutation.Author(); !ok {
-		return &ValidationError{Name: "author", err: errors.New(`ent: missing required field "KnowledgeArticle.author"`)}
-	}
-	if v, ok := kac.mutation.Author(); ok {
-		if err := knowledgearticle.AuthorValidator(v); err != nil {
-			return &ValidationError{Name: "author", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author": %w`, err)}
-		}
-	}
-	if _, ok := kac.mutation.Views(); !ok {
-		return &ValidationError{Name: "views", err: errors.New(`ent: missing required field "KnowledgeArticle.views"`)}
 	}
 	if _, ok := kac.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "KnowledgeArticle.tenant_id"`)}
+	}
+	if v, ok := kac.mutation.TenantID(); ok {
+		if err := knowledgearticle.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.tenant_id": %w`, err)}
+		}
+	}
+	if _, ok := kac.mutation.IsPublished(); !ok {
+		return &ValidationError{Name: "is_published", err: errors.New(`ent: missing required field "KnowledgeArticle.is_published"`)}
 	}
 	if _, ok := kac.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnowledgeArticle.created_at"`)}
 	}
 	if _, ok := kac.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "KnowledgeArticle.updated_at"`)}
-	}
-	if len(kac.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "KnowledgeArticle.tenant"`)}
 	}
 	return nil
 }
@@ -261,21 +244,21 @@ func (kac *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cr
 		_spec.SetField(knowledgearticle.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := kac.mutation.Status(); ok {
-		_spec.SetField(knowledgearticle.FieldStatus, field.TypeString, value)
-		_node.Status = value
-	}
-	if value, ok := kac.mutation.Author(); ok {
-		_spec.SetField(knowledgearticle.FieldAuthor, field.TypeString, value)
-		_node.Author = value
-	}
-	if value, ok := kac.mutation.Views(); ok {
-		_spec.SetField(knowledgearticle.FieldViews, field.TypeInt, value)
-		_node.Views = value
-	}
 	if value, ok := kac.mutation.Tags(); ok {
-		_spec.SetField(knowledgearticle.FieldTags, field.TypeJSON, value)
+		_spec.SetField(knowledgearticle.FieldTags, field.TypeString, value)
 		_node.Tags = value
+	}
+	if value, ok := kac.mutation.AuthorID(); ok {
+		_spec.SetField(knowledgearticle.FieldAuthorID, field.TypeInt, value)
+		_node.AuthorID = value
+	}
+	if value, ok := kac.mutation.TenantID(); ok {
+		_spec.SetField(knowledgearticle.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
+	}
+	if value, ok := kac.mutation.IsPublished(); ok {
+		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
+		_node.IsPublished = value
 	}
 	if value, ok := kac.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
@@ -284,23 +267,6 @@ func (kac *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cr
 	if value, ok := kac.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := kac.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   knowledgearticle.TenantTable,
-			Columns: []string{knowledgearticle.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

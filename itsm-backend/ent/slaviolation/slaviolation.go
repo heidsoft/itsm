@@ -13,40 +13,18 @@ const (
 	Label = "sla_violation"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldCreateTime holds the string denoting the create_time field in the database.
-	FieldCreateTime = "create_time"
-	// FieldUpdateTime holds the string denoting the update_time field in the database.
-	FieldUpdateTime = "update_time"
-	// FieldTicketID holds the string denoting the ticket_id field in the database.
-	FieldTicketID = "ticket_id"
-	// FieldTicketType holds the string denoting the ticket_type field in the database.
-	FieldTicketType = "ticket_type"
-	// FieldViolationType holds the string denoting the violation_type field in the database.
-	FieldViolationType = "violation_type"
 	// FieldSLADefinitionID holds the string denoting the sla_definition_id field in the database.
 	FieldSLADefinitionID = "sla_definition_id"
-	// FieldSLAName holds the string denoting the sla_name field in the database.
-	FieldSLAName = "sla_name"
-	// FieldExpectedTime holds the string denoting the expected_time field in the database.
-	FieldExpectedTime = "expected_time"
-	// FieldActualTime holds the string denoting the actual_time field in the database.
-	FieldActualTime = "actual_time"
-	// FieldOverdueMinutes holds the string denoting the overdue_minutes field in the database.
-	FieldOverdueMinutes = "overdue_minutes"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
-	// FieldAssignedTo holds the string denoting the assigned_to field in the database.
-	FieldAssignedTo = "assigned_to"
-	// FieldViolationOccurredAt holds the string denoting the violation_occurred_at field in the database.
-	FieldViolationOccurredAt = "violation_occurred_at"
-	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
-	FieldResolvedAt = "resolved_at"
-	// FieldResolutionNote holds the string denoting the resolution_note field in the database.
-	FieldResolutionNote = "resolution_note"
+	// FieldTicketID holds the string denoting the ticket_id field in the database.
+	FieldTicketID = "ticket_id"
+	// FieldViolationType holds the string denoting the violation_type field in the database.
+	FieldViolationType = "violation_type"
+	// FieldViolationTime holds the string denoting the violation_time field in the database.
+	FieldViolationTime = "violation_time"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
-	// FieldCreatedBy holds the string denoting the created_by field in the database.
-	FieldCreatedBy = "created_by"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -58,23 +36,12 @@ const (
 // Columns holds all SQL columns for slaviolation fields.
 var Columns = []string{
 	FieldID,
-	FieldCreateTime,
-	FieldUpdateTime,
-	FieldTicketID,
-	FieldTicketType,
-	FieldViolationType,
 	FieldSLADefinitionID,
-	FieldSLAName,
-	FieldExpectedTime,
-	FieldActualTime,
-	FieldOverdueMinutes,
-	FieldStatus,
-	FieldAssignedTo,
-	FieldViolationOccurredAt,
-	FieldResolvedAt,
-	FieldResolutionNote,
+	FieldTicketID,
+	FieldViolationType,
+	FieldViolationTime,
+	FieldDescription,
 	FieldTenantID,
-	FieldCreatedBy,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -90,12 +57,22 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultCreateTime holds the default value on creation for the "create_time" field.
-	DefaultCreateTime func() time.Time
-	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
-	DefaultUpdateTime func() time.Time
-	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
-	UpdateDefaultUpdateTime func() time.Time
+	// SLADefinitionIDValidator is a validator for the "sla_definition_id" field. It is called by the builders before save.
+	SLADefinitionIDValidator func(int) error
+	// TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	TicketIDValidator func(int) error
+	// ViolationTypeValidator is a validator for the "violation_type" field. It is called by the builders before save.
+	ViolationTypeValidator func(string) error
+	// DefaultViolationTime holds the default value on creation for the "violation_time" field.
+	DefaultViolationTime func() time.Time
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )
 
 // OrderOption defines the ordering options for the SLAViolation queries.
@@ -106,14 +83,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByCreateTime orders the results by the create_time field.
-func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
-}
-
-// ByUpdateTime orders the results by the update_time field.
-func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
+// BySLADefinitionID orders the results by the sla_definition_id field.
+func BySLADefinitionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLADefinitionID, opts...).ToFunc()
 }
 
 // ByTicketID orders the results by the ticket_id field.
@@ -121,74 +93,24 @@ func ByTicketID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTicketID, opts...).ToFunc()
 }
 
-// ByTicketType orders the results by the ticket_type field.
-func ByTicketType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldTicketType, opts...).ToFunc()
-}
-
 // ByViolationType orders the results by the violation_type field.
 func ByViolationType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldViolationType, opts...).ToFunc()
 }
 
-// BySLADefinitionID orders the results by the sla_definition_id field.
-func BySLADefinitionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSLADefinitionID, opts...).ToFunc()
+// ByViolationTime orders the results by the violation_time field.
+func ByViolationTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldViolationTime, opts...).ToFunc()
 }
 
-// BySLAName orders the results by the sla_name field.
-func BySLAName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSLAName, opts...).ToFunc()
-}
-
-// ByExpectedTime orders the results by the expected_time field.
-func ByExpectedTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldExpectedTime, opts...).ToFunc()
-}
-
-// ByActualTime orders the results by the actual_time field.
-func ByActualTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldActualTime, opts...).ToFunc()
-}
-
-// ByOverdueMinutes orders the results by the overdue_minutes field.
-func ByOverdueMinutes(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldOverdueMinutes, opts...).ToFunc()
-}
-
-// ByStatus orders the results by the status field.
-func ByStatus(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStatus, opts...).ToFunc()
-}
-
-// ByAssignedTo orders the results by the assigned_to field.
-func ByAssignedTo(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAssignedTo, opts...).ToFunc()
-}
-
-// ByViolationOccurredAt orders the results by the violation_occurred_at field.
-func ByViolationOccurredAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldViolationOccurredAt, opts...).ToFunc()
-}
-
-// ByResolvedAt orders the results by the resolved_at field.
-func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
-}
-
-// ByResolutionNote orders the results by the resolution_note field.
-func ByResolutionNote(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResolutionNote, opts...).ToFunc()
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
-}
-
-// ByCreatedBy orders the results by the created_by field.
-func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedBy, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

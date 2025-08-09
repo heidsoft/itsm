@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/servicecatalog"
-	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -28,12 +26,6 @@ func (scc *ServiceCatalogCreate) SetName(s string) *ServiceCatalogCreate {
 	return scc
 }
 
-// SetCategory sets the "category" field.
-func (scc *ServiceCatalogCreate) SetCategory(s string) *ServiceCatalogCreate {
-	scc.mutation.SetCategory(s)
-	return scc
-}
-
 // SetDescription sets the "description" field.
 func (scc *ServiceCatalogCreate) SetDescription(s string) *ServiceCatalogCreate {
 	scc.mutation.SetDescription(s)
@@ -48,20 +40,56 @@ func (scc *ServiceCatalogCreate) SetNillableDescription(s *string) *ServiceCatal
 	return scc
 }
 
+// SetCategory sets the "category" field.
+func (scc *ServiceCatalogCreate) SetCategory(s string) *ServiceCatalogCreate {
+	scc.mutation.SetCategory(s)
+	return scc
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableCategory(s *string) *ServiceCatalogCreate {
+	if s != nil {
+		scc.SetCategory(*s)
+	}
+	return scc
+}
+
+// SetPrice sets the "price" field.
+func (scc *ServiceCatalogCreate) SetPrice(f float64) *ServiceCatalogCreate {
+	scc.mutation.SetPrice(f)
+	return scc
+}
+
+// SetNillablePrice sets the "price" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillablePrice(f *float64) *ServiceCatalogCreate {
+	if f != nil {
+		scc.SetPrice(*f)
+	}
+	return scc
+}
+
 // SetDeliveryTime sets the "delivery_time" field.
-func (scc *ServiceCatalogCreate) SetDeliveryTime(s string) *ServiceCatalogCreate {
-	scc.mutation.SetDeliveryTime(s)
+func (scc *ServiceCatalogCreate) SetDeliveryTime(i int) *ServiceCatalogCreate {
+	scc.mutation.SetDeliveryTime(i)
+	return scc
+}
+
+// SetNillableDeliveryTime sets the "delivery_time" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableDeliveryTime(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetDeliveryTime(*i)
+	}
 	return scc
 }
 
 // SetStatus sets the "status" field.
-func (scc *ServiceCatalogCreate) SetStatus(s servicecatalog.Status) *ServiceCatalogCreate {
+func (scc *ServiceCatalogCreate) SetStatus(s string) *ServiceCatalogCreate {
 	scc.mutation.SetStatus(s)
 	return scc
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableStatus(s *servicecatalog.Status) *ServiceCatalogCreate {
+func (scc *ServiceCatalogCreate) SetNillableStatus(s *string) *ServiceCatalogCreate {
 	if s != nil {
 		scc.SetStatus(*s)
 	}
@@ -71,6 +99,20 @@ func (scc *ServiceCatalogCreate) SetNillableStatus(s *servicecatalog.Status) *Se
 // SetTenantID sets the "tenant_id" field.
 func (scc *ServiceCatalogCreate) SetTenantID(i int) *ServiceCatalogCreate {
 	scc.mutation.SetTenantID(i)
+	return scc
+}
+
+// SetIsActive sets the "is_active" field.
+func (scc *ServiceCatalogCreate) SetIsActive(b bool) *ServiceCatalogCreate {
+	scc.mutation.SetIsActive(b)
+	return scc
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableIsActive(b *bool) *ServiceCatalogCreate {
+	if b != nil {
+		scc.SetIsActive(*b)
+	}
 	return scc
 }
 
@@ -100,26 +142,6 @@ func (scc *ServiceCatalogCreate) SetNillableUpdatedAt(t *time.Time) *ServiceCata
 		scc.SetUpdatedAt(*t)
 	}
 	return scc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (scc *ServiceCatalogCreate) SetTenant(t *Tenant) *ServiceCatalogCreate {
-	return scc.SetTenantID(t.ID)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (scc *ServiceCatalogCreate) AddServiceRequestIDs(ids ...int) *ServiceCatalogCreate {
-	scc.mutation.AddServiceRequestIDs(ids...)
-	return scc
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (scc *ServiceCatalogCreate) AddServiceRequests(s ...*ServiceRequest) *ServiceCatalogCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return scc.AddServiceRequestIDs(ids...)
 }
 
 // Mutation returns the ServiceCatalogMutation object of the builder.
@@ -161,6 +183,10 @@ func (scc *ServiceCatalogCreate) defaults() {
 		v := servicecatalog.DefaultStatus
 		scc.mutation.SetStatus(v)
 	}
+	if _, ok := scc.mutation.IsActive(); !ok {
+		v := servicecatalog.DefaultIsActive
+		scc.mutation.SetIsActive(v)
+	}
 	if _, ok := scc.mutation.CreatedAt(); !ok {
 		v := servicecatalog.DefaultCreatedAt()
 		scc.mutation.SetCreatedAt(v)
@@ -181,29 +207,8 @@ func (scc *ServiceCatalogCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.name": %w`, err)}
 		}
 	}
-	if _, ok := scc.mutation.Category(); !ok {
-		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "ServiceCatalog.category"`)}
-	}
-	if v, ok := scc.mutation.Category(); ok {
-		if err := servicecatalog.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.category": %w`, err)}
-		}
-	}
-	if _, ok := scc.mutation.DeliveryTime(); !ok {
-		return &ValidationError{Name: "delivery_time", err: errors.New(`ent: missing required field "ServiceCatalog.delivery_time"`)}
-	}
-	if v, ok := scc.mutation.DeliveryTime(); ok {
-		if err := servicecatalog.DeliveryTimeValidator(v); err != nil {
-			return &ValidationError{Name: "delivery_time", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.delivery_time": %w`, err)}
-		}
-	}
 	if _, ok := scc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ServiceCatalog.status"`)}
-	}
-	if v, ok := scc.mutation.Status(); ok {
-		if err := servicecatalog.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.status": %w`, err)}
-		}
 	}
 	if _, ok := scc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ServiceCatalog.tenant_id"`)}
@@ -213,14 +218,14 @@ func (scc *ServiceCatalogCreate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
 		}
 	}
+	if _, ok := scc.mutation.IsActive(); !ok {
+		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ServiceCatalog.is_active"`)}
+	}
 	if _, ok := scc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceCatalog.created_at"`)}
 	}
 	if _, ok := scc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ServiceCatalog.updated_at"`)}
-	}
-	if len(scc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "ServiceCatalog.tenant"`)}
 	}
 	return nil
 }
@@ -252,21 +257,33 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 		_spec.SetField(servicecatalog.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := scc.mutation.Category(); ok {
-		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
-		_node.Category = value
-	}
 	if value, ok := scc.mutation.Description(); ok {
 		_spec.SetField(servicecatalog.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
+	if value, ok := scc.mutation.Category(); ok {
+		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
+		_node.Category = value
+	}
+	if value, ok := scc.mutation.Price(); ok {
+		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
+		_node.Price = value
+	}
 	if value, ok := scc.mutation.DeliveryTime(); ok {
-		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeString, value)
+		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
 		_node.DeliveryTime = value
 	}
 	if value, ok := scc.mutation.Status(); ok {
-		_spec.SetField(servicecatalog.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
 		_node.Status = value
+	}
+	if value, ok := scc.mutation.TenantID(); ok {
+		_spec.SetField(servicecatalog.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
+	}
+	if value, ok := scc.mutation.IsActive(); ok {
+		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
+		_node.IsActive = value
 	}
 	if value, ok := scc.mutation.CreatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)
@@ -275,39 +292,6 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 	if value, ok := scc.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := scc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicecatalog.TenantTable,
-			Columns: []string{servicecatalog.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := scc.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

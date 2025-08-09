@@ -1,4 +1,4 @@
-import { Search, Download, ChevronDown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Download, ChevronDown, ChevronUp } from "lucide-react";
 
 import React, { useMemo, useState, useCallback } from "react";
 interface Column<T> {

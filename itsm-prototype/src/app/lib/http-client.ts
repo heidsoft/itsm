@@ -10,6 +10,7 @@ class HttpClient {
   private baseURL: string;
   private token: string | null = null;
   private tenantId: number | null = null;
+  private tenantCode: string | null = null;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
@@ -18,6 +19,7 @@ class HttpClient {
       this.token = localStorage.getItem('access_token'); // 改为 access_token
       const storedTenantId = localStorage.getItem('current_tenant_id');
       this.tenantId = storedTenantId ? parseInt(storedTenantId) : null;
+      this.tenantCode = localStorage.getItem('current_tenant_code') || null;
     }
   }
 
@@ -46,6 +48,17 @@ class HttpClient {
     }
   }
 
+  setTenantCode(code: string | null) {
+    this.tenantCode = code;
+    if (typeof window !== 'undefined') {
+      if (code) {
+        localStorage.setItem('current_tenant_code', code);
+      } else {
+        localStorage.removeItem('current_tenant_code');
+      }
+    }
+  }
+
   getTenantId(): number | null {
     return this.tenantId;
   }
@@ -66,6 +79,10 @@ class HttpClient {
     if (currentTenantId) {
       headers['X-Tenant-ID'] = currentTenantId.toString();
     }
+    const currentTenantCode = typeof window !== 'undefined' ? localStorage.getItem('current_tenant_code') : this.tenantCode;
+    if (currentTenantCode) {
+      headers['X-Tenant-Code'] = currentTenantCode;
+    }
 
     return headers;
   }
@@ -78,7 +95,7 @@ class HttpClient {
     }
 
     try {
-      const response = await fetch(`${this.baseURL}/api/refresh-token`, {
+      const response = await fetch(`${this.baseURL}/api/v1/refresh-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,14 +165,18 @@ class HttpClient {
           };
           const retryResponse = await fetch(url, retryConfig);
           if (!retryResponse.ok) {
-            throw new Error(`HTTP error! status: ${retryResponse.status}`);
+            const rid = retryResponse.headers.get('X-Request-Id') || '';
+            const suffix = rid ? ` [RID: ${rid}]` : '';
+            throw new Error(`HTTP error! status: ${retryResponse.status}${suffix}`);
           }
           const retryData = await retryResponse.json() as { code: number; message: string; data: T };
           console.log('HTTP Client Retry Response Data:', retryData);
           
           // 检查响应码
           if (retryData.code !== 0) {
-            throw new Error(retryData.message || '请求失败');
+            const rid = retryResponse.headers.get('X-Request-Id') || '';
+            const suffix = rid ? ` [RID: ${rid}]` : '';
+            throw new Error((retryData.message || '请求失败') + suffix);
           }
           
           return retryData.data;
@@ -171,7 +192,9 @@ class HttpClient {
       }
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const rid = response.headers.get('X-Request-Id') || '';
+        const suffix = rid ? ` [RID: ${rid}]` : '';
+        throw new Error(`HTTP error! status: ${response.status}${suffix}`);
       }
 
       const responseData = await response.json() as { code: number; message: string; data: T };
@@ -179,7 +202,9 @@ class HttpClient {
       
       // 检查响应码
       if (responseData.code !== 0) {
-        throw new Error(responseData.message || '请求失败');
+        const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
+        const suffix = rid ? ` [RID: ${rid}]` : '';
+        throw new Error((responseData.message || '请求失败') + suffix);
       }
       
       return responseData.data;

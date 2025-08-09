@@ -6,12 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -46,62 +41,36 @@ func (ic *IncidentCreate) SetNillableDescription(s *string) *IncidentCreate {
 }
 
 // SetStatus sets the "status" field.
-func (ic *IncidentCreate) SetStatus(i incident.Status) *IncidentCreate {
-	ic.mutation.SetStatus(i)
+func (ic *IncidentCreate) SetStatus(s string) *IncidentCreate {
+	ic.mutation.SetStatus(s)
 	return ic
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableStatus(i *incident.Status) *IncidentCreate {
-	if i != nil {
-		ic.SetStatus(*i)
+func (ic *IncidentCreate) SetNillableStatus(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetStatus(*s)
 	}
 	return ic
 }
 
 // SetPriority sets the "priority" field.
-func (ic *IncidentCreate) SetPriority(i incident.Priority) *IncidentCreate {
-	ic.mutation.SetPriority(i)
+func (ic *IncidentCreate) SetPriority(s string) *IncidentCreate {
+	ic.mutation.SetPriority(s)
 	return ic
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillablePriority(i *incident.Priority) *IncidentCreate {
-	if i != nil {
-		ic.SetPriority(*i)
+func (ic *IncidentCreate) SetNillablePriority(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetPriority(*s)
 	}
-	return ic
-}
-
-// SetSource sets the "source" field.
-func (ic *IncidentCreate) SetSource(i incident.Source) *IncidentCreate {
-	ic.mutation.SetSource(i)
-	return ic
-}
-
-// SetType sets the "type" field.
-func (ic *IncidentCreate) SetType(i incident.Type) *IncidentCreate {
-	ic.mutation.SetType(i)
 	return ic
 }
 
 // SetIncidentNumber sets the "incident_number" field.
 func (ic *IncidentCreate) SetIncidentNumber(s string) *IncidentCreate {
 	ic.mutation.SetIncidentNumber(s)
-	return ic
-}
-
-// SetIsMajorIncident sets the "is_major_incident" field.
-func (ic *IncidentCreate) SetIsMajorIncident(b bool) *IncidentCreate {
-	ic.mutation.SetIsMajorIncident(b)
-	return ic
-}
-
-// SetNillableIsMajorIncident sets the "is_major_incident" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableIsMajorIncident(b *bool) *IncidentCreate {
-	if b != nil {
-		ic.SetIsMajorIncident(*b)
-	}
 	return ic
 }
 
@@ -125,138 +94,16 @@ func (ic *IncidentCreate) SetNillableAssigneeID(i *int) *IncidentCreate {
 	return ic
 }
 
-// SetTenantID sets the "tenant_id" field.
-func (ic *IncidentCreate) SetTenantID(i int) *IncidentCreate {
-	ic.mutation.SetTenantID(i)
+// SetConfigurationItemID sets the "configuration_item_id" field.
+func (ic *IncidentCreate) SetConfigurationItemID(i int) *IncidentCreate {
+	ic.mutation.SetConfigurationItemID(i)
 	return ic
 }
 
-// SetAlibabaCloudInstanceID sets the "alibaba_cloud_instance_id" field.
-func (ic *IncidentCreate) SetAlibabaCloudInstanceID(s string) *IncidentCreate {
-	ic.mutation.SetAlibabaCloudInstanceID(s)
-	return ic
-}
-
-// SetNillableAlibabaCloudInstanceID sets the "alibaba_cloud_instance_id" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableAlibabaCloudInstanceID(s *string) *IncidentCreate {
-	if s != nil {
-		ic.SetAlibabaCloudInstanceID(*s)
-	}
-	return ic
-}
-
-// SetAlibabaCloudRegion sets the "alibaba_cloud_region" field.
-func (ic *IncidentCreate) SetAlibabaCloudRegion(s string) *IncidentCreate {
-	ic.mutation.SetAlibabaCloudRegion(s)
-	return ic
-}
-
-// SetNillableAlibabaCloudRegion sets the "alibaba_cloud_region" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableAlibabaCloudRegion(s *string) *IncidentCreate {
-	if s != nil {
-		ic.SetAlibabaCloudRegion(*s)
-	}
-	return ic
-}
-
-// SetAlibabaCloudService sets the "alibaba_cloud_service" field.
-func (ic *IncidentCreate) SetAlibabaCloudService(s string) *IncidentCreate {
-	ic.mutation.SetAlibabaCloudService(s)
-	return ic
-}
-
-// SetNillableAlibabaCloudService sets the "alibaba_cloud_service" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableAlibabaCloudService(s *string) *IncidentCreate {
-	if s != nil {
-		ic.SetAlibabaCloudService(*s)
-	}
-	return ic
-}
-
-// SetAlibabaCloudAlertData sets the "alibaba_cloud_alert_data" field.
-func (ic *IncidentCreate) SetAlibabaCloudAlertData(m map[string]interface{}) *IncidentCreate {
-	ic.mutation.SetAlibabaCloudAlertData(m)
-	return ic
-}
-
-// SetAlibabaCloudMetrics sets the "alibaba_cloud_metrics" field.
-func (ic *IncidentCreate) SetAlibabaCloudMetrics(m map[string]interface{}) *IncidentCreate {
-	ic.mutation.SetAlibabaCloudMetrics(m)
-	return ic
-}
-
-// SetSecurityEventType sets the "security_event_type" field.
-func (ic *IncidentCreate) SetSecurityEventType(s string) *IncidentCreate {
-	ic.mutation.SetSecurityEventType(s)
-	return ic
-}
-
-// SetNillableSecurityEventType sets the "security_event_type" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableSecurityEventType(s *string) *IncidentCreate {
-	if s != nil {
-		ic.SetSecurityEventType(*s)
-	}
-	return ic
-}
-
-// SetSecurityEventSourceIP sets the "security_event_source_ip" field.
-func (ic *IncidentCreate) SetSecurityEventSourceIP(s string) *IncidentCreate {
-	ic.mutation.SetSecurityEventSourceIP(s)
-	return ic
-}
-
-// SetNillableSecurityEventSourceIP sets the "security_event_source_ip" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableSecurityEventSourceIP(s *string) *IncidentCreate {
-	if s != nil {
-		ic.SetSecurityEventSourceIP(*s)
-	}
-	return ic
-}
-
-// SetSecurityEventTarget sets the "security_event_target" field.
-func (ic *IncidentCreate) SetSecurityEventTarget(s string) *IncidentCreate {
-	ic.mutation.SetSecurityEventTarget(s)
-	return ic
-}
-
-// SetNillableSecurityEventTarget sets the "security_event_target" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableSecurityEventTarget(s *string) *IncidentCreate {
-	if s != nil {
-		ic.SetSecurityEventTarget(*s)
-	}
-	return ic
-}
-
-// SetSecurityEventDetails sets the "security_event_details" field.
-func (ic *IncidentCreate) SetSecurityEventDetails(m map[string]interface{}) *IncidentCreate {
-	ic.mutation.SetSecurityEventDetails(m)
-	return ic
-}
-
-// SetDetectedAt sets the "detected_at" field.
-func (ic *IncidentCreate) SetDetectedAt(t time.Time) *IncidentCreate {
-	ic.mutation.SetDetectedAt(t)
-	return ic
-}
-
-// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableDetectedAt(t *time.Time) *IncidentCreate {
-	if t != nil {
-		ic.SetDetectedAt(*t)
-	}
-	return ic
-}
-
-// SetConfirmedAt sets the "confirmed_at" field.
-func (ic *IncidentCreate) SetConfirmedAt(t time.Time) *IncidentCreate {
-	ic.mutation.SetConfirmedAt(t)
-	return ic
-}
-
-// SetNillableConfirmedAt sets the "confirmed_at" field if the given value is not nil.
-func (ic *IncidentCreate) SetNillableConfirmedAt(t *time.Time) *IncidentCreate {
-	if t != nil {
-		ic.SetConfirmedAt(*t)
+// SetNillableConfigurationItemID sets the "configuration_item_id" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableConfigurationItemID(i *int) *IncidentCreate {
+	if i != nil {
+		ic.SetConfigurationItemID(*i)
 	}
 	return ic
 }
@@ -289,6 +136,12 @@ func (ic *IncidentCreate) SetNillableClosedAt(t *time.Time) *IncidentCreate {
 	return ic
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (ic *IncidentCreate) SetTenantID(i int) *IncidentCreate {
+	ic.mutation.SetTenantID(i)
+	return ic
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (ic *IncidentCreate) SetCreatedAt(t time.Time) *IncidentCreate {
 	ic.mutation.SetCreatedAt(t)
@@ -315,96 +168,6 @@ func (ic *IncidentCreate) SetNillableUpdatedAt(t *time.Time) *IncidentCreate {
 		ic.SetUpdatedAt(*t)
 	}
 	return ic
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ic *IncidentCreate) SetTenant(t *Tenant) *IncidentCreate {
-	return ic.SetTenantID(t.ID)
-}
-
-// SetReporter sets the "reporter" edge to the User entity.
-func (ic *IncidentCreate) SetReporter(u *User) *IncidentCreate {
-	return ic.SetReporterID(u.ID)
-}
-
-// SetAssignee sets the "assignee" edge to the User entity.
-func (ic *IncidentCreate) SetAssignee(u *User) *IncidentCreate {
-	return ic.SetAssigneeID(u.ID)
-}
-
-// AddAffectedConfigurationItemIDs adds the "affected_configuration_items" edge to the ConfigurationItem entity by IDs.
-func (ic *IncidentCreate) AddAffectedConfigurationItemIDs(ids ...int) *IncidentCreate {
-	ic.mutation.AddAffectedConfigurationItemIDs(ids...)
-	return ic
-}
-
-// AddAffectedConfigurationItems adds the "affected_configuration_items" edges to the ConfigurationItem entity.
-func (ic *IncidentCreate) AddAffectedConfigurationItems(c ...*ConfigurationItem) *IncidentCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ic.AddAffectedConfigurationItemIDs(ids...)
-}
-
-// AddRelatedProblemIDs adds the "related_problems" edge to the Ticket entity by IDs.
-func (ic *IncidentCreate) AddRelatedProblemIDs(ids ...int) *IncidentCreate {
-	ic.mutation.AddRelatedProblemIDs(ids...)
-	return ic
-}
-
-// AddRelatedProblems adds the "related_problems" edges to the Ticket entity.
-func (ic *IncidentCreate) AddRelatedProblems(t ...*Ticket) *IncidentCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ic.AddRelatedProblemIDs(ids...)
-}
-
-// AddRelatedChangeIDs adds the "related_changes" edge to the Ticket entity by IDs.
-func (ic *IncidentCreate) AddRelatedChangeIDs(ids ...int) *IncidentCreate {
-	ic.mutation.AddRelatedChangeIDs(ids...)
-	return ic
-}
-
-// AddRelatedChanges adds the "related_changes" edges to the Ticket entity.
-func (ic *IncidentCreate) AddRelatedChanges(t ...*Ticket) *IncidentCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ic.AddRelatedChangeIDs(ids...)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (ic *IncidentCreate) AddStatusLogIDs(ids ...int) *IncidentCreate {
-	ic.mutation.AddStatusLogIDs(ids...)
-	return ic
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (ic *IncidentCreate) AddStatusLogs(s ...*StatusLog) *IncidentCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return ic.AddStatusLogIDs(ids...)
-}
-
-// AddCommentIDs adds the "comments" edge to the Ticket entity by IDs.
-func (ic *IncidentCreate) AddCommentIDs(ids ...int) *IncidentCreate {
-	ic.mutation.AddCommentIDs(ids...)
-	return ic
-}
-
-// AddComments adds the "comments" edges to the Ticket entity.
-func (ic *IncidentCreate) AddComments(t ...*Ticket) *IncidentCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ic.AddCommentIDs(ids...)
 }
 
 // Mutation returns the IncidentMutation object of the builder.
@@ -450,14 +213,6 @@ func (ic *IncidentCreate) defaults() {
 		v := incident.DefaultPriority
 		ic.mutation.SetPriority(v)
 	}
-	if _, ok := ic.mutation.IsMajorIncident(); !ok {
-		v := incident.DefaultIsMajorIncident
-		ic.mutation.SetIsMajorIncident(v)
-	}
-	if _, ok := ic.mutation.DetectedAt(); !ok {
-		v := incident.DefaultDetectedAt()
-		ic.mutation.SetDetectedAt(v)
-	}
 	if _, ok := ic.mutation.CreatedAt(); !ok {
 		v := incident.DefaultCreatedAt()
 		ic.mutation.SetCreatedAt(v)
@@ -481,34 +236,8 @@ func (ic *IncidentCreate) check() error {
 	if _, ok := ic.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Incident.status"`)}
 	}
-	if v, ok := ic.mutation.Status(); ok {
-		if err := incident.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Incident.status": %w`, err)}
-		}
-	}
 	if _, ok := ic.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Incident.priority"`)}
-	}
-	if v, ok := ic.mutation.Priority(); ok {
-		if err := incident.PriorityValidator(v); err != nil {
-			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
-		}
-	}
-	if _, ok := ic.mutation.Source(); !ok {
-		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "Incident.source"`)}
-	}
-	if v, ok := ic.mutation.Source(); ok {
-		if err := incident.SourceValidator(v); err != nil {
-			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "Incident.source": %w`, err)}
-		}
-	}
-	if _, ok := ic.mutation.GetType(); !ok {
-		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Incident.type"`)}
-	}
-	if v, ok := ic.mutation.GetType(); ok {
-		if err := incident.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Incident.type": %w`, err)}
-		}
 	}
 	if _, ok := ic.mutation.IncidentNumber(); !ok {
 		return &ValidationError{Name: "incident_number", err: errors.New(`ent: missing required field "Incident.incident_number"`)}
@@ -518,20 +247,12 @@ func (ic *IncidentCreate) check() error {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
 		}
 	}
-	if _, ok := ic.mutation.IsMajorIncident(); !ok {
-		return &ValidationError{Name: "is_major_incident", err: errors.New(`ent: missing required field "Incident.is_major_incident"`)}
-	}
 	if _, ok := ic.mutation.ReporterID(); !ok {
 		return &ValidationError{Name: "reporter_id", err: errors.New(`ent: missing required field "Incident.reporter_id"`)}
 	}
 	if v, ok := ic.mutation.ReporterID(); ok {
 		if err := incident.ReporterIDValidator(v); err != nil {
 			return &ValidationError{Name: "reporter_id", err: fmt.Errorf(`ent: validator failed for field "Incident.reporter_id": %w`, err)}
-		}
-	}
-	if v, ok := ic.mutation.AssigneeID(); ok {
-		if err := incident.AssigneeIDValidator(v); err != nil {
-			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Incident.assignee_id": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.TenantID(); !ok {
@@ -542,50 +263,11 @@ func (ic *IncidentCreate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := ic.mutation.AlibabaCloudInstanceID(); ok {
-		if err := incident.AlibabaCloudInstanceIDValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_instance_id", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_instance_id": %w`, err)}
-		}
-	}
-	if v, ok := ic.mutation.AlibabaCloudRegion(); ok {
-		if err := incident.AlibabaCloudRegionValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_region", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_region": %w`, err)}
-		}
-	}
-	if v, ok := ic.mutation.AlibabaCloudService(); ok {
-		if err := incident.AlibabaCloudServiceValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_service", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_service": %w`, err)}
-		}
-	}
-	if v, ok := ic.mutation.SecurityEventType(); ok {
-		if err := incident.SecurityEventTypeValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_type", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_type": %w`, err)}
-		}
-	}
-	if v, ok := ic.mutation.SecurityEventSourceIP(); ok {
-		if err := incident.SecurityEventSourceIPValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_source_ip", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_source_ip": %w`, err)}
-		}
-	}
-	if v, ok := ic.mutation.SecurityEventTarget(); ok {
-		if err := incident.SecurityEventTargetValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_target", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_target": %w`, err)}
-		}
-	}
-	if _, ok := ic.mutation.DetectedAt(); !ok {
-		return &ValidationError{Name: "detected_at", err: errors.New(`ent: missing required field "Incident.detected_at"`)}
-	}
 	if _, ok := ic.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Incident.created_at"`)}
 	}
 	if _, ok := ic.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Incident.updated_at"`)}
-	}
-	if len(ic.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "Incident.tenant"`)}
-	}
-	if len(ic.mutation.ReporterIDs()) == 0 {
-		return &ValidationError{Name: "reporter", err: errors.New(`ent: missing required edge "Incident.reporter"`)}
 	}
 	return nil
 }
@@ -622,80 +304,40 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 		_node.Description = value
 	}
 	if value, ok := ic.mutation.Status(); ok {
-		_spec.SetField(incident.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
 	if value, ok := ic.mutation.Priority(); ok {
-		_spec.SetField(incident.FieldPriority, field.TypeEnum, value)
+		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 		_node.Priority = value
-	}
-	if value, ok := ic.mutation.Source(); ok {
-		_spec.SetField(incident.FieldSource, field.TypeEnum, value)
-		_node.Source = value
-	}
-	if value, ok := ic.mutation.GetType(); ok {
-		_spec.SetField(incident.FieldType, field.TypeEnum, value)
-		_node.Type = value
 	}
 	if value, ok := ic.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 		_node.IncidentNumber = value
 	}
-	if value, ok := ic.mutation.IsMajorIncident(); ok {
-		_spec.SetField(incident.FieldIsMajorIncident, field.TypeBool, value)
-		_node.IsMajorIncident = value
+	if value, ok := ic.mutation.ReporterID(); ok {
+		_spec.SetField(incident.FieldReporterID, field.TypeInt, value)
+		_node.ReporterID = value
 	}
-	if value, ok := ic.mutation.AlibabaCloudInstanceID(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudInstanceID, field.TypeString, value)
-		_node.AlibabaCloudInstanceID = value
+	if value, ok := ic.mutation.AssigneeID(); ok {
+		_spec.SetField(incident.FieldAssigneeID, field.TypeInt, value)
+		_node.AssigneeID = value
 	}
-	if value, ok := ic.mutation.AlibabaCloudRegion(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudRegion, field.TypeString, value)
-		_node.AlibabaCloudRegion = value
-	}
-	if value, ok := ic.mutation.AlibabaCloudService(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudService, field.TypeString, value)
-		_node.AlibabaCloudService = value
-	}
-	if value, ok := ic.mutation.AlibabaCloudAlertData(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudAlertData, field.TypeJSON, value)
-		_node.AlibabaCloudAlertData = value
-	}
-	if value, ok := ic.mutation.AlibabaCloudMetrics(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudMetrics, field.TypeJSON, value)
-		_node.AlibabaCloudMetrics = value
-	}
-	if value, ok := ic.mutation.SecurityEventType(); ok {
-		_spec.SetField(incident.FieldSecurityEventType, field.TypeString, value)
-		_node.SecurityEventType = value
-	}
-	if value, ok := ic.mutation.SecurityEventSourceIP(); ok {
-		_spec.SetField(incident.FieldSecurityEventSourceIP, field.TypeString, value)
-		_node.SecurityEventSourceIP = value
-	}
-	if value, ok := ic.mutation.SecurityEventTarget(); ok {
-		_spec.SetField(incident.FieldSecurityEventTarget, field.TypeString, value)
-		_node.SecurityEventTarget = value
-	}
-	if value, ok := ic.mutation.SecurityEventDetails(); ok {
-		_spec.SetField(incident.FieldSecurityEventDetails, field.TypeJSON, value)
-		_node.SecurityEventDetails = value
-	}
-	if value, ok := ic.mutation.DetectedAt(); ok {
-		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
-		_node.DetectedAt = value
-	}
-	if value, ok := ic.mutation.ConfirmedAt(); ok {
-		_spec.SetField(incident.FieldConfirmedAt, field.TypeTime, value)
-		_node.ConfirmedAt = &value
+	if value, ok := ic.mutation.ConfigurationItemID(); ok {
+		_spec.SetField(incident.FieldConfigurationItemID, field.TypeInt, value)
+		_node.ConfigurationItemID = value
 	}
 	if value, ok := ic.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
-		_node.ResolvedAt = &value
+		_node.ResolvedAt = value
 	}
 	if value, ok := ic.mutation.ClosedAt(); ok {
 		_spec.SetField(incident.FieldClosedAt, field.TypeTime, value)
-		_node.ClosedAt = &value
+		_node.ClosedAt = value
+	}
+	if value, ok := ic.mutation.TenantID(); ok {
+		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := ic.mutation.CreatedAt(); ok {
 		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)
@@ -704,137 +346,6 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := ic.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.TenantTable,
-			Columns: []string{incident.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.ReporterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.ReporterTable,
-			Columns: []string{incident.ReporterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.ReporterID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.AssigneeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.AssigneeTable,
-			Columns: []string{incident.AssigneeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.AssigneeID = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.AffectedConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.RelatedProblemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.RelatedChangesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.CommentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -54,14 +54,9 @@ func IDLTE(id int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldLTE(FieldID, id))
 }
 
-// CreateTime applies equality check predicate on the "create_time" field. It's identical to CreateTimeEQ.
-func CreateTime(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldCreateTime, v))
-}
-
-// UpdateTime applies equality check predicate on the "update_time" field. It's identical to UpdateTimeEQ.
-func UpdateTime(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldUpdateTime, v))
+// SLADefinitionID applies equality check predicate on the "sla_definition_id" field. It's identical to SLADefinitionIDEQ.
+func SLADefinitionID(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldSLADefinitionID, v))
 }
 
 // TicketID applies equality check predicate on the "ticket_id" field. It's identical to TicketIDEQ.
@@ -69,74 +64,24 @@ func TicketID(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldTicketID, v))
 }
 
-// TicketType applies equality check predicate on the "ticket_type" field. It's identical to TicketTypeEQ.
-func TicketType(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldTicketType, v))
-}
-
 // ViolationType applies equality check predicate on the "violation_type" field. It's identical to ViolationTypeEQ.
 func ViolationType(v string) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldViolationType, v))
 }
 
-// SLADefinitionID applies equality check predicate on the "sla_definition_id" field. It's identical to SLADefinitionIDEQ.
-func SLADefinitionID(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldSLADefinitionID, v))
+// ViolationTime applies equality check predicate on the "violation_time" field. It's identical to ViolationTimeEQ.
+func ViolationTime(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldViolationTime, v))
 }
 
-// SLAName applies equality check predicate on the "sla_name" field. It's identical to SLANameEQ.
-func SLAName(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldSLAName, v))
-}
-
-// ExpectedTime applies equality check predicate on the "expected_time" field. It's identical to ExpectedTimeEQ.
-func ExpectedTime(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldExpectedTime, v))
-}
-
-// ActualTime applies equality check predicate on the "actual_time" field. It's identical to ActualTimeEQ.
-func ActualTime(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldActualTime, v))
-}
-
-// OverdueMinutes applies equality check predicate on the "overdue_minutes" field. It's identical to OverdueMinutesEQ.
-func OverdueMinutes(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldOverdueMinutes, v))
-}
-
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldStatus, v))
-}
-
-// AssignedTo applies equality check predicate on the "assigned_to" field. It's identical to AssignedToEQ.
-func AssignedTo(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldAssignedTo, v))
-}
-
-// ViolationOccurredAt applies equality check predicate on the "violation_occurred_at" field. It's identical to ViolationOccurredAtEQ.
-func ViolationOccurredAt(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldViolationOccurredAt, v))
-}
-
-// ResolvedAt applies equality check predicate on the "resolved_at" field. It's identical to ResolvedAtEQ.
-func ResolvedAt(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldResolvedAt, v))
-}
-
-// ResolutionNote applies equality check predicate on the "resolution_note" field. It's identical to ResolutionNoteEQ.
-func ResolutionNote(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldResolutionNote, v))
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldDescription, v))
 }
 
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldTenantID, v))
-}
-
-// CreatedBy applies equality check predicate on the "created_by" field. It's identical to CreatedByEQ.
-func CreatedBy(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldCreatedBy, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -149,84 +94,44 @@ func UpdatedAt(v time.Time) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// CreateTimeEQ applies the EQ predicate on the "create_time" field.
-func CreateTimeEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldCreateTime, v))
+// SLADefinitionIDEQ applies the EQ predicate on the "sla_definition_id" field.
+func SLADefinitionIDEQ(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldSLADefinitionID, v))
 }
 
-// CreateTimeNEQ applies the NEQ predicate on the "create_time" field.
-func CreateTimeNEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldCreateTime, v))
+// SLADefinitionIDNEQ applies the NEQ predicate on the "sla_definition_id" field.
+func SLADefinitionIDNEQ(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldSLADefinitionID, v))
 }
 
-// CreateTimeIn applies the In predicate on the "create_time" field.
-func CreateTimeIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldCreateTime, vs...))
+// SLADefinitionIDIn applies the In predicate on the "sla_definition_id" field.
+func SLADefinitionIDIn(vs ...int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldSLADefinitionID, vs...))
 }
 
-// CreateTimeNotIn applies the NotIn predicate on the "create_time" field.
-func CreateTimeNotIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldCreateTime, vs...))
+// SLADefinitionIDNotIn applies the NotIn predicate on the "sla_definition_id" field.
+func SLADefinitionIDNotIn(vs ...int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldSLADefinitionID, vs...))
 }
 
-// CreateTimeGT applies the GT predicate on the "create_time" field.
-func CreateTimeGT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldCreateTime, v))
+// SLADefinitionIDGT applies the GT predicate on the "sla_definition_id" field.
+func SLADefinitionIDGT(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldSLADefinitionID, v))
 }
 
-// CreateTimeGTE applies the GTE predicate on the "create_time" field.
-func CreateTimeGTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldCreateTime, v))
+// SLADefinitionIDGTE applies the GTE predicate on the "sla_definition_id" field.
+func SLADefinitionIDGTE(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldSLADefinitionID, v))
 }
 
-// CreateTimeLT applies the LT predicate on the "create_time" field.
-func CreateTimeLT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldCreateTime, v))
+// SLADefinitionIDLT applies the LT predicate on the "sla_definition_id" field.
+func SLADefinitionIDLT(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldSLADefinitionID, v))
 }
 
-// CreateTimeLTE applies the LTE predicate on the "create_time" field.
-func CreateTimeLTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldCreateTime, v))
-}
-
-// UpdateTimeEQ applies the EQ predicate on the "update_time" field.
-func UpdateTimeEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldUpdateTime, v))
-}
-
-// UpdateTimeNEQ applies the NEQ predicate on the "update_time" field.
-func UpdateTimeNEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldUpdateTime, v))
-}
-
-// UpdateTimeIn applies the In predicate on the "update_time" field.
-func UpdateTimeIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldUpdateTime, vs...))
-}
-
-// UpdateTimeNotIn applies the NotIn predicate on the "update_time" field.
-func UpdateTimeNotIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldUpdateTime, vs...))
-}
-
-// UpdateTimeGT applies the GT predicate on the "update_time" field.
-func UpdateTimeGT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldUpdateTime, v))
-}
-
-// UpdateTimeGTE applies the GTE predicate on the "update_time" field.
-func UpdateTimeGTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldUpdateTime, v))
-}
-
-// UpdateTimeLT applies the LT predicate on the "update_time" field.
-func UpdateTimeLT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldUpdateTime, v))
-}
-
-// UpdateTimeLTE applies the LTE predicate on the "update_time" field.
-func UpdateTimeLTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldUpdateTime, v))
+// SLADefinitionIDLTE applies the LTE predicate on the "sla_definition_id" field.
+func SLADefinitionIDLTE(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldSLADefinitionID, v))
 }
 
 // TicketIDEQ applies the EQ predicate on the "ticket_id" field.
@@ -267,71 +172,6 @@ func TicketIDLT(v int) predicate.SLAViolation {
 // TicketIDLTE applies the LTE predicate on the "ticket_id" field.
 func TicketIDLTE(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldLTE(FieldTicketID, v))
-}
-
-// TicketTypeEQ applies the EQ predicate on the "ticket_type" field.
-func TicketTypeEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldTicketType, v))
-}
-
-// TicketTypeNEQ applies the NEQ predicate on the "ticket_type" field.
-func TicketTypeNEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldTicketType, v))
-}
-
-// TicketTypeIn applies the In predicate on the "ticket_type" field.
-func TicketTypeIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldTicketType, vs...))
-}
-
-// TicketTypeNotIn applies the NotIn predicate on the "ticket_type" field.
-func TicketTypeNotIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldTicketType, vs...))
-}
-
-// TicketTypeGT applies the GT predicate on the "ticket_type" field.
-func TicketTypeGT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldTicketType, v))
-}
-
-// TicketTypeGTE applies the GTE predicate on the "ticket_type" field.
-func TicketTypeGTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldTicketType, v))
-}
-
-// TicketTypeLT applies the LT predicate on the "ticket_type" field.
-func TicketTypeLT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldTicketType, v))
-}
-
-// TicketTypeLTE applies the LTE predicate on the "ticket_type" field.
-func TicketTypeLTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldTicketType, v))
-}
-
-// TicketTypeContains applies the Contains predicate on the "ticket_type" field.
-func TicketTypeContains(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContains(FieldTicketType, v))
-}
-
-// TicketTypeHasPrefix applies the HasPrefix predicate on the "ticket_type" field.
-func TicketTypeHasPrefix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasPrefix(FieldTicketType, v))
-}
-
-// TicketTypeHasSuffix applies the HasSuffix predicate on the "ticket_type" field.
-func TicketTypeHasSuffix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasSuffix(FieldTicketType, v))
-}
-
-// TicketTypeEqualFold applies the EqualFold predicate on the "ticket_type" field.
-func TicketTypeEqualFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEqualFold(FieldTicketType, v))
-}
-
-// TicketTypeContainsFold applies the ContainsFold predicate on the "ticket_type" field.
-func TicketTypeContainsFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContainsFold(FieldTicketType, v))
 }
 
 // ViolationTypeEQ applies the EQ predicate on the "violation_type" field.
@@ -399,534 +239,119 @@ func ViolationTypeContainsFold(v string) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldContainsFold(FieldViolationType, v))
 }
 
-// SLADefinitionIDEQ applies the EQ predicate on the "sla_definition_id" field.
-func SLADefinitionIDEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldSLADefinitionID, v))
+// ViolationTimeEQ applies the EQ predicate on the "violation_time" field.
+func ViolationTimeEQ(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldViolationTime, v))
 }
 
-// SLADefinitionIDNEQ applies the NEQ predicate on the "sla_definition_id" field.
-func SLADefinitionIDNEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldSLADefinitionID, v))
+// ViolationTimeNEQ applies the NEQ predicate on the "violation_time" field.
+func ViolationTimeNEQ(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldViolationTime, v))
 }
 
-// SLADefinitionIDIn applies the In predicate on the "sla_definition_id" field.
-func SLADefinitionIDIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldSLADefinitionID, vs...))
+// ViolationTimeIn applies the In predicate on the "violation_time" field.
+func ViolationTimeIn(vs ...time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldViolationTime, vs...))
 }
 
-// SLADefinitionIDNotIn applies the NotIn predicate on the "sla_definition_id" field.
-func SLADefinitionIDNotIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldSLADefinitionID, vs...))
+// ViolationTimeNotIn applies the NotIn predicate on the "violation_time" field.
+func ViolationTimeNotIn(vs ...time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldViolationTime, vs...))
 }
 
-// SLADefinitionIDGT applies the GT predicate on the "sla_definition_id" field.
-func SLADefinitionIDGT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldSLADefinitionID, v))
+// ViolationTimeGT applies the GT predicate on the "violation_time" field.
+func ViolationTimeGT(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldViolationTime, v))
 }
 
-// SLADefinitionIDGTE applies the GTE predicate on the "sla_definition_id" field.
-func SLADefinitionIDGTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldSLADefinitionID, v))
+// ViolationTimeGTE applies the GTE predicate on the "violation_time" field.
+func ViolationTimeGTE(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldViolationTime, v))
 }
 
-// SLADefinitionIDLT applies the LT predicate on the "sla_definition_id" field.
-func SLADefinitionIDLT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldSLADefinitionID, v))
+// ViolationTimeLT applies the LT predicate on the "violation_time" field.
+func ViolationTimeLT(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldViolationTime, v))
 }
 
-// SLADefinitionIDLTE applies the LTE predicate on the "sla_definition_id" field.
-func SLADefinitionIDLTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldSLADefinitionID, v))
+// ViolationTimeLTE applies the LTE predicate on the "violation_time" field.
+func ViolationTimeLTE(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldViolationTime, v))
 }
 
-// SLANameEQ applies the EQ predicate on the "sla_name" field.
-func SLANameEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldSLAName, v))
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldDescription, v))
 }
 
-// SLANameNEQ applies the NEQ predicate on the "sla_name" field.
-func SLANameNEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldSLAName, v))
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldDescription, v))
 }
 
-// SLANameIn applies the In predicate on the "sla_name" field.
-func SLANameIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldSLAName, vs...))
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldDescription, vs...))
 }
 
-// SLANameNotIn applies the NotIn predicate on the "sla_name" field.
-func SLANameNotIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldSLAName, vs...))
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldDescription, vs...))
 }
 
-// SLANameGT applies the GT predicate on the "sla_name" field.
-func SLANameGT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldSLAName, v))
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldDescription, v))
 }
 
-// SLANameGTE applies the GTE predicate on the "sla_name" field.
-func SLANameGTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldSLAName, v))
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldDescription, v))
 }
 
-// SLANameLT applies the LT predicate on the "sla_name" field.
-func SLANameLT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldSLAName, v))
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldDescription, v))
 }
 
-// SLANameLTE applies the LTE predicate on the "sla_name" field.
-func SLANameLTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldSLAName, v))
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldDescription, v))
 }
 
-// SLANameContains applies the Contains predicate on the "sla_name" field.
-func SLANameContains(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContains(FieldSLAName, v))
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldContains(FieldDescription, v))
 }
 
-// SLANameHasPrefix applies the HasPrefix predicate on the "sla_name" field.
-func SLANameHasPrefix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasPrefix(FieldSLAName, v))
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldHasPrefix(FieldDescription, v))
 }
 
-// SLANameHasSuffix applies the HasSuffix predicate on the "sla_name" field.
-func SLANameHasSuffix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasSuffix(FieldSLAName, v))
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldHasSuffix(FieldDescription, v))
 }
 
-// SLANameEqualFold applies the EqualFold predicate on the "sla_name" field.
-func SLANameEqualFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEqualFold(FieldSLAName, v))
+// DescriptionIsNil applies the IsNil predicate on the "description" field.
+func DescriptionIsNil() predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIsNull(FieldDescription))
 }
 
-// SLANameContainsFold applies the ContainsFold predicate on the "sla_name" field.
-func SLANameContainsFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContainsFold(FieldSLAName, v))
+// DescriptionNotNil applies the NotNil predicate on the "description" field.
+func DescriptionNotNil() predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotNull(FieldDescription))
 }
 
-// ExpectedTimeEQ applies the EQ predicate on the "expected_time" field.
-func ExpectedTimeEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldExpectedTime, v))
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEqualFold(FieldDescription, v))
 }
 
-// ExpectedTimeNEQ applies the NEQ predicate on the "expected_time" field.
-func ExpectedTimeNEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldExpectedTime, v))
-}
-
-// ExpectedTimeIn applies the In predicate on the "expected_time" field.
-func ExpectedTimeIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldExpectedTime, vs...))
-}
-
-// ExpectedTimeNotIn applies the NotIn predicate on the "expected_time" field.
-func ExpectedTimeNotIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldExpectedTime, vs...))
-}
-
-// ExpectedTimeGT applies the GT predicate on the "expected_time" field.
-func ExpectedTimeGT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldExpectedTime, v))
-}
-
-// ExpectedTimeGTE applies the GTE predicate on the "expected_time" field.
-func ExpectedTimeGTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldExpectedTime, v))
-}
-
-// ExpectedTimeLT applies the LT predicate on the "expected_time" field.
-func ExpectedTimeLT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldExpectedTime, v))
-}
-
-// ExpectedTimeLTE applies the LTE predicate on the "expected_time" field.
-func ExpectedTimeLTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldExpectedTime, v))
-}
-
-// ActualTimeEQ applies the EQ predicate on the "actual_time" field.
-func ActualTimeEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldActualTime, v))
-}
-
-// ActualTimeNEQ applies the NEQ predicate on the "actual_time" field.
-func ActualTimeNEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldActualTime, v))
-}
-
-// ActualTimeIn applies the In predicate on the "actual_time" field.
-func ActualTimeIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldActualTime, vs...))
-}
-
-// ActualTimeNotIn applies the NotIn predicate on the "actual_time" field.
-func ActualTimeNotIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldActualTime, vs...))
-}
-
-// ActualTimeGT applies the GT predicate on the "actual_time" field.
-func ActualTimeGT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldActualTime, v))
-}
-
-// ActualTimeGTE applies the GTE predicate on the "actual_time" field.
-func ActualTimeGTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldActualTime, v))
-}
-
-// ActualTimeLT applies the LT predicate on the "actual_time" field.
-func ActualTimeLT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldActualTime, v))
-}
-
-// ActualTimeLTE applies the LTE predicate on the "actual_time" field.
-func ActualTimeLTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldActualTime, v))
-}
-
-// OverdueMinutesEQ applies the EQ predicate on the "overdue_minutes" field.
-func OverdueMinutesEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldOverdueMinutes, v))
-}
-
-// OverdueMinutesNEQ applies the NEQ predicate on the "overdue_minutes" field.
-func OverdueMinutesNEQ(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldOverdueMinutes, v))
-}
-
-// OverdueMinutesIn applies the In predicate on the "overdue_minutes" field.
-func OverdueMinutesIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldOverdueMinutes, vs...))
-}
-
-// OverdueMinutesNotIn applies the NotIn predicate on the "overdue_minutes" field.
-func OverdueMinutesNotIn(vs ...int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldOverdueMinutes, vs...))
-}
-
-// OverdueMinutesGT applies the GT predicate on the "overdue_minutes" field.
-func OverdueMinutesGT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldOverdueMinutes, v))
-}
-
-// OverdueMinutesGTE applies the GTE predicate on the "overdue_minutes" field.
-func OverdueMinutesGTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldOverdueMinutes, v))
-}
-
-// OverdueMinutesLT applies the LT predicate on the "overdue_minutes" field.
-func OverdueMinutesLT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldOverdueMinutes, v))
-}
-
-// OverdueMinutesLTE applies the LTE predicate on the "overdue_minutes" field.
-func OverdueMinutesLTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldOverdueMinutes, v))
-}
-
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldStatus, v))
-}
-
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldStatus, v))
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldStatus, vs...))
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldStatus, vs...))
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldStatus, v))
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldStatus, v))
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldStatus, v))
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldStatus, v))
-}
-
-// StatusContains applies the Contains predicate on the "status" field.
-func StatusContains(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContains(FieldStatus, v))
-}
-
-// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
-func StatusHasPrefix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasPrefix(FieldStatus, v))
-}
-
-// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
-func StatusHasSuffix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasSuffix(FieldStatus, v))
-}
-
-// StatusEqualFold applies the EqualFold predicate on the "status" field.
-func StatusEqualFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEqualFold(FieldStatus, v))
-}
-
-// StatusContainsFold applies the ContainsFold predicate on the "status" field.
-func StatusContainsFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContainsFold(FieldStatus, v))
-}
-
-// AssignedToEQ applies the EQ predicate on the "assigned_to" field.
-func AssignedToEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldAssignedTo, v))
-}
-
-// AssignedToNEQ applies the NEQ predicate on the "assigned_to" field.
-func AssignedToNEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldAssignedTo, v))
-}
-
-// AssignedToIn applies the In predicate on the "assigned_to" field.
-func AssignedToIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldAssignedTo, vs...))
-}
-
-// AssignedToNotIn applies the NotIn predicate on the "assigned_to" field.
-func AssignedToNotIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldAssignedTo, vs...))
-}
-
-// AssignedToGT applies the GT predicate on the "assigned_to" field.
-func AssignedToGT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldAssignedTo, v))
-}
-
-// AssignedToGTE applies the GTE predicate on the "assigned_to" field.
-func AssignedToGTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldAssignedTo, v))
-}
-
-// AssignedToLT applies the LT predicate on the "assigned_to" field.
-func AssignedToLT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldAssignedTo, v))
-}
-
-// AssignedToLTE applies the LTE predicate on the "assigned_to" field.
-func AssignedToLTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldAssignedTo, v))
-}
-
-// AssignedToContains applies the Contains predicate on the "assigned_to" field.
-func AssignedToContains(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContains(FieldAssignedTo, v))
-}
-
-// AssignedToHasPrefix applies the HasPrefix predicate on the "assigned_to" field.
-func AssignedToHasPrefix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasPrefix(FieldAssignedTo, v))
-}
-
-// AssignedToHasSuffix applies the HasSuffix predicate on the "assigned_to" field.
-func AssignedToHasSuffix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasSuffix(FieldAssignedTo, v))
-}
-
-// AssignedToIsNil applies the IsNil predicate on the "assigned_to" field.
-func AssignedToIsNil() predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIsNull(FieldAssignedTo))
-}
-
-// AssignedToNotNil applies the NotNil predicate on the "assigned_to" field.
-func AssignedToNotNil() predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotNull(FieldAssignedTo))
-}
-
-// AssignedToEqualFold applies the EqualFold predicate on the "assigned_to" field.
-func AssignedToEqualFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEqualFold(FieldAssignedTo, v))
-}
-
-// AssignedToContainsFold applies the ContainsFold predicate on the "assigned_to" field.
-func AssignedToContainsFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContainsFold(FieldAssignedTo, v))
-}
-
-// ViolationOccurredAtEQ applies the EQ predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldViolationOccurredAt, v))
-}
-
-// ViolationOccurredAtNEQ applies the NEQ predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtNEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldViolationOccurredAt, v))
-}
-
-// ViolationOccurredAtIn applies the In predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldViolationOccurredAt, vs...))
-}
-
-// ViolationOccurredAtNotIn applies the NotIn predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtNotIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldViolationOccurredAt, vs...))
-}
-
-// ViolationOccurredAtGT applies the GT predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtGT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldViolationOccurredAt, v))
-}
-
-// ViolationOccurredAtGTE applies the GTE predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtGTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldViolationOccurredAt, v))
-}
-
-// ViolationOccurredAtLT applies the LT predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtLT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldViolationOccurredAt, v))
-}
-
-// ViolationOccurredAtLTE applies the LTE predicate on the "violation_occurred_at" field.
-func ViolationOccurredAtLTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldViolationOccurredAt, v))
-}
-
-// ResolvedAtEQ applies the EQ predicate on the "resolved_at" field.
-func ResolvedAtEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldResolvedAt, v))
-}
-
-// ResolvedAtNEQ applies the NEQ predicate on the "resolved_at" field.
-func ResolvedAtNEQ(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldResolvedAt, v))
-}
-
-// ResolvedAtIn applies the In predicate on the "resolved_at" field.
-func ResolvedAtIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldResolvedAt, vs...))
-}
-
-// ResolvedAtNotIn applies the NotIn predicate on the "resolved_at" field.
-func ResolvedAtNotIn(vs ...time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldResolvedAt, vs...))
-}
-
-// ResolvedAtGT applies the GT predicate on the "resolved_at" field.
-func ResolvedAtGT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldResolvedAt, v))
-}
-
-// ResolvedAtGTE applies the GTE predicate on the "resolved_at" field.
-func ResolvedAtGTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldResolvedAt, v))
-}
-
-// ResolvedAtLT applies the LT predicate on the "resolved_at" field.
-func ResolvedAtLT(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldResolvedAt, v))
-}
-
-// ResolvedAtLTE applies the LTE predicate on the "resolved_at" field.
-func ResolvedAtLTE(v time.Time) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldResolvedAt, v))
-}
-
-// ResolvedAtIsNil applies the IsNil predicate on the "resolved_at" field.
-func ResolvedAtIsNil() predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIsNull(FieldResolvedAt))
-}
-
-// ResolvedAtNotNil applies the NotNil predicate on the "resolved_at" field.
-func ResolvedAtNotNil() predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotNull(FieldResolvedAt))
-}
-
-// ResolutionNoteEQ applies the EQ predicate on the "resolution_note" field.
-func ResolutionNoteEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldResolutionNote, v))
-}
-
-// ResolutionNoteNEQ applies the NEQ predicate on the "resolution_note" field.
-func ResolutionNoteNEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldResolutionNote, v))
-}
-
-// ResolutionNoteIn applies the In predicate on the "resolution_note" field.
-func ResolutionNoteIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldResolutionNote, vs...))
-}
-
-// ResolutionNoteNotIn applies the NotIn predicate on the "resolution_note" field.
-func ResolutionNoteNotIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldResolutionNote, vs...))
-}
-
-// ResolutionNoteGT applies the GT predicate on the "resolution_note" field.
-func ResolutionNoteGT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldResolutionNote, v))
-}
-
-// ResolutionNoteGTE applies the GTE predicate on the "resolution_note" field.
-func ResolutionNoteGTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldResolutionNote, v))
-}
-
-// ResolutionNoteLT applies the LT predicate on the "resolution_note" field.
-func ResolutionNoteLT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldResolutionNote, v))
-}
-
-// ResolutionNoteLTE applies the LTE predicate on the "resolution_note" field.
-func ResolutionNoteLTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldResolutionNote, v))
-}
-
-// ResolutionNoteContains applies the Contains predicate on the "resolution_note" field.
-func ResolutionNoteContains(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContains(FieldResolutionNote, v))
-}
-
-// ResolutionNoteHasPrefix applies the HasPrefix predicate on the "resolution_note" field.
-func ResolutionNoteHasPrefix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasPrefix(FieldResolutionNote, v))
-}
-
-// ResolutionNoteHasSuffix applies the HasSuffix predicate on the "resolution_note" field.
-func ResolutionNoteHasSuffix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasSuffix(FieldResolutionNote, v))
-}
-
-// ResolutionNoteIsNil applies the IsNil predicate on the "resolution_note" field.
-func ResolutionNoteIsNil() predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIsNull(FieldResolutionNote))
-}
-
-// ResolutionNoteNotNil applies the NotNil predicate on the "resolution_note" field.
-func ResolutionNoteNotNil() predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotNull(FieldResolutionNote))
-}
-
-// ResolutionNoteEqualFold applies the EqualFold predicate on the "resolution_note" field.
-func ResolutionNoteEqualFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEqualFold(FieldResolutionNote, v))
-}
-
-// ResolutionNoteContainsFold applies the ContainsFold predicate on the "resolution_note" field.
-func ResolutionNoteContainsFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContainsFold(FieldResolutionNote, v))
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldContainsFold(FieldDescription, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
@@ -967,71 +392,6 @@ func TenantIDLT(v int) predicate.SLAViolation {
 // TenantIDLTE applies the LTE predicate on the "tenant_id" field.
 func TenantIDLTE(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldLTE(FieldTenantID, v))
-}
-
-// CreatedByEQ applies the EQ predicate on the "created_by" field.
-func CreatedByEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEQ(FieldCreatedBy, v))
-}
-
-// CreatedByNEQ applies the NEQ predicate on the "created_by" field.
-func CreatedByNEQ(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNEQ(FieldCreatedBy, v))
-}
-
-// CreatedByIn applies the In predicate on the "created_by" field.
-func CreatedByIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldIn(FieldCreatedBy, vs...))
-}
-
-// CreatedByNotIn applies the NotIn predicate on the "created_by" field.
-func CreatedByNotIn(vs ...string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldNotIn(FieldCreatedBy, vs...))
-}
-
-// CreatedByGT applies the GT predicate on the "created_by" field.
-func CreatedByGT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldCreatedBy, v))
-}
-
-// CreatedByGTE applies the GTE predicate on the "created_by" field.
-func CreatedByGTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldCreatedBy, v))
-}
-
-// CreatedByLT applies the LT predicate on the "created_by" field.
-func CreatedByLT(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldCreatedBy, v))
-}
-
-// CreatedByLTE applies the LTE predicate on the "created_by" field.
-func CreatedByLTE(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldCreatedBy, v))
-}
-
-// CreatedByContains applies the Contains predicate on the "created_by" field.
-func CreatedByContains(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContains(FieldCreatedBy, v))
-}
-
-// CreatedByHasPrefix applies the HasPrefix predicate on the "created_by" field.
-func CreatedByHasPrefix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasPrefix(FieldCreatedBy, v))
-}
-
-// CreatedByHasSuffix applies the HasSuffix predicate on the "created_by" field.
-func CreatedByHasSuffix(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldHasSuffix(FieldCreatedBy, v))
-}
-
-// CreatedByEqualFold applies the EqualFold predicate on the "created_by" field.
-func CreatedByEqualFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldEqualFold(FieldCreatedBy, v))
-}
-
-// CreatedByContainsFold applies the ContainsFold predicate on the "created_by" field.
-func CreatedByContainsFold(v string) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldContainsFold(FieldCreatedBy, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

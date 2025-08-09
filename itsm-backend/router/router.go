@@ -8,97 +8,302 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes 设置路由
-func SetupRouter(ticketController *controller.TicketController, serviceController *controller.ServiceController, dashboardController *controller.DashboardController, cmdbController *controller.CMDBController, incidentController *controller.IncidentController, client *ent.Client, jwtSecret string) *gin.Engine {
+func SetupRouter(
+	authController *controller.AuthController,
+	ticketController *controller.TicketController,
+	serviceController *controller.ServiceController,
+	dashboardController *controller.DashboardController,
+	cmdbController *controller.CMDBController,
+	incidentController *controller.IncidentController,
+	notificationController *controller.NotificationController,
+	userController *controller.UserController,
+	knowledgeController *controller.KnowledgeController,
+	aiController *controller.AIController,
+	client *ent.Client,
+	jwtSecret string,
+) *gin.Engine {
 	r := gin.Default()
 
-	// CORS 中间件
-	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Tenant-ID, x-tenant-id, x-user-id")
+	// 中间件
+	r.Use(middleware.CORSMiddleware())
+	// 请求ID中间件
+	r.Use(middleware.RequestIDMiddleware())
+	r.Use(middleware.LoggerMiddleware())
+	r.Use(middleware.RecoveryMiddleware())
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
+	// API v1 路由组
+	v1 := r.Group("/api/v1")
+	{
+		// 公共路由（无需认证）
+		public := v1.Group("")
+		{
+			// 真实登录与刷新Token
+			public.POST("/login", authController.Login)
+			public.POST("/refresh-token", authController.RefreshToken)
+			// 公共健康检查与版本信息
+			public.GET("/healthz", func(c *gin.Context) {
+				c.JSON(200, gin.H{"code": 0, "message": "ok", "data": gin.H{"status": "healthy"}})
+			})
+			public.GET("/version", func(c *gin.Context) {
+				c.JSON(200, gin.H{"code": 0, "message": "ok", "data": gin.H{"version": "1.0.0"}})
+			})
 		}
 
-		c.Next()
-	})
-
-	// 创建认证控制器
-	authController := controller.NewAuthController(jwtSecret, client)
-
-	// 公开路由（不需要认证）
-	public := r.Group("/api")
-	{
-		public.POST("/login", authController.Login)
-		// 添加刷新token路由
-		public.POST("/refresh-token", authController.RefreshToken)
-		// 添加租户相关的公开路由
-		public.GET("/tenants/user", authController.GetUserTenants)
-		public.POST("/tenants/switch", authController.SwitchTenant)
-	}
-
-	// 需要认证的API路由组
-	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware(jwtSecret))
-	{
-		// 仪表盘相关路由
-		api.GET("/dashboard", dashboardController.GetDashboardData)
-		api.GET("/dashboard/kpis", dashboardController.GetKPIMetrics)
-		api.GET("/dashboard/resources/distribution", dashboardController.GetResourceDistribution)
-		api.GET("/dashboard/resources/health", dashboardController.GetResourceHealth)
-
-		// 工单相关路由
-		api.GET("/tickets", ticketController.GetTickets)
-		api.POST("/tickets", ticketController.CreateTicket)
-		api.GET("/tickets/:id", ticketController.GetTicket)
-		api.PATCH("/tickets/:id", ticketController.UpdateTicket)
-		api.PUT("/tickets/:id/status", ticketController.UpdateTicketStatus)
-		api.POST("/tickets/:id/approve", ticketController.ApproveTicket)
-		// 添加评论接口
-		api.POST("/tickets/:id/comment", ticketController.AddComment)
-
-		// 事件管理相关路由
-		api.GET("/incidents", incidentController.ListIncidents)
-		api.POST("/incidents", incidentController.CreateIncident)
-		api.GET("/incidents/:id", incidentController.GetIncident)
-		api.PATCH("/incidents/:id", incidentController.UpdateIncident)
-		api.PUT("/incidents/:id/status", incidentController.UpdateIncidentStatus)
-		api.GET("/incidents/metrics", incidentController.GetIncidentMetrics)
-
-		// 外部事件集成路由
-		api.POST("/incidents/alibaba-cloud-alert", incidentController.CreateIncidentFromAlibabaCloudAlert)
-		api.POST("/incidents/security-event", incidentController.CreateIncidentFromSecurityEvent)
-		api.POST("/incidents/cloud-product-event", incidentController.CreateIncidentFromCloudProductEvent)
-
-		// 服务目录相关路由
-		api.GET("/service-catalogs", serviceController.GetServiceCatalogs)
-		api.POST("/service-catalogs", serviceController.CreateServiceCatalog)
-		api.GET("/service-catalogs/:id", serviceController.GetServiceCatalogByID)
-		api.PUT("/service-catalogs/:id", serviceController.UpdateServiceCatalog)
-		api.DELETE("/service-catalogs/:id", serviceController.DeleteServiceCatalog)
-
-		// 服务请求相关路由
-		api.POST("/service-requests", serviceController.CreateServiceRequest)
-		api.GET("/service-requests/me", serviceController.GetUserServiceRequests)
-		api.GET("/service-requests/:id", serviceController.GetServiceRequestByID)
-		api.PUT("/service-requests/:id/status", serviceController.UpdateServiceRequestStatus)
-
-		// CMDB路由
-		cmdbGroup := api.Group("/cmdb")
+		// 认证路由（需要 JWT）
+		auth := v1.Group("")
+		auth.Use(middleware.AuthMiddleware(jwtSecret))
+		// 启用多租户中间件（通过 X-Tenant-Code 或子域解析），与 JWT tenant_id 互补
+		auth.Use(middleware.TenantMiddleware(client))
+		// 关键写操作审计
+		auth.Use(middleware.AuditMiddleware(client))
 		{
-			cmdbGroup.POST("/configuration-items", cmdbController.CreateConfigurationItem)
-			cmdbGroup.GET("/configuration-items", cmdbController.ListConfigurationItems)
-			cmdbGroup.GET("/configuration-items/:id", cmdbController.GetConfigurationItem)
-			cmdbGroup.PUT("/configuration-items/:id", cmdbController.UpdateConfigurationItem)
-			cmdbGroup.DELETE("/configuration-items/:id", cmdbController.DeleteConfigurationItem)
-			// CMDB 动态属性管理路由
-			cmdbGroup.POST("/ci-types/attributes", cmdbController.CreateCIAttributeDefinition)
-			cmdbGroup.GET("/ci-types/:id/attributes", cmdbController.GetCITypeWithAttributes)
-			cmdbGroup.POST("/ci-attributes/validate", cmdbController.ValidateCIAttributes)
-			cmdbGroup.POST("/cis/search-by-attributes", cmdbController.SearchCIsByAttributes)
+			// 工单管理路由
+			tickets := auth.Group("/tickets")
+			{
+				tickets.GET("", ticketController.ListTickets)
+				tickets.POST("", ticketController.CreateTicket)
+				tickets.GET("/stats", ticketController.GetTicketStats)
+				tickets.GET("/analytics", ticketController.GetTicketAnalytics)
+				tickets.POST("/export", ticketController.ExportTickets)
+				tickets.POST("/import", ticketController.ImportTickets)
+				tickets.POST("/batch-delete", ticketController.BatchDeleteTickets)
+				// 单工单操作
+				tickets.POST("/:id/assign", ticketController.AssignTicket)
+				tickets.POST("/:id/escalate", ticketController.EscalateTicket)
+				tickets.POST("/:id/resolve", ticketController.ResolveTicket)
+				tickets.POST("/:id/close", ticketController.CloseTicket)
+				tickets.GET("/:id/activity", ticketController.GetTicketActivity)
+				// 查询辅助
+				tickets.GET("/search", ticketController.SearchTickets)
+				tickets.GET("/overdue", ticketController.GetOverdueTickets)
+				tickets.GET("/assignee/:assignee_id", ticketController.GetTicketsByAssignee)
+
+				tickets.GET("/:id", ticketController.GetTicket)
+				tickets.PUT("/:id", ticketController.UpdateTicket)
+				tickets.DELETE("/:id", ticketController.DeleteTicket)
+			}
+
+			// 工单模板路由
+			templates := auth.Group("/ticket-templates")
+			{
+				templates.GET("", ticketController.GetTicketTemplates)
+				templates.POST("", ticketController.CreateTicketTemplate)
+				templates.PUT("/:id", ticketController.UpdateTicketTemplate)
+				templates.DELETE("/:id", ticketController.DeleteTicketTemplate)
+			}
+
+			// 服务目录路由
+			services := auth.Group("/services")
+			{
+				services.GET("", serviceController.GetServiceCatalogs)
+				services.POST("", serviceController.CreateServiceCatalog)
+				services.GET("/:id", serviceController.GetServiceCatalogByID)
+				services.PUT("/:id", serviceController.UpdateServiceCatalog)
+				services.DELETE("/:id", serviceController.DeleteServiceCatalog)
+
+				// 服务请求
+				services.GET("/requests", serviceController.GetUserServiceRequests)
+				services.POST("/requests", serviceController.CreateServiceRequest)
+				services.GET("/requests/:id", serviceController.GetServiceRequestByID)
+				services.PUT("/requests/:id", serviceController.UpdateServiceRequestStatus)
+			}
+
+			// 仪表盘路由
+			dashboard := auth.Group("/dashboard")
+			{
+				dashboard.GET("", dashboardController.GetDashboardData)
+				dashboard.GET("/kpis", dashboardController.GetKPIMetrics)
+				dashboard.GET("/resources/distribution", dashboardController.GetResourceDistribution)
+				dashboard.GET("/resources/health", dashboardController.GetResourceHealth)
+			}
+
+			// CMDB路由
+			cmdb := auth.Group("/cmdb")
+			{
+				cmdb.GET("/items", cmdbController.ListConfigurationItems)
+				cmdb.POST("/items", cmdbController.CreateConfigurationItem)
+				cmdb.GET("/items/:id", cmdbController.GetConfigurationItem)
+				cmdb.PUT("/items/:id", cmdbController.UpdateConfigurationItem)
+				cmdb.DELETE("/items/:id", cmdbController.DeleteConfigurationItem)
+
+				// CMDB属性定义
+				cmdb.POST("/attributes", cmdbController.CreateCIAttributeDefinition)
+				cmdb.GET("/types/:id", cmdbController.GetCITypeWithAttributes)
+				cmdb.POST("/validate", cmdbController.ValidateCIAttributes)
+				cmdb.POST("/search", cmdbController.SearchCIsByAttributes)
+			}
+
+			// 事件管理路由
+			incidents := auth.Group("/incidents")
+			{
+				incidents.GET("", incidentController.GetIncidents)
+				incidents.POST("", incidentController.CreateIncident)
+				incidents.GET("/stats", incidentController.GetIncidentStats)
+
+				incidents.GET("/:id", incidentController.GetIncident)
+				incidents.PUT("/:id", incidentController.UpdateIncident)
+				incidents.PUT("/:id/close", incidentController.CloseIncident)
+			}
+
+			// 问题管理路由
+			problems := auth.Group("/problems")
+			{
+				problems.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "问题管理功能开发中"})
+				})
+				problems.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "问题管理功能开发中"})
+				})
+			}
+
+			// 变更管理路由
+			changes := auth.Group("/changes")
+			{
+				changes.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "变更管理功能开发中"})
+				})
+				changes.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "变更管理功能开发中"})
+				})
+			}
+
+			// 知识库路由
+			if knowledgeController != nil {
+				knowledge := auth.Group("/knowledge-articles")
+				{
+					knowledge.GET("", knowledgeController.ListArticles)
+					knowledge.POST("", knowledgeController.CreateArticle)
+					knowledge.GET("/:id", knowledgeController.GetArticle)
+					knowledge.PUT("/:id", knowledgeController.UpdateArticle)
+					knowledge.DELETE("/:id", knowledgeController.DeleteArticle)
+					knowledge.GET("/categories", knowledgeController.GetCategories)
+				}
+			}
+
+			// AI 路由（最小可用：只读 RAG 问答）
+			if aiController != nil {
+				ai := auth.Group("/ai")
+				{
+					ai.POST("/chat", aiController.Chat)
+					ai.POST("/search", aiController.Search)
+					ai.POST("/triage", aiController.Triage)
+					ai.POST("/summarize", aiController.Summarize)
+					ai.POST("/similar-incidents", aiController.SimilarIncidents)
+					ai.GET("/tools", aiController.Tools)
+					ai.POST("/tools/execute", aiController.ExecuteTool)
+					ai.POST("/tools/:id/approve", aiController.ApproveTool)
+					ai.GET("/tools/:id", aiController.GetToolInvocation)
+					ai.POST("/embed/run", aiController.RunEmbed)
+				}
+			}
+
+			// SLA管理路由
+			sla := auth.Group("/sla")
+			{
+				sla.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "SLA管理功能开发中"})
+				})
+				sla.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "SLA管理功能开发中"})
+				})
+			}
+
+			// 报表路由
+			reports := auth.Group("/reports")
+			{
+				reports.GET("/tickets", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "工单报表功能开发中"})
+				})
+				reports.GET("/incidents", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "事件报表功能开发中"})
+				})
+				reports.GET("/sla", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "SLA报表功能开发中"})
+				})
+			}
+
+			// 通知路由
+			notifications := auth.Group("/notifications")
+			{
+				notifications.GET("", notificationController.GetNotifications)
+				notifications.GET("/unread-count", notificationController.GetUnreadCount)
+				notifications.PATCH("/:id/read", notificationController.MarkNotificationRead)
+				notifications.PATCH("/read-all", notificationController.MarkAllNotificationsRead)
+				notifications.DELETE("/:id", notificationController.DeleteNotification)
+				notifications.POST("", notificationController.CreateNotification) // 管理员功能
+			}
+
+			// 用户管理路由
+			users := auth.Group("/users")
+			{
+				users.GET("", userController.ListUsers)                        // 获取用户列表
+				users.POST("", userController.CreateUser)                      // 创建用户
+				users.GET("/search", userController.SearchUsers)               // 搜索用户
+				users.GET("/stats", userController.GetUserStats)               // 用户统计
+				users.PUT("/batch", userController.BatchUpdateUsers)           // 批量更新
+				users.GET("/:id", userController.GetUser)                      // 获取用户详情
+				users.PUT("/:id", userController.UpdateUser)                   // 更新用户
+				users.DELETE("/:id", userController.DeleteUser)                // 删除用户
+				users.PUT("/:id/status", userController.ChangeUserStatus)      // 更改状态
+				users.PUT("/:id/reset-password", userController.ResetPassword) // 重置密码
+			}
+
+			// 角色管理路由
+			roles := auth.Group("/roles")
+			{
+				roles.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "角色管理功能开发中"})
+				})
+				roles.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "角色管理功能开发中"})
+				})
+			}
+
+			// 权限管理路由
+			permissions := auth.Group("/permissions")
+			{
+				permissions.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "权限管理功能开发中"})
+				})
+				permissions.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "权限管理功能开发中"})
+				})
+			}
+
+			// 租户管理路由
+			tenants := auth.Group("/tenants")
+			{
+				tenants.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "租户管理功能开发中"})
+				})
+				tenants.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "租户管理功能开发中"})
+				})
+			}
+
+			// 系统配置路由
+			config := auth.Group("/config")
+			{
+				config.GET("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "系统配置功能开发中"})
+				})
+				config.POST("", func(c *gin.Context) {
+					c.JSON(200, gin.H{"code": 0, "message": "系统配置功能开发中"})
+				})
+			}
+
+			// 健康检查
+			auth.GET("/health", func(c *gin.Context) {
+				c.JSON(200, gin.H{
+					"code":    0,
+					"message": "服务正常",
+					"data": gin.H{
+						"status":    "healthy",
+						"timestamp": "2024-01-15T10:30:00Z",
+						"version":   "1.0.0",
+					},
+				})
+			})
 		}
 	}
 

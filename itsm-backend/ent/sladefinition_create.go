@@ -20,34 +20,6 @@ type SLADefinitionCreate struct {
 	hooks    []Hook
 }
 
-// SetCreateTime sets the "create_time" field.
-func (sdc *SLADefinitionCreate) SetCreateTime(t time.Time) *SLADefinitionCreate {
-	sdc.mutation.SetCreateTime(t)
-	return sdc
-}
-
-// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
-func (sdc *SLADefinitionCreate) SetNillableCreateTime(t *time.Time) *SLADefinitionCreate {
-	if t != nil {
-		sdc.SetCreateTime(*t)
-	}
-	return sdc
-}
-
-// SetUpdateTime sets the "update_time" field.
-func (sdc *SLADefinitionCreate) SetUpdateTime(t time.Time) *SLADefinitionCreate {
-	sdc.mutation.SetUpdateTime(t)
-	return sdc
-}
-
-// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
-func (sdc *SLADefinitionCreate) SetNillableUpdateTime(t *time.Time) *SLADefinitionCreate {
-	if t != nil {
-		sdc.SetUpdateTime(*t)
-	}
-	return sdc
-}
-
 // SetName sets the "name" field.
 func (sdc *SLADefinitionCreate) SetName(s string) *SLADefinitionCreate {
 	sdc.mutation.SetName(s)
@@ -68,71 +40,9 @@ func (sdc *SLADefinitionCreate) SetNillableDescription(s *string) *SLADefinition
 	return sdc
 }
 
-// SetServiceType sets the "service_type" field.
-func (sdc *SLADefinitionCreate) SetServiceType(s string) *SLADefinitionCreate {
-	sdc.mutation.SetServiceType(s)
-	return sdc
-}
-
-// SetPriority sets the "priority" field.
-func (sdc *SLADefinitionCreate) SetPriority(s string) *SLADefinitionCreate {
-	sdc.mutation.SetPriority(s)
-	return sdc
-}
-
-// SetImpact sets the "impact" field.
-func (sdc *SLADefinitionCreate) SetImpact(s string) *SLADefinitionCreate {
-	sdc.mutation.SetImpact(s)
-	return sdc
-}
-
-// SetResponseTime sets the "response_time" field.
-func (sdc *SLADefinitionCreate) SetResponseTime(i int) *SLADefinitionCreate {
-	sdc.mutation.SetResponseTime(i)
-	return sdc
-}
-
-// SetResolutionTime sets the "resolution_time" field.
-func (sdc *SLADefinitionCreate) SetResolutionTime(i int) *SLADefinitionCreate {
-	sdc.mutation.SetResolutionTime(i)
-	return sdc
-}
-
-// SetBusinessHours sets the "business_hours" field.
-func (sdc *SLADefinitionCreate) SetBusinessHours(s string) *SLADefinitionCreate {
-	sdc.mutation.SetBusinessHours(s)
-	return sdc
-}
-
-// SetHolidays sets the "holidays" field.
-func (sdc *SLADefinitionCreate) SetHolidays(s string) *SLADefinitionCreate {
-	sdc.mutation.SetHolidays(s)
-	return sdc
-}
-
-// SetIsActive sets the "is_active" field.
-func (sdc *SLADefinitionCreate) SetIsActive(b bool) *SLADefinitionCreate {
-	sdc.mutation.SetIsActive(b)
-	return sdc
-}
-
-// SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (sdc *SLADefinitionCreate) SetNillableIsActive(b *bool) *SLADefinitionCreate {
-	if b != nil {
-		sdc.SetIsActive(*b)
-	}
-	return sdc
-}
-
 // SetTenantID sets the "tenant_id" field.
 func (sdc *SLADefinitionCreate) SetTenantID(i int) *SLADefinitionCreate {
 	sdc.mutation.SetTenantID(i)
-	return sdc
-}
-
-// SetCreatedBy sets the "created_by" field.
-func (sdc *SLADefinitionCreate) SetCreatedBy(s string) *SLADefinitionCreate {
-	sdc.mutation.SetCreatedBy(s)
 	return sdc
 }
 
@@ -142,9 +52,25 @@ func (sdc *SLADefinitionCreate) SetCreatedAt(t time.Time) *SLADefinitionCreate {
 	return sdc
 }
 
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillableCreatedAt(t *time.Time) *SLADefinitionCreate {
+	if t != nil {
+		sdc.SetCreatedAt(*t)
+	}
+	return sdc
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (sdc *SLADefinitionCreate) SetUpdatedAt(t time.Time) *SLADefinitionCreate {
 	sdc.mutation.SetUpdatedAt(t)
+	return sdc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillableUpdatedAt(t *time.Time) *SLADefinitionCreate {
+	if t != nil {
+		sdc.SetUpdatedAt(*t)
+	}
 	return sdc
 }
 
@@ -183,60 +109,33 @@ func (sdc *SLADefinitionCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sdc *SLADefinitionCreate) defaults() {
-	if _, ok := sdc.mutation.CreateTime(); !ok {
-		v := sladefinition.DefaultCreateTime()
-		sdc.mutation.SetCreateTime(v)
+	if _, ok := sdc.mutation.CreatedAt(); !ok {
+		v := sladefinition.DefaultCreatedAt()
+		sdc.mutation.SetCreatedAt(v)
 	}
-	if _, ok := sdc.mutation.UpdateTime(); !ok {
-		v := sladefinition.DefaultUpdateTime()
-		sdc.mutation.SetUpdateTime(v)
-	}
-	if _, ok := sdc.mutation.IsActive(); !ok {
-		v := sladefinition.DefaultIsActive
-		sdc.mutation.SetIsActive(v)
+	if _, ok := sdc.mutation.UpdatedAt(); !ok {
+		v := sladefinition.DefaultUpdatedAt()
+		sdc.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (sdc *SLADefinitionCreate) check() error {
-	if _, ok := sdc.mutation.CreateTime(); !ok {
-		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "SLADefinition.create_time"`)}
-	}
-	if _, ok := sdc.mutation.UpdateTime(); !ok {
-		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "SLADefinition.update_time"`)}
-	}
 	if _, ok := sdc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "SLADefinition.name"`)}
 	}
-	if _, ok := sdc.mutation.ServiceType(); !ok {
-		return &ValidationError{Name: "service_type", err: errors.New(`ent: missing required field "SLADefinition.service_type"`)}
-	}
-	if _, ok := sdc.mutation.Priority(); !ok {
-		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "SLADefinition.priority"`)}
-	}
-	if _, ok := sdc.mutation.Impact(); !ok {
-		return &ValidationError{Name: "impact", err: errors.New(`ent: missing required field "SLADefinition.impact"`)}
-	}
-	if _, ok := sdc.mutation.ResponseTime(); !ok {
-		return &ValidationError{Name: "response_time", err: errors.New(`ent: missing required field "SLADefinition.response_time"`)}
-	}
-	if _, ok := sdc.mutation.ResolutionTime(); !ok {
-		return &ValidationError{Name: "resolution_time", err: errors.New(`ent: missing required field "SLADefinition.resolution_time"`)}
-	}
-	if _, ok := sdc.mutation.BusinessHours(); !ok {
-		return &ValidationError{Name: "business_hours", err: errors.New(`ent: missing required field "SLADefinition.business_hours"`)}
-	}
-	if _, ok := sdc.mutation.Holidays(); !ok {
-		return &ValidationError{Name: "holidays", err: errors.New(`ent: missing required field "SLADefinition.holidays"`)}
-	}
-	if _, ok := sdc.mutation.IsActive(); !ok {
-		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "SLADefinition.is_active"`)}
+	if v, ok := sdc.mutation.Name(); ok {
+		if err := sladefinition.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.name": %w`, err)}
+		}
 	}
 	if _, ok := sdc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "SLADefinition.tenant_id"`)}
 	}
-	if _, ok := sdc.mutation.CreatedBy(); !ok {
-		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "SLADefinition.created_by"`)}
+	if v, ok := sdc.mutation.TenantID(); ok {
+		if err := sladefinition.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.tenant_id": %w`, err)}
+		}
 	}
 	if _, ok := sdc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SLADefinition.created_at"`)}
@@ -270,14 +169,6 @@ func (sdc *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSp
 		_node = &SLADefinition{config: sdc.config}
 		_spec = sqlgraph.NewCreateSpec(sladefinition.Table, sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt))
 	)
-	if value, ok := sdc.mutation.CreateTime(); ok {
-		_spec.SetField(sladefinition.FieldCreateTime, field.TypeTime, value)
-		_node.CreateTime = value
-	}
-	if value, ok := sdc.mutation.UpdateTime(); ok {
-		_spec.SetField(sladefinition.FieldUpdateTime, field.TypeTime, value)
-		_node.UpdateTime = value
-	}
 	if value, ok := sdc.mutation.Name(); ok {
 		_spec.SetField(sladefinition.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -286,45 +177,9 @@ func (sdc *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSp
 		_spec.SetField(sladefinition.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := sdc.mutation.ServiceType(); ok {
-		_spec.SetField(sladefinition.FieldServiceType, field.TypeString, value)
-		_node.ServiceType = value
-	}
-	if value, ok := sdc.mutation.Priority(); ok {
-		_spec.SetField(sladefinition.FieldPriority, field.TypeString, value)
-		_node.Priority = value
-	}
-	if value, ok := sdc.mutation.Impact(); ok {
-		_spec.SetField(sladefinition.FieldImpact, field.TypeString, value)
-		_node.Impact = value
-	}
-	if value, ok := sdc.mutation.ResponseTime(); ok {
-		_spec.SetField(sladefinition.FieldResponseTime, field.TypeInt, value)
-		_node.ResponseTime = value
-	}
-	if value, ok := sdc.mutation.ResolutionTime(); ok {
-		_spec.SetField(sladefinition.FieldResolutionTime, field.TypeInt, value)
-		_node.ResolutionTime = value
-	}
-	if value, ok := sdc.mutation.BusinessHours(); ok {
-		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeString, value)
-		_node.BusinessHours = value
-	}
-	if value, ok := sdc.mutation.Holidays(); ok {
-		_spec.SetField(sladefinition.FieldHolidays, field.TypeString, value)
-		_node.Holidays = value
-	}
-	if value, ok := sdc.mutation.IsActive(); ok {
-		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
-		_node.IsActive = value
-	}
 	if value, ok := sdc.mutation.TenantID(); ok {
 		_spec.SetField(sladefinition.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
-	}
-	if value, ok := sdc.mutation.CreatedBy(); ok {
-		_spec.SetField(sladefinition.FieldCreatedBy, field.TypeString, value)
-		_node.CreatedBy = value
 	}
 	if value, ok := sdc.mutation.CreatedAt(); ok {
 		_spec.SetField(sladefinition.FieldCreatedAt, field.TypeTime, value)

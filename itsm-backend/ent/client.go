@@ -11,28 +11,25 @@ import (
 
 	"itsm-backend/ent/migrate"
 
-	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/cichangerecord"
-	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/message"
+	"itsm-backend/ent/notification"
+	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/sladefinition"
-	"itsm-backend/ent/slametrics"
 	"itsm-backend/ent/slaviolation"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/workflow"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -45,50 +42,44 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// ApprovalLog is the client for interacting with the ApprovalLog builders.
-	ApprovalLog *ApprovalLogClient
+	// AuditLog is the client for interacting with the AuditLog builders.
+	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
-	// CIChangeRecord is the client for interacting with the CIChangeRecord builders.
-	CIChangeRecord *CIChangeRecordClient
-	// CILifecycleState is the client for interacting with the CILifecycleState builders.
-	CILifecycleState *CILifecycleStateClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
 	CIRelationship *CIRelationshipClient
-	// CIRelationshipType is the client for interacting with the CIRelationshipType builders.
-	CIRelationshipType *CIRelationshipTypeClient
 	// CIType is the client for interacting with the CIType builders.
 	CIType *CITypeClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
-	// FlowInstance is the client for interacting with the FlowInstance builders.
-	FlowInstance *FlowInstanceClient
+	// Conversation is the client for interacting with the Conversation builders.
+	Conversation *ConversationClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
+	// Message is the client for interacting with the Message builders.
+	Message *MessageClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
+	// PromptTemplate is the client for interacting with the PromptTemplate builders.
+	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
 	SLADefinition *SLADefinitionClient
-	// SLAMetrics is the client for interacting with the SLAMetrics builders.
-	SLAMetrics *SLAMetricsClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
-	// StatusLog is the client for interacting with the StatusLog builders.
-	StatusLog *StatusLogClient
-	// Subscription is the client for interacting with the Subscription builders.
-	Subscription *SubscriptionClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
+	// ToolInvocation is the client for interacting with the ToolInvocation builders.
+	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
-	// Workflow is the client for interacting with the Workflow builders.
-	Workflow *WorkflowClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -100,28 +91,25 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.ApprovalLog = NewApprovalLogClient(c.config)
+	c.AuditLog = NewAuditLogClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
-	c.CIChangeRecord = NewCIChangeRecordClient(c.config)
-	c.CILifecycleState = NewCILifecycleStateClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
-	c.CIRelationshipType = NewCIRelationshipTypeClient(c.config)
 	c.CIType = NewCITypeClient(c.config)
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
-	c.FlowInstance = NewFlowInstanceClient(c.config)
+	c.Conversation = NewConversationClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
+	c.Message = NewMessageClient(c.config)
+	c.Notification = NewNotificationClient(c.config)
+	c.PromptTemplate = NewPromptTemplateClient(c.config)
 	c.SLADefinition = NewSLADefinitionClient(c.config)
-	c.SLAMetrics = NewSLAMetricsClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
-	c.StatusLog = NewStatusLogClient(c.config)
-	c.Subscription = NewSubscriptionClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
 	c.Ticket = NewTicketClient(c.config)
+	c.ToolInvocation = NewToolInvocationClient(c.config)
 	c.User = NewUserClient(c.config)
-	c.Workflow = NewWorkflowClient(c.config)
 }
 
 type (
@@ -214,28 +202,25 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:                   ctx,
 		config:                cfg,
-		ApprovalLog:           NewApprovalLogClient(cfg),
+		AuditLog:              NewAuditLogClient(cfg),
 		CIAttributeDefinition: NewCIAttributeDefinitionClient(cfg),
-		CIChangeRecord:        NewCIChangeRecordClient(cfg),
-		CILifecycleState:      NewCILifecycleStateClient(cfg),
 		CIRelationship:        NewCIRelationshipClient(cfg),
-		CIRelationshipType:    NewCIRelationshipTypeClient(cfg),
 		CIType:                NewCITypeClient(cfg),
 		ConfigurationItem:     NewConfigurationItemClient(cfg),
-		FlowInstance:          NewFlowInstanceClient(cfg),
+		Conversation:          NewConversationClient(cfg),
 		Incident:              NewIncidentClient(cfg),
 		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
+		Message:               NewMessageClient(cfg),
+		Notification:          NewNotificationClient(cfg),
+		PromptTemplate:        NewPromptTemplateClient(cfg),
 		SLADefinition:         NewSLADefinitionClient(cfg),
-		SLAMetrics:            NewSLAMetricsClient(cfg),
 		SLAViolation:          NewSLAViolationClient(cfg),
 		ServiceCatalog:        NewServiceCatalogClient(cfg),
 		ServiceRequest:        NewServiceRequestClient(cfg),
-		StatusLog:             NewStatusLogClient(cfg),
-		Subscription:          NewSubscriptionClient(cfg),
 		Tenant:                NewTenantClient(cfg),
 		Ticket:                NewTicketClient(cfg),
+		ToolInvocation:        NewToolInvocationClient(cfg),
 		User:                  NewUserClient(cfg),
-		Workflow:              NewWorkflowClient(cfg),
 	}, nil
 }
 
@@ -255,35 +240,32 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:                   ctx,
 		config:                cfg,
-		ApprovalLog:           NewApprovalLogClient(cfg),
+		AuditLog:              NewAuditLogClient(cfg),
 		CIAttributeDefinition: NewCIAttributeDefinitionClient(cfg),
-		CIChangeRecord:        NewCIChangeRecordClient(cfg),
-		CILifecycleState:      NewCILifecycleStateClient(cfg),
 		CIRelationship:        NewCIRelationshipClient(cfg),
-		CIRelationshipType:    NewCIRelationshipTypeClient(cfg),
 		CIType:                NewCITypeClient(cfg),
 		ConfigurationItem:     NewConfigurationItemClient(cfg),
-		FlowInstance:          NewFlowInstanceClient(cfg),
+		Conversation:          NewConversationClient(cfg),
 		Incident:              NewIncidentClient(cfg),
 		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
+		Message:               NewMessageClient(cfg),
+		Notification:          NewNotificationClient(cfg),
+		PromptTemplate:        NewPromptTemplateClient(cfg),
 		SLADefinition:         NewSLADefinitionClient(cfg),
-		SLAMetrics:            NewSLAMetricsClient(cfg),
 		SLAViolation:          NewSLAViolationClient(cfg),
 		ServiceCatalog:        NewServiceCatalogClient(cfg),
 		ServiceRequest:        NewServiceRequestClient(cfg),
-		StatusLog:             NewStatusLogClient(cfg),
-		Subscription:          NewSubscriptionClient(cfg),
 		Tenant:                NewTenantClient(cfg),
 		Ticket:                NewTicketClient(cfg),
+		ToolInvocation:        NewToolInvocationClient(cfg),
 		User:                  NewUserClient(cfg),
-		Workflow:              NewWorkflowClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		ApprovalLog.
+//		AuditLog.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -306,11 +288,11 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
-		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
-		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.SLADefinition, c.SLAMetrics,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
-		c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
+		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType,
+		c.ConfigurationItem, c.Conversation, c.Incident, c.KnowledgeArticle, c.Message,
+		c.Notification, c.PromptTemplate, c.SLADefinition, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.Tenant, c.Ticket, c.ToolInvocation,
+		c.User,
 	} {
 		n.Use(hooks...)
 	}
@@ -320,11 +302,11 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.ApprovalLog, c.CIAttributeDefinition, c.CIChangeRecord, c.CILifecycleState,
-		c.CIRelationship, c.CIRelationshipType, c.CIType, c.ConfigurationItem,
-		c.FlowInstance, c.Incident, c.KnowledgeArticle, c.SLADefinition, c.SLAMetrics,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.StatusLog,
-		c.Subscription, c.Tenant, c.Ticket, c.User, c.Workflow,
+		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType,
+		c.ConfigurationItem, c.Conversation, c.Incident, c.KnowledgeArticle, c.Message,
+		c.Notification, c.PromptTemplate, c.SLADefinition, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.Tenant, c.Ticket, c.ToolInvocation,
+		c.User,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -333,156 +315,150 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
-	case *ApprovalLogMutation:
-		return c.ApprovalLog.mutate(ctx, m)
+	case *AuditLogMutation:
+		return c.AuditLog.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
 		return c.CIAttributeDefinition.mutate(ctx, m)
-	case *CIChangeRecordMutation:
-		return c.CIChangeRecord.mutate(ctx, m)
-	case *CILifecycleStateMutation:
-		return c.CILifecycleState.mutate(ctx, m)
 	case *CIRelationshipMutation:
 		return c.CIRelationship.mutate(ctx, m)
-	case *CIRelationshipTypeMutation:
-		return c.CIRelationshipType.mutate(ctx, m)
 	case *CITypeMutation:
 		return c.CIType.mutate(ctx, m)
 	case *ConfigurationItemMutation:
 		return c.ConfigurationItem.mutate(ctx, m)
-	case *FlowInstanceMutation:
-		return c.FlowInstance.mutate(ctx, m)
+	case *ConversationMutation:
+		return c.Conversation.mutate(ctx, m)
 	case *IncidentMutation:
 		return c.Incident.mutate(ctx, m)
 	case *KnowledgeArticleMutation:
 		return c.KnowledgeArticle.mutate(ctx, m)
+	case *MessageMutation:
+		return c.Message.mutate(ctx, m)
+	case *NotificationMutation:
+		return c.Notification.mutate(ctx, m)
+	case *PromptTemplateMutation:
+		return c.PromptTemplate.mutate(ctx, m)
 	case *SLADefinitionMutation:
 		return c.SLADefinition.mutate(ctx, m)
-	case *SLAMetricsMutation:
-		return c.SLAMetrics.mutate(ctx, m)
 	case *SLAViolationMutation:
 		return c.SLAViolation.mutate(ctx, m)
 	case *ServiceCatalogMutation:
 		return c.ServiceCatalog.mutate(ctx, m)
 	case *ServiceRequestMutation:
 		return c.ServiceRequest.mutate(ctx, m)
-	case *StatusLogMutation:
-		return c.StatusLog.mutate(ctx, m)
-	case *SubscriptionMutation:
-		return c.Subscription.mutate(ctx, m)
 	case *TenantMutation:
 		return c.Tenant.mutate(ctx, m)
 	case *TicketMutation:
 		return c.Ticket.mutate(ctx, m)
+	case *ToolInvocationMutation:
+		return c.ToolInvocation.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
-	case *WorkflowMutation:
-		return c.Workflow.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
 }
 
-// ApprovalLogClient is a client for the ApprovalLog schema.
-type ApprovalLogClient struct {
+// AuditLogClient is a client for the AuditLog schema.
+type AuditLogClient struct {
 	config
 }
 
-// NewApprovalLogClient returns a client for the ApprovalLog from the given config.
-func NewApprovalLogClient(c config) *ApprovalLogClient {
-	return &ApprovalLogClient{config: c}
+// NewAuditLogClient returns a client for the AuditLog from the given config.
+func NewAuditLogClient(c config) *AuditLogClient {
+	return &AuditLogClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `approvallog.Hooks(f(g(h())))`.
-func (c *ApprovalLogClient) Use(hooks ...Hook) {
-	c.hooks.ApprovalLog = append(c.hooks.ApprovalLog, hooks...)
+// A call to `Use(f, g, h)` equals to `auditlog.Hooks(f(g(h())))`.
+func (c *AuditLogClient) Use(hooks ...Hook) {
+	c.hooks.AuditLog = append(c.hooks.AuditLog, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `approvallog.Intercept(f(g(h())))`.
-func (c *ApprovalLogClient) Intercept(interceptors ...Interceptor) {
-	c.inters.ApprovalLog = append(c.inters.ApprovalLog, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `auditlog.Intercept(f(g(h())))`.
+func (c *AuditLogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AuditLog = append(c.inters.AuditLog, interceptors...)
 }
 
-// Create returns a builder for creating a ApprovalLog entity.
-func (c *ApprovalLogClient) Create() *ApprovalLogCreate {
-	mutation := newApprovalLogMutation(c.config, OpCreate)
-	return &ApprovalLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a AuditLog entity.
+func (c *AuditLogClient) Create() *AuditLogCreate {
+	mutation := newAuditLogMutation(c.config, OpCreate)
+	return &AuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of ApprovalLog entities.
-func (c *ApprovalLogClient) CreateBulk(builders ...*ApprovalLogCreate) *ApprovalLogCreateBulk {
-	return &ApprovalLogCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of AuditLog entities.
+func (c *AuditLogClient) CreateBulk(builders ...*AuditLogCreate) *AuditLogCreateBulk {
+	return &AuditLogCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *ApprovalLogClient) MapCreateBulk(slice any, setFunc func(*ApprovalLogCreate, int)) *ApprovalLogCreateBulk {
+func (c *AuditLogClient) MapCreateBulk(slice any, setFunc func(*AuditLogCreate, int)) *AuditLogCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &ApprovalLogCreateBulk{err: fmt.Errorf("calling to ApprovalLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &AuditLogCreateBulk{err: fmt.Errorf("calling to AuditLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*ApprovalLogCreate, rv.Len())
+	builders := make([]*AuditLogCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &ApprovalLogCreateBulk{config: c.config, builders: builders}
+	return &AuditLogCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for ApprovalLog.
-func (c *ApprovalLogClient) Update() *ApprovalLogUpdate {
-	mutation := newApprovalLogMutation(c.config, OpUpdate)
-	return &ApprovalLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for AuditLog.
+func (c *AuditLogClient) Update() *AuditLogUpdate {
+	mutation := newAuditLogMutation(c.config, OpUpdate)
+	return &AuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *ApprovalLogClient) UpdateOne(al *ApprovalLog) *ApprovalLogUpdateOne {
-	mutation := newApprovalLogMutation(c.config, OpUpdateOne, withApprovalLog(al))
-	return &ApprovalLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *AuditLogClient) UpdateOne(al *AuditLog) *AuditLogUpdateOne {
+	mutation := newAuditLogMutation(c.config, OpUpdateOne, withAuditLog(al))
+	return &AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ApprovalLogClient) UpdateOneID(id int) *ApprovalLogUpdateOne {
-	mutation := newApprovalLogMutation(c.config, OpUpdateOne, withApprovalLogID(id))
-	return &ApprovalLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *AuditLogClient) UpdateOneID(id int) *AuditLogUpdateOne {
+	mutation := newAuditLogMutation(c.config, OpUpdateOne, withAuditLogID(id))
+	return &AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for ApprovalLog.
-func (c *ApprovalLogClient) Delete() *ApprovalLogDelete {
-	mutation := newApprovalLogMutation(c.config, OpDelete)
-	return &ApprovalLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for AuditLog.
+func (c *AuditLogClient) Delete() *AuditLogDelete {
+	mutation := newAuditLogMutation(c.config, OpDelete)
+	return &AuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *ApprovalLogClient) DeleteOne(al *ApprovalLog) *ApprovalLogDeleteOne {
+func (c *AuditLogClient) DeleteOne(al *AuditLog) *AuditLogDeleteOne {
 	return c.DeleteOneID(al.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ApprovalLogClient) DeleteOneID(id int) *ApprovalLogDeleteOne {
-	builder := c.Delete().Where(approvallog.ID(id))
+func (c *AuditLogClient) DeleteOneID(id int) *AuditLogDeleteOne {
+	builder := c.Delete().Where(auditlog.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &ApprovalLogDeleteOne{builder}
+	return &AuditLogDeleteOne{builder}
 }
 
-// Query returns a query builder for ApprovalLog.
-func (c *ApprovalLogClient) Query() *ApprovalLogQuery {
-	return &ApprovalLogQuery{
+// Query returns a query builder for AuditLog.
+func (c *AuditLogClient) Query() *AuditLogQuery {
+	return &AuditLogQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeApprovalLog},
+		ctx:    &QueryContext{Type: TypeAuditLog},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a ApprovalLog entity by its id.
-func (c *ApprovalLogClient) Get(ctx context.Context, id int) (*ApprovalLog, error) {
-	return c.Query().Where(approvallog.ID(id)).Only(ctx)
+// Get returns a AuditLog entity by its id.
+func (c *AuditLogClient) Get(ctx context.Context, id int) (*AuditLog, error) {
+	return c.Query().Where(auditlog.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ApprovalLogClient) GetX(ctx context.Context, id int) *ApprovalLog {
+func (c *AuditLogClient) GetX(ctx context.Context, id int) *AuditLog {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -490,60 +466,28 @@ func (c *ApprovalLogClient) GetX(ctx context.Context, id int) *ApprovalLog {
 	return obj
 }
 
-// QueryApprover queries the approver edge of a ApprovalLog.
-func (c *ApprovalLogClient) QueryApprover(al *ApprovalLog) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := al.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(approvallog.Table, approvallog.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, approvallog.ApproverTable, approvallog.ApproverColumn),
-		)
-		fromV = sqlgraph.Neighbors(al.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTicket queries the ticket edge of a ApprovalLog.
-func (c *ApprovalLogClient) QueryTicket(al *ApprovalLog) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := al.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(approvallog.Table, approvallog.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, approvallog.TicketTable, approvallog.TicketColumn),
-		)
-		fromV = sqlgraph.Neighbors(al.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
-func (c *ApprovalLogClient) Hooks() []Hook {
-	return c.hooks.ApprovalLog
+func (c *AuditLogClient) Hooks() []Hook {
+	return c.hooks.AuditLog
 }
 
 // Interceptors returns the client interceptors.
-func (c *ApprovalLogClient) Interceptors() []Interceptor {
-	return c.inters.ApprovalLog
+func (c *AuditLogClient) Interceptors() []Interceptor {
+	return c.inters.AuditLog
 }
 
-func (c *ApprovalLogClient) mutate(ctx context.Context, m *ApprovalLogMutation) (Value, error) {
+func (c *AuditLogClient) mutate(ctx context.Context, m *AuditLogMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&ApprovalLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&AuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&ApprovalLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&AuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&ApprovalLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&AuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&ApprovalLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&AuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown ApprovalLog mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown AuditLog mutation op: %q", m.Op())
 	}
 }
 
@@ -655,38 +599,6 @@ func (c *CIAttributeDefinitionClient) GetX(ctx context.Context, id int) *CIAttri
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a CIAttributeDefinition.
-func (c *CIAttributeDefinitionClient) QueryTenant(cad *CIAttributeDefinition) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cad.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.TenantTable, ciattributedefinition.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(cad.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiType queries the ci_type edge of a CIAttributeDefinition.
-func (c *CIAttributeDefinitionClient) QueryCiType(cad *CIAttributeDefinition) *CITypeQuery {
-	query := (&CITypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cad.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, id),
-			sqlgraph.To(citype.Table, citype.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.CiTypeTable, ciattributedefinition.CiTypeColumn),
-		)
-		fromV = sqlgraph.Neighbors(cad.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *CIAttributeDefinitionClient) Hooks() []Hook {
 	return c.hooks.CIAttributeDefinition
@@ -709,336 +621,6 @@ func (c *CIAttributeDefinitionClient) mutate(ctx context.Context, m *CIAttribute
 		return (&CIAttributeDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CIAttributeDefinition mutation op: %q", m.Op())
-	}
-}
-
-// CIChangeRecordClient is a client for the CIChangeRecord schema.
-type CIChangeRecordClient struct {
-	config
-}
-
-// NewCIChangeRecordClient returns a client for the CIChangeRecord from the given config.
-func NewCIChangeRecordClient(c config) *CIChangeRecordClient {
-	return &CIChangeRecordClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `cichangerecord.Hooks(f(g(h())))`.
-func (c *CIChangeRecordClient) Use(hooks ...Hook) {
-	c.hooks.CIChangeRecord = append(c.hooks.CIChangeRecord, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `cichangerecord.Intercept(f(g(h())))`.
-func (c *CIChangeRecordClient) Intercept(interceptors ...Interceptor) {
-	c.inters.CIChangeRecord = append(c.inters.CIChangeRecord, interceptors...)
-}
-
-// Create returns a builder for creating a CIChangeRecord entity.
-func (c *CIChangeRecordClient) Create() *CIChangeRecordCreate {
-	mutation := newCIChangeRecordMutation(c.config, OpCreate)
-	return &CIChangeRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of CIChangeRecord entities.
-func (c *CIChangeRecordClient) CreateBulk(builders ...*CIChangeRecordCreate) *CIChangeRecordCreateBulk {
-	return &CIChangeRecordCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *CIChangeRecordClient) MapCreateBulk(slice any, setFunc func(*CIChangeRecordCreate, int)) *CIChangeRecordCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &CIChangeRecordCreateBulk{err: fmt.Errorf("calling to CIChangeRecordClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*CIChangeRecordCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &CIChangeRecordCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for CIChangeRecord.
-func (c *CIChangeRecordClient) Update() *CIChangeRecordUpdate {
-	mutation := newCIChangeRecordMutation(c.config, OpUpdate)
-	return &CIChangeRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *CIChangeRecordClient) UpdateOne(ccr *CIChangeRecord) *CIChangeRecordUpdateOne {
-	mutation := newCIChangeRecordMutation(c.config, OpUpdateOne, withCIChangeRecord(ccr))
-	return &CIChangeRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *CIChangeRecordClient) UpdateOneID(id int) *CIChangeRecordUpdateOne {
-	mutation := newCIChangeRecordMutation(c.config, OpUpdateOne, withCIChangeRecordID(id))
-	return &CIChangeRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for CIChangeRecord.
-func (c *CIChangeRecordClient) Delete() *CIChangeRecordDelete {
-	mutation := newCIChangeRecordMutation(c.config, OpDelete)
-	return &CIChangeRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *CIChangeRecordClient) DeleteOne(ccr *CIChangeRecord) *CIChangeRecordDeleteOne {
-	return c.DeleteOneID(ccr.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CIChangeRecordClient) DeleteOneID(id int) *CIChangeRecordDeleteOne {
-	builder := c.Delete().Where(cichangerecord.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &CIChangeRecordDeleteOne{builder}
-}
-
-// Query returns a query builder for CIChangeRecord.
-func (c *CIChangeRecordClient) Query() *CIChangeRecordQuery {
-	return &CIChangeRecordQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeCIChangeRecord},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a CIChangeRecord entity by its id.
-func (c *CIChangeRecordClient) Get(ctx context.Context, id int) (*CIChangeRecord, error) {
-	return c.Query().Where(cichangerecord.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *CIChangeRecordClient) GetX(ctx context.Context, id int) *CIChangeRecord {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryTenant queries the tenant edge of a CIChangeRecord.
-func (c *CIChangeRecordClient) QueryTenant(ccr *CIChangeRecord) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ccr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cichangerecord.Table, cichangerecord.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cichangerecord.TenantTable, cichangerecord.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(ccr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryConfigurationItem queries the configuration_item edge of a CIChangeRecord.
-func (c *CIChangeRecordClient) QueryConfigurationItem(ccr *CIChangeRecord) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ccr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cichangerecord.Table, cichangerecord.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cichangerecord.ConfigurationItemTable, cichangerecord.ConfigurationItemColumn),
-		)
-		fromV = sqlgraph.Neighbors(ccr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *CIChangeRecordClient) Hooks() []Hook {
-	return c.hooks.CIChangeRecord
-}
-
-// Interceptors returns the client interceptors.
-func (c *CIChangeRecordClient) Interceptors() []Interceptor {
-	return c.inters.CIChangeRecord
-}
-
-func (c *CIChangeRecordClient) mutate(ctx context.Context, m *CIChangeRecordMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&CIChangeRecordCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&CIChangeRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&CIChangeRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&CIChangeRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown CIChangeRecord mutation op: %q", m.Op())
-	}
-}
-
-// CILifecycleStateClient is a client for the CILifecycleState schema.
-type CILifecycleStateClient struct {
-	config
-}
-
-// NewCILifecycleStateClient returns a client for the CILifecycleState from the given config.
-func NewCILifecycleStateClient(c config) *CILifecycleStateClient {
-	return &CILifecycleStateClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `cilifecyclestate.Hooks(f(g(h())))`.
-func (c *CILifecycleStateClient) Use(hooks ...Hook) {
-	c.hooks.CILifecycleState = append(c.hooks.CILifecycleState, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `cilifecyclestate.Intercept(f(g(h())))`.
-func (c *CILifecycleStateClient) Intercept(interceptors ...Interceptor) {
-	c.inters.CILifecycleState = append(c.inters.CILifecycleState, interceptors...)
-}
-
-// Create returns a builder for creating a CILifecycleState entity.
-func (c *CILifecycleStateClient) Create() *CILifecycleStateCreate {
-	mutation := newCILifecycleStateMutation(c.config, OpCreate)
-	return &CILifecycleStateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of CILifecycleState entities.
-func (c *CILifecycleStateClient) CreateBulk(builders ...*CILifecycleStateCreate) *CILifecycleStateCreateBulk {
-	return &CILifecycleStateCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *CILifecycleStateClient) MapCreateBulk(slice any, setFunc func(*CILifecycleStateCreate, int)) *CILifecycleStateCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &CILifecycleStateCreateBulk{err: fmt.Errorf("calling to CILifecycleStateClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*CILifecycleStateCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &CILifecycleStateCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for CILifecycleState.
-func (c *CILifecycleStateClient) Update() *CILifecycleStateUpdate {
-	mutation := newCILifecycleStateMutation(c.config, OpUpdate)
-	return &CILifecycleStateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *CILifecycleStateClient) UpdateOne(cls *CILifecycleState) *CILifecycleStateUpdateOne {
-	mutation := newCILifecycleStateMutation(c.config, OpUpdateOne, withCILifecycleState(cls))
-	return &CILifecycleStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *CILifecycleStateClient) UpdateOneID(id int) *CILifecycleStateUpdateOne {
-	mutation := newCILifecycleStateMutation(c.config, OpUpdateOne, withCILifecycleStateID(id))
-	return &CILifecycleStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for CILifecycleState.
-func (c *CILifecycleStateClient) Delete() *CILifecycleStateDelete {
-	mutation := newCILifecycleStateMutation(c.config, OpDelete)
-	return &CILifecycleStateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *CILifecycleStateClient) DeleteOne(cls *CILifecycleState) *CILifecycleStateDeleteOne {
-	return c.DeleteOneID(cls.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CILifecycleStateClient) DeleteOneID(id int) *CILifecycleStateDeleteOne {
-	builder := c.Delete().Where(cilifecyclestate.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &CILifecycleStateDeleteOne{builder}
-}
-
-// Query returns a query builder for CILifecycleState.
-func (c *CILifecycleStateClient) Query() *CILifecycleStateQuery {
-	return &CILifecycleStateQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeCILifecycleState},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a CILifecycleState entity by its id.
-func (c *CILifecycleStateClient) Get(ctx context.Context, id int) (*CILifecycleState, error) {
-	return c.Query().Where(cilifecyclestate.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *CILifecycleStateClient) GetX(ctx context.Context, id int) *CILifecycleState {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryTenant queries the tenant edge of a CILifecycleState.
-func (c *CILifecycleStateClient) QueryTenant(cls *CILifecycleState) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cls.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cilifecyclestate.Table, cilifecyclestate.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cilifecyclestate.TenantTable, cilifecyclestate.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(cls.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryConfigurationItem queries the configuration_item edge of a CILifecycleState.
-func (c *CILifecycleStateClient) QueryConfigurationItem(cls *CILifecycleState) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cls.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cilifecyclestate.Table, cilifecyclestate.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cilifecyclestate.ConfigurationItemTable, cilifecyclestate.ConfigurationItemColumn),
-		)
-		fromV = sqlgraph.Neighbors(cls.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *CILifecycleStateClient) Hooks() []Hook {
-	return c.hooks.CILifecycleState
-}
-
-// Interceptors returns the client interceptors.
-func (c *CILifecycleStateClient) Interceptors() []Interceptor {
-	return c.inters.CILifecycleState
-}
-
-func (c *CILifecycleStateClient) mutate(ctx context.Context, m *CILifecycleStateMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&CILifecycleStateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&CILifecycleStateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&CILifecycleStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&CILifecycleStateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown CILifecycleState mutation op: %q", m.Op())
 	}
 }
 
@@ -1150,70 +732,6 @@ func (c *CIRelationshipClient) GetX(ctx context.Context, id int) *CIRelationship
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a CIRelationship.
-func (c *CIRelationshipClient) QueryTenant(cr *CIRelationship) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.TenantTable, cirelationship.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySourceCi queries the source_ci edge of a CIRelationship.
-func (c *CIRelationshipClient) QuerySourceCi(cr *CIRelationship) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.SourceCiTable, cirelationship.SourceCiColumn),
-		)
-		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTargetCi queries the target_ci edge of a CIRelationship.
-func (c *CIRelationshipClient) QueryTargetCi(cr *CIRelationship) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.TargetCiTable, cirelationship.TargetCiColumn),
-		)
-		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRelationshipType queries the relationship_type edge of a CIRelationship.
-func (c *CIRelationshipClient) QueryRelationshipType(cr *CIRelationship) *CIRelationshipTypeQuery {
-	query := (&CIRelationshipTypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := cr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, id),
-			sqlgraph.To(cirelationshiptype.Table, cirelationshiptype.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.RelationshipTypeTable, cirelationship.RelationshipTypeColumn),
-		)
-		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *CIRelationshipClient) Hooks() []Hook {
 	return c.hooks.CIRelationship
@@ -1236,171 +754,6 @@ func (c *CIRelationshipClient) mutate(ctx context.Context, m *CIRelationshipMuta
 		return (&CIRelationshipDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CIRelationship mutation op: %q", m.Op())
-	}
-}
-
-// CIRelationshipTypeClient is a client for the CIRelationshipType schema.
-type CIRelationshipTypeClient struct {
-	config
-}
-
-// NewCIRelationshipTypeClient returns a client for the CIRelationshipType from the given config.
-func NewCIRelationshipTypeClient(c config) *CIRelationshipTypeClient {
-	return &CIRelationshipTypeClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `cirelationshiptype.Hooks(f(g(h())))`.
-func (c *CIRelationshipTypeClient) Use(hooks ...Hook) {
-	c.hooks.CIRelationshipType = append(c.hooks.CIRelationshipType, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `cirelationshiptype.Intercept(f(g(h())))`.
-func (c *CIRelationshipTypeClient) Intercept(interceptors ...Interceptor) {
-	c.inters.CIRelationshipType = append(c.inters.CIRelationshipType, interceptors...)
-}
-
-// Create returns a builder for creating a CIRelationshipType entity.
-func (c *CIRelationshipTypeClient) Create() *CIRelationshipTypeCreate {
-	mutation := newCIRelationshipTypeMutation(c.config, OpCreate)
-	return &CIRelationshipTypeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of CIRelationshipType entities.
-func (c *CIRelationshipTypeClient) CreateBulk(builders ...*CIRelationshipTypeCreate) *CIRelationshipTypeCreateBulk {
-	return &CIRelationshipTypeCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *CIRelationshipTypeClient) MapCreateBulk(slice any, setFunc func(*CIRelationshipTypeCreate, int)) *CIRelationshipTypeCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &CIRelationshipTypeCreateBulk{err: fmt.Errorf("calling to CIRelationshipTypeClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*CIRelationshipTypeCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &CIRelationshipTypeCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for CIRelationshipType.
-func (c *CIRelationshipTypeClient) Update() *CIRelationshipTypeUpdate {
-	mutation := newCIRelationshipTypeMutation(c.config, OpUpdate)
-	return &CIRelationshipTypeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *CIRelationshipTypeClient) UpdateOne(crt *CIRelationshipType) *CIRelationshipTypeUpdateOne {
-	mutation := newCIRelationshipTypeMutation(c.config, OpUpdateOne, withCIRelationshipType(crt))
-	return &CIRelationshipTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *CIRelationshipTypeClient) UpdateOneID(id int) *CIRelationshipTypeUpdateOne {
-	mutation := newCIRelationshipTypeMutation(c.config, OpUpdateOne, withCIRelationshipTypeID(id))
-	return &CIRelationshipTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for CIRelationshipType.
-func (c *CIRelationshipTypeClient) Delete() *CIRelationshipTypeDelete {
-	mutation := newCIRelationshipTypeMutation(c.config, OpDelete)
-	return &CIRelationshipTypeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *CIRelationshipTypeClient) DeleteOne(crt *CIRelationshipType) *CIRelationshipTypeDeleteOne {
-	return c.DeleteOneID(crt.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CIRelationshipTypeClient) DeleteOneID(id int) *CIRelationshipTypeDeleteOne {
-	builder := c.Delete().Where(cirelationshiptype.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &CIRelationshipTypeDeleteOne{builder}
-}
-
-// Query returns a query builder for CIRelationshipType.
-func (c *CIRelationshipTypeClient) Query() *CIRelationshipTypeQuery {
-	return &CIRelationshipTypeQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeCIRelationshipType},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a CIRelationshipType entity by its id.
-func (c *CIRelationshipTypeClient) Get(ctx context.Context, id int) (*CIRelationshipType, error) {
-	return c.Query().Where(cirelationshiptype.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *CIRelationshipTypeClient) GetX(ctx context.Context, id int) *CIRelationshipType {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryTenant queries the tenant edge of a CIRelationshipType.
-func (c *CIRelationshipTypeClient) QueryTenant(crt *CIRelationshipType) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := crt.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cirelationshiptype.Table, cirelationshiptype.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationshiptype.TenantTable, cirelationshiptype.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(crt.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRelationships queries the relationships edge of a CIRelationshipType.
-func (c *CIRelationshipTypeClient) QueryRelationships(crt *CIRelationshipType) *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := crt.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(cirelationshiptype.Table, cirelationshiptype.FieldID, id),
-			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, cirelationshiptype.RelationshipsTable, cirelationshiptype.RelationshipsColumn),
-		)
-		fromV = sqlgraph.Neighbors(crt.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *CIRelationshipTypeClient) Hooks() []Hook {
-	return c.hooks.CIRelationshipType
-}
-
-// Interceptors returns the client interceptors.
-func (c *CIRelationshipTypeClient) Interceptors() []Interceptor {
-	return c.inters.CIRelationshipType
-}
-
-func (c *CIRelationshipTypeClient) mutate(ctx context.Context, m *CIRelationshipTypeMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&CIRelationshipTypeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&CIRelationshipTypeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&CIRelationshipTypeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&CIRelationshipTypeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown CIRelationshipType mutation op: %q", m.Op())
 	}
 }
 
@@ -1510,70 +863,6 @@ func (c *CITypeClient) GetX(ctx context.Context, id int) *CIType {
 		panic(err)
 	}
 	return obj
-}
-
-// QueryTenant queries the tenant edge of a CIType.
-func (c *CITypeClient) QueryTenant(ct *CIType) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ct.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, citype.TenantTable, citype.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryConfigurationItems queries the configuration_items edge of a CIType.
-func (c *CITypeClient) QueryConfigurationItems(ct *CIType) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ct.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, citype.ConfigurationItemsTable, citype.ConfigurationItemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAllowedRelationships queries the allowed_relationships edge of a CIType.
-func (c *CITypeClient) QueryAllowedRelationships(ct *CIType) *CIRelationshipTypeQuery {
-	query := (&CIRelationshipTypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ct.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, id),
-			sqlgraph.To(cirelationshiptype.Table, cirelationshiptype.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, citype.AllowedRelationshipsTable, citype.AllowedRelationshipsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAttributeDefinitions queries the attribute_definitions edge of a CIType.
-func (c *CITypeClient) QueryAttributeDefinitions(ct *CIType) *CIAttributeDefinitionQuery {
-	query := (&CIAttributeDefinitionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ct.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, id),
-			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, citype.AttributeDefinitionsTable, citype.AttributeDefinitionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // Hooks returns the client hooks.
@@ -1709,134 +998,6 @@ func (c *ConfigurationItemClient) GetX(ctx context.Context, id int) *Configurati
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryTenant(ci *ConfigurationItem) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, configurationitem.TenantTable, configurationitem.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiType queries the ci_type edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryCiType(ci *ConfigurationItem) *CITypeQuery {
-	query := (&CITypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(citype.Table, citype.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, configurationitem.CiTypeTable, configurationitem.CiTypeColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryOutgoingRelationships queries the outgoing_relationships edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryOutgoingRelationships(ci *ConfigurationItem) *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationshipsTable, configurationitem.OutgoingRelationshipsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryIncomingRelationships queries the incoming_relationships edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryIncomingRelationships(ci *ConfigurationItem) *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncomingRelationshipsTable, configurationitem.IncomingRelationshipsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryLifecycleStates queries the lifecycle_states edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryLifecycleStates(ci *ConfigurationItem) *CILifecycleStateQuery {
-	query := (&CILifecycleStateClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(cilifecyclestate.Table, cilifecyclestate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.LifecycleStatesTable, configurationitem.LifecycleStatesColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryChangeRecords queries the change_records edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryChangeRecords(ci *ConfigurationItem) *CIChangeRecordQuery {
-	query := (&CIChangeRecordClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(cichangerecord.Table, cichangerecord.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ChangeRecordsTable, configurationitem.ChangeRecordsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryIncidents queries the incidents edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryIncidents(ci *ConfigurationItem) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncidentsTable, configurationitem.IncidentsColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryChanges queries the changes edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryChanges(ci *ConfigurationItem) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ci.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ChangesTable, configurationitem.ChangesColumn),
-		)
-		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *ConfigurationItemClient) Hooks() []Hook {
 	return c.hooks.ConfigurationItem
@@ -1862,107 +1023,107 @@ func (c *ConfigurationItemClient) mutate(ctx context.Context, m *ConfigurationIt
 	}
 }
 
-// FlowInstanceClient is a client for the FlowInstance schema.
-type FlowInstanceClient struct {
+// ConversationClient is a client for the Conversation schema.
+type ConversationClient struct {
 	config
 }
 
-// NewFlowInstanceClient returns a client for the FlowInstance from the given config.
-func NewFlowInstanceClient(c config) *FlowInstanceClient {
-	return &FlowInstanceClient{config: c}
+// NewConversationClient returns a client for the Conversation from the given config.
+func NewConversationClient(c config) *ConversationClient {
+	return &ConversationClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `flowinstance.Hooks(f(g(h())))`.
-func (c *FlowInstanceClient) Use(hooks ...Hook) {
-	c.hooks.FlowInstance = append(c.hooks.FlowInstance, hooks...)
+// A call to `Use(f, g, h)` equals to `conversation.Hooks(f(g(h())))`.
+func (c *ConversationClient) Use(hooks ...Hook) {
+	c.hooks.Conversation = append(c.hooks.Conversation, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `flowinstance.Intercept(f(g(h())))`.
-func (c *FlowInstanceClient) Intercept(interceptors ...Interceptor) {
-	c.inters.FlowInstance = append(c.inters.FlowInstance, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `conversation.Intercept(f(g(h())))`.
+func (c *ConversationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Conversation = append(c.inters.Conversation, interceptors...)
 }
 
-// Create returns a builder for creating a FlowInstance entity.
-func (c *FlowInstanceClient) Create() *FlowInstanceCreate {
-	mutation := newFlowInstanceMutation(c.config, OpCreate)
-	return &FlowInstanceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Conversation entity.
+func (c *ConversationClient) Create() *ConversationCreate {
+	mutation := newConversationMutation(c.config, OpCreate)
+	return &ConversationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of FlowInstance entities.
-func (c *FlowInstanceClient) CreateBulk(builders ...*FlowInstanceCreate) *FlowInstanceCreateBulk {
-	return &FlowInstanceCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Conversation entities.
+func (c *ConversationClient) CreateBulk(builders ...*ConversationCreate) *ConversationCreateBulk {
+	return &ConversationCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *FlowInstanceClient) MapCreateBulk(slice any, setFunc func(*FlowInstanceCreate, int)) *FlowInstanceCreateBulk {
+func (c *ConversationClient) MapCreateBulk(slice any, setFunc func(*ConversationCreate, int)) *ConversationCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &FlowInstanceCreateBulk{err: fmt.Errorf("calling to FlowInstanceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &ConversationCreateBulk{err: fmt.Errorf("calling to ConversationClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*FlowInstanceCreate, rv.Len())
+	builders := make([]*ConversationCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &FlowInstanceCreateBulk{config: c.config, builders: builders}
+	return &ConversationCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for FlowInstance.
-func (c *FlowInstanceClient) Update() *FlowInstanceUpdate {
-	mutation := newFlowInstanceMutation(c.config, OpUpdate)
-	return &FlowInstanceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Conversation.
+func (c *ConversationClient) Update() *ConversationUpdate {
+	mutation := newConversationMutation(c.config, OpUpdate)
+	return &ConversationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *FlowInstanceClient) UpdateOne(fi *FlowInstance) *FlowInstanceUpdateOne {
-	mutation := newFlowInstanceMutation(c.config, OpUpdateOne, withFlowInstance(fi))
-	return &FlowInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ConversationClient) UpdateOne(co *Conversation) *ConversationUpdateOne {
+	mutation := newConversationMutation(c.config, OpUpdateOne, withConversation(co))
+	return &ConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *FlowInstanceClient) UpdateOneID(id int) *FlowInstanceUpdateOne {
-	mutation := newFlowInstanceMutation(c.config, OpUpdateOne, withFlowInstanceID(id))
-	return &FlowInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *ConversationClient) UpdateOneID(id int) *ConversationUpdateOne {
+	mutation := newConversationMutation(c.config, OpUpdateOne, withConversationID(id))
+	return &ConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for FlowInstance.
-func (c *FlowInstanceClient) Delete() *FlowInstanceDelete {
-	mutation := newFlowInstanceMutation(c.config, OpDelete)
-	return &FlowInstanceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Conversation.
+func (c *ConversationClient) Delete() *ConversationDelete {
+	mutation := newConversationMutation(c.config, OpDelete)
+	return &ConversationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *FlowInstanceClient) DeleteOne(fi *FlowInstance) *FlowInstanceDeleteOne {
-	return c.DeleteOneID(fi.ID)
+func (c *ConversationClient) DeleteOne(co *Conversation) *ConversationDeleteOne {
+	return c.DeleteOneID(co.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *FlowInstanceClient) DeleteOneID(id int) *FlowInstanceDeleteOne {
-	builder := c.Delete().Where(flowinstance.ID(id))
+func (c *ConversationClient) DeleteOneID(id int) *ConversationDeleteOne {
+	builder := c.Delete().Where(conversation.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &FlowInstanceDeleteOne{builder}
+	return &ConversationDeleteOne{builder}
 }
 
-// Query returns a query builder for FlowInstance.
-func (c *FlowInstanceClient) Query() *FlowInstanceQuery {
-	return &FlowInstanceQuery{
+// Query returns a query builder for Conversation.
+func (c *ConversationClient) Query() *ConversationQuery {
+	return &ConversationQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeFlowInstance},
+		ctx:    &QueryContext{Type: TypeConversation},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a FlowInstance entity by its id.
-func (c *FlowInstanceClient) Get(ctx context.Context, id int) (*FlowInstance, error) {
-	return c.Query().Where(flowinstance.ID(id)).Only(ctx)
+// Get returns a Conversation entity by its id.
+func (c *ConversationClient) Get(ctx context.Context, id int) (*Conversation, error) {
+	return c.Query().Where(conversation.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *FlowInstanceClient) GetX(ctx context.Context, id int) *FlowInstance {
+func (c *ConversationClient) GetX(ctx context.Context, id int) *Conversation {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1970,44 +1131,60 @@ func (c *FlowInstanceClient) GetX(ctx context.Context, id int) *FlowInstance {
 	return obj
 }
 
-// QueryTicket queries the ticket edge of a FlowInstance.
-func (c *FlowInstanceClient) QueryTicket(fi *FlowInstance) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
+// QueryMessages queries the messages edge of a Conversation.
+func (c *ConversationClient) QueryMessages(co *Conversation) *MessageQuery {
+	query := (&MessageClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := fi.ID
+		id := co.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(flowinstance.Table, flowinstance.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, flowinstance.TicketTable, flowinstance.TicketColumn),
+			sqlgraph.From(conversation.Table, conversation.FieldID, id),
+			sqlgraph.To(message.Table, message.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, conversation.MessagesTable, conversation.MessagesColumn),
 		)
-		fromV = sqlgraph.Neighbors(fi.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryToolInvocations queries the tool_invocations edge of a Conversation.
+func (c *ConversationClient) QueryToolInvocations(co *Conversation) *ToolInvocationQuery {
+	query := (&ToolInvocationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := co.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(conversation.Table, conversation.FieldID, id),
+			sqlgraph.To(toolinvocation.Table, toolinvocation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, conversation.ToolInvocationsTable, conversation.ToolInvocationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *FlowInstanceClient) Hooks() []Hook {
-	return c.hooks.FlowInstance
+func (c *ConversationClient) Hooks() []Hook {
+	return c.hooks.Conversation
 }
 
 // Interceptors returns the client interceptors.
-func (c *FlowInstanceClient) Interceptors() []Interceptor {
-	return c.inters.FlowInstance
+func (c *ConversationClient) Interceptors() []Interceptor {
+	return c.inters.Conversation
 }
 
-func (c *FlowInstanceClient) mutate(ctx context.Context, m *FlowInstanceMutation) (Value, error) {
+func (c *ConversationClient) mutate(ctx context.Context, m *ConversationMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&FlowInstanceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ConversationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&FlowInstanceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ConversationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&FlowInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&ConversationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&FlowInstanceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&ConversationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown FlowInstance mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Conversation mutation op: %q", m.Op())
 	}
 }
 
@@ -2117,134 +1294,6 @@ func (c *IncidentClient) GetX(ctx context.Context, id int) *Incident {
 		panic(err)
 	}
 	return obj
-}
-
-// QueryTenant queries the tenant edge of a Incident.
-func (c *IncidentClient) QueryTenant(i *Incident) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, incident.TenantTable, incident.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReporter queries the reporter edge of a Incident.
-func (c *IncidentClient) QueryReporter(i *Incident) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, incident.ReporterTable, incident.ReporterColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAssignee queries the assignee edge of a Incident.
-func (c *IncidentClient) QueryAssignee(i *Incident) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, incident.AssigneeTable, incident.AssigneeColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAffectedConfigurationItems queries the affected_configuration_items edge of a Incident.
-func (c *IncidentClient) QueryAffectedConfigurationItems(i *Incident) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, incident.AffectedConfigurationItemsTable, incident.AffectedConfigurationItemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRelatedProblems queries the related_problems edge of a Incident.
-func (c *IncidentClient) QueryRelatedProblems(i *Incident) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, incident.RelatedProblemsTable, incident.RelatedProblemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRelatedChanges queries the related_changes edge of a Incident.
-func (c *IncidentClient) QueryRelatedChanges(i *Incident) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, incident.RelatedChangesTable, incident.RelatedChangesColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryStatusLogs queries the status_logs edge of a Incident.
-func (c *IncidentClient) QueryStatusLogs(i *Incident) *StatusLogQuery {
-	query := (&StatusLogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(statuslog.Table, statuslog.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, incident.StatusLogsTable, incident.StatusLogsColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryComments queries the comments edge of a Incident.
-func (c *IncidentClient) QueryComments(i *Incident) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(incident.Table, incident.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, incident.CommentsTable, incident.CommentsColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // Hooks returns the client hooks.
@@ -2380,22 +1429,6 @@ func (c *KnowledgeArticleClient) GetX(ctx context.Context, id int) *KnowledgeArt
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a KnowledgeArticle.
-func (c *KnowledgeArticleClient) QueryTenant(ka *KnowledgeArticle) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ka.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticle.TenantTable, knowledgearticle.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(ka.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *KnowledgeArticleClient) Hooks() []Hook {
 	return c.hooks.KnowledgeArticle
@@ -2418,6 +1451,421 @@ func (c *KnowledgeArticleClient) mutate(ctx context.Context, m *KnowledgeArticle
 		return (&KnowledgeArticleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown KnowledgeArticle mutation op: %q", m.Op())
+	}
+}
+
+// MessageClient is a client for the Message schema.
+type MessageClient struct {
+	config
+}
+
+// NewMessageClient returns a client for the Message from the given config.
+func NewMessageClient(c config) *MessageClient {
+	return &MessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `message.Hooks(f(g(h())))`.
+func (c *MessageClient) Use(hooks ...Hook) {
+	c.hooks.Message = append(c.hooks.Message, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `message.Intercept(f(g(h())))`.
+func (c *MessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Message = append(c.inters.Message, interceptors...)
+}
+
+// Create returns a builder for creating a Message entity.
+func (c *MessageClient) Create() *MessageCreate {
+	mutation := newMessageMutation(c.config, OpCreate)
+	return &MessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Message entities.
+func (c *MessageClient) CreateBulk(builders ...*MessageCreate) *MessageCreateBulk {
+	return &MessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MessageClient) MapCreateBulk(slice any, setFunc func(*MessageCreate, int)) *MessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MessageCreateBulk{err: fmt.Errorf("calling to MessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Message.
+func (c *MessageClient) Update() *MessageUpdate {
+	mutation := newMessageMutation(c.config, OpUpdate)
+	return &MessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MessageClient) UpdateOne(m *Message) *MessageUpdateOne {
+	mutation := newMessageMutation(c.config, OpUpdateOne, withMessage(m))
+	return &MessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MessageClient) UpdateOneID(id int) *MessageUpdateOne {
+	mutation := newMessageMutation(c.config, OpUpdateOne, withMessageID(id))
+	return &MessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Message.
+func (c *MessageClient) Delete() *MessageDelete {
+	mutation := newMessageMutation(c.config, OpDelete)
+	return &MessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MessageClient) DeleteOne(m *Message) *MessageDeleteOne {
+	return c.DeleteOneID(m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MessageClient) DeleteOneID(id int) *MessageDeleteOne {
+	builder := c.Delete().Where(message.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MessageDeleteOne{builder}
+}
+
+// Query returns a query builder for Message.
+func (c *MessageClient) Query() *MessageQuery {
+	return &MessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Message entity by its id.
+func (c *MessageClient) Get(ctx context.Context, id int) (*Message, error) {
+	return c.Query().Where(message.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MessageClient) GetX(ctx context.Context, id int) *Message {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryConversation queries the conversation edge of a Message.
+func (c *MessageClient) QueryConversation(m *Message) *ConversationQuery {
+	query := (&ConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, id),
+			sqlgraph.To(conversation.Table, conversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, message.ConversationTable, message.ConversationColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MessageClient) Hooks() []Hook {
+	return c.hooks.Message
+}
+
+// Interceptors returns the client interceptors.
+func (c *MessageClient) Interceptors() []Interceptor {
+	return c.inters.Message
+}
+
+func (c *MessageClient) mutate(ctx context.Context, m *MessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Message mutation op: %q", m.Op())
+	}
+}
+
+// NotificationClient is a client for the Notification schema.
+type NotificationClient struct {
+	config
+}
+
+// NewNotificationClient returns a client for the Notification from the given config.
+func NewNotificationClient(c config) *NotificationClient {
+	return &NotificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notification.Hooks(f(g(h())))`.
+func (c *NotificationClient) Use(hooks ...Hook) {
+	c.hooks.Notification = append(c.hooks.Notification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notification.Intercept(f(g(h())))`.
+func (c *NotificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Notification = append(c.inters.Notification, interceptors...)
+}
+
+// Create returns a builder for creating a Notification entity.
+func (c *NotificationClient) Create() *NotificationCreate {
+	mutation := newNotificationMutation(c.config, OpCreate)
+	return &NotificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Notification entities.
+func (c *NotificationClient) CreateBulk(builders ...*NotificationCreate) *NotificationCreateBulk {
+	return &NotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationClient) MapCreateBulk(slice any, setFunc func(*NotificationCreate, int)) *NotificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationCreateBulk{err: fmt.Errorf("calling to NotificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Notification.
+func (c *NotificationClient) Update() *NotificationUpdate {
+	mutation := newNotificationMutation(c.config, OpUpdate)
+	return &NotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationClient) UpdateOne(n *Notification) *NotificationUpdateOne {
+	mutation := newNotificationMutation(c.config, OpUpdateOne, withNotification(n))
+	return &NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationClient) UpdateOneID(id int) *NotificationUpdateOne {
+	mutation := newNotificationMutation(c.config, OpUpdateOne, withNotificationID(id))
+	return &NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Notification.
+func (c *NotificationClient) Delete() *NotificationDelete {
+	mutation := newNotificationMutation(c.config, OpDelete)
+	return &NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationClient) DeleteOne(n *Notification) *NotificationDeleteOne {
+	return c.DeleteOneID(n.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationClient) DeleteOneID(id int) *NotificationDeleteOne {
+	builder := c.Delete().Where(notification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationDeleteOne{builder}
+}
+
+// Query returns a query builder for Notification.
+func (c *NotificationClient) Query() *NotificationQuery {
+	return &NotificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Notification entity by its id.
+func (c *NotificationClient) Get(ctx context.Context, id int) (*Notification, error) {
+	return c.Query().Where(notification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationClient) GetX(ctx context.Context, id int) *Notification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationClient) Hooks() []Hook {
+	return c.hooks.Notification
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationClient) Interceptors() []Interceptor {
+	return c.inters.Notification
+}
+
+func (c *NotificationClient) mutate(ctx context.Context, m *NotificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Notification mutation op: %q", m.Op())
+	}
+}
+
+// PromptTemplateClient is a client for the PromptTemplate schema.
+type PromptTemplateClient struct {
+	config
+}
+
+// NewPromptTemplateClient returns a client for the PromptTemplate from the given config.
+func NewPromptTemplateClient(c config) *PromptTemplateClient {
+	return &PromptTemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `prompttemplate.Hooks(f(g(h())))`.
+func (c *PromptTemplateClient) Use(hooks ...Hook) {
+	c.hooks.PromptTemplate = append(c.hooks.PromptTemplate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `prompttemplate.Intercept(f(g(h())))`.
+func (c *PromptTemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PromptTemplate = append(c.inters.PromptTemplate, interceptors...)
+}
+
+// Create returns a builder for creating a PromptTemplate entity.
+func (c *PromptTemplateClient) Create() *PromptTemplateCreate {
+	mutation := newPromptTemplateMutation(c.config, OpCreate)
+	return &PromptTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PromptTemplate entities.
+func (c *PromptTemplateClient) CreateBulk(builders ...*PromptTemplateCreate) *PromptTemplateCreateBulk {
+	return &PromptTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PromptTemplateClient) MapCreateBulk(slice any, setFunc func(*PromptTemplateCreate, int)) *PromptTemplateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PromptTemplateCreateBulk{err: fmt.Errorf("calling to PromptTemplateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PromptTemplateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PromptTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PromptTemplate.
+func (c *PromptTemplateClient) Update() *PromptTemplateUpdate {
+	mutation := newPromptTemplateMutation(c.config, OpUpdate)
+	return &PromptTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PromptTemplateClient) UpdateOne(pt *PromptTemplate) *PromptTemplateUpdateOne {
+	mutation := newPromptTemplateMutation(c.config, OpUpdateOne, withPromptTemplate(pt))
+	return &PromptTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PromptTemplateClient) UpdateOneID(id int) *PromptTemplateUpdateOne {
+	mutation := newPromptTemplateMutation(c.config, OpUpdateOne, withPromptTemplateID(id))
+	return &PromptTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PromptTemplate.
+func (c *PromptTemplateClient) Delete() *PromptTemplateDelete {
+	mutation := newPromptTemplateMutation(c.config, OpDelete)
+	return &PromptTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PromptTemplateClient) DeleteOne(pt *PromptTemplate) *PromptTemplateDeleteOne {
+	return c.DeleteOneID(pt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PromptTemplateClient) DeleteOneID(id int) *PromptTemplateDeleteOne {
+	builder := c.Delete().Where(prompttemplate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PromptTemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for PromptTemplate.
+func (c *PromptTemplateClient) Query() *PromptTemplateQuery {
+	return &PromptTemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePromptTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PromptTemplate entity by its id.
+func (c *PromptTemplateClient) Get(ctx context.Context, id int) (*PromptTemplate, error) {
+	return c.Query().Where(prompttemplate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PromptTemplateClient) GetX(ctx context.Context, id int) *PromptTemplate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PromptTemplateClient) Hooks() []Hook {
+	return c.hooks.PromptTemplate
+}
+
+// Interceptors returns the client interceptors.
+func (c *PromptTemplateClient) Interceptors() []Interceptor {
+	return c.inters.PromptTemplate
+}
+
+func (c *PromptTemplateClient) mutate(ctx context.Context, m *PromptTemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PromptTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PromptTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PromptTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PromptTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PromptTemplate mutation op: %q", m.Op())
 	}
 }
 
@@ -2551,139 +1999,6 @@ func (c *SLADefinitionClient) mutate(ctx context.Context, m *SLADefinitionMutati
 		return (&SLADefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown SLADefinition mutation op: %q", m.Op())
-	}
-}
-
-// SLAMetricsClient is a client for the SLAMetrics schema.
-type SLAMetricsClient struct {
-	config
-}
-
-// NewSLAMetricsClient returns a client for the SLAMetrics from the given config.
-func NewSLAMetricsClient(c config) *SLAMetricsClient {
-	return &SLAMetricsClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `slametrics.Hooks(f(g(h())))`.
-func (c *SLAMetricsClient) Use(hooks ...Hook) {
-	c.hooks.SLAMetrics = append(c.hooks.SLAMetrics, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `slametrics.Intercept(f(g(h())))`.
-func (c *SLAMetricsClient) Intercept(interceptors ...Interceptor) {
-	c.inters.SLAMetrics = append(c.inters.SLAMetrics, interceptors...)
-}
-
-// Create returns a builder for creating a SLAMetrics entity.
-func (c *SLAMetricsClient) Create() *SLAMetricsCreate {
-	mutation := newSLAMetricsMutation(c.config, OpCreate)
-	return &SLAMetricsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of SLAMetrics entities.
-func (c *SLAMetricsClient) CreateBulk(builders ...*SLAMetricsCreate) *SLAMetricsCreateBulk {
-	return &SLAMetricsCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *SLAMetricsClient) MapCreateBulk(slice any, setFunc func(*SLAMetricsCreate, int)) *SLAMetricsCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &SLAMetricsCreateBulk{err: fmt.Errorf("calling to SLAMetricsClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*SLAMetricsCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &SLAMetricsCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for SLAMetrics.
-func (c *SLAMetricsClient) Update() *SLAMetricsUpdate {
-	mutation := newSLAMetricsMutation(c.config, OpUpdate)
-	return &SLAMetricsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SLAMetricsClient) UpdateOne(sm *SLAMetrics) *SLAMetricsUpdateOne {
-	mutation := newSLAMetricsMutation(c.config, OpUpdateOne, withSLAMetrics(sm))
-	return &SLAMetricsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SLAMetricsClient) UpdateOneID(id int) *SLAMetricsUpdateOne {
-	mutation := newSLAMetricsMutation(c.config, OpUpdateOne, withSLAMetricsID(id))
-	return &SLAMetricsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for SLAMetrics.
-func (c *SLAMetricsClient) Delete() *SLAMetricsDelete {
-	mutation := newSLAMetricsMutation(c.config, OpDelete)
-	return &SLAMetricsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SLAMetricsClient) DeleteOne(sm *SLAMetrics) *SLAMetricsDeleteOne {
-	return c.DeleteOneID(sm.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SLAMetricsClient) DeleteOneID(id int) *SLAMetricsDeleteOne {
-	builder := c.Delete().Where(slametrics.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SLAMetricsDeleteOne{builder}
-}
-
-// Query returns a query builder for SLAMetrics.
-func (c *SLAMetricsClient) Query() *SLAMetricsQuery {
-	return &SLAMetricsQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeSLAMetrics},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a SLAMetrics entity by its id.
-func (c *SLAMetricsClient) Get(ctx context.Context, id int) (*SLAMetrics, error) {
-	return c.Query().Where(slametrics.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SLAMetricsClient) GetX(ctx context.Context, id int) *SLAMetrics {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *SLAMetricsClient) Hooks() []Hook {
-	return c.hooks.SLAMetrics
-}
-
-// Interceptors returns the client interceptors.
-func (c *SLAMetricsClient) Interceptors() []Interceptor {
-	return c.inters.SLAMetrics
-}
-
-func (c *SLAMetricsClient) mutate(ctx context.Context, m *SLAMetricsMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&SLAMetricsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&SLAMetricsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&SLAMetricsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&SLAMetricsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown SLAMetrics mutation op: %q", m.Op())
 	}
 }
 
@@ -2928,38 +2243,6 @@ func (c *ServiceCatalogClient) GetX(ctx context.Context, id int) *ServiceCatalog
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a ServiceCatalog.
-func (c *ServiceCatalogClient) QueryTenant(sc *ServiceCatalog) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sc.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, servicecatalog.TenantTable, servicecatalog.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(sc.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryServiceRequests queries the service_requests edge of a ServiceCatalog.
-func (c *ServiceCatalogClient) QueryServiceRequests(sc *ServiceCatalog) *ServiceRequestQuery {
-	query := (&ServiceRequestClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sc.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(servicecatalog.Table, servicecatalog.FieldID, id),
-			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, servicecatalog.ServiceRequestsTable, servicecatalog.ServiceRequestsColumn),
-		)
-		fromV = sqlgraph.Neighbors(sc.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *ServiceCatalogClient) Hooks() []Hook {
 	return c.hooks.ServiceCatalog
@@ -3093,54 +2376,6 @@ func (c *ServiceRequestClient) GetX(ctx context.Context, id int) *ServiceRequest
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a ServiceRequest.
-func (c *ServiceRequestClient) QueryTenant(sr *ServiceRequest) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(servicerequest.Table, servicerequest.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, servicerequest.TenantTable, servicerequest.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCatalog queries the catalog edge of a ServiceRequest.
-func (c *ServiceRequestClient) QueryCatalog(sr *ServiceRequest) *ServiceCatalogQuery {
-	query := (&ServiceCatalogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(servicerequest.Table, servicerequest.FieldID, id),
-			sqlgraph.To(servicecatalog.Table, servicecatalog.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, servicerequest.CatalogTable, servicerequest.CatalogColumn),
-		)
-		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRequester queries the requester edge of a ServiceRequest.
-func (c *ServiceRequestClient) QueryRequester(sr *ServiceRequest) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(servicerequest.Table, servicerequest.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, servicerequest.RequesterTable, servicerequest.RequesterColumn),
-		)
-		fromV = sqlgraph.Neighbors(sr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *ServiceRequestClient) Hooks() []Hook {
 	return c.hooks.ServiceRequest
@@ -3163,320 +2398,6 @@ func (c *ServiceRequestClient) mutate(ctx context.Context, m *ServiceRequestMuta
 		return (&ServiceRequestDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ServiceRequest mutation op: %q", m.Op())
-	}
-}
-
-// StatusLogClient is a client for the StatusLog schema.
-type StatusLogClient struct {
-	config
-}
-
-// NewStatusLogClient returns a client for the StatusLog from the given config.
-func NewStatusLogClient(c config) *StatusLogClient {
-	return &StatusLogClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `statuslog.Hooks(f(g(h())))`.
-func (c *StatusLogClient) Use(hooks ...Hook) {
-	c.hooks.StatusLog = append(c.hooks.StatusLog, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `statuslog.Intercept(f(g(h())))`.
-func (c *StatusLogClient) Intercept(interceptors ...Interceptor) {
-	c.inters.StatusLog = append(c.inters.StatusLog, interceptors...)
-}
-
-// Create returns a builder for creating a StatusLog entity.
-func (c *StatusLogClient) Create() *StatusLogCreate {
-	mutation := newStatusLogMutation(c.config, OpCreate)
-	return &StatusLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of StatusLog entities.
-func (c *StatusLogClient) CreateBulk(builders ...*StatusLogCreate) *StatusLogCreateBulk {
-	return &StatusLogCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *StatusLogClient) MapCreateBulk(slice any, setFunc func(*StatusLogCreate, int)) *StatusLogCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &StatusLogCreateBulk{err: fmt.Errorf("calling to StatusLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*StatusLogCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &StatusLogCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for StatusLog.
-func (c *StatusLogClient) Update() *StatusLogUpdate {
-	mutation := newStatusLogMutation(c.config, OpUpdate)
-	return &StatusLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *StatusLogClient) UpdateOne(sl *StatusLog) *StatusLogUpdateOne {
-	mutation := newStatusLogMutation(c.config, OpUpdateOne, withStatusLog(sl))
-	return &StatusLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *StatusLogClient) UpdateOneID(id int) *StatusLogUpdateOne {
-	mutation := newStatusLogMutation(c.config, OpUpdateOne, withStatusLogID(id))
-	return &StatusLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for StatusLog.
-func (c *StatusLogClient) Delete() *StatusLogDelete {
-	mutation := newStatusLogMutation(c.config, OpDelete)
-	return &StatusLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *StatusLogClient) DeleteOne(sl *StatusLog) *StatusLogDeleteOne {
-	return c.DeleteOneID(sl.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *StatusLogClient) DeleteOneID(id int) *StatusLogDeleteOne {
-	builder := c.Delete().Where(statuslog.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &StatusLogDeleteOne{builder}
-}
-
-// Query returns a query builder for StatusLog.
-func (c *StatusLogClient) Query() *StatusLogQuery {
-	return &StatusLogQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeStatusLog},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a StatusLog entity by its id.
-func (c *StatusLogClient) Get(ctx context.Context, id int) (*StatusLog, error) {
-	return c.Query().Where(statuslog.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *StatusLogClient) GetX(ctx context.Context, id int) *StatusLog {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryTicket queries the ticket edge of a StatusLog.
-func (c *StatusLogClient) QueryTicket(sl *StatusLog) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sl.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(statuslog.Table, statuslog.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, statuslog.TicketTable, statuslog.TicketColumn),
-		)
-		fromV = sqlgraph.Neighbors(sl.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryUser queries the user edge of a StatusLog.
-func (c *StatusLogClient) QueryUser(sl *StatusLog) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sl.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(statuslog.Table, statuslog.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, statuslog.UserTable, statuslog.UserColumn),
-		)
-		fromV = sqlgraph.Neighbors(sl.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *StatusLogClient) Hooks() []Hook {
-	return c.hooks.StatusLog
-}
-
-// Interceptors returns the client interceptors.
-func (c *StatusLogClient) Interceptors() []Interceptor {
-	return c.inters.StatusLog
-}
-
-func (c *StatusLogClient) mutate(ctx context.Context, m *StatusLogMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&StatusLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&StatusLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&StatusLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&StatusLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown StatusLog mutation op: %q", m.Op())
-	}
-}
-
-// SubscriptionClient is a client for the Subscription schema.
-type SubscriptionClient struct {
-	config
-}
-
-// NewSubscriptionClient returns a client for the Subscription from the given config.
-func NewSubscriptionClient(c config) *SubscriptionClient {
-	return &SubscriptionClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `subscription.Hooks(f(g(h())))`.
-func (c *SubscriptionClient) Use(hooks ...Hook) {
-	c.hooks.Subscription = append(c.hooks.Subscription, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `subscription.Intercept(f(g(h())))`.
-func (c *SubscriptionClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Subscription = append(c.inters.Subscription, interceptors...)
-}
-
-// Create returns a builder for creating a Subscription entity.
-func (c *SubscriptionClient) Create() *SubscriptionCreate {
-	mutation := newSubscriptionMutation(c.config, OpCreate)
-	return &SubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Subscription entities.
-func (c *SubscriptionClient) CreateBulk(builders ...*SubscriptionCreate) *SubscriptionCreateBulk {
-	return &SubscriptionCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *SubscriptionClient) MapCreateBulk(slice any, setFunc func(*SubscriptionCreate, int)) *SubscriptionCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &SubscriptionCreateBulk{err: fmt.Errorf("calling to SubscriptionClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*SubscriptionCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &SubscriptionCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Subscription.
-func (c *SubscriptionClient) Update() *SubscriptionUpdate {
-	mutation := newSubscriptionMutation(c.config, OpUpdate)
-	return &SubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SubscriptionClient) UpdateOne(s *Subscription) *SubscriptionUpdateOne {
-	mutation := newSubscriptionMutation(c.config, OpUpdateOne, withSubscription(s))
-	return &SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SubscriptionClient) UpdateOneID(id int) *SubscriptionUpdateOne {
-	mutation := newSubscriptionMutation(c.config, OpUpdateOne, withSubscriptionID(id))
-	return &SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Subscription.
-func (c *SubscriptionClient) Delete() *SubscriptionDelete {
-	mutation := newSubscriptionMutation(c.config, OpDelete)
-	return &SubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SubscriptionClient) DeleteOne(s *Subscription) *SubscriptionDeleteOne {
-	return c.DeleteOneID(s.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SubscriptionClient) DeleteOneID(id int) *SubscriptionDeleteOne {
-	builder := c.Delete().Where(subscription.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SubscriptionDeleteOne{builder}
-}
-
-// Query returns a query builder for Subscription.
-func (c *SubscriptionClient) Query() *SubscriptionQuery {
-	return &SubscriptionQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeSubscription},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Subscription entity by its id.
-func (c *SubscriptionClient) Get(ctx context.Context, id int) (*Subscription, error) {
-	return c.Query().Where(subscription.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SubscriptionClient) GetX(ctx context.Context, id int) *Subscription {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryTenant queries the tenant edge of a Subscription.
-func (c *SubscriptionClient) QueryTenant(s *Subscription) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := s.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(subscription.Table, subscription.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscription.TenantTable, subscription.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *SubscriptionClient) Hooks() []Hook {
-	return c.hooks.Subscription
-}
-
-// Interceptors returns the client interceptors.
-func (c *SubscriptionClient) Interceptors() []Interceptor {
-	return c.inters.Subscription
-}
-
-func (c *SubscriptionClient) mutate(ctx context.Context, m *SubscriptionMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&SubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&SubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&SubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&SubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Subscription mutation op: %q", m.Op())
 	}
 }
 
@@ -3586,246 +2507,6 @@ func (c *TenantClient) GetX(ctx context.Context, id int) *Tenant {
 		panic(err)
 	}
 	return obj
-}
-
-// QueryUsers queries the users edge of a Tenant.
-func (c *TenantClient) QueryUsers(t *Tenant) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.UsersTable, tenant.UsersColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryTickets queries the tickets edge of a Tenant.
-func (c *TenantClient) QueryTickets(t *Tenant) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.TicketsTable, tenant.TicketsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryServiceCatalogs queries the service_catalogs edge of a Tenant.
-func (c *TenantClient) QueryServiceCatalogs(t *Tenant) *ServiceCatalogQuery {
-	query := (&ServiceCatalogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(servicecatalog.Table, servicecatalog.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ServiceCatalogsTable, tenant.ServiceCatalogsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryServiceRequests queries the service_requests edge of a Tenant.
-func (c *TenantClient) QueryServiceRequests(t *Tenant) *ServiceRequestQuery {
-	query := (&ServiceRequestClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ServiceRequestsTable, tenant.ServiceRequestsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySubscriptions queries the subscriptions edge of a Tenant.
-func (c *TenantClient) QuerySubscriptions(t *Tenant) *SubscriptionQuery {
-	query := (&SubscriptionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(subscription.Table, subscription.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.SubscriptionsTable, tenant.SubscriptionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryConfigurationItems queries the configuration_items edge of a Tenant.
-func (c *TenantClient) QueryConfigurationItems(t *Tenant) *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.ConfigurationItemsTable, tenant.ConfigurationItemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryKnowledgeArticles queries the knowledge_articles edge of a Tenant.
-func (c *TenantClient) QueryKnowledgeArticles(t *Tenant) *KnowledgeArticleQuery {
-	query := (&KnowledgeArticleClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.KnowledgeArticlesTable, tenant.KnowledgeArticlesColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryWorkflows queries the workflows edge of a Tenant.
-func (c *TenantClient) QueryWorkflows(t *Tenant) *WorkflowQuery {
-	query := (&WorkflowClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(workflow.Table, workflow.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.WorkflowsTable, tenant.WorkflowsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiTypes queries the ci_types edge of a Tenant.
-func (c *TenantClient) QueryCiTypes(t *Tenant) *CITypeQuery {
-	query := (&CITypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(citype.Table, citype.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiTypesTable, tenant.CiTypesColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiRelationshipTypes queries the ci_relationship_types edge of a Tenant.
-func (c *TenantClient) QueryCiRelationshipTypes(t *Tenant) *CIRelationshipTypeQuery {
-	query := (&CIRelationshipTypeClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(cirelationshiptype.Table, cirelationshiptype.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiRelationshipTypesTable, tenant.CiRelationshipTypesColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiRelationships queries the ci_relationships edge of a Tenant.
-func (c *TenantClient) QueryCiRelationships(t *Tenant) *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiRelationshipsTable, tenant.CiRelationshipsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiLifecycleStates queries the ci_lifecycle_states edge of a Tenant.
-func (c *TenantClient) QueryCiLifecycleStates(t *Tenant) *CILifecycleStateQuery {
-	query := (&CILifecycleStateClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(cilifecyclestate.Table, cilifecyclestate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiLifecycleStatesTable, tenant.CiLifecycleStatesColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiChangeRecords queries the ci_change_records edge of a Tenant.
-func (c *TenantClient) QueryCiChangeRecords(t *Tenant) *CIChangeRecordQuery {
-	query := (&CIChangeRecordClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(cichangerecord.Table, cichangerecord.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiChangeRecordsTable, tenant.CiChangeRecordsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryCiAttributeDefinitions queries the ci_attribute_definitions edge of a Tenant.
-func (c *TenantClient) QueryCiAttributeDefinitions(t *Tenant) *CIAttributeDefinitionQuery {
-	query := (&CIAttributeDefinitionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.CiAttributeDefinitionsTable, tenant.CiAttributeDefinitionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryIncidents queries the incidents edge of a Tenant.
-func (c *TenantClient) QueryIncidents(t *Tenant) *IncidentQuery {
-	query := (&IncidentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(tenant.Table, tenant.FieldID, id),
-			sqlgraph.To(incident.Table, incident.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, tenant.IncidentsTable, tenant.IncidentsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // Hooks returns the client hooks.
@@ -3961,102 +2642,6 @@ func (c *TicketClient) GetX(ctx context.Context, id int) *Ticket {
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a Ticket.
-func (c *TicketClient) QueryTenant(t *Ticket) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.TenantTable, ticket.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryRequester queries the requester edge of a Ticket.
-func (c *TicketClient) QueryRequester(t *Ticket) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.RequesterTable, ticket.RequesterColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAssignee queries the assignee edge of a Ticket.
-func (c *TicketClient) QueryAssignee(t *Ticket) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ticket.AssigneeTable, ticket.AssigneeColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryApprovalLogs queries the approval_logs edge of a Ticket.
-func (c *TicketClient) QueryApprovalLogs(t *Ticket) *ApprovalLogQuery {
-	query := (&ApprovalLogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(approvallog.Table, approvallog.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ApprovalLogsTable, ticket.ApprovalLogsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryFlowInstance queries the flow_instance edge of a Ticket.
-func (c *TicketClient) QueryFlowInstance(t *Ticket) *FlowInstanceQuery {
-	query := (&FlowInstanceClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(flowinstance.Table, flowinstance.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, ticket.FlowInstanceTable, ticket.FlowInstanceColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryStatusLogs queries the status_logs edge of a Ticket.
-func (c *TicketClient) QueryStatusLogs(t *Ticket) *StatusLogQuery {
-	query := (&StatusLogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticket.Table, ticket.FieldID, id),
-			sqlgraph.To(statuslog.Table, statuslog.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ticket.StatusLogsTable, ticket.StatusLogsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *TicketClient) Hooks() []Hook {
 	return c.hooks.Ticket
@@ -4079,6 +2664,155 @@ func (c *TicketClient) mutate(ctx context.Context, m *TicketMutation) (Value, er
 		return (&TicketDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Ticket mutation op: %q", m.Op())
+	}
+}
+
+// ToolInvocationClient is a client for the ToolInvocation schema.
+type ToolInvocationClient struct {
+	config
+}
+
+// NewToolInvocationClient returns a client for the ToolInvocation from the given config.
+func NewToolInvocationClient(c config) *ToolInvocationClient {
+	return &ToolInvocationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `toolinvocation.Hooks(f(g(h())))`.
+func (c *ToolInvocationClient) Use(hooks ...Hook) {
+	c.hooks.ToolInvocation = append(c.hooks.ToolInvocation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `toolinvocation.Intercept(f(g(h())))`.
+func (c *ToolInvocationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ToolInvocation = append(c.inters.ToolInvocation, interceptors...)
+}
+
+// Create returns a builder for creating a ToolInvocation entity.
+func (c *ToolInvocationClient) Create() *ToolInvocationCreate {
+	mutation := newToolInvocationMutation(c.config, OpCreate)
+	return &ToolInvocationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ToolInvocation entities.
+func (c *ToolInvocationClient) CreateBulk(builders ...*ToolInvocationCreate) *ToolInvocationCreateBulk {
+	return &ToolInvocationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ToolInvocationClient) MapCreateBulk(slice any, setFunc func(*ToolInvocationCreate, int)) *ToolInvocationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ToolInvocationCreateBulk{err: fmt.Errorf("calling to ToolInvocationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ToolInvocationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ToolInvocationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ToolInvocation.
+func (c *ToolInvocationClient) Update() *ToolInvocationUpdate {
+	mutation := newToolInvocationMutation(c.config, OpUpdate)
+	return &ToolInvocationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ToolInvocationClient) UpdateOne(ti *ToolInvocation) *ToolInvocationUpdateOne {
+	mutation := newToolInvocationMutation(c.config, OpUpdateOne, withToolInvocation(ti))
+	return &ToolInvocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ToolInvocationClient) UpdateOneID(id int) *ToolInvocationUpdateOne {
+	mutation := newToolInvocationMutation(c.config, OpUpdateOne, withToolInvocationID(id))
+	return &ToolInvocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ToolInvocation.
+func (c *ToolInvocationClient) Delete() *ToolInvocationDelete {
+	mutation := newToolInvocationMutation(c.config, OpDelete)
+	return &ToolInvocationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ToolInvocationClient) DeleteOne(ti *ToolInvocation) *ToolInvocationDeleteOne {
+	return c.DeleteOneID(ti.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ToolInvocationClient) DeleteOneID(id int) *ToolInvocationDeleteOne {
+	builder := c.Delete().Where(toolinvocation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ToolInvocationDeleteOne{builder}
+}
+
+// Query returns a query builder for ToolInvocation.
+func (c *ToolInvocationClient) Query() *ToolInvocationQuery {
+	return &ToolInvocationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeToolInvocation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ToolInvocation entity by its id.
+func (c *ToolInvocationClient) Get(ctx context.Context, id int) (*ToolInvocation, error) {
+	return c.Query().Where(toolinvocation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ToolInvocationClient) GetX(ctx context.Context, id int) *ToolInvocation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryConversation queries the conversation edge of a ToolInvocation.
+func (c *ToolInvocationClient) QueryConversation(ti *ToolInvocation) *ConversationQuery {
+	query := (&ConversationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ti.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(toolinvocation.Table, toolinvocation.FieldID, id),
+			sqlgraph.To(conversation.Table, conversation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, toolinvocation.ConversationTable, toolinvocation.ConversationColumn),
+		)
+		fromV = sqlgraph.Neighbors(ti.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ToolInvocationClient) Hooks() []Hook {
+	return c.hooks.ToolInvocation
+}
+
+// Interceptors returns the client interceptors.
+func (c *ToolInvocationClient) Interceptors() []Interceptor {
+	return c.inters.ToolInvocation
+}
+
+func (c *ToolInvocationClient) mutate(ctx context.Context, m *ToolInvocationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ToolInvocationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ToolInvocationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ToolInvocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ToolInvocationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ToolInvocation mutation op: %q", m.Op())
 	}
 }
 
@@ -4190,134 +2924,6 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
-// QueryTenant queries the tenant edge of a User.
-func (c *UserClient) QueryTenant(u *User) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.TenantTable, user.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySubmittedTickets queries the submitted_tickets edge of a User.
-func (c *UserClient) QuerySubmittedTickets(u *User) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.SubmittedTicketsTable, user.SubmittedTicketsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAssignedTickets queries the assigned_tickets edge of a User.
-func (c *UserClient) QueryAssignedTickets(u *User) *TicketQuery {
-	query := (&TicketClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedTicketsTable, user.AssignedTicketsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryApprovalLogs queries the approval_logs edge of a User.
-func (c *UserClient) QueryApprovalLogs(u *User) *ApprovalLogQuery {
-	query := (&ApprovalLogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(approvallog.Table, approvallog.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ApprovalLogsTable, user.ApprovalLogsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryStatusLogs queries the status_logs edge of a User.
-func (c *UserClient) QueryStatusLogs(u *User) *StatusLogQuery {
-	query := (&StatusLogClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(statuslog.Table, statuslog.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.StatusLogsTable, user.StatusLogsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryServiceRequests queries the service_requests edge of a User.
-func (c *UserClient) QueryServiceRequests(u *User) *ServiceRequestQuery {
-	query := (&ServiceRequestClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(servicerequest.Table, servicerequest.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ServiceRequestsTable, user.ServiceRequestsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReportedIncidents queries the reported_incidents edge of a User.
-func (c *UserClient) QueryReportedIncidents(u *User) *IncidentQuery {
-	query := (&IncidentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(incident.Table, incident.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.ReportedIncidentsTable, user.ReportedIncidentsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAssignedIncidents queries the assigned_incidents edge of a User.
-func (c *UserClient) QueryAssignedIncidents(u *User) *IncidentQuery {
-	query := (&IncidentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(incident.Table, incident.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.AssignedIncidentsTable, user.AssignedIncidentsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -4343,185 +2949,18 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
-// WorkflowClient is a client for the Workflow schema.
-type WorkflowClient struct {
-	config
-}
-
-// NewWorkflowClient returns a client for the Workflow from the given config.
-func NewWorkflowClient(c config) *WorkflowClient {
-	return &WorkflowClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `workflow.Hooks(f(g(h())))`.
-func (c *WorkflowClient) Use(hooks ...Hook) {
-	c.hooks.Workflow = append(c.hooks.Workflow, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `workflow.Intercept(f(g(h())))`.
-func (c *WorkflowClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Workflow = append(c.inters.Workflow, interceptors...)
-}
-
-// Create returns a builder for creating a Workflow entity.
-func (c *WorkflowClient) Create() *WorkflowCreate {
-	mutation := newWorkflowMutation(c.config, OpCreate)
-	return &WorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Workflow entities.
-func (c *WorkflowClient) CreateBulk(builders ...*WorkflowCreate) *WorkflowCreateBulk {
-	return &WorkflowCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *WorkflowClient) MapCreateBulk(slice any, setFunc func(*WorkflowCreate, int)) *WorkflowCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &WorkflowCreateBulk{err: fmt.Errorf("calling to WorkflowClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*WorkflowCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &WorkflowCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Workflow.
-func (c *WorkflowClient) Update() *WorkflowUpdate {
-	mutation := newWorkflowMutation(c.config, OpUpdate)
-	return &WorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *WorkflowClient) UpdateOne(w *Workflow) *WorkflowUpdateOne {
-	mutation := newWorkflowMutation(c.config, OpUpdateOne, withWorkflow(w))
-	return &WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *WorkflowClient) UpdateOneID(id int) *WorkflowUpdateOne {
-	mutation := newWorkflowMutation(c.config, OpUpdateOne, withWorkflowID(id))
-	return &WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Workflow.
-func (c *WorkflowClient) Delete() *WorkflowDelete {
-	mutation := newWorkflowMutation(c.config, OpDelete)
-	return &WorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *WorkflowClient) DeleteOne(w *Workflow) *WorkflowDeleteOne {
-	return c.DeleteOneID(w.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *WorkflowClient) DeleteOneID(id int) *WorkflowDeleteOne {
-	builder := c.Delete().Where(workflow.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &WorkflowDeleteOne{builder}
-}
-
-// Query returns a query builder for Workflow.
-func (c *WorkflowClient) Query() *WorkflowQuery {
-	return &WorkflowQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeWorkflow},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Workflow entity by its id.
-func (c *WorkflowClient) Get(ctx context.Context, id int) (*Workflow, error) {
-	return c.Query().Where(workflow.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *WorkflowClient) GetX(ctx context.Context, id int) *Workflow {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryTenant queries the tenant edge of a Workflow.
-func (c *WorkflowClient) QueryTenant(w *Workflow) *TenantQuery {
-	query := (&TenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := w.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflow.Table, workflow.FieldID, id),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workflow.TenantTable, workflow.TenantColumn),
-		)
-		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryFlowInstances queries the flow_instances edge of a Workflow.
-func (c *WorkflowClient) QueryFlowInstances(w *Workflow) *FlowInstanceQuery {
-	query := (&FlowInstanceClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := w.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflow.Table, workflow.FieldID, id),
-			sqlgraph.To(flowinstance.Table, flowinstance.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, workflow.FlowInstancesTable, workflow.FlowInstancesColumn),
-		)
-		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *WorkflowClient) Hooks() []Hook {
-	return c.hooks.Workflow
-}
-
-// Interceptors returns the client interceptors.
-func (c *WorkflowClient) Interceptors() []Interceptor {
-	return c.inters.Workflow
-}
-
-func (c *WorkflowClient) mutate(ctx context.Context, m *WorkflowMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&WorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&WorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&WorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&WorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Workflow mutation op: %q", m.Op())
-	}
-}
-
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
-		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
-		Incident, KnowledgeArticle, SLADefinition, SLAMetrics, SLAViolation,
-		ServiceCatalog, ServiceRequest, StatusLog, Subscription, Tenant, Ticket, User,
-		Workflow []ent.Hook
+		AuditLog, CIAttributeDefinition, CIRelationship, CIType, ConfigurationItem,
+		Conversation, Incident, KnowledgeArticle, Message, Notification,
+		PromptTemplate, SLADefinition, SLAViolation, ServiceCatalog, ServiceRequest,
+		Tenant, Ticket, ToolInvocation, User []ent.Hook
 	}
 	inters struct {
-		ApprovalLog, CIAttributeDefinition, CIChangeRecord, CILifecycleState,
-		CIRelationship, CIRelationshipType, CIType, ConfigurationItem, FlowInstance,
-		Incident, KnowledgeArticle, SLADefinition, SLAMetrics, SLAViolation,
-		ServiceCatalog, ServiceRequest, StatusLog, Subscription, Tenant, Ticket, User,
-		Workflow []ent.Interceptor
+		AuditLog, CIAttributeDefinition, CIRelationship, CIType, ConfigurationItem,
+		Conversation, Incident, KnowledgeArticle, Message, Notification,
+		PromptTemplate, SLADefinition, SLAViolation, ServiceCatalog, ServiceRequest,
+		Tenant, Ticket, ToolInvocation, User []ent.Interceptor
 	}
 )

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -60,29 +59,14 @@ func Name(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldName, v))
 }
 
-// DisplayName applies equality check predicate on the "display_name" field. It's identical to DisplayNameEQ.
-func DisplayName(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldDisplayName, v))
-}
-
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldDescription, v))
 }
 
-// CiTypeID applies equality check predicate on the "ci_type_id" field. It's identical to CiTypeIDEQ.
-func CiTypeID(v int) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldCiTypeID, v))
-}
-
-// SerialNumber applies equality check predicate on the "serial_number" field. It's identical to SerialNumberEQ.
-func SerialNumber(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldSerialNumber, v))
-}
-
-// AssetTag applies equality check predicate on the "asset_tag" field. It's identical to AssetTagEQ.
-func AssetTag(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldAssetTag, v))
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldType, v))
 }
 
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
@@ -90,39 +74,29 @@ func Status(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldStatus, v))
 }
 
-// LifecycleState applies equality check predicate on the "lifecycle_state" field. It's identical to LifecycleStateEQ.
-func LifecycleState(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldLifecycleState, v))
-}
-
-// BusinessService applies equality check predicate on the "business_service" field. It's identical to BusinessServiceEQ.
-func BusinessService(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldBusinessService, v))
-}
-
-// Owner applies equality check predicate on the "owner" field. It's identical to OwnerEQ.
-func Owner(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwner, v))
-}
-
-// Environment applies equality check predicate on the "environment" field. It's identical to EnvironmentEQ.
-func Environment(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldEnvironment, v))
-}
-
 // Location applies equality check predicate on the "location" field. It's identical to LocationEQ.
 func Location(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldLocation, v))
 }
 
-// LastDiscovered applies equality check predicate on the "last_discovered" field. It's identical to LastDiscoveredEQ.
-func LastDiscovered(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldLastDiscovered, v))
+// SerialNumber applies equality check predicate on the "serial_number" field. It's identical to SerialNumberEQ.
+func SerialNumber(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSerialNumber, v))
 }
 
-// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
-func Version(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldVersion, v))
+// Model applies equality check predicate on the "model" field. It's identical to ModelEQ.
+func Model(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldModel, v))
+}
+
+// Vendor applies equality check predicate on the "vendor" field. It's identical to VendorEQ.
+func Vendor(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldVendor, v))
+}
+
+// CiTypeID applies equality check predicate on the "ci_type_id" field. It's identical to CiTypeIDEQ.
+func CiTypeID(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldCiTypeID, v))
 }
 
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
@@ -205,81 +179,6 @@ func NameContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldName, v))
 }
 
-// DisplayNameEQ applies the EQ predicate on the "display_name" field.
-func DisplayNameEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldDisplayName, v))
-}
-
-// DisplayNameNEQ applies the NEQ predicate on the "display_name" field.
-func DisplayNameNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldDisplayName, v))
-}
-
-// DisplayNameIn applies the In predicate on the "display_name" field.
-func DisplayNameIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldDisplayName, vs...))
-}
-
-// DisplayNameNotIn applies the NotIn predicate on the "display_name" field.
-func DisplayNameNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldDisplayName, vs...))
-}
-
-// DisplayNameGT applies the GT predicate on the "display_name" field.
-func DisplayNameGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldDisplayName, v))
-}
-
-// DisplayNameGTE applies the GTE predicate on the "display_name" field.
-func DisplayNameGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldDisplayName, v))
-}
-
-// DisplayNameLT applies the LT predicate on the "display_name" field.
-func DisplayNameLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldDisplayName, v))
-}
-
-// DisplayNameLTE applies the LTE predicate on the "display_name" field.
-func DisplayNameLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldDisplayName, v))
-}
-
-// DisplayNameContains applies the Contains predicate on the "display_name" field.
-func DisplayNameContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldDisplayName, v))
-}
-
-// DisplayNameHasPrefix applies the HasPrefix predicate on the "display_name" field.
-func DisplayNameHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldDisplayName, v))
-}
-
-// DisplayNameHasSuffix applies the HasSuffix predicate on the "display_name" field.
-func DisplayNameHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldDisplayName, v))
-}
-
-// DisplayNameIsNil applies the IsNil predicate on the "display_name" field.
-func DisplayNameIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldDisplayName))
-}
-
-// DisplayNameNotNil applies the NotNil predicate on the "display_name" field.
-func DisplayNameNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldDisplayName))
-}
-
-// DisplayNameEqualFold applies the EqualFold predicate on the "display_name" field.
-func DisplayNameEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldDisplayName, v))
-}
-
-// DisplayNameContainsFold applies the ContainsFold predicate on the "display_name" field.
-func DisplayNameContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldDisplayName, v))
-}
-
 // DescriptionEQ applies the EQ predicate on the "description" field.
 func DescriptionEQ(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldDescription, v))
@@ -355,174 +254,79 @@ func DescriptionContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// CiTypeIDEQ applies the EQ predicate on the "ci_type_id" field.
-func CiTypeIDEQ(v int) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldCiTypeID, v))
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldType, v))
 }
 
-// CiTypeIDNEQ applies the NEQ predicate on the "ci_type_id" field.
-func CiTypeIDNEQ(v int) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldCiTypeID, v))
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldType, v))
 }
 
-// CiTypeIDIn applies the In predicate on the "ci_type_id" field.
-func CiTypeIDIn(vs ...int) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldCiTypeID, vs...))
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldType, vs...))
 }
 
-// CiTypeIDNotIn applies the NotIn predicate on the "ci_type_id" field.
-func CiTypeIDNotIn(vs ...int) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldCiTypeID, vs...))
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldType, vs...))
 }
 
-// SerialNumberEQ applies the EQ predicate on the "serial_number" field.
-func SerialNumberEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldSerialNumber, v))
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldType, v))
 }
 
-// SerialNumberNEQ applies the NEQ predicate on the "serial_number" field.
-func SerialNumberNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldSerialNumber, v))
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldType, v))
 }
 
-// SerialNumberIn applies the In predicate on the "serial_number" field.
-func SerialNumberIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldSerialNumber, vs...))
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldType, v))
 }
 
-// SerialNumberNotIn applies the NotIn predicate on the "serial_number" field.
-func SerialNumberNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldSerialNumber, vs...))
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldType, v))
 }
 
-// SerialNumberGT applies the GT predicate on the "serial_number" field.
-func SerialNumberGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldSerialNumber, v))
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldType, v))
 }
 
-// SerialNumberGTE applies the GTE predicate on the "serial_number" field.
-func SerialNumberGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldSerialNumber, v))
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldType, v))
 }
 
-// SerialNumberLT applies the LT predicate on the "serial_number" field.
-func SerialNumberLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldSerialNumber, v))
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldType, v))
 }
 
-// SerialNumberLTE applies the LTE predicate on the "serial_number" field.
-func SerialNumberLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldSerialNumber, v))
+// TypeIsNil applies the IsNil predicate on the "type" field.
+func TypeIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldType))
 }
 
-// SerialNumberContains applies the Contains predicate on the "serial_number" field.
-func SerialNumberContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldSerialNumber, v))
+// TypeNotNil applies the NotNil predicate on the "type" field.
+func TypeNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldType))
 }
 
-// SerialNumberHasPrefix applies the HasPrefix predicate on the "serial_number" field.
-func SerialNumberHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldSerialNumber, v))
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldType, v))
 }
 
-// SerialNumberHasSuffix applies the HasSuffix predicate on the "serial_number" field.
-func SerialNumberHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldSerialNumber, v))
-}
-
-// SerialNumberIsNil applies the IsNil predicate on the "serial_number" field.
-func SerialNumberIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldSerialNumber))
-}
-
-// SerialNumberNotNil applies the NotNil predicate on the "serial_number" field.
-func SerialNumberNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldSerialNumber))
-}
-
-// SerialNumberEqualFold applies the EqualFold predicate on the "serial_number" field.
-func SerialNumberEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldSerialNumber, v))
-}
-
-// SerialNumberContainsFold applies the ContainsFold predicate on the "serial_number" field.
-func SerialNumberContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldSerialNumber, v))
-}
-
-// AssetTagEQ applies the EQ predicate on the "asset_tag" field.
-func AssetTagEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldAssetTag, v))
-}
-
-// AssetTagNEQ applies the NEQ predicate on the "asset_tag" field.
-func AssetTagNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldAssetTag, v))
-}
-
-// AssetTagIn applies the In predicate on the "asset_tag" field.
-func AssetTagIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldAssetTag, vs...))
-}
-
-// AssetTagNotIn applies the NotIn predicate on the "asset_tag" field.
-func AssetTagNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldAssetTag, vs...))
-}
-
-// AssetTagGT applies the GT predicate on the "asset_tag" field.
-func AssetTagGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldAssetTag, v))
-}
-
-// AssetTagGTE applies the GTE predicate on the "asset_tag" field.
-func AssetTagGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldAssetTag, v))
-}
-
-// AssetTagLT applies the LT predicate on the "asset_tag" field.
-func AssetTagLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldAssetTag, v))
-}
-
-// AssetTagLTE applies the LTE predicate on the "asset_tag" field.
-func AssetTagLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldAssetTag, v))
-}
-
-// AssetTagContains applies the Contains predicate on the "asset_tag" field.
-func AssetTagContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldAssetTag, v))
-}
-
-// AssetTagHasPrefix applies the HasPrefix predicate on the "asset_tag" field.
-func AssetTagHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldAssetTag, v))
-}
-
-// AssetTagHasSuffix applies the HasSuffix predicate on the "asset_tag" field.
-func AssetTagHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldAssetTag, v))
-}
-
-// AssetTagIsNil applies the IsNil predicate on the "asset_tag" field.
-func AssetTagIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldAssetTag))
-}
-
-// AssetTagNotNil applies the NotNil predicate on the "asset_tag" field.
-func AssetTagNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldAssetTag))
-}
-
-// AssetTagEqualFold applies the EqualFold predicate on the "asset_tag" field.
-func AssetTagEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldAssetTag, v))
-}
-
-// AssetTagContainsFold applies the ContainsFold predicate on the "asset_tag" field.
-func AssetTagContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldAssetTag, v))
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldType, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -588,296 +392,6 @@ func StatusEqualFold(v string) predicate.ConfigurationItem {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldStatus, v))
-}
-
-// LifecycleStateEQ applies the EQ predicate on the "lifecycle_state" field.
-func LifecycleStateEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldLifecycleState, v))
-}
-
-// LifecycleStateNEQ applies the NEQ predicate on the "lifecycle_state" field.
-func LifecycleStateNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldLifecycleState, v))
-}
-
-// LifecycleStateIn applies the In predicate on the "lifecycle_state" field.
-func LifecycleStateIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldLifecycleState, vs...))
-}
-
-// LifecycleStateNotIn applies the NotIn predicate on the "lifecycle_state" field.
-func LifecycleStateNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldLifecycleState, vs...))
-}
-
-// LifecycleStateGT applies the GT predicate on the "lifecycle_state" field.
-func LifecycleStateGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldLifecycleState, v))
-}
-
-// LifecycleStateGTE applies the GTE predicate on the "lifecycle_state" field.
-func LifecycleStateGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldLifecycleState, v))
-}
-
-// LifecycleStateLT applies the LT predicate on the "lifecycle_state" field.
-func LifecycleStateLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldLifecycleState, v))
-}
-
-// LifecycleStateLTE applies the LTE predicate on the "lifecycle_state" field.
-func LifecycleStateLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldLifecycleState, v))
-}
-
-// LifecycleStateContains applies the Contains predicate on the "lifecycle_state" field.
-func LifecycleStateContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldLifecycleState, v))
-}
-
-// LifecycleStateHasPrefix applies the HasPrefix predicate on the "lifecycle_state" field.
-func LifecycleStateHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldLifecycleState, v))
-}
-
-// LifecycleStateHasSuffix applies the HasSuffix predicate on the "lifecycle_state" field.
-func LifecycleStateHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldLifecycleState, v))
-}
-
-// LifecycleStateEqualFold applies the EqualFold predicate on the "lifecycle_state" field.
-func LifecycleStateEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldLifecycleState, v))
-}
-
-// LifecycleStateContainsFold applies the ContainsFold predicate on the "lifecycle_state" field.
-func LifecycleStateContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldLifecycleState, v))
-}
-
-// BusinessServiceEQ applies the EQ predicate on the "business_service" field.
-func BusinessServiceEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldBusinessService, v))
-}
-
-// BusinessServiceNEQ applies the NEQ predicate on the "business_service" field.
-func BusinessServiceNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldBusinessService, v))
-}
-
-// BusinessServiceIn applies the In predicate on the "business_service" field.
-func BusinessServiceIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldBusinessService, vs...))
-}
-
-// BusinessServiceNotIn applies the NotIn predicate on the "business_service" field.
-func BusinessServiceNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldBusinessService, vs...))
-}
-
-// BusinessServiceGT applies the GT predicate on the "business_service" field.
-func BusinessServiceGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldBusinessService, v))
-}
-
-// BusinessServiceGTE applies the GTE predicate on the "business_service" field.
-func BusinessServiceGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldBusinessService, v))
-}
-
-// BusinessServiceLT applies the LT predicate on the "business_service" field.
-func BusinessServiceLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldBusinessService, v))
-}
-
-// BusinessServiceLTE applies the LTE predicate on the "business_service" field.
-func BusinessServiceLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldBusinessService, v))
-}
-
-// BusinessServiceContains applies the Contains predicate on the "business_service" field.
-func BusinessServiceContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldBusinessService, v))
-}
-
-// BusinessServiceHasPrefix applies the HasPrefix predicate on the "business_service" field.
-func BusinessServiceHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldBusinessService, v))
-}
-
-// BusinessServiceHasSuffix applies the HasSuffix predicate on the "business_service" field.
-func BusinessServiceHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldBusinessService, v))
-}
-
-// BusinessServiceIsNil applies the IsNil predicate on the "business_service" field.
-func BusinessServiceIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldBusinessService))
-}
-
-// BusinessServiceNotNil applies the NotNil predicate on the "business_service" field.
-func BusinessServiceNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldBusinessService))
-}
-
-// BusinessServiceEqualFold applies the EqualFold predicate on the "business_service" field.
-func BusinessServiceEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldBusinessService, v))
-}
-
-// BusinessServiceContainsFold applies the ContainsFold predicate on the "business_service" field.
-func BusinessServiceContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldBusinessService, v))
-}
-
-// OwnerEQ applies the EQ predicate on the "owner" field.
-func OwnerEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwner, v))
-}
-
-// OwnerNEQ applies the NEQ predicate on the "owner" field.
-func OwnerNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldOwner, v))
-}
-
-// OwnerIn applies the In predicate on the "owner" field.
-func OwnerIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldOwner, vs...))
-}
-
-// OwnerNotIn applies the NotIn predicate on the "owner" field.
-func OwnerNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldOwner, vs...))
-}
-
-// OwnerGT applies the GT predicate on the "owner" field.
-func OwnerGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldOwner, v))
-}
-
-// OwnerGTE applies the GTE predicate on the "owner" field.
-func OwnerGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldOwner, v))
-}
-
-// OwnerLT applies the LT predicate on the "owner" field.
-func OwnerLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldOwner, v))
-}
-
-// OwnerLTE applies the LTE predicate on the "owner" field.
-func OwnerLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldOwner, v))
-}
-
-// OwnerContains applies the Contains predicate on the "owner" field.
-func OwnerContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldOwner, v))
-}
-
-// OwnerHasPrefix applies the HasPrefix predicate on the "owner" field.
-func OwnerHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldOwner, v))
-}
-
-// OwnerHasSuffix applies the HasSuffix predicate on the "owner" field.
-func OwnerHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldOwner, v))
-}
-
-// OwnerIsNil applies the IsNil predicate on the "owner" field.
-func OwnerIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldOwner))
-}
-
-// OwnerNotNil applies the NotNil predicate on the "owner" field.
-func OwnerNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldOwner))
-}
-
-// OwnerEqualFold applies the EqualFold predicate on the "owner" field.
-func OwnerEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldOwner, v))
-}
-
-// OwnerContainsFold applies the ContainsFold predicate on the "owner" field.
-func OwnerContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldOwner, v))
-}
-
-// EnvironmentEQ applies the EQ predicate on the "environment" field.
-func EnvironmentEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldEnvironment, v))
-}
-
-// EnvironmentNEQ applies the NEQ predicate on the "environment" field.
-func EnvironmentNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldEnvironment, v))
-}
-
-// EnvironmentIn applies the In predicate on the "environment" field.
-func EnvironmentIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldEnvironment, vs...))
-}
-
-// EnvironmentNotIn applies the NotIn predicate on the "environment" field.
-func EnvironmentNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldEnvironment, vs...))
-}
-
-// EnvironmentGT applies the GT predicate on the "environment" field.
-func EnvironmentGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldEnvironment, v))
-}
-
-// EnvironmentGTE applies the GTE predicate on the "environment" field.
-func EnvironmentGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldEnvironment, v))
-}
-
-// EnvironmentLT applies the LT predicate on the "environment" field.
-func EnvironmentLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldEnvironment, v))
-}
-
-// EnvironmentLTE applies the LTE predicate on the "environment" field.
-func EnvironmentLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldEnvironment, v))
-}
-
-// EnvironmentContains applies the Contains predicate on the "environment" field.
-func EnvironmentContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldEnvironment, v))
-}
-
-// EnvironmentHasPrefix applies the HasPrefix predicate on the "environment" field.
-func EnvironmentHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldEnvironment, v))
-}
-
-// EnvironmentHasSuffix applies the HasSuffix predicate on the "environment" field.
-func EnvironmentHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldEnvironment, v))
-}
-
-// EnvironmentIsNil applies the IsNil predicate on the "environment" field.
-func EnvironmentIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldEnvironment))
-}
-
-// EnvironmentNotNil applies the NotNil predicate on the "environment" field.
-func EnvironmentNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldEnvironment))
-}
-
-// EnvironmentEqualFold applies the EqualFold predicate on the "environment" field.
-func EnvironmentEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldEnvironment, v))
-}
-
-// EnvironmentContainsFold applies the ContainsFold predicate on the "environment" field.
-func EnvironmentContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldEnvironment, v))
 }
 
 // LocationEQ applies the EQ predicate on the "location" field.
@@ -955,149 +469,269 @@ func LocationContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldLocation, v))
 }
 
-// AttributesIsNil applies the IsNil predicate on the "attributes" field.
-func AttributesIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldAttributes))
+// SerialNumberEQ applies the EQ predicate on the "serial_number" field.
+func SerialNumberEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldSerialNumber, v))
 }
 
-// AttributesNotNil applies the NotNil predicate on the "attributes" field.
-func AttributesNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldAttributes))
+// SerialNumberNEQ applies the NEQ predicate on the "serial_number" field.
+func SerialNumberNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldSerialNumber, v))
 }
 
-// MonitoringDataIsNil applies the IsNil predicate on the "monitoring_data" field.
-func MonitoringDataIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldMonitoringData))
+// SerialNumberIn applies the In predicate on the "serial_number" field.
+func SerialNumberIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldSerialNumber, vs...))
 }
 
-// MonitoringDataNotNil applies the NotNil predicate on the "monitoring_data" field.
-func MonitoringDataNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldMonitoringData))
+// SerialNumberNotIn applies the NotIn predicate on the "serial_number" field.
+func SerialNumberNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldSerialNumber, vs...))
 }
 
-// DiscoverySourceIsNil applies the IsNil predicate on the "discovery_source" field.
-func DiscoverySourceIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldDiscoverySource))
+// SerialNumberGT applies the GT predicate on the "serial_number" field.
+func SerialNumberGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldSerialNumber, v))
 }
 
-// DiscoverySourceNotNil applies the NotNil predicate on the "discovery_source" field.
-func DiscoverySourceNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldDiscoverySource))
+// SerialNumberGTE applies the GTE predicate on the "serial_number" field.
+func SerialNumberGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldSerialNumber, v))
 }
 
-// LastDiscoveredEQ applies the EQ predicate on the "last_discovered" field.
-func LastDiscoveredEQ(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldLastDiscovered, v))
+// SerialNumberLT applies the LT predicate on the "serial_number" field.
+func SerialNumberLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldSerialNumber, v))
 }
 
-// LastDiscoveredNEQ applies the NEQ predicate on the "last_discovered" field.
-func LastDiscoveredNEQ(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldLastDiscovered, v))
+// SerialNumberLTE applies the LTE predicate on the "serial_number" field.
+func SerialNumberLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldSerialNumber, v))
 }
 
-// LastDiscoveredIn applies the In predicate on the "last_discovered" field.
-func LastDiscoveredIn(vs ...time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldLastDiscovered, vs...))
+// SerialNumberContains applies the Contains predicate on the "serial_number" field.
+func SerialNumberContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldSerialNumber, v))
 }
 
-// LastDiscoveredNotIn applies the NotIn predicate on the "last_discovered" field.
-func LastDiscoveredNotIn(vs ...time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldLastDiscovered, vs...))
+// SerialNumberHasPrefix applies the HasPrefix predicate on the "serial_number" field.
+func SerialNumberHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldSerialNumber, v))
 }
 
-// LastDiscoveredGT applies the GT predicate on the "last_discovered" field.
-func LastDiscoveredGT(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldLastDiscovered, v))
+// SerialNumberHasSuffix applies the HasSuffix predicate on the "serial_number" field.
+func SerialNumberHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldSerialNumber, v))
 }
 
-// LastDiscoveredGTE applies the GTE predicate on the "last_discovered" field.
-func LastDiscoveredGTE(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldLastDiscovered, v))
+// SerialNumberIsNil applies the IsNil predicate on the "serial_number" field.
+func SerialNumberIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldSerialNumber))
 }
 
-// LastDiscoveredLT applies the LT predicate on the "last_discovered" field.
-func LastDiscoveredLT(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldLastDiscovered, v))
+// SerialNumberNotNil applies the NotNil predicate on the "serial_number" field.
+func SerialNumberNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldSerialNumber))
 }
 
-// LastDiscoveredLTE applies the LTE predicate on the "last_discovered" field.
-func LastDiscoveredLTE(v time.Time) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldLastDiscovered, v))
+// SerialNumberEqualFold applies the EqualFold predicate on the "serial_number" field.
+func SerialNumberEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldSerialNumber, v))
 }
 
-// LastDiscoveredIsNil applies the IsNil predicate on the "last_discovered" field.
-func LastDiscoveredIsNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIsNull(FieldLastDiscovered))
+// SerialNumberContainsFold applies the ContainsFold predicate on the "serial_number" field.
+func SerialNumberContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldSerialNumber, v))
 }
 
-// LastDiscoveredNotNil applies the NotNil predicate on the "last_discovered" field.
-func LastDiscoveredNotNil() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotNull(FieldLastDiscovered))
+// ModelEQ applies the EQ predicate on the "model" field.
+func ModelEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldModel, v))
 }
 
-// VersionEQ applies the EQ predicate on the "version" field.
-func VersionEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEQ(FieldVersion, v))
+// ModelNEQ applies the NEQ predicate on the "model" field.
+func ModelNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldModel, v))
 }
 
-// VersionNEQ applies the NEQ predicate on the "version" field.
-func VersionNEQ(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNEQ(FieldVersion, v))
+// ModelIn applies the In predicate on the "model" field.
+func ModelIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldModel, vs...))
 }
 
-// VersionIn applies the In predicate on the "version" field.
-func VersionIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldIn(FieldVersion, vs...))
+// ModelNotIn applies the NotIn predicate on the "model" field.
+func ModelNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldModel, vs...))
 }
 
-// VersionNotIn applies the NotIn predicate on the "version" field.
-func VersionNotIn(vs ...string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldNotIn(FieldVersion, vs...))
+// ModelGT applies the GT predicate on the "model" field.
+func ModelGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldModel, v))
 }
 
-// VersionGT applies the GT predicate on the "version" field.
-func VersionGT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGT(FieldVersion, v))
+// ModelGTE applies the GTE predicate on the "model" field.
+func ModelGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldModel, v))
 }
 
-// VersionGTE applies the GTE predicate on the "version" field.
-func VersionGTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldGTE(FieldVersion, v))
+// ModelLT applies the LT predicate on the "model" field.
+func ModelLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldModel, v))
 }
 
-// VersionLT applies the LT predicate on the "version" field.
-func VersionLT(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLT(FieldVersion, v))
+// ModelLTE applies the LTE predicate on the "model" field.
+func ModelLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldModel, v))
 }
 
-// VersionLTE applies the LTE predicate on the "version" field.
-func VersionLTE(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldLTE(FieldVersion, v))
+// ModelContains applies the Contains predicate on the "model" field.
+func ModelContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldModel, v))
 }
 
-// VersionContains applies the Contains predicate on the "version" field.
-func VersionContains(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContains(FieldVersion, v))
+// ModelHasPrefix applies the HasPrefix predicate on the "model" field.
+func ModelHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldModel, v))
 }
 
-// VersionHasPrefix applies the HasPrefix predicate on the "version" field.
-func VersionHasPrefix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldVersion, v))
+// ModelHasSuffix applies the HasSuffix predicate on the "model" field.
+func ModelHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldModel, v))
 }
 
-// VersionHasSuffix applies the HasSuffix predicate on the "version" field.
-func VersionHasSuffix(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldVersion, v))
+// ModelIsNil applies the IsNil predicate on the "model" field.
+func ModelIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldModel))
 }
 
-// VersionEqualFold applies the EqualFold predicate on the "version" field.
-func VersionEqualFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldVersion, v))
+// ModelNotNil applies the NotNil predicate on the "model" field.
+func ModelNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldModel))
 }
 
-// VersionContainsFold applies the ContainsFold predicate on the "version" field.
-func VersionContainsFold(v string) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldVersion, v))
+// ModelEqualFold applies the EqualFold predicate on the "model" field.
+func ModelEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldModel, v))
+}
+
+// ModelContainsFold applies the ContainsFold predicate on the "model" field.
+func ModelContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldModel, v))
+}
+
+// VendorEQ applies the EQ predicate on the "vendor" field.
+func VendorEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldVendor, v))
+}
+
+// VendorNEQ applies the NEQ predicate on the "vendor" field.
+func VendorNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldVendor, v))
+}
+
+// VendorIn applies the In predicate on the "vendor" field.
+func VendorIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldVendor, vs...))
+}
+
+// VendorNotIn applies the NotIn predicate on the "vendor" field.
+func VendorNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldVendor, vs...))
+}
+
+// VendorGT applies the GT predicate on the "vendor" field.
+func VendorGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldVendor, v))
+}
+
+// VendorGTE applies the GTE predicate on the "vendor" field.
+func VendorGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldVendor, v))
+}
+
+// VendorLT applies the LT predicate on the "vendor" field.
+func VendorLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldVendor, v))
+}
+
+// VendorLTE applies the LTE predicate on the "vendor" field.
+func VendorLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldVendor, v))
+}
+
+// VendorContains applies the Contains predicate on the "vendor" field.
+func VendorContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldVendor, v))
+}
+
+// VendorHasPrefix applies the HasPrefix predicate on the "vendor" field.
+func VendorHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldVendor, v))
+}
+
+// VendorHasSuffix applies the HasSuffix predicate on the "vendor" field.
+func VendorHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldVendor, v))
+}
+
+// VendorIsNil applies the IsNil predicate on the "vendor" field.
+func VendorIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldVendor))
+}
+
+// VendorNotNil applies the NotNil predicate on the "vendor" field.
+func VendorNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldVendor))
+}
+
+// VendorEqualFold applies the EqualFold predicate on the "vendor" field.
+func VendorEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldVendor, v))
+}
+
+// VendorContainsFold applies the ContainsFold predicate on the "vendor" field.
+func VendorContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldVendor, v))
+}
+
+// CiTypeIDEQ applies the EQ predicate on the "ci_type_id" field.
+func CiTypeIDEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldCiTypeID, v))
+}
+
+// CiTypeIDNEQ applies the NEQ predicate on the "ci_type_id" field.
+func CiTypeIDNEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldCiTypeID, v))
+}
+
+// CiTypeIDIn applies the In predicate on the "ci_type_id" field.
+func CiTypeIDIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldCiTypeID, vs...))
+}
+
+// CiTypeIDNotIn applies the NotIn predicate on the "ci_type_id" field.
+func CiTypeIDNotIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldCiTypeID, vs...))
+}
+
+// CiTypeIDGT applies the GT predicate on the "ci_type_id" field.
+func CiTypeIDGT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldCiTypeID, v))
+}
+
+// CiTypeIDGTE applies the GTE predicate on the "ci_type_id" field.
+func CiTypeIDGTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldCiTypeID, v))
+}
+
+// CiTypeIDLT applies the LT predicate on the "ci_type_id" field.
+func CiTypeIDLT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldCiTypeID, v))
+}
+
+// CiTypeIDLTE applies the LTE predicate on the "ci_type_id" field.
+func CiTypeIDLTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldCiTypeID, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
@@ -1118,6 +752,26 @@ func TenantIDIn(vs ...int) predicate.ConfigurationItem {
 // TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
 func TenantIDNotIn(vs ...int) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldTenantID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -1198,190 +852,6 @@ func UpdatedAtLT(v time.Time) predicate.ConfigurationItem {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiType applies the HasEdge predicate on the "ci_type" edge.
-func HasCiType() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CiTypeTable, CiTypeColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiTypeWith applies the HasEdge predicate on the "ci_type" edge with a given conditions (other predicates).
-func HasCiTypeWith(preds ...predicate.CIType) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newCiTypeStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasOutgoingRelationships applies the HasEdge predicate on the "outgoing_relationships" edge.
-func HasOutgoingRelationships() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, OutgoingRelationshipsTable, OutgoingRelationshipsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasOutgoingRelationshipsWith applies the HasEdge predicate on the "outgoing_relationships" edge with a given conditions (other predicates).
-func HasOutgoingRelationshipsWith(preds ...predicate.CIRelationship) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newOutgoingRelationshipsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasIncomingRelationships applies the HasEdge predicate on the "incoming_relationships" edge.
-func HasIncomingRelationships() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, IncomingRelationshipsTable, IncomingRelationshipsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasIncomingRelationshipsWith applies the HasEdge predicate on the "incoming_relationships" edge with a given conditions (other predicates).
-func HasIncomingRelationshipsWith(preds ...predicate.CIRelationship) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newIncomingRelationshipsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasLifecycleStates applies the HasEdge predicate on the "lifecycle_states" edge.
-func HasLifecycleStates() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, LifecycleStatesTable, LifecycleStatesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasLifecycleStatesWith applies the HasEdge predicate on the "lifecycle_states" edge with a given conditions (other predicates).
-func HasLifecycleStatesWith(preds ...predicate.CILifecycleState) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newLifecycleStatesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasChangeRecords applies the HasEdge predicate on the "change_records" edge.
-func HasChangeRecords() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ChangeRecordsTable, ChangeRecordsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasChangeRecordsWith applies the HasEdge predicate on the "change_records" edge with a given conditions (other predicates).
-func HasChangeRecordsWith(preds ...predicate.CIChangeRecord) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newChangeRecordsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasIncidents applies the HasEdge predicate on the "incidents" edge.
-func HasIncidents() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, IncidentsTable, IncidentsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasIncidentsWith applies the HasEdge predicate on the "incidents" edge with a given conditions (other predicates).
-func HasIncidentsWith(preds ...predicate.Ticket) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newIncidentsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasChanges applies the HasEdge predicate on the "changes" edge.
-func HasChanges() predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ChangesTable, ChangesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasChangesWith applies the HasEdge predicate on the "changes" edge with a given conditions (other predicates).
-func HasChangesWith(preds ...predicate.Ticket) predicate.ConfigurationItem {
-	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newChangesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

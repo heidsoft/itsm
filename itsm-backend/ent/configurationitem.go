@@ -3,11 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/tenant"
 	"strings"
 	"time"
 
@@ -20,150 +17,31 @@ type ConfigurationItem struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
+	// 配置项名称
 	Name string `json:"name,omitempty"`
-	// DisplayName holds the value of the "display_name" field.
-	DisplayName string `json:"display_name,omitempty"`
-	// Description holds the value of the "description" field.
+	// 配置项描述
 	Description string `json:"description,omitempty"`
-	// CiTypeID holds the value of the "ci_type_id" field.
-	CiTypeID int `json:"ci_type_id,omitempty"`
-	// SerialNumber holds the value of the "serial_number" field.
-	SerialNumber string `json:"serial_number,omitempty"`
-	// AssetTag holds the value of the "asset_tag" field.
-	AssetTag string `json:"asset_tag,omitempty"`
-	// Status holds the value of the "status" field.
+	// 配置项类型
+	Type string `json:"type,omitempty"`
+	// 状态
 	Status string `json:"status,omitempty"`
-	// LifecycleState holds the value of the "lifecycle_state" field.
-	LifecycleState string `json:"lifecycle_state,omitempty"`
-	// BusinessService holds the value of the "business_service" field.
-	BusinessService string `json:"business_service,omitempty"`
-	// Owner holds the value of the "owner" field.
-	Owner string `json:"owner,omitempty"`
-	// Environment holds the value of the "environment" field.
-	Environment string `json:"environment,omitempty"`
-	// Location holds the value of the "location" field.
+	// 位置
 	Location string `json:"location,omitempty"`
-	// Attributes holds the value of the "attributes" field.
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	// MonitoringData holds the value of the "monitoring_data" field.
-	MonitoringData map[string]interface{} `json:"monitoring_data,omitempty"`
-	// DiscoverySource holds the value of the "discovery_source" field.
-	DiscoverySource map[string]interface{} `json:"discovery_source,omitempty"`
-	// LastDiscovered holds the value of the "last_discovered" field.
-	LastDiscovered time.Time `json:"last_discovered,omitempty"`
-	// Version holds the value of the "version" field.
-	Version string `json:"version,omitempty"`
-	// TenantID holds the value of the "tenant_id" field.
+	// 序列号
+	SerialNumber string `json:"serial_number,omitempty"`
+	// 型号
+	Model string `json:"model,omitempty"`
+	// 厂商
+	Vendor string `json:"vendor,omitempty"`
+	// CI类型ID
+	CiTypeID int `json:"ci_type_id,omitempty"`
+	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the ConfigurationItemQuery when eager-loading is set.
-	Edges                                 ConfigurationItemEdges `json:"edges"`
-	incident_affected_configuration_items *int
-	selectValues                          sql.SelectValues
-}
-
-// ConfigurationItemEdges holds the relations/edges for other nodes in the graph.
-type ConfigurationItemEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// CiType holds the value of the ci_type edge.
-	CiType *CIType `json:"ci_type,omitempty"`
-	// OutgoingRelationships holds the value of the outgoing_relationships edge.
-	OutgoingRelationships []*CIRelationship `json:"outgoing_relationships,omitempty"`
-	// IncomingRelationships holds the value of the incoming_relationships edge.
-	IncomingRelationships []*CIRelationship `json:"incoming_relationships,omitempty"`
-	// LifecycleStates holds the value of the lifecycle_states edge.
-	LifecycleStates []*CILifecycleState `json:"lifecycle_states,omitempty"`
-	// ChangeRecords holds the value of the change_records edge.
-	ChangeRecords []*CIChangeRecord `json:"change_records,omitempty"`
-	// Incidents holds the value of the incidents edge.
-	Incidents []*Ticket `json:"incidents,omitempty"`
-	// Changes holds the value of the changes edge.
-	Changes []*Ticket `json:"changes,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ConfigurationItemEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// CiTypeOrErr returns the CiType value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ConfigurationItemEdges) CiTypeOrErr() (*CIType, error) {
-	if e.CiType != nil {
-		return e.CiType, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: citype.Label}
-	}
-	return nil, &NotLoadedError{edge: "ci_type"}
-}
-
-// OutgoingRelationshipsOrErr returns the OutgoingRelationships value or an error if the edge
-// was not loaded in eager-loading.
-func (e ConfigurationItemEdges) OutgoingRelationshipsOrErr() ([]*CIRelationship, error) {
-	if e.loadedTypes[2] {
-		return e.OutgoingRelationships, nil
-	}
-	return nil, &NotLoadedError{edge: "outgoing_relationships"}
-}
-
-// IncomingRelationshipsOrErr returns the IncomingRelationships value or an error if the edge
-// was not loaded in eager-loading.
-func (e ConfigurationItemEdges) IncomingRelationshipsOrErr() ([]*CIRelationship, error) {
-	if e.loadedTypes[3] {
-		return e.IncomingRelationships, nil
-	}
-	return nil, &NotLoadedError{edge: "incoming_relationships"}
-}
-
-// LifecycleStatesOrErr returns the LifecycleStates value or an error if the edge
-// was not loaded in eager-loading.
-func (e ConfigurationItemEdges) LifecycleStatesOrErr() ([]*CILifecycleState, error) {
-	if e.loadedTypes[4] {
-		return e.LifecycleStates, nil
-	}
-	return nil, &NotLoadedError{edge: "lifecycle_states"}
-}
-
-// ChangeRecordsOrErr returns the ChangeRecords value or an error if the edge
-// was not loaded in eager-loading.
-func (e ConfigurationItemEdges) ChangeRecordsOrErr() ([]*CIChangeRecord, error) {
-	if e.loadedTypes[5] {
-		return e.ChangeRecords, nil
-	}
-	return nil, &NotLoadedError{edge: "change_records"}
-}
-
-// IncidentsOrErr returns the Incidents value or an error if the edge
-// was not loaded in eager-loading.
-func (e ConfigurationItemEdges) IncidentsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[6] {
-		return e.Incidents, nil
-	}
-	return nil, &NotLoadedError{edge: "incidents"}
-}
-
-// ChangesOrErr returns the Changes value or an error if the edge
-// was not loaded in eager-loading.
-func (e ConfigurationItemEdges) ChangesOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[7] {
-		return e.Changes, nil
-	}
-	return nil, &NotLoadedError{edge: "changes"}
+	// 更新时间
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -171,16 +49,12 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case configurationitem.FieldAttributes, configurationitem.FieldMonitoringData, configurationitem.FieldDiscoverySource:
-			values[i] = new([]byte)
 		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldDisplayName, configurationitem.FieldDescription, configurationitem.FieldSerialNumber, configurationitem.FieldAssetTag, configurationitem.FieldStatus, configurationitem.FieldLifecycleState, configurationitem.FieldBusinessService, configurationitem.FieldOwner, configurationitem.FieldEnvironment, configurationitem.FieldLocation, configurationitem.FieldVersion:
+		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldType, configurationitem.FieldStatus, configurationitem.FieldLocation, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor:
 			values[i] = new(sql.NullString)
-		case configurationitem.FieldLastDiscovered, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
+		case configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case configurationitem.ForeignKeys[0]: // incident_affected_configuration_items
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -208,35 +82,17 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				ci.Name = value.String
 			}
-		case configurationitem.FieldDisplayName:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field display_name", values[i])
-			} else if value.Valid {
-				ci.DisplayName = value.String
-			}
 		case configurationitem.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				ci.Description = value.String
 			}
-		case configurationitem.FieldCiTypeID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
-			} else if value.Valid {
-				ci.CiTypeID = int(value.Int64)
-			}
-		case configurationitem.FieldSerialNumber:
+		case configurationitem.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field serial_number", values[i])
+				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				ci.SerialNumber = value.String
-			}
-		case configurationitem.FieldAssetTag:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field asset_tag", values[i])
-			} else if value.Valid {
-				ci.AssetTag = value.String
+				ci.Type = value.String
 			}
 		case configurationitem.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -244,71 +100,35 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				ci.Status = value.String
 			}
-		case configurationitem.FieldLifecycleState:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field lifecycle_state", values[i])
-			} else if value.Valid {
-				ci.LifecycleState = value.String
-			}
-		case configurationitem.FieldBusinessService:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field business_service", values[i])
-			} else if value.Valid {
-				ci.BusinessService = value.String
-			}
-		case configurationitem.FieldOwner:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field owner", values[i])
-			} else if value.Valid {
-				ci.Owner = value.String
-			}
-		case configurationitem.FieldEnvironment:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field environment", values[i])
-			} else if value.Valid {
-				ci.Environment = value.String
-			}
 		case configurationitem.FieldLocation:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field location", values[i])
 			} else if value.Valid {
 				ci.Location = value.String
 			}
-		case configurationitem.FieldAttributes:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field attributes", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.Attributes); err != nil {
-					return fmt.Errorf("unmarshal field attributes: %w", err)
-				}
-			}
-		case configurationitem.FieldMonitoringData:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field monitoring_data", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.MonitoringData); err != nil {
-					return fmt.Errorf("unmarshal field monitoring_data: %w", err)
-				}
-			}
-		case configurationitem.FieldDiscoverySource:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field discovery_source", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.DiscoverySource); err != nil {
-					return fmt.Errorf("unmarshal field discovery_source: %w", err)
-				}
-			}
-		case configurationitem.FieldLastDiscovered:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field last_discovered", values[i])
-			} else if value.Valid {
-				ci.LastDiscovered = value.Time
-			}
-		case configurationitem.FieldVersion:
+		case configurationitem.FieldSerialNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field version", values[i])
+				return fmt.Errorf("unexpected type %T for field serial_number", values[i])
 			} else if value.Valid {
-				ci.Version = value.String
+				ci.SerialNumber = value.String
+			}
+		case configurationitem.FieldModel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field model", values[i])
+			} else if value.Valid {
+				ci.Model = value.String
+			}
+		case configurationitem.FieldVendor:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field vendor", values[i])
+			} else if value.Valid {
+				ci.Vendor = value.String
+			}
+		case configurationitem.FieldCiTypeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
+			} else if value.Valid {
+				ci.CiTypeID = int(value.Int64)
 			}
 		case configurationitem.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -328,13 +148,6 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				ci.UpdatedAt = value.Time
 			}
-		case configurationitem.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field incident_affected_configuration_items", value)
-			} else if value.Valid {
-				ci.incident_affected_configuration_items = new(int)
-				*ci.incident_affected_configuration_items = int(value.Int64)
-			}
 		default:
 			ci.selectValues.Set(columns[i], values[i])
 		}
@@ -346,46 +159,6 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 // This includes values selected through modifiers, order, etc.
 func (ci *ConfigurationItem) Value(name string) (ent.Value, error) {
 	return ci.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryTenant() *TenantQuery {
-	return NewConfigurationItemClient(ci.config).QueryTenant(ci)
-}
-
-// QueryCiType queries the "ci_type" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryCiType() *CITypeQuery {
-	return NewConfigurationItemClient(ci.config).QueryCiType(ci)
-}
-
-// QueryOutgoingRelationships queries the "outgoing_relationships" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryOutgoingRelationships() *CIRelationshipQuery {
-	return NewConfigurationItemClient(ci.config).QueryOutgoingRelationships(ci)
-}
-
-// QueryIncomingRelationships queries the "incoming_relationships" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryIncomingRelationships() *CIRelationshipQuery {
-	return NewConfigurationItemClient(ci.config).QueryIncomingRelationships(ci)
-}
-
-// QueryLifecycleStates queries the "lifecycle_states" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryLifecycleStates() *CILifecycleStateQuery {
-	return NewConfigurationItemClient(ci.config).QueryLifecycleStates(ci)
-}
-
-// QueryChangeRecords queries the "change_records" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryChangeRecords() *CIChangeRecordQuery {
-	return NewConfigurationItemClient(ci.config).QueryChangeRecords(ci)
-}
-
-// QueryIncidents queries the "incidents" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryIncidents() *TicketQuery {
-	return NewConfigurationItemClient(ci.config).QueryIncidents(ci)
-}
-
-// QueryChanges queries the "changes" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryChanges() *TicketQuery {
-	return NewConfigurationItemClient(ci.config).QueryChanges(ci)
 }
 
 // Update returns a builder for updating this ConfigurationItem.
@@ -414,53 +187,29 @@ func (ci *ConfigurationItem) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(ci.Name)
 	builder.WriteString(", ")
-	builder.WriteString("display_name=")
-	builder.WriteString(ci.DisplayName)
-	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(ci.Description)
 	builder.WriteString(", ")
-	builder.WriteString("ci_type_id=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CiTypeID))
-	builder.WriteString(", ")
-	builder.WriteString("serial_number=")
-	builder.WriteString(ci.SerialNumber)
-	builder.WriteString(", ")
-	builder.WriteString("asset_tag=")
-	builder.WriteString(ci.AssetTag)
+	builder.WriteString("type=")
+	builder.WriteString(ci.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(ci.Status)
 	builder.WriteString(", ")
-	builder.WriteString("lifecycle_state=")
-	builder.WriteString(ci.LifecycleState)
-	builder.WriteString(", ")
-	builder.WriteString("business_service=")
-	builder.WriteString(ci.BusinessService)
-	builder.WriteString(", ")
-	builder.WriteString("owner=")
-	builder.WriteString(ci.Owner)
-	builder.WriteString(", ")
-	builder.WriteString("environment=")
-	builder.WriteString(ci.Environment)
-	builder.WriteString(", ")
 	builder.WriteString("location=")
 	builder.WriteString(ci.Location)
 	builder.WriteString(", ")
-	builder.WriteString("attributes=")
-	builder.WriteString(fmt.Sprintf("%v", ci.Attributes))
+	builder.WriteString("serial_number=")
+	builder.WriteString(ci.SerialNumber)
 	builder.WriteString(", ")
-	builder.WriteString("monitoring_data=")
-	builder.WriteString(fmt.Sprintf("%v", ci.MonitoringData))
+	builder.WriteString("model=")
+	builder.WriteString(ci.Model)
 	builder.WriteString(", ")
-	builder.WriteString("discovery_source=")
-	builder.WriteString(fmt.Sprintf("%v", ci.DiscoverySource))
+	builder.WriteString("vendor=")
+	builder.WriteString(ci.Vendor)
 	builder.WriteString(", ")
-	builder.WriteString("last_discovered=")
-	builder.WriteString(ci.LastDiscovered.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("version=")
-	builder.WriteString(ci.Version)
+	builder.WriteString("ci_type_id=")
+	builder.WriteString(fmt.Sprintf("%v", ci.CiTypeID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", ci.TenantID))

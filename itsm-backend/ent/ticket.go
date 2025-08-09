@@ -3,12 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
-	"itsm-backend/ent/flowinstance"
-	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/user"
 	"strings"
 	"time"
 
@@ -25,114 +21,23 @@ type Ticket struct {
 	Title string `json:"title,omitempty"`
 	// 工单描述
 	Description string `json:"description,omitempty"`
-	// 工单状态
-	Status ticket.Status `json:"status,omitempty"`
+	// 状态
+	Status string `json:"status,omitempty"`
 	// 优先级
-	Priority ticket.Priority `json:"priority,omitempty"`
-	// 表单字段JSON数据
-	FormFields map[string]interface{} `json:"form_fields,omitempty"`
+	Priority string `json:"priority,omitempty"`
 	// 工单编号
 	TicketNumber string `json:"ticket_number,omitempty"`
 	// 申请人ID
 	RequesterID int `json:"requester_id,omitempty"`
 	// 处理人ID
-	AssigneeID *int `json:"assignee_id,omitempty"`
+	AssigneeID int `json:"assignee_id,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the TicketQuery when eager-loading is set.
-	Edges                        TicketEdges `json:"edges"`
-	configuration_item_incidents *int
-	configuration_item_changes   *int
-	incident_related_problems    *int
-	incident_related_changes     *int
-	incident_comments            *int
-	selectValues                 sql.SelectValues
-}
-
-// TicketEdges holds the relations/edges for other nodes in the graph.
-type TicketEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// Requester holds the value of the requester edge.
-	Requester *User `json:"requester,omitempty"`
-	// Assignee holds the value of the assignee edge.
-	Assignee *User `json:"assignee,omitempty"`
-	// ApprovalLogs holds the value of the approval_logs edge.
-	ApprovalLogs []*ApprovalLog `json:"approval_logs,omitempty"`
-	// FlowInstance holds the value of the flow_instance edge.
-	FlowInstance *FlowInstance `json:"flow_instance,omitempty"`
-	// StatusLogs holds the value of the status_logs edge.
-	StatusLogs []*StatusLog `json:"status_logs,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// RequesterOrErr returns the Requester value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) RequesterOrErr() (*User, error) {
-	if e.Requester != nil {
-		return e.Requester, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: user.Label}
-	}
-	return nil, &NotLoadedError{edge: "requester"}
-}
-
-// AssigneeOrErr returns the Assignee value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) AssigneeOrErr() (*User, error) {
-	if e.Assignee != nil {
-		return e.Assignee, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: user.Label}
-	}
-	return nil, &NotLoadedError{edge: "assignee"}
-}
-
-// ApprovalLogsOrErr returns the ApprovalLogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) ApprovalLogsOrErr() ([]*ApprovalLog, error) {
-	if e.loadedTypes[3] {
-		return e.ApprovalLogs, nil
-	}
-	return nil, &NotLoadedError{edge: "approval_logs"}
-}
-
-// FlowInstanceOrErr returns the FlowInstance value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketEdges) FlowInstanceOrErr() (*FlowInstance, error) {
-	if e.FlowInstance != nil {
-		return e.FlowInstance, nil
-	} else if e.loadedTypes[4] {
-		return nil, &NotFoundError{label: flowinstance.Label}
-	}
-	return nil, &NotLoadedError{edge: "flow_instance"}
-}
-
-// StatusLogsOrErr returns the StatusLogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e TicketEdges) StatusLogsOrErr() ([]*StatusLog, error) {
-	if e.loadedTypes[5] {
-		return e.StatusLogs, nil
-	}
-	return nil, &NotLoadedError{edge: "status_logs"}
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -140,24 +45,12 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldFormFields:
-			values[i] = new([]byte)
 		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber:
 			values[i] = new(sql.NullString)
 		case ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case ticket.ForeignKeys[0]: // configuration_item_incidents
-			values[i] = new(sql.NullInt64)
-		case ticket.ForeignKeys[1]: // configuration_item_changes
-			values[i] = new(sql.NullInt64)
-		case ticket.ForeignKeys[2]: // incident_related_problems
-			values[i] = new(sql.NullInt64)
-		case ticket.ForeignKeys[3]: // incident_related_changes
-			values[i] = new(sql.NullInt64)
-		case ticket.ForeignKeys[4]: // incident_comments
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -195,21 +88,13 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				t.Status = ticket.Status(value.String)
+				t.Status = value.String
 			}
 		case ticket.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				t.Priority = ticket.Priority(value.String)
-			}
-		case ticket.FieldFormFields:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field form_fields", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &t.FormFields); err != nil {
-					return fmt.Errorf("unmarshal field form_fields: %w", err)
-				}
+				t.Priority = value.String
 			}
 		case ticket.FieldTicketNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -227,8 +112,7 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee_id", values[i])
 			} else if value.Valid {
-				t.AssigneeID = new(int)
-				*t.AssigneeID = int(value.Int64)
+				t.AssigneeID = int(value.Int64)
 			}
 		case ticket.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -248,41 +132,6 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.UpdatedAt = value.Time
 			}
-		case ticket.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field configuration_item_incidents", value)
-			} else if value.Valid {
-				t.configuration_item_incidents = new(int)
-				*t.configuration_item_incidents = int(value.Int64)
-			}
-		case ticket.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field configuration_item_changes", value)
-			} else if value.Valid {
-				t.configuration_item_changes = new(int)
-				*t.configuration_item_changes = int(value.Int64)
-			}
-		case ticket.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field incident_related_problems", value)
-			} else if value.Valid {
-				t.incident_related_problems = new(int)
-				*t.incident_related_problems = int(value.Int64)
-			}
-		case ticket.ForeignKeys[3]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field incident_related_changes", value)
-			} else if value.Valid {
-				t.incident_related_changes = new(int)
-				*t.incident_related_changes = int(value.Int64)
-			}
-		case ticket.ForeignKeys[4]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field incident_comments", value)
-			} else if value.Valid {
-				t.incident_comments = new(int)
-				*t.incident_comments = int(value.Int64)
-			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
 		}
@@ -294,36 +143,6 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (t *Ticket) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the Ticket entity.
-func (t *Ticket) QueryTenant() *TenantQuery {
-	return NewTicketClient(t.config).QueryTenant(t)
-}
-
-// QueryRequester queries the "requester" edge of the Ticket entity.
-func (t *Ticket) QueryRequester() *UserQuery {
-	return NewTicketClient(t.config).QueryRequester(t)
-}
-
-// QueryAssignee queries the "assignee" edge of the Ticket entity.
-func (t *Ticket) QueryAssignee() *UserQuery {
-	return NewTicketClient(t.config).QueryAssignee(t)
-}
-
-// QueryApprovalLogs queries the "approval_logs" edge of the Ticket entity.
-func (t *Ticket) QueryApprovalLogs() *ApprovalLogQuery {
-	return NewTicketClient(t.config).QueryApprovalLogs(t)
-}
-
-// QueryFlowInstance queries the "flow_instance" edge of the Ticket entity.
-func (t *Ticket) QueryFlowInstance() *FlowInstanceQuery {
-	return NewTicketClient(t.config).QueryFlowInstance(t)
-}
-
-// QueryStatusLogs queries the "status_logs" edge of the Ticket entity.
-func (t *Ticket) QueryStatusLogs() *StatusLogQuery {
-	return NewTicketClient(t.config).QueryStatusLogs(t)
 }
 
 // Update returns a builder for updating this Ticket.
@@ -356,13 +175,10 @@ func (t *Ticket) String() string {
 	builder.WriteString(t.Description)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", t.Status))
+	builder.WriteString(t.Status)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(fmt.Sprintf("%v", t.Priority))
-	builder.WriteString(", ")
-	builder.WriteString("form_fields=")
-	builder.WriteString(fmt.Sprintf("%v", t.FormFields))
+	builder.WriteString(t.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_number=")
 	builder.WriteString(t.TicketNumber)
@@ -370,10 +186,8 @@ func (t *Ticket) String() string {
 	builder.WriteString("requester_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.RequesterID))
 	builder.WriteString(", ")
-	if v := t.AssigneeID; v != nil {
-		builder.WriteString("assignee_id=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
+	builder.WriteString("assignee_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.AssigneeID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.TenantID))

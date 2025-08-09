@@ -1,0 +1,353 @@
+package controller
+
+import (
+	"itsm-backend/common"
+	"itsm-backend/dto"
+	"itsm-backend/service"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
+
+type WorkflowController struct {
+	workflowService *service.WorkflowService
+	logger          *zap.SugaredLogger
+}
+
+func NewWorkflowController(workflowService *service.WorkflowService, logger *zap.SugaredLogger) *WorkflowController {
+	return &WorkflowController{
+		workflowService: workflowService,
+		logger:          logger,
+	}
+}
+
+// CreateWorkflow 创建工作流
+func (wc *WorkflowController) CreateWorkflow(c *gin.Context) {
+	var req dto.CreateWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	workflow, err := wc.workflowService.CreateWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to create workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, workflow)
+}
+
+// UpdateWorkflow 更新工作流
+func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工作流ID")
+		return
+	}
+
+	var req dto.UpdateWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	workflow, err := wc.workflowService.UpdateWorkflow(c.Request.Context(), id, &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to update workflow", "error", err, "workflow_id", id, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, workflow)
+}
+
+// ListWorkflows 获取工作流列表
+func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
+	var req dto.ListWorkflowsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	response, err := wc.workflowService.ListWorkflows(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to list workflows", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// GetWorkflow 获取工作流详情
+func (wc *WorkflowController) GetWorkflow(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工作流ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	workflow, err := wc.workflowService.GetWorkflow(c.Request.Context(), id, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to get workflow", "error", err, "workflow_id", id, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, workflow)
+}
+
+// DeleteWorkflow 删除工作流
+func (wc *WorkflowController) DeleteWorkflow(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工作流ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	err = wc.workflowService.DeleteWorkflow(c.Request.Context(), id, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to delete workflow", "error", err, "workflow_id", id, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "工作流删除成功"})
+}
+
+// StartWorkflow 启动工作流实例
+func (wc *WorkflowController) StartWorkflow(c *gin.Context) {
+	var req dto.StartWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	response, err := wc.workflowService.StartWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to start workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// CompleteTask 完成任务
+func (wc *WorkflowController) CompleteTask(c *gin.Context) {
+	var req dto.CompleteTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	err := wc.workflowService.CompleteTask(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to complete task", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "任务完成成功"})
+}
+
+// ListWorkflowInstances 获取工作流实例列表
+func (wc *WorkflowController) ListWorkflowInstances(c *gin.Context) {
+	var req dto.ListWorkflowInstancesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	response, err := wc.workflowService.ListWorkflowInstances(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to list workflow instances", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// ListWorkflowTasks 获取工作流任务列表
+func (wc *WorkflowController) ListWorkflowTasks(c *gin.Context) {
+	var req dto.ListWorkflowTasksRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	response, err := wc.workflowService.ListWorkflowTasks(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to list workflow tasks", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// GetWorkflowInstance 获取工作流实例详情
+func (wc *WorkflowController) GetWorkflowInstance(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的实例ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	instance, err := wc.workflowService.GetWorkflowInstance(c.Request.Context(), id, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to get workflow instance", "error", err, "instance_id", id, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, instance)
+}
+
+// SuspendWorkflow 暂停工作流实例
+func (wc *WorkflowController) SuspendWorkflow(c *gin.Context) {
+	var req dto.SuspendWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	err := wc.workflowService.SuspendWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to suspend workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "工作流暂停成功"})
+}
+
+// ResumeWorkflow 恢复工作流实例
+func (wc *WorkflowController) ResumeWorkflow(c *gin.Context) {
+	var req dto.ResumeWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	err := wc.workflowService.ResumeWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to resume workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "工作流恢复成功"})
+}
+
+// TerminateWorkflow 终止工作流实例
+func (wc *WorkflowController) TerminateWorkflow(c *gin.Context) {
+	var req dto.TerminateWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	err := wc.workflowService.TerminateWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to terminate workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "工作流终止成功"})
+}
+
+// ValidateBPMN 验证BPMN XML
+func (wc *WorkflowController) ValidateBPMN(c *gin.Context) {
+	var req dto.ValidateBPMNRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	response, err := wc.workflowService.ValidateBPMN(req.BPMNXML)
+	if err != nil {
+		wc.logger.Errorw("Failed to validate BPMN", "error", err)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// GetWorkflowStatistics 获取工作流统计
+func (wc *WorkflowController) GetWorkflowStatistics(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	stats, err := wc.workflowService.GetWorkflowStatistics(c.Request.Context(), tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to get workflow statistics", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, stats)
+}
+
+// ExportWorkflow 导出工作流
+func (wc *WorkflowController) ExportWorkflow(c *gin.Context) {
+	var req dto.ExportWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	response, err := wc.workflowService.ExportWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to export workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	// 设置响应头
+	c.Header("Content-Disposition", "attachment; filename="+response.Filename)
+	c.Header("Content-Type", "application/octet-stream")
+	c.Data(http.StatusOK, "application/octet-stream", []byte(response.Data))
+}
+
+// ImportWorkflow 导入工作流
+func (wc *WorkflowController) ImportWorkflow(c *gin.Context) {
+	var req dto.ImportWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	workflow, err := wc.workflowService.ImportWorkflow(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		wc.logger.Errorw("Failed to import workflow", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, workflow)
+}

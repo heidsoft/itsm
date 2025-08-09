@@ -3,10 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/citype"
-	"itsm-backend/ent/tenant"
 	"strings"
 	"time"
 
@@ -19,87 +17,25 @@ type CIType struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
+	// 类型名称
 	Name string `json:"name,omitempty"`
-	// DisplayName holds the value of the "display_name" field.
-	DisplayName string `json:"display_name,omitempty"`
-	// Description holds the value of the "description" field.
+	// 类型描述
 	Description string `json:"description,omitempty"`
-	// Category holds the value of the "category" field.
-	Category string `json:"category,omitempty"`
-	// Icon holds the value of the "icon" field.
+	// 图标
 	Icon string `json:"icon,omitempty"`
-	// AttributeSchema holds the value of the "attribute_schema" field.
-	AttributeSchema map[string]interface{} `json:"attribute_schema,omitempty"`
-	// ValidationRules holds the value of the "validation_rules" field.
-	ValidationRules map[string]interface{} `json:"validation_rules,omitempty"`
-	// IsSystem holds the value of the "is_system" field.
-	IsSystem bool `json:"is_system,omitempty"`
-	// IsActive holds the value of the "is_active" field.
-	IsActive bool `json:"is_active,omitempty"`
-	// TenantID holds the value of the "tenant_id" field.
+	// 颜色
+	Color string `json:"color,omitempty"`
+	// 属性模式定义
+	AttributeSchema string `json:"attribute_schema,omitempty"`
+	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 是否激活
+	IsActive bool `json:"is_active,omitempty"`
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the CITypeQuery when eager-loading is set.
-	Edges        CITypeEdges `json:"edges"`
+	// 更新时间
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// CITypeEdges holds the relations/edges for other nodes in the graph.
-type CITypeEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// ConfigurationItems holds the value of the configuration_items edge.
-	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
-	// AllowedRelationships holds the value of the allowed_relationships edge.
-	AllowedRelationships []*CIRelationshipType `json:"allowed_relationships,omitempty"`
-	// AttributeDefinitions holds the value of the attribute_definitions edge.
-	AttributeDefinitions []*CIAttributeDefinition `json:"attribute_definitions,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CITypeEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
-// was not loaded in eager-loading.
-func (e CITypeEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
-	if e.loadedTypes[1] {
-		return e.ConfigurationItems, nil
-	}
-	return nil, &NotLoadedError{edge: "configuration_items"}
-}
-
-// AllowedRelationshipsOrErr returns the AllowedRelationships value or an error if the edge
-// was not loaded in eager-loading.
-func (e CITypeEdges) AllowedRelationshipsOrErr() ([]*CIRelationshipType, error) {
-	if e.loadedTypes[2] {
-		return e.AllowedRelationships, nil
-	}
-	return nil, &NotLoadedError{edge: "allowed_relationships"}
-}
-
-// AttributeDefinitionsOrErr returns the AttributeDefinitions value or an error if the edge
-// was not loaded in eager-loading.
-func (e CITypeEdges) AttributeDefinitionsOrErr() ([]*CIAttributeDefinition, error) {
-	if e.loadedTypes[3] {
-		return e.AttributeDefinitions, nil
-	}
-	return nil, &NotLoadedError{edge: "attribute_definitions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -107,13 +43,11 @@ func (*CIType) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case citype.FieldAttributeSchema, citype.FieldValidationRules:
-			values[i] = new([]byte)
-		case citype.FieldIsSystem, citype.FieldIsActive:
+		case citype.FieldIsActive:
 			values[i] = new(sql.NullBool)
 		case citype.FieldID, citype.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case citype.FieldName, citype.FieldDisplayName, citype.FieldDescription, citype.FieldCategory, citype.FieldIcon:
+		case citype.FieldName, citype.FieldDescription, citype.FieldIcon, citype.FieldColor, citype.FieldAttributeSchema:
 			values[i] = new(sql.NullString)
 		case citype.FieldCreatedAt, citype.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -144,23 +78,11 @@ func (ct *CIType) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ct.Name = value.String
 			}
-		case citype.FieldDisplayName:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field display_name", values[i])
-			} else if value.Valid {
-				ct.DisplayName = value.String
-			}
 		case citype.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				ct.Description = value.String
-			}
-		case citype.FieldCategory:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field category", values[i])
-			} else if value.Valid {
-				ct.Category = value.String
 			}
 		case citype.FieldIcon:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -168,39 +90,29 @@ func (ct *CIType) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ct.Icon = value.String
 			}
+		case citype.FieldColor:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field color", values[i])
+			} else if value.Valid {
+				ct.Color = value.String
+			}
 		case citype.FieldAttributeSchema:
-			if value, ok := values[i].(*[]byte); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field attribute_schema", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ct.AttributeSchema); err != nil {
-					return fmt.Errorf("unmarshal field attribute_schema: %w", err)
-				}
-			}
-		case citype.FieldValidationRules:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field validation_rules", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ct.ValidationRules); err != nil {
-					return fmt.Errorf("unmarshal field validation_rules: %w", err)
-				}
-			}
-		case citype.FieldIsSystem:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_system", values[i])
 			} else if value.Valid {
-				ct.IsSystem = value.Bool
-			}
-		case citype.FieldIsActive:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_active", values[i])
-			} else if value.Valid {
-				ct.IsActive = value.Bool
+				ct.AttributeSchema = value.String
 			}
 		case citype.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				ct.TenantID = int(value.Int64)
+			}
+		case citype.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				ct.IsActive = value.Bool
 			}
 		case citype.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -225,26 +137,6 @@ func (ct *CIType) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ct *CIType) Value(name string) (ent.Value, error) {
 	return ct.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the CIType entity.
-func (ct *CIType) QueryTenant() *TenantQuery {
-	return NewCITypeClient(ct.config).QueryTenant(ct)
-}
-
-// QueryConfigurationItems queries the "configuration_items" edge of the CIType entity.
-func (ct *CIType) QueryConfigurationItems() *ConfigurationItemQuery {
-	return NewCITypeClient(ct.config).QueryConfigurationItems(ct)
-}
-
-// QueryAllowedRelationships queries the "allowed_relationships" edge of the CIType entity.
-func (ct *CIType) QueryAllowedRelationships() *CIRelationshipTypeQuery {
-	return NewCITypeClient(ct.config).QueryAllowedRelationships(ct)
-}
-
-// QueryAttributeDefinitions queries the "attribute_definitions" edge of the CIType entity.
-func (ct *CIType) QueryAttributeDefinitions() *CIAttributeDefinitionQuery {
-	return NewCITypeClient(ct.config).QueryAttributeDefinitions(ct)
 }
 
 // Update returns a builder for updating this CIType.
@@ -273,32 +165,23 @@ func (ct *CIType) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(ct.Name)
 	builder.WriteString(", ")
-	builder.WriteString("display_name=")
-	builder.WriteString(ct.DisplayName)
-	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(ct.Description)
-	builder.WriteString(", ")
-	builder.WriteString("category=")
-	builder.WriteString(ct.Category)
 	builder.WriteString(", ")
 	builder.WriteString("icon=")
 	builder.WriteString(ct.Icon)
 	builder.WriteString(", ")
+	builder.WriteString("color=")
+	builder.WriteString(ct.Color)
+	builder.WriteString(", ")
 	builder.WriteString("attribute_schema=")
-	builder.WriteString(fmt.Sprintf("%v", ct.AttributeSchema))
-	builder.WriteString(", ")
-	builder.WriteString("validation_rules=")
-	builder.WriteString(fmt.Sprintf("%v", ct.ValidationRules))
-	builder.WriteString(", ")
-	builder.WriteString("is_system=")
-	builder.WriteString(fmt.Sprintf("%v", ct.IsSystem))
-	builder.WriteString(", ")
-	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", ct.IsActive))
+	builder.WriteString(ct.AttributeSchema)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", ct.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", ct.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(ct.CreatedAt.Format(time.ANSIC))

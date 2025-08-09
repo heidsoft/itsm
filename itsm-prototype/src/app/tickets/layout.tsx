@@ -1,14 +1,14 @@
+import React from "react";
+import AppLayout from "../components/AppLayout";
 
-import React from 'react';
-import { Sidebar } from '../components/Sidebar';
-
-export default function TicketsLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex h-screen bg-gray-100 font-sans">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto">
-                {children}
-            </main>
-        </div>
-    );
+export default function TicketsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AppLayout title="工单管理" breadcrumb={[{ title: "工单管理" }]}>
+      {children}
+    </AppLayout>
+  );
 }

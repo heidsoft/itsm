@@ -6,13 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -68,57 +63,29 @@ func (iu *IncidentUpdate) ClearDescription() *IncidentUpdate {
 }
 
 // SetStatus sets the "status" field.
-func (iu *IncidentUpdate) SetStatus(i incident.Status) *IncidentUpdate {
-	iu.mutation.SetStatus(i)
+func (iu *IncidentUpdate) SetStatus(s string) *IncidentUpdate {
+	iu.mutation.SetStatus(s)
 	return iu
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableStatus(i *incident.Status) *IncidentUpdate {
-	if i != nil {
-		iu.SetStatus(*i)
+func (iu *IncidentUpdate) SetNillableStatus(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetStatus(*s)
 	}
 	return iu
 }
 
 // SetPriority sets the "priority" field.
-func (iu *IncidentUpdate) SetPriority(i incident.Priority) *IncidentUpdate {
-	iu.mutation.SetPriority(i)
+func (iu *IncidentUpdate) SetPriority(s string) *IncidentUpdate {
+	iu.mutation.SetPriority(s)
 	return iu
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillablePriority(i *incident.Priority) *IncidentUpdate {
-	if i != nil {
-		iu.SetPriority(*i)
-	}
-	return iu
-}
-
-// SetSource sets the "source" field.
-func (iu *IncidentUpdate) SetSource(i incident.Source) *IncidentUpdate {
-	iu.mutation.SetSource(i)
-	return iu
-}
-
-// SetNillableSource sets the "source" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSource(i *incident.Source) *IncidentUpdate {
-	if i != nil {
-		iu.SetSource(*i)
-	}
-	return iu
-}
-
-// SetType sets the "type" field.
-func (iu *IncidentUpdate) SetType(i incident.Type) *IncidentUpdate {
-	iu.mutation.SetType(i)
-	return iu
-}
-
-// SetNillableType sets the "type" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableType(i *incident.Type) *IncidentUpdate {
-	if i != nil {
-		iu.SetType(*i)
+func (iu *IncidentUpdate) SetNillablePriority(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetPriority(*s)
 	}
 	return iu
 }
@@ -137,22 +104,9 @@ func (iu *IncidentUpdate) SetNillableIncidentNumber(s *string) *IncidentUpdate {
 	return iu
 }
 
-// SetIsMajorIncident sets the "is_major_incident" field.
-func (iu *IncidentUpdate) SetIsMajorIncident(b bool) *IncidentUpdate {
-	iu.mutation.SetIsMajorIncident(b)
-	return iu
-}
-
-// SetNillableIsMajorIncident sets the "is_major_incident" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableIsMajorIncident(b *bool) *IncidentUpdate {
-	if b != nil {
-		iu.SetIsMajorIncident(*b)
-	}
-	return iu
-}
-
 // SetReporterID sets the "reporter_id" field.
 func (iu *IncidentUpdate) SetReporterID(i int) *IncidentUpdate {
+	iu.mutation.ResetReporterID()
 	iu.mutation.SetReporterID(i)
 	return iu
 }
@@ -165,8 +119,15 @@ func (iu *IncidentUpdate) SetNillableReporterID(i *int) *IncidentUpdate {
 	return iu
 }
 
+// AddReporterID adds i to the "reporter_id" field.
+func (iu *IncidentUpdate) AddReporterID(i int) *IncidentUpdate {
+	iu.mutation.AddReporterID(i)
+	return iu
+}
+
 // SetAssigneeID sets the "assignee_id" field.
 func (iu *IncidentUpdate) SetAssigneeID(i int) *IncidentUpdate {
+	iu.mutation.ResetAssigneeID()
 	iu.mutation.SetAssigneeID(i)
 	return iu
 }
@@ -179,213 +140,42 @@ func (iu *IncidentUpdate) SetNillableAssigneeID(i *int) *IncidentUpdate {
 	return iu
 }
 
+// AddAssigneeID adds i to the "assignee_id" field.
+func (iu *IncidentUpdate) AddAssigneeID(i int) *IncidentUpdate {
+	iu.mutation.AddAssigneeID(i)
+	return iu
+}
+
 // ClearAssigneeID clears the value of the "assignee_id" field.
 func (iu *IncidentUpdate) ClearAssigneeID() *IncidentUpdate {
 	iu.mutation.ClearAssigneeID()
 	return iu
 }
 
-// SetTenantID sets the "tenant_id" field.
-func (iu *IncidentUpdate) SetTenantID(i int) *IncidentUpdate {
-	iu.mutation.SetTenantID(i)
+// SetConfigurationItemID sets the "configuration_item_id" field.
+func (iu *IncidentUpdate) SetConfigurationItemID(i int) *IncidentUpdate {
+	iu.mutation.ResetConfigurationItemID()
+	iu.mutation.SetConfigurationItemID(i)
 	return iu
 }
 
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableTenantID(i *int) *IncidentUpdate {
+// SetNillableConfigurationItemID sets the "configuration_item_id" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableConfigurationItemID(i *int) *IncidentUpdate {
 	if i != nil {
-		iu.SetTenantID(*i)
+		iu.SetConfigurationItemID(*i)
 	}
 	return iu
 }
 
-// SetAlibabaCloudInstanceID sets the "alibaba_cloud_instance_id" field.
-func (iu *IncidentUpdate) SetAlibabaCloudInstanceID(s string) *IncidentUpdate {
-	iu.mutation.SetAlibabaCloudInstanceID(s)
+// AddConfigurationItemID adds i to the "configuration_item_id" field.
+func (iu *IncidentUpdate) AddConfigurationItemID(i int) *IncidentUpdate {
+	iu.mutation.AddConfigurationItemID(i)
 	return iu
 }
 
-// SetNillableAlibabaCloudInstanceID sets the "alibaba_cloud_instance_id" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableAlibabaCloudInstanceID(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetAlibabaCloudInstanceID(*s)
-	}
-	return iu
-}
-
-// ClearAlibabaCloudInstanceID clears the value of the "alibaba_cloud_instance_id" field.
-func (iu *IncidentUpdate) ClearAlibabaCloudInstanceID() *IncidentUpdate {
-	iu.mutation.ClearAlibabaCloudInstanceID()
-	return iu
-}
-
-// SetAlibabaCloudRegion sets the "alibaba_cloud_region" field.
-func (iu *IncidentUpdate) SetAlibabaCloudRegion(s string) *IncidentUpdate {
-	iu.mutation.SetAlibabaCloudRegion(s)
-	return iu
-}
-
-// SetNillableAlibabaCloudRegion sets the "alibaba_cloud_region" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableAlibabaCloudRegion(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetAlibabaCloudRegion(*s)
-	}
-	return iu
-}
-
-// ClearAlibabaCloudRegion clears the value of the "alibaba_cloud_region" field.
-func (iu *IncidentUpdate) ClearAlibabaCloudRegion() *IncidentUpdate {
-	iu.mutation.ClearAlibabaCloudRegion()
-	return iu
-}
-
-// SetAlibabaCloudService sets the "alibaba_cloud_service" field.
-func (iu *IncidentUpdate) SetAlibabaCloudService(s string) *IncidentUpdate {
-	iu.mutation.SetAlibabaCloudService(s)
-	return iu
-}
-
-// SetNillableAlibabaCloudService sets the "alibaba_cloud_service" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableAlibabaCloudService(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetAlibabaCloudService(*s)
-	}
-	return iu
-}
-
-// ClearAlibabaCloudService clears the value of the "alibaba_cloud_service" field.
-func (iu *IncidentUpdate) ClearAlibabaCloudService() *IncidentUpdate {
-	iu.mutation.ClearAlibabaCloudService()
-	return iu
-}
-
-// SetAlibabaCloudAlertData sets the "alibaba_cloud_alert_data" field.
-func (iu *IncidentUpdate) SetAlibabaCloudAlertData(m map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetAlibabaCloudAlertData(m)
-	return iu
-}
-
-// ClearAlibabaCloudAlertData clears the value of the "alibaba_cloud_alert_data" field.
-func (iu *IncidentUpdate) ClearAlibabaCloudAlertData() *IncidentUpdate {
-	iu.mutation.ClearAlibabaCloudAlertData()
-	return iu
-}
-
-// SetAlibabaCloudMetrics sets the "alibaba_cloud_metrics" field.
-func (iu *IncidentUpdate) SetAlibabaCloudMetrics(m map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetAlibabaCloudMetrics(m)
-	return iu
-}
-
-// ClearAlibabaCloudMetrics clears the value of the "alibaba_cloud_metrics" field.
-func (iu *IncidentUpdate) ClearAlibabaCloudMetrics() *IncidentUpdate {
-	iu.mutation.ClearAlibabaCloudMetrics()
-	return iu
-}
-
-// SetSecurityEventType sets the "security_event_type" field.
-func (iu *IncidentUpdate) SetSecurityEventType(s string) *IncidentUpdate {
-	iu.mutation.SetSecurityEventType(s)
-	return iu
-}
-
-// SetNillableSecurityEventType sets the "security_event_type" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSecurityEventType(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetSecurityEventType(*s)
-	}
-	return iu
-}
-
-// ClearSecurityEventType clears the value of the "security_event_type" field.
-func (iu *IncidentUpdate) ClearSecurityEventType() *IncidentUpdate {
-	iu.mutation.ClearSecurityEventType()
-	return iu
-}
-
-// SetSecurityEventSourceIP sets the "security_event_source_ip" field.
-func (iu *IncidentUpdate) SetSecurityEventSourceIP(s string) *IncidentUpdate {
-	iu.mutation.SetSecurityEventSourceIP(s)
-	return iu
-}
-
-// SetNillableSecurityEventSourceIP sets the "security_event_source_ip" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSecurityEventSourceIP(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetSecurityEventSourceIP(*s)
-	}
-	return iu
-}
-
-// ClearSecurityEventSourceIP clears the value of the "security_event_source_ip" field.
-func (iu *IncidentUpdate) ClearSecurityEventSourceIP() *IncidentUpdate {
-	iu.mutation.ClearSecurityEventSourceIP()
-	return iu
-}
-
-// SetSecurityEventTarget sets the "security_event_target" field.
-func (iu *IncidentUpdate) SetSecurityEventTarget(s string) *IncidentUpdate {
-	iu.mutation.SetSecurityEventTarget(s)
-	return iu
-}
-
-// SetNillableSecurityEventTarget sets the "security_event_target" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSecurityEventTarget(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetSecurityEventTarget(*s)
-	}
-	return iu
-}
-
-// ClearSecurityEventTarget clears the value of the "security_event_target" field.
-func (iu *IncidentUpdate) ClearSecurityEventTarget() *IncidentUpdate {
-	iu.mutation.ClearSecurityEventTarget()
-	return iu
-}
-
-// SetSecurityEventDetails sets the "security_event_details" field.
-func (iu *IncidentUpdate) SetSecurityEventDetails(m map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetSecurityEventDetails(m)
-	return iu
-}
-
-// ClearSecurityEventDetails clears the value of the "security_event_details" field.
-func (iu *IncidentUpdate) ClearSecurityEventDetails() *IncidentUpdate {
-	iu.mutation.ClearSecurityEventDetails()
-	return iu
-}
-
-// SetDetectedAt sets the "detected_at" field.
-func (iu *IncidentUpdate) SetDetectedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetDetectedAt(t)
-	return iu
-}
-
-// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableDetectedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetDetectedAt(*t)
-	}
-	return iu
-}
-
-// SetConfirmedAt sets the "confirmed_at" field.
-func (iu *IncidentUpdate) SetConfirmedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetConfirmedAt(t)
-	return iu
-}
-
-// SetNillableConfirmedAt sets the "confirmed_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableConfirmedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetConfirmedAt(*t)
-	}
-	return iu
-}
-
-// ClearConfirmedAt clears the value of the "confirmed_at" field.
-func (iu *IncidentUpdate) ClearConfirmedAt() *IncidentUpdate {
-	iu.mutation.ClearConfirmedAt()
+// ClearConfigurationItemID clears the value of the "configuration_item_id" field.
+func (iu *IncidentUpdate) ClearConfigurationItemID() *IncidentUpdate {
+	iu.mutation.ClearConfigurationItemID()
 	return iu
 }
 
@@ -429,228 +219,50 @@ func (iu *IncidentUpdate) ClearClosedAt() *IncidentUpdate {
 	return iu
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (iu *IncidentUpdate) SetTenantID(i int) *IncidentUpdate {
+	iu.mutation.ResetTenantID()
+	iu.mutation.SetTenantID(i)
+	return iu
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableTenantID(i *int) *IncidentUpdate {
+	if i != nil {
+		iu.SetTenantID(*i)
+	}
+	return iu
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (iu *IncidentUpdate) AddTenantID(i int) *IncidentUpdate {
+	iu.mutation.AddTenantID(i)
+	return iu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (iu *IncidentUpdate) SetCreatedAt(t time.Time) *IncidentUpdate {
+	iu.mutation.SetCreatedAt(t)
+	return iu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableCreatedAt(t *time.Time) *IncidentUpdate {
+	if t != nil {
+		iu.SetCreatedAt(*t)
+	}
+	return iu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (iu *IncidentUpdate) SetUpdatedAt(t time.Time) *IncidentUpdate {
 	iu.mutation.SetUpdatedAt(t)
 	return iu
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (iu *IncidentUpdate) SetTenant(t *Tenant) *IncidentUpdate {
-	return iu.SetTenantID(t.ID)
-}
-
-// SetReporter sets the "reporter" edge to the User entity.
-func (iu *IncidentUpdate) SetReporter(u *User) *IncidentUpdate {
-	return iu.SetReporterID(u.ID)
-}
-
-// SetAssignee sets the "assignee" edge to the User entity.
-func (iu *IncidentUpdate) SetAssignee(u *User) *IncidentUpdate {
-	return iu.SetAssigneeID(u.ID)
-}
-
-// AddAffectedConfigurationItemIDs adds the "affected_configuration_items" edge to the ConfigurationItem entity by IDs.
-func (iu *IncidentUpdate) AddAffectedConfigurationItemIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddAffectedConfigurationItemIDs(ids...)
-	return iu
-}
-
-// AddAffectedConfigurationItems adds the "affected_configuration_items" edges to the ConfigurationItem entity.
-func (iu *IncidentUpdate) AddAffectedConfigurationItems(c ...*ConfigurationItem) *IncidentUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iu.AddAffectedConfigurationItemIDs(ids...)
-}
-
-// AddRelatedProblemIDs adds the "related_problems" edge to the Ticket entity by IDs.
-func (iu *IncidentUpdate) AddRelatedProblemIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddRelatedProblemIDs(ids...)
-	return iu
-}
-
-// AddRelatedProblems adds the "related_problems" edges to the Ticket entity.
-func (iu *IncidentUpdate) AddRelatedProblems(t ...*Ticket) *IncidentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iu.AddRelatedProblemIDs(ids...)
-}
-
-// AddRelatedChangeIDs adds the "related_changes" edge to the Ticket entity by IDs.
-func (iu *IncidentUpdate) AddRelatedChangeIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddRelatedChangeIDs(ids...)
-	return iu
-}
-
-// AddRelatedChanges adds the "related_changes" edges to the Ticket entity.
-func (iu *IncidentUpdate) AddRelatedChanges(t ...*Ticket) *IncidentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iu.AddRelatedChangeIDs(ids...)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (iu *IncidentUpdate) AddStatusLogIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddStatusLogIDs(ids...)
-	return iu
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (iu *IncidentUpdate) AddStatusLogs(s ...*StatusLog) *IncidentUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iu.AddStatusLogIDs(ids...)
-}
-
-// AddCommentIDs adds the "comments" edge to the Ticket entity by IDs.
-func (iu *IncidentUpdate) AddCommentIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddCommentIDs(ids...)
-	return iu
-}
-
-// AddComments adds the "comments" edges to the Ticket entity.
-func (iu *IncidentUpdate) AddComments(t ...*Ticket) *IncidentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iu.AddCommentIDs(ids...)
-}
-
 // Mutation returns the IncidentMutation object of the builder.
 func (iu *IncidentUpdate) Mutation() *IncidentMutation {
 	return iu.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (iu *IncidentUpdate) ClearTenant() *IncidentUpdate {
-	iu.mutation.ClearTenant()
-	return iu
-}
-
-// ClearReporter clears the "reporter" edge to the User entity.
-func (iu *IncidentUpdate) ClearReporter() *IncidentUpdate {
-	iu.mutation.ClearReporter()
-	return iu
-}
-
-// ClearAssignee clears the "assignee" edge to the User entity.
-func (iu *IncidentUpdate) ClearAssignee() *IncidentUpdate {
-	iu.mutation.ClearAssignee()
-	return iu
-}
-
-// ClearAffectedConfigurationItems clears all "affected_configuration_items" edges to the ConfigurationItem entity.
-func (iu *IncidentUpdate) ClearAffectedConfigurationItems() *IncidentUpdate {
-	iu.mutation.ClearAffectedConfigurationItems()
-	return iu
-}
-
-// RemoveAffectedConfigurationItemIDs removes the "affected_configuration_items" edge to ConfigurationItem entities by IDs.
-func (iu *IncidentUpdate) RemoveAffectedConfigurationItemIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveAffectedConfigurationItemIDs(ids...)
-	return iu
-}
-
-// RemoveAffectedConfigurationItems removes "affected_configuration_items" edges to ConfigurationItem entities.
-func (iu *IncidentUpdate) RemoveAffectedConfigurationItems(c ...*ConfigurationItem) *IncidentUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iu.RemoveAffectedConfigurationItemIDs(ids...)
-}
-
-// ClearRelatedProblems clears all "related_problems" edges to the Ticket entity.
-func (iu *IncidentUpdate) ClearRelatedProblems() *IncidentUpdate {
-	iu.mutation.ClearRelatedProblems()
-	return iu
-}
-
-// RemoveRelatedProblemIDs removes the "related_problems" edge to Ticket entities by IDs.
-func (iu *IncidentUpdate) RemoveRelatedProblemIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveRelatedProblemIDs(ids...)
-	return iu
-}
-
-// RemoveRelatedProblems removes "related_problems" edges to Ticket entities.
-func (iu *IncidentUpdate) RemoveRelatedProblems(t ...*Ticket) *IncidentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iu.RemoveRelatedProblemIDs(ids...)
-}
-
-// ClearRelatedChanges clears all "related_changes" edges to the Ticket entity.
-func (iu *IncidentUpdate) ClearRelatedChanges() *IncidentUpdate {
-	iu.mutation.ClearRelatedChanges()
-	return iu
-}
-
-// RemoveRelatedChangeIDs removes the "related_changes" edge to Ticket entities by IDs.
-func (iu *IncidentUpdate) RemoveRelatedChangeIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveRelatedChangeIDs(ids...)
-	return iu
-}
-
-// RemoveRelatedChanges removes "related_changes" edges to Ticket entities.
-func (iu *IncidentUpdate) RemoveRelatedChanges(t ...*Ticket) *IncidentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iu.RemoveRelatedChangeIDs(ids...)
-}
-
-// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
-func (iu *IncidentUpdate) ClearStatusLogs() *IncidentUpdate {
-	iu.mutation.ClearStatusLogs()
-	return iu
-}
-
-// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
-func (iu *IncidentUpdate) RemoveStatusLogIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveStatusLogIDs(ids...)
-	return iu
-}
-
-// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
-func (iu *IncidentUpdate) RemoveStatusLogs(s ...*StatusLog) *IncidentUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iu.RemoveStatusLogIDs(ids...)
-}
-
-// ClearComments clears all "comments" edges to the Ticket entity.
-func (iu *IncidentUpdate) ClearComments() *IncidentUpdate {
-	iu.mutation.ClearComments()
-	return iu
-}
-
-// RemoveCommentIDs removes the "comments" edge to Ticket entities by IDs.
-func (iu *IncidentUpdate) RemoveCommentIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveCommentIDs(ids...)
-	return iu
-}
-
-// RemoveComments removes "comments" edges to Ticket entities.
-func (iu *IncidentUpdate) RemoveComments(t ...*Ticket) *IncidentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iu.RemoveCommentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -696,26 +308,6 @@ func (iu *IncidentUpdate) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Incident.title": %w`, err)}
 		}
 	}
-	if v, ok := iu.mutation.Status(); ok {
-		if err := incident.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Incident.status": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.Priority(); ok {
-		if err := incident.PriorityValidator(v); err != nil {
-			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.Source(); ok {
-		if err := incident.SourceValidator(v); err != nil {
-			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "Incident.source": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.GetType(); ok {
-		if err := incident.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Incident.type": %w`, err)}
-		}
-	}
 	if v, ok := iu.mutation.IncidentNumber(); ok {
 		if err := incident.IncidentNumberValidator(v); err != nil {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
@@ -726,51 +318,10 @@ func (iu *IncidentUpdate) check() error {
 			return &ValidationError{Name: "reporter_id", err: fmt.Errorf(`ent: validator failed for field "Incident.reporter_id": %w`, err)}
 		}
 	}
-	if v, ok := iu.mutation.AssigneeID(); ok {
-		if err := incident.AssigneeIDValidator(v); err != nil {
-			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Incident.assignee_id": %w`, err)}
-		}
-	}
 	if v, ok := iu.mutation.TenantID(); ok {
 		if err := incident.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
-	}
-	if v, ok := iu.mutation.AlibabaCloudInstanceID(); ok {
-		if err := incident.AlibabaCloudInstanceIDValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_instance_id", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_instance_id": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.AlibabaCloudRegion(); ok {
-		if err := incident.AlibabaCloudRegionValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_region", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_region": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.AlibabaCloudService(); ok {
-		if err := incident.AlibabaCloudServiceValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_service", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_service": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.SecurityEventType(); ok {
-		if err := incident.SecurityEventTypeValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_type", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_type": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.SecurityEventSourceIP(); ok {
-		if err := incident.SecurityEventSourceIPValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_source_ip", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_source_ip": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.SecurityEventTarget(); ok {
-		if err := incident.SecurityEventTargetValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_target", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_target": %w`, err)}
-		}
-	}
-	if iu.mutation.TenantCleared() && len(iu.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Incident.tenant"`)
-	}
-	if iu.mutation.ReporterCleared() && len(iu.mutation.ReporterIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Incident.reporter"`)
 	}
 	return nil
 }
@@ -797,85 +348,37 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.ClearField(incident.FieldDescription, field.TypeString)
 	}
 	if value, ok := iu.mutation.Status(); ok {
-		_spec.SetField(incident.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 	}
 	if value, ok := iu.mutation.Priority(); ok {
-		_spec.SetField(incident.FieldPriority, field.TypeEnum, value)
-	}
-	if value, ok := iu.mutation.Source(); ok {
-		_spec.SetField(incident.FieldSource, field.TypeEnum, value)
-	}
-	if value, ok := iu.mutation.GetType(); ok {
-		_spec.SetField(incident.FieldType, field.TypeEnum, value)
+		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
 	if value, ok := iu.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.IsMajorIncident(); ok {
-		_spec.SetField(incident.FieldIsMajorIncident, field.TypeBool, value)
+	if value, ok := iu.mutation.ReporterID(); ok {
+		_spec.SetField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AlibabaCloudInstanceID(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudInstanceID, field.TypeString, value)
+	if value, ok := iu.mutation.AddedReporterID(); ok {
+		_spec.AddField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if iu.mutation.AlibabaCloudInstanceIDCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudInstanceID, field.TypeString)
+	if value, ok := iu.mutation.AssigneeID(); ok {
+		_spec.SetField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AlibabaCloudRegion(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudRegion, field.TypeString, value)
+	if value, ok := iu.mutation.AddedAssigneeID(); ok {
+		_spec.AddField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if iu.mutation.AlibabaCloudRegionCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudRegion, field.TypeString)
+	if iu.mutation.AssigneeIDCleared() {
+		_spec.ClearField(incident.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := iu.mutation.AlibabaCloudService(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudService, field.TypeString, value)
+	if value, ok := iu.mutation.ConfigurationItemID(); ok {
+		_spec.SetField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if iu.mutation.AlibabaCloudServiceCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudService, field.TypeString)
+	if value, ok := iu.mutation.AddedConfigurationItemID(); ok {
+		_spec.AddField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AlibabaCloudAlertData(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudAlertData, field.TypeJSON, value)
-	}
-	if iu.mutation.AlibabaCloudAlertDataCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudAlertData, field.TypeJSON)
-	}
-	if value, ok := iu.mutation.AlibabaCloudMetrics(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudMetrics, field.TypeJSON, value)
-	}
-	if iu.mutation.AlibabaCloudMetricsCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudMetrics, field.TypeJSON)
-	}
-	if value, ok := iu.mutation.SecurityEventType(); ok {
-		_spec.SetField(incident.FieldSecurityEventType, field.TypeString, value)
-	}
-	if iu.mutation.SecurityEventTypeCleared() {
-		_spec.ClearField(incident.FieldSecurityEventType, field.TypeString)
-	}
-	if value, ok := iu.mutation.SecurityEventSourceIP(); ok {
-		_spec.SetField(incident.FieldSecurityEventSourceIP, field.TypeString, value)
-	}
-	if iu.mutation.SecurityEventSourceIPCleared() {
-		_spec.ClearField(incident.FieldSecurityEventSourceIP, field.TypeString)
-	}
-	if value, ok := iu.mutation.SecurityEventTarget(); ok {
-		_spec.SetField(incident.FieldSecurityEventTarget, field.TypeString, value)
-	}
-	if iu.mutation.SecurityEventTargetCleared() {
-		_spec.ClearField(incident.FieldSecurityEventTarget, field.TypeString)
-	}
-	if value, ok := iu.mutation.SecurityEventDetails(); ok {
-		_spec.SetField(incident.FieldSecurityEventDetails, field.TypeJSON, value)
-	}
-	if iu.mutation.SecurityEventDetailsCleared() {
-		_spec.ClearField(incident.FieldSecurityEventDetails, field.TypeJSON)
-	}
-	if value, ok := iu.mutation.DetectedAt(); ok {
-		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
-	}
-	if value, ok := iu.mutation.ConfirmedAt(); ok {
-		_spec.SetField(incident.FieldConfirmedAt, field.TypeTime, value)
-	}
-	if iu.mutation.ConfirmedAtCleared() {
-		_spec.ClearField(incident.FieldConfirmedAt, field.TypeTime)
+	if iu.mutation.ConfigurationItemIDCleared() {
+		_spec.ClearField(incident.FieldConfigurationItemID, field.TypeInt)
 	}
 	if value, ok := iu.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
@@ -889,320 +392,17 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if iu.mutation.ClosedAtCleared() {
 		_spec.ClearField(incident.FieldClosedAt, field.TypeTime)
 	}
+	if value, ok := iu.mutation.TenantID(); ok {
+		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := iu.mutation.AddedTenantID(); ok {
+		_spec.AddField(incident.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := iu.mutation.CreatedAt(); ok {
+		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)
+	}
 	if value, ok := iu.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if iu.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.TenantTable,
-			Columns: []string{incident.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.TenantTable,
-			Columns: []string{incident.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.ReporterCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.ReporterTable,
-			Columns: []string{incident.ReporterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.ReporterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.ReporterTable,
-			Columns: []string{incident.ReporterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.AssigneeCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.AssigneeTable,
-			Columns: []string{incident.AssigneeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.AssigneeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.AssigneeTable,
-			Columns: []string{incident.AssigneeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.AffectedConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedAffectedConfigurationItemsIDs(); len(nodes) > 0 && !iu.mutation.AffectedConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.AffectedConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.RelatedProblemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedRelatedProblemsIDs(); len(nodes) > 0 && !iu.mutation.RelatedProblemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RelatedProblemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.RelatedChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedRelatedChangesIDs(); len(nodes) > 0 && !iu.mutation.RelatedChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RelatedChangesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !iu.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.CommentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !iu.mutation.CommentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.CommentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1259,57 +459,29 @@ func (iuo *IncidentUpdateOne) ClearDescription() *IncidentUpdateOne {
 }
 
 // SetStatus sets the "status" field.
-func (iuo *IncidentUpdateOne) SetStatus(i incident.Status) *IncidentUpdateOne {
-	iuo.mutation.SetStatus(i)
+func (iuo *IncidentUpdateOne) SetStatus(s string) *IncidentUpdateOne {
+	iuo.mutation.SetStatus(s)
 	return iuo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableStatus(i *incident.Status) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetStatus(*i)
+func (iuo *IncidentUpdateOne) SetNillableStatus(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetStatus(*s)
 	}
 	return iuo
 }
 
 // SetPriority sets the "priority" field.
-func (iuo *IncidentUpdateOne) SetPriority(i incident.Priority) *IncidentUpdateOne {
-	iuo.mutation.SetPriority(i)
+func (iuo *IncidentUpdateOne) SetPriority(s string) *IncidentUpdateOne {
+	iuo.mutation.SetPriority(s)
 	return iuo
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillablePriority(i *incident.Priority) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetPriority(*i)
-	}
-	return iuo
-}
-
-// SetSource sets the "source" field.
-func (iuo *IncidentUpdateOne) SetSource(i incident.Source) *IncidentUpdateOne {
-	iuo.mutation.SetSource(i)
-	return iuo
-}
-
-// SetNillableSource sets the "source" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSource(i *incident.Source) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetSource(*i)
-	}
-	return iuo
-}
-
-// SetType sets the "type" field.
-func (iuo *IncidentUpdateOne) SetType(i incident.Type) *IncidentUpdateOne {
-	iuo.mutation.SetType(i)
-	return iuo
-}
-
-// SetNillableType sets the "type" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableType(i *incident.Type) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetType(*i)
+func (iuo *IncidentUpdateOne) SetNillablePriority(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetPriority(*s)
 	}
 	return iuo
 }
@@ -1328,22 +500,9 @@ func (iuo *IncidentUpdateOne) SetNillableIncidentNumber(s *string) *IncidentUpda
 	return iuo
 }
 
-// SetIsMajorIncident sets the "is_major_incident" field.
-func (iuo *IncidentUpdateOne) SetIsMajorIncident(b bool) *IncidentUpdateOne {
-	iuo.mutation.SetIsMajorIncident(b)
-	return iuo
-}
-
-// SetNillableIsMajorIncident sets the "is_major_incident" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableIsMajorIncident(b *bool) *IncidentUpdateOne {
-	if b != nil {
-		iuo.SetIsMajorIncident(*b)
-	}
-	return iuo
-}
-
 // SetReporterID sets the "reporter_id" field.
 func (iuo *IncidentUpdateOne) SetReporterID(i int) *IncidentUpdateOne {
+	iuo.mutation.ResetReporterID()
 	iuo.mutation.SetReporterID(i)
 	return iuo
 }
@@ -1356,8 +515,15 @@ func (iuo *IncidentUpdateOne) SetNillableReporterID(i *int) *IncidentUpdateOne {
 	return iuo
 }
 
+// AddReporterID adds i to the "reporter_id" field.
+func (iuo *IncidentUpdateOne) AddReporterID(i int) *IncidentUpdateOne {
+	iuo.mutation.AddReporterID(i)
+	return iuo
+}
+
 // SetAssigneeID sets the "assignee_id" field.
 func (iuo *IncidentUpdateOne) SetAssigneeID(i int) *IncidentUpdateOne {
+	iuo.mutation.ResetAssigneeID()
 	iuo.mutation.SetAssigneeID(i)
 	return iuo
 }
@@ -1370,213 +536,42 @@ func (iuo *IncidentUpdateOne) SetNillableAssigneeID(i *int) *IncidentUpdateOne {
 	return iuo
 }
 
+// AddAssigneeID adds i to the "assignee_id" field.
+func (iuo *IncidentUpdateOne) AddAssigneeID(i int) *IncidentUpdateOne {
+	iuo.mutation.AddAssigneeID(i)
+	return iuo
+}
+
 // ClearAssigneeID clears the value of the "assignee_id" field.
 func (iuo *IncidentUpdateOne) ClearAssigneeID() *IncidentUpdateOne {
 	iuo.mutation.ClearAssigneeID()
 	return iuo
 }
 
-// SetTenantID sets the "tenant_id" field.
-func (iuo *IncidentUpdateOne) SetTenantID(i int) *IncidentUpdateOne {
-	iuo.mutation.SetTenantID(i)
+// SetConfigurationItemID sets the "configuration_item_id" field.
+func (iuo *IncidentUpdateOne) SetConfigurationItemID(i int) *IncidentUpdateOne {
+	iuo.mutation.ResetConfigurationItemID()
+	iuo.mutation.SetConfigurationItemID(i)
 	return iuo
 }
 
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableTenantID(i *int) *IncidentUpdateOne {
+// SetNillableConfigurationItemID sets the "configuration_item_id" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableConfigurationItemID(i *int) *IncidentUpdateOne {
 	if i != nil {
-		iuo.SetTenantID(*i)
+		iuo.SetConfigurationItemID(*i)
 	}
 	return iuo
 }
 
-// SetAlibabaCloudInstanceID sets the "alibaba_cloud_instance_id" field.
-func (iuo *IncidentUpdateOne) SetAlibabaCloudInstanceID(s string) *IncidentUpdateOne {
-	iuo.mutation.SetAlibabaCloudInstanceID(s)
+// AddConfigurationItemID adds i to the "configuration_item_id" field.
+func (iuo *IncidentUpdateOne) AddConfigurationItemID(i int) *IncidentUpdateOne {
+	iuo.mutation.AddConfigurationItemID(i)
 	return iuo
 }
 
-// SetNillableAlibabaCloudInstanceID sets the "alibaba_cloud_instance_id" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableAlibabaCloudInstanceID(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetAlibabaCloudInstanceID(*s)
-	}
-	return iuo
-}
-
-// ClearAlibabaCloudInstanceID clears the value of the "alibaba_cloud_instance_id" field.
-func (iuo *IncidentUpdateOne) ClearAlibabaCloudInstanceID() *IncidentUpdateOne {
-	iuo.mutation.ClearAlibabaCloudInstanceID()
-	return iuo
-}
-
-// SetAlibabaCloudRegion sets the "alibaba_cloud_region" field.
-func (iuo *IncidentUpdateOne) SetAlibabaCloudRegion(s string) *IncidentUpdateOne {
-	iuo.mutation.SetAlibabaCloudRegion(s)
-	return iuo
-}
-
-// SetNillableAlibabaCloudRegion sets the "alibaba_cloud_region" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableAlibabaCloudRegion(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetAlibabaCloudRegion(*s)
-	}
-	return iuo
-}
-
-// ClearAlibabaCloudRegion clears the value of the "alibaba_cloud_region" field.
-func (iuo *IncidentUpdateOne) ClearAlibabaCloudRegion() *IncidentUpdateOne {
-	iuo.mutation.ClearAlibabaCloudRegion()
-	return iuo
-}
-
-// SetAlibabaCloudService sets the "alibaba_cloud_service" field.
-func (iuo *IncidentUpdateOne) SetAlibabaCloudService(s string) *IncidentUpdateOne {
-	iuo.mutation.SetAlibabaCloudService(s)
-	return iuo
-}
-
-// SetNillableAlibabaCloudService sets the "alibaba_cloud_service" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableAlibabaCloudService(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetAlibabaCloudService(*s)
-	}
-	return iuo
-}
-
-// ClearAlibabaCloudService clears the value of the "alibaba_cloud_service" field.
-func (iuo *IncidentUpdateOne) ClearAlibabaCloudService() *IncidentUpdateOne {
-	iuo.mutation.ClearAlibabaCloudService()
-	return iuo
-}
-
-// SetAlibabaCloudAlertData sets the "alibaba_cloud_alert_data" field.
-func (iuo *IncidentUpdateOne) SetAlibabaCloudAlertData(m map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetAlibabaCloudAlertData(m)
-	return iuo
-}
-
-// ClearAlibabaCloudAlertData clears the value of the "alibaba_cloud_alert_data" field.
-func (iuo *IncidentUpdateOne) ClearAlibabaCloudAlertData() *IncidentUpdateOne {
-	iuo.mutation.ClearAlibabaCloudAlertData()
-	return iuo
-}
-
-// SetAlibabaCloudMetrics sets the "alibaba_cloud_metrics" field.
-func (iuo *IncidentUpdateOne) SetAlibabaCloudMetrics(m map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetAlibabaCloudMetrics(m)
-	return iuo
-}
-
-// ClearAlibabaCloudMetrics clears the value of the "alibaba_cloud_metrics" field.
-func (iuo *IncidentUpdateOne) ClearAlibabaCloudMetrics() *IncidentUpdateOne {
-	iuo.mutation.ClearAlibabaCloudMetrics()
-	return iuo
-}
-
-// SetSecurityEventType sets the "security_event_type" field.
-func (iuo *IncidentUpdateOne) SetSecurityEventType(s string) *IncidentUpdateOne {
-	iuo.mutation.SetSecurityEventType(s)
-	return iuo
-}
-
-// SetNillableSecurityEventType sets the "security_event_type" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSecurityEventType(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetSecurityEventType(*s)
-	}
-	return iuo
-}
-
-// ClearSecurityEventType clears the value of the "security_event_type" field.
-func (iuo *IncidentUpdateOne) ClearSecurityEventType() *IncidentUpdateOne {
-	iuo.mutation.ClearSecurityEventType()
-	return iuo
-}
-
-// SetSecurityEventSourceIP sets the "security_event_source_ip" field.
-func (iuo *IncidentUpdateOne) SetSecurityEventSourceIP(s string) *IncidentUpdateOne {
-	iuo.mutation.SetSecurityEventSourceIP(s)
-	return iuo
-}
-
-// SetNillableSecurityEventSourceIP sets the "security_event_source_ip" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSecurityEventSourceIP(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetSecurityEventSourceIP(*s)
-	}
-	return iuo
-}
-
-// ClearSecurityEventSourceIP clears the value of the "security_event_source_ip" field.
-func (iuo *IncidentUpdateOne) ClearSecurityEventSourceIP() *IncidentUpdateOne {
-	iuo.mutation.ClearSecurityEventSourceIP()
-	return iuo
-}
-
-// SetSecurityEventTarget sets the "security_event_target" field.
-func (iuo *IncidentUpdateOne) SetSecurityEventTarget(s string) *IncidentUpdateOne {
-	iuo.mutation.SetSecurityEventTarget(s)
-	return iuo
-}
-
-// SetNillableSecurityEventTarget sets the "security_event_target" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSecurityEventTarget(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetSecurityEventTarget(*s)
-	}
-	return iuo
-}
-
-// ClearSecurityEventTarget clears the value of the "security_event_target" field.
-func (iuo *IncidentUpdateOne) ClearSecurityEventTarget() *IncidentUpdateOne {
-	iuo.mutation.ClearSecurityEventTarget()
-	return iuo
-}
-
-// SetSecurityEventDetails sets the "security_event_details" field.
-func (iuo *IncidentUpdateOne) SetSecurityEventDetails(m map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetSecurityEventDetails(m)
-	return iuo
-}
-
-// ClearSecurityEventDetails clears the value of the "security_event_details" field.
-func (iuo *IncidentUpdateOne) ClearSecurityEventDetails() *IncidentUpdateOne {
-	iuo.mutation.ClearSecurityEventDetails()
-	return iuo
-}
-
-// SetDetectedAt sets the "detected_at" field.
-func (iuo *IncidentUpdateOne) SetDetectedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetDetectedAt(t)
-	return iuo
-}
-
-// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableDetectedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetDetectedAt(*t)
-	}
-	return iuo
-}
-
-// SetConfirmedAt sets the "confirmed_at" field.
-func (iuo *IncidentUpdateOne) SetConfirmedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetConfirmedAt(t)
-	return iuo
-}
-
-// SetNillableConfirmedAt sets the "confirmed_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableConfirmedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetConfirmedAt(*t)
-	}
-	return iuo
-}
-
-// ClearConfirmedAt clears the value of the "confirmed_at" field.
-func (iuo *IncidentUpdateOne) ClearConfirmedAt() *IncidentUpdateOne {
-	iuo.mutation.ClearConfirmedAt()
+// ClearConfigurationItemID clears the value of the "configuration_item_id" field.
+func (iuo *IncidentUpdateOne) ClearConfigurationItemID() *IncidentUpdateOne {
+	iuo.mutation.ClearConfigurationItemID()
 	return iuo
 }
 
@@ -1620,228 +615,50 @@ func (iuo *IncidentUpdateOne) ClearClosedAt() *IncidentUpdateOne {
 	return iuo
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (iuo *IncidentUpdateOne) SetTenantID(i int) *IncidentUpdateOne {
+	iuo.mutation.ResetTenantID()
+	iuo.mutation.SetTenantID(i)
+	return iuo
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableTenantID(i *int) *IncidentUpdateOne {
+	if i != nil {
+		iuo.SetTenantID(*i)
+	}
+	return iuo
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (iuo *IncidentUpdateOne) AddTenantID(i int) *IncidentUpdateOne {
+	iuo.mutation.AddTenantID(i)
+	return iuo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (iuo *IncidentUpdateOne) SetCreatedAt(t time.Time) *IncidentUpdateOne {
+	iuo.mutation.SetCreatedAt(t)
+	return iuo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentUpdateOne {
+	if t != nil {
+		iuo.SetCreatedAt(*t)
+	}
+	return iuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (iuo *IncidentUpdateOne) SetUpdatedAt(t time.Time) *IncidentUpdateOne {
 	iuo.mutation.SetUpdatedAt(t)
 	return iuo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (iuo *IncidentUpdateOne) SetTenant(t *Tenant) *IncidentUpdateOne {
-	return iuo.SetTenantID(t.ID)
-}
-
-// SetReporter sets the "reporter" edge to the User entity.
-func (iuo *IncidentUpdateOne) SetReporter(u *User) *IncidentUpdateOne {
-	return iuo.SetReporterID(u.ID)
-}
-
-// SetAssignee sets the "assignee" edge to the User entity.
-func (iuo *IncidentUpdateOne) SetAssignee(u *User) *IncidentUpdateOne {
-	return iuo.SetAssigneeID(u.ID)
-}
-
-// AddAffectedConfigurationItemIDs adds the "affected_configuration_items" edge to the ConfigurationItem entity by IDs.
-func (iuo *IncidentUpdateOne) AddAffectedConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddAffectedConfigurationItemIDs(ids...)
-	return iuo
-}
-
-// AddAffectedConfigurationItems adds the "affected_configuration_items" edges to the ConfigurationItem entity.
-func (iuo *IncidentUpdateOne) AddAffectedConfigurationItems(c ...*ConfigurationItem) *IncidentUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iuo.AddAffectedConfigurationItemIDs(ids...)
-}
-
-// AddRelatedProblemIDs adds the "related_problems" edge to the Ticket entity by IDs.
-func (iuo *IncidentUpdateOne) AddRelatedProblemIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddRelatedProblemIDs(ids...)
-	return iuo
-}
-
-// AddRelatedProblems adds the "related_problems" edges to the Ticket entity.
-func (iuo *IncidentUpdateOne) AddRelatedProblems(t ...*Ticket) *IncidentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iuo.AddRelatedProblemIDs(ids...)
-}
-
-// AddRelatedChangeIDs adds the "related_changes" edge to the Ticket entity by IDs.
-func (iuo *IncidentUpdateOne) AddRelatedChangeIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddRelatedChangeIDs(ids...)
-	return iuo
-}
-
-// AddRelatedChanges adds the "related_changes" edges to the Ticket entity.
-func (iuo *IncidentUpdateOne) AddRelatedChanges(t ...*Ticket) *IncidentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iuo.AddRelatedChangeIDs(ids...)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (iuo *IncidentUpdateOne) AddStatusLogIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddStatusLogIDs(ids...)
-	return iuo
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (iuo *IncidentUpdateOne) AddStatusLogs(s ...*StatusLog) *IncidentUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iuo.AddStatusLogIDs(ids...)
-}
-
-// AddCommentIDs adds the "comments" edge to the Ticket entity by IDs.
-func (iuo *IncidentUpdateOne) AddCommentIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddCommentIDs(ids...)
-	return iuo
-}
-
-// AddComments adds the "comments" edges to the Ticket entity.
-func (iuo *IncidentUpdateOne) AddComments(t ...*Ticket) *IncidentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iuo.AddCommentIDs(ids...)
-}
-
 // Mutation returns the IncidentMutation object of the builder.
 func (iuo *IncidentUpdateOne) Mutation() *IncidentMutation {
 	return iuo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (iuo *IncidentUpdateOne) ClearTenant() *IncidentUpdateOne {
-	iuo.mutation.ClearTenant()
-	return iuo
-}
-
-// ClearReporter clears the "reporter" edge to the User entity.
-func (iuo *IncidentUpdateOne) ClearReporter() *IncidentUpdateOne {
-	iuo.mutation.ClearReporter()
-	return iuo
-}
-
-// ClearAssignee clears the "assignee" edge to the User entity.
-func (iuo *IncidentUpdateOne) ClearAssignee() *IncidentUpdateOne {
-	iuo.mutation.ClearAssignee()
-	return iuo
-}
-
-// ClearAffectedConfigurationItems clears all "affected_configuration_items" edges to the ConfigurationItem entity.
-func (iuo *IncidentUpdateOne) ClearAffectedConfigurationItems() *IncidentUpdateOne {
-	iuo.mutation.ClearAffectedConfigurationItems()
-	return iuo
-}
-
-// RemoveAffectedConfigurationItemIDs removes the "affected_configuration_items" edge to ConfigurationItem entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveAffectedConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveAffectedConfigurationItemIDs(ids...)
-	return iuo
-}
-
-// RemoveAffectedConfigurationItems removes "affected_configuration_items" edges to ConfigurationItem entities.
-func (iuo *IncidentUpdateOne) RemoveAffectedConfigurationItems(c ...*ConfigurationItem) *IncidentUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return iuo.RemoveAffectedConfigurationItemIDs(ids...)
-}
-
-// ClearRelatedProblems clears all "related_problems" edges to the Ticket entity.
-func (iuo *IncidentUpdateOne) ClearRelatedProblems() *IncidentUpdateOne {
-	iuo.mutation.ClearRelatedProblems()
-	return iuo
-}
-
-// RemoveRelatedProblemIDs removes the "related_problems" edge to Ticket entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveRelatedProblemIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveRelatedProblemIDs(ids...)
-	return iuo
-}
-
-// RemoveRelatedProblems removes "related_problems" edges to Ticket entities.
-func (iuo *IncidentUpdateOne) RemoveRelatedProblems(t ...*Ticket) *IncidentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iuo.RemoveRelatedProblemIDs(ids...)
-}
-
-// ClearRelatedChanges clears all "related_changes" edges to the Ticket entity.
-func (iuo *IncidentUpdateOne) ClearRelatedChanges() *IncidentUpdateOne {
-	iuo.mutation.ClearRelatedChanges()
-	return iuo
-}
-
-// RemoveRelatedChangeIDs removes the "related_changes" edge to Ticket entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveRelatedChangeIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveRelatedChangeIDs(ids...)
-	return iuo
-}
-
-// RemoveRelatedChanges removes "related_changes" edges to Ticket entities.
-func (iuo *IncidentUpdateOne) RemoveRelatedChanges(t ...*Ticket) *IncidentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iuo.RemoveRelatedChangeIDs(ids...)
-}
-
-// ClearStatusLogs clears all "status_logs" edges to the StatusLog entity.
-func (iuo *IncidentUpdateOne) ClearStatusLogs() *IncidentUpdateOne {
-	iuo.mutation.ClearStatusLogs()
-	return iuo
-}
-
-// RemoveStatusLogIDs removes the "status_logs" edge to StatusLog entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveStatusLogIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveStatusLogIDs(ids...)
-	return iuo
-}
-
-// RemoveStatusLogs removes "status_logs" edges to StatusLog entities.
-func (iuo *IncidentUpdateOne) RemoveStatusLogs(s ...*StatusLog) *IncidentUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return iuo.RemoveStatusLogIDs(ids...)
-}
-
-// ClearComments clears all "comments" edges to the Ticket entity.
-func (iuo *IncidentUpdateOne) ClearComments() *IncidentUpdateOne {
-	iuo.mutation.ClearComments()
-	return iuo
-}
-
-// RemoveCommentIDs removes the "comments" edge to Ticket entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveCommentIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveCommentIDs(ids...)
-	return iuo
-}
-
-// RemoveComments removes "comments" edges to Ticket entities.
-func (iuo *IncidentUpdateOne) RemoveComments(t ...*Ticket) *IncidentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return iuo.RemoveCommentIDs(ids...)
 }
 
 // Where appends a list predicates to the IncidentUpdate builder.
@@ -1900,26 +717,6 @@ func (iuo *IncidentUpdateOne) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Incident.title": %w`, err)}
 		}
 	}
-	if v, ok := iuo.mutation.Status(); ok {
-		if err := incident.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Incident.status": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.Priority(); ok {
-		if err := incident.PriorityValidator(v); err != nil {
-			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Incident.priority": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.Source(); ok {
-		if err := incident.SourceValidator(v); err != nil {
-			return &ValidationError{Name: "source", err: fmt.Errorf(`ent: validator failed for field "Incident.source": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.GetType(); ok {
-		if err := incident.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Incident.type": %w`, err)}
-		}
-	}
 	if v, ok := iuo.mutation.IncidentNumber(); ok {
 		if err := incident.IncidentNumberValidator(v); err != nil {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
@@ -1930,51 +727,10 @@ func (iuo *IncidentUpdateOne) check() error {
 			return &ValidationError{Name: "reporter_id", err: fmt.Errorf(`ent: validator failed for field "Incident.reporter_id": %w`, err)}
 		}
 	}
-	if v, ok := iuo.mutation.AssigneeID(); ok {
-		if err := incident.AssigneeIDValidator(v); err != nil {
-			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Incident.assignee_id": %w`, err)}
-		}
-	}
 	if v, ok := iuo.mutation.TenantID(); ok {
 		if err := incident.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
-	}
-	if v, ok := iuo.mutation.AlibabaCloudInstanceID(); ok {
-		if err := incident.AlibabaCloudInstanceIDValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_instance_id", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_instance_id": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.AlibabaCloudRegion(); ok {
-		if err := incident.AlibabaCloudRegionValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_region", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_region": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.AlibabaCloudService(); ok {
-		if err := incident.AlibabaCloudServiceValidator(v); err != nil {
-			return &ValidationError{Name: "alibaba_cloud_service", err: fmt.Errorf(`ent: validator failed for field "Incident.alibaba_cloud_service": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.SecurityEventType(); ok {
-		if err := incident.SecurityEventTypeValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_type", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_type": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.SecurityEventSourceIP(); ok {
-		if err := incident.SecurityEventSourceIPValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_source_ip", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_source_ip": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.SecurityEventTarget(); ok {
-		if err := incident.SecurityEventTargetValidator(v); err != nil {
-			return &ValidationError{Name: "security_event_target", err: fmt.Errorf(`ent: validator failed for field "Incident.security_event_target": %w`, err)}
-		}
-	}
-	if iuo.mutation.TenantCleared() && len(iuo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Incident.tenant"`)
-	}
-	if iuo.mutation.ReporterCleared() && len(iuo.mutation.ReporterIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Incident.reporter"`)
 	}
 	return nil
 }
@@ -2018,85 +774,37 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		_spec.ClearField(incident.FieldDescription, field.TypeString)
 	}
 	if value, ok := iuo.mutation.Status(); ok {
-		_spec.SetField(incident.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 	}
 	if value, ok := iuo.mutation.Priority(); ok {
-		_spec.SetField(incident.FieldPriority, field.TypeEnum, value)
-	}
-	if value, ok := iuo.mutation.Source(); ok {
-		_spec.SetField(incident.FieldSource, field.TypeEnum, value)
-	}
-	if value, ok := iuo.mutation.GetType(); ok {
-		_spec.SetField(incident.FieldType, field.TypeEnum, value)
+		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
 	if value, ok := iuo.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.IsMajorIncident(); ok {
-		_spec.SetField(incident.FieldIsMajorIncident, field.TypeBool, value)
+	if value, ok := iuo.mutation.ReporterID(); ok {
+		_spec.SetField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AlibabaCloudInstanceID(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudInstanceID, field.TypeString, value)
+	if value, ok := iuo.mutation.AddedReporterID(); ok {
+		_spec.AddField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if iuo.mutation.AlibabaCloudInstanceIDCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudInstanceID, field.TypeString)
+	if value, ok := iuo.mutation.AssigneeID(); ok {
+		_spec.SetField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AlibabaCloudRegion(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudRegion, field.TypeString, value)
+	if value, ok := iuo.mutation.AddedAssigneeID(); ok {
+		_spec.AddField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if iuo.mutation.AlibabaCloudRegionCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudRegion, field.TypeString)
+	if iuo.mutation.AssigneeIDCleared() {
+		_spec.ClearField(incident.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := iuo.mutation.AlibabaCloudService(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudService, field.TypeString, value)
+	if value, ok := iuo.mutation.ConfigurationItemID(); ok {
+		_spec.SetField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if iuo.mutation.AlibabaCloudServiceCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudService, field.TypeString)
+	if value, ok := iuo.mutation.AddedConfigurationItemID(); ok {
+		_spec.AddField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AlibabaCloudAlertData(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudAlertData, field.TypeJSON, value)
-	}
-	if iuo.mutation.AlibabaCloudAlertDataCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudAlertData, field.TypeJSON)
-	}
-	if value, ok := iuo.mutation.AlibabaCloudMetrics(); ok {
-		_spec.SetField(incident.FieldAlibabaCloudMetrics, field.TypeJSON, value)
-	}
-	if iuo.mutation.AlibabaCloudMetricsCleared() {
-		_spec.ClearField(incident.FieldAlibabaCloudMetrics, field.TypeJSON)
-	}
-	if value, ok := iuo.mutation.SecurityEventType(); ok {
-		_spec.SetField(incident.FieldSecurityEventType, field.TypeString, value)
-	}
-	if iuo.mutation.SecurityEventTypeCleared() {
-		_spec.ClearField(incident.FieldSecurityEventType, field.TypeString)
-	}
-	if value, ok := iuo.mutation.SecurityEventSourceIP(); ok {
-		_spec.SetField(incident.FieldSecurityEventSourceIP, field.TypeString, value)
-	}
-	if iuo.mutation.SecurityEventSourceIPCleared() {
-		_spec.ClearField(incident.FieldSecurityEventSourceIP, field.TypeString)
-	}
-	if value, ok := iuo.mutation.SecurityEventTarget(); ok {
-		_spec.SetField(incident.FieldSecurityEventTarget, field.TypeString, value)
-	}
-	if iuo.mutation.SecurityEventTargetCleared() {
-		_spec.ClearField(incident.FieldSecurityEventTarget, field.TypeString)
-	}
-	if value, ok := iuo.mutation.SecurityEventDetails(); ok {
-		_spec.SetField(incident.FieldSecurityEventDetails, field.TypeJSON, value)
-	}
-	if iuo.mutation.SecurityEventDetailsCleared() {
-		_spec.ClearField(incident.FieldSecurityEventDetails, field.TypeJSON)
-	}
-	if value, ok := iuo.mutation.DetectedAt(); ok {
-		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
-	}
-	if value, ok := iuo.mutation.ConfirmedAt(); ok {
-		_spec.SetField(incident.FieldConfirmedAt, field.TypeTime, value)
-	}
-	if iuo.mutation.ConfirmedAtCleared() {
-		_spec.ClearField(incident.FieldConfirmedAt, field.TypeTime)
+	if iuo.mutation.ConfigurationItemIDCleared() {
+		_spec.ClearField(incident.FieldConfigurationItemID, field.TypeInt)
 	}
 	if value, ok := iuo.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
@@ -2110,320 +818,17 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 	if iuo.mutation.ClosedAtCleared() {
 		_spec.ClearField(incident.FieldClosedAt, field.TypeTime)
 	}
+	if value, ok := iuo.mutation.TenantID(); ok {
+		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := iuo.mutation.AddedTenantID(); ok {
+		_spec.AddField(incident.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := iuo.mutation.CreatedAt(); ok {
+		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)
+	}
 	if value, ok := iuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if iuo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.TenantTable,
-			Columns: []string{incident.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.TenantTable,
-			Columns: []string{incident.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.ReporterCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.ReporterTable,
-			Columns: []string{incident.ReporterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.ReporterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.ReporterTable,
-			Columns: []string{incident.ReporterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.AssigneeCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.AssigneeTable,
-			Columns: []string{incident.AssigneeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.AssigneeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   incident.AssigneeTable,
-			Columns: []string{incident.AssigneeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.AffectedConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedAffectedConfigurationItemsIDs(); len(nodes) > 0 && !iuo.mutation.AffectedConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.AffectedConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.AffectedConfigurationItemsTable,
-			Columns: []string{incident.AffectedConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.RelatedProblemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedRelatedProblemsIDs(); len(nodes) > 0 && !iuo.mutation.RelatedProblemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RelatedProblemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedProblemsTable,
-			Columns: []string{incident.RelatedProblemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.RelatedChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedRelatedChangesIDs(); len(nodes) > 0 && !iuo.mutation.RelatedChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RelatedChangesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.RelatedChangesTable,
-			Columns: []string{incident.RelatedChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedStatusLogsIDs(); len(nodes) > 0 && !iuo.mutation.StatusLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.StatusLogsTable,
-			Columns: []string{incident.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.CommentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !iuo.mutation.CommentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.CommentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.CommentsTable,
-			Columns: []string{incident.CommentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Incident{config: iuo.config}
 	_spec.Assign = _node.assignValues

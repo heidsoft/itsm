@@ -4,16 +4,9 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
-	"itsm-backend/ent/cichangerecord"
-	"itsm-backend/ent/cilifecyclestate"
-	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
 	"math"
 
 	"entgo.io/ent"
@@ -25,19 +18,10 @@ import (
 // ConfigurationItemQuery is the builder for querying ConfigurationItem entities.
 type ConfigurationItemQuery struct {
 	config
-	ctx                       *QueryContext
-	order                     []configurationitem.OrderOption
-	inters                    []Interceptor
-	predicates                []predicate.ConfigurationItem
-	withTenant                *TenantQuery
-	withCiType                *CITypeQuery
-	withOutgoingRelationships *CIRelationshipQuery
-	withIncomingRelationships *CIRelationshipQuery
-	withLifecycleStates       *CILifecycleStateQuery
-	withChangeRecords         *CIChangeRecordQuery
-	withIncidents             *TicketQuery
-	withChanges               *TicketQuery
-	withFKs                   bool
+	ctx        *QueryContext
+	order      []configurationitem.OrderOption
+	inters     []Interceptor
+	predicates []predicate.ConfigurationItem
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -72,182 +56,6 @@ func (ciq *ConfigurationItemQuery) Unique(unique bool) *ConfigurationItemQuery {
 func (ciq *ConfigurationItemQuery) Order(o ...configurationitem.OrderOption) *ConfigurationItemQuery {
 	ciq.order = append(ciq.order, o...)
 	return ciq
-}
-
-// QueryTenant chains the current query on the "tenant" edge.
-func (ciq *ConfigurationItemQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, configurationitem.TenantTable, configurationitem.TenantColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryCiType chains the current query on the "ci_type" edge.
-func (ciq *ConfigurationItemQuery) QueryCiType() *CITypeQuery {
-	query := (&CITypeClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(citype.Table, citype.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, configurationitem.CiTypeTable, configurationitem.CiTypeColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryOutgoingRelationships chains the current query on the "outgoing_relationships" edge.
-func (ciq *ConfigurationItemQuery) QueryOutgoingRelationships() *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationshipsTable, configurationitem.OutgoingRelationshipsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryIncomingRelationships chains the current query on the "incoming_relationships" edge.
-func (ciq *ConfigurationItemQuery) QueryIncomingRelationships() *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncomingRelationshipsTable, configurationitem.IncomingRelationshipsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryLifecycleStates chains the current query on the "lifecycle_states" edge.
-func (ciq *ConfigurationItemQuery) QueryLifecycleStates() *CILifecycleStateQuery {
-	query := (&CILifecycleStateClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(cilifecyclestate.Table, cilifecyclestate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.LifecycleStatesTable, configurationitem.LifecycleStatesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryChangeRecords chains the current query on the "change_records" edge.
-func (ciq *ConfigurationItemQuery) QueryChangeRecords() *CIChangeRecordQuery {
-	query := (&CIChangeRecordClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(cichangerecord.Table, cichangerecord.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ChangeRecordsTable, configurationitem.ChangeRecordsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryIncidents chains the current query on the "incidents" edge.
-func (ciq *ConfigurationItemQuery) QueryIncidents() *TicketQuery {
-	query := (&TicketClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncidentsTable, configurationitem.IncidentsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryChanges chains the current query on the "changes" edge.
-func (ciq *ConfigurationItemQuery) QueryChanges() *TicketQuery {
-	query := (&TicketClient{config: ciq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ciq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
-			sqlgraph.To(ticket.Table, ticket.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ChangesTable, configurationitem.ChangesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // First returns the first ConfigurationItem entity from the query.
@@ -437,111 +245,15 @@ func (ciq *ConfigurationItemQuery) Clone() *ConfigurationItemQuery {
 		return nil
 	}
 	return &ConfigurationItemQuery{
-		config:                    ciq.config,
-		ctx:                       ciq.ctx.Clone(),
-		order:                     append([]configurationitem.OrderOption{}, ciq.order...),
-		inters:                    append([]Interceptor{}, ciq.inters...),
-		predicates:                append([]predicate.ConfigurationItem{}, ciq.predicates...),
-		withTenant:                ciq.withTenant.Clone(),
-		withCiType:                ciq.withCiType.Clone(),
-		withOutgoingRelationships: ciq.withOutgoingRelationships.Clone(),
-		withIncomingRelationships: ciq.withIncomingRelationships.Clone(),
-		withLifecycleStates:       ciq.withLifecycleStates.Clone(),
-		withChangeRecords:         ciq.withChangeRecords.Clone(),
-		withIncidents:             ciq.withIncidents.Clone(),
-		withChanges:               ciq.withChanges.Clone(),
+		config:     ciq.config,
+		ctx:        ciq.ctx.Clone(),
+		order:      append([]configurationitem.OrderOption{}, ciq.order...),
+		inters:     append([]Interceptor{}, ciq.inters...),
+		predicates: append([]predicate.ConfigurationItem{}, ciq.predicates...),
 		// clone intermediate query.
 		sql:  ciq.sql.Clone(),
 		path: ciq.path,
 	}
-}
-
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithTenant(opts ...func(*TenantQuery)) *ConfigurationItemQuery {
-	query := (&TenantClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withTenant = query
-	return ciq
-}
-
-// WithCiType tells the query-builder to eager-load the nodes that are connected to
-// the "ci_type" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithCiType(opts ...func(*CITypeQuery)) *ConfigurationItemQuery {
-	query := (&CITypeClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withCiType = query
-	return ciq
-}
-
-// WithOutgoingRelationships tells the query-builder to eager-load the nodes that are connected to
-// the "outgoing_relationships" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithOutgoingRelationships(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withOutgoingRelationships = query
-	return ciq
-}
-
-// WithIncomingRelationships tells the query-builder to eager-load the nodes that are connected to
-// the "incoming_relationships" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithIncomingRelationships(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withIncomingRelationships = query
-	return ciq
-}
-
-// WithLifecycleStates tells the query-builder to eager-load the nodes that are connected to
-// the "lifecycle_states" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithLifecycleStates(opts ...func(*CILifecycleStateQuery)) *ConfigurationItemQuery {
-	query := (&CILifecycleStateClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withLifecycleStates = query
-	return ciq
-}
-
-// WithChangeRecords tells the query-builder to eager-load the nodes that are connected to
-// the "change_records" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithChangeRecords(opts ...func(*CIChangeRecordQuery)) *ConfigurationItemQuery {
-	query := (&CIChangeRecordClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withChangeRecords = query
-	return ciq
-}
-
-// WithIncidents tells the query-builder to eager-load the nodes that are connected to
-// the "incidents" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithIncidents(opts ...func(*TicketQuery)) *ConfigurationItemQuery {
-	query := (&TicketClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withIncidents = query
-	return ciq
-}
-
-// WithChanges tells the query-builder to eager-load the nodes that are connected to
-// the "changes" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithChanges(opts ...func(*TicketQuery)) *ConfigurationItemQuery {
-	query := (&TicketClient{config: ciq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ciq.withChanges = query
-	return ciq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -620,30 +332,15 @@ func (ciq *ConfigurationItemQuery) prepareQuery(ctx context.Context) error {
 
 func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ConfigurationItem, error) {
 	var (
-		nodes       = []*ConfigurationItem{}
-		withFKs     = ciq.withFKs
-		_spec       = ciq.querySpec()
-		loadedTypes = [8]bool{
-			ciq.withTenant != nil,
-			ciq.withCiType != nil,
-			ciq.withOutgoingRelationships != nil,
-			ciq.withIncomingRelationships != nil,
-			ciq.withLifecycleStates != nil,
-			ciq.withChangeRecords != nil,
-			ciq.withIncidents != nil,
-			ciq.withChanges != nil,
-		}
+		nodes = []*ConfigurationItem{}
+		_spec = ciq.querySpec()
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, configurationitem.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ConfigurationItem).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ConfigurationItem{config: ciq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -655,310 +352,7 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ciq.withTenant; query != nil {
-		if err := ciq.loadTenant(ctx, query, nodes, nil,
-			func(n *ConfigurationItem, e *Tenant) { n.Edges.Tenant = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withCiType; query != nil {
-		if err := ciq.loadCiType(ctx, query, nodes, nil,
-			func(n *ConfigurationItem, e *CIType) { n.Edges.CiType = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withOutgoingRelationships; query != nil {
-		if err := ciq.loadOutgoingRelationships(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.OutgoingRelationships = []*CIRelationship{} },
-			func(n *ConfigurationItem, e *CIRelationship) {
-				n.Edges.OutgoingRelationships = append(n.Edges.OutgoingRelationships, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withIncomingRelationships; query != nil {
-		if err := ciq.loadIncomingRelationships(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.IncomingRelationships = []*CIRelationship{} },
-			func(n *ConfigurationItem, e *CIRelationship) {
-				n.Edges.IncomingRelationships = append(n.Edges.IncomingRelationships, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withLifecycleStates; query != nil {
-		if err := ciq.loadLifecycleStates(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.LifecycleStates = []*CILifecycleState{} },
-			func(n *ConfigurationItem, e *CILifecycleState) {
-				n.Edges.LifecycleStates = append(n.Edges.LifecycleStates, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withChangeRecords; query != nil {
-		if err := ciq.loadChangeRecords(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.ChangeRecords = []*CIChangeRecord{} },
-			func(n *ConfigurationItem, e *CIChangeRecord) {
-				n.Edges.ChangeRecords = append(n.Edges.ChangeRecords, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withIncidents; query != nil {
-		if err := ciq.loadIncidents(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.Incidents = []*Ticket{} },
-			func(n *ConfigurationItem, e *Ticket) { n.Edges.Incidents = append(n.Edges.Incidents, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := ciq.withChanges; query != nil {
-		if err := ciq.loadChanges(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.Changes = []*Ticket{} },
-			func(n *ConfigurationItem, e *Ticket) { n.Edges.Changes = append(n.Edges.Changes, e) }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (ciq *ConfigurationItemQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Tenant)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*ConfigurationItem)
-	for i := range nodes {
-		fk := nodes[i].TenantID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tenant.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadCiType(ctx context.Context, query *CITypeQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIType)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*ConfigurationItem)
-	for i := range nodes {
-		fk := nodes[i].CiTypeID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(citype.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "ci_type_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadOutgoingRelationships(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ConfigurationItem)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(cirelationship.FieldSourceCiID)
-	}
-	query.Where(predicate.CIRelationship(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.OutgoingRelationshipsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.SourceCiID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "source_ci_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadIncomingRelationships(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ConfigurationItem)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(cirelationship.FieldTargetCiID)
-	}
-	query.Where(predicate.CIRelationship(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.IncomingRelationshipsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.TargetCiID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "target_ci_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadLifecycleStates(ctx context.Context, query *CILifecycleStateQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CILifecycleState)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ConfigurationItem)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(cilifecyclestate.FieldCiID)
-	}
-	query.Where(predicate.CILifecycleState(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.LifecycleStatesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.CiID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ci_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadChangeRecords(ctx context.Context, query *CIChangeRecordQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIChangeRecord)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ConfigurationItem)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(cichangerecord.FieldCiID)
-	}
-	query.Where(predicate.CIChangeRecord(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.ChangeRecordsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.CiID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ci_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadIncidents(ctx context.Context, query *TicketQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Ticket)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ConfigurationItem)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Ticket(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.IncidentsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.configuration_item_incidents
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "configuration_item_incidents" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "configuration_item_incidents" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ciq *ConfigurationItemQuery) loadChanges(ctx context.Context, query *TicketQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Ticket)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ConfigurationItem)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.Ticket(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.ChangesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.configuration_item_changes
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "configuration_item_changes" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "configuration_item_changes" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
 }
 
 func (ciq *ConfigurationItemQuery) sqlCount(ctx context.Context) (int, error) {
@@ -985,12 +379,6 @@ func (ciq *ConfigurationItemQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != configurationitem.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if ciq.withTenant != nil {
-			_spec.Node.AddColumnOnce(configurationitem.FieldTenantID)
-		}
-		if ciq.withCiType != nil {
-			_spec.Node.AddColumnOnce(configurationitem.FieldCiTypeID)
 		}
 	}
 	if ps := ciq.predicates; len(ps) > 0 {

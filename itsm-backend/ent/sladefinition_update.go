@@ -28,12 +28,6 @@ func (sdu *SLADefinitionUpdate) Where(ps ...predicate.SLADefinition) *SLADefinit
 	return sdu
 }
 
-// SetUpdateTime sets the "update_time" field.
-func (sdu *SLADefinitionUpdate) SetUpdateTime(t time.Time) *SLADefinitionUpdate {
-	sdu.mutation.SetUpdateTime(t)
-	return sdu
-}
-
 // SetName sets the "name" field.
 func (sdu *SLADefinitionUpdate) SetName(s string) *SLADefinitionUpdate {
 	sdu.mutation.SetName(s)
@@ -68,132 +62,6 @@ func (sdu *SLADefinitionUpdate) ClearDescription() *SLADefinitionUpdate {
 	return sdu
 }
 
-// SetServiceType sets the "service_type" field.
-func (sdu *SLADefinitionUpdate) SetServiceType(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetServiceType(s)
-	return sdu
-}
-
-// SetNillableServiceType sets the "service_type" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableServiceType(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetServiceType(*s)
-	}
-	return sdu
-}
-
-// SetPriority sets the "priority" field.
-func (sdu *SLADefinitionUpdate) SetPriority(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetPriority(s)
-	return sdu
-}
-
-// SetNillablePriority sets the "priority" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillablePriority(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetPriority(*s)
-	}
-	return sdu
-}
-
-// SetImpact sets the "impact" field.
-func (sdu *SLADefinitionUpdate) SetImpact(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetImpact(s)
-	return sdu
-}
-
-// SetNillableImpact sets the "impact" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableImpact(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetImpact(*s)
-	}
-	return sdu
-}
-
-// SetResponseTime sets the "response_time" field.
-func (sdu *SLADefinitionUpdate) SetResponseTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.ResetResponseTime()
-	sdu.mutation.SetResponseTime(i)
-	return sdu
-}
-
-// SetNillableResponseTime sets the "response_time" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableResponseTime(i *int) *SLADefinitionUpdate {
-	if i != nil {
-		sdu.SetResponseTime(*i)
-	}
-	return sdu
-}
-
-// AddResponseTime adds i to the "response_time" field.
-func (sdu *SLADefinitionUpdate) AddResponseTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.AddResponseTime(i)
-	return sdu
-}
-
-// SetResolutionTime sets the "resolution_time" field.
-func (sdu *SLADefinitionUpdate) SetResolutionTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.ResetResolutionTime()
-	sdu.mutation.SetResolutionTime(i)
-	return sdu
-}
-
-// SetNillableResolutionTime sets the "resolution_time" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableResolutionTime(i *int) *SLADefinitionUpdate {
-	if i != nil {
-		sdu.SetResolutionTime(*i)
-	}
-	return sdu
-}
-
-// AddResolutionTime adds i to the "resolution_time" field.
-func (sdu *SLADefinitionUpdate) AddResolutionTime(i int) *SLADefinitionUpdate {
-	sdu.mutation.AddResolutionTime(i)
-	return sdu
-}
-
-// SetBusinessHours sets the "business_hours" field.
-func (sdu *SLADefinitionUpdate) SetBusinessHours(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetBusinessHours(s)
-	return sdu
-}
-
-// SetNillableBusinessHours sets the "business_hours" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableBusinessHours(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetBusinessHours(*s)
-	}
-	return sdu
-}
-
-// SetHolidays sets the "holidays" field.
-func (sdu *SLADefinitionUpdate) SetHolidays(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetHolidays(s)
-	return sdu
-}
-
-// SetNillableHolidays sets the "holidays" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableHolidays(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetHolidays(*s)
-	}
-	return sdu
-}
-
-// SetIsActive sets the "is_active" field.
-func (sdu *SLADefinitionUpdate) SetIsActive(b bool) *SLADefinitionUpdate {
-	sdu.mutation.SetIsActive(b)
-	return sdu
-}
-
-// SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableIsActive(b *bool) *SLADefinitionUpdate {
-	if b != nil {
-		sdu.SetIsActive(*b)
-	}
-	return sdu
-}
-
 // SetTenantID sets the "tenant_id" field.
 func (sdu *SLADefinitionUpdate) SetTenantID(i int) *SLADefinitionUpdate {
 	sdu.mutation.ResetTenantID()
@@ -215,20 +83,6 @@ func (sdu *SLADefinitionUpdate) AddTenantID(i int) *SLADefinitionUpdate {
 	return sdu
 }
 
-// SetCreatedBy sets the "created_by" field.
-func (sdu *SLADefinitionUpdate) SetCreatedBy(s string) *SLADefinitionUpdate {
-	sdu.mutation.SetCreatedBy(s)
-	return sdu
-}
-
-// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableCreatedBy(s *string) *SLADefinitionUpdate {
-	if s != nil {
-		sdu.SetCreatedBy(*s)
-	}
-	return sdu
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (sdu *SLADefinitionUpdate) SetCreatedAt(t time.Time) *SLADefinitionUpdate {
 	sdu.mutation.SetCreatedAt(t)
@@ -246,14 +100,6 @@ func (sdu *SLADefinitionUpdate) SetNillableCreatedAt(t *time.Time) *SLADefinitio
 // SetUpdatedAt sets the "updated_at" field.
 func (sdu *SLADefinitionUpdate) SetUpdatedAt(t time.Time) *SLADefinitionUpdate {
 	sdu.mutation.SetUpdatedAt(t)
-	return sdu
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (sdu *SLADefinitionUpdate) SetNillableUpdatedAt(t *time.Time) *SLADefinitionUpdate {
-	if t != nil {
-		sdu.SetUpdatedAt(*t)
-	}
 	return sdu
 }
 
@@ -292,13 +138,31 @@ func (sdu *SLADefinitionUpdate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sdu *SLADefinitionUpdate) defaults() {
-	if _, ok := sdu.mutation.UpdateTime(); !ok {
-		v := sladefinition.UpdateDefaultUpdateTime()
-		sdu.mutation.SetUpdateTime(v)
+	if _, ok := sdu.mutation.UpdatedAt(); !ok {
+		v := sladefinition.UpdateDefaultUpdatedAt()
+		sdu.mutation.SetUpdatedAt(v)
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (sdu *SLADefinitionUpdate) check() error {
+	if v, ok := sdu.mutation.Name(); ok {
+		if err := sladefinition.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.name": %w`, err)}
+		}
+	}
+	if v, ok := sdu.mutation.TenantID(); ok {
+		if err := sladefinition.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.tenant_id": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := sdu.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(sladefinition.Table, sladefinition.Columns, sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt))
 	if ps := sdu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -306,9 +170,6 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := sdu.mutation.UpdateTime(); ok {
-		_spec.SetField(sladefinition.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := sdu.mutation.Name(); ok {
 		_spec.SetField(sladefinition.FieldName, field.TypeString, value)
@@ -319,44 +180,11 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if sdu.mutation.DescriptionCleared() {
 		_spec.ClearField(sladefinition.FieldDescription, field.TypeString)
 	}
-	if value, ok := sdu.mutation.ServiceType(); ok {
-		_spec.SetField(sladefinition.FieldServiceType, field.TypeString, value)
-	}
-	if value, ok := sdu.mutation.Priority(); ok {
-		_spec.SetField(sladefinition.FieldPriority, field.TypeString, value)
-	}
-	if value, ok := sdu.mutation.Impact(); ok {
-		_spec.SetField(sladefinition.FieldImpact, field.TypeString, value)
-	}
-	if value, ok := sdu.mutation.ResponseTime(); ok {
-		_spec.SetField(sladefinition.FieldResponseTime, field.TypeInt, value)
-	}
-	if value, ok := sdu.mutation.AddedResponseTime(); ok {
-		_spec.AddField(sladefinition.FieldResponseTime, field.TypeInt, value)
-	}
-	if value, ok := sdu.mutation.ResolutionTime(); ok {
-		_spec.SetField(sladefinition.FieldResolutionTime, field.TypeInt, value)
-	}
-	if value, ok := sdu.mutation.AddedResolutionTime(); ok {
-		_spec.AddField(sladefinition.FieldResolutionTime, field.TypeInt, value)
-	}
-	if value, ok := sdu.mutation.BusinessHours(); ok {
-		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeString, value)
-	}
-	if value, ok := sdu.mutation.Holidays(); ok {
-		_spec.SetField(sladefinition.FieldHolidays, field.TypeString, value)
-	}
-	if value, ok := sdu.mutation.IsActive(); ok {
-		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
-	}
 	if value, ok := sdu.mutation.TenantID(); ok {
 		_spec.SetField(sladefinition.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := sdu.mutation.AddedTenantID(); ok {
 		_spec.AddField(sladefinition.FieldTenantID, field.TypeInt, value)
-	}
-	if value, ok := sdu.mutation.CreatedBy(); ok {
-		_spec.SetField(sladefinition.FieldCreatedBy, field.TypeString, value)
 	}
 	if value, ok := sdu.mutation.CreatedAt(); ok {
 		_spec.SetField(sladefinition.FieldCreatedAt, field.TypeTime, value)
@@ -382,12 +210,6 @@ type SLADefinitionUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *SLADefinitionMutation
-}
-
-// SetUpdateTime sets the "update_time" field.
-func (sduo *SLADefinitionUpdateOne) SetUpdateTime(t time.Time) *SLADefinitionUpdateOne {
-	sduo.mutation.SetUpdateTime(t)
-	return sduo
 }
 
 // SetName sets the "name" field.
@@ -424,132 +246,6 @@ func (sduo *SLADefinitionUpdateOne) ClearDescription() *SLADefinitionUpdateOne {
 	return sduo
 }
 
-// SetServiceType sets the "service_type" field.
-func (sduo *SLADefinitionUpdateOne) SetServiceType(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetServiceType(s)
-	return sduo
-}
-
-// SetNillableServiceType sets the "service_type" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableServiceType(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetServiceType(*s)
-	}
-	return sduo
-}
-
-// SetPriority sets the "priority" field.
-func (sduo *SLADefinitionUpdateOne) SetPriority(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetPriority(s)
-	return sduo
-}
-
-// SetNillablePriority sets the "priority" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillablePriority(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetPriority(*s)
-	}
-	return sduo
-}
-
-// SetImpact sets the "impact" field.
-func (sduo *SLADefinitionUpdateOne) SetImpact(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetImpact(s)
-	return sduo
-}
-
-// SetNillableImpact sets the "impact" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableImpact(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetImpact(*s)
-	}
-	return sduo
-}
-
-// SetResponseTime sets the "response_time" field.
-func (sduo *SLADefinitionUpdateOne) SetResponseTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.ResetResponseTime()
-	sduo.mutation.SetResponseTime(i)
-	return sduo
-}
-
-// SetNillableResponseTime sets the "response_time" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableResponseTime(i *int) *SLADefinitionUpdateOne {
-	if i != nil {
-		sduo.SetResponseTime(*i)
-	}
-	return sduo
-}
-
-// AddResponseTime adds i to the "response_time" field.
-func (sduo *SLADefinitionUpdateOne) AddResponseTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddResponseTime(i)
-	return sduo
-}
-
-// SetResolutionTime sets the "resolution_time" field.
-func (sduo *SLADefinitionUpdateOne) SetResolutionTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.ResetResolutionTime()
-	sduo.mutation.SetResolutionTime(i)
-	return sduo
-}
-
-// SetNillableResolutionTime sets the "resolution_time" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableResolutionTime(i *int) *SLADefinitionUpdateOne {
-	if i != nil {
-		sduo.SetResolutionTime(*i)
-	}
-	return sduo
-}
-
-// AddResolutionTime adds i to the "resolution_time" field.
-func (sduo *SLADefinitionUpdateOne) AddResolutionTime(i int) *SLADefinitionUpdateOne {
-	sduo.mutation.AddResolutionTime(i)
-	return sduo
-}
-
-// SetBusinessHours sets the "business_hours" field.
-func (sduo *SLADefinitionUpdateOne) SetBusinessHours(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetBusinessHours(s)
-	return sduo
-}
-
-// SetNillableBusinessHours sets the "business_hours" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableBusinessHours(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetBusinessHours(*s)
-	}
-	return sduo
-}
-
-// SetHolidays sets the "holidays" field.
-func (sduo *SLADefinitionUpdateOne) SetHolidays(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetHolidays(s)
-	return sduo
-}
-
-// SetNillableHolidays sets the "holidays" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableHolidays(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetHolidays(*s)
-	}
-	return sduo
-}
-
-// SetIsActive sets the "is_active" field.
-func (sduo *SLADefinitionUpdateOne) SetIsActive(b bool) *SLADefinitionUpdateOne {
-	sduo.mutation.SetIsActive(b)
-	return sduo
-}
-
-// SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableIsActive(b *bool) *SLADefinitionUpdateOne {
-	if b != nil {
-		sduo.SetIsActive(*b)
-	}
-	return sduo
-}
-
 // SetTenantID sets the "tenant_id" field.
 func (sduo *SLADefinitionUpdateOne) SetTenantID(i int) *SLADefinitionUpdateOne {
 	sduo.mutation.ResetTenantID()
@@ -571,20 +267,6 @@ func (sduo *SLADefinitionUpdateOne) AddTenantID(i int) *SLADefinitionUpdateOne {
 	return sduo
 }
 
-// SetCreatedBy sets the "created_by" field.
-func (sduo *SLADefinitionUpdateOne) SetCreatedBy(s string) *SLADefinitionUpdateOne {
-	sduo.mutation.SetCreatedBy(s)
-	return sduo
-}
-
-// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableCreatedBy(s *string) *SLADefinitionUpdateOne {
-	if s != nil {
-		sduo.SetCreatedBy(*s)
-	}
-	return sduo
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (sduo *SLADefinitionUpdateOne) SetCreatedAt(t time.Time) *SLADefinitionUpdateOne {
 	sduo.mutation.SetCreatedAt(t)
@@ -602,14 +284,6 @@ func (sduo *SLADefinitionUpdateOne) SetNillableCreatedAt(t *time.Time) *SLADefin
 // SetUpdatedAt sets the "updated_at" field.
 func (sduo *SLADefinitionUpdateOne) SetUpdatedAt(t time.Time) *SLADefinitionUpdateOne {
 	sduo.mutation.SetUpdatedAt(t)
-	return sduo
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (sduo *SLADefinitionUpdateOne) SetNillableUpdatedAt(t *time.Time) *SLADefinitionUpdateOne {
-	if t != nil {
-		sduo.SetUpdatedAt(*t)
-	}
 	return sduo
 }
 
@@ -661,13 +335,31 @@ func (sduo *SLADefinitionUpdateOne) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sduo *SLADefinitionUpdateOne) defaults() {
-	if _, ok := sduo.mutation.UpdateTime(); !ok {
-		v := sladefinition.UpdateDefaultUpdateTime()
-		sduo.mutation.SetUpdateTime(v)
+	if _, ok := sduo.mutation.UpdatedAt(); !ok {
+		v := sladefinition.UpdateDefaultUpdatedAt()
+		sduo.mutation.SetUpdatedAt(v)
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (sduo *SLADefinitionUpdateOne) check() error {
+	if v, ok := sduo.mutation.Name(); ok {
+		if err := sladefinition.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.name": %w`, err)}
+		}
+	}
+	if v, ok := sduo.mutation.TenantID(); ok {
+		if err := sladefinition.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.tenant_id": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefinition, err error) {
+	if err := sduo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(sladefinition.Table, sladefinition.Columns, sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt))
 	id, ok := sduo.mutation.ID()
 	if !ok {
@@ -693,9 +385,6 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 			}
 		}
 	}
-	if value, ok := sduo.mutation.UpdateTime(); ok {
-		_spec.SetField(sladefinition.FieldUpdateTime, field.TypeTime, value)
-	}
 	if value, ok := sduo.mutation.Name(); ok {
 		_spec.SetField(sladefinition.FieldName, field.TypeString, value)
 	}
@@ -705,44 +394,11 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 	if sduo.mutation.DescriptionCleared() {
 		_spec.ClearField(sladefinition.FieldDescription, field.TypeString)
 	}
-	if value, ok := sduo.mutation.ServiceType(); ok {
-		_spec.SetField(sladefinition.FieldServiceType, field.TypeString, value)
-	}
-	if value, ok := sduo.mutation.Priority(); ok {
-		_spec.SetField(sladefinition.FieldPriority, field.TypeString, value)
-	}
-	if value, ok := sduo.mutation.Impact(); ok {
-		_spec.SetField(sladefinition.FieldImpact, field.TypeString, value)
-	}
-	if value, ok := sduo.mutation.ResponseTime(); ok {
-		_spec.SetField(sladefinition.FieldResponseTime, field.TypeInt, value)
-	}
-	if value, ok := sduo.mutation.AddedResponseTime(); ok {
-		_spec.AddField(sladefinition.FieldResponseTime, field.TypeInt, value)
-	}
-	if value, ok := sduo.mutation.ResolutionTime(); ok {
-		_spec.SetField(sladefinition.FieldResolutionTime, field.TypeInt, value)
-	}
-	if value, ok := sduo.mutation.AddedResolutionTime(); ok {
-		_spec.AddField(sladefinition.FieldResolutionTime, field.TypeInt, value)
-	}
-	if value, ok := sduo.mutation.BusinessHours(); ok {
-		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeString, value)
-	}
-	if value, ok := sduo.mutation.Holidays(); ok {
-		_spec.SetField(sladefinition.FieldHolidays, field.TypeString, value)
-	}
-	if value, ok := sduo.mutation.IsActive(); ok {
-		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
-	}
 	if value, ok := sduo.mutation.TenantID(); ok {
 		_spec.SetField(sladefinition.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := sduo.mutation.AddedTenantID(); ok {
 		_spec.AddField(sladefinition.FieldTenantID, field.TypeInt, value)
-	}
-	if value, ok := sduo.mutation.CreatedBy(); ok {
-		_spec.SetField(sladefinition.FieldCreatedBy, field.TypeString, value)
 	}
 	if value, ok := sduo.mutation.CreatedAt(); ok {
 		_spec.SetField(sladefinition.FieldCreatedAt, field.TypeTime, value)

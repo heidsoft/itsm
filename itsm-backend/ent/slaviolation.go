@@ -17,40 +17,18 @@ type SLAViolation struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// CreateTime holds the value of the "create_time" field.
-	CreateTime time.Time `json:"create_time,omitempty"`
-	// UpdateTime holds the value of the "update_time" field.
-	UpdateTime time.Time `json:"update_time,omitempty"`
-	// 工单ID
-	TicketID int `json:"ticket_id,omitempty"`
-	// 工单类型：incident/service_request/problem/change
-	TicketType string `json:"ticket_type,omitempty"`
-	// 违规类型：response_time/resolution_time
-	ViolationType string `json:"violation_type,omitempty"`
 	// SLA定义ID
 	SLADefinitionID int `json:"sla_definition_id,omitempty"`
-	// SLA名称
-	SLAName string `json:"sla_name,omitempty"`
-	// 预期时间（分钟）
-	ExpectedTime int `json:"expected_time,omitempty"`
-	// 实际时间（分钟）
-	ActualTime int `json:"actual_time,omitempty"`
-	// 超时时间（分钟）
-	OverdueMinutes int `json:"overdue_minutes,omitempty"`
-	// 状态：pending/notified/escalated/resolved
-	Status string `json:"status,omitempty"`
-	// 处理人
-	AssignedTo string `json:"assigned_to,omitempty"`
-	// 违规发生时间
-	ViolationOccurredAt time.Time `json:"violation_occurred_at,omitempty"`
-	// 解决时间
-	ResolvedAt time.Time `json:"resolved_at,omitempty"`
-	// 解决说明
-	ResolutionNote string `json:"resolution_note,omitempty"`
+	// 工单ID
+	TicketID int `json:"ticket_id,omitempty"`
+	// 违规类型
+	ViolationType string `json:"violation_type,omitempty"`
+	// 违规时间
+	ViolationTime time.Time `json:"violation_time,omitempty"`
+	// 违规描述
+	Description string `json:"description,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// 创建人
-	CreatedBy string `json:"created_by,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -63,11 +41,11 @@ func (*SLAViolation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case slaviolation.FieldID, slaviolation.FieldTicketID, slaviolation.FieldSLADefinitionID, slaviolation.FieldExpectedTime, slaviolation.FieldActualTime, slaviolation.FieldOverdueMinutes, slaviolation.FieldTenantID:
+		case slaviolation.FieldID, slaviolation.FieldSLADefinitionID, slaviolation.FieldTicketID, slaviolation.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case slaviolation.FieldTicketType, slaviolation.FieldViolationType, slaviolation.FieldSLAName, slaviolation.FieldStatus, slaviolation.FieldAssignedTo, slaviolation.FieldResolutionNote, slaviolation.FieldCreatedBy:
+		case slaviolation.FieldViolationType, slaviolation.FieldDescription:
 			values[i] = new(sql.NullString)
-		case slaviolation.FieldCreateTime, slaviolation.FieldUpdateTime, slaviolation.FieldViolationOccurredAt, slaviolation.FieldResolvedAt, slaviolation.FieldCreatedAt, slaviolation.FieldUpdatedAt:
+		case slaviolation.FieldViolationTime, slaviolation.FieldCreatedAt, slaviolation.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -90,17 +68,11 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			sv.ID = int(value.Int64)
-		case slaviolation.FieldCreateTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+		case slaviolation.FieldSLADefinitionID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
 			} else if value.Valid {
-				sv.CreateTime = value.Time
-			}
-		case slaviolation.FieldUpdateTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field update_time", values[i])
-			} else if value.Valid {
-				sv.UpdateTime = value.Time
+				sv.SLADefinitionID = int(value.Int64)
 			}
 		case slaviolation.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -108,89 +80,29 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sv.TicketID = int(value.Int64)
 			}
-		case slaviolation.FieldTicketType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field ticket_type", values[i])
-			} else if value.Valid {
-				sv.TicketType = value.String
-			}
 		case slaviolation.FieldViolationType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field violation_type", values[i])
 			} else if value.Valid {
 				sv.ViolationType = value.String
 			}
-		case slaviolation.FieldSLADefinitionID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
-			} else if value.Valid {
-				sv.SLADefinitionID = int(value.Int64)
-			}
-		case slaviolation.FieldSLAName:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field sla_name", values[i])
-			} else if value.Valid {
-				sv.SLAName = value.String
-			}
-		case slaviolation.FieldExpectedTime:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field expected_time", values[i])
-			} else if value.Valid {
-				sv.ExpectedTime = int(value.Int64)
-			}
-		case slaviolation.FieldActualTime:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field actual_time", values[i])
-			} else if value.Valid {
-				sv.ActualTime = int(value.Int64)
-			}
-		case slaviolation.FieldOverdueMinutes:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field overdue_minutes", values[i])
-			} else if value.Valid {
-				sv.OverdueMinutes = int(value.Int64)
-			}
-		case slaviolation.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				sv.Status = value.String
-			}
-		case slaviolation.FieldAssignedTo:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field assigned_to", values[i])
-			} else if value.Valid {
-				sv.AssignedTo = value.String
-			}
-		case slaviolation.FieldViolationOccurredAt:
+		case slaviolation.FieldViolationTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field violation_occurred_at", values[i])
+				return fmt.Errorf("unexpected type %T for field violation_time", values[i])
 			} else if value.Valid {
-				sv.ViolationOccurredAt = value.Time
+				sv.ViolationTime = value.Time
 			}
-		case slaviolation.FieldResolvedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
-			} else if value.Valid {
-				sv.ResolvedAt = value.Time
-			}
-		case slaviolation.FieldResolutionNote:
+		case slaviolation.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field resolution_note", values[i])
+				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				sv.ResolutionNote = value.String
+				sv.Description = value.String
 			}
 		case slaviolation.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				sv.TenantID = int(value.Int64)
-			}
-		case slaviolation.FieldCreatedBy:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field created_by", values[i])
-			} else if value.Valid {
-				sv.CreatedBy = value.String
 			}
 		case slaviolation.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -240,56 +152,23 @@ func (sv *SLAViolation) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLAViolation(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", sv.ID))
-	builder.WriteString("create_time=")
-	builder.WriteString(sv.CreateTime.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("update_time=")
-	builder.WriteString(sv.UpdateTime.Format(time.ANSIC))
+	builder.WriteString("sla_definition_id=")
+	builder.WriteString(fmt.Sprintf("%v", sv.SLADefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("ticket_id=")
 	builder.WriteString(fmt.Sprintf("%v", sv.TicketID))
 	builder.WriteString(", ")
-	builder.WriteString("ticket_type=")
-	builder.WriteString(sv.TicketType)
-	builder.WriteString(", ")
 	builder.WriteString("violation_type=")
 	builder.WriteString(sv.ViolationType)
 	builder.WriteString(", ")
-	builder.WriteString("sla_definition_id=")
-	builder.WriteString(fmt.Sprintf("%v", sv.SLADefinitionID))
+	builder.WriteString("violation_time=")
+	builder.WriteString(sv.ViolationTime.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("sla_name=")
-	builder.WriteString(sv.SLAName)
-	builder.WriteString(", ")
-	builder.WriteString("expected_time=")
-	builder.WriteString(fmt.Sprintf("%v", sv.ExpectedTime))
-	builder.WriteString(", ")
-	builder.WriteString("actual_time=")
-	builder.WriteString(fmt.Sprintf("%v", sv.ActualTime))
-	builder.WriteString(", ")
-	builder.WriteString("overdue_minutes=")
-	builder.WriteString(fmt.Sprintf("%v", sv.OverdueMinutes))
-	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(sv.Status)
-	builder.WriteString(", ")
-	builder.WriteString("assigned_to=")
-	builder.WriteString(sv.AssignedTo)
-	builder.WriteString(", ")
-	builder.WriteString("violation_occurred_at=")
-	builder.WriteString(sv.ViolationOccurredAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("resolved_at=")
-	builder.WriteString(sv.ResolvedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("resolution_note=")
-	builder.WriteString(sv.ResolutionNote)
+	builder.WriteString("description=")
+	builder.WriteString(sv.Description)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", sv.TenantID))
-	builder.WriteString(", ")
-	builder.WriteString("created_by=")
-	builder.WriteString(sv.CreatedBy)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(sv.CreatedAt.Format(time.ANSIC))

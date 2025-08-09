@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -60,19 +59,9 @@ func Name(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldName, v))
 }
 
-// DisplayName applies equality check predicate on the "display_name" field. It's identical to DisplayNameEQ.
-func DisplayName(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldDisplayName, v))
-}
-
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldDescription, v))
-}
-
-// Category applies equality check predicate on the "category" field. It's identical to CategoryEQ.
-func Category(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldCategory, v))
 }
 
 // Icon applies equality check predicate on the "icon" field. It's identical to IconEQ.
@@ -80,19 +69,24 @@ func Icon(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldIcon, v))
 }
 
-// IsSystem applies equality check predicate on the "is_system" field. It's identical to IsSystemEQ.
-func IsSystem(v bool) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldIsSystem, v))
+// Color applies equality check predicate on the "color" field. It's identical to ColorEQ.
+func Color(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldColor, v))
 }
 
-// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
-func IsActive(v bool) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldIsActive, v))
+// AttributeSchema applies equality check predicate on the "attribute_schema" field. It's identical to AttributeSchemaEQ.
+func AttributeSchema(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldAttributeSchema, v))
 }
 
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldTenantID, v))
+}
+
+// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
+func IsActive(v bool) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldIsActive, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -170,71 +164,6 @@ func NameContainsFold(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldContainsFold(FieldName, v))
 }
 
-// DisplayNameEQ applies the EQ predicate on the "display_name" field.
-func DisplayNameEQ(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldDisplayName, v))
-}
-
-// DisplayNameNEQ applies the NEQ predicate on the "display_name" field.
-func DisplayNameNEQ(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldNEQ(FieldDisplayName, v))
-}
-
-// DisplayNameIn applies the In predicate on the "display_name" field.
-func DisplayNameIn(vs ...string) predicate.CIType {
-	return predicate.CIType(sql.FieldIn(FieldDisplayName, vs...))
-}
-
-// DisplayNameNotIn applies the NotIn predicate on the "display_name" field.
-func DisplayNameNotIn(vs ...string) predicate.CIType {
-	return predicate.CIType(sql.FieldNotIn(FieldDisplayName, vs...))
-}
-
-// DisplayNameGT applies the GT predicate on the "display_name" field.
-func DisplayNameGT(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldGT(FieldDisplayName, v))
-}
-
-// DisplayNameGTE applies the GTE predicate on the "display_name" field.
-func DisplayNameGTE(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldGTE(FieldDisplayName, v))
-}
-
-// DisplayNameLT applies the LT predicate on the "display_name" field.
-func DisplayNameLT(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldLT(FieldDisplayName, v))
-}
-
-// DisplayNameLTE applies the LTE predicate on the "display_name" field.
-func DisplayNameLTE(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldLTE(FieldDisplayName, v))
-}
-
-// DisplayNameContains applies the Contains predicate on the "display_name" field.
-func DisplayNameContains(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldContains(FieldDisplayName, v))
-}
-
-// DisplayNameHasPrefix applies the HasPrefix predicate on the "display_name" field.
-func DisplayNameHasPrefix(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldHasPrefix(FieldDisplayName, v))
-}
-
-// DisplayNameHasSuffix applies the HasSuffix predicate on the "display_name" field.
-func DisplayNameHasSuffix(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldHasSuffix(FieldDisplayName, v))
-}
-
-// DisplayNameEqualFold applies the EqualFold predicate on the "display_name" field.
-func DisplayNameEqualFold(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldEqualFold(FieldDisplayName, v))
-}
-
-// DisplayNameContainsFold applies the ContainsFold predicate on the "display_name" field.
-func DisplayNameContainsFold(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldContainsFold(FieldDisplayName, v))
-}
-
 // DescriptionEQ applies the EQ predicate on the "description" field.
 func DescriptionEQ(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldEQ(FieldDescription, v))
@@ -308,71 +237,6 @@ func DescriptionEqualFold(v string) predicate.CIType {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldContainsFold(FieldDescription, v))
-}
-
-// CategoryEQ applies the EQ predicate on the "category" field.
-func CategoryEQ(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldCategory, v))
-}
-
-// CategoryNEQ applies the NEQ predicate on the "category" field.
-func CategoryNEQ(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldNEQ(FieldCategory, v))
-}
-
-// CategoryIn applies the In predicate on the "category" field.
-func CategoryIn(vs ...string) predicate.CIType {
-	return predicate.CIType(sql.FieldIn(FieldCategory, vs...))
-}
-
-// CategoryNotIn applies the NotIn predicate on the "category" field.
-func CategoryNotIn(vs ...string) predicate.CIType {
-	return predicate.CIType(sql.FieldNotIn(FieldCategory, vs...))
-}
-
-// CategoryGT applies the GT predicate on the "category" field.
-func CategoryGT(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldGT(FieldCategory, v))
-}
-
-// CategoryGTE applies the GTE predicate on the "category" field.
-func CategoryGTE(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldGTE(FieldCategory, v))
-}
-
-// CategoryLT applies the LT predicate on the "category" field.
-func CategoryLT(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldLT(FieldCategory, v))
-}
-
-// CategoryLTE applies the LTE predicate on the "category" field.
-func CategoryLTE(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldLTE(FieldCategory, v))
-}
-
-// CategoryContains applies the Contains predicate on the "category" field.
-func CategoryContains(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldContains(FieldCategory, v))
-}
-
-// CategoryHasPrefix applies the HasPrefix predicate on the "category" field.
-func CategoryHasPrefix(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldHasPrefix(FieldCategory, v))
-}
-
-// CategoryHasSuffix applies the HasSuffix predicate on the "category" field.
-func CategoryHasSuffix(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldHasSuffix(FieldCategory, v))
-}
-
-// CategoryEqualFold applies the EqualFold predicate on the "category" field.
-func CategoryEqualFold(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldEqualFold(FieldCategory, v))
-}
-
-// CategoryContainsFold applies the ContainsFold predicate on the "category" field.
-func CategoryContainsFold(v string) predicate.CIType {
-	return predicate.CIType(sql.FieldContainsFold(FieldCategory, v))
 }
 
 // IconEQ applies the EQ predicate on the "icon" field.
@@ -450,6 +314,136 @@ func IconContainsFold(v string) predicate.CIType {
 	return predicate.CIType(sql.FieldContainsFold(FieldIcon, v))
 }
 
+// ColorEQ applies the EQ predicate on the "color" field.
+func ColorEQ(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldColor, v))
+}
+
+// ColorNEQ applies the NEQ predicate on the "color" field.
+func ColorNEQ(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldNEQ(FieldColor, v))
+}
+
+// ColorIn applies the In predicate on the "color" field.
+func ColorIn(vs ...string) predicate.CIType {
+	return predicate.CIType(sql.FieldIn(FieldColor, vs...))
+}
+
+// ColorNotIn applies the NotIn predicate on the "color" field.
+func ColorNotIn(vs ...string) predicate.CIType {
+	return predicate.CIType(sql.FieldNotIn(FieldColor, vs...))
+}
+
+// ColorGT applies the GT predicate on the "color" field.
+func ColorGT(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldGT(FieldColor, v))
+}
+
+// ColorGTE applies the GTE predicate on the "color" field.
+func ColorGTE(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldGTE(FieldColor, v))
+}
+
+// ColorLT applies the LT predicate on the "color" field.
+func ColorLT(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldLT(FieldColor, v))
+}
+
+// ColorLTE applies the LTE predicate on the "color" field.
+func ColorLTE(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldLTE(FieldColor, v))
+}
+
+// ColorContains applies the Contains predicate on the "color" field.
+func ColorContains(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldContains(FieldColor, v))
+}
+
+// ColorHasPrefix applies the HasPrefix predicate on the "color" field.
+func ColorHasPrefix(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldHasPrefix(FieldColor, v))
+}
+
+// ColorHasSuffix applies the HasSuffix predicate on the "color" field.
+func ColorHasSuffix(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldHasSuffix(FieldColor, v))
+}
+
+// ColorIsNil applies the IsNil predicate on the "color" field.
+func ColorIsNil() predicate.CIType {
+	return predicate.CIType(sql.FieldIsNull(FieldColor))
+}
+
+// ColorNotNil applies the NotNil predicate on the "color" field.
+func ColorNotNil() predicate.CIType {
+	return predicate.CIType(sql.FieldNotNull(FieldColor))
+}
+
+// ColorEqualFold applies the EqualFold predicate on the "color" field.
+func ColorEqualFold(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldEqualFold(FieldColor, v))
+}
+
+// ColorContainsFold applies the ContainsFold predicate on the "color" field.
+func ColorContainsFold(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldContainsFold(FieldColor, v))
+}
+
+// AttributeSchemaEQ applies the EQ predicate on the "attribute_schema" field.
+func AttributeSchemaEQ(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaNEQ applies the NEQ predicate on the "attribute_schema" field.
+func AttributeSchemaNEQ(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldNEQ(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaIn applies the In predicate on the "attribute_schema" field.
+func AttributeSchemaIn(vs ...string) predicate.CIType {
+	return predicate.CIType(sql.FieldIn(FieldAttributeSchema, vs...))
+}
+
+// AttributeSchemaNotIn applies the NotIn predicate on the "attribute_schema" field.
+func AttributeSchemaNotIn(vs ...string) predicate.CIType {
+	return predicate.CIType(sql.FieldNotIn(FieldAttributeSchema, vs...))
+}
+
+// AttributeSchemaGT applies the GT predicate on the "attribute_schema" field.
+func AttributeSchemaGT(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldGT(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaGTE applies the GTE predicate on the "attribute_schema" field.
+func AttributeSchemaGTE(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldGTE(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaLT applies the LT predicate on the "attribute_schema" field.
+func AttributeSchemaLT(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldLT(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaLTE applies the LTE predicate on the "attribute_schema" field.
+func AttributeSchemaLTE(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldLTE(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaContains applies the Contains predicate on the "attribute_schema" field.
+func AttributeSchemaContains(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldContains(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaHasPrefix applies the HasPrefix predicate on the "attribute_schema" field.
+func AttributeSchemaHasPrefix(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldHasPrefix(FieldAttributeSchema, v))
+}
+
+// AttributeSchemaHasSuffix applies the HasSuffix predicate on the "attribute_schema" field.
+func AttributeSchemaHasSuffix(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldHasSuffix(FieldAttributeSchema, v))
+}
+
 // AttributeSchemaIsNil applies the IsNil predicate on the "attribute_schema" field.
 func AttributeSchemaIsNil() predicate.CIType {
 	return predicate.CIType(sql.FieldIsNull(FieldAttributeSchema))
@@ -460,34 +454,14 @@ func AttributeSchemaNotNil() predicate.CIType {
 	return predicate.CIType(sql.FieldNotNull(FieldAttributeSchema))
 }
 
-// ValidationRulesIsNil applies the IsNil predicate on the "validation_rules" field.
-func ValidationRulesIsNil() predicate.CIType {
-	return predicate.CIType(sql.FieldIsNull(FieldValidationRules))
+// AttributeSchemaEqualFold applies the EqualFold predicate on the "attribute_schema" field.
+func AttributeSchemaEqualFold(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldEqualFold(FieldAttributeSchema, v))
 }
 
-// ValidationRulesNotNil applies the NotNil predicate on the "validation_rules" field.
-func ValidationRulesNotNil() predicate.CIType {
-	return predicate.CIType(sql.FieldNotNull(FieldValidationRules))
-}
-
-// IsSystemEQ applies the EQ predicate on the "is_system" field.
-func IsSystemEQ(v bool) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldIsSystem, v))
-}
-
-// IsSystemNEQ applies the NEQ predicate on the "is_system" field.
-func IsSystemNEQ(v bool) predicate.CIType {
-	return predicate.CIType(sql.FieldNEQ(FieldIsSystem, v))
-}
-
-// IsActiveEQ applies the EQ predicate on the "is_active" field.
-func IsActiveEQ(v bool) predicate.CIType {
-	return predicate.CIType(sql.FieldEQ(FieldIsActive, v))
-}
-
-// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
-func IsActiveNEQ(v bool) predicate.CIType {
-	return predicate.CIType(sql.FieldNEQ(FieldIsActive, v))
+// AttributeSchemaContainsFold applies the ContainsFold predicate on the "attribute_schema" field.
+func AttributeSchemaContainsFold(v string) predicate.CIType {
+	return predicate.CIType(sql.FieldContainsFold(FieldAttributeSchema, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
@@ -508,6 +482,36 @@ func TenantIDIn(vs ...int) predicate.CIType {
 // TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
 func TenantIDNotIn(vs ...int) predicate.CIType {
 	return predicate.CIType(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.CIType {
+	return predicate.CIType(sql.FieldLTE(FieldTenantID, v))
+}
+
+// IsActiveEQ applies the EQ predicate on the "is_active" field.
+func IsActiveEQ(v bool) predicate.CIType {
+	return predicate.CIType(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
+func IsActiveNEQ(v bool) predicate.CIType {
+	return predicate.CIType(sql.FieldNEQ(FieldIsActive, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -588,98 +592,6 @@ func UpdatedAtLT(v time.Time) predicate.CIType {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.CIType {
 	return predicate.CIType(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasConfigurationItems applies the HasEdge predicate on the "configuration_items" edge.
-func HasConfigurationItems() predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemsTable, ConfigurationItemsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasConfigurationItemsWith applies the HasEdge predicate on the "configuration_items" edge with a given conditions (other predicates).
-func HasConfigurationItemsWith(preds ...predicate.ConfigurationItem) predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := newConfigurationItemsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasAllowedRelationships applies the HasEdge predicate on the "allowed_relationships" edge.
-func HasAllowedRelationships() predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, AllowedRelationshipsTable, AllowedRelationshipsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAllowedRelationshipsWith applies the HasEdge predicate on the "allowed_relationships" edge with a given conditions (other predicates).
-func HasAllowedRelationshipsWith(preds ...predicate.CIRelationshipType) predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := newAllowedRelationshipsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasAttributeDefinitions applies the HasEdge predicate on the "attribute_definitions" edge.
-func HasAttributeDefinitions() predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, AttributeDefinitionsTable, AttributeDefinitionsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAttributeDefinitionsWith applies the HasEdge predicate on the "attribute_definitions" edge with a given conditions (other predicates).
-func HasAttributeDefinitionsWith(preds ...predicate.CIAttributeDefinition) predicate.CIType {
-	return predicate.CIType(func(s *sql.Selector) {
-		step := newAttributeDefinitionsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

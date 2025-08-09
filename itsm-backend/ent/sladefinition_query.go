@@ -262,12 +262,12 @@ func (sdq *SLADefinitionQuery) Clone() *SLADefinitionQuery {
 // Example:
 //
 //	var v []struct {
-//		CreateTime time.Time `json:"create_time,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.SLADefinition.Query().
-//		GroupBy(sladefinition.FieldCreateTime).
+//		GroupBy(sladefinition.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (sdq *SLADefinitionQuery) GroupBy(field string, fields ...string) *SLADefinitionGroupBy {
@@ -285,11 +285,11 @@ func (sdq *SLADefinitionQuery) GroupBy(field string, fields ...string) *SLADefin
 // Example:
 //
 //	var v []struct {
-//		CreateTime time.Time `json:"create_time,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
 //	client.SLADefinition.Query().
-//		Select(sladefinition.FieldCreateTime).
+//		Select(sladefinition.FieldName).
 //		Scan(ctx, &v)
 func (sdq *SLADefinitionQuery) Select(fields ...string) *SLADefinitionSelect {
 	sdq.ctx.Fields = append(sdq.ctx.Fields, fields...)

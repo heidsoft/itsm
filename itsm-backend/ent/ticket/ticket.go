@@ -3,11 +3,9 @@
 package ticket
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -23,8 +21,6 @@ const (
 	FieldStatus = "status"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
-	// FieldFormFields holds the string denoting the form_fields field in the database.
-	FieldFormFields = "form_fields"
 	// FieldTicketNumber holds the string denoting the ticket_number field in the database.
 	FieldTicketNumber = "ticket_number"
 	// FieldRequesterID holds the string denoting the requester_id field in the database.
@@ -37,62 +33,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeRequester holds the string denoting the requester edge name in mutations.
-	EdgeRequester = "requester"
-	// EdgeAssignee holds the string denoting the assignee edge name in mutations.
-	EdgeAssignee = "assignee"
-	// EdgeApprovalLogs holds the string denoting the approval_logs edge name in mutations.
-	EdgeApprovalLogs = "approval_logs"
-	// EdgeFlowInstance holds the string denoting the flow_instance edge name in mutations.
-	EdgeFlowInstance = "flow_instance"
-	// EdgeStatusLogs holds the string denoting the status_logs edge name in mutations.
-	EdgeStatusLogs = "status_logs"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "tickets"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// RequesterTable is the table that holds the requester relation/edge.
-	RequesterTable = "tickets"
-	// RequesterInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	RequesterInverseTable = "users"
-	// RequesterColumn is the table column denoting the requester relation/edge.
-	RequesterColumn = "requester_id"
-	// AssigneeTable is the table that holds the assignee relation/edge.
-	AssigneeTable = "tickets"
-	// AssigneeInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	AssigneeInverseTable = "users"
-	// AssigneeColumn is the table column denoting the assignee relation/edge.
-	AssigneeColumn = "assignee_id"
-	// ApprovalLogsTable is the table that holds the approval_logs relation/edge.
-	ApprovalLogsTable = "approval_logs"
-	// ApprovalLogsInverseTable is the table name for the ApprovalLog entity.
-	// It exists in this package in order to avoid circular dependency with the "approvallog" package.
-	ApprovalLogsInverseTable = "approval_logs"
-	// ApprovalLogsColumn is the table column denoting the approval_logs relation/edge.
-	ApprovalLogsColumn = "ticket_id"
-	// FlowInstanceTable is the table that holds the flow_instance relation/edge.
-	FlowInstanceTable = "flow_instances"
-	// FlowInstanceInverseTable is the table name for the FlowInstance entity.
-	// It exists in this package in order to avoid circular dependency with the "flowinstance" package.
-	FlowInstanceInverseTable = "flow_instances"
-	// FlowInstanceColumn is the table column denoting the flow_instance relation/edge.
-	FlowInstanceColumn = "ticket_id"
-	// StatusLogsTable is the table that holds the status_logs relation/edge.
-	StatusLogsTable = "status_logs"
-	// StatusLogsInverseTable is the table name for the StatusLog entity.
-	// It exists in this package in order to avoid circular dependency with the "statuslog" package.
-	StatusLogsInverseTable = "status_logs"
-	// StatusLogsColumn is the table column denoting the status_logs relation/edge.
-	StatusLogsColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -102,23 +44,12 @@ var Columns = []string{
 	FieldDescription,
 	FieldStatus,
 	FieldPriority,
-	FieldFormFields,
 	FieldTicketNumber,
 	FieldRequesterID,
 	FieldAssigneeID,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "tickets"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"configuration_item_incidents",
-	"configuration_item_changes",
-	"incident_related_problems",
-	"incident_related_changes",
-	"incident_comments",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -128,23 +59,20 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
-			return true
-		}
-	}
 	return false
 }
 
 var (
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
+	// DefaultPriority holds the default value on creation for the "priority" field.
+	DefaultPriority string
 	// TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
 	TicketNumberValidator func(string) error
 	// RequesterIDValidator is a validator for the "requester_id" field. It is called by the builders before save.
 	RequesterIDValidator func(int) error
-	// AssigneeIDValidator is a validator for the "assignee_id" field. It is called by the builders before save.
-	AssigneeIDValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -154,66 +82,6 @@ var (
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
 )
-
-// Status defines the type for the "status" enum field.
-type Status string
-
-// StatusDraft is the default value of the Status enum.
-const DefaultStatus = StatusDraft
-
-// Status values.
-const (
-	StatusDraft      Status = "draft"
-	StatusSubmitted  Status = "submitted"
-	StatusInProgress Status = "in_progress"
-	StatusPending    Status = "pending"
-	StatusApproved   Status = "approved"
-	StatusRejected   Status = "rejected"
-	StatusClosed     Status = "closed"
-	StatusCancelled  Status = "cancelled"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusDraft, StatusSubmitted, StatusInProgress, StatusPending, StatusApproved, StatusRejected, StatusClosed, StatusCancelled:
-		return nil
-	default:
-		return fmt.Errorf("ticket: invalid enum value for status field: %q", s)
-	}
-}
-
-// Priority defines the type for the "priority" enum field.
-type Priority string
-
-// PriorityMedium is the default value of the Priority enum.
-const DefaultPriority = PriorityMedium
-
-// Priority values.
-const (
-	PriorityLow      Priority = "low"
-	PriorityMedium   Priority = "medium"
-	PriorityHigh     Priority = "high"
-	PriorityCritical Priority = "critical"
-)
-
-func (pr Priority) String() string {
-	return string(pr)
-}
-
-// PriorityValidator is a validator for the "priority" field enum values. It is called by the builders before save.
-func PriorityValidator(pr Priority) error {
-	switch pr {
-	case PriorityLow, PriorityMedium, PriorityHigh, PriorityCritical:
-		return nil
-	default:
-		return fmt.Errorf("ticket: invalid enum value for priority field: %q", pr)
-	}
-}
 
 // OrderOption defines the ordering options for the Ticket queries.
 type OrderOption func(*sql.Selector)
@@ -271,102 +139,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByRequesterField orders the results by requester field.
-func ByRequesterField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRequesterStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByAssigneeField orders the results by assignee field.
-func ByAssigneeField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAssigneeStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByApprovalLogsCount orders the results by approval_logs count.
-func ByApprovalLogsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newApprovalLogsStep(), opts...)
-	}
-}
-
-// ByApprovalLogs orders the results by approval_logs terms.
-func ByApprovalLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newApprovalLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByFlowInstanceField orders the results by flow_instance field.
-func ByFlowInstanceField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newFlowInstanceStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByStatusLogsCount orders the results by status_logs count.
-func ByStatusLogsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newStatusLogsStep(), opts...)
-	}
-}
-
-// ByStatusLogs orders the results by status_logs terms.
-func ByStatusLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newStatusLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newRequesterStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RequesterInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
-	)
-}
-func newAssigneeStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AssigneeInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, AssigneeTable, AssigneeColumn),
-	)
-}
-func newApprovalLogsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ApprovalLogsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalLogsTable, ApprovalLogsColumn),
-	)
-}
-func newFlowInstanceStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(FlowInstanceInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2O, false, FlowInstanceTable, FlowInstanceColumn),
-	)
-}
-func newStatusLogsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(StatusLogsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
-	)
 }

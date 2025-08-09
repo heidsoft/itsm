@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"log"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -10,6 +11,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	Log      LogConfig      `mapstructure:"log"`
+	LLM      LLMConfig      `mapstructure:"llm"`
 }
 
 type DatabaseConfig struct {
@@ -35,6 +37,14 @@ type JWTConfig struct {
 type LogConfig struct {
 	Level string `mapstructure:"level"`
 	Path  string `mapstructure:"path"`
+}
+
+type LLMConfig struct {
+	Provider string `mapstructure:"provider"` // openai|azure|local
+	Model    string `mapstructure:"model"`
+	APIKey   string `mapstructure:"api_key"`
+	Endpoint string `mapstructure:"endpoint"`
+	TokenCap int    `mapstructure:"token_cap"` // per request soft cap
 }
 
 func LoadConfig() (*Config, error) {

@@ -12,50 +12,44 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// ApprovalLog is the client for interacting with the ApprovalLog builders.
-	ApprovalLog *ApprovalLogClient
+	// AuditLog is the client for interacting with the AuditLog builders.
+	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
-	// CIChangeRecord is the client for interacting with the CIChangeRecord builders.
-	CIChangeRecord *CIChangeRecordClient
-	// CILifecycleState is the client for interacting with the CILifecycleState builders.
-	CILifecycleState *CILifecycleStateClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
 	CIRelationship *CIRelationshipClient
-	// CIRelationshipType is the client for interacting with the CIRelationshipType builders.
-	CIRelationshipType *CIRelationshipTypeClient
 	// CIType is the client for interacting with the CIType builders.
 	CIType *CITypeClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
-	// FlowInstance is the client for interacting with the FlowInstance builders.
-	FlowInstance *FlowInstanceClient
+	// Conversation is the client for interacting with the Conversation builders.
+	Conversation *ConversationClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
+	// Message is the client for interacting with the Message builders.
+	Message *MessageClient
+	// Notification is the client for interacting with the Notification builders.
+	Notification *NotificationClient
+	// PromptTemplate is the client for interacting with the PromptTemplate builders.
+	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
 	SLADefinition *SLADefinitionClient
-	// SLAMetrics is the client for interacting with the SLAMetrics builders.
-	SLAMetrics *SLAMetricsClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
-	// StatusLog is the client for interacting with the StatusLog builders.
-	StatusLog *StatusLogClient
-	// Subscription is the client for interacting with the Subscription builders.
-	Subscription *SubscriptionClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
+	// ToolInvocation is the client for interacting with the ToolInvocation builders.
+	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
-	// Workflow is the client for interacting with the Workflow builders.
-	Workflow *WorkflowClient
 
 	// lazily loaded.
 	client     *Client
@@ -187,28 +181,25 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.ApprovalLog = NewApprovalLogClient(tx.config)
+	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
-	tx.CIChangeRecord = NewCIChangeRecordClient(tx.config)
-	tx.CILifecycleState = NewCILifecycleStateClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
-	tx.CIRelationshipType = NewCIRelationshipTypeClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
-	tx.FlowInstance = NewFlowInstanceClient(tx.config)
+	tx.Conversation = NewConversationClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
+	tx.Message = NewMessageClient(tx.config)
+	tx.Notification = NewNotificationClient(tx.config)
+	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
-	tx.SLAMetrics = NewSLAMetricsClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
-	tx.StatusLog = NewStatusLogClient(tx.config)
-	tx.Subscription = NewSubscriptionClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
+	tx.ToolInvocation = NewToolInvocationClient(tx.config)
 	tx.User = NewUserClient(tx.config)
-	tx.Workflow = NewWorkflowClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -218,7 +209,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: ApprovalLog.QueryXXX(), the query will be executed
+// applies a query, for example: AuditLog.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

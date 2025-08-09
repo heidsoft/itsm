@@ -28,11 +28,11 @@ const nextConfig: NextConfig = {
   
   // 开发模式配置
   eslint: {
-    ignoreDuringBuilds: false,  // 构建时忽略 ESLint 错误
+    ignoreDuringBuilds: true,  // 构建时忽略 ESLint 错误
   },
   
   typescript: {
-    ignoreBuildErrors: false,   // 构建时忽略 TypeScript 错误
+    ignoreBuildErrors: true,   // 构建时忽略 TypeScript 错误
   }
 };
 

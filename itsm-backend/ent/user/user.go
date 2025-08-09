@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -34,80 +33,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeSubmittedTickets holds the string denoting the submitted_tickets edge name in mutations.
-	EdgeSubmittedTickets = "submitted_tickets"
-	// EdgeAssignedTickets holds the string denoting the assigned_tickets edge name in mutations.
-	EdgeAssignedTickets = "assigned_tickets"
-	// EdgeApprovalLogs holds the string denoting the approval_logs edge name in mutations.
-	EdgeApprovalLogs = "approval_logs"
-	// EdgeStatusLogs holds the string denoting the status_logs edge name in mutations.
-	EdgeStatusLogs = "status_logs"
-	// EdgeServiceRequests holds the string denoting the service_requests edge name in mutations.
-	EdgeServiceRequests = "service_requests"
-	// EdgeReportedIncidents holds the string denoting the reported_incidents edge name in mutations.
-	EdgeReportedIncidents = "reported_incidents"
-	// EdgeAssignedIncidents holds the string denoting the assigned_incidents edge name in mutations.
-	EdgeAssignedIncidents = "assigned_incidents"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "users"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// SubmittedTicketsTable is the table that holds the submitted_tickets relation/edge.
-	SubmittedTicketsTable = "tickets"
-	// SubmittedTicketsInverseTable is the table name for the Ticket entity.
-	// It exists in this package in order to avoid circular dependency with the "ticket" package.
-	SubmittedTicketsInverseTable = "tickets"
-	// SubmittedTicketsColumn is the table column denoting the submitted_tickets relation/edge.
-	SubmittedTicketsColumn = "requester_id"
-	// AssignedTicketsTable is the table that holds the assigned_tickets relation/edge.
-	AssignedTicketsTable = "tickets"
-	// AssignedTicketsInverseTable is the table name for the Ticket entity.
-	// It exists in this package in order to avoid circular dependency with the "ticket" package.
-	AssignedTicketsInverseTable = "tickets"
-	// AssignedTicketsColumn is the table column denoting the assigned_tickets relation/edge.
-	AssignedTicketsColumn = "assignee_id"
-	// ApprovalLogsTable is the table that holds the approval_logs relation/edge.
-	ApprovalLogsTable = "approval_logs"
-	// ApprovalLogsInverseTable is the table name for the ApprovalLog entity.
-	// It exists in this package in order to avoid circular dependency with the "approvallog" package.
-	ApprovalLogsInverseTable = "approval_logs"
-	// ApprovalLogsColumn is the table column denoting the approval_logs relation/edge.
-	ApprovalLogsColumn = "approver_id"
-	// StatusLogsTable is the table that holds the status_logs relation/edge.
-	StatusLogsTable = "status_logs"
-	// StatusLogsInverseTable is the table name for the StatusLog entity.
-	// It exists in this package in order to avoid circular dependency with the "statuslog" package.
-	StatusLogsInverseTable = "status_logs"
-	// StatusLogsColumn is the table column denoting the status_logs relation/edge.
-	StatusLogsColumn = "user_id"
-	// ServiceRequestsTable is the table that holds the service_requests relation/edge.
-	ServiceRequestsTable = "service_requests"
-	// ServiceRequestsInverseTable is the table name for the ServiceRequest entity.
-	// It exists in this package in order to avoid circular dependency with the "servicerequest" package.
-	ServiceRequestsInverseTable = "service_requests"
-	// ServiceRequestsColumn is the table column denoting the service_requests relation/edge.
-	ServiceRequestsColumn = "requester_id"
-	// ReportedIncidentsTable is the table that holds the reported_incidents relation/edge.
-	ReportedIncidentsTable = "incidents"
-	// ReportedIncidentsInverseTable is the table name for the Incident entity.
-	// It exists in this package in order to avoid circular dependency with the "incident" package.
-	ReportedIncidentsInverseTable = "incidents"
-	// ReportedIncidentsColumn is the table column denoting the reported_incidents relation/edge.
-	ReportedIncidentsColumn = "reporter_id"
-	// AssignedIncidentsTable is the table that holds the assigned_incidents relation/edge.
-	AssignedIncidentsTable = "incidents"
-	// AssignedIncidentsInverseTable is the table name for the Incident entity.
-	// It exists in this package in order to avoid circular dependency with the "incident" package.
-	AssignedIncidentsInverseTable = "incidents"
-	// AssignedIncidentsColumn is the table column denoting the assigned_incidents relation/edge.
-	AssignedIncidentsColumn = "assignee_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -142,10 +69,8 @@ var (
 	EmailValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// DepartmentValidator is a validator for the "department" field. It is called by the builders before save.
-	DepartmentValidator func(string) error
-	// PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
-	PhoneValidator func(string) error
+	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
+	PasswordHashValidator func(string) error
 	// DefaultActive holds the default value on creation for the "active" field.
 	DefaultActive bool
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -214,165 +139,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// BySubmittedTicketsCount orders the results by submitted_tickets count.
-func BySubmittedTicketsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSubmittedTicketsStep(), opts...)
-	}
-}
-
-// BySubmittedTickets orders the results by submitted_tickets terms.
-func BySubmittedTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSubmittedTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAssignedTicketsCount orders the results by assigned_tickets count.
-func ByAssignedTicketsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAssignedTicketsStep(), opts...)
-	}
-}
-
-// ByAssignedTickets orders the results by assigned_tickets terms.
-func ByAssignedTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAssignedTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByApprovalLogsCount orders the results by approval_logs count.
-func ByApprovalLogsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newApprovalLogsStep(), opts...)
-	}
-}
-
-// ByApprovalLogs orders the results by approval_logs terms.
-func ByApprovalLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newApprovalLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByStatusLogsCount orders the results by status_logs count.
-func ByStatusLogsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newStatusLogsStep(), opts...)
-	}
-}
-
-// ByStatusLogs orders the results by status_logs terms.
-func ByStatusLogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newStatusLogsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByServiceRequestsCount orders the results by service_requests count.
-func ByServiceRequestsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newServiceRequestsStep(), opts...)
-	}
-}
-
-// ByServiceRequests orders the results by service_requests terms.
-func ByServiceRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServiceRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByReportedIncidentsCount orders the results by reported_incidents count.
-func ByReportedIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newReportedIncidentsStep(), opts...)
-	}
-}
-
-// ByReportedIncidents orders the results by reported_incidents terms.
-func ByReportedIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReportedIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAssignedIncidentsCount orders the results by assigned_incidents count.
-func ByAssignedIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAssignedIncidentsStep(), opts...)
-	}
-}
-
-// ByAssignedIncidents orders the results by assigned_incidents terms.
-func ByAssignedIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAssignedIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newSubmittedTicketsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SubmittedTicketsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SubmittedTicketsTable, SubmittedTicketsColumn),
-	)
-}
-func newAssignedTicketsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AssignedTicketsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AssignedTicketsTable, AssignedTicketsColumn),
-	)
-}
-func newApprovalLogsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ApprovalLogsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalLogsTable, ApprovalLogsColumn),
-	)
-}
-func newStatusLogsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(StatusLogsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
-	)
-}
-func newServiceRequestsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServiceRequestsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ServiceRequestsTable, ServiceRequestsColumn),
-	)
-}
-func newReportedIncidentsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ReportedIncidentsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ReportedIncidentsTable, ReportedIncidentsColumn),
-	)
-}
-func newAssignedIncidentsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AssignedIncidentsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AssignedIncidentsTable, AssignedIncidentsColumn),
-	)
 }

@@ -6,7 +6,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
-	"itsm-backend/ent/tenant"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -24,14 +24,11 @@ func NewKnowledgeService(client *ent.Client, logger *zap.SugaredLogger) *Knowled
 }
 
 // CreateArticle 创建知识库文章
-func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKnowledgeArticleRequest, tenantID int, author string) (*ent.KnowledgeArticle, error) {
-	// 验证租户存在
-	exists, err := ks.client.Tenant.Query().Where(tenant.ID(tenantID)).Exist(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("验证租户失败: %w", err)
-	}
-	if !exists {
-		return nil, fmt.Errorf("租户不存在")
+func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKnowledgeArticleRequest, tenantID int, authorID int) (*ent.KnowledgeArticle, error) {
+	// 将Tags数组转换为字符串
+	tagsStr := ""
+	if len(req.Tags) > 0 {
+		tagsStr = strings.Join(req.Tags, ",")
 	}
 
 	// 创建文章
@@ -39,8 +36,8 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 		SetTitle(req.Title).
 		SetContent(req.Content).
 		SetCategory(req.Category).
-		SetAuthor(author).
-		SetTags(req.Tags).
+		SetAuthorID(authorID).
+		SetTags(tagsStr).
 		SetTenantID(tenantID).
 		Save(ctx)
 
@@ -69,14 +66,6 @@ func (ks *KnowledgeService) GetArticle(ctx context.Context, id, tenantID int) (*
 		return nil, fmt.Errorf("获取文章失败: %w", err)
 	}
 
-	// 增加浏览次数
-	_, err = ks.client.KnowledgeArticle.UpdateOneID(id).
-		SetViews(article.Views + 1).
-		Save(ctx)
-	if err != nil {
-		ks.logger.Warnf("更新文章浏览次数失败: %v", err)
-	}
-
 	return article, nil
 }
 
@@ -88,9 +77,6 @@ func (ks *KnowledgeService) ListArticles(ctx context.Context, req *dto.ListKnowl
 	// 添加过滤条件
 	if req.Category != "" {
 		query = query.Where(knowledgearticle.Category(req.Category))
-	}
-	if req.Status != "" {
-		query = query.Where(knowledgearticle.Status(req.Status))
 	}
 	if req.Search != "" {
 		query = query.Where(
@@ -134,24 +120,21 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 	if req.Category != nil {
 		update = update.SetCategory(*req.Category)
 	}
-	if req.Status != nil {
-		update = update.SetStatus(*req.Status)
-	}
 	if req.Tags != nil {
-		update = update.SetTags(req.Tags)
+		if len(req.Tags) > 0 {
+			// 将Tags数组转换为字符串
+			tagsStr := strings.Join(req.Tags, ",")
+			update = update.SetTags(tagsStr)
+		}
 	}
 
-	article, err := update.
-		Where(knowledgearticle.TenantID(tenantID)).
-		Save(ctx)
-
+	article, err := update.Save(ctx)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("文章不存在")
-		}
+		ks.logger.Errorf("更新知识库文章失败: %v", err)
 		return nil, fmt.Errorf("更新文章失败: %w", err)
 	}
 
+	ks.logger.Infof("更新知识库文章成功: %s", article.Title)
 	return article, nil
 }
 

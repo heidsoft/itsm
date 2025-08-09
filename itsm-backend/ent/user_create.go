@@ -6,12 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/approvallog"
-	"itsm-backend/ent/incident"
-	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"time"
 
@@ -126,116 +120,6 @@ func (uc *UserCreate) SetNillableUpdatedAt(t *time.Time) *UserCreate {
 	return uc
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (uc *UserCreate) SetTenant(t *Tenant) *UserCreate {
-	return uc.SetTenantID(t.ID)
-}
-
-// AddSubmittedTicketIDs adds the "submitted_tickets" edge to the Ticket entity by IDs.
-func (uc *UserCreate) AddSubmittedTicketIDs(ids ...int) *UserCreate {
-	uc.mutation.AddSubmittedTicketIDs(ids...)
-	return uc
-}
-
-// AddSubmittedTickets adds the "submitted_tickets" edges to the Ticket entity.
-func (uc *UserCreate) AddSubmittedTickets(t ...*Ticket) *UserCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uc.AddSubmittedTicketIDs(ids...)
-}
-
-// AddAssignedTicketIDs adds the "assigned_tickets" edge to the Ticket entity by IDs.
-func (uc *UserCreate) AddAssignedTicketIDs(ids ...int) *UserCreate {
-	uc.mutation.AddAssignedTicketIDs(ids...)
-	return uc
-}
-
-// AddAssignedTickets adds the "assigned_tickets" edges to the Ticket entity.
-func (uc *UserCreate) AddAssignedTickets(t ...*Ticket) *UserCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return uc.AddAssignedTicketIDs(ids...)
-}
-
-// AddApprovalLogIDs adds the "approval_logs" edge to the ApprovalLog entity by IDs.
-func (uc *UserCreate) AddApprovalLogIDs(ids ...int) *UserCreate {
-	uc.mutation.AddApprovalLogIDs(ids...)
-	return uc
-}
-
-// AddApprovalLogs adds the "approval_logs" edges to the ApprovalLog entity.
-func (uc *UserCreate) AddApprovalLogs(a ...*ApprovalLog) *UserCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return uc.AddApprovalLogIDs(ids...)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (uc *UserCreate) AddStatusLogIDs(ids ...int) *UserCreate {
-	uc.mutation.AddStatusLogIDs(ids...)
-	return uc
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (uc *UserCreate) AddStatusLogs(s ...*StatusLog) *UserCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uc.AddStatusLogIDs(ids...)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (uc *UserCreate) AddServiceRequestIDs(ids ...int) *UserCreate {
-	uc.mutation.AddServiceRequestIDs(ids...)
-	return uc
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (uc *UserCreate) AddServiceRequests(s ...*ServiceRequest) *UserCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uc.AddServiceRequestIDs(ids...)
-}
-
-// AddReportedIncidentIDs adds the "reported_incidents" edge to the Incident entity by IDs.
-func (uc *UserCreate) AddReportedIncidentIDs(ids ...int) *UserCreate {
-	uc.mutation.AddReportedIncidentIDs(ids...)
-	return uc
-}
-
-// AddReportedIncidents adds the "reported_incidents" edges to the Incident entity.
-func (uc *UserCreate) AddReportedIncidents(i ...*Incident) *UserCreate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uc.AddReportedIncidentIDs(ids...)
-}
-
-// AddAssignedIncidentIDs adds the "assigned_incidents" edge to the Incident entity by IDs.
-func (uc *UserCreate) AddAssignedIncidentIDs(ids ...int) *UserCreate {
-	uc.mutation.AddAssignedIncidentIDs(ids...)
-	return uc
-}
-
-// AddAssignedIncidents adds the "assigned_incidents" edges to the Incident entity.
-func (uc *UserCreate) AddAssignedIncidents(i ...*Incident) *UserCreate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uc.AddAssignedIncidentIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -311,18 +195,13 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
-	if v, ok := uc.mutation.Department(); ok {
-		if err := user.DepartmentValidator(v); err != nil {
-			return &ValidationError{Name: "department", err: fmt.Errorf(`ent: validator failed for field "User.department": %w`, err)}
-		}
-	}
-	if v, ok := uc.mutation.Phone(); ok {
-		if err := user.PhoneValidator(v); err != nil {
-			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
-		}
-	}
 	if _, ok := uc.mutation.PasswordHash(); !ok {
 		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "User.password_hash"`)}
+	}
+	if v, ok := uc.mutation.PasswordHash(); ok {
+		if err := user.PasswordHashValidator(v); err != nil {
+			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
+		}
 	}
 	if _, ok := uc.mutation.Active(); !ok {
 		return &ValidationError{Name: "active", err: errors.New(`ent: missing required field "User.active"`)}
@@ -340,9 +219,6 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "User.updated_at"`)}
-	}
-	if len(uc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "User.tenant"`)}
 	}
 	return nil
 }
@@ -398,6 +274,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldActive, field.TypeBool, value)
 		_node.Active = value
 	}
+	if value, ok := uc.mutation.TenantID(); ok {
+		_spec.SetField(user.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
+	}
 	if value, ok := uc.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -405,135 +285,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := uc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.TenantTable,
-			Columns: []string{user.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.SubmittedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubmittedTicketsTable,
-			Columns: []string{user.SubmittedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.AssignedTicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedTicketsTable,
-			Columns: []string{user.AssignedTicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.ApprovalLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ApprovalLogsTable,
-			Columns: []string{user.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.StatusLogsTable,
-			Columns: []string{user.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ServiceRequestsTable,
-			Columns: []string{user.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.ReportedIncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.ReportedIncidentsTable,
-			Columns: []string{user.ReportedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.AssignedIncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.AssignedIncidentsTable,
-			Columns: []string{user.AssignedIncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

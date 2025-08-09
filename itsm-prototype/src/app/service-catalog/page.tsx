@@ -3,14 +3,32 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  Card,
+  Row,
+  Col,
+  Input,
+  Select,
+  Tag,
+  Button,
+  Statistic,
+  Empty,
+  Typography,
+  Space,
+  Rate,
+} from "antd";
+import {
   HardDrive,
   UserCog,
   ShieldCheck,
   Search,
   Clock,
-  AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 import { ServiceCatalogApi, ServiceCatalog } from "../lib/service-catalog-api";
+
+const { Search: SearchInput } = Input;
+const { Option } = Select;
+const { Title, Text } = Typography;
 
 // 图标映射
 const categoryIcons = {
@@ -22,177 +40,265 @@ const categoryIcons = {
 const ServiceItemCard = ({ catalog }: { catalog: ServiceCatalog }) => {
   const IconComponent = categoryIcons[catalog.category] || HardDrive;
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "高":
+        return "red";
+      case "中":
+        return "orange";
+      case "低":
+        return "green";
+      default:
+        return "default";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "可用":
+        return "success";
+      case "维护中":
+        return "warning";
+      case "不可用":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 flex flex-col">
-      <div className="flex items-center mb-3">
-        <IconComponent className="w-5 h-5 mr-2 text-blue-600" />
-        <h4 className="text-lg font-semibold text-gray-800">{catalog.name}</h4>
+    <Card
+      hoverable
+      style={{ height: "100%" }}
+      actions={[
+        <Link key="request" href={`/service-catalog/request/${catalog.id}`}>
+          <Button type="primary" size="small" icon={<ArrowRight size={14} />}>
+            申请服务
+          </Button>
+        </Link>,
+      ]}
+    >
+      <div style={{ marginBottom: 16 }}>
+        <Space align="center">
+          <div style={{ color: "#1890ff" }}>
+            <IconComponent size={20} />
+          </div>
+          <Title level={4} style={{ margin: 0 }}>
+            {catalog.name}
+          </Title>
+        </Space>
       </div>
-      <p className="text-gray-600 mt-2 flex-grow">{catalog.description}</p>
-      <div className="flex items-center text-sm text-gray-500 mt-4 pt-4 border-t border-gray-100">
-        <Clock className="w-4 h-4 mr-2" />
-        <span>预计交付时间: {catalog.delivery_time}</span>
+
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary">{catalog.description}</Text>
       </div>
-      <Link href={`/service-catalog/request/${catalog.id}`} passHref>
-        <button className="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">
-          发起请求
-        </button>
-      </Link>
-    </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Space wrap>
+          <Tag color="blue">{catalog.category}</Tag>
+          <Tag color={getStatusColor(catalog.status)}>{catalog.status}</Tag>
+          <Tag color={getPriorityColor(catalog.priority)}>
+            {catalog.priority}
+          </Tag>
+        </Space>
+      </div>
+
+      <Row gutter={16}>
+        <Col span={12}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ color: "#faad14", marginBottom: 4 }}>
+              <Clock size={16} />
+            </div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {catalog.sla_time}
+            </Text>
+          </div>
+        </Col>
+        <Col span={12}>
+          <div style={{ textAlign: "center" }}>
+            <Rate
+              disabled
+              defaultValue={4.5}
+              allowHalf
+              style={{ fontSize: 12 }}
+            />
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                满意度 4.5
+              </Text>
+            </div>
+          </div>
+        </Col>
+      </Row>
+    </Card>
   );
 };
 
 const ServiceCatalogPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
   const [catalogs, setCatalogs] = useState<ServiceCatalog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("全部");
+  const [selectedStatus, setSelectedStatus] = useState("全部");
 
-  // 获取服务目录数据
   useEffect(() => {
     const fetchCatalogs = async () => {
       try {
         setLoading(true);
-        const response = await ServiceCatalogApi.getServiceCatalogs({
-          page: 1,
-          size: 100,
-          category: selectedCategory || undefined,
-          status: "enabled",
-        });
-        setCatalogs(response.catalogs);
-        setError(null);
-      } catch (err) {
-        setError("获取服务目录失败，请稍后重试");
-        console.error("Failed to fetch service catalogs:", err);
+        const data = await ServiceCatalogApi.getCatalogs();
+        setCatalogs(data);
+      } catch (error) {
+        console.error("Failed to fetch service catalogs:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCatalogs();
-  }, [selectedCategory]);
+  }, []);
 
-  // 过滤服务目录
-  const filteredCatalogs = catalogs.filter(
-    (catalog) =>
+  const filteredCatalogs = catalogs.filter((catalog) => {
+    const matchesSearch =
       catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      catalog.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "全部" || catalog.category === selectedCategory;
+    const matchesStatus =
+      selectedStatus === "全部" || catalog.status === selectedStatus;
 
-  // 按分类分组
-  const groupedCatalogs = filteredCatalogs.reduce((acc, catalog) => {
-    if (!acc[catalog.category]) {
-      acc[catalog.category] = [];
-    }
-    acc[catalog.category].push(catalog);
-    return acc;
-  }, {} as Record<string, ServiceCatalog[]>);
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
-  const categories = Object.keys(groupedCatalogs);
+  const categories = [
+    "全部",
+    ...Array.from(new Set(catalogs.map((c) => c.category))),
+  ];
+  const statuses = [
+    "全部",
+    ...Array.from(new Set(catalogs.map((c) => c.status))),
+  ];
 
-  if (loading) {
-    return (
-      <div className="p-10 bg-gray-50 min-h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载服务目录中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-10 bg-gray-50 min-h-full flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            重新加载
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const stats = {
+    total: catalogs.length,
+    available: catalogs.filter((c) => c.status === "可用").length,
+    maintenance: catalogs.filter((c) => c.status === "维护中").length,
+    high_priority: catalogs.filter((c) => c.priority === "高").length,
+  };
 
   return (
-    <div className="p-10 bg-gray-50 min-h-full">
-      <header className="mb-8">
-        <h2 className="text-4xl font-bold text-gray-800">服务目录</h2>
-        <p className="text-gray-500 mt-1">您的一站式IT服务请求中心</p>
-      </header>
+    <div style={{ padding: 24 }}>
+      {/* 页面头部 */}
+      <div style={{ marginBottom: 24 }}>
+        <Title level={2} style={{ margin: 0 }}>
+          服务目录
+        </Title>
+        <Text type="secondary">
+          浏览和申请IT服务，简化业务流程，提高工作效率
+        </Text>
+      </div>
 
-      <div className="mb-8 space-y-4">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="搜索服务，例如：虚拟机、重置密码..."
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      {/* 统计卡片 */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="总服务数"
+              value={stats.total}
+              prefix={<HardDrive size={16} style={{ color: "#1890ff" }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="可用服务"
+              value={stats.available}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="维护中"
+              value={stats.maintenance}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="高优先级"
+              value={stats.high_priority}
+              valueStyle={{ color: "#f5222d" }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 搜索和筛选 */}
+      <Card style={{ marginBottom: 24 }}>
+        <Row gutter={16} align="middle">
+          <Col span={8}>
+            <SearchInput
+              placeholder="搜索服务名称或描述"
+              allowClear
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              prefix={<Search size={16} />}
+            />
+          </Col>
+          <Col span={4}>
+            <Select
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              style={{ width: "100%" }}
+              placeholder="选择分类"
+            >
+              {categories.map((category) => (
+                <Option key={category} value={category}>
+                  {category}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={4}>
+            <Select
+              value={selectedStatus}
+              onChange={setSelectedStatus}
+              style={{ width: "100%" }}
+              placeholder="选择状态"
+            >
+              {statuses.map((status) => (
+                <Option key={status} value={status}>
+                  {status}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 服务卡片网格 */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 48 }}>加载中...</div>
+      ) : filteredCatalogs.length > 0 ? (
+        <Row gutter={[16, 16]}>
+          {filteredCatalogs.map((catalog) => (
+            <Col key={catalog.id} xs={24} sm={12} md={8} lg={6}>
+              <ServiceItemCard catalog={catalog} />
+            </Col>
+          ))}
+        </Row>
+      ) : (
+        <Card>
+          <Empty
+            description="未找到匹配的服务项"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedCategory("")}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              selectedCategory === ""
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            全部分类
-          </button>
-          {Array.from(new Set(catalogs.map((c) => c.category))).map(
-            (category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  selectedCategory === category
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {category}
-              </button>
-            )
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-12">
-        {categories.length > 0 ? (
-          categories.map((category) => {
-            const IconComponent = categoryIcons[category] || HardDrive;
-            return (
-              <section key={category}>
-                <div className="flex items-center mb-4">
-                  <IconComponent className="w-6 h-6 mr-3 text-blue-600" />
-                  <h3 className="text-2xl font-semibold text-gray-700">
-                    {category}
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {groupedCatalogs[category].map((catalog) => (
-                    <ServiceItemCard key={catalog.id} catalog={catalog} />
-                  ))}
-                </div>
-              </section>
-            );
-          })
-        ) : (
-          <div className="text-center py-16">
-            <p className="text-gray-500 text-lg">未找到匹配的服务项。</p>
-          </div>
-        )}
-      </div>
+        </Card>
+      )}
     </div>
   );
 };

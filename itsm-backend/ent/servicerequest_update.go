@@ -7,10 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/user"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -32,6 +30,7 @@ func (sru *ServiceRequestUpdate) Where(ps ...predicate.ServiceRequest) *ServiceR
 
 // SetCatalogID sets the "catalog_id" field.
 func (sru *ServiceRequestUpdate) SetCatalogID(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetCatalogID()
 	sru.mutation.SetCatalogID(i)
 	return sru
 }
@@ -44,8 +43,15 @@ func (sru *ServiceRequestUpdate) SetNillableCatalogID(i *int) *ServiceRequestUpd
 	return sru
 }
 
+// AddCatalogID adds i to the "catalog_id" field.
+func (sru *ServiceRequestUpdate) AddCatalogID(i int) *ServiceRequestUpdate {
+	sru.mutation.AddCatalogID(i)
+	return sru
+}
+
 // SetRequesterID sets the "requester_id" field.
 func (sru *ServiceRequestUpdate) SetRequesterID(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetRequesterID()
 	sru.mutation.SetRequesterID(i)
 	return sru
 }
@@ -58,14 +64,20 @@ func (sru *ServiceRequestUpdate) SetNillableRequesterID(i *int) *ServiceRequestU
 	return sru
 }
 
+// AddRequesterID adds i to the "requester_id" field.
+func (sru *ServiceRequestUpdate) AddRequesterID(i int) *ServiceRequestUpdate {
+	sru.mutation.AddRequesterID(i)
+	return sru
+}
+
 // SetStatus sets the "status" field.
-func (sru *ServiceRequestUpdate) SetStatus(s servicerequest.Status) *ServiceRequestUpdate {
+func (sru *ServiceRequestUpdate) SetStatus(s string) *ServiceRequestUpdate {
 	sru.mutation.SetStatus(s)
 	return sru
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (sru *ServiceRequestUpdate) SetNillableStatus(s *servicerequest.Status) *ServiceRequestUpdate {
+func (sru *ServiceRequestUpdate) SetNillableStatus(s *string) *ServiceRequestUpdate {
 	if s != nil {
 		sru.SetStatus(*s)
 	}
@@ -92,33 +104,24 @@ func (sru *ServiceRequestUpdate) ClearReason() *ServiceRequestUpdate {
 	return sru
 }
 
-// SetTenantID sets the "tenant_id" field.
-func (sru *ServiceRequestUpdate) SetTenantID(i int) *ServiceRequestUpdate {
-	sru.mutation.SetTenantID(i)
+// SetCreatedAt sets the "created_at" field.
+func (sru *ServiceRequestUpdate) SetCreatedAt(t time.Time) *ServiceRequestUpdate {
+	sru.mutation.SetCreatedAt(t)
 	return sru
 }
 
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (sru *ServiceRequestUpdate) SetNillableTenantID(i *int) *ServiceRequestUpdate {
-	if i != nil {
-		sru.SetTenantID(*i)
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCreatedAt(t *time.Time) *ServiceRequestUpdate {
+	if t != nil {
+		sru.SetCreatedAt(*t)
 	}
 	return sru
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (sru *ServiceRequestUpdate) SetTenant(t *Tenant) *ServiceRequestUpdate {
-	return sru.SetTenantID(t.ID)
-}
-
-// SetCatalog sets the "catalog" edge to the ServiceCatalog entity.
-func (sru *ServiceRequestUpdate) SetCatalog(s *ServiceCatalog) *ServiceRequestUpdate {
-	return sru.SetCatalogID(s.ID)
-}
-
-// SetRequester sets the "requester" edge to the User entity.
-func (sru *ServiceRequestUpdate) SetRequester(u *User) *ServiceRequestUpdate {
-	return sru.SetRequesterID(u.ID)
+// SetUpdatedAt sets the "updated_at" field.
+func (sru *ServiceRequestUpdate) SetUpdatedAt(t time.Time) *ServiceRequestUpdate {
+	sru.mutation.SetUpdatedAt(t)
+	return sru
 }
 
 // Mutation returns the ServiceRequestMutation object of the builder.
@@ -126,26 +129,9 @@ func (sru *ServiceRequestUpdate) Mutation() *ServiceRequestMutation {
 	return sru.mutation
 }
 
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (sru *ServiceRequestUpdate) ClearTenant() *ServiceRequestUpdate {
-	sru.mutation.ClearTenant()
-	return sru
-}
-
-// ClearCatalog clears the "catalog" edge to the ServiceCatalog entity.
-func (sru *ServiceRequestUpdate) ClearCatalog() *ServiceRequestUpdate {
-	sru.mutation.ClearCatalog()
-	return sru
-}
-
-// ClearRequester clears the "requester" edge to the User entity.
-func (sru *ServiceRequestUpdate) ClearRequester() *ServiceRequestUpdate {
-	sru.mutation.ClearRequester()
-	return sru
-}
-
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (sru *ServiceRequestUpdate) Save(ctx context.Context) (int, error) {
+	sru.defaults()
 	return withHooks(ctx, sru.sqlSave, sru.mutation, sru.hooks)
 }
 
@@ -171,6 +157,14 @@ func (sru *ServiceRequestUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (sru *ServiceRequestUpdate) defaults() {
+	if _, ok := sru.mutation.UpdatedAt(); !ok {
+		v := servicerequest.UpdateDefaultUpdatedAt()
+		sru.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (sru *ServiceRequestUpdate) check() error {
 	if v, ok := sru.mutation.CatalogID(); ok {
@@ -182,30 +176,6 @@ func (sru *ServiceRequestUpdate) check() error {
 		if err := servicerequest.RequesterIDValidator(v); err != nil {
 			return &ValidationError{Name: "requester_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.requester_id": %w`, err)}
 		}
-	}
-	if v, ok := sru.mutation.Status(); ok {
-		if err := servicerequest.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.status": %w`, err)}
-		}
-	}
-	if v, ok := sru.mutation.Reason(); ok {
-		if err := servicerequest.ReasonValidator(v); err != nil {
-			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.reason": %w`, err)}
-		}
-	}
-	if v, ok := sru.mutation.TenantID(); ok {
-		if err := servicerequest.TenantIDValidator(v); err != nil {
-			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.tenant_id": %w`, err)}
-		}
-	}
-	if sru.mutation.TenantCleared() && len(sru.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceRequest.tenant"`)
-	}
-	if sru.mutation.CatalogCleared() && len(sru.mutation.CatalogIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceRequest.catalog"`)
-	}
-	if sru.mutation.RequesterCleared() && len(sru.mutation.RequesterIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceRequest.requester"`)
 	}
 	return nil
 }
@@ -222,8 +192,20 @@ func (sru *ServiceRequestUpdate) sqlSave(ctx context.Context) (n int, err error)
 			}
 		}
 	}
+	if value, ok := sru.mutation.CatalogID(); ok {
+		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedCatalogID(); ok {
+		_spec.AddField(servicerequest.FieldCatalogID, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.RequesterID(); ok {
+		_spec.SetField(servicerequest.FieldRequesterID, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedRequesterID(); ok {
+		_spec.AddField(servicerequest.FieldRequesterID, field.TypeInt, value)
+	}
 	if value, ok := sru.mutation.Status(); ok {
-		_spec.SetField(servicerequest.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(servicerequest.FieldStatus, field.TypeString, value)
 	}
 	if value, ok := sru.mutation.Reason(); ok {
 		_spec.SetField(servicerequest.FieldReason, field.TypeString, value)
@@ -231,92 +213,11 @@ func (sru *ServiceRequestUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if sru.mutation.ReasonCleared() {
 		_spec.ClearField(servicerequest.FieldReason, field.TypeString)
 	}
-	if sru.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.TenantTable,
-			Columns: []string{servicerequest.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := sru.mutation.CreatedAt(); ok {
+		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
 	}
-	if nodes := sru.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.TenantTable,
-			Columns: []string{servicerequest.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if sru.mutation.CatalogCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.CatalogTable,
-			Columns: []string{servicerequest.CatalogColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sru.mutation.CatalogIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.CatalogTable,
-			Columns: []string{servicerequest.CatalogColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if sru.mutation.RequesterCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.RequesterTable,
-			Columns: []string{servicerequest.RequesterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sru.mutation.RequesterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.RequesterTable,
-			Columns: []string{servicerequest.RequesterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := sru.mutation.UpdatedAt(); ok {
+		_spec.SetField(servicerequest.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, sru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -340,6 +241,7 @@ type ServiceRequestUpdateOne struct {
 
 // SetCatalogID sets the "catalog_id" field.
 func (sruo *ServiceRequestUpdateOne) SetCatalogID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetCatalogID()
 	sruo.mutation.SetCatalogID(i)
 	return sruo
 }
@@ -352,8 +254,15 @@ func (sruo *ServiceRequestUpdateOne) SetNillableCatalogID(i *int) *ServiceReques
 	return sruo
 }
 
+// AddCatalogID adds i to the "catalog_id" field.
+func (sruo *ServiceRequestUpdateOne) AddCatalogID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddCatalogID(i)
+	return sruo
+}
+
 // SetRequesterID sets the "requester_id" field.
 func (sruo *ServiceRequestUpdateOne) SetRequesterID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetRequesterID()
 	sruo.mutation.SetRequesterID(i)
 	return sruo
 }
@@ -366,14 +275,20 @@ func (sruo *ServiceRequestUpdateOne) SetNillableRequesterID(i *int) *ServiceRequ
 	return sruo
 }
 
+// AddRequesterID adds i to the "requester_id" field.
+func (sruo *ServiceRequestUpdateOne) AddRequesterID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddRequesterID(i)
+	return sruo
+}
+
 // SetStatus sets the "status" field.
-func (sruo *ServiceRequestUpdateOne) SetStatus(s servicerequest.Status) *ServiceRequestUpdateOne {
+func (sruo *ServiceRequestUpdateOne) SetStatus(s string) *ServiceRequestUpdateOne {
 	sruo.mutation.SetStatus(s)
 	return sruo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (sruo *ServiceRequestUpdateOne) SetNillableStatus(s *servicerequest.Status) *ServiceRequestUpdateOne {
+func (sruo *ServiceRequestUpdateOne) SetNillableStatus(s *string) *ServiceRequestUpdateOne {
 	if s != nil {
 		sruo.SetStatus(*s)
 	}
@@ -400,56 +315,29 @@ func (sruo *ServiceRequestUpdateOne) ClearReason() *ServiceRequestUpdateOne {
 	return sruo
 }
 
-// SetTenantID sets the "tenant_id" field.
-func (sruo *ServiceRequestUpdateOne) SetTenantID(i int) *ServiceRequestUpdateOne {
-	sruo.mutation.SetTenantID(i)
+// SetCreatedAt sets the "created_at" field.
+func (sruo *ServiceRequestUpdateOne) SetCreatedAt(t time.Time) *ServiceRequestUpdateOne {
+	sruo.mutation.SetCreatedAt(t)
 	return sruo
 }
 
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (sruo *ServiceRequestUpdateOne) SetNillableTenantID(i *int) *ServiceRequestUpdateOne {
-	if i != nil {
-		sruo.SetTenantID(*i)
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCreatedAt(t *time.Time) *ServiceRequestUpdateOne {
+	if t != nil {
+		sruo.SetCreatedAt(*t)
 	}
 	return sruo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (sruo *ServiceRequestUpdateOne) SetTenant(t *Tenant) *ServiceRequestUpdateOne {
-	return sruo.SetTenantID(t.ID)
-}
-
-// SetCatalog sets the "catalog" edge to the ServiceCatalog entity.
-func (sruo *ServiceRequestUpdateOne) SetCatalog(s *ServiceCatalog) *ServiceRequestUpdateOne {
-	return sruo.SetCatalogID(s.ID)
-}
-
-// SetRequester sets the "requester" edge to the User entity.
-func (sruo *ServiceRequestUpdateOne) SetRequester(u *User) *ServiceRequestUpdateOne {
-	return sruo.SetRequesterID(u.ID)
+// SetUpdatedAt sets the "updated_at" field.
+func (sruo *ServiceRequestUpdateOne) SetUpdatedAt(t time.Time) *ServiceRequestUpdateOne {
+	sruo.mutation.SetUpdatedAt(t)
+	return sruo
 }
 
 // Mutation returns the ServiceRequestMutation object of the builder.
 func (sruo *ServiceRequestUpdateOne) Mutation() *ServiceRequestMutation {
 	return sruo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (sruo *ServiceRequestUpdateOne) ClearTenant() *ServiceRequestUpdateOne {
-	sruo.mutation.ClearTenant()
-	return sruo
-}
-
-// ClearCatalog clears the "catalog" edge to the ServiceCatalog entity.
-func (sruo *ServiceRequestUpdateOne) ClearCatalog() *ServiceRequestUpdateOne {
-	sruo.mutation.ClearCatalog()
-	return sruo
-}
-
-// ClearRequester clears the "requester" edge to the User entity.
-func (sruo *ServiceRequestUpdateOne) ClearRequester() *ServiceRequestUpdateOne {
-	sruo.mutation.ClearRequester()
-	return sruo
 }
 
 // Where appends a list predicates to the ServiceRequestUpdate builder.
@@ -467,6 +355,7 @@ func (sruo *ServiceRequestUpdateOne) Select(field string, fields ...string) *Ser
 
 // Save executes the query and returns the updated ServiceRequest entity.
 func (sruo *ServiceRequestUpdateOne) Save(ctx context.Context) (*ServiceRequest, error) {
+	sruo.defaults()
 	return withHooks(ctx, sruo.sqlSave, sruo.mutation, sruo.hooks)
 }
 
@@ -492,6 +381,14 @@ func (sruo *ServiceRequestUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (sruo *ServiceRequestUpdateOne) defaults() {
+	if _, ok := sruo.mutation.UpdatedAt(); !ok {
+		v := servicerequest.UpdateDefaultUpdatedAt()
+		sruo.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (sruo *ServiceRequestUpdateOne) check() error {
 	if v, ok := sruo.mutation.CatalogID(); ok {
@@ -503,30 +400,6 @@ func (sruo *ServiceRequestUpdateOne) check() error {
 		if err := servicerequest.RequesterIDValidator(v); err != nil {
 			return &ValidationError{Name: "requester_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.requester_id": %w`, err)}
 		}
-	}
-	if v, ok := sruo.mutation.Status(); ok {
-		if err := servicerequest.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.status": %w`, err)}
-		}
-	}
-	if v, ok := sruo.mutation.Reason(); ok {
-		if err := servicerequest.ReasonValidator(v); err != nil {
-			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.reason": %w`, err)}
-		}
-	}
-	if v, ok := sruo.mutation.TenantID(); ok {
-		if err := servicerequest.TenantIDValidator(v); err != nil {
-			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.tenant_id": %w`, err)}
-		}
-	}
-	if sruo.mutation.TenantCleared() && len(sruo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceRequest.tenant"`)
-	}
-	if sruo.mutation.CatalogCleared() && len(sruo.mutation.CatalogIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceRequest.catalog"`)
-	}
-	if sruo.mutation.RequesterCleared() && len(sruo.mutation.RequesterIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceRequest.requester"`)
 	}
 	return nil
 }
@@ -560,8 +433,20 @@ func (sruo *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 			}
 		}
 	}
+	if value, ok := sruo.mutation.CatalogID(); ok {
+		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedCatalogID(); ok {
+		_spec.AddField(servicerequest.FieldCatalogID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.RequesterID(); ok {
+		_spec.SetField(servicerequest.FieldRequesterID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedRequesterID(); ok {
+		_spec.AddField(servicerequest.FieldRequesterID, field.TypeInt, value)
+	}
 	if value, ok := sruo.mutation.Status(); ok {
-		_spec.SetField(servicerequest.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(servicerequest.FieldStatus, field.TypeString, value)
 	}
 	if value, ok := sruo.mutation.Reason(); ok {
 		_spec.SetField(servicerequest.FieldReason, field.TypeString, value)
@@ -569,92 +454,11 @@ func (sruo *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	if sruo.mutation.ReasonCleared() {
 		_spec.ClearField(servicerequest.FieldReason, field.TypeString)
 	}
-	if sruo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.TenantTable,
-			Columns: []string{servicerequest.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := sruo.mutation.CreatedAt(); ok {
+		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
 	}
-	if nodes := sruo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.TenantTable,
-			Columns: []string{servicerequest.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if sruo.mutation.CatalogCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.CatalogTable,
-			Columns: []string{servicerequest.CatalogColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sruo.mutation.CatalogIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.CatalogTable,
-			Columns: []string{servicerequest.CatalogColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if sruo.mutation.RequesterCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.RequesterTable,
-			Columns: []string{servicerequest.RequesterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := sruo.mutation.RequesterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.RequesterTable,
-			Columns: []string{servicerequest.RequesterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	if value, ok := sruo.mutation.UpdatedAt(); ok {
+		_spec.SetField(servicerequest.FieldUpdatedAt, field.TypeTime, value)
 	}
 	_node = &ServiceRequest{config: sruo.config}
 	_spec.Assign = _node.assignValues

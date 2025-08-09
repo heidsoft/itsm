@@ -6,14 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/cichangerecord"
-	"itsm-backend/ent/cilifecyclestate"
-	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -48,26 +42,6 @@ func (ciu *ConfigurationItemUpdate) SetNillableName(s *string) *ConfigurationIte
 	return ciu
 }
 
-// SetDisplayName sets the "display_name" field.
-func (ciu *ConfigurationItemUpdate) SetDisplayName(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetDisplayName(s)
-	return ciu
-}
-
-// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableDisplayName(s *string) *ConfigurationItemUpdate {
-	if s != nil {
-		ciu.SetDisplayName(*s)
-	}
-	return ciu
-}
-
-// ClearDisplayName clears the value of the "display_name" field.
-func (ciu *ConfigurationItemUpdate) ClearDisplayName() *ConfigurationItemUpdate {
-	ciu.mutation.ClearDisplayName()
-	return ciu
-}
-
 // SetDescription sets the "description" field.
 func (ciu *ConfigurationItemUpdate) SetDescription(s string) *ConfigurationItemUpdate {
 	ciu.mutation.SetDescription(s)
@@ -88,57 +62,23 @@ func (ciu *ConfigurationItemUpdate) ClearDescription() *ConfigurationItemUpdate 
 	return ciu
 }
 
-// SetCiTypeID sets the "ci_type_id" field.
-func (ciu *ConfigurationItemUpdate) SetCiTypeID(i int) *ConfigurationItemUpdate {
-	ciu.mutation.SetCiTypeID(i)
+// SetType sets the "type" field.
+func (ciu *ConfigurationItemUpdate) SetType(s string) *ConfigurationItemUpdate {
+	ciu.mutation.SetType(s)
 	return ciu
 }
 
-// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableCiTypeID(i *int) *ConfigurationItemUpdate {
-	if i != nil {
-		ciu.SetCiTypeID(*i)
-	}
-	return ciu
-}
-
-// SetSerialNumber sets the "serial_number" field.
-func (ciu *ConfigurationItemUpdate) SetSerialNumber(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetSerialNumber(s)
-	return ciu
-}
-
-// SetNillableSerialNumber sets the "serial_number" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableSerialNumber(s *string) *ConfigurationItemUpdate {
+// SetNillableType sets the "type" field if the given value is not nil.
+func (ciu *ConfigurationItemUpdate) SetNillableType(s *string) *ConfigurationItemUpdate {
 	if s != nil {
-		ciu.SetSerialNumber(*s)
+		ciu.SetType(*s)
 	}
 	return ciu
 }
 
-// ClearSerialNumber clears the value of the "serial_number" field.
-func (ciu *ConfigurationItemUpdate) ClearSerialNumber() *ConfigurationItemUpdate {
-	ciu.mutation.ClearSerialNumber()
-	return ciu
-}
-
-// SetAssetTag sets the "asset_tag" field.
-func (ciu *ConfigurationItemUpdate) SetAssetTag(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetAssetTag(s)
-	return ciu
-}
-
-// SetNillableAssetTag sets the "asset_tag" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableAssetTag(s *string) *ConfigurationItemUpdate {
-	if s != nil {
-		ciu.SetAssetTag(*s)
-	}
-	return ciu
-}
-
-// ClearAssetTag clears the value of the "asset_tag" field.
-func (ciu *ConfigurationItemUpdate) ClearAssetTag() *ConfigurationItemUpdate {
-	ciu.mutation.ClearAssetTag()
+// ClearType clears the value of the "type" field.
+func (ciu *ConfigurationItemUpdate) ClearType() *ConfigurationItemUpdate {
+	ciu.mutation.ClearType()
 	return ciu
 }
 
@@ -153,80 +93,6 @@ func (ciu *ConfigurationItemUpdate) SetNillableStatus(s *string) *ConfigurationI
 	if s != nil {
 		ciu.SetStatus(*s)
 	}
-	return ciu
-}
-
-// SetLifecycleState sets the "lifecycle_state" field.
-func (ciu *ConfigurationItemUpdate) SetLifecycleState(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetLifecycleState(s)
-	return ciu
-}
-
-// SetNillableLifecycleState sets the "lifecycle_state" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableLifecycleState(s *string) *ConfigurationItemUpdate {
-	if s != nil {
-		ciu.SetLifecycleState(*s)
-	}
-	return ciu
-}
-
-// SetBusinessService sets the "business_service" field.
-func (ciu *ConfigurationItemUpdate) SetBusinessService(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetBusinessService(s)
-	return ciu
-}
-
-// SetNillableBusinessService sets the "business_service" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableBusinessService(s *string) *ConfigurationItemUpdate {
-	if s != nil {
-		ciu.SetBusinessService(*s)
-	}
-	return ciu
-}
-
-// ClearBusinessService clears the value of the "business_service" field.
-func (ciu *ConfigurationItemUpdate) ClearBusinessService() *ConfigurationItemUpdate {
-	ciu.mutation.ClearBusinessService()
-	return ciu
-}
-
-// SetOwner sets the "owner" field.
-func (ciu *ConfigurationItemUpdate) SetOwner(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetOwner(s)
-	return ciu
-}
-
-// SetNillableOwner sets the "owner" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableOwner(s *string) *ConfigurationItemUpdate {
-	if s != nil {
-		ciu.SetOwner(*s)
-	}
-	return ciu
-}
-
-// ClearOwner clears the value of the "owner" field.
-func (ciu *ConfigurationItemUpdate) ClearOwner() *ConfigurationItemUpdate {
-	ciu.mutation.ClearOwner()
-	return ciu
-}
-
-// SetEnvironment sets the "environment" field.
-func (ciu *ConfigurationItemUpdate) SetEnvironment(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetEnvironment(s)
-	return ciu
-}
-
-// SetNillableEnvironment sets the "environment" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableEnvironment(s *string) *ConfigurationItemUpdate {
-	if s != nil {
-		ciu.SetEnvironment(*s)
-	}
-	return ciu
-}
-
-// ClearEnvironment clears the value of the "environment" field.
-func (ciu *ConfigurationItemUpdate) ClearEnvironment() *ConfigurationItemUpdate {
-	ciu.mutation.ClearEnvironment()
 	return ciu
 }
 
@@ -250,78 +116,90 @@ func (ciu *ConfigurationItemUpdate) ClearLocation() *ConfigurationItemUpdate {
 	return ciu
 }
 
-// SetAttributes sets the "attributes" field.
-func (ciu *ConfigurationItemUpdate) SetAttributes(m map[string]interface{}) *ConfigurationItemUpdate {
-	ciu.mutation.SetAttributes(m)
+// SetSerialNumber sets the "serial_number" field.
+func (ciu *ConfigurationItemUpdate) SetSerialNumber(s string) *ConfigurationItemUpdate {
+	ciu.mutation.SetSerialNumber(s)
 	return ciu
 }
 
-// ClearAttributes clears the value of the "attributes" field.
-func (ciu *ConfigurationItemUpdate) ClearAttributes() *ConfigurationItemUpdate {
-	ciu.mutation.ClearAttributes()
-	return ciu
-}
-
-// SetMonitoringData sets the "monitoring_data" field.
-func (ciu *ConfigurationItemUpdate) SetMonitoringData(m map[string]interface{}) *ConfigurationItemUpdate {
-	ciu.mutation.SetMonitoringData(m)
-	return ciu
-}
-
-// ClearMonitoringData clears the value of the "monitoring_data" field.
-func (ciu *ConfigurationItemUpdate) ClearMonitoringData() *ConfigurationItemUpdate {
-	ciu.mutation.ClearMonitoringData()
-	return ciu
-}
-
-// SetDiscoverySource sets the "discovery_source" field.
-func (ciu *ConfigurationItemUpdate) SetDiscoverySource(m map[string]interface{}) *ConfigurationItemUpdate {
-	ciu.mutation.SetDiscoverySource(m)
-	return ciu
-}
-
-// ClearDiscoverySource clears the value of the "discovery_source" field.
-func (ciu *ConfigurationItemUpdate) ClearDiscoverySource() *ConfigurationItemUpdate {
-	ciu.mutation.ClearDiscoverySource()
-	return ciu
-}
-
-// SetLastDiscovered sets the "last_discovered" field.
-func (ciu *ConfigurationItemUpdate) SetLastDiscovered(t time.Time) *ConfigurationItemUpdate {
-	ciu.mutation.SetLastDiscovered(t)
-	return ciu
-}
-
-// SetNillableLastDiscovered sets the "last_discovered" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableLastDiscovered(t *time.Time) *ConfigurationItemUpdate {
-	if t != nil {
-		ciu.SetLastDiscovered(*t)
-	}
-	return ciu
-}
-
-// ClearLastDiscovered clears the value of the "last_discovered" field.
-func (ciu *ConfigurationItemUpdate) ClearLastDiscovered() *ConfigurationItemUpdate {
-	ciu.mutation.ClearLastDiscovered()
-	return ciu
-}
-
-// SetVersion sets the "version" field.
-func (ciu *ConfigurationItemUpdate) SetVersion(s string) *ConfigurationItemUpdate {
-	ciu.mutation.SetVersion(s)
-	return ciu
-}
-
-// SetNillableVersion sets the "version" field if the given value is not nil.
-func (ciu *ConfigurationItemUpdate) SetNillableVersion(s *string) *ConfigurationItemUpdate {
+// SetNillableSerialNumber sets the "serial_number" field if the given value is not nil.
+func (ciu *ConfigurationItemUpdate) SetNillableSerialNumber(s *string) *ConfigurationItemUpdate {
 	if s != nil {
-		ciu.SetVersion(*s)
+		ciu.SetSerialNumber(*s)
 	}
+	return ciu
+}
+
+// ClearSerialNumber clears the value of the "serial_number" field.
+func (ciu *ConfigurationItemUpdate) ClearSerialNumber() *ConfigurationItemUpdate {
+	ciu.mutation.ClearSerialNumber()
+	return ciu
+}
+
+// SetModel sets the "model" field.
+func (ciu *ConfigurationItemUpdate) SetModel(s string) *ConfigurationItemUpdate {
+	ciu.mutation.SetModel(s)
+	return ciu
+}
+
+// SetNillableModel sets the "model" field if the given value is not nil.
+func (ciu *ConfigurationItemUpdate) SetNillableModel(s *string) *ConfigurationItemUpdate {
+	if s != nil {
+		ciu.SetModel(*s)
+	}
+	return ciu
+}
+
+// ClearModel clears the value of the "model" field.
+func (ciu *ConfigurationItemUpdate) ClearModel() *ConfigurationItemUpdate {
+	ciu.mutation.ClearModel()
+	return ciu
+}
+
+// SetVendor sets the "vendor" field.
+func (ciu *ConfigurationItemUpdate) SetVendor(s string) *ConfigurationItemUpdate {
+	ciu.mutation.SetVendor(s)
+	return ciu
+}
+
+// SetNillableVendor sets the "vendor" field if the given value is not nil.
+func (ciu *ConfigurationItemUpdate) SetNillableVendor(s *string) *ConfigurationItemUpdate {
+	if s != nil {
+		ciu.SetVendor(*s)
+	}
+	return ciu
+}
+
+// ClearVendor clears the value of the "vendor" field.
+func (ciu *ConfigurationItemUpdate) ClearVendor() *ConfigurationItemUpdate {
+	ciu.mutation.ClearVendor()
+	return ciu
+}
+
+// SetCiTypeID sets the "ci_type_id" field.
+func (ciu *ConfigurationItemUpdate) SetCiTypeID(i int) *ConfigurationItemUpdate {
+	ciu.mutation.ResetCiTypeID()
+	ciu.mutation.SetCiTypeID(i)
+	return ciu
+}
+
+// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
+func (ciu *ConfigurationItemUpdate) SetNillableCiTypeID(i *int) *ConfigurationItemUpdate {
+	if i != nil {
+		ciu.SetCiTypeID(*i)
+	}
+	return ciu
+}
+
+// AddCiTypeID adds i to the "ci_type_id" field.
+func (ciu *ConfigurationItemUpdate) AddCiTypeID(i int) *ConfigurationItemUpdate {
+	ciu.mutation.AddCiTypeID(i)
 	return ciu
 }
 
 // SetTenantID sets the "tenant_id" field.
 func (ciu *ConfigurationItemUpdate) SetTenantID(i int) *ConfigurationItemUpdate {
+	ciu.mutation.ResetTenantID()
 	ciu.mutation.SetTenantID(i)
 	return ciu
 }
@@ -331,6 +209,12 @@ func (ciu *ConfigurationItemUpdate) SetNillableTenantID(i *int) *ConfigurationIt
 	if i != nil {
 		ciu.SetTenantID(*i)
 	}
+	return ciu
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (ciu *ConfigurationItemUpdate) AddTenantID(i int) *ConfigurationItemUpdate {
+	ciu.mutation.AddTenantID(i)
 	return ciu
 }
 
@@ -354,247 +238,9 @@ func (ciu *ConfigurationItemUpdate) SetUpdatedAt(t time.Time) *ConfigurationItem
 	return ciu
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ciu *ConfigurationItemUpdate) SetTenant(t *Tenant) *ConfigurationItemUpdate {
-	return ciu.SetTenantID(t.ID)
-}
-
-// SetCiType sets the "ci_type" edge to the CIType entity.
-func (ciu *ConfigurationItemUpdate) SetCiType(c *CIType) *ConfigurationItemUpdate {
-	return ciu.SetCiTypeID(c.ID)
-}
-
-// AddOutgoingRelationshipIDs adds the "outgoing_relationships" edge to the CIRelationship entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddOutgoingRelationshipIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddOutgoingRelationshipIDs(ids...)
-	return ciu
-}
-
-// AddOutgoingRelationships adds the "outgoing_relationships" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) AddOutgoingRelationships(c ...*CIRelationship) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.AddOutgoingRelationshipIDs(ids...)
-}
-
-// AddIncomingRelationshipIDs adds the "incoming_relationships" edge to the CIRelationship entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddIncomingRelationshipIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddIncomingRelationshipIDs(ids...)
-	return ciu
-}
-
-// AddIncomingRelationships adds the "incoming_relationships" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) AddIncomingRelationships(c ...*CIRelationship) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.AddIncomingRelationshipIDs(ids...)
-}
-
-// AddLifecycleStateIDs adds the "lifecycle_states" edge to the CILifecycleState entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddLifecycleStateIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddLifecycleStateIDs(ids...)
-	return ciu
-}
-
-// AddLifecycleStates adds the "lifecycle_states" edges to the CILifecycleState entity.
-func (ciu *ConfigurationItemUpdate) AddLifecycleStates(c ...*CILifecycleState) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.AddLifecycleStateIDs(ids...)
-}
-
-// AddChangeRecordIDs adds the "change_records" edge to the CIChangeRecord entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddChangeRecordIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddChangeRecordIDs(ids...)
-	return ciu
-}
-
-// AddChangeRecords adds the "change_records" edges to the CIChangeRecord entity.
-func (ciu *ConfigurationItemUpdate) AddChangeRecords(c ...*CIChangeRecord) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.AddChangeRecordIDs(ids...)
-}
-
-// AddIncidentIDs adds the "incidents" edge to the Ticket entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddIncidentIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddIncidentIDs(ids...)
-	return ciu
-}
-
-// AddIncidents adds the "incidents" edges to the Ticket entity.
-func (ciu *ConfigurationItemUpdate) AddIncidents(t ...*Ticket) *ConfigurationItemUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciu.AddIncidentIDs(ids...)
-}
-
-// AddChangeIDs adds the "changes" edge to the Ticket entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddChangeIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddChangeIDs(ids...)
-	return ciu
-}
-
-// AddChanges adds the "changes" edges to the Ticket entity.
-func (ciu *ConfigurationItemUpdate) AddChanges(t ...*Ticket) *ConfigurationItemUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciu.AddChangeIDs(ids...)
-}
-
 // Mutation returns the ConfigurationItemMutation object of the builder.
 func (ciu *ConfigurationItemUpdate) Mutation() *ConfigurationItemMutation {
 	return ciu.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (ciu *ConfigurationItemUpdate) ClearTenant() *ConfigurationItemUpdate {
-	ciu.mutation.ClearTenant()
-	return ciu
-}
-
-// ClearCiType clears the "ci_type" edge to the CIType entity.
-func (ciu *ConfigurationItemUpdate) ClearCiType() *ConfigurationItemUpdate {
-	ciu.mutation.ClearCiType()
-	return ciu
-}
-
-// ClearOutgoingRelationships clears all "outgoing_relationships" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) ClearOutgoingRelationships() *ConfigurationItemUpdate {
-	ciu.mutation.ClearOutgoingRelationships()
-	return ciu
-}
-
-// RemoveOutgoingRelationshipIDs removes the "outgoing_relationships" edge to CIRelationship entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveOutgoingRelationshipIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveOutgoingRelationshipIDs(ids...)
-	return ciu
-}
-
-// RemoveOutgoingRelationships removes "outgoing_relationships" edges to CIRelationship entities.
-func (ciu *ConfigurationItemUpdate) RemoveOutgoingRelationships(c ...*CIRelationship) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.RemoveOutgoingRelationshipIDs(ids...)
-}
-
-// ClearIncomingRelationships clears all "incoming_relationships" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) ClearIncomingRelationships() *ConfigurationItemUpdate {
-	ciu.mutation.ClearIncomingRelationships()
-	return ciu
-}
-
-// RemoveIncomingRelationshipIDs removes the "incoming_relationships" edge to CIRelationship entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveIncomingRelationshipIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveIncomingRelationshipIDs(ids...)
-	return ciu
-}
-
-// RemoveIncomingRelationships removes "incoming_relationships" edges to CIRelationship entities.
-func (ciu *ConfigurationItemUpdate) RemoveIncomingRelationships(c ...*CIRelationship) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.RemoveIncomingRelationshipIDs(ids...)
-}
-
-// ClearLifecycleStates clears all "lifecycle_states" edges to the CILifecycleState entity.
-func (ciu *ConfigurationItemUpdate) ClearLifecycleStates() *ConfigurationItemUpdate {
-	ciu.mutation.ClearLifecycleStates()
-	return ciu
-}
-
-// RemoveLifecycleStateIDs removes the "lifecycle_states" edge to CILifecycleState entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveLifecycleStateIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveLifecycleStateIDs(ids...)
-	return ciu
-}
-
-// RemoveLifecycleStates removes "lifecycle_states" edges to CILifecycleState entities.
-func (ciu *ConfigurationItemUpdate) RemoveLifecycleStates(c ...*CILifecycleState) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.RemoveLifecycleStateIDs(ids...)
-}
-
-// ClearChangeRecords clears all "change_records" edges to the CIChangeRecord entity.
-func (ciu *ConfigurationItemUpdate) ClearChangeRecords() *ConfigurationItemUpdate {
-	ciu.mutation.ClearChangeRecords()
-	return ciu
-}
-
-// RemoveChangeRecordIDs removes the "change_records" edge to CIChangeRecord entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveChangeRecordIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveChangeRecordIDs(ids...)
-	return ciu
-}
-
-// RemoveChangeRecords removes "change_records" edges to CIChangeRecord entities.
-func (ciu *ConfigurationItemUpdate) RemoveChangeRecords(c ...*CIChangeRecord) *ConfigurationItemUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciu.RemoveChangeRecordIDs(ids...)
-}
-
-// ClearIncidents clears all "incidents" edges to the Ticket entity.
-func (ciu *ConfigurationItemUpdate) ClearIncidents() *ConfigurationItemUpdate {
-	ciu.mutation.ClearIncidents()
-	return ciu
-}
-
-// RemoveIncidentIDs removes the "incidents" edge to Ticket entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveIncidentIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveIncidentIDs(ids...)
-	return ciu
-}
-
-// RemoveIncidents removes "incidents" edges to Ticket entities.
-func (ciu *ConfigurationItemUpdate) RemoveIncidents(t ...*Ticket) *ConfigurationItemUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciu.RemoveIncidentIDs(ids...)
-}
-
-// ClearChanges clears all "changes" edges to the Ticket entity.
-func (ciu *ConfigurationItemUpdate) ClearChanges() *ConfigurationItemUpdate {
-	ciu.mutation.ClearChanges()
-	return ciu
-}
-
-// RemoveChangeIDs removes the "changes" edge to Ticket entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveChangeIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveChangeIDs(ids...)
-	return ciu
-}
-
-// RemoveChanges removes "changes" edges to Ticket entities.
-func (ciu *ConfigurationItemUpdate) RemoveChanges(t ...*Ticket) *ConfigurationItemUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciu.RemoveChangeIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -640,11 +286,15 @@ func (ciu *ConfigurationItemUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.name": %w`, err)}
 		}
 	}
-	if ciu.mutation.TenantCleared() && len(ciu.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ConfigurationItem.tenant"`)
+	if v, ok := ciu.mutation.CiTypeID(); ok {
+		if err := configurationitem.CiTypeIDValidator(v); err != nil {
+			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.ci_type_id": %w`, err)}
+		}
 	}
-	if ciu.mutation.CiTypeCleared() && len(ciu.mutation.CiTypeIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ConfigurationItem.ci_type"`)
+	if v, ok := ciu.mutation.TenantID(); ok {
+		if err := configurationitem.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.tenant_id": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -664,53 +314,20 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 	if value, ok := ciu.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
 	}
-	if value, ok := ciu.mutation.DisplayName(); ok {
-		_spec.SetField(configurationitem.FieldDisplayName, field.TypeString, value)
-	}
-	if ciu.mutation.DisplayNameCleared() {
-		_spec.ClearField(configurationitem.FieldDisplayName, field.TypeString)
-	}
 	if value, ok := ciu.mutation.Description(); ok {
 		_spec.SetField(configurationitem.FieldDescription, field.TypeString, value)
 	}
 	if ciu.mutation.DescriptionCleared() {
 		_spec.ClearField(configurationitem.FieldDescription, field.TypeString)
 	}
-	if value, ok := ciu.mutation.SerialNumber(); ok {
-		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
+	if value, ok := ciu.mutation.GetType(); ok {
+		_spec.SetField(configurationitem.FieldType, field.TypeString, value)
 	}
-	if ciu.mutation.SerialNumberCleared() {
-		_spec.ClearField(configurationitem.FieldSerialNumber, field.TypeString)
-	}
-	if value, ok := ciu.mutation.AssetTag(); ok {
-		_spec.SetField(configurationitem.FieldAssetTag, field.TypeString, value)
-	}
-	if ciu.mutation.AssetTagCleared() {
-		_spec.ClearField(configurationitem.FieldAssetTag, field.TypeString)
+	if ciu.mutation.TypeCleared() {
+		_spec.ClearField(configurationitem.FieldType, field.TypeString)
 	}
 	if value, ok := ciu.mutation.Status(); ok {
 		_spec.SetField(configurationitem.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := ciu.mutation.LifecycleState(); ok {
-		_spec.SetField(configurationitem.FieldLifecycleState, field.TypeString, value)
-	}
-	if value, ok := ciu.mutation.BusinessService(); ok {
-		_spec.SetField(configurationitem.FieldBusinessService, field.TypeString, value)
-	}
-	if ciu.mutation.BusinessServiceCleared() {
-		_spec.ClearField(configurationitem.FieldBusinessService, field.TypeString)
-	}
-	if value, ok := ciu.mutation.Owner(); ok {
-		_spec.SetField(configurationitem.FieldOwner, field.TypeString, value)
-	}
-	if ciu.mutation.OwnerCleared() {
-		_spec.ClearField(configurationitem.FieldOwner, field.TypeString)
-	}
-	if value, ok := ciu.mutation.Environment(); ok {
-		_spec.SetField(configurationitem.FieldEnvironment, field.TypeString, value)
-	}
-	if ciu.mutation.EnvironmentCleared() {
-		_spec.ClearField(configurationitem.FieldEnvironment, field.TypeString)
 	}
 	if value, ok := ciu.mutation.Location(); ok {
 		_spec.SetField(configurationitem.FieldLocation, field.TypeString, value)
@@ -718,366 +335,41 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 	if ciu.mutation.LocationCleared() {
 		_spec.ClearField(configurationitem.FieldLocation, field.TypeString)
 	}
-	if value, ok := ciu.mutation.Attributes(); ok {
-		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)
+	if value, ok := ciu.mutation.SerialNumber(); ok {
+		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
 	}
-	if ciu.mutation.AttributesCleared() {
-		_spec.ClearField(configurationitem.FieldAttributes, field.TypeJSON)
+	if ciu.mutation.SerialNumberCleared() {
+		_spec.ClearField(configurationitem.FieldSerialNumber, field.TypeString)
 	}
-	if value, ok := ciu.mutation.MonitoringData(); ok {
-		_spec.SetField(configurationitem.FieldMonitoringData, field.TypeJSON, value)
+	if value, ok := ciu.mutation.Model(); ok {
+		_spec.SetField(configurationitem.FieldModel, field.TypeString, value)
 	}
-	if ciu.mutation.MonitoringDataCleared() {
-		_spec.ClearField(configurationitem.FieldMonitoringData, field.TypeJSON)
+	if ciu.mutation.ModelCleared() {
+		_spec.ClearField(configurationitem.FieldModel, field.TypeString)
 	}
-	if value, ok := ciu.mutation.DiscoverySource(); ok {
-		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeJSON, value)
+	if value, ok := ciu.mutation.Vendor(); ok {
+		_spec.SetField(configurationitem.FieldVendor, field.TypeString, value)
 	}
-	if ciu.mutation.DiscoverySourceCleared() {
-		_spec.ClearField(configurationitem.FieldDiscoverySource, field.TypeJSON)
+	if ciu.mutation.VendorCleared() {
+		_spec.ClearField(configurationitem.FieldVendor, field.TypeString)
 	}
-	if value, ok := ciu.mutation.LastDiscovered(); ok {
-		_spec.SetField(configurationitem.FieldLastDiscovered, field.TypeTime, value)
+	if value, ok := ciu.mutation.CiTypeID(); ok {
+		_spec.SetField(configurationitem.FieldCiTypeID, field.TypeInt, value)
 	}
-	if ciu.mutation.LastDiscoveredCleared() {
-		_spec.ClearField(configurationitem.FieldLastDiscovered, field.TypeTime)
+	if value, ok := ciu.mutation.AddedCiTypeID(); ok {
+		_spec.AddField(configurationitem.FieldCiTypeID, field.TypeInt, value)
 	}
-	if value, ok := ciu.mutation.Version(); ok {
-		_spec.SetField(configurationitem.FieldVersion, field.TypeString, value)
+	if value, ok := ciu.mutation.TenantID(); ok {
+		_spec.SetField(configurationitem.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := ciu.mutation.AddedTenantID(); ok {
+		_spec.AddField(configurationitem.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := ciu.mutation.CreatedAt(); ok {
 		_spec.SetField(configurationitem.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := ciu.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if ciu.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.TenantTable,
-			Columns: []string{configurationitem.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.TenantTable,
-			Columns: []string{configurationitem.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.CiTypeCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.CiTypeTable,
-			Columns: []string{configurationitem.CiTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.CiTypeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.CiTypeTable,
-			Columns: []string{configurationitem.CiTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.OutgoingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.RemovedOutgoingRelationshipsIDs(); len(nodes) > 0 && !ciu.mutation.OutgoingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.OutgoingRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.IncomingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.RemovedIncomingRelationshipsIDs(); len(nodes) > 0 && !ciu.mutation.IncomingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.IncomingRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.LifecycleStatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.RemovedLifecycleStatesIDs(); len(nodes) > 0 && !ciu.mutation.LifecycleStatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.LifecycleStatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.ChangeRecordsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.RemovedChangeRecordsIDs(); len(nodes) > 0 && !ciu.mutation.ChangeRecordsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.ChangeRecordsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.IncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.RemovedIncidentsIDs(); len(nodes) > 0 && !ciu.mutation.IncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.IncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciu.mutation.ChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.RemovedChangesIDs(); len(nodes) > 0 && !ciu.mutation.ChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciu.mutation.ChangesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ciu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -1113,26 +405,6 @@ func (ciuo *ConfigurationItemUpdateOne) SetNillableName(s *string) *Configuratio
 	return ciuo
 }
 
-// SetDisplayName sets the "display_name" field.
-func (ciuo *ConfigurationItemUpdateOne) SetDisplayName(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetDisplayName(s)
-	return ciuo
-}
-
-// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableDisplayName(s *string) *ConfigurationItemUpdateOne {
-	if s != nil {
-		ciuo.SetDisplayName(*s)
-	}
-	return ciuo
-}
-
-// ClearDisplayName clears the value of the "display_name" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearDisplayName() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearDisplayName()
-	return ciuo
-}
-
 // SetDescription sets the "description" field.
 func (ciuo *ConfigurationItemUpdateOne) SetDescription(s string) *ConfigurationItemUpdateOne {
 	ciuo.mutation.SetDescription(s)
@@ -1153,57 +425,23 @@ func (ciuo *ConfigurationItemUpdateOne) ClearDescription() *ConfigurationItemUpd
 	return ciuo
 }
 
-// SetCiTypeID sets the "ci_type_id" field.
-func (ciuo *ConfigurationItemUpdateOne) SetCiTypeID(i int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetCiTypeID(i)
+// SetType sets the "type" field.
+func (ciuo *ConfigurationItemUpdateOne) SetType(s string) *ConfigurationItemUpdateOne {
+	ciuo.mutation.SetType(s)
 	return ciuo
 }
 
-// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableCiTypeID(i *int) *ConfigurationItemUpdateOne {
-	if i != nil {
-		ciuo.SetCiTypeID(*i)
-	}
-	return ciuo
-}
-
-// SetSerialNumber sets the "serial_number" field.
-func (ciuo *ConfigurationItemUpdateOne) SetSerialNumber(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetSerialNumber(s)
-	return ciuo
-}
-
-// SetNillableSerialNumber sets the "serial_number" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableSerialNumber(s *string) *ConfigurationItemUpdateOne {
+// SetNillableType sets the "type" field if the given value is not nil.
+func (ciuo *ConfigurationItemUpdateOne) SetNillableType(s *string) *ConfigurationItemUpdateOne {
 	if s != nil {
-		ciuo.SetSerialNumber(*s)
+		ciuo.SetType(*s)
 	}
 	return ciuo
 }
 
-// ClearSerialNumber clears the value of the "serial_number" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearSerialNumber() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearSerialNumber()
-	return ciuo
-}
-
-// SetAssetTag sets the "asset_tag" field.
-func (ciuo *ConfigurationItemUpdateOne) SetAssetTag(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetAssetTag(s)
-	return ciuo
-}
-
-// SetNillableAssetTag sets the "asset_tag" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableAssetTag(s *string) *ConfigurationItemUpdateOne {
-	if s != nil {
-		ciuo.SetAssetTag(*s)
-	}
-	return ciuo
-}
-
-// ClearAssetTag clears the value of the "asset_tag" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearAssetTag() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearAssetTag()
+// ClearType clears the value of the "type" field.
+func (ciuo *ConfigurationItemUpdateOne) ClearType() *ConfigurationItemUpdateOne {
+	ciuo.mutation.ClearType()
 	return ciuo
 }
 
@@ -1218,80 +456,6 @@ func (ciuo *ConfigurationItemUpdateOne) SetNillableStatus(s *string) *Configurat
 	if s != nil {
 		ciuo.SetStatus(*s)
 	}
-	return ciuo
-}
-
-// SetLifecycleState sets the "lifecycle_state" field.
-func (ciuo *ConfigurationItemUpdateOne) SetLifecycleState(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetLifecycleState(s)
-	return ciuo
-}
-
-// SetNillableLifecycleState sets the "lifecycle_state" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableLifecycleState(s *string) *ConfigurationItemUpdateOne {
-	if s != nil {
-		ciuo.SetLifecycleState(*s)
-	}
-	return ciuo
-}
-
-// SetBusinessService sets the "business_service" field.
-func (ciuo *ConfigurationItemUpdateOne) SetBusinessService(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetBusinessService(s)
-	return ciuo
-}
-
-// SetNillableBusinessService sets the "business_service" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableBusinessService(s *string) *ConfigurationItemUpdateOne {
-	if s != nil {
-		ciuo.SetBusinessService(*s)
-	}
-	return ciuo
-}
-
-// ClearBusinessService clears the value of the "business_service" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearBusinessService() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearBusinessService()
-	return ciuo
-}
-
-// SetOwner sets the "owner" field.
-func (ciuo *ConfigurationItemUpdateOne) SetOwner(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetOwner(s)
-	return ciuo
-}
-
-// SetNillableOwner sets the "owner" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableOwner(s *string) *ConfigurationItemUpdateOne {
-	if s != nil {
-		ciuo.SetOwner(*s)
-	}
-	return ciuo
-}
-
-// ClearOwner clears the value of the "owner" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearOwner() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearOwner()
-	return ciuo
-}
-
-// SetEnvironment sets the "environment" field.
-func (ciuo *ConfigurationItemUpdateOne) SetEnvironment(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetEnvironment(s)
-	return ciuo
-}
-
-// SetNillableEnvironment sets the "environment" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableEnvironment(s *string) *ConfigurationItemUpdateOne {
-	if s != nil {
-		ciuo.SetEnvironment(*s)
-	}
-	return ciuo
-}
-
-// ClearEnvironment clears the value of the "environment" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearEnvironment() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearEnvironment()
 	return ciuo
 }
 
@@ -1315,78 +479,90 @@ func (ciuo *ConfigurationItemUpdateOne) ClearLocation() *ConfigurationItemUpdate
 	return ciuo
 }
 
-// SetAttributes sets the "attributes" field.
-func (ciuo *ConfigurationItemUpdateOne) SetAttributes(m map[string]interface{}) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetAttributes(m)
+// SetSerialNumber sets the "serial_number" field.
+func (ciuo *ConfigurationItemUpdateOne) SetSerialNumber(s string) *ConfigurationItemUpdateOne {
+	ciuo.mutation.SetSerialNumber(s)
 	return ciuo
 }
 
-// ClearAttributes clears the value of the "attributes" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearAttributes() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearAttributes()
-	return ciuo
-}
-
-// SetMonitoringData sets the "monitoring_data" field.
-func (ciuo *ConfigurationItemUpdateOne) SetMonitoringData(m map[string]interface{}) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetMonitoringData(m)
-	return ciuo
-}
-
-// ClearMonitoringData clears the value of the "monitoring_data" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearMonitoringData() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearMonitoringData()
-	return ciuo
-}
-
-// SetDiscoverySource sets the "discovery_source" field.
-func (ciuo *ConfigurationItemUpdateOne) SetDiscoverySource(m map[string]interface{}) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetDiscoverySource(m)
-	return ciuo
-}
-
-// ClearDiscoverySource clears the value of the "discovery_source" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearDiscoverySource() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearDiscoverySource()
-	return ciuo
-}
-
-// SetLastDiscovered sets the "last_discovered" field.
-func (ciuo *ConfigurationItemUpdateOne) SetLastDiscovered(t time.Time) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetLastDiscovered(t)
-	return ciuo
-}
-
-// SetNillableLastDiscovered sets the "last_discovered" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableLastDiscovered(t *time.Time) *ConfigurationItemUpdateOne {
-	if t != nil {
-		ciuo.SetLastDiscovered(*t)
-	}
-	return ciuo
-}
-
-// ClearLastDiscovered clears the value of the "last_discovered" field.
-func (ciuo *ConfigurationItemUpdateOne) ClearLastDiscovered() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearLastDiscovered()
-	return ciuo
-}
-
-// SetVersion sets the "version" field.
-func (ciuo *ConfigurationItemUpdateOne) SetVersion(s string) *ConfigurationItemUpdateOne {
-	ciuo.mutation.SetVersion(s)
-	return ciuo
-}
-
-// SetNillableVersion sets the "version" field if the given value is not nil.
-func (ciuo *ConfigurationItemUpdateOne) SetNillableVersion(s *string) *ConfigurationItemUpdateOne {
+// SetNillableSerialNumber sets the "serial_number" field if the given value is not nil.
+func (ciuo *ConfigurationItemUpdateOne) SetNillableSerialNumber(s *string) *ConfigurationItemUpdateOne {
 	if s != nil {
-		ciuo.SetVersion(*s)
+		ciuo.SetSerialNumber(*s)
 	}
+	return ciuo
+}
+
+// ClearSerialNumber clears the value of the "serial_number" field.
+func (ciuo *ConfigurationItemUpdateOne) ClearSerialNumber() *ConfigurationItemUpdateOne {
+	ciuo.mutation.ClearSerialNumber()
+	return ciuo
+}
+
+// SetModel sets the "model" field.
+func (ciuo *ConfigurationItemUpdateOne) SetModel(s string) *ConfigurationItemUpdateOne {
+	ciuo.mutation.SetModel(s)
+	return ciuo
+}
+
+// SetNillableModel sets the "model" field if the given value is not nil.
+func (ciuo *ConfigurationItemUpdateOne) SetNillableModel(s *string) *ConfigurationItemUpdateOne {
+	if s != nil {
+		ciuo.SetModel(*s)
+	}
+	return ciuo
+}
+
+// ClearModel clears the value of the "model" field.
+func (ciuo *ConfigurationItemUpdateOne) ClearModel() *ConfigurationItemUpdateOne {
+	ciuo.mutation.ClearModel()
+	return ciuo
+}
+
+// SetVendor sets the "vendor" field.
+func (ciuo *ConfigurationItemUpdateOne) SetVendor(s string) *ConfigurationItemUpdateOne {
+	ciuo.mutation.SetVendor(s)
+	return ciuo
+}
+
+// SetNillableVendor sets the "vendor" field if the given value is not nil.
+func (ciuo *ConfigurationItemUpdateOne) SetNillableVendor(s *string) *ConfigurationItemUpdateOne {
+	if s != nil {
+		ciuo.SetVendor(*s)
+	}
+	return ciuo
+}
+
+// ClearVendor clears the value of the "vendor" field.
+func (ciuo *ConfigurationItemUpdateOne) ClearVendor() *ConfigurationItemUpdateOne {
+	ciuo.mutation.ClearVendor()
+	return ciuo
+}
+
+// SetCiTypeID sets the "ci_type_id" field.
+func (ciuo *ConfigurationItemUpdateOne) SetCiTypeID(i int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.ResetCiTypeID()
+	ciuo.mutation.SetCiTypeID(i)
+	return ciuo
+}
+
+// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
+func (ciuo *ConfigurationItemUpdateOne) SetNillableCiTypeID(i *int) *ConfigurationItemUpdateOne {
+	if i != nil {
+		ciuo.SetCiTypeID(*i)
+	}
+	return ciuo
+}
+
+// AddCiTypeID adds i to the "ci_type_id" field.
+func (ciuo *ConfigurationItemUpdateOne) AddCiTypeID(i int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.AddCiTypeID(i)
 	return ciuo
 }
 
 // SetTenantID sets the "tenant_id" field.
 func (ciuo *ConfigurationItemUpdateOne) SetTenantID(i int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.ResetTenantID()
 	ciuo.mutation.SetTenantID(i)
 	return ciuo
 }
@@ -1396,6 +572,12 @@ func (ciuo *ConfigurationItemUpdateOne) SetNillableTenantID(i *int) *Configurati
 	if i != nil {
 		ciuo.SetTenantID(*i)
 	}
+	return ciuo
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (ciuo *ConfigurationItemUpdateOne) AddTenantID(i int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.AddTenantID(i)
 	return ciuo
 }
 
@@ -1419,247 +601,9 @@ func (ciuo *ConfigurationItemUpdateOne) SetUpdatedAt(t time.Time) *Configuration
 	return ciuo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ciuo *ConfigurationItemUpdateOne) SetTenant(t *Tenant) *ConfigurationItemUpdateOne {
-	return ciuo.SetTenantID(t.ID)
-}
-
-// SetCiType sets the "ci_type" edge to the CIType entity.
-func (ciuo *ConfigurationItemUpdateOne) SetCiType(c *CIType) *ConfigurationItemUpdateOne {
-	return ciuo.SetCiTypeID(c.ID)
-}
-
-// AddOutgoingRelationshipIDs adds the "outgoing_relationships" edge to the CIRelationship entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddOutgoingRelationshipIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddOutgoingRelationshipIDs(ids...)
-	return ciuo
-}
-
-// AddOutgoingRelationships adds the "outgoing_relationships" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) AddOutgoingRelationships(c ...*CIRelationship) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.AddOutgoingRelationshipIDs(ids...)
-}
-
-// AddIncomingRelationshipIDs adds the "incoming_relationships" edge to the CIRelationship entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddIncomingRelationshipIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddIncomingRelationshipIDs(ids...)
-	return ciuo
-}
-
-// AddIncomingRelationships adds the "incoming_relationships" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) AddIncomingRelationships(c ...*CIRelationship) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.AddIncomingRelationshipIDs(ids...)
-}
-
-// AddLifecycleStateIDs adds the "lifecycle_states" edge to the CILifecycleState entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddLifecycleStateIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddLifecycleStateIDs(ids...)
-	return ciuo
-}
-
-// AddLifecycleStates adds the "lifecycle_states" edges to the CILifecycleState entity.
-func (ciuo *ConfigurationItemUpdateOne) AddLifecycleStates(c ...*CILifecycleState) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.AddLifecycleStateIDs(ids...)
-}
-
-// AddChangeRecordIDs adds the "change_records" edge to the CIChangeRecord entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddChangeRecordIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddChangeRecordIDs(ids...)
-	return ciuo
-}
-
-// AddChangeRecords adds the "change_records" edges to the CIChangeRecord entity.
-func (ciuo *ConfigurationItemUpdateOne) AddChangeRecords(c ...*CIChangeRecord) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.AddChangeRecordIDs(ids...)
-}
-
-// AddIncidentIDs adds the "incidents" edge to the Ticket entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddIncidentIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddIncidentIDs(ids...)
-	return ciuo
-}
-
-// AddIncidents adds the "incidents" edges to the Ticket entity.
-func (ciuo *ConfigurationItemUpdateOne) AddIncidents(t ...*Ticket) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciuo.AddIncidentIDs(ids...)
-}
-
-// AddChangeIDs adds the "changes" edge to the Ticket entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddChangeIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddChangeIDs(ids...)
-	return ciuo
-}
-
-// AddChanges adds the "changes" edges to the Ticket entity.
-func (ciuo *ConfigurationItemUpdateOne) AddChanges(t ...*Ticket) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciuo.AddChangeIDs(ids...)
-}
-
 // Mutation returns the ConfigurationItemMutation object of the builder.
 func (ciuo *ConfigurationItemUpdateOne) Mutation() *ConfigurationItemMutation {
 	return ciuo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearTenant() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearTenant()
-	return ciuo
-}
-
-// ClearCiType clears the "ci_type" edge to the CIType entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearCiType() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearCiType()
-	return ciuo
-}
-
-// ClearOutgoingRelationships clears all "outgoing_relationships" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearOutgoingRelationships() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearOutgoingRelationships()
-	return ciuo
-}
-
-// RemoveOutgoingRelationshipIDs removes the "outgoing_relationships" edge to CIRelationship entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveOutgoingRelationshipIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveOutgoingRelationshipIDs(ids...)
-	return ciuo
-}
-
-// RemoveOutgoingRelationships removes "outgoing_relationships" edges to CIRelationship entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveOutgoingRelationships(c ...*CIRelationship) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.RemoveOutgoingRelationshipIDs(ids...)
-}
-
-// ClearIncomingRelationships clears all "incoming_relationships" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearIncomingRelationships() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearIncomingRelationships()
-	return ciuo
-}
-
-// RemoveIncomingRelationshipIDs removes the "incoming_relationships" edge to CIRelationship entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveIncomingRelationshipIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveIncomingRelationshipIDs(ids...)
-	return ciuo
-}
-
-// RemoveIncomingRelationships removes "incoming_relationships" edges to CIRelationship entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveIncomingRelationships(c ...*CIRelationship) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.RemoveIncomingRelationshipIDs(ids...)
-}
-
-// ClearLifecycleStates clears all "lifecycle_states" edges to the CILifecycleState entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearLifecycleStates() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearLifecycleStates()
-	return ciuo
-}
-
-// RemoveLifecycleStateIDs removes the "lifecycle_states" edge to CILifecycleState entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveLifecycleStateIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveLifecycleStateIDs(ids...)
-	return ciuo
-}
-
-// RemoveLifecycleStates removes "lifecycle_states" edges to CILifecycleState entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveLifecycleStates(c ...*CILifecycleState) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.RemoveLifecycleStateIDs(ids...)
-}
-
-// ClearChangeRecords clears all "change_records" edges to the CIChangeRecord entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearChangeRecords() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearChangeRecords()
-	return ciuo
-}
-
-// RemoveChangeRecordIDs removes the "change_records" edge to CIChangeRecord entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveChangeRecordIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveChangeRecordIDs(ids...)
-	return ciuo
-}
-
-// RemoveChangeRecords removes "change_records" edges to CIChangeRecord entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveChangeRecords(c ...*CIChangeRecord) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ciuo.RemoveChangeRecordIDs(ids...)
-}
-
-// ClearIncidents clears all "incidents" edges to the Ticket entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearIncidents() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearIncidents()
-	return ciuo
-}
-
-// RemoveIncidentIDs removes the "incidents" edge to Ticket entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveIncidentIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveIncidentIDs(ids...)
-	return ciuo
-}
-
-// RemoveIncidents removes "incidents" edges to Ticket entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveIncidents(t ...*Ticket) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciuo.RemoveIncidentIDs(ids...)
-}
-
-// ClearChanges clears all "changes" edges to the Ticket entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearChanges() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearChanges()
-	return ciuo
-}
-
-// RemoveChangeIDs removes the "changes" edge to Ticket entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveChangeIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveChangeIDs(ids...)
-	return ciuo
-}
-
-// RemoveChanges removes "changes" edges to Ticket entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveChanges(t ...*Ticket) *ConfigurationItemUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return ciuo.RemoveChangeIDs(ids...)
 }
 
 // Where appends a list predicates to the ConfigurationItemUpdate builder.
@@ -1718,11 +662,15 @@ func (ciuo *ConfigurationItemUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.name": %w`, err)}
 		}
 	}
-	if ciuo.mutation.TenantCleared() && len(ciuo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ConfigurationItem.tenant"`)
+	if v, ok := ciuo.mutation.CiTypeID(); ok {
+		if err := configurationitem.CiTypeIDValidator(v); err != nil {
+			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.ci_type_id": %w`, err)}
+		}
 	}
-	if ciuo.mutation.CiTypeCleared() && len(ciuo.mutation.CiTypeIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ConfigurationItem.ci_type"`)
+	if v, ok := ciuo.mutation.TenantID(); ok {
+		if err := configurationitem.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.tenant_id": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -1759,53 +707,20 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 	if value, ok := ciuo.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
 	}
-	if value, ok := ciuo.mutation.DisplayName(); ok {
-		_spec.SetField(configurationitem.FieldDisplayName, field.TypeString, value)
-	}
-	if ciuo.mutation.DisplayNameCleared() {
-		_spec.ClearField(configurationitem.FieldDisplayName, field.TypeString)
-	}
 	if value, ok := ciuo.mutation.Description(); ok {
 		_spec.SetField(configurationitem.FieldDescription, field.TypeString, value)
 	}
 	if ciuo.mutation.DescriptionCleared() {
 		_spec.ClearField(configurationitem.FieldDescription, field.TypeString)
 	}
-	if value, ok := ciuo.mutation.SerialNumber(); ok {
-		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
+	if value, ok := ciuo.mutation.GetType(); ok {
+		_spec.SetField(configurationitem.FieldType, field.TypeString, value)
 	}
-	if ciuo.mutation.SerialNumberCleared() {
-		_spec.ClearField(configurationitem.FieldSerialNumber, field.TypeString)
-	}
-	if value, ok := ciuo.mutation.AssetTag(); ok {
-		_spec.SetField(configurationitem.FieldAssetTag, field.TypeString, value)
-	}
-	if ciuo.mutation.AssetTagCleared() {
-		_spec.ClearField(configurationitem.FieldAssetTag, field.TypeString)
+	if ciuo.mutation.TypeCleared() {
+		_spec.ClearField(configurationitem.FieldType, field.TypeString)
 	}
 	if value, ok := ciuo.mutation.Status(); ok {
 		_spec.SetField(configurationitem.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := ciuo.mutation.LifecycleState(); ok {
-		_spec.SetField(configurationitem.FieldLifecycleState, field.TypeString, value)
-	}
-	if value, ok := ciuo.mutation.BusinessService(); ok {
-		_spec.SetField(configurationitem.FieldBusinessService, field.TypeString, value)
-	}
-	if ciuo.mutation.BusinessServiceCleared() {
-		_spec.ClearField(configurationitem.FieldBusinessService, field.TypeString)
-	}
-	if value, ok := ciuo.mutation.Owner(); ok {
-		_spec.SetField(configurationitem.FieldOwner, field.TypeString, value)
-	}
-	if ciuo.mutation.OwnerCleared() {
-		_spec.ClearField(configurationitem.FieldOwner, field.TypeString)
-	}
-	if value, ok := ciuo.mutation.Environment(); ok {
-		_spec.SetField(configurationitem.FieldEnvironment, field.TypeString, value)
-	}
-	if ciuo.mutation.EnvironmentCleared() {
-		_spec.ClearField(configurationitem.FieldEnvironment, field.TypeString)
 	}
 	if value, ok := ciuo.mutation.Location(); ok {
 		_spec.SetField(configurationitem.FieldLocation, field.TypeString, value)
@@ -1813,366 +728,41 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 	if ciuo.mutation.LocationCleared() {
 		_spec.ClearField(configurationitem.FieldLocation, field.TypeString)
 	}
-	if value, ok := ciuo.mutation.Attributes(); ok {
-		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)
+	if value, ok := ciuo.mutation.SerialNumber(); ok {
+		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
 	}
-	if ciuo.mutation.AttributesCleared() {
-		_spec.ClearField(configurationitem.FieldAttributes, field.TypeJSON)
+	if ciuo.mutation.SerialNumberCleared() {
+		_spec.ClearField(configurationitem.FieldSerialNumber, field.TypeString)
 	}
-	if value, ok := ciuo.mutation.MonitoringData(); ok {
-		_spec.SetField(configurationitem.FieldMonitoringData, field.TypeJSON, value)
+	if value, ok := ciuo.mutation.Model(); ok {
+		_spec.SetField(configurationitem.FieldModel, field.TypeString, value)
 	}
-	if ciuo.mutation.MonitoringDataCleared() {
-		_spec.ClearField(configurationitem.FieldMonitoringData, field.TypeJSON)
+	if ciuo.mutation.ModelCleared() {
+		_spec.ClearField(configurationitem.FieldModel, field.TypeString)
 	}
-	if value, ok := ciuo.mutation.DiscoverySource(); ok {
-		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeJSON, value)
+	if value, ok := ciuo.mutation.Vendor(); ok {
+		_spec.SetField(configurationitem.FieldVendor, field.TypeString, value)
 	}
-	if ciuo.mutation.DiscoverySourceCleared() {
-		_spec.ClearField(configurationitem.FieldDiscoverySource, field.TypeJSON)
+	if ciuo.mutation.VendorCleared() {
+		_spec.ClearField(configurationitem.FieldVendor, field.TypeString)
 	}
-	if value, ok := ciuo.mutation.LastDiscovered(); ok {
-		_spec.SetField(configurationitem.FieldLastDiscovered, field.TypeTime, value)
+	if value, ok := ciuo.mutation.CiTypeID(); ok {
+		_spec.SetField(configurationitem.FieldCiTypeID, field.TypeInt, value)
 	}
-	if ciuo.mutation.LastDiscoveredCleared() {
-		_spec.ClearField(configurationitem.FieldLastDiscovered, field.TypeTime)
+	if value, ok := ciuo.mutation.AddedCiTypeID(); ok {
+		_spec.AddField(configurationitem.FieldCiTypeID, field.TypeInt, value)
 	}
-	if value, ok := ciuo.mutation.Version(); ok {
-		_spec.SetField(configurationitem.FieldVersion, field.TypeString, value)
+	if value, ok := ciuo.mutation.TenantID(); ok {
+		_spec.SetField(configurationitem.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := ciuo.mutation.AddedTenantID(); ok {
+		_spec.AddField(configurationitem.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := ciuo.mutation.CreatedAt(); ok {
 		_spec.SetField(configurationitem.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := ciuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if ciuo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.TenantTable,
-			Columns: []string{configurationitem.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.TenantTable,
-			Columns: []string{configurationitem.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.CiTypeCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.CiTypeTable,
-			Columns: []string{configurationitem.CiTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.CiTypeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.CiTypeTable,
-			Columns: []string{configurationitem.CiTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.OutgoingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.RemovedOutgoingRelationshipsIDs(); len(nodes) > 0 && !ciuo.mutation.OutgoingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.OutgoingRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.IncomingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.RemovedIncomingRelationshipsIDs(); len(nodes) > 0 && !ciuo.mutation.IncomingRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.IncomingRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.LifecycleStatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.RemovedLifecycleStatesIDs(); len(nodes) > 0 && !ciuo.mutation.LifecycleStatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.LifecycleStatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.ChangeRecordsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.RemovedChangeRecordsIDs(); len(nodes) > 0 && !ciuo.mutation.ChangeRecordsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.ChangeRecordsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.IncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.RemovedIncidentsIDs(); len(nodes) > 0 && !ciuo.mutation.IncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.IncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ciuo.mutation.ChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.RemovedChangesIDs(); len(nodes) > 0 && !ciuo.mutation.ChangesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ciuo.mutation.ChangesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ConfigurationItem{config: ciuo.config}
 	_spec.Assign = _node.assignValues

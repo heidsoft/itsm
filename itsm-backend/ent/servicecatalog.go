@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"itsm-backend/ent/servicecatalog"
-	"itsm-backend/ent/tenant"
 	"strings"
 	"time"
 
@@ -20,55 +19,25 @@ type ServiceCatalog struct {
 	ID int `json:"id,omitempty"`
 	// 服务名称
 	Name string `json:"name,omitempty"`
-	// 服务分类
-	Category string `json:"category,omitempty"`
 	// 服务描述
 	Description string `json:"description,omitempty"`
-	// 交付时间
-	DeliveryTime string `json:"delivery_time,omitempty"`
-	// 服务状态
-	Status servicecatalog.Status `json:"status,omitempty"`
+	// 服务分类
+	Category string `json:"category,omitempty"`
+	// 价格
+	Price float64 `json:"price,omitempty"`
+	// 交付时间（天）
+	DeliveryTime int `json:"delivery_time,omitempty"`
+	// 状态
+	Status string `json:"status,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 是否激活
+	IsActive bool `json:"is_active,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the ServiceCatalogQuery when eager-loading is set.
-	Edges        ServiceCatalogEdges `json:"edges"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// ServiceCatalogEdges holds the relations/edges for other nodes in the graph.
-type ServiceCatalogEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// ServiceRequests holds the value of the service_requests edge.
-	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ServiceCatalogEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// ServiceRequestsOrErr returns the ServiceRequests value or an error if the edge
-// was not loaded in eager-loading.
-func (e ServiceCatalogEdges) ServiceRequestsOrErr() ([]*ServiceRequest, error) {
-	if e.loadedTypes[1] {
-		return e.ServiceRequests, nil
-	}
-	return nil, &NotLoadedError{edge: "service_requests"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -76,9 +45,13 @@ func (*ServiceCatalog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicecatalog.FieldID, servicecatalog.FieldTenantID:
+		case servicecatalog.FieldIsActive:
+			values[i] = new(sql.NullBool)
+		case servicecatalog.FieldPrice:
+			values[i] = new(sql.NullFloat64)
+		case servicecatalog.FieldID, servicecatalog.FieldDeliveryTime, servicecatalog.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case servicecatalog.FieldName, servicecatalog.FieldCategory, servicecatalog.FieldDescription, servicecatalog.FieldDeliveryTime, servicecatalog.FieldStatus:
+		case servicecatalog.FieldName, servicecatalog.FieldDescription, servicecatalog.FieldCategory, servicecatalog.FieldStatus:
 			values[i] = new(sql.NullString)
 		case servicecatalog.FieldCreatedAt, servicecatalog.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -109,35 +82,47 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sc.Name = value.String
 			}
-		case servicecatalog.FieldCategory:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field category", values[i])
-			} else if value.Valid {
-				sc.Category = value.String
-			}
 		case servicecatalog.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				sc.Description = value.String
 			}
-		case servicecatalog.FieldDeliveryTime:
+		case servicecatalog.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field category", values[i])
+			} else if value.Valid {
+				sc.Category = value.String
+			}
+		case servicecatalog.FieldPrice:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field price", values[i])
+			} else if value.Valid {
+				sc.Price = value.Float64
+			}
+		case servicecatalog.FieldDeliveryTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field delivery_time", values[i])
 			} else if value.Valid {
-				sc.DeliveryTime = value.String
+				sc.DeliveryTime = int(value.Int64)
 			}
 		case servicecatalog.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				sc.Status = servicecatalog.Status(value.String)
+				sc.Status = value.String
 			}
 		case servicecatalog.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				sc.TenantID = int(value.Int64)
+			}
+		case servicecatalog.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				sc.IsActive = value.Bool
 			}
 		case servicecatalog.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -162,16 +147,6 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (sc *ServiceCatalog) Value(name string) (ent.Value, error) {
 	return sc.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the ServiceCatalog entity.
-func (sc *ServiceCatalog) QueryTenant() *TenantQuery {
-	return NewServiceCatalogClient(sc.config).QueryTenant(sc)
-}
-
-// QueryServiceRequests queries the "service_requests" edge of the ServiceCatalog entity.
-func (sc *ServiceCatalog) QueryServiceRequests() *ServiceRequestQuery {
-	return NewServiceCatalogClient(sc.config).QueryServiceRequests(sc)
 }
 
 // Update returns a builder for updating this ServiceCatalog.
@@ -200,20 +175,26 @@ func (sc *ServiceCatalog) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(sc.Name)
 	builder.WriteString(", ")
-	builder.WriteString("category=")
-	builder.WriteString(sc.Category)
-	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(sc.Description)
 	builder.WriteString(", ")
+	builder.WriteString("category=")
+	builder.WriteString(sc.Category)
+	builder.WriteString(", ")
+	builder.WriteString("price=")
+	builder.WriteString(fmt.Sprintf("%v", sc.Price))
+	builder.WriteString(", ")
 	builder.WriteString("delivery_time=")
-	builder.WriteString(sc.DeliveryTime)
+	builder.WriteString(fmt.Sprintf("%v", sc.DeliveryTime))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", sc.Status))
+	builder.WriteString(sc.Status)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", sc.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", sc.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(sc.CreatedAt.Format(time.ANSIC))

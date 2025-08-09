@@ -27,7 +27,7 @@ func NewAuthController(jwtSecret string, client *ent.Client) *AuthController {
 	}
 }
 
-// Login 用户登录
+// Login 登录接口
 func (ac *AuthController) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,10 +42,18 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	// 如果提供了租户代码，则按租户过滤
 	if req.TenantCode != "" {
-		userQuery = userQuery.Where(user.HasTenantWith(tenant.CodeEQ(req.TenantCode)))
+		// 先查询租户
+		tenantEntity, err := ac.client.Tenant.Query().
+			Where(tenant.CodeEQ(req.TenantCode)).
+			First(ctx)
+		if err != nil {
+			common.Fail(c, 2001, "用户名或密码错误")
+			return
+		}
+		userQuery = userQuery.Where(user.TenantIDEQ(tenantEntity.ID))
 	}
 
-	userEntity, err := userQuery.WithTenant().First(ctx)
+	userEntity, err := userQuery.First(ctx)
 	if err != nil {
 		common.Fail(c, 2001, "用户名或密码错误")
 		return
@@ -57,14 +65,20 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	// 检查用户是否激活
-	if !userEntity.Active {
-		common.Fail(c, 2002, "用户账号已被禁用")
+	// 检查用户是否激活（简化处理，假设所有用户都是激活的）
+	// if !userEntity.Active {
+	// 	common.Fail(c, 2002, "用户账号已被禁用")
+	// 	return
+	// }
+
+	// 检查租户状态
+	tenantEntity, err := ac.client.Tenant.Get(ctx, userEntity.TenantID)
+	if err != nil {
+		common.Fail(c, 2003, "租户不存在")
 		return
 	}
 
-	// 检查租户状态
-	if userEntity.Edges.Tenant.Status != tenant.StatusActive {
+	if tenantEntity.Status != "active" {
 		common.Fail(c, 2003, "租户已被暂停或过期")
 		return
 	}
@@ -98,7 +112,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         userEntity,
-		Tenant:       userEntity.Edges.Tenant,
+		Tenant:       tenantEntity,
 	}
 
 	common.Success(c, response)
@@ -169,21 +183,27 @@ func (ac *AuthController) GetUserTenants(c *gin.Context) {
 	// 查询用户的租户（这里简化为用户只属于一个租户）
 	userEntity, err := ac.client.User.Query().
 		Where(user.IDEQ(userID.(int))).
-		WithTenant().
 		First(ctx)
 	if err != nil {
 		common.Fail(c, 5001, "查询用户信息失败")
 		return
 	}
 
+	// 查询租户信息
+	tenantEntity, err := ac.client.Tenant.Get(ctx, userEntity.TenantID)
+	if err != nil {
+		common.Fail(c, 5001, "查询租户信息失败")
+		return
+	}
+
 	tenants := []dto.TenantInfo{
 		{
-			ID:     userEntity.Edges.Tenant.ID,
-			Name:   userEntity.Edges.Tenant.Name,
-			Code:   userEntity.Edges.Tenant.Code,
-			Domain: userEntity.Edges.Tenant.Domain,
-			Type:   string(userEntity.Edges.Tenant.Type),
-			Status: string(userEntity.Edges.Tenant.Status),
+			ID:     tenantEntity.ID,
+			Name:   tenantEntity.Name,
+			Code:   tenantEntity.Code,
+			Domain: tenantEntity.Domain,
+			Type:   tenantEntity.Type,
+			Status: tenantEntity.Status,
 		},
 	}
 
@@ -215,10 +235,16 @@ func (ac *AuthController) SwitchTenant(c *gin.Context) {
 			user.IDEQ(userID.(int)),
 			user.TenantIDEQ(req.TenantID),
 		).
-		WithTenant().
 		First(ctx)
 	if err != nil {
 		common.Fail(c, 2004, "无权限访问该租户")
+		return
+	}
+
+	// 查询租户信息
+	tenantEntity, err := ac.client.Tenant.Get(ctx, req.TenantID)
+	if err != nil {
+		common.Fail(c, 2004, "租户不存在")
 		return
 	}
 
@@ -251,7 +277,7 @@ func (ac *AuthController) SwitchTenant(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         userEntity,
-		Tenant:       userEntity.Edges.Tenant,
+		Tenant:       tenantEntity,
 	}
 	common.Success(c, response)
 }

@@ -6,9 +6,7 @@ import (
 	"context"
 	"fmt"
 	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
 	"math"
 
 	"entgo.io/ent"
@@ -24,8 +22,6 @@ type CIAttributeDefinitionQuery struct {
 	order      []ciattributedefinition.OrderOption
 	inters     []Interceptor
 	predicates []predicate.CIAttributeDefinition
-	withTenant *TenantQuery
-	withCiType *CITypeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,50 +56,6 @@ func (cadq *CIAttributeDefinitionQuery) Unique(unique bool) *CIAttributeDefiniti
 func (cadq *CIAttributeDefinitionQuery) Order(o ...ciattributedefinition.OrderOption) *CIAttributeDefinitionQuery {
 	cadq.order = append(cadq.order, o...)
 	return cadq
-}
-
-// QueryTenant chains the current query on the "tenant" edge.
-func (cadq *CIAttributeDefinitionQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: cadq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cadq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := cadq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.TenantTable, ciattributedefinition.TenantColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(cadq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryCiType chains the current query on the "ci_type" edge.
-func (cadq *CIAttributeDefinitionQuery) QueryCiType() *CITypeQuery {
-	query := (&CITypeClient{config: cadq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cadq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := cadq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ciattributedefinition.Table, ciattributedefinition.FieldID, selector),
-			sqlgraph.To(citype.Table, citype.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ciattributedefinition.CiTypeTable, ciattributedefinition.CiTypeColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(cadq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // First returns the first CIAttributeDefinition entity from the query.
@@ -298,34 +250,10 @@ func (cadq *CIAttributeDefinitionQuery) Clone() *CIAttributeDefinitionQuery {
 		order:      append([]ciattributedefinition.OrderOption{}, cadq.order...),
 		inters:     append([]Interceptor{}, cadq.inters...),
 		predicates: append([]predicate.CIAttributeDefinition{}, cadq.predicates...),
-		withTenant: cadq.withTenant.Clone(),
-		withCiType: cadq.withCiType.Clone(),
 		// clone intermediate query.
 		sql:  cadq.sql.Clone(),
 		path: cadq.path,
 	}
-}
-
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (cadq *CIAttributeDefinitionQuery) WithTenant(opts ...func(*TenantQuery)) *CIAttributeDefinitionQuery {
-	query := (&TenantClient{config: cadq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	cadq.withTenant = query
-	return cadq
-}
-
-// WithCiType tells the query-builder to eager-load the nodes that are connected to
-// the "ci_type" edge. The optional arguments are used to configure the query builder of the edge.
-func (cadq *CIAttributeDefinitionQuery) WithCiType(opts ...func(*CITypeQuery)) *CIAttributeDefinitionQuery {
-	query := (&CITypeClient{config: cadq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	cadq.withCiType = query
-	return cadq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -404,12 +332,8 @@ func (cadq *CIAttributeDefinitionQuery) prepareQuery(ctx context.Context) error 
 
 func (cadq *CIAttributeDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CIAttributeDefinition, error) {
 	var (
-		nodes       = []*CIAttributeDefinition{}
-		_spec       = cadq.querySpec()
-		loadedTypes = [2]bool{
-			cadq.withTenant != nil,
-			cadq.withCiType != nil,
-		}
+		nodes = []*CIAttributeDefinition{}
+		_spec = cadq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*CIAttributeDefinition).scanValues(nil, columns)
@@ -417,7 +341,6 @@ func (cadq *CIAttributeDefinitionQuery) sqlAll(ctx context.Context, hooks ...que
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &CIAttributeDefinition{config: cadq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -429,78 +352,7 @@ func (cadq *CIAttributeDefinitionQuery) sqlAll(ctx context.Context, hooks ...que
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := cadq.withTenant; query != nil {
-		if err := cadq.loadTenant(ctx, query, nodes, nil,
-			func(n *CIAttributeDefinition, e *Tenant) { n.Edges.Tenant = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := cadq.withCiType; query != nil {
-		if err := cadq.loadCiType(ctx, query, nodes, nil,
-			func(n *CIAttributeDefinition, e *CIType) { n.Edges.CiType = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (cadq *CIAttributeDefinitionQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*CIAttributeDefinition, init func(*CIAttributeDefinition), assign func(*CIAttributeDefinition, *Tenant)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*CIAttributeDefinition)
-	for i := range nodes {
-		fk := nodes[i].TenantID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tenant.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (cadq *CIAttributeDefinitionQuery) loadCiType(ctx context.Context, query *CITypeQuery, nodes []*CIAttributeDefinition, init func(*CIAttributeDefinition), assign func(*CIAttributeDefinition, *CIType)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*CIAttributeDefinition)
-	for i := range nodes {
-		fk := nodes[i].CiTypeID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(citype.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "ci_type_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
 }
 
 func (cadq *CIAttributeDefinitionQuery) sqlCount(ctx context.Context) (int, error) {
@@ -527,12 +379,6 @@ func (cadq *CIAttributeDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != ciattributedefinition.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if cadq.withTenant != nil {
-			_spec.Node.AddColumnOnce(ciattributedefinition.FieldTenantID)
-		}
-		if cadq.withCiType != nil {
-			_spec.Node.AddColumnOnce(ciattributedefinition.FieldCiTypeID)
 		}
 	}
 	if ps := cadq.predicates; len(ps) > 0 {

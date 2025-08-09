@@ -6,12 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/approvallog"
-	"itsm-backend/ent/flowinstance"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -46,36 +41,30 @@ func (tc *TicketCreate) SetNillableDescription(s *string) *TicketCreate {
 }
 
 // SetStatus sets the "status" field.
-func (tc *TicketCreate) SetStatus(t ticket.Status) *TicketCreate {
-	tc.mutation.SetStatus(t)
+func (tc *TicketCreate) SetStatus(s string) *TicketCreate {
+	tc.mutation.SetStatus(s)
 	return tc
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tc *TicketCreate) SetNillableStatus(t *ticket.Status) *TicketCreate {
-	if t != nil {
-		tc.SetStatus(*t)
+func (tc *TicketCreate) SetNillableStatus(s *string) *TicketCreate {
+	if s != nil {
+		tc.SetStatus(*s)
 	}
 	return tc
 }
 
 // SetPriority sets the "priority" field.
-func (tc *TicketCreate) SetPriority(t ticket.Priority) *TicketCreate {
-	tc.mutation.SetPriority(t)
+func (tc *TicketCreate) SetPriority(s string) *TicketCreate {
+	tc.mutation.SetPriority(s)
 	return tc
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (tc *TicketCreate) SetNillablePriority(t *ticket.Priority) *TicketCreate {
-	if t != nil {
-		tc.SetPriority(*t)
+func (tc *TicketCreate) SetNillablePriority(s *string) *TicketCreate {
+	if s != nil {
+		tc.SetPriority(*s)
 	}
-	return tc
-}
-
-// SetFormFields sets the "form_fields" field.
-func (tc *TicketCreate) SetFormFields(m map[string]interface{}) *TicketCreate {
-	tc.mutation.SetFormFields(m)
 	return tc
 }
 
@@ -137,70 +126,6 @@ func (tc *TicketCreate) SetNillableUpdatedAt(t *time.Time) *TicketCreate {
 		tc.SetUpdatedAt(*t)
 	}
 	return tc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (tc *TicketCreate) SetTenant(t *Tenant) *TicketCreate {
-	return tc.SetTenantID(t.ID)
-}
-
-// SetRequester sets the "requester" edge to the User entity.
-func (tc *TicketCreate) SetRequester(u *User) *TicketCreate {
-	return tc.SetRequesterID(u.ID)
-}
-
-// SetAssignee sets the "assignee" edge to the User entity.
-func (tc *TicketCreate) SetAssignee(u *User) *TicketCreate {
-	return tc.SetAssigneeID(u.ID)
-}
-
-// AddApprovalLogIDs adds the "approval_logs" edge to the ApprovalLog entity by IDs.
-func (tc *TicketCreate) AddApprovalLogIDs(ids ...int) *TicketCreate {
-	tc.mutation.AddApprovalLogIDs(ids...)
-	return tc
-}
-
-// AddApprovalLogs adds the "approval_logs" edges to the ApprovalLog entity.
-func (tc *TicketCreate) AddApprovalLogs(a ...*ApprovalLog) *TicketCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return tc.AddApprovalLogIDs(ids...)
-}
-
-// SetFlowInstanceID sets the "flow_instance" edge to the FlowInstance entity by ID.
-func (tc *TicketCreate) SetFlowInstanceID(id int) *TicketCreate {
-	tc.mutation.SetFlowInstanceID(id)
-	return tc
-}
-
-// SetNillableFlowInstanceID sets the "flow_instance" edge to the FlowInstance entity by ID if the given value is not nil.
-func (tc *TicketCreate) SetNillableFlowInstanceID(id *int) *TicketCreate {
-	if id != nil {
-		tc = tc.SetFlowInstanceID(*id)
-	}
-	return tc
-}
-
-// SetFlowInstance sets the "flow_instance" edge to the FlowInstance entity.
-func (tc *TicketCreate) SetFlowInstance(f *FlowInstance) *TicketCreate {
-	return tc.SetFlowInstanceID(f.ID)
-}
-
-// AddStatusLogIDs adds the "status_logs" edge to the StatusLog entity by IDs.
-func (tc *TicketCreate) AddStatusLogIDs(ids ...int) *TicketCreate {
-	tc.mutation.AddStatusLogIDs(ids...)
-	return tc
-}
-
-// AddStatusLogs adds the "status_logs" edges to the StatusLog entity.
-func (tc *TicketCreate) AddStatusLogs(s ...*StatusLog) *TicketCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return tc.AddStatusLogIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -269,18 +194,8 @@ func (tc *TicketCreate) check() error {
 	if _, ok := tc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Ticket.status"`)}
 	}
-	if v, ok := tc.mutation.Status(); ok {
-		if err := ticket.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Ticket.status": %w`, err)}
-		}
-	}
 	if _, ok := tc.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Ticket.priority"`)}
-	}
-	if v, ok := tc.mutation.Priority(); ok {
-		if err := ticket.PriorityValidator(v); err != nil {
-			return &ValidationError{Name: "priority", err: fmt.Errorf(`ent: validator failed for field "Ticket.priority": %w`, err)}
-		}
 	}
 	if _, ok := tc.mutation.TicketNumber(); !ok {
 		return &ValidationError{Name: "ticket_number", err: errors.New(`ent: missing required field "Ticket.ticket_number"`)}
@@ -298,11 +213,6 @@ func (tc *TicketCreate) check() error {
 			return &ValidationError{Name: "requester_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.requester_id": %w`, err)}
 		}
 	}
-	if v, ok := tc.mutation.AssigneeID(); ok {
-		if err := ticket.AssigneeIDValidator(v); err != nil {
-			return &ValidationError{Name: "assignee_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.assignee_id": %w`, err)}
-		}
-	}
 	if _, ok := tc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Ticket.tenant_id"`)}
 	}
@@ -316,12 +226,6 @@ func (tc *TicketCreate) check() error {
 	}
 	if _, ok := tc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Ticket.updated_at"`)}
-	}
-	if len(tc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "Ticket.tenant"`)}
-	}
-	if len(tc.mutation.RequesterIDs()) == 0 {
-		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required edge "Ticket.requester"`)}
 	}
 	return nil
 }
@@ -358,20 +262,28 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_node.Description = value
 	}
 	if value, ok := tc.mutation.Status(); ok {
-		_spec.SetField(ticket.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(ticket.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
 	if value, ok := tc.mutation.Priority(); ok {
-		_spec.SetField(ticket.FieldPriority, field.TypeEnum, value)
+		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
 		_node.Priority = value
-	}
-	if value, ok := tc.mutation.FormFields(); ok {
-		_spec.SetField(ticket.FieldFormFields, field.TypeJSON, value)
-		_node.FormFields = value
 	}
 	if value, ok := tc.mutation.TicketNumber(); ok {
 		_spec.SetField(ticket.FieldTicketNumber, field.TypeString, value)
 		_node.TicketNumber = value
+	}
+	if value, ok := tc.mutation.RequesterID(); ok {
+		_spec.SetField(ticket.FieldRequesterID, field.TypeInt, value)
+		_node.RequesterID = value
+	}
+	if value, ok := tc.mutation.AssigneeID(); ok {
+		_spec.SetField(ticket.FieldAssigneeID, field.TypeInt, value)
+		_node.AssigneeID = value
+	}
+	if value, ok := tc.mutation.TenantID(); ok {
+		_spec.SetField(ticket.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -380,105 +292,6 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticket.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := tc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.TenantTable,
-			Columns: []string{ticket.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.RequesterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.RequesterTable,
-			Columns: []string{ticket.RequesterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.RequesterID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.AssigneeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   ticket.AssigneeTable,
-			Columns: []string{ticket.AssigneeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.AssigneeID = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ApprovalLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.ApprovalLogsTable,
-			Columns: []string{ticket.ApprovalLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(approvallog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.FlowInstanceIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   ticket.FlowInstanceTable,
-			Columns: []string{ticket.FlowInstanceColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(flowinstance.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.StatusLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   ticket.StatusLogsTable,
-			Columns: []string{ticket.StatusLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(statuslog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

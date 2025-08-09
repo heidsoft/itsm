@@ -6,28 +6,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/approvallog"
+	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/cichangerecord"
-	"itsm-backend/ent/cilifecyclestate"
 	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/flowinstance"
+	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/message"
+	"itsm-backend/ent/notification"
+	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/sladefinition"
-	"itsm-backend/ent/slametrics"
 	"itsm-backend/ent/slaviolation"
-	"itsm-backend/ent/statuslog"
-	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/workflow"
 	"reflect"
 	"sync"
 
@@ -94,28 +91,25 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			approvallog.Table:           approvallog.ValidColumn,
+			auditlog.Table:              auditlog.ValidColumn,
 			ciattributedefinition.Table: ciattributedefinition.ValidColumn,
-			cichangerecord.Table:        cichangerecord.ValidColumn,
-			cilifecyclestate.Table:      cilifecyclestate.ValidColumn,
 			cirelationship.Table:        cirelationship.ValidColumn,
-			cirelationshiptype.Table:    cirelationshiptype.ValidColumn,
 			citype.Table:                citype.ValidColumn,
 			configurationitem.Table:     configurationitem.ValidColumn,
-			flowinstance.Table:          flowinstance.ValidColumn,
+			conversation.Table:          conversation.ValidColumn,
 			incident.Table:              incident.ValidColumn,
 			knowledgearticle.Table:      knowledgearticle.ValidColumn,
+			message.Table:               message.ValidColumn,
+			notification.Table:          notification.ValidColumn,
+			prompttemplate.Table:        prompttemplate.ValidColumn,
 			sladefinition.Table:         sladefinition.ValidColumn,
-			slametrics.Table:            slametrics.ValidColumn,
 			slaviolation.Table:          slaviolation.ValidColumn,
 			servicecatalog.Table:        servicecatalog.ValidColumn,
 			servicerequest.Table:        servicerequest.ValidColumn,
-			statuslog.Table:             statuslog.ValidColumn,
-			subscription.Table:          subscription.ValidColumn,
 			tenant.Table:                tenant.ValidColumn,
 			ticket.Table:                ticket.ValidColumn,
+			toolinvocation.Table:        toolinvocation.ValidColumn,
 			user.Table:                  user.ValidColumn,
-			workflow.Table:              workflow.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

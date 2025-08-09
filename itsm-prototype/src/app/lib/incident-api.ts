@@ -152,7 +152,7 @@ export class IncidentAPI {
   static async listIncidents(params: ListIncidentsRequest = {}): Promise<ListIncidentsResponse> {
     console.log('IncidentAPI.listIncidents called with params:', params);
     try {
-      const response = await httpClient.get<ListIncidentsResponse>('/api/incidents', params);
+      const response = await httpClient.get<ListIncidentsResponse>('/api/v1/incidents', params);
       console.log('IncidentAPI.listIncidents response:', response);
       return response;
     } catch (error) {
@@ -163,49 +163,49 @@ export class IncidentAPI {
 
   // 获取事件详情
   static async getIncident(id: number): Promise<Incident> {
-    const response = await httpClient.get<Incident>(`/api/incidents/${id}`);
+    const response = await httpClient.get<Incident>(`/api/v1/incidents/${id}`);
     return response;
   }
 
   // 创建事件
   static async createIncident(data: CreateIncidentRequest): Promise<Incident> {
-    const response = await httpClient.post<Incident>('/api/incidents', data);
+    const response = await httpClient.post<Incident>('/api/v1/incidents', data);
     return response;
   }
 
   // 更新事件
   static async updateIncident(id: number, data: UpdateIncidentRequest): Promise<Incident> {
-    const response = await httpClient.patch<Incident>(`/api/incidents/${id}`, data);
+    const response = await httpClient.patch<Incident>(`/api/v1/incidents/${id}`, data);
     return response;
   }
 
   // 更新事件状态
   static async updateIncidentStatus(id: number, data: UpdateIncidentStatusRequest): Promise<Incident> {
-    const response = await httpClient.put<Incident>(`/api/incidents/${id}/status`, data);
+    const response = await httpClient.put<Incident>(`/api/v1/incidents/${id}/status`, data);
     return response;
   }
 
   // 获取事件指标
   static async getIncidentMetrics(): Promise<IncidentMetrics> {
-    const response = await httpClient.get<IncidentMetrics>('/api/incidents/metrics');
+    const response = await httpClient.get<IncidentMetrics>('/api/v1/incidents/stats');
     return response;
   }
 
   // 从阿里云告警创建事件
   static async createIncidentFromAlibabaCloudAlert(data: AlibabaCloudAlertRequest): Promise<Incident> {
-    const response = await httpClient.post<Incident>('/api/incidents/alibaba-cloud-alert', data);
+    const response = await httpClient.post<Incident>('/api/v1/incidents/alibaba-cloud-alert', data);
     return response;
   }
 
   // 从安全事件创建事件
   static async createIncidentFromSecurityEvent(data: SecurityEventRequest): Promise<Incident> {
-    const response = await httpClient.post<Incident>('/api/incidents/security-event', data);
+    const response = await httpClient.post<Incident>('/api/v1/incidents/security-event', data);
     return response;
   }
 
   // 从云产品事件创建事件
   static async createIncidentFromCloudProductEvent(data: CloudProductEventRequest): Promise<Incident> {
-    const response = await httpClient.post<Incident>('/api/incidents/cloud-product-event', data);
+    const response = await httpClient.post<Incident>('/api/v1/incidents/cloud-product-event', data);
     return response;
   }
 

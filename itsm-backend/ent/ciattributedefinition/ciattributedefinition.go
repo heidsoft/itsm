@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -18,58 +17,28 @@ const (
 	FieldName = "name"
 	// FieldDisplayName holds the string denoting the display_name field in the database.
 	FieldDisplayName = "display_name"
-	// FieldDescription holds the string denoting the description field in the database.
-	FieldDescription = "description"
-	// FieldDataType holds the string denoting the data_type field in the database.
-	FieldDataType = "data_type"
-	// FieldIsRequired holds the string denoting the is_required field in the database.
-	FieldIsRequired = "is_required"
-	// FieldIsUnique holds the string denoting the is_unique field in the database.
-	FieldIsUnique = "is_unique"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
+	// FieldRequired holds the string denoting the required field in the database.
+	FieldRequired = "required"
+	// FieldUnique holds the string denoting the unique field in the database.
+	FieldUnique = "unique"
 	// FieldDefaultValue holds the string denoting the default_value field in the database.
 	FieldDefaultValue = "default_value"
 	// FieldValidationRules holds the string denoting the validation_rules field in the database.
 	FieldValidationRules = "validation_rules"
-	// FieldEnumValues holds the string denoting the enum_values field in the database.
-	FieldEnumValues = "enum_values"
-	// FieldReferenceType holds the string denoting the reference_type field in the database.
-	FieldReferenceType = "reference_type"
-	// FieldDisplayOrder holds the string denoting the display_order field in the database.
-	FieldDisplayOrder = "display_order"
-	// FieldIsSearchable holds the string denoting the is_searchable field in the database.
-	FieldIsSearchable = "is_searchable"
-	// FieldIsSystem holds the string denoting the is_system field in the database.
-	FieldIsSystem = "is_system"
-	// FieldIsActive holds the string denoting the is_active field in the database.
-	FieldIsActive = "is_active"
 	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
 	FieldCiTypeID = "ci_type_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
+	// FieldIsActive holds the string denoting the is_active field in the database.
+	FieldIsActive = "is_active"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeCiType holds the string denoting the ci_type edge name in mutations.
-	EdgeCiType = "ci_type"
 	// Table holds the table name of the ciattributedefinition in the database.
 	Table = "ci_attribute_definitions"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "ci_attribute_definitions"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// CiTypeTable is the table that holds the ci_type relation/edge.
-	CiTypeTable = "ci_attribute_definitions"
-	// CiTypeInverseTable is the table name for the CIType entity.
-	// It exists in this package in order to avoid circular dependency with the "citype" package.
-	CiTypeInverseTable = "ci_types"
-	// CiTypeColumn is the table column denoting the ci_type relation/edge.
-	CiTypeColumn = "ci_type_id"
 )
 
 // Columns holds all SQL columns for ciattributedefinition fields.
@@ -77,20 +46,14 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDisplayName,
-	FieldDescription,
-	FieldDataType,
-	FieldIsRequired,
-	FieldIsUnique,
+	FieldType,
+	FieldRequired,
+	FieldUnique,
 	FieldDefaultValue,
 	FieldValidationRules,
-	FieldEnumValues,
-	FieldReferenceType,
-	FieldDisplayOrder,
-	FieldIsSearchable,
-	FieldIsSystem,
-	FieldIsActive,
 	FieldCiTypeID,
 	FieldTenantID,
+	FieldIsActive,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -110,18 +73,16 @@ var (
 	NameValidator func(string) error
 	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
 	DisplayNameValidator func(string) error
-	// DataTypeValidator is a validator for the "data_type" field. It is called by the builders before save.
-	DataTypeValidator func(string) error
-	// DefaultIsRequired holds the default value on creation for the "is_required" field.
-	DefaultIsRequired bool
-	// DefaultIsUnique holds the default value on creation for the "is_unique" field.
-	DefaultIsUnique bool
-	// DefaultDisplayOrder holds the default value on creation for the "display_order" field.
-	DefaultDisplayOrder int
-	// DefaultIsSearchable holds the default value on creation for the "is_searchable" field.
-	DefaultIsSearchable bool
-	// DefaultIsSystem holds the default value on creation for the "is_system" field.
-	DefaultIsSystem bool
+	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	TypeValidator func(string) error
+	// DefaultRequired holds the default value on creation for the "required" field.
+	DefaultRequired bool
+	// DefaultUnique holds the default value on creation for the "unique" field.
+	DefaultUnique bool
+	// CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
+	CiTypeIDValidator func(int) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -150,24 +111,19 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
 }
 
-// ByDescription orders the results by the description field.
-func ByDescription(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
-// ByDataType orders the results by the data_type field.
-func ByDataType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDataType, opts...).ToFunc()
+// ByRequired orders the results by the required field.
+func ByRequired(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequired, opts...).ToFunc()
 }
 
-// ByIsRequired orders the results by the is_required field.
-func ByIsRequired(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsRequired, opts...).ToFunc()
-}
-
-// ByIsUnique orders the results by the is_unique field.
-func ByIsUnique(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsUnique, opts...).ToFunc()
+// ByUnique orders the results by the unique field.
+func ByUnique(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUnique, opts...).ToFunc()
 }
 
 // ByDefaultValue orders the results by the default_value field.
@@ -175,29 +131,9 @@ func ByDefaultValue(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDefaultValue, opts...).ToFunc()
 }
 
-// ByReferenceType orders the results by the reference_type field.
-func ByReferenceType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldReferenceType, opts...).ToFunc()
-}
-
-// ByDisplayOrder orders the results by the display_order field.
-func ByDisplayOrder(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDisplayOrder, opts...).ToFunc()
-}
-
-// ByIsSearchable orders the results by the is_searchable field.
-func ByIsSearchable(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsSearchable, opts...).ToFunc()
-}
-
-// ByIsSystem orders the results by the is_system field.
-func ByIsSystem(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsSystem, opts...).ToFunc()
-}
-
-// ByIsActive orders the results by the is_active field.
-func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+// ByValidationRules orders the results by the validation_rules field.
+func ByValidationRules(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldValidationRules, opts...).ToFunc()
 }
 
 // ByCiTypeID orders the results by the ci_type_id field.
@@ -210,6 +146,11 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
+// ByIsActive orders the results by the is_active field.
+func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -218,32 +159,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByCiTypeField orders the results by ci_type field.
-func ByCiTypeField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCiTypeStep(), sql.OrderByField(field, opts...))
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newCiTypeStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(CiTypeInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, CiTypeTable, CiTypeColumn),
-	)
 }

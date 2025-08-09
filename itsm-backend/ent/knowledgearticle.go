@@ -3,10 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
-	"itsm-backend/ent/tenant"
 	"strings"
 	"time"
 
@@ -19,50 +17,25 @@ type KnowledgeArticle struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Title holds the value of the "title" field.
+	// 文章标题
 	Title string `json:"title,omitempty"`
-	// Content holds the value of the "content" field.
+	// 文章内容
 	Content string `json:"content,omitempty"`
-	// Category holds the value of the "category" field.
+	// 分类
 	Category string `json:"category,omitempty"`
-	// Status holds the value of the "status" field.
-	Status string `json:"status,omitempty"`
-	// Author holds the value of the "author" field.
-	Author string `json:"author,omitempty"`
-	// Views holds the value of the "views" field.
-	Views int `json:"views,omitempty"`
-	// Tags holds the value of the "tags" field.
-	Tags []string `json:"tags,omitempty"`
-	// TenantID holds the value of the "tenant_id" field.
+	// 标签
+	Tags string `json:"tags,omitempty"`
+	// 作者ID
+	AuthorID int `json:"author_id,omitempty"`
+	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 是否发布
+	IsPublished bool `json:"is_published,omitempty"`
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the KnowledgeArticleQuery when eager-loading is set.
-	Edges        KnowledgeArticleEdges `json:"edges"`
+	// 更新时间
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// KnowledgeArticleEdges holds the relations/edges for other nodes in the graph.
-type KnowledgeArticleEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e KnowledgeArticleEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -70,11 +43,11 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case knowledgearticle.FieldTags:
-			values[i] = new([]byte)
-		case knowledgearticle.FieldID, knowledgearticle.FieldViews, knowledgearticle.FieldTenantID:
+		case knowledgearticle.FieldIsPublished:
+			values[i] = new(sql.NullBool)
+		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldStatus, knowledgearticle.FieldAuthor:
+		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags:
 			values[i] = new(sql.NullString)
 		case knowledgearticle.FieldCreatedAt, knowledgearticle.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -117,37 +90,29 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ka.Category = value.String
 			}
-		case knowledgearticle.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				ka.Status = value.String
-			}
-		case knowledgearticle.FieldAuthor:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field author", values[i])
-			} else if value.Valid {
-				ka.Author = value.String
-			}
-		case knowledgearticle.FieldViews:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field views", values[i])
-			} else if value.Valid {
-				ka.Views = int(value.Int64)
-			}
 		case knowledgearticle.FieldTags:
-			if value, ok := values[i].(*[]byte); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ka.Tags); err != nil {
-					return fmt.Errorf("unmarshal field tags: %w", err)
-				}
+			} else if value.Valid {
+				ka.Tags = value.String
+			}
+		case knowledgearticle.FieldAuthorID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field author_id", values[i])
+			} else if value.Valid {
+				ka.AuthorID = int(value.Int64)
 			}
 		case knowledgearticle.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				ka.TenantID = int(value.Int64)
+			}
+		case knowledgearticle.FieldIsPublished:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_published", values[i])
+			} else if value.Valid {
+				ka.IsPublished = value.Bool
 			}
 		case knowledgearticle.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -172,11 +137,6 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ka *KnowledgeArticle) Value(name string) (ent.Value, error) {
 	return ka.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the KnowledgeArticle entity.
-func (ka *KnowledgeArticle) QueryTenant() *TenantQuery {
-	return NewKnowledgeArticleClient(ka.config).QueryTenant(ka)
 }
 
 // Update returns a builder for updating this KnowledgeArticle.
@@ -211,20 +171,17 @@ func (ka *KnowledgeArticle) String() string {
 	builder.WriteString("category=")
 	builder.WriteString(ka.Category)
 	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(ka.Status)
-	builder.WriteString(", ")
-	builder.WriteString("author=")
-	builder.WriteString(ka.Author)
-	builder.WriteString(", ")
-	builder.WriteString("views=")
-	builder.WriteString(fmt.Sprintf("%v", ka.Views))
-	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", ka.Tags))
+	builder.WriteString(ka.Tags)
+	builder.WriteString(", ")
+	builder.WriteString("author_id=")
+	builder.WriteString(fmt.Sprintf("%v", ka.AuthorID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", ka.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("is_published=")
+	builder.WriteString(fmt.Sprintf("%v", ka.IsPublished))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(ka.CreatedAt.Format(time.ANSIC))

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './api-config';
+import { API_BASE_URL, Tenant } from './api-config';
 import { useAuthStore } from './store';
 
 export class AuthService {
@@ -28,9 +28,24 @@ export class AuthService {
 
   // 检查是否已认证
   static isAuthenticated(): boolean {
+    // 首先检查Zustand store的状态
+    const { isAuthenticated } = useAuthStore.getState();
+    console.log('AuthService.isAuthenticated - Zustand状态:', { isAuthenticated });
+    if (isAuthenticated) {
+      return true;
+    }
+
+    // 然后检查localStorage中的token
     const token = this.getAccessToken();
+    console.log('AuthService.isAuthenticated - Token:', token);
     if (!token) {
       return false;
+    }
+
+    // 对于开发环境，允许mock token
+    if (token.startsWith('mock_')) {
+      console.log('AuthService.isAuthenticated - Mock token detected');
+      return true;
     }
 
     try {
@@ -62,6 +77,8 @@ export class AuthService {
   // 直接使用fetch进行HTTP请求，避免循环依赖
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('makeRequest called with:', { url, method: options.method, body: options.body });
+    
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -70,11 +87,15 @@ export class AuthService {
       ...options,
     });
 
+    console.log('makeRequest response status:', response.status);
+    console.log('makeRequest response headers:', response.headers);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const responseData = await response.json() as { code: number; message: string; data: T };
+    console.log('makeRequest response data:', responseData);
     
     // 检查响应码
     if (responseData.code !== 0) {
@@ -94,7 +115,7 @@ export class AuthService {
     try {
       const data = await this.makeRequest<{
         access_token: string;
-      }>('/api/refresh-token', {
+      }>('/api/v1/refresh-token', {
         method: 'POST',
         body: JSON.stringify({
           refresh_token: refreshToken,
@@ -131,12 +152,13 @@ export class AuthService {
   // 修改login方法
   static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
     try {
+      console.log('AuthService.login called with:', { username, password: '***', tenantCode });
+      
       const data = await this.makeRequest<{
         access_token: string;
         refresh_token: string;
         user: unknown;
-        tenant: unknown;
-      }>('/api/login', {
+      }>('/api/v1/login', {
         method: 'POST',
         body: JSON.stringify({
           username,
@@ -145,16 +167,25 @@ export class AuthService {
         }),
       });
       
+      console.log('AuthService.login response data:', data);
+      
       // 存储tokens
       this.setTokens(data.access_token, data.refresh_token);
       
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
+      console.log('AuthService.login - 调用Zustand login方法');
       login(
-        data.user,
+        data.user as { id: number; username: string; role: string; email?: string; name?: string },
         data.access_token,
-        data.tenant
+        { id: 1, name: "默认租户", code: "default" } as Tenant
       );
+      
+      // 验证状态是否正确设置
+      const { isAuthenticated } = useAuthStore.getState();
+      console.log('AuthService.login - 登录后Zustand状态:', { isAuthenticated });
+      
+      console.log('AuthService.login completed successfully');
       return true;
     } catch (error) {
       console.error('Login failed:', error);

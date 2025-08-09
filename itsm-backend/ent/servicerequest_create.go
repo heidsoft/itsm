@@ -6,10 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/user"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -36,13 +33,13 @@ func (src *ServiceRequestCreate) SetRequesterID(i int) *ServiceRequestCreate {
 }
 
 // SetStatus sets the "status" field.
-func (src *ServiceRequestCreate) SetStatus(s servicerequest.Status) *ServiceRequestCreate {
+func (src *ServiceRequestCreate) SetStatus(s string) *ServiceRequestCreate {
 	src.mutation.SetStatus(s)
 	return src
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (src *ServiceRequestCreate) SetNillableStatus(s *servicerequest.Status) *ServiceRequestCreate {
+func (src *ServiceRequestCreate) SetNillableStatus(s *string) *ServiceRequestCreate {
 	if s != nil {
 		src.SetStatus(*s)
 	}
@@ -63,12 +60,6 @@ func (src *ServiceRequestCreate) SetNillableReason(s *string) *ServiceRequestCre
 	return src
 }
 
-// SetTenantID sets the "tenant_id" field.
-func (src *ServiceRequestCreate) SetTenantID(i int) *ServiceRequestCreate {
-	src.mutation.SetTenantID(i)
-	return src
-}
-
 // SetCreatedAt sets the "created_at" field.
 func (src *ServiceRequestCreate) SetCreatedAt(t time.Time) *ServiceRequestCreate {
 	src.mutation.SetCreatedAt(t)
@@ -83,19 +74,18 @@ func (src *ServiceRequestCreate) SetNillableCreatedAt(t *time.Time) *ServiceRequ
 	return src
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (src *ServiceRequestCreate) SetTenant(t *Tenant) *ServiceRequestCreate {
-	return src.SetTenantID(t.ID)
+// SetUpdatedAt sets the "updated_at" field.
+func (src *ServiceRequestCreate) SetUpdatedAt(t time.Time) *ServiceRequestCreate {
+	src.mutation.SetUpdatedAt(t)
+	return src
 }
 
-// SetCatalog sets the "catalog" edge to the ServiceCatalog entity.
-func (src *ServiceRequestCreate) SetCatalog(s *ServiceCatalog) *ServiceRequestCreate {
-	return src.SetCatalogID(s.ID)
-}
-
-// SetRequester sets the "requester" edge to the User entity.
-func (src *ServiceRequestCreate) SetRequester(u *User) *ServiceRequestCreate {
-	return src.SetRequesterID(u.ID)
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableUpdatedAt(t *time.Time) *ServiceRequestCreate {
+	if t != nil {
+		src.SetUpdatedAt(*t)
+	}
+	return src
 }
 
 // Mutation returns the ServiceRequestMutation object of the builder.
@@ -141,6 +131,10 @@ func (src *ServiceRequestCreate) defaults() {
 		v := servicerequest.DefaultCreatedAt()
 		src.mutation.SetCreatedAt(v)
 	}
+	if _, ok := src.mutation.UpdatedAt(); !ok {
+		v := servicerequest.DefaultUpdatedAt()
+		src.mutation.SetUpdatedAt(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -164,35 +158,11 @@ func (src *ServiceRequestCreate) check() error {
 	if _, ok := src.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ServiceRequest.status"`)}
 	}
-	if v, ok := src.mutation.Status(); ok {
-		if err := servicerequest.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.status": %w`, err)}
-		}
-	}
-	if v, ok := src.mutation.Reason(); ok {
-		if err := servicerequest.ReasonValidator(v); err != nil {
-			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.reason": %w`, err)}
-		}
-	}
-	if _, ok := src.mutation.TenantID(); !ok {
-		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ServiceRequest.tenant_id"`)}
-	}
-	if v, ok := src.mutation.TenantID(); ok {
-		if err := servicerequest.TenantIDValidator(v); err != nil {
-			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.tenant_id": %w`, err)}
-		}
-	}
 	if _, ok := src.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceRequest.created_at"`)}
 	}
-	if len(src.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "ServiceRequest.tenant"`)}
-	}
-	if len(src.mutation.CatalogIDs()) == 0 {
-		return &ValidationError{Name: "catalog", err: errors.New(`ent: missing required edge "ServiceRequest.catalog"`)}
-	}
-	if len(src.mutation.RequesterIDs()) == 0 {
-		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required edge "ServiceRequest.requester"`)}
+	if _, ok := src.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ServiceRequest.updated_at"`)}
 	}
 	return nil
 }
@@ -220,8 +190,16 @@ func (src *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.Create
 		_node = &ServiceRequest{config: src.config}
 		_spec = sqlgraph.NewCreateSpec(servicerequest.Table, sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt))
 	)
+	if value, ok := src.mutation.CatalogID(); ok {
+		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)
+		_node.CatalogID = value
+	}
+	if value, ok := src.mutation.RequesterID(); ok {
+		_spec.SetField(servicerequest.FieldRequesterID, field.TypeInt, value)
+		_node.RequesterID = value
+	}
 	if value, ok := src.mutation.Status(); ok {
-		_spec.SetField(servicerequest.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(servicerequest.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
 	if value, ok := src.mutation.Reason(); ok {
@@ -232,56 +210,9 @@ func (src *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.Create
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := src.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.TenantTable,
-			Columns: []string{servicerequest.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := src.mutation.CatalogIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.CatalogTable,
-			Columns: []string{servicerequest.CatalogColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.CatalogID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := src.mutation.RequesterIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicerequest.RequesterTable,
-			Columns: []string{servicerequest.RequesterColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.RequesterID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := src.mutation.UpdatedAt(); ok {
+		_spec.SetField(servicerequest.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
 	}
 	return _node, _spec
 }

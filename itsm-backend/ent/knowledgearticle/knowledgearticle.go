@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -20,31 +19,20 @@ const (
 	FieldContent = "content"
 	// FieldCategory holds the string denoting the category field in the database.
 	FieldCategory = "category"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
-	// FieldAuthor holds the string denoting the author field in the database.
-	FieldAuthor = "author"
-	// FieldViews holds the string denoting the views field in the database.
-	FieldViews = "views"
 	// FieldTags holds the string denoting the tags field in the database.
 	FieldTags = "tags"
+	// FieldAuthorID holds the string denoting the author_id field in the database.
+	FieldAuthorID = "author_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
+	// FieldIsPublished holds the string denoting the is_published field in the database.
+	FieldIsPublished = "is_published"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
 	// Table holds the table name of the knowledgearticle in the database.
 	Table = "knowledge_articles"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "knowledge_articles"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
 )
 
 // Columns holds all SQL columns for knowledgearticle fields.
@@ -53,11 +41,10 @@ var Columns = []string{
 	FieldTitle,
 	FieldContent,
 	FieldCategory,
-	FieldStatus,
-	FieldAuthor,
-	FieldViews,
 	FieldTags,
+	FieldAuthorID,
 	FieldTenantID,
+	FieldIsPublished,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -75,14 +62,12 @@ func ValidColumn(column string) bool {
 var (
 	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
 	TitleValidator func(string) error
-	// CategoryValidator is a validator for the "category" field. It is called by the builders before save.
-	CategoryValidator func(string) error
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
-	// AuthorValidator is a validator for the "author" field. It is called by the builders before save.
-	AuthorValidator func(string) error
-	// DefaultViews holds the default value on creation for the "views" field.
-	DefaultViews int
+	// AuthorIDValidator is a validator for the "author_id" field. It is called by the builders before save.
+	AuthorIDValidator func(int) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
+	// DefaultIsPublished holds the default value on creation for the "is_published" field.
+	DefaultIsPublished bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -114,24 +99,24 @@ func ByCategory(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCategory, opts...).ToFunc()
 }
 
-// ByStatus orders the results by the status field.
-func ByStatus(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+// ByTags orders the results by the tags field.
+func ByTags(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTags, opts...).ToFunc()
 }
 
-// ByAuthor orders the results by the author field.
-func ByAuthor(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAuthor, opts...).ToFunc()
-}
-
-// ByViews orders the results by the views field.
-func ByViews(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldViews, opts...).ToFunc()
+// ByAuthorID orders the results by the author_id field.
+func ByAuthorID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAuthorID, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+}
+
+// ByIsPublished orders the results by the is_published field.
+func ByIsPublished(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsPublished, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -142,18 +127,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
 }

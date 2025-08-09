@@ -1,5 +1,5 @@
 
-import  from 'lucide-react';
+import { Cpu, User, Shield } from 'lucide-react';
 
 // 模拟事件数据 (从 incidents/[incidentId]/page.tsx 复制并转换为数组)
 export const mockIncidentsData = [

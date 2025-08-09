@@ -6,12 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -46,20 +42,6 @@ func (ctu *CITypeUpdate) SetNillableName(s *string) *CITypeUpdate {
 	return ctu
 }
 
-// SetDisplayName sets the "display_name" field.
-func (ctu *CITypeUpdate) SetDisplayName(s string) *CITypeUpdate {
-	ctu.mutation.SetDisplayName(s)
-	return ctu
-}
-
-// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableDisplayName(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetDisplayName(*s)
-	}
-	return ctu
-}
-
 // SetDescription sets the "description" field.
 func (ctu *CITypeUpdate) SetDescription(s string) *CITypeUpdate {
 	ctu.mutation.SetDescription(s)
@@ -77,20 +59,6 @@ func (ctu *CITypeUpdate) SetNillableDescription(s *string) *CITypeUpdate {
 // ClearDescription clears the value of the "description" field.
 func (ctu *CITypeUpdate) ClearDescription() *CITypeUpdate {
 	ctu.mutation.ClearDescription()
-	return ctu
-}
-
-// SetCategory sets the "category" field.
-func (ctu *CITypeUpdate) SetCategory(s string) *CITypeUpdate {
-	ctu.mutation.SetCategory(s)
-	return ctu
-}
-
-// SetNillableCategory sets the "category" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableCategory(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetCategory(*s)
-	}
 	return ctu
 }
 
@@ -114,9 +82,37 @@ func (ctu *CITypeUpdate) ClearIcon() *CITypeUpdate {
 	return ctu
 }
 
+// SetColor sets the "color" field.
+func (ctu *CITypeUpdate) SetColor(s string) *CITypeUpdate {
+	ctu.mutation.SetColor(s)
+	return ctu
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (ctu *CITypeUpdate) SetNillableColor(s *string) *CITypeUpdate {
+	if s != nil {
+		ctu.SetColor(*s)
+	}
+	return ctu
+}
+
+// ClearColor clears the value of the "color" field.
+func (ctu *CITypeUpdate) ClearColor() *CITypeUpdate {
+	ctu.mutation.ClearColor()
+	return ctu
+}
+
 // SetAttributeSchema sets the "attribute_schema" field.
-func (ctu *CITypeUpdate) SetAttributeSchema(m map[string]interface{}) *CITypeUpdate {
-	ctu.mutation.SetAttributeSchema(m)
+func (ctu *CITypeUpdate) SetAttributeSchema(s string) *CITypeUpdate {
+	ctu.mutation.SetAttributeSchema(s)
+	return ctu
+}
+
+// SetNillableAttributeSchema sets the "attribute_schema" field if the given value is not nil.
+func (ctu *CITypeUpdate) SetNillableAttributeSchema(s *string) *CITypeUpdate {
+	if s != nil {
+		ctu.SetAttributeSchema(*s)
+	}
 	return ctu
 }
 
@@ -126,29 +122,24 @@ func (ctu *CITypeUpdate) ClearAttributeSchema() *CITypeUpdate {
 	return ctu
 }
 
-// SetValidationRules sets the "validation_rules" field.
-func (ctu *CITypeUpdate) SetValidationRules(m map[string]interface{}) *CITypeUpdate {
-	ctu.mutation.SetValidationRules(m)
+// SetTenantID sets the "tenant_id" field.
+func (ctu *CITypeUpdate) SetTenantID(i int) *CITypeUpdate {
+	ctu.mutation.ResetTenantID()
+	ctu.mutation.SetTenantID(i)
 	return ctu
 }
 
-// ClearValidationRules clears the value of the "validation_rules" field.
-func (ctu *CITypeUpdate) ClearValidationRules() *CITypeUpdate {
-	ctu.mutation.ClearValidationRules()
-	return ctu
-}
-
-// SetIsSystem sets the "is_system" field.
-func (ctu *CITypeUpdate) SetIsSystem(b bool) *CITypeUpdate {
-	ctu.mutation.SetIsSystem(b)
-	return ctu
-}
-
-// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableIsSystem(b *bool) *CITypeUpdate {
-	if b != nil {
-		ctu.SetIsSystem(*b)
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (ctu *CITypeUpdate) SetNillableTenantID(i *int) *CITypeUpdate {
+	if i != nil {
+		ctu.SetTenantID(*i)
 	}
+	return ctu
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (ctu *CITypeUpdate) AddTenantID(i int) *CITypeUpdate {
+	ctu.mutation.AddTenantID(i)
 	return ctu
 }
 
@@ -162,20 +153,6 @@ func (ctu *CITypeUpdate) SetIsActive(b bool) *CITypeUpdate {
 func (ctu *CITypeUpdate) SetNillableIsActive(b *bool) *CITypeUpdate {
 	if b != nil {
 		ctu.SetIsActive(*b)
-	}
-	return ctu
-}
-
-// SetTenantID sets the "tenant_id" field.
-func (ctu *CITypeUpdate) SetTenantID(i int) *CITypeUpdate {
-	ctu.mutation.SetTenantID(i)
-	return ctu
-}
-
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableTenantID(i *int) *CITypeUpdate {
-	if i != nil {
-		ctu.SetTenantID(*i)
 	}
 	return ctu
 }
@@ -200,128 +177,9 @@ func (ctu *CITypeUpdate) SetUpdatedAt(t time.Time) *CITypeUpdate {
 	return ctu
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ctu *CITypeUpdate) SetTenant(t *Tenant) *CITypeUpdate {
-	return ctu.SetTenantID(t.ID)
-}
-
-// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (ctu *CITypeUpdate) AddConfigurationItemIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.AddConfigurationItemIDs(ids...)
-	return ctu
-}
-
-// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (ctu *CITypeUpdate) AddConfigurationItems(c ...*ConfigurationItem) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctu.AddConfigurationItemIDs(ids...)
-}
-
-// AddAllowedRelationshipIDs adds the "allowed_relationships" edge to the CIRelationshipType entity by IDs.
-func (ctu *CITypeUpdate) AddAllowedRelationshipIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.AddAllowedRelationshipIDs(ids...)
-	return ctu
-}
-
-// AddAllowedRelationships adds the "allowed_relationships" edges to the CIRelationshipType entity.
-func (ctu *CITypeUpdate) AddAllowedRelationships(c ...*CIRelationshipType) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctu.AddAllowedRelationshipIDs(ids...)
-}
-
-// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
-func (ctu *CITypeUpdate) AddAttributeDefinitionIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.AddAttributeDefinitionIDs(ids...)
-	return ctu
-}
-
-// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
-func (ctu *CITypeUpdate) AddAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctu.AddAttributeDefinitionIDs(ids...)
-}
-
 // Mutation returns the CITypeMutation object of the builder.
 func (ctu *CITypeUpdate) Mutation() *CITypeMutation {
 	return ctu.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (ctu *CITypeUpdate) ClearTenant() *CITypeUpdate {
-	ctu.mutation.ClearTenant()
-	return ctu
-}
-
-// ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
-func (ctu *CITypeUpdate) ClearConfigurationItems() *CITypeUpdate {
-	ctu.mutation.ClearConfigurationItems()
-	return ctu
-}
-
-// RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
-func (ctu *CITypeUpdate) RemoveConfigurationItemIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.RemoveConfigurationItemIDs(ids...)
-	return ctu
-}
-
-// RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
-func (ctu *CITypeUpdate) RemoveConfigurationItems(c ...*ConfigurationItem) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctu.RemoveConfigurationItemIDs(ids...)
-}
-
-// ClearAllowedRelationships clears all "allowed_relationships" edges to the CIRelationshipType entity.
-func (ctu *CITypeUpdate) ClearAllowedRelationships() *CITypeUpdate {
-	ctu.mutation.ClearAllowedRelationships()
-	return ctu
-}
-
-// RemoveAllowedRelationshipIDs removes the "allowed_relationships" edge to CIRelationshipType entities by IDs.
-func (ctu *CITypeUpdate) RemoveAllowedRelationshipIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.RemoveAllowedRelationshipIDs(ids...)
-	return ctu
-}
-
-// RemoveAllowedRelationships removes "allowed_relationships" edges to CIRelationshipType entities.
-func (ctu *CITypeUpdate) RemoveAllowedRelationships(c ...*CIRelationshipType) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctu.RemoveAllowedRelationshipIDs(ids...)
-}
-
-// ClearAttributeDefinitions clears all "attribute_definitions" edges to the CIAttributeDefinition entity.
-func (ctu *CITypeUpdate) ClearAttributeDefinitions() *CITypeUpdate {
-	ctu.mutation.ClearAttributeDefinitions()
-	return ctu
-}
-
-// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to CIAttributeDefinition entities by IDs.
-func (ctu *CITypeUpdate) RemoveAttributeDefinitionIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.RemoveAttributeDefinitionIDs(ids...)
-	return ctu
-}
-
-// RemoveAttributeDefinitions removes "attribute_definitions" edges to CIAttributeDefinition entities.
-func (ctu *CITypeUpdate) RemoveAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctu.RemoveAttributeDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -367,18 +225,10 @@ func (ctu *CITypeUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIType.name": %w`, err)}
 		}
 	}
-	if v, ok := ctu.mutation.DisplayName(); ok {
-		if err := citype.DisplayNameValidator(v); err != nil {
-			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIType.display_name": %w`, err)}
+	if v, ok := ctu.mutation.TenantID(); ok {
+		if err := citype.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIType.tenant_id": %w`, err)}
 		}
-	}
-	if v, ok := ctu.mutation.Category(); ok {
-		if err := citype.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "CIType.category": %w`, err)}
-		}
-	}
-	if ctu.mutation.TenantCleared() && len(ctu.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "CIType.tenant"`)
 	}
 	return nil
 }
@@ -398,17 +248,11 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ctu.mutation.Name(); ok {
 		_spec.SetField(citype.FieldName, field.TypeString, value)
 	}
-	if value, ok := ctu.mutation.DisplayName(); ok {
-		_spec.SetField(citype.FieldDisplayName, field.TypeString, value)
-	}
 	if value, ok := ctu.mutation.Description(); ok {
 		_spec.SetField(citype.FieldDescription, field.TypeString, value)
 	}
 	if ctu.mutation.DescriptionCleared() {
 		_spec.ClearField(citype.FieldDescription, field.TypeString)
-	}
-	if value, ok := ctu.mutation.Category(); ok {
-		_spec.SetField(citype.FieldCategory, field.TypeString, value)
 	}
 	if value, ok := ctu.mutation.Icon(); ok {
 		_spec.SetField(citype.FieldIcon, field.TypeString, value)
@@ -416,20 +260,23 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if ctu.mutation.IconCleared() {
 		_spec.ClearField(citype.FieldIcon, field.TypeString)
 	}
+	if value, ok := ctu.mutation.Color(); ok {
+		_spec.SetField(citype.FieldColor, field.TypeString, value)
+	}
+	if ctu.mutation.ColorCleared() {
+		_spec.ClearField(citype.FieldColor, field.TypeString)
+	}
 	if value, ok := ctu.mutation.AttributeSchema(); ok {
-		_spec.SetField(citype.FieldAttributeSchema, field.TypeJSON, value)
+		_spec.SetField(citype.FieldAttributeSchema, field.TypeString, value)
 	}
 	if ctu.mutation.AttributeSchemaCleared() {
-		_spec.ClearField(citype.FieldAttributeSchema, field.TypeJSON)
+		_spec.ClearField(citype.FieldAttributeSchema, field.TypeString)
 	}
-	if value, ok := ctu.mutation.ValidationRules(); ok {
-		_spec.SetField(citype.FieldValidationRules, field.TypeJSON, value)
+	if value, ok := ctu.mutation.TenantID(); ok {
+		_spec.SetField(citype.FieldTenantID, field.TypeInt, value)
 	}
-	if ctu.mutation.ValidationRulesCleared() {
-		_spec.ClearField(citype.FieldValidationRules, field.TypeJSON)
-	}
-	if value, ok := ctu.mutation.IsSystem(); ok {
-		_spec.SetField(citype.FieldIsSystem, field.TypeBool, value)
+	if value, ok := ctu.mutation.AddedTenantID(); ok {
+		_spec.AddField(citype.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := ctu.mutation.IsActive(); ok {
 		_spec.SetField(citype.FieldIsActive, field.TypeBool, value)
@@ -439,170 +286,6 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ctu.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if ctu.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   citype.TenantTable,
-			Columns: []string{citype.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   citype.TenantTable,
-			Columns: []string{citype.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ctu.mutation.ConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !ctu.mutation.ConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ctu.mutation.AllowedRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.RemovedAllowedRelationshipsIDs(); len(nodes) > 0 && !ctu.mutation.AllowedRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.AllowedRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ctu.mutation.AttributeDefinitionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.RemovedAttributeDefinitionsIDs(); len(nodes) > 0 && !ctu.mutation.AttributeDefinitionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctu.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ctu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -638,20 +321,6 @@ func (ctuo *CITypeUpdateOne) SetNillableName(s *string) *CITypeUpdateOne {
 	return ctuo
 }
 
-// SetDisplayName sets the "display_name" field.
-func (ctuo *CITypeUpdateOne) SetDisplayName(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetDisplayName(s)
-	return ctuo
-}
-
-// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableDisplayName(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetDisplayName(*s)
-	}
-	return ctuo
-}
-
 // SetDescription sets the "description" field.
 func (ctuo *CITypeUpdateOne) SetDescription(s string) *CITypeUpdateOne {
 	ctuo.mutation.SetDescription(s)
@@ -669,20 +338,6 @@ func (ctuo *CITypeUpdateOne) SetNillableDescription(s *string) *CITypeUpdateOne 
 // ClearDescription clears the value of the "description" field.
 func (ctuo *CITypeUpdateOne) ClearDescription() *CITypeUpdateOne {
 	ctuo.mutation.ClearDescription()
-	return ctuo
-}
-
-// SetCategory sets the "category" field.
-func (ctuo *CITypeUpdateOne) SetCategory(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetCategory(s)
-	return ctuo
-}
-
-// SetNillableCategory sets the "category" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableCategory(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetCategory(*s)
-	}
 	return ctuo
 }
 
@@ -706,9 +361,37 @@ func (ctuo *CITypeUpdateOne) ClearIcon() *CITypeUpdateOne {
 	return ctuo
 }
 
+// SetColor sets the "color" field.
+func (ctuo *CITypeUpdateOne) SetColor(s string) *CITypeUpdateOne {
+	ctuo.mutation.SetColor(s)
+	return ctuo
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (ctuo *CITypeUpdateOne) SetNillableColor(s *string) *CITypeUpdateOne {
+	if s != nil {
+		ctuo.SetColor(*s)
+	}
+	return ctuo
+}
+
+// ClearColor clears the value of the "color" field.
+func (ctuo *CITypeUpdateOne) ClearColor() *CITypeUpdateOne {
+	ctuo.mutation.ClearColor()
+	return ctuo
+}
+
 // SetAttributeSchema sets the "attribute_schema" field.
-func (ctuo *CITypeUpdateOne) SetAttributeSchema(m map[string]interface{}) *CITypeUpdateOne {
-	ctuo.mutation.SetAttributeSchema(m)
+func (ctuo *CITypeUpdateOne) SetAttributeSchema(s string) *CITypeUpdateOne {
+	ctuo.mutation.SetAttributeSchema(s)
+	return ctuo
+}
+
+// SetNillableAttributeSchema sets the "attribute_schema" field if the given value is not nil.
+func (ctuo *CITypeUpdateOne) SetNillableAttributeSchema(s *string) *CITypeUpdateOne {
+	if s != nil {
+		ctuo.SetAttributeSchema(*s)
+	}
 	return ctuo
 }
 
@@ -718,29 +401,24 @@ func (ctuo *CITypeUpdateOne) ClearAttributeSchema() *CITypeUpdateOne {
 	return ctuo
 }
 
-// SetValidationRules sets the "validation_rules" field.
-func (ctuo *CITypeUpdateOne) SetValidationRules(m map[string]interface{}) *CITypeUpdateOne {
-	ctuo.mutation.SetValidationRules(m)
+// SetTenantID sets the "tenant_id" field.
+func (ctuo *CITypeUpdateOne) SetTenantID(i int) *CITypeUpdateOne {
+	ctuo.mutation.ResetTenantID()
+	ctuo.mutation.SetTenantID(i)
 	return ctuo
 }
 
-// ClearValidationRules clears the value of the "validation_rules" field.
-func (ctuo *CITypeUpdateOne) ClearValidationRules() *CITypeUpdateOne {
-	ctuo.mutation.ClearValidationRules()
-	return ctuo
-}
-
-// SetIsSystem sets the "is_system" field.
-func (ctuo *CITypeUpdateOne) SetIsSystem(b bool) *CITypeUpdateOne {
-	ctuo.mutation.SetIsSystem(b)
-	return ctuo
-}
-
-// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableIsSystem(b *bool) *CITypeUpdateOne {
-	if b != nil {
-		ctuo.SetIsSystem(*b)
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (ctuo *CITypeUpdateOne) SetNillableTenantID(i *int) *CITypeUpdateOne {
+	if i != nil {
+		ctuo.SetTenantID(*i)
 	}
+	return ctuo
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (ctuo *CITypeUpdateOne) AddTenantID(i int) *CITypeUpdateOne {
+	ctuo.mutation.AddTenantID(i)
 	return ctuo
 }
 
@@ -754,20 +432,6 @@ func (ctuo *CITypeUpdateOne) SetIsActive(b bool) *CITypeUpdateOne {
 func (ctuo *CITypeUpdateOne) SetNillableIsActive(b *bool) *CITypeUpdateOne {
 	if b != nil {
 		ctuo.SetIsActive(*b)
-	}
-	return ctuo
-}
-
-// SetTenantID sets the "tenant_id" field.
-func (ctuo *CITypeUpdateOne) SetTenantID(i int) *CITypeUpdateOne {
-	ctuo.mutation.SetTenantID(i)
-	return ctuo
-}
-
-// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableTenantID(i *int) *CITypeUpdateOne {
-	if i != nil {
-		ctuo.SetTenantID(*i)
 	}
 	return ctuo
 }
@@ -792,128 +456,9 @@ func (ctuo *CITypeUpdateOne) SetUpdatedAt(t time.Time) *CITypeUpdateOne {
 	return ctuo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ctuo *CITypeUpdateOne) SetTenant(t *Tenant) *CITypeUpdateOne {
-	return ctuo.SetTenantID(t.ID)
-}
-
-// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (ctuo *CITypeUpdateOne) AddConfigurationItemIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.AddConfigurationItemIDs(ids...)
-	return ctuo
-}
-
-// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (ctuo *CITypeUpdateOne) AddConfigurationItems(c ...*ConfigurationItem) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctuo.AddConfigurationItemIDs(ids...)
-}
-
-// AddAllowedRelationshipIDs adds the "allowed_relationships" edge to the CIRelationshipType entity by IDs.
-func (ctuo *CITypeUpdateOne) AddAllowedRelationshipIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.AddAllowedRelationshipIDs(ids...)
-	return ctuo
-}
-
-// AddAllowedRelationships adds the "allowed_relationships" edges to the CIRelationshipType entity.
-func (ctuo *CITypeUpdateOne) AddAllowedRelationships(c ...*CIRelationshipType) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctuo.AddAllowedRelationshipIDs(ids...)
-}
-
-// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
-func (ctuo *CITypeUpdateOne) AddAttributeDefinitionIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.AddAttributeDefinitionIDs(ids...)
-	return ctuo
-}
-
-// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
-func (ctuo *CITypeUpdateOne) AddAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctuo.AddAttributeDefinitionIDs(ids...)
-}
-
 // Mutation returns the CITypeMutation object of the builder.
 func (ctuo *CITypeUpdateOne) Mutation() *CITypeMutation {
 	return ctuo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (ctuo *CITypeUpdateOne) ClearTenant() *CITypeUpdateOne {
-	ctuo.mutation.ClearTenant()
-	return ctuo
-}
-
-// ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
-func (ctuo *CITypeUpdateOne) ClearConfigurationItems() *CITypeUpdateOne {
-	ctuo.mutation.ClearConfigurationItems()
-	return ctuo
-}
-
-// RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
-func (ctuo *CITypeUpdateOne) RemoveConfigurationItemIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.RemoveConfigurationItemIDs(ids...)
-	return ctuo
-}
-
-// RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
-func (ctuo *CITypeUpdateOne) RemoveConfigurationItems(c ...*ConfigurationItem) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctuo.RemoveConfigurationItemIDs(ids...)
-}
-
-// ClearAllowedRelationships clears all "allowed_relationships" edges to the CIRelationshipType entity.
-func (ctuo *CITypeUpdateOne) ClearAllowedRelationships() *CITypeUpdateOne {
-	ctuo.mutation.ClearAllowedRelationships()
-	return ctuo
-}
-
-// RemoveAllowedRelationshipIDs removes the "allowed_relationships" edge to CIRelationshipType entities by IDs.
-func (ctuo *CITypeUpdateOne) RemoveAllowedRelationshipIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.RemoveAllowedRelationshipIDs(ids...)
-	return ctuo
-}
-
-// RemoveAllowedRelationships removes "allowed_relationships" edges to CIRelationshipType entities.
-func (ctuo *CITypeUpdateOne) RemoveAllowedRelationships(c ...*CIRelationshipType) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctuo.RemoveAllowedRelationshipIDs(ids...)
-}
-
-// ClearAttributeDefinitions clears all "attribute_definitions" edges to the CIAttributeDefinition entity.
-func (ctuo *CITypeUpdateOne) ClearAttributeDefinitions() *CITypeUpdateOne {
-	ctuo.mutation.ClearAttributeDefinitions()
-	return ctuo
-}
-
-// RemoveAttributeDefinitionIDs removes the "attribute_definitions" edge to CIAttributeDefinition entities by IDs.
-func (ctuo *CITypeUpdateOne) RemoveAttributeDefinitionIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.RemoveAttributeDefinitionIDs(ids...)
-	return ctuo
-}
-
-// RemoveAttributeDefinitions removes "attribute_definitions" edges to CIAttributeDefinition entities.
-func (ctuo *CITypeUpdateOne) RemoveAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctuo.RemoveAttributeDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the CITypeUpdate builder.
@@ -972,18 +517,10 @@ func (ctuo *CITypeUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIType.name": %w`, err)}
 		}
 	}
-	if v, ok := ctuo.mutation.DisplayName(); ok {
-		if err := citype.DisplayNameValidator(v); err != nil {
-			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIType.display_name": %w`, err)}
+	if v, ok := ctuo.mutation.TenantID(); ok {
+		if err := citype.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIType.tenant_id": %w`, err)}
 		}
-	}
-	if v, ok := ctuo.mutation.Category(); ok {
-		if err := citype.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "CIType.category": %w`, err)}
-		}
-	}
-	if ctuo.mutation.TenantCleared() && len(ctuo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "CIType.tenant"`)
 	}
 	return nil
 }
@@ -1020,17 +557,11 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 	if value, ok := ctuo.mutation.Name(); ok {
 		_spec.SetField(citype.FieldName, field.TypeString, value)
 	}
-	if value, ok := ctuo.mutation.DisplayName(); ok {
-		_spec.SetField(citype.FieldDisplayName, field.TypeString, value)
-	}
 	if value, ok := ctuo.mutation.Description(); ok {
 		_spec.SetField(citype.FieldDescription, field.TypeString, value)
 	}
 	if ctuo.mutation.DescriptionCleared() {
 		_spec.ClearField(citype.FieldDescription, field.TypeString)
-	}
-	if value, ok := ctuo.mutation.Category(); ok {
-		_spec.SetField(citype.FieldCategory, field.TypeString, value)
 	}
 	if value, ok := ctuo.mutation.Icon(); ok {
 		_spec.SetField(citype.FieldIcon, field.TypeString, value)
@@ -1038,20 +569,23 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 	if ctuo.mutation.IconCleared() {
 		_spec.ClearField(citype.FieldIcon, field.TypeString)
 	}
+	if value, ok := ctuo.mutation.Color(); ok {
+		_spec.SetField(citype.FieldColor, field.TypeString, value)
+	}
+	if ctuo.mutation.ColorCleared() {
+		_spec.ClearField(citype.FieldColor, field.TypeString)
+	}
 	if value, ok := ctuo.mutation.AttributeSchema(); ok {
-		_spec.SetField(citype.FieldAttributeSchema, field.TypeJSON, value)
+		_spec.SetField(citype.FieldAttributeSchema, field.TypeString, value)
 	}
 	if ctuo.mutation.AttributeSchemaCleared() {
-		_spec.ClearField(citype.FieldAttributeSchema, field.TypeJSON)
+		_spec.ClearField(citype.FieldAttributeSchema, field.TypeString)
 	}
-	if value, ok := ctuo.mutation.ValidationRules(); ok {
-		_spec.SetField(citype.FieldValidationRules, field.TypeJSON, value)
+	if value, ok := ctuo.mutation.TenantID(); ok {
+		_spec.SetField(citype.FieldTenantID, field.TypeInt, value)
 	}
-	if ctuo.mutation.ValidationRulesCleared() {
-		_spec.ClearField(citype.FieldValidationRules, field.TypeJSON)
-	}
-	if value, ok := ctuo.mutation.IsSystem(); ok {
-		_spec.SetField(citype.FieldIsSystem, field.TypeBool, value)
+	if value, ok := ctuo.mutation.AddedTenantID(); ok {
+		_spec.AddField(citype.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := ctuo.mutation.IsActive(); ok {
 		_spec.SetField(citype.FieldIsActive, field.TypeBool, value)
@@ -1061,170 +595,6 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 	}
 	if value, ok := ctuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if ctuo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   citype.TenantTable,
-			Columns: []string{citype.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   citype.TenantTable,
-			Columns: []string{citype.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ctuo.mutation.ConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !ctuo.mutation.ConfigurationItemsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ctuo.mutation.AllowedRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.RemovedAllowedRelationshipsIDs(); len(nodes) > 0 && !ctuo.mutation.AllowedRelationshipsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.AllowedRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ctuo.mutation.AttributeDefinitionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.RemovedAttributeDefinitionsIDs(); len(nodes) > 0 && !ctuo.mutation.AttributeDefinitionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ctuo.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &CIType{config: ctuo.config}
 	_spec.Assign = _node.assignValues

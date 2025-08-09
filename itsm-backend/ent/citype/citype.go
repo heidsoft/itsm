@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -16,81 +15,36 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldDisplayName holds the string denoting the display_name field in the database.
-	FieldDisplayName = "display_name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldCategory holds the string denoting the category field in the database.
-	FieldCategory = "category"
 	// FieldIcon holds the string denoting the icon field in the database.
 	FieldIcon = "icon"
+	// FieldColor holds the string denoting the color field in the database.
+	FieldColor = "color"
 	// FieldAttributeSchema holds the string denoting the attribute_schema field in the database.
 	FieldAttributeSchema = "attribute_schema"
-	// FieldValidationRules holds the string denoting the validation_rules field in the database.
-	FieldValidationRules = "validation_rules"
-	// FieldIsSystem holds the string denoting the is_system field in the database.
-	FieldIsSystem = "is_system"
-	// FieldIsActive holds the string denoting the is_active field in the database.
-	FieldIsActive = "is_active"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
+	// FieldIsActive holds the string denoting the is_active field in the database.
+	FieldIsActive = "is_active"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
-	EdgeConfigurationItems = "configuration_items"
-	// EdgeAllowedRelationships holds the string denoting the allowed_relationships edge name in mutations.
-	EdgeAllowedRelationships = "allowed_relationships"
-	// EdgeAttributeDefinitions holds the string denoting the attribute_definitions edge name in mutations.
-	EdgeAttributeDefinitions = "attribute_definitions"
 	// Table holds the table name of the citype in the database.
 	Table = "ci_types"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "ci_types"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// ConfigurationItemsTable is the table that holds the configuration_items relation/edge.
-	ConfigurationItemsTable = "configuration_items"
-	// ConfigurationItemsInverseTable is the table name for the ConfigurationItem entity.
-	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
-	ConfigurationItemsInverseTable = "configuration_items"
-	// ConfigurationItemsColumn is the table column denoting the configuration_items relation/edge.
-	ConfigurationItemsColumn = "ci_type_id"
-	// AllowedRelationshipsTable is the table that holds the allowed_relationships relation/edge.
-	AllowedRelationshipsTable = "ci_relationship_types"
-	// AllowedRelationshipsInverseTable is the table name for the CIRelationshipType entity.
-	// It exists in this package in order to avoid circular dependency with the "cirelationshiptype" package.
-	AllowedRelationshipsInverseTable = "ci_relationship_types"
-	// AllowedRelationshipsColumn is the table column denoting the allowed_relationships relation/edge.
-	AllowedRelationshipsColumn = "ci_type_allowed_relationships"
-	// AttributeDefinitionsTable is the table that holds the attribute_definitions relation/edge.
-	AttributeDefinitionsTable = "ci_attribute_definitions"
-	// AttributeDefinitionsInverseTable is the table name for the CIAttributeDefinition entity.
-	// It exists in this package in order to avoid circular dependency with the "ciattributedefinition" package.
-	AttributeDefinitionsInverseTable = "ci_attribute_definitions"
-	// AttributeDefinitionsColumn is the table column denoting the attribute_definitions relation/edge.
-	AttributeDefinitionsColumn = "ci_type_id"
 )
 
 // Columns holds all SQL columns for citype fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
-	FieldDisplayName,
 	FieldDescription,
-	FieldCategory,
 	FieldIcon,
+	FieldColor,
 	FieldAttributeSchema,
-	FieldValidationRules,
-	FieldIsSystem,
-	FieldIsActive,
 	FieldTenantID,
+	FieldIsActive,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -108,12 +62,8 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
-	DisplayNameValidator func(string) error
-	// CategoryValidator is a validator for the "category" field. It is called by the builders before save.
-	CategoryValidator func(string) error
-	// DefaultIsSystem holds the default value on creation for the "is_system" field.
-	DefaultIsSystem bool
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -137,19 +87,9 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByDisplayName orders the results by the display_name field.
-func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
-}
-
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
-}
-
-// ByCategory orders the results by the category field.
-func ByCategory(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCategory, opts...).ToFunc()
 }
 
 // ByIcon orders the results by the icon field.
@@ -157,19 +97,24 @@ func ByIcon(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIcon, opts...).ToFunc()
 }
 
-// ByIsSystem orders the results by the is_system field.
-func ByIsSystem(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsSystem, opts...).ToFunc()
+// ByColor orders the results by the color field.
+func ByColor(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldColor, opts...).ToFunc()
 }
 
-// ByIsActive orders the results by the is_active field.
-func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+// ByAttributeSchema orders the results by the attribute_schema field.
+func ByAttributeSchema(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAttributeSchema, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+}
+
+// ByIsActive orders the results by the is_active field.
+func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -180,81 +125,4 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
-}
-
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByConfigurationItemsCount orders the results by configuration_items count.
-func ByConfigurationItemsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newConfigurationItemsStep(), opts...)
-	}
-}
-
-// ByConfigurationItems orders the results by configuration_items terms.
-func ByConfigurationItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAllowedRelationshipsCount orders the results by allowed_relationships count.
-func ByAllowedRelationshipsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAllowedRelationshipsStep(), opts...)
-	}
-}
-
-// ByAllowedRelationships orders the results by allowed_relationships terms.
-func ByAllowedRelationships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAllowedRelationshipsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByAttributeDefinitionsCount orders the results by attribute_definitions count.
-func ByAttributeDefinitionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAttributeDefinitionsStep(), opts...)
-	}
-}
-
-// ByAttributeDefinitions orders the results by attribute_definitions terms.
-func ByAttributeDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAttributeDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newConfigurationItemsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ConfigurationItemsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemsTable, ConfigurationItemsColumn),
-	)
-}
-func newAllowedRelationshipsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AllowedRelationshipsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AllowedRelationshipsTable, AllowedRelationshipsColumn),
-	)
-}
-func newAttributeDefinitionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AttributeDefinitionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AttributeDefinitionsTable, AttributeDefinitionsColumn),
-	)
 }

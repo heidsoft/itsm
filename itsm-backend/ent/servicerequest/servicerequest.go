@@ -3,11 +3,9 @@
 package servicerequest
 
 import (
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -23,39 +21,12 @@ const (
 	FieldStatus = "status"
 	// FieldReason holds the string denoting the reason field in the database.
 	FieldReason = "reason"
-	// FieldTenantID holds the string denoting the tenant_id field in the database.
-	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// EdgeTenant holds the string denoting the tenant edge name in mutations.
-	EdgeTenant = "tenant"
-	// EdgeCatalog holds the string denoting the catalog edge name in mutations.
-	EdgeCatalog = "catalog"
-	// EdgeRequester holds the string denoting the requester edge name in mutations.
-	EdgeRequester = "requester"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// Table holds the table name of the servicerequest in the database.
 	Table = "service_requests"
-	// TenantTable is the table that holds the tenant relation/edge.
-	TenantTable = "service_requests"
-	// TenantInverseTable is the table name for the Tenant entity.
-	// It exists in this package in order to avoid circular dependency with the "tenant" package.
-	TenantInverseTable = "tenants"
-	// TenantColumn is the table column denoting the tenant relation/edge.
-	TenantColumn = "tenant_id"
-	// CatalogTable is the table that holds the catalog relation/edge.
-	CatalogTable = "service_requests"
-	// CatalogInverseTable is the table name for the ServiceCatalog entity.
-	// It exists in this package in order to avoid circular dependency with the "servicecatalog" package.
-	CatalogInverseTable = "service_catalogs"
-	// CatalogColumn is the table column denoting the catalog relation/edge.
-	CatalogColumn = "catalog_id"
-	// RequesterTable is the table that holds the requester relation/edge.
-	RequesterTable = "service_requests"
-	// RequesterInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	RequesterInverseTable = "users"
-	// RequesterColumn is the table column denoting the requester relation/edge.
-	RequesterColumn = "requester_id"
 )
 
 // Columns holds all SQL columns for servicerequest fields.
@@ -65,8 +36,8 @@ var Columns = []string{
 	FieldRequesterID,
 	FieldStatus,
 	FieldReason,
-	FieldTenantID,
 	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -84,41 +55,15 @@ var (
 	CatalogIDValidator func(int) error
 	// RequesterIDValidator is a validator for the "requester_id" field. It is called by the builders before save.
 	RequesterIDValidator func(int) error
-	// ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
-	ReasonValidator func(string) error
-	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
-	TenantIDValidator func(int) error
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )
-
-// Status defines the type for the "status" enum field.
-type Status string
-
-// StatusPending is the default value of the Status enum.
-const DefaultStatus = StatusPending
-
-// Status values.
-const (
-	StatusPending    Status = "pending"
-	StatusInProgress Status = "in_progress"
-	StatusCompleted  Status = "completed"
-	StatusRejected   Status = "rejected"
-)
-
-func (s Status) String() string {
-	return string(s)
-}
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s Status) error {
-	switch s {
-	case StatusPending, StatusInProgress, StatusCompleted, StatusRejected:
-		return nil
-	default:
-		return fmt.Errorf("servicerequest: invalid enum value for status field: %q", s)
-	}
-}
 
 // OrderOption defines the ordering options for the ServiceRequest queries.
 type OrderOption func(*sql.Selector)
@@ -148,54 +93,12 @@ func ByReason(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReason, opts...).ToFunc()
 }
 
-// ByTenantID orders the results by the tenant_id field.
-func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
-}
-
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByTenantField orders the results by tenant field.
-func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByCatalogField orders the results by catalog field.
-func ByCatalogField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCatalogStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByRequesterField orders the results by requester field.
-func ByRequesterField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRequesterStep(), sql.OrderByField(field, opts...))
-	}
-}
-func newTenantStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(TenantInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-	)
-}
-func newCatalogStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(CatalogInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, CatalogTable, CatalogColumn),
-	)
-}
-func newRequesterStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RequesterInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
-	)
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }

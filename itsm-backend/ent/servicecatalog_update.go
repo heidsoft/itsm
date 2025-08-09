@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/servicecatalog"
-	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -44,20 +42,6 @@ func (scu *ServiceCatalogUpdate) SetNillableName(s *string) *ServiceCatalogUpdat
 	return scu
 }
 
-// SetCategory sets the "category" field.
-func (scu *ServiceCatalogUpdate) SetCategory(s string) *ServiceCatalogUpdate {
-	scu.mutation.SetCategory(s)
-	return scu
-}
-
-// SetNillableCategory sets the "category" field if the given value is not nil.
-func (scu *ServiceCatalogUpdate) SetNillableCategory(s *string) *ServiceCatalogUpdate {
-	if s != nil {
-		scu.SetCategory(*s)
-	}
-	return scu
-}
-
 // SetDescription sets the "description" field.
 func (scu *ServiceCatalogUpdate) SetDescription(s string) *ServiceCatalogUpdate {
 	scu.mutation.SetDescription(s)
@@ -78,28 +62,88 @@ func (scu *ServiceCatalogUpdate) ClearDescription() *ServiceCatalogUpdate {
 	return scu
 }
 
-// SetDeliveryTime sets the "delivery_time" field.
-func (scu *ServiceCatalogUpdate) SetDeliveryTime(s string) *ServiceCatalogUpdate {
-	scu.mutation.SetDeliveryTime(s)
+// SetCategory sets the "category" field.
+func (scu *ServiceCatalogUpdate) SetCategory(s string) *ServiceCatalogUpdate {
+	scu.mutation.SetCategory(s)
 	return scu
 }
 
-// SetNillableDeliveryTime sets the "delivery_time" field if the given value is not nil.
-func (scu *ServiceCatalogUpdate) SetNillableDeliveryTime(s *string) *ServiceCatalogUpdate {
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableCategory(s *string) *ServiceCatalogUpdate {
 	if s != nil {
-		scu.SetDeliveryTime(*s)
+		scu.SetCategory(*s)
 	}
 	return scu
 }
 
+// ClearCategory clears the value of the "category" field.
+func (scu *ServiceCatalogUpdate) ClearCategory() *ServiceCatalogUpdate {
+	scu.mutation.ClearCategory()
+	return scu
+}
+
+// SetPrice sets the "price" field.
+func (scu *ServiceCatalogUpdate) SetPrice(f float64) *ServiceCatalogUpdate {
+	scu.mutation.ResetPrice()
+	scu.mutation.SetPrice(f)
+	return scu
+}
+
+// SetNillablePrice sets the "price" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillablePrice(f *float64) *ServiceCatalogUpdate {
+	if f != nil {
+		scu.SetPrice(*f)
+	}
+	return scu
+}
+
+// AddPrice adds f to the "price" field.
+func (scu *ServiceCatalogUpdate) AddPrice(f float64) *ServiceCatalogUpdate {
+	scu.mutation.AddPrice(f)
+	return scu
+}
+
+// ClearPrice clears the value of the "price" field.
+func (scu *ServiceCatalogUpdate) ClearPrice() *ServiceCatalogUpdate {
+	scu.mutation.ClearPrice()
+	return scu
+}
+
+// SetDeliveryTime sets the "delivery_time" field.
+func (scu *ServiceCatalogUpdate) SetDeliveryTime(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetDeliveryTime()
+	scu.mutation.SetDeliveryTime(i)
+	return scu
+}
+
+// SetNillableDeliveryTime sets the "delivery_time" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableDeliveryTime(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetDeliveryTime(*i)
+	}
+	return scu
+}
+
+// AddDeliveryTime adds i to the "delivery_time" field.
+func (scu *ServiceCatalogUpdate) AddDeliveryTime(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddDeliveryTime(i)
+	return scu
+}
+
+// ClearDeliveryTime clears the value of the "delivery_time" field.
+func (scu *ServiceCatalogUpdate) ClearDeliveryTime() *ServiceCatalogUpdate {
+	scu.mutation.ClearDeliveryTime()
+	return scu
+}
+
 // SetStatus sets the "status" field.
-func (scu *ServiceCatalogUpdate) SetStatus(s servicecatalog.Status) *ServiceCatalogUpdate {
+func (scu *ServiceCatalogUpdate) SetStatus(s string) *ServiceCatalogUpdate {
 	scu.mutation.SetStatus(s)
 	return scu
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (scu *ServiceCatalogUpdate) SetNillableStatus(s *servicecatalog.Status) *ServiceCatalogUpdate {
+func (scu *ServiceCatalogUpdate) SetNillableStatus(s *string) *ServiceCatalogUpdate {
 	if s != nil {
 		scu.SetStatus(*s)
 	}
@@ -108,6 +152,7 @@ func (scu *ServiceCatalogUpdate) SetNillableStatus(s *servicecatalog.Status) *Se
 
 // SetTenantID sets the "tenant_id" field.
 func (scu *ServiceCatalogUpdate) SetTenantID(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetTenantID()
 	scu.mutation.SetTenantID(i)
 	return scu
 }
@@ -120,62 +165,49 @@ func (scu *ServiceCatalogUpdate) SetNillableTenantID(i *int) *ServiceCatalogUpda
 	return scu
 }
 
+// AddTenantID adds i to the "tenant_id" field.
+func (scu *ServiceCatalogUpdate) AddTenantID(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddTenantID(i)
+	return scu
+}
+
+// SetIsActive sets the "is_active" field.
+func (scu *ServiceCatalogUpdate) SetIsActive(b bool) *ServiceCatalogUpdate {
+	scu.mutation.SetIsActive(b)
+	return scu
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableIsActive(b *bool) *ServiceCatalogUpdate {
+	if b != nil {
+		scu.SetIsActive(*b)
+	}
+	return scu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (scu *ServiceCatalogUpdate) SetCreatedAt(t time.Time) *ServiceCatalogUpdate {
+	scu.mutation.SetCreatedAt(t)
+	return scu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableCreatedAt(t *time.Time) *ServiceCatalogUpdate {
+	if t != nil {
+		scu.SetCreatedAt(*t)
+	}
+	return scu
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (scu *ServiceCatalogUpdate) SetUpdatedAt(t time.Time) *ServiceCatalogUpdate {
 	scu.mutation.SetUpdatedAt(t)
 	return scu
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (scu *ServiceCatalogUpdate) SetTenant(t *Tenant) *ServiceCatalogUpdate {
-	return scu.SetTenantID(t.ID)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (scu *ServiceCatalogUpdate) AddServiceRequestIDs(ids ...int) *ServiceCatalogUpdate {
-	scu.mutation.AddServiceRequestIDs(ids...)
-	return scu
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (scu *ServiceCatalogUpdate) AddServiceRequests(s ...*ServiceRequest) *ServiceCatalogUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return scu.AddServiceRequestIDs(ids...)
-}
-
 // Mutation returns the ServiceCatalogMutation object of the builder.
 func (scu *ServiceCatalogUpdate) Mutation() *ServiceCatalogMutation {
 	return scu.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (scu *ServiceCatalogUpdate) ClearTenant() *ServiceCatalogUpdate {
-	scu.mutation.ClearTenant()
-	return scu
-}
-
-// ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
-func (scu *ServiceCatalogUpdate) ClearServiceRequests() *ServiceCatalogUpdate {
-	scu.mutation.ClearServiceRequests()
-	return scu
-}
-
-// RemoveServiceRequestIDs removes the "service_requests" edge to ServiceRequest entities by IDs.
-func (scu *ServiceCatalogUpdate) RemoveServiceRequestIDs(ids ...int) *ServiceCatalogUpdate {
-	scu.mutation.RemoveServiceRequestIDs(ids...)
-	return scu
-}
-
-// RemoveServiceRequests removes "service_requests" edges to ServiceRequest entities.
-func (scu *ServiceCatalogUpdate) RemoveServiceRequests(s ...*ServiceRequest) *ServiceCatalogUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return scu.RemoveServiceRequestIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -221,28 +253,10 @@ func (scu *ServiceCatalogUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.name": %w`, err)}
 		}
 	}
-	if v, ok := scu.mutation.Category(); ok {
-		if err := servicecatalog.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.category": %w`, err)}
-		}
-	}
-	if v, ok := scu.mutation.DeliveryTime(); ok {
-		if err := servicecatalog.DeliveryTimeValidator(v); err != nil {
-			return &ValidationError{Name: "delivery_time", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.delivery_time": %w`, err)}
-		}
-	}
-	if v, ok := scu.mutation.Status(); ok {
-		if err := servicecatalog.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.status": %w`, err)}
-		}
-	}
 	if v, ok := scu.mutation.TenantID(); ok {
 		if err := servicecatalog.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
 		}
-	}
-	if scu.mutation.TenantCleared() && len(scu.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceCatalog.tenant"`)
 	}
 	return nil
 }
@@ -262,97 +276,53 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := scu.mutation.Name(); ok {
 		_spec.SetField(servicecatalog.FieldName, field.TypeString, value)
 	}
-	if value, ok := scu.mutation.Category(); ok {
-		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
-	}
 	if value, ok := scu.mutation.Description(); ok {
 		_spec.SetField(servicecatalog.FieldDescription, field.TypeString, value)
 	}
 	if scu.mutation.DescriptionCleared() {
 		_spec.ClearField(servicecatalog.FieldDescription, field.TypeString)
 	}
+	if value, ok := scu.mutation.Category(); ok {
+		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
+	}
+	if scu.mutation.CategoryCleared() {
+		_spec.ClearField(servicecatalog.FieldCategory, field.TypeString)
+	}
+	if value, ok := scu.mutation.Price(); ok {
+		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
+	}
+	if value, ok := scu.mutation.AddedPrice(); ok {
+		_spec.AddField(servicecatalog.FieldPrice, field.TypeFloat64, value)
+	}
+	if scu.mutation.PriceCleared() {
+		_spec.ClearField(servicecatalog.FieldPrice, field.TypeFloat64)
+	}
 	if value, ok := scu.mutation.DeliveryTime(); ok {
-		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeString, value)
+		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedDeliveryTime(); ok {
+		_spec.AddField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
+	}
+	if scu.mutation.DeliveryTimeCleared() {
+		_spec.ClearField(servicecatalog.FieldDeliveryTime, field.TypeInt)
 	}
 	if value, ok := scu.mutation.Status(); ok {
-		_spec.SetField(servicecatalog.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := scu.mutation.TenantID(); ok {
+		_spec.SetField(servicecatalog.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedTenantID(); ok {
+		_spec.AddField(servicecatalog.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.IsActive(); ok {
+		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := scu.mutation.CreatedAt(); ok {
+		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := scu.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if scu.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicecatalog.TenantTable,
-			Columns: []string{servicecatalog.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := scu.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicecatalog.TenantTable,
-			Columns: []string{servicecatalog.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if scu.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := scu.mutation.RemovedServiceRequestsIDs(); len(nodes) > 0 && !scu.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := scu.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, scu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -388,20 +358,6 @@ func (scuo *ServiceCatalogUpdateOne) SetNillableName(s *string) *ServiceCatalogU
 	return scuo
 }
 
-// SetCategory sets the "category" field.
-func (scuo *ServiceCatalogUpdateOne) SetCategory(s string) *ServiceCatalogUpdateOne {
-	scuo.mutation.SetCategory(s)
-	return scuo
-}
-
-// SetNillableCategory sets the "category" field if the given value is not nil.
-func (scuo *ServiceCatalogUpdateOne) SetNillableCategory(s *string) *ServiceCatalogUpdateOne {
-	if s != nil {
-		scuo.SetCategory(*s)
-	}
-	return scuo
-}
-
 // SetDescription sets the "description" field.
 func (scuo *ServiceCatalogUpdateOne) SetDescription(s string) *ServiceCatalogUpdateOne {
 	scuo.mutation.SetDescription(s)
@@ -422,28 +378,88 @@ func (scuo *ServiceCatalogUpdateOne) ClearDescription() *ServiceCatalogUpdateOne
 	return scuo
 }
 
-// SetDeliveryTime sets the "delivery_time" field.
-func (scuo *ServiceCatalogUpdateOne) SetDeliveryTime(s string) *ServiceCatalogUpdateOne {
-	scuo.mutation.SetDeliveryTime(s)
+// SetCategory sets the "category" field.
+func (scuo *ServiceCatalogUpdateOne) SetCategory(s string) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetCategory(s)
 	return scuo
 }
 
-// SetNillableDeliveryTime sets the "delivery_time" field if the given value is not nil.
-func (scuo *ServiceCatalogUpdateOne) SetNillableDeliveryTime(s *string) *ServiceCatalogUpdateOne {
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableCategory(s *string) *ServiceCatalogUpdateOne {
 	if s != nil {
-		scuo.SetDeliveryTime(*s)
+		scuo.SetCategory(*s)
 	}
 	return scuo
 }
 
+// ClearCategory clears the value of the "category" field.
+func (scuo *ServiceCatalogUpdateOne) ClearCategory() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearCategory()
+	return scuo
+}
+
+// SetPrice sets the "price" field.
+func (scuo *ServiceCatalogUpdateOne) SetPrice(f float64) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetPrice()
+	scuo.mutation.SetPrice(f)
+	return scuo
+}
+
+// SetNillablePrice sets the "price" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillablePrice(f *float64) *ServiceCatalogUpdateOne {
+	if f != nil {
+		scuo.SetPrice(*f)
+	}
+	return scuo
+}
+
+// AddPrice adds f to the "price" field.
+func (scuo *ServiceCatalogUpdateOne) AddPrice(f float64) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddPrice(f)
+	return scuo
+}
+
+// ClearPrice clears the value of the "price" field.
+func (scuo *ServiceCatalogUpdateOne) ClearPrice() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearPrice()
+	return scuo
+}
+
+// SetDeliveryTime sets the "delivery_time" field.
+func (scuo *ServiceCatalogUpdateOne) SetDeliveryTime(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetDeliveryTime()
+	scuo.mutation.SetDeliveryTime(i)
+	return scuo
+}
+
+// SetNillableDeliveryTime sets the "delivery_time" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableDeliveryTime(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetDeliveryTime(*i)
+	}
+	return scuo
+}
+
+// AddDeliveryTime adds i to the "delivery_time" field.
+func (scuo *ServiceCatalogUpdateOne) AddDeliveryTime(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddDeliveryTime(i)
+	return scuo
+}
+
+// ClearDeliveryTime clears the value of the "delivery_time" field.
+func (scuo *ServiceCatalogUpdateOne) ClearDeliveryTime() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearDeliveryTime()
+	return scuo
+}
+
 // SetStatus sets the "status" field.
-func (scuo *ServiceCatalogUpdateOne) SetStatus(s servicecatalog.Status) *ServiceCatalogUpdateOne {
+func (scuo *ServiceCatalogUpdateOne) SetStatus(s string) *ServiceCatalogUpdateOne {
 	scuo.mutation.SetStatus(s)
 	return scuo
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (scuo *ServiceCatalogUpdateOne) SetNillableStatus(s *servicecatalog.Status) *ServiceCatalogUpdateOne {
+func (scuo *ServiceCatalogUpdateOne) SetNillableStatus(s *string) *ServiceCatalogUpdateOne {
 	if s != nil {
 		scuo.SetStatus(*s)
 	}
@@ -452,6 +468,7 @@ func (scuo *ServiceCatalogUpdateOne) SetNillableStatus(s *servicecatalog.Status)
 
 // SetTenantID sets the "tenant_id" field.
 func (scuo *ServiceCatalogUpdateOne) SetTenantID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetTenantID()
 	scuo.mutation.SetTenantID(i)
 	return scuo
 }
@@ -464,62 +481,49 @@ func (scuo *ServiceCatalogUpdateOne) SetNillableTenantID(i *int) *ServiceCatalog
 	return scuo
 }
 
+// AddTenantID adds i to the "tenant_id" field.
+func (scuo *ServiceCatalogUpdateOne) AddTenantID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddTenantID(i)
+	return scuo
+}
+
+// SetIsActive sets the "is_active" field.
+func (scuo *ServiceCatalogUpdateOne) SetIsActive(b bool) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetIsActive(b)
+	return scuo
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableIsActive(b *bool) *ServiceCatalogUpdateOne {
+	if b != nil {
+		scuo.SetIsActive(*b)
+	}
+	return scuo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (scuo *ServiceCatalogUpdateOne) SetCreatedAt(t time.Time) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetCreatedAt(t)
+	return scuo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableCreatedAt(t *time.Time) *ServiceCatalogUpdateOne {
+	if t != nil {
+		scuo.SetCreatedAt(*t)
+	}
+	return scuo
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (scuo *ServiceCatalogUpdateOne) SetUpdatedAt(t time.Time) *ServiceCatalogUpdateOne {
 	scuo.mutation.SetUpdatedAt(t)
 	return scuo
 }
 
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (scuo *ServiceCatalogUpdateOne) SetTenant(t *Tenant) *ServiceCatalogUpdateOne {
-	return scuo.SetTenantID(t.ID)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (scuo *ServiceCatalogUpdateOne) AddServiceRequestIDs(ids ...int) *ServiceCatalogUpdateOne {
-	scuo.mutation.AddServiceRequestIDs(ids...)
-	return scuo
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (scuo *ServiceCatalogUpdateOne) AddServiceRequests(s ...*ServiceRequest) *ServiceCatalogUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return scuo.AddServiceRequestIDs(ids...)
-}
-
 // Mutation returns the ServiceCatalogMutation object of the builder.
 func (scuo *ServiceCatalogUpdateOne) Mutation() *ServiceCatalogMutation {
 	return scuo.mutation
-}
-
-// ClearTenant clears the "tenant" edge to the Tenant entity.
-func (scuo *ServiceCatalogUpdateOne) ClearTenant() *ServiceCatalogUpdateOne {
-	scuo.mutation.ClearTenant()
-	return scuo
-}
-
-// ClearServiceRequests clears all "service_requests" edges to the ServiceRequest entity.
-func (scuo *ServiceCatalogUpdateOne) ClearServiceRequests() *ServiceCatalogUpdateOne {
-	scuo.mutation.ClearServiceRequests()
-	return scuo
-}
-
-// RemoveServiceRequestIDs removes the "service_requests" edge to ServiceRequest entities by IDs.
-func (scuo *ServiceCatalogUpdateOne) RemoveServiceRequestIDs(ids ...int) *ServiceCatalogUpdateOne {
-	scuo.mutation.RemoveServiceRequestIDs(ids...)
-	return scuo
-}
-
-// RemoveServiceRequests removes "service_requests" edges to ServiceRequest entities.
-func (scuo *ServiceCatalogUpdateOne) RemoveServiceRequests(s ...*ServiceRequest) *ServiceCatalogUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return scuo.RemoveServiceRequestIDs(ids...)
 }
 
 // Where appends a list predicates to the ServiceCatalogUpdate builder.
@@ -578,28 +582,10 @@ func (scuo *ServiceCatalogUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.name": %w`, err)}
 		}
 	}
-	if v, ok := scuo.mutation.Category(); ok {
-		if err := servicecatalog.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.category": %w`, err)}
-		}
-	}
-	if v, ok := scuo.mutation.DeliveryTime(); ok {
-		if err := servicecatalog.DeliveryTimeValidator(v); err != nil {
-			return &ValidationError{Name: "delivery_time", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.delivery_time": %w`, err)}
-		}
-	}
-	if v, ok := scuo.mutation.Status(); ok {
-		if err := servicecatalog.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.status": %w`, err)}
-		}
-	}
 	if v, ok := scuo.mutation.TenantID(); ok {
 		if err := servicecatalog.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
 		}
-	}
-	if scuo.mutation.TenantCleared() && len(scuo.mutation.TenantIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "ServiceCatalog.tenant"`)
 	}
 	return nil
 }
@@ -636,97 +622,53 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	if value, ok := scuo.mutation.Name(); ok {
 		_spec.SetField(servicecatalog.FieldName, field.TypeString, value)
 	}
-	if value, ok := scuo.mutation.Category(); ok {
-		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
-	}
 	if value, ok := scuo.mutation.Description(); ok {
 		_spec.SetField(servicecatalog.FieldDescription, field.TypeString, value)
 	}
 	if scuo.mutation.DescriptionCleared() {
 		_spec.ClearField(servicecatalog.FieldDescription, field.TypeString)
 	}
+	if value, ok := scuo.mutation.Category(); ok {
+		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
+	}
+	if scuo.mutation.CategoryCleared() {
+		_spec.ClearField(servicecatalog.FieldCategory, field.TypeString)
+	}
+	if value, ok := scuo.mutation.Price(); ok {
+		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
+	}
+	if value, ok := scuo.mutation.AddedPrice(); ok {
+		_spec.AddField(servicecatalog.FieldPrice, field.TypeFloat64, value)
+	}
+	if scuo.mutation.PriceCleared() {
+		_spec.ClearField(servicecatalog.FieldPrice, field.TypeFloat64)
+	}
 	if value, ok := scuo.mutation.DeliveryTime(); ok {
-		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeString, value)
+		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedDeliveryTime(); ok {
+		_spec.AddField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
+	}
+	if scuo.mutation.DeliveryTimeCleared() {
+		_spec.ClearField(servicecatalog.FieldDeliveryTime, field.TypeInt)
 	}
 	if value, ok := scuo.mutation.Status(); ok {
-		_spec.SetField(servicecatalog.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := scuo.mutation.TenantID(); ok {
+		_spec.SetField(servicecatalog.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedTenantID(); ok {
+		_spec.AddField(servicecatalog.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.IsActive(); ok {
+		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := scuo.mutation.CreatedAt(); ok {
+		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := scuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if scuo.mutation.TenantCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicecatalog.TenantTable,
-			Columns: []string{servicecatalog.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := scuo.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   servicecatalog.TenantTable,
-			Columns: []string{servicecatalog.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if scuo.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := scuo.mutation.RemovedServiceRequestsIDs(); len(nodes) > 0 && !scuo.mutation.ServiceRequestsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := scuo.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   servicecatalog.ServiceRequestsTable,
-			Columns: []string{servicecatalog.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ServiceCatalog{config: scuo.config}
 	_spec.Assign = _node.assignValues

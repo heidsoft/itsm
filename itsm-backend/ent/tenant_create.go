@@ -6,22 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/cichangerecord"
-	"itsm-backend/ent/cilifecyclestate"
-	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/cirelationshiptype"
-	"itsm-backend/ent/citype"
-	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/incident"
-	"itsm-backend/ent/knowledgearticle"
-	"itsm-backend/ent/servicecatalog"
-	"itsm-backend/ent/servicerequest"
-	"itsm-backend/ent/subscription"
 	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/user"
-	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -61,43 +46,31 @@ func (tc *TenantCreate) SetNillableDomain(s *string) *TenantCreate {
 	return tc
 }
 
-// SetStatus sets the "status" field.
-func (tc *TenantCreate) SetStatus(t tenant.Status) *TenantCreate {
-	tc.mutation.SetStatus(t)
-	return tc
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (tc *TenantCreate) SetNillableStatus(t *tenant.Status) *TenantCreate {
-	if t != nil {
-		tc.SetStatus(*t)
-	}
-	return tc
-}
-
 // SetType sets the "type" field.
-func (tc *TenantCreate) SetType(t tenant.Type) *TenantCreate {
-	tc.mutation.SetType(t)
+func (tc *TenantCreate) SetType(s string) *TenantCreate {
+	tc.mutation.SetType(s)
 	return tc
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (tc *TenantCreate) SetNillableType(t *tenant.Type) *TenantCreate {
-	if t != nil {
-		tc.SetType(*t)
+func (tc *TenantCreate) SetNillableType(s *string) *TenantCreate {
+	if s != nil {
+		tc.SetType(*s)
 	}
 	return tc
 }
 
-// SetSettings sets the "settings" field.
-func (tc *TenantCreate) SetSettings(m map[string]interface{}) *TenantCreate {
-	tc.mutation.SetSettings(m)
+// SetStatus sets the "status" field.
+func (tc *TenantCreate) SetStatus(s string) *TenantCreate {
+	tc.mutation.SetStatus(s)
 	return tc
 }
 
-// SetQuota sets the "quota" field.
-func (tc *TenantCreate) SetQuota(m map[string]interface{}) *TenantCreate {
-	tc.mutation.SetQuota(m)
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableStatus(s *string) *TenantCreate {
+	if s != nil {
+		tc.SetStatus(*s)
+	}
 	return tc
 }
 
@@ -143,231 +116,6 @@ func (tc *TenantCreate) SetNillableUpdatedAt(t *time.Time) *TenantCreate {
 	return tc
 }
 
-// AddUserIDs adds the "users" edge to the User entity by IDs.
-func (tc *TenantCreate) AddUserIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddUserIDs(ids...)
-	return tc
-}
-
-// AddUsers adds the "users" edges to the User entity.
-func (tc *TenantCreate) AddUsers(u ...*User) *TenantCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return tc.AddUserIDs(ids...)
-}
-
-// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (tc *TenantCreate) AddTicketIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddTicketIDs(ids...)
-	return tc
-}
-
-// AddTickets adds the "tickets" edges to the Ticket entity.
-func (tc *TenantCreate) AddTickets(t ...*Ticket) *TenantCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return tc.AddTicketIDs(ids...)
-}
-
-// AddServiceCatalogIDs adds the "service_catalogs" edge to the ServiceCatalog entity by IDs.
-func (tc *TenantCreate) AddServiceCatalogIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddServiceCatalogIDs(ids...)
-	return tc
-}
-
-// AddServiceCatalogs adds the "service_catalogs" edges to the ServiceCatalog entity.
-func (tc *TenantCreate) AddServiceCatalogs(s ...*ServiceCatalog) *TenantCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return tc.AddServiceCatalogIDs(ids...)
-}
-
-// AddServiceRequestIDs adds the "service_requests" edge to the ServiceRequest entity by IDs.
-func (tc *TenantCreate) AddServiceRequestIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddServiceRequestIDs(ids...)
-	return tc
-}
-
-// AddServiceRequests adds the "service_requests" edges to the ServiceRequest entity.
-func (tc *TenantCreate) AddServiceRequests(s ...*ServiceRequest) *TenantCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return tc.AddServiceRequestIDs(ids...)
-}
-
-// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
-func (tc *TenantCreate) AddSubscriptionIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddSubscriptionIDs(ids...)
-	return tc
-}
-
-// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
-func (tc *TenantCreate) AddSubscriptions(s ...*Subscription) *TenantCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return tc.AddSubscriptionIDs(ids...)
-}
-
-// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (tc *TenantCreate) AddConfigurationItemIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddConfigurationItemIDs(ids...)
-	return tc
-}
-
-// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (tc *TenantCreate) AddConfigurationItems(c ...*ConfigurationItem) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddConfigurationItemIDs(ids...)
-}
-
-// AddKnowledgeArticleIDs adds the "knowledge_articles" edge to the KnowledgeArticle entity by IDs.
-func (tc *TenantCreate) AddKnowledgeArticleIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddKnowledgeArticleIDs(ids...)
-	return tc
-}
-
-// AddKnowledgeArticles adds the "knowledge_articles" edges to the KnowledgeArticle entity.
-func (tc *TenantCreate) AddKnowledgeArticles(k ...*KnowledgeArticle) *TenantCreate {
-	ids := make([]int, len(k))
-	for i := range k {
-		ids[i] = k[i].ID
-	}
-	return tc.AddKnowledgeArticleIDs(ids...)
-}
-
-// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
-func (tc *TenantCreate) AddWorkflowIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddWorkflowIDs(ids...)
-	return tc
-}
-
-// AddWorkflows adds the "workflows" edges to the Workflow entity.
-func (tc *TenantCreate) AddWorkflows(w ...*Workflow) *TenantCreate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
-	}
-	return tc.AddWorkflowIDs(ids...)
-}
-
-// AddCiTypeIDs adds the "ci_types" edge to the CIType entity by IDs.
-func (tc *TenantCreate) AddCiTypeIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddCiTypeIDs(ids...)
-	return tc
-}
-
-// AddCiTypes adds the "ci_types" edges to the CIType entity.
-func (tc *TenantCreate) AddCiTypes(c ...*CIType) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddCiTypeIDs(ids...)
-}
-
-// AddCiRelationshipTypeIDs adds the "ci_relationship_types" edge to the CIRelationshipType entity by IDs.
-func (tc *TenantCreate) AddCiRelationshipTypeIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddCiRelationshipTypeIDs(ids...)
-	return tc
-}
-
-// AddCiRelationshipTypes adds the "ci_relationship_types" edges to the CIRelationshipType entity.
-func (tc *TenantCreate) AddCiRelationshipTypes(c ...*CIRelationshipType) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddCiRelationshipTypeIDs(ids...)
-}
-
-// AddCiRelationshipIDs adds the "ci_relationships" edge to the CIRelationship entity by IDs.
-func (tc *TenantCreate) AddCiRelationshipIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddCiRelationshipIDs(ids...)
-	return tc
-}
-
-// AddCiRelationships adds the "ci_relationships" edges to the CIRelationship entity.
-func (tc *TenantCreate) AddCiRelationships(c ...*CIRelationship) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddCiRelationshipIDs(ids...)
-}
-
-// AddCiLifecycleStateIDs adds the "ci_lifecycle_states" edge to the CILifecycleState entity by IDs.
-func (tc *TenantCreate) AddCiLifecycleStateIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddCiLifecycleStateIDs(ids...)
-	return tc
-}
-
-// AddCiLifecycleStates adds the "ci_lifecycle_states" edges to the CILifecycleState entity.
-func (tc *TenantCreate) AddCiLifecycleStates(c ...*CILifecycleState) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddCiLifecycleStateIDs(ids...)
-}
-
-// AddCiChangeRecordIDs adds the "ci_change_records" edge to the CIChangeRecord entity by IDs.
-func (tc *TenantCreate) AddCiChangeRecordIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddCiChangeRecordIDs(ids...)
-	return tc
-}
-
-// AddCiChangeRecords adds the "ci_change_records" edges to the CIChangeRecord entity.
-func (tc *TenantCreate) AddCiChangeRecords(c ...*CIChangeRecord) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddCiChangeRecordIDs(ids...)
-}
-
-// AddCiAttributeDefinitionIDs adds the "ci_attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
-func (tc *TenantCreate) AddCiAttributeDefinitionIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddCiAttributeDefinitionIDs(ids...)
-	return tc
-}
-
-// AddCiAttributeDefinitions adds the "ci_attribute_definitions" edges to the CIAttributeDefinition entity.
-func (tc *TenantCreate) AddCiAttributeDefinitions(c ...*CIAttributeDefinition) *TenantCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return tc.AddCiAttributeDefinitionIDs(ids...)
-}
-
-// AddIncidentIDs adds the "incidents" edge to the Incident entity by IDs.
-func (tc *TenantCreate) AddIncidentIDs(ids ...int) *TenantCreate {
-	tc.mutation.AddIncidentIDs(ids...)
-	return tc
-}
-
-// AddIncidents adds the "incidents" edges to the Incident entity.
-func (tc *TenantCreate) AddIncidents(i ...*Incident) *TenantCreate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return tc.AddIncidentIDs(ids...)
-}
-
 // Mutation returns the TenantMutation object of the builder.
 func (tc *TenantCreate) Mutation() *TenantMutation {
 	return tc.mutation
@@ -403,13 +151,13 @@ func (tc *TenantCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tc *TenantCreate) defaults() {
-	if _, ok := tc.mutation.Status(); !ok {
-		v := tenant.DefaultStatus
-		tc.mutation.SetStatus(v)
-	}
 	if _, ok := tc.mutation.GetType(); !ok {
 		v := tenant.DefaultType
 		tc.mutation.SetType(v)
+	}
+	if _, ok := tc.mutation.Status(); !ok {
+		v := tenant.DefaultStatus
+		tc.mutation.SetStatus(v)
 	}
 	if _, ok := tc.mutation.CreatedAt(); !ok {
 		v := tenant.DefaultCreatedAt()
@@ -439,26 +187,11 @@ func (tc *TenantCreate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Tenant.code": %w`, err)}
 		}
 	}
-	if v, ok := tc.mutation.Domain(); ok {
-		if err := tenant.DomainValidator(v); err != nil {
-			return &ValidationError{Name: "domain", err: fmt.Errorf(`ent: validator failed for field "Tenant.domain": %w`, err)}
-		}
-	}
-	if _, ok := tc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Tenant.status"`)}
-	}
-	if v, ok := tc.mutation.Status(); ok {
-		if err := tenant.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Tenant.status": %w`, err)}
-		}
-	}
 	if _, ok := tc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Tenant.type"`)}
 	}
-	if v, ok := tc.mutation.GetType(); ok {
-		if err := tenant.TypeValidator(v); err != nil {
-			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Tenant.type": %w`, err)}
-		}
+	if _, ok := tc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Tenant.status"`)}
 	}
 	if _, ok := tc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Tenant.created_at"`)}
@@ -504,25 +237,17 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 		_spec.SetField(tenant.FieldDomain, field.TypeString, value)
 		_node.Domain = value
 	}
-	if value, ok := tc.mutation.Status(); ok {
-		_spec.SetField(tenant.FieldStatus, field.TypeEnum, value)
-		_node.Status = value
-	}
 	if value, ok := tc.mutation.GetType(); ok {
-		_spec.SetField(tenant.FieldType, field.TypeEnum, value)
+		_spec.SetField(tenant.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := tc.mutation.Settings(); ok {
-		_spec.SetField(tenant.FieldSettings, field.TypeJSON, value)
-		_node.Settings = value
-	}
-	if value, ok := tc.mutation.Quota(); ok {
-		_spec.SetField(tenant.FieldQuota, field.TypeJSON, value)
-		_node.Quota = value
+	if value, ok := tc.mutation.Status(); ok {
+		_spec.SetField(tenant.FieldStatus, field.TypeString, value)
+		_node.Status = value
 	}
 	if value, ok := tc.mutation.ExpiresAt(); ok {
 		_spec.SetField(tenant.FieldExpiresAt, field.TypeTime, value)
-		_node.ExpiresAt = &value
+		_node.ExpiresAt = value
 	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(tenant.FieldCreatedAt, field.TypeTime, value)
@@ -531,246 +256,6 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.UpdatedAt(); ok {
 		_spec.SetField(tenant.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := tc.mutation.UsersIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.UsersTable,
-			Columns: []string{tenant.UsersColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.TicketsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.TicketsTable,
-			Columns: []string{tenant.TicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ServiceCatalogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.ServiceCatalogsTable,
-			Columns: []string{tenant.ServiceCatalogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ServiceRequestsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.ServiceRequestsTable,
-			Columns: []string{tenant.ServiceRequestsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.SubscriptionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.SubscriptionsTable,
-			Columns: []string{tenant.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(subscription.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.ConfigurationItemsTable,
-			Columns: []string{tenant.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.KnowledgeArticlesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.KnowledgeArticlesTable,
-			Columns: []string{tenant.KnowledgeArticlesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.WorkflowsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.WorkflowsTable,
-			Columns: []string{tenant.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.CiTypesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.CiTypesTable,
-			Columns: []string{tenant.CiTypesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.CiRelationshipTypesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.CiRelationshipTypesTable,
-			Columns: []string{tenant.CiRelationshipTypesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.CiRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.CiRelationshipsTable,
-			Columns: []string{tenant.CiRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.CiLifecycleStatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.CiLifecycleStatesTable,
-			Columns: []string{tenant.CiLifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.CiChangeRecordsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.CiChangeRecordsTable,
-			Columns: []string{tenant.CiChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.CiAttributeDefinitionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.CiAttributeDefinitionsTable,
-			Columns: []string{tenant.CiAttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := tc.mutation.IncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   tenant.IncidentsTable,
-			Columns: []string{tenant.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

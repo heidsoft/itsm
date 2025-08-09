@@ -1,21 +1,62 @@
 "use client";
 
-import { Settings, AlertTriangle, RefreshCw, Save, Server } from 'lucide-react';
-
 import React, { useState } from "react";
-// 系统配置分组
-const CONFIG_SECTIONS = {
-  GENERAL: "general",
-  SECURITY: "security",
-  EMAIL: "email",
-  DATABASE: "database",
-  INTEGRATION: "integration",
-  NOTIFICATION: "notification",
-} as const;
+import {
+  Card,
+  Tabs,
+  Form,
+  Input,
+  Select,
+  Switch,
+  Button,
+  message,
+  Space,
+  Row,
+  Col,
+  Typography,
+  Divider,
+  InputNumber,
+  Alert,
+  Tooltip,
+  Badge,
+  Statistic,
+  Tag,
+  Modal,
+  Progress,
+} from "antd";
+import {
+  Settings,
+  AlertTriangle,
+  RefreshCw,
+  Save,
+  Server,
+  Shield,
+  Mail,
+  Database,
+  Globe,
+  Bell,
+  CheckCircle,
+  Clock,
+  HardDrive,
+  Network,
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
+  TestTube,
+  Activity,
+  Cpu,
+  MemoryStick,
+  Wifi,
+} from "lucide-react";
 
-// 模拟系统配置数据
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
+const { Password } = Input;
+
+// 系统配置数据
 const mockSystemConfig = {
-  // 基础设置
   general: {
     systemName: "企业ITSM系统",
     systemUrl: "https://itsm.company.com",
@@ -27,7 +68,6 @@ const mockSystemConfig = {
     maxFileSize: 10,
     allowedFileTypes: ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.gif",
   },
-  // 安全设置
   security: {
     passwordMinLength: 8,
     passwordRequireUppercase: true,
@@ -41,7 +81,6 @@ const mockSystemConfig = {
     enableSSOLogin: false,
     ssoProvider: "LDAP",
   },
-  // 邮件设置
   email: {
     smtpHost: "smtp.company.com",
     smtpPort: 587,
@@ -53,7 +92,6 @@ const mockSystemConfig = {
     enableEmailNotification: true,
     emailTemplate: "default",
   },
-  // 数据库设置
   database: {
     host: "localhost",
     port: 5432,
@@ -65,7 +103,6 @@ const mockSystemConfig = {
     backupSchedule: "daily",
     backupRetentionDays: 30,
   },
-  // 集成设置
   integration: {
     enableApiAccess: true,
     apiRateLimit: 1000,
@@ -76,7 +113,6 @@ const mockSystemConfig = {
     ldapPort: 389,
     ldapBaseDn: "dc=company,dc=com",
   },
-  // 通知设置
   notification: {
     enablePushNotification: true,
     enableEmailNotification: true,
@@ -90,32 +126,38 @@ const mockSystemConfig = {
 
 const SystemConfiguration = () => {
   const [config, setConfig] = useState(mockSystemConfig);
-  const [activeSection, setActiveSection] = useState(CONFIG_SECTIONS.GENERAL);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [testingConnection, setTestingConnection] = useState<string | null>(
+    null
+  );
+  const [form] = Form.useForm();
+  const [showPassword, setShowPassword] = useState(false);
 
-  // 处理配置更新
-  const handleConfigChange = (section: string, field: string, value: unknown) => {
-    setConfig((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }));
-    setHasChanges(true);
-  };
+  // 系统状态统计
+  const [systemStats] = useState({
+    uptime: "99.9%",
+    connections: 45,
+    diskUsage: 67,
+    memoryUsage: 72,
+    cpuUsage: 23,
+    networkLatency: 12,
+  });
 
   // 保存配置
   const handleSave = async () => {
-    setIsSaving(true);
     try {
+      const values = await form.validateFields();
+      setIsSaving(true);
+
       // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      setConfig({ ...config, ...values });
       setHasChanges(false);
-      alert("配置保存成功！");
+      message.success("配置保存成功！");
     } catch (error) {
-      alert("保存失败，请重试！");
+      message.error("保存失败，请检查必填项！");
     } finally {
       setIsSaving(false);
     }
@@ -123,527 +165,773 @@ const SystemConfiguration = () => {
 
   // 重置配置
   const handleReset = () => {
-    if (confirm("确定要重置所有配置吗？此操作不可撤销。")) {
-      setConfig(mockSystemConfig);
-      setHasChanges(false);
-    }
+    Modal.confirm({
+      title: "确认重置",
+      content: "确定要重置所有配置吗？此操作不可撤销。",
+      okText: "确定重置",
+      okType: "danger",
+      cancelText: "取消",
+      onOk: () => {
+        setConfig(mockSystemConfig);
+        form.setFieldsValue(mockSystemConfig);
+        setHasChanges(false);
+        message.info("配置已重置");
+      },
+    });
   };
 
   // 测试连接
   const handleTestConnection = async (type: string) => {
+    setTestingConnection(type);
     try {
-      // 模拟测试连接
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert(`${type}连接测试成功！`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      message.success(`${type}连接测试成功！`);
     } catch (error) {
-      alert(`${type}连接测试失败！`);
+      message.error(`${type}连接测试失败！`);
+    } finally {
+      setTestingConnection(null);
     }
   };
 
-  // 配置节点菜单
-  const sectionMenus = [
-    {
-      key: CONFIG_SECTIONS.GENERAL,
-      label: "基础设置",
-      icon: Settings,
-      description: "系统基本信息和通用配置",
-    },
-    {
-      key: CONFIG_SECTIONS.SECURITY,
-      label: "安全设置",
-      icon: Shield,
-      description: "密码策略和安全选项",
-    },
-    {
-      key: CONFIG_SECTIONS.EMAIL,
-      label: "邮件设置",
-      icon: Mail,
-      description: "SMTP服务器和邮件模板",
-    },
-    {
-      key: CONFIG_SECTIONS.DATABASE,
-      label: "数据库设置",
-      icon: Database,
-      description: "数据库连接和备份配置",
-    },
-    {
-      key: CONFIG_SECTIONS.INTEGRATION,
-      label: "集成设置",
-      icon: Globe,
-      description: "API接口和第三方集成",
-    },
-    {
-      key: CONFIG_SECTIONS.NOTIFICATION,
-      label: "通知设置",
-      icon: Bell,
-      description: "消息推送和通知渠道",
-    },
-  ];
+  // 表单值变化处理
+  const handleFormChange = () => {
+    setHasChanges(true);
+  };
 
   // 渲染基础设置
   const renderGeneralSettings = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            系统名称
-          </label>
-          <input
-            type="text"
-            value={config.general.systemName}
-            onChange={(e) =>
-              handleConfigChange("general", "systemName", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            系统URL
-          </label>
-          <input
-            type="url"
-            value={config.general.systemUrl}
-            onChange={(e) =>
-              handleConfigChange("general", "systemUrl", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            时区
-          </label>
-          <select
-            value={config.general.timezone}
-            onChange={(e) =>
-              handleConfigChange("general", "timezone", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    <Card
+      title={
+        <span>
+          <Settings className="w-4 h-4 mr-2" />
+          基础设置
+        </span>
+      }
+      className="mb-6"
+    >
+      <Row gutter={[24, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="系统名称"
+            name={["general", "systemName"]}
+            rules={[{ required: true, message: "请输入系统名称" }]}
           >
-            <option value="Asia/Shanghai">Asia/Shanghai (UTC+8)</option>
-            <option value="UTC">UTC (UTC+0)</option>
-            <option value="America/New_York">America/New_York (UTC-5)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            默认语言
-          </label>
-          <select
-            value={config.general.language}
-            onChange={(e) =>
-              handleConfigChange("general", "language", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <Input placeholder="请输入系统名称" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="系统URL"
+            name={["general", "systemUrl"]}
+            rules={[
+              { required: true, type: "url", message: "请输入有效的URL" },
+            ]}
           >
-            <option value="zh-CN">简体中文</option>
-            <option value="en-US">English</option>
-            <option value="ja-JP">日本語</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            会话超时时间（分钟）
-          </label>
-          <input
-            type="number"
-            value={config.general.sessionTimeout}
-            onChange={(e) =>
-              handleConfigChange(
-                "general",
-                "sessionTimeout",
-                parseInt(e.target.value)
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            最大文件大小（MB）
-          </label>
-          <input
-            type="number"
-            value={config.general.maxFileSize}
-            onChange={(e) =>
-              handleConfigChange(
-                "general",
-                "maxFileSize",
-                parseInt(e.target.value)
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          允许的文件类型
-        </label>
-        <input
-          type="text"
-          value={config.general.allowedFileTypes}
-          onChange={(e) =>
-            handleConfigChange("general", "allowedFileTypes", e.target.value)
-          }
-          placeholder="例如: .pdf,.doc,.jpg"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <p className="text-sm text-gray-500 mt-1">用逗号分隔多个文件扩展名</p>
-      </div>
-    </div>
+            <Input placeholder="https://itsm.company.com" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="时区" name={["general", "timezone"]}>
+            <Select>
+              <Option value="Asia/Shanghai">Asia/Shanghai (UTC+8)</Option>
+              <Option value="UTC">UTC (UTC+0)</Option>
+              <Option value="America/New_York">America/New_York (UTC-5)</Option>
+              <Option value="Europe/London">Europe/London (UTC+0)</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="默认语言" name={["general", "language"]}>
+            <Select>
+              <Option value="zh-CN">简体中文</Option>
+              <Option value="en-US">English</Option>
+              <Option value="ja-JP">日本語</Option>
+              <Option value="ko-KR">한국어</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="会话超时时间（分钟）"
+            name={["general", "sessionTimeout"]}
+            rules={[{ required: true, type: "number", min: 5, max: 480 }]}
+          >
+            <InputNumber min={5} max={480} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="最大文件大小（MB）"
+            name={["general", "maxFileSize"]}
+            rules={[{ required: true, type: "number", min: 1, max: 1024 }]}
+          >
+            <InputNumber min={1} max={1024} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24}>
+          <Form.Item
+            label="允许的文件类型"
+            name={["general", "allowedFileTypes"]}
+            extra="用逗号分隔多个文件扩展名"
+          >
+            <Input placeholder="例如: .pdf,.doc,.jpg" />
+          </Form.Item>
+        </Col>
+      </Row>
+    </Card>
   );
 
   // 渲染安全设置
   const renderSecuritySettings = () => (
-    <div className="space-y-6">
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <AlertTriangle className="w-5 h-5 text-yellow-600 mr-2" />
-          <h4 className="text-sm font-medium text-yellow-800">安全设置提醒</h4>
-        </div>
-        <p className="text-sm text-yellow-700 mt-1">
-          修改安全设置可能影响所有用户的登录体验，请谨慎操作。
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            密码最小长度
-          </label>
-          <input
-            type="number"
-            min="6"
-            max="20"
-            value={config.security.passwordMinLength}
-            onChange={(e) =>
-              handleConfigChange(
-                "security",
-                "passwordMinLength",
-                parseInt(e.target.value)
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            密码过期天数
-          </label>
-          <input
-            type="number"
-            value={config.security.passwordExpireDays}
-            onChange={(e) =>
-              handleConfigChange(
-                "security",
-                "passwordExpireDays",
-                parseInt(e.target.value)
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            最大登录尝试次数
-          </label>
-          <input
-            type="number"
-            value={config.security.maxLoginAttempts}
-            onChange={(e) =>
-              handleConfigChange(
-                "security",
-                "maxLoginAttempts",
-                parseInt(e.target.value)
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            锁定时长（分钟）
-          </label>
-          <input
-            type="number"
-            value={config.security.lockoutDuration}
-            onChange={(e) =>
-              handleConfigChange(
-                "security",
-                "lockoutDuration",
-                parseInt(e.target.value)
-              )
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h4 className="text-lg font-medium text-gray-900">密码复杂度要求</h4>
-        <div className="space-y-3">
-          {[
-            { key: "passwordRequireUppercase", label: "包含大写字母" },
-            { key: "passwordRequireLowercase", label: "包含小写字母" },
-            { key: "passwordRequireNumbers", label: "包含数字" },
-            { key: "passwordRequireSpecialChars", label: "包含特殊字符" },
-          ].map((item) => (
-            <label key={item.key} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={config.security[item.key]}
-                onChange={(e) =>
-                  handleConfigChange("security", item.key, e.target.checked)
-                }
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">{item.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h4 className="text-lg font-medium text-gray-900">高级安全选项</h4>
-        <div className="space-y-3">
-          {[
-            { key: "enableTwoFactor", label: "启用双因子认证" },
-            { key: "enableSSOLogin", label: "启用单点登录(SSO)" },
-          ].map((item) => (
-            <label key={item.key} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={config.security[item.key]}
-                onChange={(e) =>
-                  handleConfigChange("security", item.key, e.target.checked)
-                }
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">{item.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Card
+      title={
+        <span>
+          <Shield className="w-4 h-4 mr-2" />
+          安全设置
+        </span>
+      }
+      className="mb-6"
+    >
+      <Row gutter={[24, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码最小长度"
+            name={["security", "passwordMinLength"]}
+            rules={[{ required: true, type: "number", min: 6, max: 32 }]}
+          >
+            <InputNumber min={6} max={32} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码过期天数"
+            name={["security", "passwordExpireDays"]}
+            rules={[{ required: true, type: "number", min: 0, max: 365 }]}
+          >
+            <InputNumber min={0} max={365} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码要求大写字母"
+            name={["security", "passwordRequireUppercase"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码要求小写字母"
+            name={["security", "passwordRequireLowercase"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码要求数字"
+            name={["security", "passwordRequireNumbers"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码要求特殊字符"
+            name={["security", "passwordRequireSpecialChars"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="最大登录尝试次数"
+            name={["security", "maxLoginAttempts"]}
+            rules={[{ required: true, type: "number", min: 3, max: 10 }]}
+          >
+            <InputNumber min={3} max={10} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="锁定持续时间（分钟）"
+            name={["security", "lockoutDuration"]}
+            rules={[{ required: true, type: "number", min: 5, max: 60 }]}
+          >
+            <InputNumber min={5} max={60} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用双因子认证"
+            name={["security", "enableTwoFactor"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用SSO登录"
+            name={["security", "enableSSOLogin"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24}>
+          <Form.Item label="SSO提供商" name={["security", "ssoProvider"]}>
+            <Select>
+              <Option value="LDAP">LDAP</Option>
+              <Option value="SAML">SAML 2.0</Option>
+              <Option value="OAuth">OAuth 2.0</Option>
+              <Option value="OpenID">OpenID Connect</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+      </Row>
+    </Card>
   );
 
   // 渲染邮件设置
   const renderEmailSettings = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            SMTP服务器
-          </label>
-          <input
-            type="text"
-            value={config.email.smtpHost}
-            onChange={(e) =>
-              handleConfigChange("email", "smtpHost", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            SMTP端口
-          </label>
-          <input
-            type="number"
-            value={config.email.smtpPort}
-            onChange={(e) =>
-              handleConfigChange("email", "smtpPort", parseInt(e.target.value))
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            用户名
-          </label>
-          <input
-            type="text"
-            value={config.email.smtpUsername}
-            onChange={(e) =>
-              handleConfigChange("email", "smtpUsername", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            密码
-          </label>
-          <input
-            type="password"
-            value={config.email.smtpPassword}
-            onChange={(e) =>
-              handleConfigChange("email", "smtpPassword", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            加密方式
-          </label>
-          <select
-            value={config.email.smtpEncryption}
-            onChange={(e) =>
-              handleConfigChange("email", "smtpEncryption", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="TLS">TLS</option>
-            <option value="SSL">SSL</option>
-            <option value="NONE">无加密</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            发件人邮箱
-          </label>
-          <input
-            type="email"
-            value={config.email.fromEmail}
-            onChange={(e) =>
-              handleConfigChange("email", "fromEmail", e.target.value)
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={() => handleTestConnection("邮件服务器")}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+    <Card
+      title={
+        <span>
+          <Mail className="w-4 h-4 mr-2" />
+          邮件设置
+        </span>
+      }
+      extra={
+        <Button
+          size="small"
+          icon={<TestTube className="w-4 h-4" />}
+          loading={testingConnection === "email"}
+          onClick={() => handleTestConnection("邮件")}
         >
-          <Server className="w-4 h-4" />
           测试连接
-        </button>
-      </div>
-    </div>
+        </Button>
+      }
+      className="mb-6"
+    >
+      <Row gutter={[24, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="SMTP服务器"
+            name={["email", "smtpHost"]}
+            rules={[{ required: true, message: "请输入SMTP服务器地址" }]}
+          >
+            <Input placeholder="smtp.company.com" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="SMTP端口"
+            name={["email", "smtpPort"]}
+            rules={[{ required: true, type: "number", min: 1, max: 65535 }]}
+          >
+            <InputNumber min={1} max={65535} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="用户名"
+            name={["email", "smtpUsername"]}
+            rules={[{ required: true, message: "请输入SMTP用户名" }]}
+          >
+            <Input placeholder="itsm@company.com" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="密码"
+            name={["email", "smtpPassword"]}
+            rules={[{ required: true, message: "请输入SMTP密码" }]}
+          >
+            <Input.Password placeholder="请输入密码" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="加密方式" name={["email", "smtpEncryption"]}>
+            <Select>
+              <Option value="none">无加密</Option>
+              <Option value="TLS">TLS</Option>
+              <Option value="SSL">SSL</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用邮件通知"
+            name={["email", "enableEmailNotification"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="发件人邮箱"
+            name={["email", "fromEmail"]}
+            rules={[{ type: "email", message: "请输入有效的邮箱地址" }]}
+          >
+            <Input placeholder="itsm@company.com" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="发件人名称" name={["email", "fromName"]}>
+            <Input placeholder="ITSM系统" />
+          </Form.Item>
+        </Col>
+      </Row>
+    </Card>
   );
 
-  // 根据当前选中的节点渲染对应的设置内容
-  const renderCurrentSection = () => {
-    switch (activeSection) {
-      case CONFIG_SECTIONS.GENERAL:
-        return renderGeneralSettings();
-      case CONFIG_SECTIONS.SECURITY:
-        return renderSecuritySettings();
-      case CONFIG_SECTIONS.EMAIL:
-        return renderEmailSettings();
-      default:
-        return (
-          <div className="text-center py-12">
-            <Settings className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              功能开发中
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              该配置模块正在开发中，敬请期待！
-            </p>
-          </div>
-        );
-    }
-  };
+  // 渲染数据库设置
+  const renderDatabaseSettings = () => (
+    <Card
+      title={
+        <span>
+          <Database className="w-4 h-4 mr-2" />
+          数据库设置
+        </span>
+      }
+      extra={
+        <Button
+          size="small"
+          icon={<TestTube className="w-4 h-4" />}
+          loading={testingConnection === "database"}
+          onClick={() => handleTestConnection("数据库")}
+        >
+          测试连接
+        </Button>
+      }
+      className="mb-6"
+    >
+      <Row gutter={[24, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="数据库主机"
+            name={["database", "host"]}
+            rules={[{ required: true, message: "请输入数据库主机地址" }]}
+          >
+            <Input placeholder="localhost" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="端口"
+            name={["database", "port"]}
+            rules={[{ required: true, type: "number", min: 1, max: 65535 }]}
+          >
+            <InputNumber min={1} max={65535} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="数据库名"
+            name={["database", "database"]}
+            rules={[{ required: true, message: "请输入数据库名称" }]}
+          >
+            <Input placeholder="itsm_db" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="用户名"
+            name={["database", "username"]}
+            rules={[{ required: true, message: "请输入数据库用户名" }]}
+          >
+            <Input placeholder="itsm_user" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="最大连接数"
+            name={["database", "maxConnections"]}
+            rules={[{ required: true, type: "number", min: 10, max: 1000 }]}
+          >
+            <InputNumber min={10} max={1000} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="连接超时（秒）"
+            name={["database", "connectionTimeout"]}
+            rules={[{ required: true, type: "number", min: 10, max: 300 }]}
+          >
+            <InputNumber min={10} max={300} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用备份"
+            name={["database", "enableBackup"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="备份计划" name={["database", "backupSchedule"]}>
+            <Select>
+              <Option value="hourly">每小时</Option>
+              <Option value="daily">每天</Option>
+              <Option value="weekly">每周</Option>
+              <Option value="monthly">每月</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24}>
+          <Form.Item
+            label="备份保留天数"
+            name={["database", "backupRetentionDays"]}
+            rules={[{ required: true, type: "number", min: 1, max: 365 }]}
+          >
+            <InputNumber min={1} max={365} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  // 渲染集成设置
+  const renderIntegrationSettings = () => (
+    <Card
+      title={
+        <span>
+          <Globe className="w-4 h-4 mr-2" />
+          集成设置
+        </span>
+      }
+      className="mb-6"
+    >
+      <Row gutter={[24, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用API访问"
+            name={["integration", "enableApiAccess"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="API速率限制（请求/小时）"
+            name={["integration", "apiRateLimit"]}
+            rules={[{ required: true, type: "number", min: 100, max: 10000 }]}
+          >
+            <InputNumber min={100} max={10000} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用Webhooks"
+            name={["integration", "enableWebhooks"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="Webhook超时（秒）"
+            name={["integration", "webhookTimeout"]}
+            rules={[{ required: true, type: "number", min: 5, max: 60 }]}
+          >
+            <InputNumber min={5} max={60} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用LDAP同步"
+            name={["integration", "enableLdapSync"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="LDAP服务器" name={["integration", "ldapServer"]}>
+            <Input placeholder="ldap.company.com" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="LDAP端口"
+            name={["integration", "ldapPort"]}
+            rules={[{ type: "number", min: 1, max: 65535 }]}
+          >
+            <InputNumber min={1} max={65535} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24}>
+          <Form.Item label="Base DN" name={["integration", "ldapBaseDn"]}>
+            <Input placeholder="dc=company,dc=com" />
+          </Form.Item>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  // 渲染通知设置
+  const renderNotificationSettings = () => (
+    <Card
+      title={
+        <span>
+          <Bell className="w-4 h-4 mr-2" />
+          通知设置
+        </span>
+      }
+      className="mb-6"
+    >
+      <Row gutter={[24, 16]}>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用推送通知"
+            name={["notification", "enablePushNotification"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用邮件通知"
+            name={["notification", "enableEmailNotification"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="启用短信通知"
+            name={["notification", "enableSmsNotification"]}
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="短信服务商" name={["notification", "smsProvider"]}>
+            <Select>
+              <Option value="阿里云">阿里云</Option>
+              <Option value="腾讯云">腾讯云</Option>
+              <Option value="华为云">华为云</Option>
+            </Select>
+          </Form.Item>
+        </Col>
+        <Col xs={24}>
+          <Form.Item label="短信API密钥" name={["notification", "smsApiKey"]}>
+            <Input.Password placeholder="请输入API密钥" />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="通知重试次数"
+            name={["notification", "notificationRetryTimes"]}
+            rules={[{ required: true, type: "number", min: 1, max: 5 }]}
+          >
+            <InputNumber min={1} max={5} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="重试间隔（秒）"
+            name={["notification", "notificationRetryInterval"]}
+            rules={[{ required: true, type: "number", min: 1, max: 60 }]}
+          >
+            <InputNumber min={1} max={60} style={{ width: "100%" }} />
+          </Form.Item>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  // Tab项目配置
+  const tabItems = [
+    {
+      key: "general",
+      label: (
+        <span>
+          <Settings className="w-4 h-4 mr-1" />
+          基础设置
+        </span>
+      ),
+      children: renderGeneralSettings(),
+    },
+    {
+      key: "security",
+      label: (
+        <span>
+          <Shield className="w-4 h-4 mr-1" />
+          安全设置
+        </span>
+      ),
+      children: renderSecuritySettings(),
+    },
+    {
+      key: "email",
+      label: (
+        <span>
+          <Mail className="w-4 h-4 mr-1" />
+          邮件设置
+        </span>
+      ),
+      children: renderEmailSettings(),
+    },
+    {
+      key: "database",
+      label: (
+        <span>
+          <Database className="w-4 h-4 mr-1" />
+          数据库设置
+        </span>
+      ),
+      children: renderDatabaseSettings(),
+    },
+    {
+      key: "integration",
+      label: (
+        <span>
+          <Globe className="w-4 h-4 mr-1" />
+          集成设置
+        </span>
+      ),
+      children: renderIntegrationSettings(),
+    },
+    {
+      key: "notification",
+      label: (
+        <span>
+          <Bell className="w-4 h-4 mr-1" />
+          通知设置
+        </span>
+      ),
+      children: renderNotificationSettings(),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">系统配置</h1>
-          <p className="text-gray-600 mt-1">
-            管理系统的基础设置、安全策略和集成配置
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleReset}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            重置
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!hasChanges || isSaving}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-              hasChanges && !isSaving
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? "保存中..." : "保存配置"}
-          </button>
-        </div>
+    <div className="p-6">
+      {/* 页面标题 */}
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Settings className="inline-block w-6 h-6 mr-2" />
+          系统配置
+        </Title>
+        <Text type="secondary">管理系统全局设置和集成配置</Text>
       </div>
 
-      {/* 配置内容 */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* 左侧菜单 */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">配置分类</h3>
+      {/* 系统状态统计 */}
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="系统运行时间"
+              value={systemStats.uptime}
+              prefix={<Clock className="w-5 h-5" />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="当前连接数"
+              value={systemStats.connections}
+              prefix={<Network className="w-5 h-5" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-500">磁盘使用率</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {systemStats.diskUsage}%
+                </div>
+              </div>
+              <HardDrive className="w-8 h-8 text-orange-600" />
             </div>
-            <nav className="space-y-1 p-2">
-              {sectionMenus.map((menu) => {
-                const Icon = menu.icon;
-                const isActive = activeSection === menu.key;
-                return (
-                  <button
-                    key={menu.key}
-                    onClick={() => setActiveSection(menu.key)}
-                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-3 transition-colors ${
-                      isActive
-                        ? "bg-blue-50 text-blue-700 border border-blue-200"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <div>
-                      <div className="text-sm font-medium">{menu.label}</div>
-                      <div className="text-xs text-gray-500">
-                        {menu.description}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-
-        {/* 右侧配置内容 */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
-                {sectionMenus.find((m) => m.key === activeSection)?.label}
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {sectionMenus.find((m) => m.key === activeSection)?.description}
-              </p>
+            <Progress
+              percent={systemStats.diskUsage}
+              size="small"
+              strokeColor="#fa8c16"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-500">内存使用率</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {systemStats.memoryUsage}%
+                </div>
+              </div>
+              <MemoryStick className="w-8 h-8 text-purple-600" />
             </div>
-            <div className="p-6">{renderCurrentSection()}</div>
-          </div>
-        </div>
-      </div>
+            <Progress
+              percent={systemStats.memoryUsage}
+              size="small"
+              strokeColor="#722ed1"
+            />
+          </Card>
+        </Col>
+      </Row>
 
-      {/* 变更提示 */}
+      {/* 操作提示 */}
       {hasChanges && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4" />
-          <span className="text-sm">您有未保存的更改</span>
-        </div>
+        <Alert
+          message="配置已修改"
+          description="您有未保存的配置更改，请及时保存。"
+          type="warning"
+          showIcon
+          closable
+          className="mb-6"
+        />
       )}
+
+      {/* 配置表单 */}
+      <Card className="enterprise-card">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={config}
+          onValuesChange={handleFormChange}
+        >
+          <div className="mb-4 flex justify-between items-center">
+            <Title level={4}>配置管理</Title>
+            <Space>
+              <Button
+                icon={<RefreshCw className="w-4 h-4" />}
+                onClick={handleReset}
+              >
+                重置
+              </Button>
+              <Button
+                type="primary"
+                icon={<Save className="w-4 h-4" />}
+                loading={isSaving}
+                onClick={handleSave}
+              >
+                {isSaving ? "保存中..." : "保存配置"}
+              </Button>
+            </Space>
+          </div>
+
+          <Tabs items={tabItems} type="card" className="custom-tabs" />
+        </Form>
+      </Card>
     </div>
   );
 };

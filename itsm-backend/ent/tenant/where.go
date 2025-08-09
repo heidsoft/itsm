@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -68,6 +67,16 @@ func Code(v string) predicate.Tenant {
 // Domain applies equality check predicate on the "domain" field. It's identical to DomainEQ.
 func Domain(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldDomain, v))
+}
+
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldType, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldStatus, v))
 }
 
 // ExpiresAt applies equality check predicate on the "expires_at" field. It's identical to ExpiresAtEQ.
@@ -290,64 +299,134 @@ func DomainContainsFold(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldContainsFold(FieldDomain, v))
 }
 
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEQ(FieldStatus, v))
-}
-
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.Tenant {
-	return predicate.Tenant(sql.FieldNEQ(FieldStatus, v))
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.Tenant {
-	return predicate.Tenant(sql.FieldIn(FieldStatus, vs...))
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotIn(FieldStatus, vs...))
-}
-
 // TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v Type) predicate.Tenant {
+func TypeEQ(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldType, v))
 }
 
 // TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v Type) predicate.Tenant {
+func TypeNEQ(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldNEQ(FieldType, v))
 }
 
 // TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...Type) predicate.Tenant {
+func TypeIn(vs ...string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldIn(FieldType, vs...))
 }
 
 // TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...Type) predicate.Tenant {
+func TypeNotIn(vs ...string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldNotIn(FieldType, vs...))
 }
 
-// SettingsIsNil applies the IsNil predicate on the "settings" field.
-func SettingsIsNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldIsNull(FieldSettings))
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldType, v))
 }
 
-// SettingsNotNil applies the NotNil predicate on the "settings" field.
-func SettingsNotNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotNull(FieldSettings))
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldType, v))
 }
 
-// QuotaIsNil applies the IsNil predicate on the "quota" field.
-func QuotaIsNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldIsNull(FieldQuota))
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldType, v))
 }
 
-// QuotaNotNil applies the NotNil predicate on the "quota" field.
-func QuotaNotNil() predicate.Tenant {
-	return predicate.Tenant(sql.FieldNotNull(FieldQuota))
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldType, v))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldType, v))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldType, v))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldType, v))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldType, v))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldType, v))
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.Tenant {
+	return predicate.Tenant(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // ExpiresAtEQ applies the EQ predicate on the "expires_at" field.
@@ -478,351 +557,6 @@ func UpdatedAtLT(v time.Time) predicate.Tenant {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Tenant {
 	return predicate.Tenant(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasUsers applies the HasEdge predicate on the "users" edge.
-func HasUsers() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
-func HasUsersWith(preds ...predicate.User) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newUsersStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasTickets applies the HasEdge predicate on the "tickets" edge.
-func HasTickets() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTicketsWith applies the HasEdge predicate on the "tickets" edge with a given conditions (other predicates).
-func HasTicketsWith(preds ...predicate.Ticket) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newTicketsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasServiceCatalogs applies the HasEdge predicate on the "service_catalogs" edge.
-func HasServiceCatalogs() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ServiceCatalogsTable, ServiceCatalogsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasServiceCatalogsWith applies the HasEdge predicate on the "service_catalogs" edge with a given conditions (other predicates).
-func HasServiceCatalogsWith(preds ...predicate.ServiceCatalog) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newServiceCatalogsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasServiceRequests applies the HasEdge predicate on the "service_requests" edge.
-func HasServiceRequests() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ServiceRequestsTable, ServiceRequestsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasServiceRequestsWith applies the HasEdge predicate on the "service_requests" edge with a given conditions (other predicates).
-func HasServiceRequestsWith(preds ...predicate.ServiceRequest) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newServiceRequestsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasSubscriptions applies the HasEdge predicate on the "subscriptions" edge.
-func HasSubscriptions() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasSubscriptionsWith applies the HasEdge predicate on the "subscriptions" edge with a given conditions (other predicates).
-func HasSubscriptionsWith(preds ...predicate.Subscription) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newSubscriptionsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasConfigurationItems applies the HasEdge predicate on the "configuration_items" edge.
-func HasConfigurationItems() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ConfigurationItemsTable, ConfigurationItemsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasConfigurationItemsWith applies the HasEdge predicate on the "configuration_items" edge with a given conditions (other predicates).
-func HasConfigurationItemsWith(preds ...predicate.ConfigurationItem) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newConfigurationItemsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasKnowledgeArticles applies the HasEdge predicate on the "knowledge_articles" edge.
-func HasKnowledgeArticles() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, KnowledgeArticlesTable, KnowledgeArticlesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasKnowledgeArticlesWith applies the HasEdge predicate on the "knowledge_articles" edge with a given conditions (other predicates).
-func HasKnowledgeArticlesWith(preds ...predicate.KnowledgeArticle) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newKnowledgeArticlesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasWorkflows applies the HasEdge predicate on the "workflows" edge.
-func HasWorkflows() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, WorkflowsTable, WorkflowsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasWorkflowsWith applies the HasEdge predicate on the "workflows" edge with a given conditions (other predicates).
-func HasWorkflowsWith(preds ...predicate.Workflow) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newWorkflowsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiTypes applies the HasEdge predicate on the "ci_types" edge.
-func HasCiTypes() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CiTypesTable, CiTypesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiTypesWith applies the HasEdge predicate on the "ci_types" edge with a given conditions (other predicates).
-func HasCiTypesWith(preds ...predicate.CIType) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newCiTypesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiRelationshipTypes applies the HasEdge predicate on the "ci_relationship_types" edge.
-func HasCiRelationshipTypes() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CiRelationshipTypesTable, CiRelationshipTypesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiRelationshipTypesWith applies the HasEdge predicate on the "ci_relationship_types" edge with a given conditions (other predicates).
-func HasCiRelationshipTypesWith(preds ...predicate.CIRelationshipType) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newCiRelationshipTypesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiRelationships applies the HasEdge predicate on the "ci_relationships" edge.
-func HasCiRelationships() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CiRelationshipsTable, CiRelationshipsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiRelationshipsWith applies the HasEdge predicate on the "ci_relationships" edge with a given conditions (other predicates).
-func HasCiRelationshipsWith(preds ...predicate.CIRelationship) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newCiRelationshipsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiLifecycleStates applies the HasEdge predicate on the "ci_lifecycle_states" edge.
-func HasCiLifecycleStates() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CiLifecycleStatesTable, CiLifecycleStatesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiLifecycleStatesWith applies the HasEdge predicate on the "ci_lifecycle_states" edge with a given conditions (other predicates).
-func HasCiLifecycleStatesWith(preds ...predicate.CILifecycleState) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newCiLifecycleStatesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiChangeRecords applies the HasEdge predicate on the "ci_change_records" edge.
-func HasCiChangeRecords() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CiChangeRecordsTable, CiChangeRecordsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiChangeRecordsWith applies the HasEdge predicate on the "ci_change_records" edge with a given conditions (other predicates).
-func HasCiChangeRecordsWith(preds ...predicate.CIChangeRecord) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newCiChangeRecordsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasCiAttributeDefinitions applies the HasEdge predicate on the "ci_attribute_definitions" edge.
-func HasCiAttributeDefinitions() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CiAttributeDefinitionsTable, CiAttributeDefinitionsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasCiAttributeDefinitionsWith applies the HasEdge predicate on the "ci_attribute_definitions" edge with a given conditions (other predicates).
-func HasCiAttributeDefinitionsWith(preds ...predicate.CIAttributeDefinition) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newCiAttributeDefinitionsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasIncidents applies the HasEdge predicate on the "incidents" edge.
-func HasIncidents() predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, IncidentsTable, IncidentsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasIncidentsWith applies the HasEdge predicate on the "incidents" edge with a given conditions (other predicates).
-func HasIncidentsWith(preds ...predicate.Incident) predicate.Tenant {
-	return predicate.Tenant(func(s *sql.Selector) {
-		step := newIncidentsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

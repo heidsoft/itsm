@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -60,24 +59,39 @@ func Name(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldName, v))
 }
 
-// Category applies equality check predicate on the "category" field. It's identical to CategoryEQ.
-func Category(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldEQ(FieldCategory, v))
-}
-
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldDescription, v))
 }
 
+// Category applies equality check predicate on the "category" field. It's identical to CategoryEQ.
+func Category(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldCategory, v))
+}
+
+// Price applies equality check predicate on the "price" field. It's identical to PriceEQ.
+func Price(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldPrice, v))
+}
+
 // DeliveryTime applies equality check predicate on the "delivery_time" field. It's identical to DeliveryTimeEQ.
-func DeliveryTime(v string) predicate.ServiceCatalog {
+func DeliveryTime(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldDeliveryTime, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldStatus, v))
 }
 
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldTenantID, v))
+}
+
+// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
+func IsActive(v bool) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldIsActive, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -155,71 +169,6 @@ func NameContainsFold(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldName, v))
 }
 
-// CategoryEQ applies the EQ predicate on the "category" field.
-func CategoryEQ(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldEQ(FieldCategory, v))
-}
-
-// CategoryNEQ applies the NEQ predicate on the "category" field.
-func CategoryNEQ(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldNEQ(FieldCategory, v))
-}
-
-// CategoryIn applies the In predicate on the "category" field.
-func CategoryIn(vs ...string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldIn(FieldCategory, vs...))
-}
-
-// CategoryNotIn applies the NotIn predicate on the "category" field.
-func CategoryNotIn(vs ...string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldNotIn(FieldCategory, vs...))
-}
-
-// CategoryGT applies the GT predicate on the "category" field.
-func CategoryGT(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldGT(FieldCategory, v))
-}
-
-// CategoryGTE applies the GTE predicate on the "category" field.
-func CategoryGTE(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldGTE(FieldCategory, v))
-}
-
-// CategoryLT applies the LT predicate on the "category" field.
-func CategoryLT(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldLT(FieldCategory, v))
-}
-
-// CategoryLTE applies the LTE predicate on the "category" field.
-func CategoryLTE(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldLTE(FieldCategory, v))
-}
-
-// CategoryContains applies the Contains predicate on the "category" field.
-func CategoryContains(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldContains(FieldCategory, v))
-}
-
-// CategoryHasPrefix applies the HasPrefix predicate on the "category" field.
-func CategoryHasPrefix(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldCategory, v))
-}
-
-// CategoryHasSuffix applies the HasSuffix predicate on the "category" field.
-func CategoryHasSuffix(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldCategory, v))
-}
-
-// CategoryEqualFold applies the EqualFold predicate on the "category" field.
-func CategoryEqualFold(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldCategory, v))
-}
-
-// CategoryContainsFold applies the ContainsFold predicate on the "category" field.
-func CategoryContainsFold(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldCategory, v))
-}
-
 // DescriptionEQ applies the EQ predicate on the "description" field.
 func DescriptionEQ(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldDescription, v))
@@ -295,89 +244,244 @@ func DescriptionContainsFold(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// CategoryEQ applies the EQ predicate on the "category" field.
+func CategoryEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldCategory, v))
+}
+
+// CategoryNEQ applies the NEQ predicate on the "category" field.
+func CategoryNEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldCategory, v))
+}
+
+// CategoryIn applies the In predicate on the "category" field.
+func CategoryIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldCategory, vs...))
+}
+
+// CategoryNotIn applies the NotIn predicate on the "category" field.
+func CategoryNotIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldCategory, vs...))
+}
+
+// CategoryGT applies the GT predicate on the "category" field.
+func CategoryGT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldCategory, v))
+}
+
+// CategoryGTE applies the GTE predicate on the "category" field.
+func CategoryGTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldCategory, v))
+}
+
+// CategoryLT applies the LT predicate on the "category" field.
+func CategoryLT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldCategory, v))
+}
+
+// CategoryLTE applies the LTE predicate on the "category" field.
+func CategoryLTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldCategory, v))
+}
+
+// CategoryContains applies the Contains predicate on the "category" field.
+func CategoryContains(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContains(FieldCategory, v))
+}
+
+// CategoryHasPrefix applies the HasPrefix predicate on the "category" field.
+func CategoryHasPrefix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldCategory, v))
+}
+
+// CategoryHasSuffix applies the HasSuffix predicate on the "category" field.
+func CategoryHasSuffix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldCategory, v))
+}
+
+// CategoryIsNil applies the IsNil predicate on the "category" field.
+func CategoryIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldCategory))
+}
+
+// CategoryNotNil applies the NotNil predicate on the "category" field.
+func CategoryNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldCategory))
+}
+
+// CategoryEqualFold applies the EqualFold predicate on the "category" field.
+func CategoryEqualFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldCategory, v))
+}
+
+// CategoryContainsFold applies the ContainsFold predicate on the "category" field.
+func CategoryContainsFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldCategory, v))
+}
+
+// PriceEQ applies the EQ predicate on the "price" field.
+func PriceEQ(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldPrice, v))
+}
+
+// PriceNEQ applies the NEQ predicate on the "price" field.
+func PriceNEQ(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldPrice, v))
+}
+
+// PriceIn applies the In predicate on the "price" field.
+func PriceIn(vs ...float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldPrice, vs...))
+}
+
+// PriceNotIn applies the NotIn predicate on the "price" field.
+func PriceNotIn(vs ...float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldPrice, vs...))
+}
+
+// PriceGT applies the GT predicate on the "price" field.
+func PriceGT(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldPrice, v))
+}
+
+// PriceGTE applies the GTE predicate on the "price" field.
+func PriceGTE(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldPrice, v))
+}
+
+// PriceLT applies the LT predicate on the "price" field.
+func PriceLT(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldPrice, v))
+}
+
+// PriceLTE applies the LTE predicate on the "price" field.
+func PriceLTE(v float64) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldPrice, v))
+}
+
+// PriceIsNil applies the IsNil predicate on the "price" field.
+func PriceIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldPrice))
+}
+
+// PriceNotNil applies the NotNil predicate on the "price" field.
+func PriceNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldPrice))
+}
+
 // DeliveryTimeEQ applies the EQ predicate on the "delivery_time" field.
-func DeliveryTimeEQ(v string) predicate.ServiceCatalog {
+func DeliveryTimeEQ(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldDeliveryTime, v))
 }
 
 // DeliveryTimeNEQ applies the NEQ predicate on the "delivery_time" field.
-func DeliveryTimeNEQ(v string) predicate.ServiceCatalog {
+func DeliveryTimeNEQ(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNEQ(FieldDeliveryTime, v))
 }
 
 // DeliveryTimeIn applies the In predicate on the "delivery_time" field.
-func DeliveryTimeIn(vs ...string) predicate.ServiceCatalog {
+func DeliveryTimeIn(vs ...int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldIn(FieldDeliveryTime, vs...))
 }
 
 // DeliveryTimeNotIn applies the NotIn predicate on the "delivery_time" field.
-func DeliveryTimeNotIn(vs ...string) predicate.ServiceCatalog {
+func DeliveryTimeNotIn(vs ...int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNotIn(FieldDeliveryTime, vs...))
 }
 
 // DeliveryTimeGT applies the GT predicate on the "delivery_time" field.
-func DeliveryTimeGT(v string) predicate.ServiceCatalog {
+func DeliveryTimeGT(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldGT(FieldDeliveryTime, v))
 }
 
 // DeliveryTimeGTE applies the GTE predicate on the "delivery_time" field.
-func DeliveryTimeGTE(v string) predicate.ServiceCatalog {
+func DeliveryTimeGTE(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldGTE(FieldDeliveryTime, v))
 }
 
 // DeliveryTimeLT applies the LT predicate on the "delivery_time" field.
-func DeliveryTimeLT(v string) predicate.ServiceCatalog {
+func DeliveryTimeLT(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldLT(FieldDeliveryTime, v))
 }
 
 // DeliveryTimeLTE applies the LTE predicate on the "delivery_time" field.
-func DeliveryTimeLTE(v string) predicate.ServiceCatalog {
+func DeliveryTimeLTE(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldLTE(FieldDeliveryTime, v))
 }
 
-// DeliveryTimeContains applies the Contains predicate on the "delivery_time" field.
-func DeliveryTimeContains(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldContains(FieldDeliveryTime, v))
+// DeliveryTimeIsNil applies the IsNil predicate on the "delivery_time" field.
+func DeliveryTimeIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldDeliveryTime))
 }
 
-// DeliveryTimeHasPrefix applies the HasPrefix predicate on the "delivery_time" field.
-func DeliveryTimeHasPrefix(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldDeliveryTime, v))
-}
-
-// DeliveryTimeHasSuffix applies the HasSuffix predicate on the "delivery_time" field.
-func DeliveryTimeHasSuffix(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldDeliveryTime, v))
-}
-
-// DeliveryTimeEqualFold applies the EqualFold predicate on the "delivery_time" field.
-func DeliveryTimeEqualFold(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldDeliveryTime, v))
-}
-
-// DeliveryTimeContainsFold applies the ContainsFold predicate on the "delivery_time" field.
-func DeliveryTimeContainsFold(v string) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldDeliveryTime, v))
+// DeliveryTimeNotNil applies the NotNil predicate on the "delivery_time" field.
+func DeliveryTimeNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldDeliveryTime))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.ServiceCatalog {
+func StatusEQ(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.ServiceCatalog {
+func StatusNEQ(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.ServiceCatalog {
+func StatusIn(vs ...string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.ServiceCatalog {
+func StatusNotIn(vs ...string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
@@ -398,6 +502,36 @@ func TenantIDIn(vs ...int) predicate.ServiceCatalog {
 // TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
 func TenantIDNotIn(vs ...int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldTenantID, v))
+}
+
+// IsActiveEQ applies the EQ predicate on the "is_active" field.
+func IsActiveEQ(v bool) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
+func IsActiveNEQ(v bool) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldIsActive, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -478,52 +612,6 @@ func UpdatedAtLT(v time.Time) predicate.ServiceCatalog {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasServiceRequests applies the HasEdge predicate on the "service_requests" edge.
-func HasServiceRequests() predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ServiceRequestsTable, ServiceRequestsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasServiceRequestsWith applies the HasEdge predicate on the "service_requests" edge with a given conditions (other predicates).
-func HasServiceRequestsWith(preds ...predicate.ServiceRequest) predicate.ServiceCatalog {
-	return predicate.ServiceCatalog(func(s *sql.Selector) {
-		step := newServiceRequestsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

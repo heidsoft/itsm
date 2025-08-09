@@ -6,13 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/cichangerecord"
-	"itsm-backend/ent/cilifecyclestate"
-	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -32,20 +26,6 @@ func (cic *ConfigurationItemCreate) SetName(s string) *ConfigurationItemCreate {
 	return cic
 }
 
-// SetDisplayName sets the "display_name" field.
-func (cic *ConfigurationItemCreate) SetDisplayName(s string) *ConfigurationItemCreate {
-	cic.mutation.SetDisplayName(s)
-	return cic
-}
-
-// SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableDisplayName(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetDisplayName(*s)
-	}
-	return cic
-}
-
 // SetDescription sets the "description" field.
 func (cic *ConfigurationItemCreate) SetDescription(s string) *ConfigurationItemCreate {
 	cic.mutation.SetDescription(s)
@@ -60,36 +40,16 @@ func (cic *ConfigurationItemCreate) SetNillableDescription(s *string) *Configura
 	return cic
 }
 
-// SetCiTypeID sets the "ci_type_id" field.
-func (cic *ConfigurationItemCreate) SetCiTypeID(i int) *ConfigurationItemCreate {
-	cic.mutation.SetCiTypeID(i)
+// SetType sets the "type" field.
+func (cic *ConfigurationItemCreate) SetType(s string) *ConfigurationItemCreate {
+	cic.mutation.SetType(s)
 	return cic
 }
 
-// SetSerialNumber sets the "serial_number" field.
-func (cic *ConfigurationItemCreate) SetSerialNumber(s string) *ConfigurationItemCreate {
-	cic.mutation.SetSerialNumber(s)
-	return cic
-}
-
-// SetNillableSerialNumber sets the "serial_number" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableSerialNumber(s *string) *ConfigurationItemCreate {
+// SetNillableType sets the "type" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableType(s *string) *ConfigurationItemCreate {
 	if s != nil {
-		cic.SetSerialNumber(*s)
-	}
-	return cic
-}
-
-// SetAssetTag sets the "asset_tag" field.
-func (cic *ConfigurationItemCreate) SetAssetTag(s string) *ConfigurationItemCreate {
-	cic.mutation.SetAssetTag(s)
-	return cic
-}
-
-// SetNillableAssetTag sets the "asset_tag" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableAssetTag(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetAssetTag(*s)
+		cic.SetType(*s)
 	}
 	return cic
 }
@@ -108,62 +68,6 @@ func (cic *ConfigurationItemCreate) SetNillableStatus(s *string) *ConfigurationI
 	return cic
 }
 
-// SetLifecycleState sets the "lifecycle_state" field.
-func (cic *ConfigurationItemCreate) SetLifecycleState(s string) *ConfigurationItemCreate {
-	cic.mutation.SetLifecycleState(s)
-	return cic
-}
-
-// SetNillableLifecycleState sets the "lifecycle_state" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableLifecycleState(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetLifecycleState(*s)
-	}
-	return cic
-}
-
-// SetBusinessService sets the "business_service" field.
-func (cic *ConfigurationItemCreate) SetBusinessService(s string) *ConfigurationItemCreate {
-	cic.mutation.SetBusinessService(s)
-	return cic
-}
-
-// SetNillableBusinessService sets the "business_service" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableBusinessService(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetBusinessService(*s)
-	}
-	return cic
-}
-
-// SetOwner sets the "owner" field.
-func (cic *ConfigurationItemCreate) SetOwner(s string) *ConfigurationItemCreate {
-	cic.mutation.SetOwner(s)
-	return cic
-}
-
-// SetNillableOwner sets the "owner" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableOwner(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetOwner(*s)
-	}
-	return cic
-}
-
-// SetEnvironment sets the "environment" field.
-func (cic *ConfigurationItemCreate) SetEnvironment(s string) *ConfigurationItemCreate {
-	cic.mutation.SetEnvironment(s)
-	return cic
-}
-
-// SetNillableEnvironment sets the "environment" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableEnvironment(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetEnvironment(*s)
-	}
-	return cic
-}
-
 // SetLocation sets the "location" field.
 func (cic *ConfigurationItemCreate) SetLocation(s string) *ConfigurationItemCreate {
 	cic.mutation.SetLocation(s)
@@ -178,49 +82,51 @@ func (cic *ConfigurationItemCreate) SetNillableLocation(s *string) *Configuratio
 	return cic
 }
 
-// SetAttributes sets the "attributes" field.
-func (cic *ConfigurationItemCreate) SetAttributes(m map[string]interface{}) *ConfigurationItemCreate {
-	cic.mutation.SetAttributes(m)
+// SetSerialNumber sets the "serial_number" field.
+func (cic *ConfigurationItemCreate) SetSerialNumber(s string) *ConfigurationItemCreate {
+	cic.mutation.SetSerialNumber(s)
 	return cic
 }
 
-// SetMonitoringData sets the "monitoring_data" field.
-func (cic *ConfigurationItemCreate) SetMonitoringData(m map[string]interface{}) *ConfigurationItemCreate {
-	cic.mutation.SetMonitoringData(m)
-	return cic
-}
-
-// SetDiscoverySource sets the "discovery_source" field.
-func (cic *ConfigurationItemCreate) SetDiscoverySource(m map[string]interface{}) *ConfigurationItemCreate {
-	cic.mutation.SetDiscoverySource(m)
-	return cic
-}
-
-// SetLastDiscovered sets the "last_discovered" field.
-func (cic *ConfigurationItemCreate) SetLastDiscovered(t time.Time) *ConfigurationItemCreate {
-	cic.mutation.SetLastDiscovered(t)
-	return cic
-}
-
-// SetNillableLastDiscovered sets the "last_discovered" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableLastDiscovered(t *time.Time) *ConfigurationItemCreate {
-	if t != nil {
-		cic.SetLastDiscovered(*t)
-	}
-	return cic
-}
-
-// SetVersion sets the "version" field.
-func (cic *ConfigurationItemCreate) SetVersion(s string) *ConfigurationItemCreate {
-	cic.mutation.SetVersion(s)
-	return cic
-}
-
-// SetNillableVersion sets the "version" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableVersion(s *string) *ConfigurationItemCreate {
+// SetNillableSerialNumber sets the "serial_number" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableSerialNumber(s *string) *ConfigurationItemCreate {
 	if s != nil {
-		cic.SetVersion(*s)
+		cic.SetSerialNumber(*s)
 	}
+	return cic
+}
+
+// SetModel sets the "model" field.
+func (cic *ConfigurationItemCreate) SetModel(s string) *ConfigurationItemCreate {
+	cic.mutation.SetModel(s)
+	return cic
+}
+
+// SetNillableModel sets the "model" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableModel(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetModel(*s)
+	}
+	return cic
+}
+
+// SetVendor sets the "vendor" field.
+func (cic *ConfigurationItemCreate) SetVendor(s string) *ConfigurationItemCreate {
+	cic.mutation.SetVendor(s)
+	return cic
+}
+
+// SetNillableVendor sets the "vendor" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableVendor(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetVendor(*s)
+	}
+	return cic
+}
+
+// SetCiTypeID sets the "ci_type_id" field.
+func (cic *ConfigurationItemCreate) SetCiTypeID(i int) *ConfigurationItemCreate {
+	cic.mutation.SetCiTypeID(i)
 	return cic
 }
 
@@ -256,106 +162,6 @@ func (cic *ConfigurationItemCreate) SetNillableUpdatedAt(t *time.Time) *Configur
 		cic.SetUpdatedAt(*t)
 	}
 	return cic
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (cic *ConfigurationItemCreate) SetTenant(t *Tenant) *ConfigurationItemCreate {
-	return cic.SetTenantID(t.ID)
-}
-
-// SetCiType sets the "ci_type" edge to the CIType entity.
-func (cic *ConfigurationItemCreate) SetCiType(c *CIType) *ConfigurationItemCreate {
-	return cic.SetCiTypeID(c.ID)
-}
-
-// AddOutgoingRelationshipIDs adds the "outgoing_relationships" edge to the CIRelationship entity by IDs.
-func (cic *ConfigurationItemCreate) AddOutgoingRelationshipIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddOutgoingRelationshipIDs(ids...)
-	return cic
-}
-
-// AddOutgoingRelationships adds the "outgoing_relationships" edges to the CIRelationship entity.
-func (cic *ConfigurationItemCreate) AddOutgoingRelationships(c ...*CIRelationship) *ConfigurationItemCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return cic.AddOutgoingRelationshipIDs(ids...)
-}
-
-// AddIncomingRelationshipIDs adds the "incoming_relationships" edge to the CIRelationship entity by IDs.
-func (cic *ConfigurationItemCreate) AddIncomingRelationshipIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddIncomingRelationshipIDs(ids...)
-	return cic
-}
-
-// AddIncomingRelationships adds the "incoming_relationships" edges to the CIRelationship entity.
-func (cic *ConfigurationItemCreate) AddIncomingRelationships(c ...*CIRelationship) *ConfigurationItemCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return cic.AddIncomingRelationshipIDs(ids...)
-}
-
-// AddLifecycleStateIDs adds the "lifecycle_states" edge to the CILifecycleState entity by IDs.
-func (cic *ConfigurationItemCreate) AddLifecycleStateIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddLifecycleStateIDs(ids...)
-	return cic
-}
-
-// AddLifecycleStates adds the "lifecycle_states" edges to the CILifecycleState entity.
-func (cic *ConfigurationItemCreate) AddLifecycleStates(c ...*CILifecycleState) *ConfigurationItemCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return cic.AddLifecycleStateIDs(ids...)
-}
-
-// AddChangeRecordIDs adds the "change_records" edge to the CIChangeRecord entity by IDs.
-func (cic *ConfigurationItemCreate) AddChangeRecordIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddChangeRecordIDs(ids...)
-	return cic
-}
-
-// AddChangeRecords adds the "change_records" edges to the CIChangeRecord entity.
-func (cic *ConfigurationItemCreate) AddChangeRecords(c ...*CIChangeRecord) *ConfigurationItemCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return cic.AddChangeRecordIDs(ids...)
-}
-
-// AddIncidentIDs adds the "incidents" edge to the Ticket entity by IDs.
-func (cic *ConfigurationItemCreate) AddIncidentIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddIncidentIDs(ids...)
-	return cic
-}
-
-// AddIncidents adds the "incidents" edges to the Ticket entity.
-func (cic *ConfigurationItemCreate) AddIncidents(t ...*Ticket) *ConfigurationItemCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cic.AddIncidentIDs(ids...)
-}
-
-// AddChangeIDs adds the "changes" edge to the Ticket entity by IDs.
-func (cic *ConfigurationItemCreate) AddChangeIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddChangeIDs(ids...)
-	return cic
-}
-
-// AddChanges adds the "changes" edges to the Ticket entity.
-func (cic *ConfigurationItemCreate) AddChanges(t ...*Ticket) *ConfigurationItemCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
-	}
-	return cic.AddChangeIDs(ids...)
 }
 
 // Mutation returns the ConfigurationItemMutation object of the builder.
@@ -397,14 +203,6 @@ func (cic *ConfigurationItemCreate) defaults() {
 		v := configurationitem.DefaultStatus
 		cic.mutation.SetStatus(v)
 	}
-	if _, ok := cic.mutation.LifecycleState(); !ok {
-		v := configurationitem.DefaultLifecycleState
-		cic.mutation.SetLifecycleState(v)
-	}
-	if _, ok := cic.mutation.Version(); !ok {
-		v := configurationitem.DefaultVersion
-		cic.mutation.SetVersion(v)
-	}
 	if _, ok := cic.mutation.CreatedAt(); !ok {
 		v := configurationitem.DefaultCreatedAt()
 		cic.mutation.SetCreatedAt(v)
@@ -425,32 +223,30 @@ func (cic *ConfigurationItemCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.name": %w`, err)}
 		}
 	}
-	if _, ok := cic.mutation.CiTypeID(); !ok {
-		return &ValidationError{Name: "ci_type_id", err: errors.New(`ent: missing required field "ConfigurationItem.ci_type_id"`)}
-	}
 	if _, ok := cic.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ConfigurationItem.status"`)}
 	}
-	if _, ok := cic.mutation.LifecycleState(); !ok {
-		return &ValidationError{Name: "lifecycle_state", err: errors.New(`ent: missing required field "ConfigurationItem.lifecycle_state"`)}
+	if _, ok := cic.mutation.CiTypeID(); !ok {
+		return &ValidationError{Name: "ci_type_id", err: errors.New(`ent: missing required field "ConfigurationItem.ci_type_id"`)}
 	}
-	if _, ok := cic.mutation.Version(); !ok {
-		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ConfigurationItem.version"`)}
+	if v, ok := cic.mutation.CiTypeID(); ok {
+		if err := configurationitem.CiTypeIDValidator(v); err != nil {
+			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.ci_type_id": %w`, err)}
+		}
 	}
 	if _, ok := cic.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ConfigurationItem.tenant_id"`)}
+	}
+	if v, ok := cic.mutation.TenantID(); ok {
+		if err := configurationitem.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.tenant_id": %w`, err)}
+		}
 	}
 	if _, ok := cic.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ConfigurationItem.created_at"`)}
 	}
 	if _, ok := cic.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ConfigurationItem.updated_at"`)}
-	}
-	if len(cic.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "ConfigurationItem.tenant"`)}
-	}
-	if len(cic.mutation.CiTypeIDs()) == 0 {
-		return &ValidationError{Name: "ci_type", err: errors.New(`ent: missing required edge "ConfigurationItem.ci_type"`)}
 	}
 	return nil
 }
@@ -482,65 +278,41 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := cic.mutation.DisplayName(); ok {
-		_spec.SetField(configurationitem.FieldDisplayName, field.TypeString, value)
-		_node.DisplayName = value
-	}
 	if value, ok := cic.mutation.Description(); ok {
 		_spec.SetField(configurationitem.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := cic.mutation.SerialNumber(); ok {
-		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
-		_node.SerialNumber = value
-	}
-	if value, ok := cic.mutation.AssetTag(); ok {
-		_spec.SetField(configurationitem.FieldAssetTag, field.TypeString, value)
-		_node.AssetTag = value
+	if value, ok := cic.mutation.GetType(); ok {
+		_spec.SetField(configurationitem.FieldType, field.TypeString, value)
+		_node.Type = value
 	}
 	if value, ok := cic.mutation.Status(); ok {
 		_spec.SetField(configurationitem.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := cic.mutation.LifecycleState(); ok {
-		_spec.SetField(configurationitem.FieldLifecycleState, field.TypeString, value)
-		_node.LifecycleState = value
-	}
-	if value, ok := cic.mutation.BusinessService(); ok {
-		_spec.SetField(configurationitem.FieldBusinessService, field.TypeString, value)
-		_node.BusinessService = value
-	}
-	if value, ok := cic.mutation.Owner(); ok {
-		_spec.SetField(configurationitem.FieldOwner, field.TypeString, value)
-		_node.Owner = value
-	}
-	if value, ok := cic.mutation.Environment(); ok {
-		_spec.SetField(configurationitem.FieldEnvironment, field.TypeString, value)
-		_node.Environment = value
-	}
 	if value, ok := cic.mutation.Location(); ok {
 		_spec.SetField(configurationitem.FieldLocation, field.TypeString, value)
 		_node.Location = value
 	}
-	if value, ok := cic.mutation.Attributes(); ok {
-		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)
-		_node.Attributes = value
+	if value, ok := cic.mutation.SerialNumber(); ok {
+		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
+		_node.SerialNumber = value
 	}
-	if value, ok := cic.mutation.MonitoringData(); ok {
-		_spec.SetField(configurationitem.FieldMonitoringData, field.TypeJSON, value)
-		_node.MonitoringData = value
+	if value, ok := cic.mutation.Model(); ok {
+		_spec.SetField(configurationitem.FieldModel, field.TypeString, value)
+		_node.Model = value
 	}
-	if value, ok := cic.mutation.DiscoverySource(); ok {
-		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeJSON, value)
-		_node.DiscoverySource = value
+	if value, ok := cic.mutation.Vendor(); ok {
+		_spec.SetField(configurationitem.FieldVendor, field.TypeString, value)
+		_node.Vendor = value
 	}
-	if value, ok := cic.mutation.LastDiscovered(); ok {
-		_spec.SetField(configurationitem.FieldLastDiscovered, field.TypeTime, value)
-		_node.LastDiscovered = value
+	if value, ok := cic.mutation.CiTypeID(); ok {
+		_spec.SetField(configurationitem.FieldCiTypeID, field.TypeInt, value)
+		_node.CiTypeID = value
 	}
-	if value, ok := cic.mutation.Version(); ok {
-		_spec.SetField(configurationitem.FieldVersion, field.TypeString, value)
-		_node.Version = value
+	if value, ok := cic.mutation.TenantID(); ok {
+		_spec.SetField(configurationitem.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := cic.mutation.CreatedAt(); ok {
 		_spec.SetField(configurationitem.FieldCreatedAt, field.TypeTime, value)
@@ -549,136 +321,6 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 	if value, ok := cic.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := cic.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.TenantTable,
-			Columns: []string{configurationitem.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.CiTypeIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   configurationitem.CiTypeTable,
-			Columns: []string{configurationitem.CiTypeColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.CiTypeID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.OutgoingRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.OutgoingRelationshipsTable,
-			Columns: []string{configurationitem.OutgoingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.IncomingRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncomingRelationshipsTable,
-			Columns: []string{configurationitem.IncomingRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.LifecycleStatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.LifecycleStatesTable,
-			Columns: []string{configurationitem.LifecycleStatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cilifecyclestate.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.ChangeRecordsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangeRecordsTable,
-			Columns: []string{configurationitem.ChangeRecordsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cichangerecord.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.IncidentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.IncidentsTable,
-			Columns: []string{configurationitem.IncidentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := cic.mutation.ChangesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   configurationitem.ChangesTable,
-			Columns: []string{configurationitem.ChangesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

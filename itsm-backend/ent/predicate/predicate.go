@@ -6,23 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// ApprovalLog is the predicate function for approvallog builders.
-type ApprovalLog func(*sql.Selector)
+// AuditLog is the predicate function for auditlog builders.
+type AuditLog func(*sql.Selector)
 
 // CIAttributeDefinition is the predicate function for ciattributedefinition builders.
 type CIAttributeDefinition func(*sql.Selector)
 
-// CIChangeRecord is the predicate function for cichangerecord builders.
-type CIChangeRecord func(*sql.Selector)
-
-// CILifecycleState is the predicate function for cilifecyclestate builders.
-type CILifecycleState func(*sql.Selector)
-
 // CIRelationship is the predicate function for cirelationship builders.
 type CIRelationship func(*sql.Selector)
-
-// CIRelationshipType is the predicate function for cirelationshiptype builders.
-type CIRelationshipType func(*sql.Selector)
 
 // CIType is the predicate function for citype builders.
 type CIType func(*sql.Selector)
@@ -30,8 +21,8 @@ type CIType func(*sql.Selector)
 // ConfigurationItem is the predicate function for configurationitem builders.
 type ConfigurationItem func(*sql.Selector)
 
-// FlowInstance is the predicate function for flowinstance builders.
-type FlowInstance func(*sql.Selector)
+// Conversation is the predicate function for conversation builders.
+type Conversation func(*sql.Selector)
 
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
@@ -39,11 +30,17 @@ type Incident func(*sql.Selector)
 // KnowledgeArticle is the predicate function for knowledgearticle builders.
 type KnowledgeArticle func(*sql.Selector)
 
+// Message is the predicate function for message builders.
+type Message func(*sql.Selector)
+
+// Notification is the predicate function for notification builders.
+type Notification func(*sql.Selector)
+
+// PromptTemplate is the predicate function for prompttemplate builders.
+type PromptTemplate func(*sql.Selector)
+
 // SLADefinition is the predicate function for sladefinition builders.
 type SLADefinition func(*sql.Selector)
-
-// SLAMetrics is the predicate function for slametrics builders.
-type SLAMetrics func(*sql.Selector)
 
 // SLAViolation is the predicate function for slaviolation builders.
 type SLAViolation func(*sql.Selector)
@@ -54,20 +51,14 @@ type ServiceCatalog func(*sql.Selector)
 // ServiceRequest is the predicate function for servicerequest builders.
 type ServiceRequest func(*sql.Selector)
 
-// StatusLog is the predicate function for statuslog builders.
-type StatusLog func(*sql.Selector)
-
-// Subscription is the predicate function for subscription builders.
-type Subscription func(*sql.Selector)
-
 // Tenant is the predicate function for tenant builders.
 type Tenant func(*sql.Selector)
 
 // Ticket is the predicate function for ticket builders.
 type Ticket func(*sql.Selector)
 
+// ToolInvocation is the predicate function for toolinvocation builders.
+type ToolInvocation func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
-
-// Workflow is the predicate function for workflow builders.
-type Workflow func(*sql.Selector)

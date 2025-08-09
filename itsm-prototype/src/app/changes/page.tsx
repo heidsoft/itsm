@@ -1,110 +1,316 @@
+"use client";
 
-'use client';
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  Table,
+  Button,
+  Tag,
+  Space,
+  Row,
+  Col,
+  Statistic,
+  Select,
+  Input,
+  Tooltip,
+  Progress,
+} from "antd";
+import {
+  PlusCircle,
+  Search,
+  Eye,
+  Edit,
+  GitBranch,
+  Calendar,
+} from "lucide-react";
+import { mockChangesData } from "../lib/mock-data";
 
-import { Filter, PlusCircle } from 'lucide-react';
+const { Search: SearchInput } = Input;
+const { Option } = Select;
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import  from 'lucide-react';
-
-import { mockChangesData } from '../lib/mock-data';
-
-const ChangeTypeBadge = ({ type }) => {
-    const colors = {
-        '普通变更': 'bg-blue-100 text-blue-800',
-        '标准变更': 'bg-green-100 text-green-800',
-        '紧急变更': 'bg-red-100 text-red-800',
-    };
-    return <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[type]}`}>{type}</span>;
+const getChangeTypeColor = (type: string) => {
+  switch (type) {
+    case "普通变更":
+      return "blue";
+    case "标准变更":
+      return "green";
+    case "紧急变更":
+      return "red";
+    default:
+      return "default";
+  }
 };
 
-const ChangeStatusBadge = ({ status }) => {
-    const colors = {
-        '待审批': 'bg-yellow-100 text-yellow-800',
-        '已批准': 'bg-green-100 text-green-800',
-        '实施中': 'bg-blue-100 text-blue-800',
-        '已完成': 'bg-gray-200 text-gray-800',
-        '已拒绝': 'bg-red-100 text-red-800',
-    };
-    return <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status]}`}>{status}</span>;
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "待审批":
+      return "warning";
+    case "已批准":
+      return "success";
+    case "实施中":
+      return "processing";
+    case "已完成":
+      return "success";
+    case "已回滚":
+      return "error";
+    case "已拒绝":
+      return "error";
+    default:
+      return "default";
+  }
 };
 
-const ChangePriorityBadge = ({ priority }) => {
-    const colors = {
-        '紧急': 'bg-red-100 text-red-800 border-red-300',
-        '高': 'bg-orange-100 text-orange-800 border-orange-300',
-        '中': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-        '低': 'bg-blue-100 text-blue-800 border-blue-300',
-    };
-    return <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${colors[priority]}`}>{priority}</span>;
+const getRiskLevel = (risk: string) => {
+  switch (risk) {
+    case "高":
+      return { color: "red", percent: 80 };
+    case "中":
+      return { color: "orange", percent: 50 };
+    case "低":
+      return { color: "green", percent: 20 };
+    default:
+      return { color: "gray", percent: 0 };
+  }
 };
 
 const ChangeListPage = () => {
-    const [filter, setFilter] = useState('全部');
+  const [filter, setFilter] = useState("全部");
+  const [searchText, setSearchText] = useState("");
+  const [changes] = useState(mockChangesData);
 
-    return (
-        <div className="p-10 bg-gray-50 min-h-full">
-            <header className="mb-8 flex justify-between items-center">
-                <div>
-                    <h2 className="text-4xl font-bold text-gray-800">变更管理</h2>
-                    <p className="text-gray-500 mt-1">规划、实施和控制IT基础设施和服务的变更</p>
-                </div>
-                <Link href="/changes/new" passHref>
-                    <button className="flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                        <PlusCircle className="w-5 h-5 mr-2" />
-                        新建变更
-                    </button>
-                </Link>
-            </header>
+  const filteredChanges = changes.filter((change) => {
+    const matchesFilter = filter === "全部" || change.status === filter;
+    const matchesSearch =
+      change.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      change.id.toLowerCase().includes(searchText.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
-            {/* 筛选器 */}
-            <div className="flex items-center mb-6 bg-white p-3 rounded-lg shadow-sm">
-                <Filter className="w-5 h-5 text-gray-500 mr-3" />
-                <span className="text-sm font-semibold mr-4">筛选:</span>
-                <div className="flex space-x-2">
-                    {['全部', '待审批', '已批准', '实施中', '已完成', '已拒绝'].map(f => (
-                        <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 text-sm rounded-md ${filter === f ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>
-                            {f}
-                        </button>
-                    ))}
-                </div>
-            </div>
+  const statusCounts = {
+    total: changes.length,
+    pending: changes.filter((c) => c.status === "待审批").length,
+    approved: changes.filter((c) => c.status === "已批准").length,
+    implementing: changes.filter((c) => c.status === "实施中").length,
+    completed: changes.filter((c) => c.status === "已完成").length,
+  };
 
-            {/* 变更列表表格 */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">变更ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">标题</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">优先级</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">负责人</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {mockChangesData.map(change => (
-                            <tr key={change.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <Link href={`/changes/${change.id}`} className="text-blue-600 font-semibold hover:underline">
-                                        {change.id}
-                                    </Link>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap"><ChangeTypeBadge type={change.type} /></td>
-                                <td className="px-6 py-4 whitespace-nowrap max-w-sm truncate">{change.title}</td>
-                                <td className="px-6 py-4 whitespace-nowrap"><ChangeStatusBadge status={change.status} /></td>
-                                <td className="px-6 py-4 whitespace-nowrap"><ChangePriorityBadge priority={change.priority} /></td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{change.assignee}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{change.createdAt}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  const columns = [
+    {
+      title: "变更ID",
+      dataIndex: "id",
+      key: "id",
+      width: 120,
+      render: (text: string) => (
+        <Link href={`/changes/${text}`}>
+          <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
+            {text}
+          </span>
+        </Link>
+      ),
+    },
+    {
+      title: "变更标题",
+      dataIndex: "title",
+      key: "title",
+      ellipsis: true,
+    },
+    {
+      title: "变更类型",
+      dataIndex: "type",
+      key: "type",
+      width: 120,
+      render: (type: string) => (
+        <Tag color={getChangeTypeColor(type)}>{type}</Tag>
+      ),
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      width: 100,
+      render: (status: string) => (
+        <Tag color={getStatusColor(status)}>{status}</Tag>
+      ),
+    },
+    {
+      title: "风险等级",
+      dataIndex: "risk",
+      key: "risk",
+      width: 120,
+      render: (risk: string) => {
+        const riskInfo = getRiskLevel(risk);
+        return (
+          <div style={{ width: 80 }}>
+            <Progress
+              percent={riskInfo.percent}
+              size="small"
+              status={
+                riskInfo.color as "active" | "exception" | "normal" | "success"
+              }
+              format={() => risk}
+            />
+          </div>
+        );
+      },
+    },
+    {
+      title: "申请人",
+      dataIndex: "requester",
+      key: "requester",
+      width: 100,
+    },
+    {
+      title: "计划实施时间",
+      dataIndex: "scheduledDate",
+      key: "scheduledDate",
+      width: 150,
+    },
+    {
+      title: "操作",
+      key: "actions",
+      width: 120,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="查看详情">
+            <Link href={`/changes/${record.id}`}>
+              <Button type="text" size="small" icon={<Eye size={14} />} />
+            </Link>
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<Edit size={14} />} />
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+      {/* 页面头部 */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 600,
+              color: "#1e293b",
+              margin: 0,
+            }}
+          >
+            变更管理
+          </h1>
+          <p style={{ color: "#64748b", marginTop: 4, marginBottom: 0 }}>
+            管理系统变更请求，确保变更的安全性和可控性
+          </p>
         </div>
-    );
+        <Link href="/changes/new">
+          <Button type="primary" icon={<PlusCircle size={16} />}>
+            新建变更
+          </Button>
+        </Link>
+      </div>
+
+      {/* 统计卡片 */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="总变更数"
+              value={statusCounts.total}
+              prefix={<GitBranch size={16} style={{ color: "#1890ff" }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="待审批"
+              value={statusCounts.pending}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="实施中"
+              value={statusCounts.implementing}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="已完成"
+              value={statusCounts.completed}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 筛选和搜索 */}
+      <Card className="mb-6">
+        <Row gutter={16} align="middle">
+          <Col span={8}>
+            <SearchInput
+              placeholder="搜索变更ID或标题"
+              allowClear
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              prefix={<Search size={16} />}
+            />
+          </Col>
+          <Col span={4}>
+            <Select
+              value={filter}
+              onChange={setFilter}
+              style={{ width: "100%" }}
+              placeholder="状态筛选"
+            >
+              <Option value="全部">全部状态</Option>
+              <Option value="待审批">待审批</Option>
+              <Option value="已批准">已批准</Option>
+              <Option value="实施中">实施中</Option>
+              <Option value="已完成">已完成</Option>
+              <Option value="已回滚">已回滚</Option>
+              <Option value="已拒绝">已拒绝</Option>
+            </Select>
+          </Col>
+          <Col span={4}>
+            <Button icon={<Calendar size={16} />}>时间筛选</Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 变更列表 */}
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={filteredChanges}
+          rowKey="id"
+          pagination={{
+            total: filteredChanges.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) =>
+              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
+    </div>
+  );
 };
 
 export default ChangeListPage;

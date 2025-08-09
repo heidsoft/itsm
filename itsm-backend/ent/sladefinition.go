@@ -17,34 +17,12 @@ type SLADefinition struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// CreateTime holds the value of the "create_time" field.
-	CreateTime time.Time `json:"create_time,omitempty"`
-	// UpdateTime holds the value of the "update_time" field.
-	UpdateTime time.Time `json:"update_time,omitempty"`
 	// SLA名称
 	Name string `json:"name,omitempty"`
 	// SLA描述
 	Description string `json:"description,omitempty"`
-	// 服务类型：incident/service_request/problem/change
-	ServiceType string `json:"service_type,omitempty"`
-	// 优先级：low/medium/high/critical
-	Priority string `json:"priority,omitempty"`
-	// 影响范围：low/medium/high
-	Impact string `json:"impact,omitempty"`
-	// 响应时间（分钟）
-	ResponseTime int `json:"response_time,omitempty"`
-	// 解决时间（分钟）
-	ResolutionTime int `json:"resolution_time,omitempty"`
-	// 工作时间配置JSON
-	BusinessHours string `json:"business_hours,omitempty"`
-	// 节假日配置JSON
-	Holidays string `json:"holidays,omitempty"`
-	// 是否启用
-	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// 创建人
-	CreatedBy string `json:"created_by,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -57,13 +35,11 @@ func (*SLADefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sladefinition.FieldIsActive:
-			values[i] = new(sql.NullBool)
-		case sladefinition.FieldID, sladefinition.FieldResponseTime, sladefinition.FieldResolutionTime, sladefinition.FieldTenantID:
+		case sladefinition.FieldID, sladefinition.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case sladefinition.FieldName, sladefinition.FieldDescription, sladefinition.FieldServiceType, sladefinition.FieldPriority, sladefinition.FieldImpact, sladefinition.FieldBusinessHours, sladefinition.FieldHolidays, sladefinition.FieldCreatedBy:
+		case sladefinition.FieldName, sladefinition.FieldDescription:
 			values[i] = new(sql.NullString)
-		case sladefinition.FieldCreateTime, sladefinition.FieldUpdateTime, sladefinition.FieldCreatedAt, sladefinition.FieldUpdatedAt:
+		case sladefinition.FieldCreatedAt, sladefinition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -86,18 +62,6 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			sd.ID = int(value.Int64)
-		case sladefinition.FieldCreateTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field create_time", values[i])
-			} else if value.Valid {
-				sd.CreateTime = value.Time
-			}
-		case sladefinition.FieldUpdateTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field update_time", values[i])
-			} else if value.Valid {
-				sd.UpdateTime = value.Time
-			}
 		case sladefinition.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -110,65 +74,11 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sd.Description = value.String
 			}
-		case sladefinition.FieldServiceType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field service_type", values[i])
-			} else if value.Valid {
-				sd.ServiceType = value.String
-			}
-		case sladefinition.FieldPriority:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field priority", values[i])
-			} else if value.Valid {
-				sd.Priority = value.String
-			}
-		case sladefinition.FieldImpact:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field impact", values[i])
-			} else if value.Valid {
-				sd.Impact = value.String
-			}
-		case sladefinition.FieldResponseTime:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field response_time", values[i])
-			} else if value.Valid {
-				sd.ResponseTime = int(value.Int64)
-			}
-		case sladefinition.FieldResolutionTime:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field resolution_time", values[i])
-			} else if value.Valid {
-				sd.ResolutionTime = int(value.Int64)
-			}
-		case sladefinition.FieldBusinessHours:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field business_hours", values[i])
-			} else if value.Valid {
-				sd.BusinessHours = value.String
-			}
-		case sladefinition.FieldHolidays:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field holidays", values[i])
-			} else if value.Valid {
-				sd.Holidays = value.String
-			}
-		case sladefinition.FieldIsActive:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field is_active", values[i])
-			} else if value.Valid {
-				sd.IsActive = value.Bool
-			}
 		case sladefinition.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
 				sd.TenantID = int(value.Int64)
-			}
-		case sladefinition.FieldCreatedBy:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field created_by", values[i])
-			} else if value.Valid {
-				sd.CreatedBy = value.String
 			}
 		case sladefinition.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -218,47 +128,14 @@ func (sd *SLADefinition) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLADefinition(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", sd.ID))
-	builder.WriteString("create_time=")
-	builder.WriteString(sd.CreateTime.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("update_time=")
-	builder.WriteString(sd.UpdateTime.Format(time.ANSIC))
-	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(sd.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(sd.Description)
 	builder.WriteString(", ")
-	builder.WriteString("service_type=")
-	builder.WriteString(sd.ServiceType)
-	builder.WriteString(", ")
-	builder.WriteString("priority=")
-	builder.WriteString(sd.Priority)
-	builder.WriteString(", ")
-	builder.WriteString("impact=")
-	builder.WriteString(sd.Impact)
-	builder.WriteString(", ")
-	builder.WriteString("response_time=")
-	builder.WriteString(fmt.Sprintf("%v", sd.ResponseTime))
-	builder.WriteString(", ")
-	builder.WriteString("resolution_time=")
-	builder.WriteString(fmt.Sprintf("%v", sd.ResolutionTime))
-	builder.WriteString(", ")
-	builder.WriteString("business_hours=")
-	builder.WriteString(sd.BusinessHours)
-	builder.WriteString(", ")
-	builder.WriteString("holidays=")
-	builder.WriteString(sd.Holidays)
-	builder.WriteString(", ")
-	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", sd.IsActive))
-	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", sd.TenantID))
-	builder.WriteString(", ")
-	builder.WriteString("created_by=")
-	builder.WriteString(sd.CreatedBy)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(sd.CreatedAt.Format(time.ANSIC))

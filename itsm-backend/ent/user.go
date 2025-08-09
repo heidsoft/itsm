@@ -4,7 +4,6 @@ package ent
 
 import (
 	"fmt"
-	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -20,16 +19,16 @@ type User struct {
 	ID int `json:"id,omitempty"`
 	// 用户名
 	Username string `json:"username,omitempty"`
-	// 邮箱地址
+	// 邮箱
 	Email string `json:"email,omitempty"`
-	// 真实姓名
+	// 姓名
 	Name string `json:"name,omitempty"`
 	// 部门
 	Department string `json:"department,omitempty"`
-	// 联系电话
+	// 电话
 	Phone string `json:"phone,omitempty"`
 	// 密码哈希
-	PasswordHash string `json:"-"`
+	PasswordHash string `json:"password_hash,omitempty"`
 	// 是否激活
 	Active bool `json:"active,omitempty"`
 	// 租户ID
@@ -37,108 +36,8 @@ type User struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// UserEdges holds the relations/edges for other nodes in the graph.
-type UserEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// SubmittedTickets holds the value of the submitted_tickets edge.
-	SubmittedTickets []*Ticket `json:"submitted_tickets,omitempty"`
-	// AssignedTickets holds the value of the assigned_tickets edge.
-	AssignedTickets []*Ticket `json:"assigned_tickets,omitempty"`
-	// ApprovalLogs holds the value of the approval_logs edge.
-	ApprovalLogs []*ApprovalLog `json:"approval_logs,omitempty"`
-	// StatusLogs holds the value of the status_logs edge.
-	StatusLogs []*StatusLog `json:"status_logs,omitempty"`
-	// ServiceRequests holds the value of the service_requests edge.
-	ServiceRequests []*ServiceRequest `json:"service_requests,omitempty"`
-	// ReportedIncidents holds the value of the reported_incidents edge.
-	ReportedIncidents []*Incident `json:"reported_incidents,omitempty"`
-	// AssignedIncidents holds the value of the assigned_incidents edge.
-	AssignedIncidents []*Incident `json:"assigned_incidents,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// SubmittedTicketsOrErr returns the SubmittedTickets value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) SubmittedTicketsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[1] {
-		return e.SubmittedTickets, nil
-	}
-	return nil, &NotLoadedError{edge: "submitted_tickets"}
-}
-
-// AssignedTicketsOrErr returns the AssignedTickets value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) AssignedTicketsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[2] {
-		return e.AssignedTickets, nil
-	}
-	return nil, &NotLoadedError{edge: "assigned_tickets"}
-}
-
-// ApprovalLogsOrErr returns the ApprovalLogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) ApprovalLogsOrErr() ([]*ApprovalLog, error) {
-	if e.loadedTypes[3] {
-		return e.ApprovalLogs, nil
-	}
-	return nil, &NotLoadedError{edge: "approval_logs"}
-}
-
-// StatusLogsOrErr returns the StatusLogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) StatusLogsOrErr() ([]*StatusLog, error) {
-	if e.loadedTypes[4] {
-		return e.StatusLogs, nil
-	}
-	return nil, &NotLoadedError{edge: "status_logs"}
-}
-
-// ServiceRequestsOrErr returns the ServiceRequests value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) ServiceRequestsOrErr() ([]*ServiceRequest, error) {
-	if e.loadedTypes[5] {
-		return e.ServiceRequests, nil
-	}
-	return nil, &NotLoadedError{edge: "service_requests"}
-}
-
-// ReportedIncidentsOrErr returns the ReportedIncidents value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) ReportedIncidentsOrErr() ([]*Incident, error) {
-	if e.loadedTypes[6] {
-		return e.ReportedIncidents, nil
-	}
-	return nil, &NotLoadedError{edge: "reported_incidents"}
-}
-
-// AssignedIncidentsOrErr returns the AssignedIncidents value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) AssignedIncidentsOrErr() ([]*Incident, error) {
-	if e.loadedTypes[7] {
-		return e.AssignedIncidents, nil
-	}
-	return nil, &NotLoadedError{edge: "assigned_incidents"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -248,46 +147,6 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryTenant queries the "tenant" edge of the User entity.
-func (u *User) QueryTenant() *TenantQuery {
-	return NewUserClient(u.config).QueryTenant(u)
-}
-
-// QuerySubmittedTickets queries the "submitted_tickets" edge of the User entity.
-func (u *User) QuerySubmittedTickets() *TicketQuery {
-	return NewUserClient(u.config).QuerySubmittedTickets(u)
-}
-
-// QueryAssignedTickets queries the "assigned_tickets" edge of the User entity.
-func (u *User) QueryAssignedTickets() *TicketQuery {
-	return NewUserClient(u.config).QueryAssignedTickets(u)
-}
-
-// QueryApprovalLogs queries the "approval_logs" edge of the User entity.
-func (u *User) QueryApprovalLogs() *ApprovalLogQuery {
-	return NewUserClient(u.config).QueryApprovalLogs(u)
-}
-
-// QueryStatusLogs queries the "status_logs" edge of the User entity.
-func (u *User) QueryStatusLogs() *StatusLogQuery {
-	return NewUserClient(u.config).QueryStatusLogs(u)
-}
-
-// QueryServiceRequests queries the "service_requests" edge of the User entity.
-func (u *User) QueryServiceRequests() *ServiceRequestQuery {
-	return NewUserClient(u.config).QueryServiceRequests(u)
-}
-
-// QueryReportedIncidents queries the "reported_incidents" edge of the User entity.
-func (u *User) QueryReportedIncidents() *IncidentQuery {
-	return NewUserClient(u.config).QueryReportedIncidents(u)
-}
-
-// QueryAssignedIncidents queries the "assigned_incidents" edge of the User entity.
-func (u *User) QueryAssignedIncidents() *IncidentQuery {
-	return NewUserClient(u.config).QueryAssignedIncidents(u)
-}
-
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -326,7 +185,8 @@ func (u *User) String() string {
 	builder.WriteString("phone=")
 	builder.WriteString(u.Phone)
 	builder.WriteString(", ")
-	builder.WriteString("password_hash=<sensitive>")
+	builder.WriteString("password_hash=")
+	builder.WriteString(u.PasswordHash)
 	builder.WriteString(", ")
 	builder.WriteString("active=")
 	builder.WriteString(fmt.Sprintf("%v", u.Active))

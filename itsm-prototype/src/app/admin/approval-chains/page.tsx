@@ -1,8 +1,56 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Users, Search, Settings, Trash2, XCircle, FileText, Pause, Play, Copy, ArrowDown, FileText } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Typography,
+  Tag,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Statistic,
+  Badge,
+  Tooltip,
+  Popconfirm,
+  Steps,
+  Descriptions,
+  Drawer,
+  App,
+} from "antd";
+import {
+  Plus,
+  CheckCircle,
+  Clock,
+  Users,
+  Search,
+  Settings,
+  Trash2,
+  XCircle,
+  FileText,
+  Pause,
+  Play,
+  Copy,
+  ArrowRight,
+  GitBranch,
+  AlertTriangle,
+  UserCheck,
+  Eye,
+  Edit,
+  Activity,
+  Workflow,
+  Timer,
+} from "lucide-react";
 
-import React, { useState, useEffect } from "react";
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { Step } = Steps;
+
 // 审批链状态枚举
 const APPROVAL_CHAIN_STATUS = {
   ACTIVE: "active",
@@ -163,26 +211,26 @@ const mockApprovalChains = [
 const APPROVAL_TYPE_CONFIG = {
   [APPROVAL_TYPES.SEQUENTIAL]: {
     label: "顺序审批",
-    color: "bg-blue-100 text-blue-800",
-    icon: ArrowRight,
+    color: "blue",
+    icon: <ArrowRight className="w-4 h-4" />,
     description: "按顺序逐级审批",
   },
   [APPROVAL_TYPES.PARALLEL]: {
     label: "并行审批",
-    color: "bg-green-100 text-green-800",
-    icon: GitBranch,
+    color: "green",
+    icon: <GitBranch className="w-4 h-4" />,
     description: "多个审批人同时审批",
   },
   [APPROVAL_TYPES.CONDITIONAL]: {
     label: "条件审批",
-    color: "bg-purple-100 text-purple-800",
-    icon: Settings,
+    color: "purple",
+    icon: <Settings className="w-4 h-4" />,
     description: "根据条件动态审批",
   },
   [APPROVAL_TYPES.ESCALATION]: {
     label: "升级审批",
-    color: "bg-orange-100 text-orange-800",
-    icon: AlertTriangle,
+    color: "orange",
+    icon: <AlertTriangle className="w-4 h-4" />,
     description: "超时自动升级审批",
   },
 };
@@ -191,18 +239,18 @@ const APPROVAL_TYPE_CONFIG = {
 const STATUS_CONFIG = {
   [APPROVAL_CHAIN_STATUS.ACTIVE]: {
     label: "已启用",
-    color: "bg-green-100 text-green-800",
-    icon: CheckCircle,
+    color: "success",
+    icon: <CheckCircle className="w-3 h-3" />,
   },
   [APPROVAL_CHAIN_STATUS.INACTIVE]: {
     label: "已停用",
-    color: "bg-gray-100 text-gray-800",
-    icon: XCircle,
+    color: "default",
+    icon: <XCircle className="w-3 h-3" />,
   },
   [APPROVAL_CHAIN_STATUS.DRAFT]: {
     label: "草稿",
-    color: "bg-yellow-100 text-yellow-800",
-    icon: Clock,
+    color: "warning",
+    icon: <Clock className="w-3 h-3" />,
   },
 };
 
@@ -210,35 +258,55 @@ const STATUS_CONFIG = {
 const NODE_TYPE_CONFIG = {
   [NODE_TYPES.USER]: {
     label: "用户审批",
-    color: "bg-blue-100 text-blue-800",
-    icon: UserCheck,
+    color: "blue",
+    icon: <UserCheck className="w-3 h-3" />,
   },
   [NODE_TYPES.ROLE]: {
     label: "角色审批",
-    color: "bg-purple-100 text-purple-800",
-    icon: Users,
+    color: "purple",
+    icon: <Users className="w-3 h-3" />,
   },
   [NODE_TYPES.GROUP]: {
     label: "用户组审批",
-    color: "bg-green-100 text-green-800",
-    icon: Users,
+    color: "green",
+    icon: <Users className="w-3 h-3" />,
   },
   [NODE_TYPES.AUTO]: {
     label: "自动审批",
-    color: "bg-gray-100 text-gray-800",
-    icon: Settings,
+    color: "cyan",
+    icon: <Settings className="w-3 h-3" />,
   },
 };
 
 const ApprovalChainManagement = () => {
+  const { message } = App.useApp();
   const [approvalChains, setApprovalChains] = useState(mockApprovalChains);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedChain, setSelectedChain] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedChain, setSelectedChain] = useState<any>(null);
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+
+  // 统计信息
+  const stats = {
+    total: approvalChains.length,
+    active: approvalChains.filter(
+      (c) => c.status === APPROVAL_CHAIN_STATUS.ACTIVE
+    ).length,
+    draft: approvalChains.filter(
+      (c) => c.status === APPROVAL_CHAIN_STATUS.DRAFT
+    ).length,
+    totalUsage: approvalChains.reduce((sum, c) => sum + c.usageCount, 0),
+  };
+
+  // 获取所有分类
+  const categories = Array.from(
+    new Set(approvalChains.map((chain) => chain.category))
+  );
 
   // 过滤审批链
   const filteredChains = approvalChains.filter((chain) => {
@@ -254,13 +322,8 @@ const ApprovalChainManagement = () => {
     return matchesSearch && matchesType && matchesStatus && matchesCategory;
   });
 
-  // 获取所有分类
-  const categories = Array.from(
-    new Set(approvalChains.map((chain) => chain.category))
-  );
-
   // 处理状态切换
-  const handleStatusToggle = (chainId) => {
+  const handleStatusToggle = (chainId: number) => {
     setApprovalChains((prev) =>
       prev.map((chain) => {
         if (chain.id === chainId) {
@@ -273,10 +336,11 @@ const ApprovalChainManagement = () => {
         return chain;
       })
     );
+    message.success("审批链状态已更新");
   };
 
   // 处理复制
-  const handleDuplicate = (chain) => {
+  const handleDuplicate = (chain: any) => {
     const newChain = {
       ...chain,
       id: Math.max(...approvalChains.map((c) => c.id)) + 1,
@@ -287,418 +351,632 @@ const ApprovalChainManagement = () => {
       usageCount: 0,
     };
     setApprovalChains((prev) => [newChain, ...prev]);
+    message.success("审批链已复制");
   };
 
   // 处理删除
-  const handleDelete = (chainId) => {
-    if (confirm("确定要删除这个审批链吗？此操作不可撤销。")) {
-      setApprovalChains((prev) => prev.filter((c) => c.id !== chainId));
-    }
+  const handleDelete = (chainId: number) => {
+    setApprovalChains((prev) => prev.filter((c) => c.id !== chainId));
+    message.success("审批链已删除");
   };
 
   // 查看详情
-  const handleViewDetail = (chain) => {
+  const handleViewDetail = (chain: any) => {
     setSelectedChain(chain);
-    setShowDetailModal(true);
+    setShowDetailDrawer(true);
   };
 
-  // 统计信息
-  const stats = {
-    total: approvalChains.length,
-    active: approvalChains.filter(
-      (c) => c.status === APPROVAL_CHAIN_STATUS.ACTIVE
-    ).length,
-    draft: approvalChains.filter(
-      (c) => c.status === APPROVAL_CHAIN_STATUS.DRAFT
-    ).length,
-    totalUsage: approvalChains.reduce((sum, c) => sum + c.usageCount, 0),
+  // 保存审批链
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (selectedChain) {
+        // 编辑
+        setApprovalChains((prev) =>
+          prev.map((chain) =>
+            chain.id === selectedChain.id
+              ? {
+                  ...chain,
+                  ...values,
+                  lastModified: new Date().toLocaleString("zh-CN"),
+                }
+              : chain
+          )
+        );
+        message.success("审批链更新成功");
+      } else {
+        // 新建
+        const newChain = {
+          id: Math.max(...approvalChains.map((c) => c.id)) + 1,
+          ...values,
+          status: APPROVAL_CHAIN_STATUS.DRAFT,
+          createdBy: "当前用户",
+          createdAt: new Date().toLocaleString("zh-CN"),
+          lastModified: new Date().toLocaleString("zh-CN"),
+          nodesCount: 0,
+          usageCount: 0,
+          avgApprovalTime: "0小时",
+          nodes: [],
+        };
+        setApprovalChains((prev) => [newChain, ...prev]);
+        message.success("审批链创建成功");
+      }
+
+      setShowCreateModal(false);
+      setSelectedChain(null);
+      form.resetFields();
+    } catch (error) {
+      message.error("保存失败，请检查必填项");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // 渲染审批节点流程
+  const renderApprovalFlow = (nodes: any[], type: string) => {
+    if (!nodes || nodes.length === 0) {
+      return <Text type="secondary">暂无审批节点</Text>;
+    }
+
+    if (type === APPROVAL_TYPES.SEQUENTIAL) {
+      return (
+        <Steps direction="vertical" size="small">
+          {nodes.map((node, index) => (
+            <Step
+              key={node.id}
+              title={
+                <div className="flex items-center gap-2">
+                  <span>{node.name}</span>
+                  <Tag
+                    color={
+                      NODE_TYPE_CONFIG[
+                        node.type as keyof typeof NODE_TYPE_CONFIG
+                      ]?.color
+                    }
+                    size="small"
+                  >
+                    {
+                      NODE_TYPE_CONFIG[
+                        node.type as keyof typeof NODE_TYPE_CONFIG
+                      ]?.label
+                    }
+                  </Tag>
+                  {node.isRequired && <Badge status="error" text="必须" />}
+                </div>
+              }
+              description={
+                <div className="text-xs text-gray-500">
+                  <div>审批人: {node.approver}</div>
+                  <div>条件: {node.condition}</div>
+                  <div>超时: {node.timeout}小时</div>
+                </div>
+              }
+              status={index === 0 ? "process" : "wait"}
+            />
+          ))}
+        </Steps>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {nodes.map((node) => (
+          <Card
+            key={node.id}
+            size="small"
+            className="border-l-4 border-l-blue-500"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{node.name}</span>
+                <Tag
+                  color={
+                    NODE_TYPE_CONFIG[node.type as keyof typeof NODE_TYPE_CONFIG]
+                      ?.color
+                  }
+                  size="small"
+                >
+                  {
+                    NODE_TYPE_CONFIG[node.type as keyof typeof NODE_TYPE_CONFIG]
+                      ?.label
+                  }
+                </Tag>
+              </div>
+              <div className="text-xs text-gray-500">{node.timeout}h</div>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {node.approver} · {node.condition}
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  // 表格列定义
+  const columns = [
+    {
+      title: "审批链信息",
+      dataIndex: "name",
+      key: "name",
+      render: (_: any, record: any) => (
+        <div>
+          <div className="flex items-center gap-2">
+            <Text strong>{record.name}</Text>
+            <Tag
+              color={
+                APPROVAL_TYPE_CONFIG[
+                  record.type as keyof typeof APPROVAL_TYPE_CONFIG
+                ]?.color
+              }
+              icon={
+                APPROVAL_TYPE_CONFIG[
+                  record.type as keyof typeof APPROVAL_TYPE_CONFIG
+                ]?.icon
+              }
+            >
+              {
+                APPROVAL_TYPE_CONFIG[
+                  record.type as keyof typeof APPROVAL_TYPE_CONFIG
+                ]?.label
+              }
+            </Tag>
+          </div>
+          <Text type="secondary" className="text-sm">
+            {record.description}
+          </Text>
+          <div className="flex items-center gap-4 mt-1">
+            <span className="text-xs text-gray-500">
+              分类: {record.category}
+            </span>
+            <span className="text-xs text-gray-500">
+              节点: {record.nodesCount}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "使用统计",
+      dataIndex: "usageCount",
+      key: "usageCount",
+      align: "center" as const,
+      render: (_: any, record: any) => (
+        <div className="text-center">
+          <div className="text-lg font-bold text-blue-600">
+            {record.usageCount}
+          </div>
+          <div className="text-xs text-gray-500">次使用</div>
+          <div className="text-xs text-gray-500">
+            平均 {record.avgApprovalTime}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      align: "center" as const,
+      render: (status: string) => (
+        <Tag
+          color={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color}
+          icon={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.icon}
+        >
+          {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
+        </Tag>
+      ),
+    },
+    {
+      title: "更新信息",
+      dataIndex: "lastModified",
+      key: "lastModified",
+      align: "center" as const,
+      render: (_: any, record: any) => (
+        <div className="text-center">
+          <div className="text-sm">{record.lastModified}</div>
+          <div className="text-xs text-gray-500">由 {record.createdBy}</div>
+        </div>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      align: "center" as const,
+      render: (_: any, record: any) => (
+        <Space>
+          <Tooltip title="查看详情">
+            <Button
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
+              onClick={() => handleViewDetail(record)}
+            />
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedChain(record);
+                form.setFieldsValue(record);
+                setShowCreateModal(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="复制">
+            <Button
+              type="text"
+              icon={<Copy className="w-4 h-4" />}
+              onClick={() => handleDuplicate(record)}
+            />
+          </Tooltip>
+          <Tooltip
+            title={
+              record.status === APPROVAL_CHAIN_STATUS.ACTIVE ? "停用" : "启用"
+            }
+          >
+            <Button
+              type="text"
+              icon={
+                record.status === APPROVAL_CHAIN_STATUS.ACTIVE ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )
+              }
+              onClick={() => handleStatusToggle(record.id)}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="确定要删除这个审批链吗？"
+            description="删除后无法恢复，正在使用的流程将受到影响。"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定删除"
+            cancelText="取消"
+            okType="danger"
+          >
+            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <FileText className="w-8 h-8 text-blue-600 mr-3" />
-              审批链配置
-            </h1>
-            <p className="text-gray-600 mt-2">
-              设计和管理审批流程，配置多级审批节点和条件规则
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            新建审批链
-          </button>
-        </div>
+    <div className="p-6">
+      {/* 页面标题 */}
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <FileText className="inline-block w-6 h-6 mr-2" />
+          审批链配置
+        </Title>
+        <Text type="secondary">
+          设计和管理审批流程，配置多级审批节点和条件规则
+        </Text>
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">审批链总数</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">已启用</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">草稿状态</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.draft}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Users className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">总使用次数</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.totalUsage}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="审批链总数"
+              value={stats.total}
+              prefix={<FileText className="w-5 h-5" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="已启用"
+              value={stats.active}
+              prefix={<CheckCircle className="w-5 h-5" />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="草稿状态"
+              value={stats.draft}
+              prefix={<Clock className="w-5 h-5" />}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="总使用次数"
+              value={stats.totalUsage}
+              prefix={<Activity className="w-5 h-5" />}
+              valueStyle={{ color: "#722ed1" }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* 搜索和过滤 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="搜索审批链..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={8}>
+            <Input
+              placeholder="搜索审批链名称或描述..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              allowClear
             />
-          </div>
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="all">所有类型</option>
-            {Object.entries(APPROVAL_TYPE_CONFIG).map(([key, config]) => (
-              <option key={key} value={key}>
-                {config.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">所有状态</option>
-            {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-              <option key={key} value={key}>
-                {config.label}
-              </option>
-            ))}
-          </select>
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="all">所有分类</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="审批类型"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部类型</Option>
+              {Object.entries(APPROVAL_TYPE_CONFIG).map(([key, config]) => (
+                <Option key={key} value={key}>
+                  {config.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="状态"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部状态</Option>
+              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                <Option key={key} value={key}>
+                  {config.label}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4}>
+            <Select
+              placeholder="分类"
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部分类</Option>
+              {categories.map((category) => (
+                <Option key={category} value={category}>
+                  {category}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} md={4} className="text-right">
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedChain(null);
+                form.resetFields();
+                setShowCreateModal(true);
+              }}
+            >
+              新建审批链
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
       {/* 审批链列表 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            审批链列表 ({filteredChains.length})
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  审批链信息
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  类型
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  状态
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  节点数
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  使用次数
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  平均审批时间
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredChains.map((chain) => {
-                const typeConfig = APPROVAL_TYPE_CONFIG[chain.type];
-                const statusConfig = STATUS_CONFIG[chain.status];
-                const TypeIcon = typeConfig.icon;
-                const StatusIcon = statusConfig.icon;
+      <Card className="enterprise-card">
+        <Table
+          columns={columns}
+          dataSource={filteredChains}
+          rowKey="id"
+          pagination={{
+            total: filteredChains.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
+          className="enterprise-table"
+        />
+      </Card>
 
-                return (
-                  <tr key={chain.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {chain.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {chain.description}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          分类: {chain.category} | 创建者: {chain.createdBy}
-                        </div>
+      {/* 创建/编辑模态框 */}
+      <Modal
+        title={
+          <span>
+            <FileText className="w-4 h-4 mr-2" />
+            {selectedChain ? "编辑审批链" : "新建审批链"}
+          </span>
+        }
+        open={showCreateModal}
+        onOk={handleSave}
+        onCancel={() => {
+          setShowCreateModal(false);
+          setSelectedChain(null);
+          form.resetFields();
+        }}
+        width={600}
+        confirmLoading={loading}
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item
+            label="审批链名称"
+            name="name"
+            rules={[{ required: true, message: "请输入审批链名称" }]}
+          >
+            <Input placeholder="请输入审批链名称" />
+          </Form.Item>
+          <Form.Item
+            label="描述"
+            name="description"
+            rules={[{ required: true, message: "请输入审批链描述" }]}
+          >
+            <Input.TextArea rows={3} placeholder="请输入审批链描述" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="审批类型"
+                name="type"
+                rules={[{ required: true, message: "请选择审批类型" }]}
+                initialValue={APPROVAL_TYPES.SEQUENTIAL}
+              >
+                <Select>
+                  {Object.entries(APPROVAL_TYPE_CONFIG).map(([key, config]) => (
+                    <Option key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        {config.icon}
+                        <span>{config.label}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeConfig.color}`}
-                      >
-                        <TypeIcon className="w-3 h-3 mr-1" />
-                        {typeConfig.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}`}
-                      >
-                        <StatusIcon className="w-3 h-3 mr-1" />
-                        {statusConfig.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {chain.nodesCount} 个节点
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {chain.usageCount} 次
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {chain.avgApprovalTime}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleViewDetail(chain)}
-                          className="text-blue-600 hover:text-blue-900 text-sm"
-                          title="查看详情"
-                        >
-                          <Settings className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleStatusToggle(chain.id)}
-                          className={`text-sm ${
-                            chain.status === APPROVAL_CHAIN_STATUS.ACTIVE
-                              ? "text-red-600 hover:text-red-900"
-                              : "text-green-600 hover:text-green-900"
-                          }`}
-                          title={
-                            chain.status === APPROVAL_CHAIN_STATUS.ACTIVE
-                              ? "停用"
-                              : "启用"
-                          }
-                        >
-                          {chain.status === APPROVAL_CHAIN_STATUS.ACTIVE ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDuplicate(chain)}
-                          className="text-gray-600 hover:text-gray-900 text-sm"
-                          title="复制"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(chain.id)}
-                          className="text-red-600 hover:text-red-900 text-sm"
-                          title="删除"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="分类"
+                name="category"
+                rules={[{ required: true, message: "请输入分类" }]}
+              >
+                <Select showSearch placeholder="选择或输入分类" mode="combobox">
+                  {categories.map((category) => (
+                    <Option key={category} value={category}>
+                      {category}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
 
-      {/* 审批链详情模态框 */}
-      {showDetailModal && selectedChain && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  审批链详情: {selectedChain.name}
-                </h3>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+      {/* 详情抽屉 */}
+      <Drawer
+        title={
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            <span>审批链详情</span>
+          </div>
+        }
+        placement="right"
+        size="large"
+        open={showDetailDrawer}
+        onClose={() => setShowDetailDrawer(false)}
+      >
+        {selectedChain && (
+          <div className="space-y-6">
+            <Descriptions title="基本信息" bordered column={1} size="small">
+              <Descriptions.Item label="名称">
+                {selectedChain.name}
+              </Descriptions.Item>
+              <Descriptions.Item label="描述">
+                {selectedChain.description}
+              </Descriptions.Item>
+              <Descriptions.Item label="类型">
+                <Tag
+                  color={
+                    APPROVAL_TYPE_CONFIG[
+                      selectedChain.type as keyof typeof APPROVAL_TYPE_CONFIG
+                    ]?.color
+                  }
+                  icon={
+                    APPROVAL_TYPE_CONFIG[
+                      selectedChain.type as keyof typeof APPROVAL_TYPE_CONFIG
+                    ]?.icon
+                  }
                 >
-                  <XCircle className="w-6 h-6" />
-                </button>
-              </div>
+                  {
+                    APPROVAL_TYPE_CONFIG[
+                      selectedChain.type as keyof typeof APPROVAL_TYPE_CONFIG
+                    ]?.label
+                  }
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="状态">
+                <Tag
+                  color={
+                    STATUS_CONFIG[
+                      selectedChain.status as keyof typeof STATUS_CONFIG
+                    ]?.color
+                  }
+                  icon={
+                    STATUS_CONFIG[
+                      selectedChain.status as keyof typeof STATUS_CONFIG
+                    ]?.icon
+                  }
+                >
+                  {
+                    STATUS_CONFIG[
+                      selectedChain.status as keyof typeof STATUS_CONFIG
+                    ]?.label
+                  }
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="分类">
+                {selectedChain.category}
+              </Descriptions.Item>
+              <Descriptions.Item label="创建者">
+                {selectedChain.createdBy}
+              </Descriptions.Item>
+              <Descriptions.Item label="创建时间">
+                {selectedChain.createdAt}
+              </Descriptions.Item>
+              <Descriptions.Item label="最后修改">
+                {selectedChain.lastModified}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <div>
+              <Title level={4}>使用统计</Title>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Statistic
+                    title="使用次数"
+                    value={selectedChain.usageCount}
+                    prefix={<Activity className="w-4 h-4" />}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="节点数量"
+                    value={selectedChain.nodesCount}
+                    prefix={<Workflow className="w-4 h-4" />}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="平均审批时间"
+                    value={selectedChain.avgApprovalTime}
+                    prefix={<Timer className="w-4 h-4" />}
+                  />
+                </Col>
+              </Row>
             </div>
-            <div className="p-6">
-              {/* 基本信息 */}
-              <div className="mb-6">
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  基本信息
-                </h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">审批类型:</span>
-                    <span className="ml-2 text-gray-900">
-                      {APPROVAL_TYPE_CONFIG[selectedChain.type].label}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">状态:</span>
-                    <span className="ml-2 text-gray-900">
-                      {STATUS_CONFIG[selectedChain.status].label}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">分类:</span>
-                    <span className="ml-2 text-gray-900">
-                      {selectedChain.category}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">使用次数:</span>
-                    <span className="ml-2 text-gray-900">
-                      {selectedChain.usageCount} 次
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              {/* 审批节点 */}
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">
-                  审批节点
-                </h4>
-                <div className="space-y-4">
-                  {selectedChain.nodes.map((node, index) => {
-                    const nodeConfig = NODE_TYPE_CONFIG[node.type];
-                    const NodeIcon = nodeConfig.icon;
-
-                    return (
-                      <div key={node.id} className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 text-sm font-medium">
-                              {index + 1}
-                            </span>
-                          </div>
-                        </div>
-                        {index < selectedChain.nodes.length - 1 && (
-                          <div className="flex-shrink-0 mx-4">
-                            <ArrowDown className="w-4 h-4 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="flex-1 bg-gray-50 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-medium text-gray-900">
-                              {node.name}
-                            </h5>
-                            <span
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${nodeConfig.color}`}
-                            >
-                              <NodeIcon className="w-3 h-3 mr-1" />
-                              {nodeConfig.label}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 text-xs text-gray-600">
-                            <div>
-                              <span className="font-medium">审批人:</span>{" "}
-                              {node.approver}
-                            </div>
-                            <div>
-                              <span className="font-medium">超时时间:</span>{" "}
-                              {node.timeout}小时
-                            </div>
-                            <div>
-                              <span className="font-medium">触发条件:</span>{" "}
-                              {node.condition}
-                            </div>
-                            <div>
-                              <span className="font-medium">是否必需:</span>
-                              <span
-                                className={
-                                  node.isRequired
-                                    ? "text-red-600"
-                                    : "text-green-600"
-                                }
-                              >
-                                {node.isRequired ? "必需" : "可选"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            <div>
+              <Title level={4}>审批流程</Title>
+              {renderApprovalFlow(selectedChain.nodes, selectedChain.type)}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Drawer>
     </div>
   );
 };

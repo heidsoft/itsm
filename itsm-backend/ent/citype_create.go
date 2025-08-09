@@ -6,11 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
-	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/tenant"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -30,12 +26,6 @@ func (ctc *CITypeCreate) SetName(s string) *CITypeCreate {
 	return ctc
 }
 
-// SetDisplayName sets the "display_name" field.
-func (ctc *CITypeCreate) SetDisplayName(s string) *CITypeCreate {
-	ctc.mutation.SetDisplayName(s)
-	return ctc
-}
-
 // SetDescription sets the "description" field.
 func (ctc *CITypeCreate) SetDescription(s string) *CITypeCreate {
 	ctc.mutation.SetDescription(s)
@@ -47,12 +37,6 @@ func (ctc *CITypeCreate) SetNillableDescription(s *string) *CITypeCreate {
 	if s != nil {
 		ctc.SetDescription(*s)
 	}
-	return ctc
-}
-
-// SetCategory sets the "category" field.
-func (ctc *CITypeCreate) SetCategory(s string) *CITypeCreate {
-	ctc.mutation.SetCategory(s)
 	return ctc
 }
 
@@ -70,29 +54,37 @@ func (ctc *CITypeCreate) SetNillableIcon(s *string) *CITypeCreate {
 	return ctc
 }
 
-// SetAttributeSchema sets the "attribute_schema" field.
-func (ctc *CITypeCreate) SetAttributeSchema(m map[string]interface{}) *CITypeCreate {
-	ctc.mutation.SetAttributeSchema(m)
+// SetColor sets the "color" field.
+func (ctc *CITypeCreate) SetColor(s string) *CITypeCreate {
+	ctc.mutation.SetColor(s)
 	return ctc
 }
 
-// SetValidationRules sets the "validation_rules" field.
-func (ctc *CITypeCreate) SetValidationRules(m map[string]interface{}) *CITypeCreate {
-	ctc.mutation.SetValidationRules(m)
-	return ctc
-}
-
-// SetIsSystem sets the "is_system" field.
-func (ctc *CITypeCreate) SetIsSystem(b bool) *CITypeCreate {
-	ctc.mutation.SetIsSystem(b)
-	return ctc
-}
-
-// SetNillableIsSystem sets the "is_system" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableIsSystem(b *bool) *CITypeCreate {
-	if b != nil {
-		ctc.SetIsSystem(*b)
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (ctc *CITypeCreate) SetNillableColor(s *string) *CITypeCreate {
+	if s != nil {
+		ctc.SetColor(*s)
 	}
+	return ctc
+}
+
+// SetAttributeSchema sets the "attribute_schema" field.
+func (ctc *CITypeCreate) SetAttributeSchema(s string) *CITypeCreate {
+	ctc.mutation.SetAttributeSchema(s)
+	return ctc
+}
+
+// SetNillableAttributeSchema sets the "attribute_schema" field if the given value is not nil.
+func (ctc *CITypeCreate) SetNillableAttributeSchema(s *string) *CITypeCreate {
+	if s != nil {
+		ctc.SetAttributeSchema(*s)
+	}
+	return ctc
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (ctc *CITypeCreate) SetTenantID(i int) *CITypeCreate {
+	ctc.mutation.SetTenantID(i)
 	return ctc
 }
 
@@ -107,12 +99,6 @@ func (ctc *CITypeCreate) SetNillableIsActive(b *bool) *CITypeCreate {
 	if b != nil {
 		ctc.SetIsActive(*b)
 	}
-	return ctc
-}
-
-// SetTenantID sets the "tenant_id" field.
-func (ctc *CITypeCreate) SetTenantID(i int) *CITypeCreate {
-	ctc.mutation.SetTenantID(i)
 	return ctc
 }
 
@@ -142,56 +128,6 @@ func (ctc *CITypeCreate) SetNillableUpdatedAt(t *time.Time) *CITypeCreate {
 		ctc.SetUpdatedAt(*t)
 	}
 	return ctc
-}
-
-// SetTenant sets the "tenant" edge to the Tenant entity.
-func (ctc *CITypeCreate) SetTenant(t *Tenant) *CITypeCreate {
-	return ctc.SetTenantID(t.ID)
-}
-
-// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (ctc *CITypeCreate) AddConfigurationItemIDs(ids ...int) *CITypeCreate {
-	ctc.mutation.AddConfigurationItemIDs(ids...)
-	return ctc
-}
-
-// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (ctc *CITypeCreate) AddConfigurationItems(c ...*ConfigurationItem) *CITypeCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctc.AddConfigurationItemIDs(ids...)
-}
-
-// AddAllowedRelationshipIDs adds the "allowed_relationships" edge to the CIRelationshipType entity by IDs.
-func (ctc *CITypeCreate) AddAllowedRelationshipIDs(ids ...int) *CITypeCreate {
-	ctc.mutation.AddAllowedRelationshipIDs(ids...)
-	return ctc
-}
-
-// AddAllowedRelationships adds the "allowed_relationships" edges to the CIRelationshipType entity.
-func (ctc *CITypeCreate) AddAllowedRelationships(c ...*CIRelationshipType) *CITypeCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctc.AddAllowedRelationshipIDs(ids...)
-}
-
-// AddAttributeDefinitionIDs adds the "attribute_definitions" edge to the CIAttributeDefinition entity by IDs.
-func (ctc *CITypeCreate) AddAttributeDefinitionIDs(ids ...int) *CITypeCreate {
-	ctc.mutation.AddAttributeDefinitionIDs(ids...)
-	return ctc
-}
-
-// AddAttributeDefinitions adds the "attribute_definitions" edges to the CIAttributeDefinition entity.
-func (ctc *CITypeCreate) AddAttributeDefinitions(c ...*CIAttributeDefinition) *CITypeCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ctc.AddAttributeDefinitionIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
@@ -229,10 +165,6 @@ func (ctc *CITypeCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ctc *CITypeCreate) defaults() {
-	if _, ok := ctc.mutation.IsSystem(); !ok {
-		v := citype.DefaultIsSystem
-		ctc.mutation.SetIsSystem(v)
-	}
 	if _, ok := ctc.mutation.IsActive(); !ok {
 		v := citype.DefaultIsActive
 		ctc.mutation.SetIsActive(v)
@@ -257,39 +189,22 @@ func (ctc *CITypeCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIType.name": %w`, err)}
 		}
 	}
-	if _, ok := ctc.mutation.DisplayName(); !ok {
-		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "CIType.display_name"`)}
+	if _, ok := ctc.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CIType.tenant_id"`)}
 	}
-	if v, ok := ctc.mutation.DisplayName(); ok {
-		if err := citype.DisplayNameValidator(v); err != nil {
-			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIType.display_name": %w`, err)}
+	if v, ok := ctc.mutation.TenantID(); ok {
+		if err := citype.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIType.tenant_id": %w`, err)}
 		}
-	}
-	if _, ok := ctc.mutation.Category(); !ok {
-		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "CIType.category"`)}
-	}
-	if v, ok := ctc.mutation.Category(); ok {
-		if err := citype.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "CIType.category": %w`, err)}
-		}
-	}
-	if _, ok := ctc.mutation.IsSystem(); !ok {
-		return &ValidationError{Name: "is_system", err: errors.New(`ent: missing required field "CIType.is_system"`)}
 	}
 	if _, ok := ctc.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CIType.is_active"`)}
-	}
-	if _, ok := ctc.mutation.TenantID(); !ok {
-		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CIType.tenant_id"`)}
 	}
 	if _, ok := ctc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CIType.created_at"`)}
 	}
 	if _, ok := ctc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CIType.updated_at"`)}
-	}
-	if len(ctc.mutation.TenantIDs()) == 0 {
-		return &ValidationError{Name: "tenant", err: errors.New(`ent: missing required edge "CIType.tenant"`)}
 	}
 	return nil
 }
@@ -321,33 +236,25 @@ func (ctc *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
 		_spec.SetField(citype.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ctc.mutation.DisplayName(); ok {
-		_spec.SetField(citype.FieldDisplayName, field.TypeString, value)
-		_node.DisplayName = value
-	}
 	if value, ok := ctc.mutation.Description(); ok {
 		_spec.SetField(citype.FieldDescription, field.TypeString, value)
 		_node.Description = value
-	}
-	if value, ok := ctc.mutation.Category(); ok {
-		_spec.SetField(citype.FieldCategory, field.TypeString, value)
-		_node.Category = value
 	}
 	if value, ok := ctc.mutation.Icon(); ok {
 		_spec.SetField(citype.FieldIcon, field.TypeString, value)
 		_node.Icon = value
 	}
+	if value, ok := ctc.mutation.Color(); ok {
+		_spec.SetField(citype.FieldColor, field.TypeString, value)
+		_node.Color = value
+	}
 	if value, ok := ctc.mutation.AttributeSchema(); ok {
-		_spec.SetField(citype.FieldAttributeSchema, field.TypeJSON, value)
+		_spec.SetField(citype.FieldAttributeSchema, field.TypeString, value)
 		_node.AttributeSchema = value
 	}
-	if value, ok := ctc.mutation.ValidationRules(); ok {
-		_spec.SetField(citype.FieldValidationRules, field.TypeJSON, value)
-		_node.ValidationRules = value
-	}
-	if value, ok := ctc.mutation.IsSystem(); ok {
-		_spec.SetField(citype.FieldIsSystem, field.TypeBool, value)
-		_node.IsSystem = value
+	if value, ok := ctc.mutation.TenantID(); ok {
+		_spec.SetField(citype.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
 	}
 	if value, ok := ctc.mutation.IsActive(); ok {
 		_spec.SetField(citype.FieldIsActive, field.TypeBool, value)
@@ -360,71 +267,6 @@ func (ctc *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
 	if value, ok := ctc.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if nodes := ctc.mutation.TenantIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   citype.TenantTable,
-			Columns: []string{citype.TenantColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TenantID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ctc.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.ConfigurationItemsTable,
-			Columns: []string{citype.ConfigurationItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ctc.mutation.AllowedRelationshipsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AllowedRelationshipsTable,
-			Columns: []string{citype.AllowedRelationshipsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(cirelationshiptype.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ctc.mutation.AttributeDefinitionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   citype.AttributeDefinitionsTable,
-			Columns: []string{citype.AttributeDefinitionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

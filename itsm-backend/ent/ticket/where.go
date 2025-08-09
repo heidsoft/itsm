@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -63,6 +62,16 @@ func Title(v string) predicate.Ticket {
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
 func Description(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldDescription, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldStatus, v))
+}
+
+// Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
+func Priority(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldPriority, v))
 }
 
 // TicketNumber applies equality check predicate on the "ticket_number" field. It's identical to TicketNumberEQ.
@@ -236,53 +245,133 @@ func DescriptionContainsFold(v string) predicate.Ticket {
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v Status) predicate.Ticket {
+func StatusEQ(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v Status) predicate.Ticket {
+func StatusNEQ(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...Status) predicate.Ticket {
+func StatusIn(vs ...string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...Status) predicate.Ticket {
+func StatusNotIn(vs ...string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldStatus, vs...))
 }
 
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldStatus, v))
+}
+
 // PriorityEQ applies the EQ predicate on the "priority" field.
-func PriorityEQ(v Priority) predicate.Ticket {
+func PriorityEQ(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldPriority, v))
 }
 
 // PriorityNEQ applies the NEQ predicate on the "priority" field.
-func PriorityNEQ(v Priority) predicate.Ticket {
+func PriorityNEQ(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNEQ(FieldPriority, v))
 }
 
 // PriorityIn applies the In predicate on the "priority" field.
-func PriorityIn(vs ...Priority) predicate.Ticket {
+func PriorityIn(vs ...string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldIn(FieldPriority, vs...))
 }
 
 // PriorityNotIn applies the NotIn predicate on the "priority" field.
-func PriorityNotIn(vs ...Priority) predicate.Ticket {
+func PriorityNotIn(vs ...string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldPriority, vs...))
 }
 
-// FormFieldsIsNil applies the IsNil predicate on the "form_fields" field.
-func FormFieldsIsNil() predicate.Ticket {
-	return predicate.Ticket(sql.FieldIsNull(FieldFormFields))
+// PriorityGT applies the GT predicate on the "priority" field.
+func PriorityGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldPriority, v))
 }
 
-// FormFieldsNotNil applies the NotNil predicate on the "form_fields" field.
-func FormFieldsNotNil() predicate.Ticket {
-	return predicate.Ticket(sql.FieldNotNull(FieldFormFields))
+// PriorityGTE applies the GTE predicate on the "priority" field.
+func PriorityGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldPriority, v))
+}
+
+// PriorityLT applies the LT predicate on the "priority" field.
+func PriorityLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldPriority, v))
+}
+
+// PriorityLTE applies the LTE predicate on the "priority" field.
+func PriorityLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldPriority, v))
+}
+
+// PriorityContains applies the Contains predicate on the "priority" field.
+func PriorityContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldPriority, v))
+}
+
+// PriorityHasPrefix applies the HasPrefix predicate on the "priority" field.
+func PriorityHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldPriority, v))
+}
+
+// PriorityHasSuffix applies the HasSuffix predicate on the "priority" field.
+func PriorityHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldPriority, v))
+}
+
+// PriorityEqualFold applies the EqualFold predicate on the "priority" field.
+func PriorityEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldPriority, v))
+}
+
+// PriorityContainsFold applies the ContainsFold predicate on the "priority" field.
+func PriorityContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldPriority, v))
 }
 
 // TicketNumberEQ applies the EQ predicate on the "ticket_number" field.
@@ -370,6 +459,26 @@ func RequesterIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldRequesterID, vs...))
 }
 
+// RequesterIDGT applies the GT predicate on the "requester_id" field.
+func RequesterIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldRequesterID, v))
+}
+
+// RequesterIDGTE applies the GTE predicate on the "requester_id" field.
+func RequesterIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldRequesterID, v))
+}
+
+// RequesterIDLT applies the LT predicate on the "requester_id" field.
+func RequesterIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldRequesterID, v))
+}
+
+// RequesterIDLTE applies the LTE predicate on the "requester_id" field.
+func RequesterIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldRequesterID, v))
+}
+
 // AssigneeIDEQ applies the EQ predicate on the "assignee_id" field.
 func AssigneeIDEQ(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldAssigneeID, v))
@@ -388,6 +497,26 @@ func AssigneeIDIn(vs ...int) predicate.Ticket {
 // AssigneeIDNotIn applies the NotIn predicate on the "assignee_id" field.
 func AssigneeIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldAssigneeID, vs...))
+}
+
+// AssigneeIDGT applies the GT predicate on the "assignee_id" field.
+func AssigneeIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldAssigneeID, v))
+}
+
+// AssigneeIDGTE applies the GTE predicate on the "assignee_id" field.
+func AssigneeIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldAssigneeID, v))
+}
+
+// AssigneeIDLT applies the LT predicate on the "assignee_id" field.
+func AssigneeIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldAssigneeID, v))
+}
+
+// AssigneeIDLTE applies the LTE predicate on the "assignee_id" field.
+func AssigneeIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldAssigneeID, v))
 }
 
 // AssigneeIDIsNil applies the IsNil predicate on the "assignee_id" field.
@@ -418,6 +547,26 @@ func TenantIDIn(vs ...int) predicate.Ticket {
 // TenantIDNotIn applies the NotIn predicate on the "tenant_id" field.
 func TenantIDNotIn(vs ...int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotIn(FieldTenantID, vs...))
+}
+
+// TenantIDGT applies the GT predicate on the "tenant_id" field.
+func TenantIDGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldTenantID, v))
+}
+
+// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
+func TenantIDGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldTenantID, v))
+}
+
+// TenantIDLT applies the LT predicate on the "tenant_id" field.
+func TenantIDLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldTenantID, v))
+}
+
+// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
+func TenantIDLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldTenantID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -498,144 +647,6 @@ func UpdatedAtLT(v time.Time) predicate.Ticket {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldUpdatedAt, v))
-}
-
-// HasTenant applies the HasEdge predicate on the "tenant" edge.
-func HasTenant() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
-func HasTenantWith(preds ...predicate.Tenant) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newTenantStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasRequester applies the HasEdge predicate on the "requester" edge.
-func HasRequester() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, RequesterTable, RequesterColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasRequesterWith applies the HasEdge predicate on the "requester" edge with a given conditions (other predicates).
-func HasRequesterWith(preds ...predicate.User) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newRequesterStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasAssignee applies the HasEdge predicate on the "assignee" edge.
-func HasAssignee() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, AssigneeTable, AssigneeColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAssigneeWith applies the HasEdge predicate on the "assignee" edge with a given conditions (other predicates).
-func HasAssigneeWith(preds ...predicate.User) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newAssigneeStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasApprovalLogs applies the HasEdge predicate on the "approval_logs" edge.
-func HasApprovalLogs() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ApprovalLogsTable, ApprovalLogsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasApprovalLogsWith applies the HasEdge predicate on the "approval_logs" edge with a given conditions (other predicates).
-func HasApprovalLogsWith(preds ...predicate.ApprovalLog) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newApprovalLogsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasFlowInstance applies the HasEdge predicate on the "flow_instance" edge.
-func HasFlowInstance() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, FlowInstanceTable, FlowInstanceColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasFlowInstanceWith applies the HasEdge predicate on the "flow_instance" edge with a given conditions (other predicates).
-func HasFlowInstanceWith(preds ...predicate.FlowInstance) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newFlowInstanceStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasStatusLogs applies the HasEdge predicate on the "status_logs" edge.
-func HasStatusLogs() predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, StatusLogsTable, StatusLogsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasStatusLogsWith applies the HasEdge predicate on the "status_logs" edge with a given conditions (other predicates).
-func HasStatusLogsWith(preds ...predicate.StatusLog) predicate.Ticket {
-	return predicate.Ticket(func(s *sql.Selector) {
-		step := newStatusLogsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

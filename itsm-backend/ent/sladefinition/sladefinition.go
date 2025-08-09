@@ -13,34 +13,12 @@ const (
 	Label = "sla_definition"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldCreateTime holds the string denoting the create_time field in the database.
-	FieldCreateTime = "create_time"
-	// FieldUpdateTime holds the string denoting the update_time field in the database.
-	FieldUpdateTime = "update_time"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldServiceType holds the string denoting the service_type field in the database.
-	FieldServiceType = "service_type"
-	// FieldPriority holds the string denoting the priority field in the database.
-	FieldPriority = "priority"
-	// FieldImpact holds the string denoting the impact field in the database.
-	FieldImpact = "impact"
-	// FieldResponseTime holds the string denoting the response_time field in the database.
-	FieldResponseTime = "response_time"
-	// FieldResolutionTime holds the string denoting the resolution_time field in the database.
-	FieldResolutionTime = "resolution_time"
-	// FieldBusinessHours holds the string denoting the business_hours field in the database.
-	FieldBusinessHours = "business_hours"
-	// FieldHolidays holds the string denoting the holidays field in the database.
-	FieldHolidays = "holidays"
-	// FieldIsActive holds the string denoting the is_active field in the database.
-	FieldIsActive = "is_active"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
-	// FieldCreatedBy holds the string denoting the created_by field in the database.
-	FieldCreatedBy = "created_by"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -52,20 +30,9 @@ const (
 // Columns holds all SQL columns for sladefinition fields.
 var Columns = []string{
 	FieldID,
-	FieldCreateTime,
-	FieldUpdateTime,
 	FieldName,
 	FieldDescription,
-	FieldServiceType,
-	FieldPriority,
-	FieldImpact,
-	FieldResponseTime,
-	FieldResolutionTime,
-	FieldBusinessHours,
-	FieldHolidays,
-	FieldIsActive,
 	FieldTenantID,
-	FieldCreatedBy,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -81,14 +48,16 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultCreateTime holds the default value on creation for the "create_time" field.
-	DefaultCreateTime func() time.Time
-	// DefaultUpdateTime holds the default value on creation for the "update_time" field.
-	DefaultUpdateTime func() time.Time
-	// UpdateDefaultUpdateTime holds the default value on update for the "update_time" field.
-	UpdateDefaultUpdateTime func() time.Time
-	// DefaultIsActive holds the default value on creation for the "is_active" field.
-	DefaultIsActive bool
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )
 
 // OrderOption defines the ordering options for the SLADefinition queries.
@@ -97,16 +66,6 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
-}
-
-// ByCreateTime orders the results by the create_time field.
-func ByCreateTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreateTime, opts...).ToFunc()
-}
-
-// ByUpdateTime orders the results by the update_time field.
-func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.
@@ -119,54 +78,9 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByServiceType orders the results by the service_type field.
-func ByServiceType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldServiceType, opts...).ToFunc()
-}
-
-// ByPriority orders the results by the priority field.
-func ByPriority(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPriority, opts...).ToFunc()
-}
-
-// ByImpact orders the results by the impact field.
-func ByImpact(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldImpact, opts...).ToFunc()
-}
-
-// ByResponseTime orders the results by the response_time field.
-func ByResponseTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResponseTime, opts...).ToFunc()
-}
-
-// ByResolutionTime orders the results by the resolution_time field.
-func ByResolutionTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResolutionTime, opts...).ToFunc()
-}
-
-// ByBusinessHours orders the results by the business_hours field.
-func ByBusinessHours(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBusinessHours, opts...).ToFunc()
-}
-
-// ByHolidays orders the results by the holidays field.
-func ByHolidays(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldHolidays, opts...).ToFunc()
-}
-
-// ByIsActive orders the results by the is_active field.
-func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
-}
-
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
-}
-
-// ByCreatedBy orders the results by the created_by field.
-func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatedBy, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

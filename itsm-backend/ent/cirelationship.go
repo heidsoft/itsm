@@ -3,12 +3,8 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/cirelationship"
-	"itsm-backend/ent/cirelationshiptype"
-	"itsm-backend/ent/configurationitem"
-	"itsm-backend/ent/tenant"
 	"strings"
 	"time"
 
@@ -21,89 +17,21 @@ type CIRelationship struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// SourceCiID holds the value of the "source_ci_id" field.
+	// 源CI ID
 	SourceCiID int `json:"source_ci_id,omitempty"`
-	// TargetCiID holds the value of the "target_ci_id" field.
+	// 目标CI ID
 	TargetCiID int `json:"target_ci_id,omitempty"`
-	// RelationshipTypeID holds the value of the "relationship_type_id" field.
+	// 关系类型ID
 	RelationshipTypeID int `json:"relationship_type_id,omitempty"`
-	// Properties holds the value of the "properties" field.
-	Properties map[string]interface{} `json:"properties,omitempty"`
-	// Status holds the value of the "status" field.
-	Status string `json:"status,omitempty"`
-	// EffectiveFrom holds the value of the "effective_from" field.
-	EffectiveFrom time.Time `json:"effective_from,omitempty"`
-	// EffectiveTo holds the value of the "effective_to" field.
-	EffectiveTo time.Time `json:"effective_to,omitempty"`
-	// TenantID holds the value of the "tenant_id" field.
+	// 关系描述
+	Description string `json:"description,omitempty"`
+	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the CIRelationshipQuery when eager-loading is set.
-	Edges        CIRelationshipEdges `json:"edges"`
+	// 更新时间
+	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// CIRelationshipEdges holds the relations/edges for other nodes in the graph.
-type CIRelationshipEdges struct {
-	// Tenant holds the value of the tenant edge.
-	Tenant *Tenant `json:"tenant,omitempty"`
-	// SourceCi holds the value of the source_ci edge.
-	SourceCi *ConfigurationItem `json:"source_ci,omitempty"`
-	// TargetCi holds the value of the target_ci edge.
-	TargetCi *ConfigurationItem `json:"target_ci,omitempty"`
-	// RelationshipType holds the value of the relationship_type edge.
-	RelationshipType *CIRelationshipType `json:"relationship_type,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
-}
-
-// TenantOrErr returns the Tenant value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CIRelationshipEdges) TenantOrErr() (*Tenant, error) {
-	if e.Tenant != nil {
-		return e.Tenant, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: tenant.Label}
-	}
-	return nil, &NotLoadedError{edge: "tenant"}
-}
-
-// SourceCiOrErr returns the SourceCi value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CIRelationshipEdges) SourceCiOrErr() (*ConfigurationItem, error) {
-	if e.SourceCi != nil {
-		return e.SourceCi, nil
-	} else if e.loadedTypes[1] {
-		return nil, &NotFoundError{label: configurationitem.Label}
-	}
-	return nil, &NotLoadedError{edge: "source_ci"}
-}
-
-// TargetCiOrErr returns the TargetCi value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CIRelationshipEdges) TargetCiOrErr() (*ConfigurationItem, error) {
-	if e.TargetCi != nil {
-		return e.TargetCi, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: configurationitem.Label}
-	}
-	return nil, &NotLoadedError{edge: "target_ci"}
-}
-
-// RelationshipTypeOrErr returns the RelationshipType value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e CIRelationshipEdges) RelationshipTypeOrErr() (*CIRelationshipType, error) {
-	if e.RelationshipType != nil {
-		return e.RelationshipType, nil
-	} else if e.loadedTypes[3] {
-		return nil, &NotFoundError{label: cirelationshiptype.Label}
-	}
-	return nil, &NotLoadedError{edge: "relationship_type"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -111,13 +39,11 @@ func (*CIRelationship) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case cirelationship.FieldProperties:
-			values[i] = new([]byte)
 		case cirelationship.FieldID, cirelationship.FieldSourceCiID, cirelationship.FieldTargetCiID, cirelationship.FieldRelationshipTypeID, cirelationship.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case cirelationship.FieldStatus:
+		case cirelationship.FieldDescription:
 			values[i] = new(sql.NullString)
-		case cirelationship.FieldEffectiveFrom, cirelationship.FieldEffectiveTo, cirelationship.FieldCreatedAt, cirelationship.FieldUpdatedAt:
+		case cirelationship.FieldCreatedAt, cirelationship.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -158,31 +84,11 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				cr.RelationshipTypeID = int(value.Int64)
 			}
-		case cirelationship.FieldProperties:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field properties", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cr.Properties); err != nil {
-					return fmt.Errorf("unmarshal field properties: %w", err)
-				}
-			}
-		case cirelationship.FieldStatus:
+		case cirelationship.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
+				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				cr.Status = value.String
-			}
-		case cirelationship.FieldEffectiveFrom:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field effective_from", values[i])
-			} else if value.Valid {
-				cr.EffectiveFrom = value.Time
-			}
-		case cirelationship.FieldEffectiveTo:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field effective_to", values[i])
-			} else if value.Valid {
-				cr.EffectiveTo = value.Time
+				cr.Description = value.String
 			}
 		case cirelationship.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -213,26 +119,6 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (cr *CIRelationship) Value(name string) (ent.Value, error) {
 	return cr.selectValues.Get(name)
-}
-
-// QueryTenant queries the "tenant" edge of the CIRelationship entity.
-func (cr *CIRelationship) QueryTenant() *TenantQuery {
-	return NewCIRelationshipClient(cr.config).QueryTenant(cr)
-}
-
-// QuerySourceCi queries the "source_ci" edge of the CIRelationship entity.
-func (cr *CIRelationship) QuerySourceCi() *ConfigurationItemQuery {
-	return NewCIRelationshipClient(cr.config).QuerySourceCi(cr)
-}
-
-// QueryTargetCi queries the "target_ci" edge of the CIRelationship entity.
-func (cr *CIRelationship) QueryTargetCi() *ConfigurationItemQuery {
-	return NewCIRelationshipClient(cr.config).QueryTargetCi(cr)
-}
-
-// QueryRelationshipType queries the "relationship_type" edge of the CIRelationship entity.
-func (cr *CIRelationship) QueryRelationshipType() *CIRelationshipTypeQuery {
-	return NewCIRelationshipClient(cr.config).QueryRelationshipType(cr)
 }
 
 // Update returns a builder for updating this CIRelationship.
@@ -267,17 +153,8 @@ func (cr *CIRelationship) String() string {
 	builder.WriteString("relationship_type_id=")
 	builder.WriteString(fmt.Sprintf("%v", cr.RelationshipTypeID))
 	builder.WriteString(", ")
-	builder.WriteString("properties=")
-	builder.WriteString(fmt.Sprintf("%v", cr.Properties))
-	builder.WriteString(", ")
-	builder.WriteString("status=")
-	builder.WriteString(cr.Status)
-	builder.WriteString(", ")
-	builder.WriteString("effective_from=")
-	builder.WriteString(cr.EffectiveFrom.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("effective_to=")
-	builder.WriteString(cr.EffectiveTo.Format(time.ANSIC))
+	builder.WriteString("description=")
+	builder.WriteString(cr.Description)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", cr.TenantID))

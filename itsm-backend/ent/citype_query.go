@@ -4,14 +4,9 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
-	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/cirelationshiptype"
 	"itsm-backend/ent/citype"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/tenant"
 	"math"
 
 	"entgo.io/ent"
@@ -23,14 +18,10 @@ import (
 // CITypeQuery is the builder for querying CIType entities.
 type CITypeQuery struct {
 	config
-	ctx                      *QueryContext
-	order                    []citype.OrderOption
-	inters                   []Interceptor
-	predicates               []predicate.CIType
-	withTenant               *TenantQuery
-	withConfigurationItems   *ConfigurationItemQuery
-	withAllowedRelationships *CIRelationshipTypeQuery
-	withAttributeDefinitions *CIAttributeDefinitionQuery
+	ctx        *QueryContext
+	order      []citype.OrderOption
+	inters     []Interceptor
+	predicates []predicate.CIType
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,94 +56,6 @@ func (ctq *CITypeQuery) Unique(unique bool) *CITypeQuery {
 func (ctq *CITypeQuery) Order(o ...citype.OrderOption) *CITypeQuery {
 	ctq.order = append(ctq.order, o...)
 	return ctq
-}
-
-// QueryTenant chains the current query on the "tenant" edge.
-func (ctq *CITypeQuery) QueryTenant() *TenantQuery {
-	query := (&TenantClient{config: ctq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ctq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ctq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, selector),
-			sqlgraph.To(tenant.Table, tenant.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, citype.TenantTable, citype.TenantColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ctq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryConfigurationItems chains the current query on the "configuration_items" edge.
-func (ctq *CITypeQuery) QueryConfigurationItems() *ConfigurationItemQuery {
-	query := (&ConfigurationItemClient{config: ctq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ctq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ctq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, selector),
-			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, citype.ConfigurationItemsTable, citype.ConfigurationItemsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ctq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryAllowedRelationships chains the current query on the "allowed_relationships" edge.
-func (ctq *CITypeQuery) QueryAllowedRelationships() *CIRelationshipTypeQuery {
-	query := (&CIRelationshipTypeClient{config: ctq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ctq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ctq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, selector),
-			sqlgraph.To(cirelationshiptype.Table, cirelationshiptype.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, citype.AllowedRelationshipsTable, citype.AllowedRelationshipsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ctq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryAttributeDefinitions chains the current query on the "attribute_definitions" edge.
-func (ctq *CITypeQuery) QueryAttributeDefinitions() *CIAttributeDefinitionQuery {
-	query := (&CIAttributeDefinitionClient{config: ctq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ctq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := ctq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(citype.Table, citype.FieldID, selector),
-			sqlgraph.To(ciattributedefinition.Table, ciattributedefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, citype.AttributeDefinitionsTable, citype.AttributeDefinitionsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(ctq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
 }
 
 // First returns the first CIType entity from the query.
@@ -342,63 +245,15 @@ func (ctq *CITypeQuery) Clone() *CITypeQuery {
 		return nil
 	}
 	return &CITypeQuery{
-		config:                   ctq.config,
-		ctx:                      ctq.ctx.Clone(),
-		order:                    append([]citype.OrderOption{}, ctq.order...),
-		inters:                   append([]Interceptor{}, ctq.inters...),
-		predicates:               append([]predicate.CIType{}, ctq.predicates...),
-		withTenant:               ctq.withTenant.Clone(),
-		withConfigurationItems:   ctq.withConfigurationItems.Clone(),
-		withAllowedRelationships: ctq.withAllowedRelationships.Clone(),
-		withAttributeDefinitions: ctq.withAttributeDefinitions.Clone(),
+		config:     ctq.config,
+		ctx:        ctq.ctx.Clone(),
+		order:      append([]citype.OrderOption{}, ctq.order...),
+		inters:     append([]Interceptor{}, ctq.inters...),
+		predicates: append([]predicate.CIType{}, ctq.predicates...),
 		// clone intermediate query.
 		sql:  ctq.sql.Clone(),
 		path: ctq.path,
 	}
-}
-
-// WithTenant tells the query-builder to eager-load the nodes that are connected to
-// the "tenant" edge. The optional arguments are used to configure the query builder of the edge.
-func (ctq *CITypeQuery) WithTenant(opts ...func(*TenantQuery)) *CITypeQuery {
-	query := (&TenantClient{config: ctq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ctq.withTenant = query
-	return ctq
-}
-
-// WithConfigurationItems tells the query-builder to eager-load the nodes that are connected to
-// the "configuration_items" edge. The optional arguments are used to configure the query builder of the edge.
-func (ctq *CITypeQuery) WithConfigurationItems(opts ...func(*ConfigurationItemQuery)) *CITypeQuery {
-	query := (&ConfigurationItemClient{config: ctq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ctq.withConfigurationItems = query
-	return ctq
-}
-
-// WithAllowedRelationships tells the query-builder to eager-load the nodes that are connected to
-// the "allowed_relationships" edge. The optional arguments are used to configure the query builder of the edge.
-func (ctq *CITypeQuery) WithAllowedRelationships(opts ...func(*CIRelationshipTypeQuery)) *CITypeQuery {
-	query := (&CIRelationshipTypeClient{config: ctq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ctq.withAllowedRelationships = query
-	return ctq
-}
-
-// WithAttributeDefinitions tells the query-builder to eager-load the nodes that are connected to
-// the "attribute_definitions" edge. The optional arguments are used to configure the query builder of the edge.
-func (ctq *CITypeQuery) WithAttributeDefinitions(opts ...func(*CIAttributeDefinitionQuery)) *CITypeQuery {
-	query := (&CIAttributeDefinitionClient{config: ctq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	ctq.withAttributeDefinitions = query
-	return ctq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -477,14 +332,8 @@ func (ctq *CITypeQuery) prepareQuery(ctx context.Context) error {
 
 func (ctq *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CIType, error) {
 	var (
-		nodes       = []*CIType{}
-		_spec       = ctq.querySpec()
-		loadedTypes = [4]bool{
-			ctq.withTenant != nil,
-			ctq.withConfigurationItems != nil,
-			ctq.withAllowedRelationships != nil,
-			ctq.withAttributeDefinitions != nil,
-		}
+		nodes = []*CIType{}
+		_spec = ctq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*CIType).scanValues(nil, columns)
@@ -492,7 +341,6 @@ func (ctq *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CITy
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &CIType{config: ctq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -504,162 +352,7 @@ func (ctq *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CITy
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ctq.withTenant; query != nil {
-		if err := ctq.loadTenant(ctx, query, nodes, nil,
-			func(n *CIType, e *Tenant) { n.Edges.Tenant = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := ctq.withConfigurationItems; query != nil {
-		if err := ctq.loadConfigurationItems(ctx, query, nodes,
-			func(n *CIType) { n.Edges.ConfigurationItems = []*ConfigurationItem{} },
-			func(n *CIType, e *ConfigurationItem) {
-				n.Edges.ConfigurationItems = append(n.Edges.ConfigurationItems, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := ctq.withAllowedRelationships; query != nil {
-		if err := ctq.loadAllowedRelationships(ctx, query, nodes,
-			func(n *CIType) { n.Edges.AllowedRelationships = []*CIRelationshipType{} },
-			func(n *CIType, e *CIRelationshipType) {
-				n.Edges.AllowedRelationships = append(n.Edges.AllowedRelationships, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
-	if query := ctq.withAttributeDefinitions; query != nil {
-		if err := ctq.loadAttributeDefinitions(ctx, query, nodes,
-			func(n *CIType) { n.Edges.AttributeDefinitions = []*CIAttributeDefinition{} },
-			func(n *CIType, e *CIAttributeDefinition) {
-				n.Edges.AttributeDefinitions = append(n.Edges.AttributeDefinitions, e)
-			}); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (ctq *CITypeQuery) loadTenant(ctx context.Context, query *TenantQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *Tenant)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*CIType)
-	for i := range nodes {
-		fk := nodes[i].TenantID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(tenant.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "tenant_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (ctq *CITypeQuery) loadConfigurationItems(ctx context.Context, query *ConfigurationItemQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *ConfigurationItem)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*CIType)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(configurationitem.FieldCiTypeID)
-	}
-	query.Where(predicate.ConfigurationItem(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(citype.ConfigurationItemsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.CiTypeID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ci_type_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ctq *CITypeQuery) loadAllowedRelationships(ctx context.Context, query *CIRelationshipTypeQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *CIRelationshipType)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*CIType)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.CIRelationshipType(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(citype.AllowedRelationshipsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.ci_type_allowed_relationships
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "ci_type_allowed_relationships" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ci_type_allowed_relationships" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (ctq *CITypeQuery) loadAttributeDefinitions(ctx context.Context, query *CIAttributeDefinitionQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *CIAttributeDefinition)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*CIType)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(ciattributedefinition.FieldCiTypeID)
-	}
-	query.Where(predicate.CIAttributeDefinition(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(citype.AttributeDefinitionsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.CiTypeID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "ci_type_id" returned %v for node %v`, fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
 }
 
 func (ctq *CITypeQuery) sqlCount(ctx context.Context) (int, error) {
@@ -686,9 +379,6 @@ func (ctq *CITypeQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != citype.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if ctq.withTenant != nil {
-			_spec.Node.AddColumnOnce(citype.FieldTenantID)
 		}
 	}
 	if ps := ctq.predicates; len(ps) > 0 {

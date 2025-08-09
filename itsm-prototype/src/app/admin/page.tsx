@@ -3,6 +3,19 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Button,
+  Typography,
+  Tag,
+  Space,
+  Avatar,
+  theme,
+  List,
+} from "antd";
+import {
   Users,
   Shield,
   Workflow,
@@ -25,6 +38,8 @@ import {
   ArrowUpRight,
   RefreshCw,
 } from "lucide-react";
+
+const { Title, Text, Paragraph } = Typography;
 
 // 系统健康状态数据
 const systemHealth = {
@@ -268,18 +283,36 @@ const recentActivities = [
 
 // 系统健康状态组件
 const SystemHealthCard = () => {
-  const getHealthColor = (status: string) => {
+  const { token } = theme.useToken();
+
+  const getHealthStatus = (status: string) => {
     switch (status) {
       case "excellent":
-        return "text-green-600 bg-green-100";
+        return {
+          type: "success" as const,
+          text: "优秀",
+          color: token.colorSuccess,
+        };
       case "good":
-        return "text-blue-600 bg-blue-100";
+        return { type: "info" as const, text: "良好", color: token.colorInfo };
       case "warning":
-        return "text-yellow-600 bg-yellow-100";
+        return {
+          type: "warning" as const,
+          text: "警告",
+          color: token.colorWarning,
+        };
       case "critical":
-        return "text-red-600 bg-red-100";
+        return {
+          type: "error" as const,
+          text: "严重",
+          color: token.colorError,
+        };
       default:
-        return "text-gray-600 bg-gray-100";
+        return {
+          type: "default" as const,
+          text: "未知",
+          color: token.colorTextSecondary,
+        };
     }
   };
 
@@ -298,98 +331,157 @@ const SystemHealthCard = () => {
   };
 
   const HealthIcon = getHealthIcon(systemHealth.overall);
+  const healthStatus = getHealthStatus(systemHealth.overall);
+
+  const serviceList = Object.entries(systemHealth.services).map(
+    ([service, status]) => ({
+      name:
+        service === "database"
+          ? "数据库"
+          : service === "api"
+          ? "API服务"
+          : service === "cache"
+          ? "缓存"
+          : "消息队列",
+      status,
+      icon: getHealthIcon(status),
+    })
+  );
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">系统健康状态</h3>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <RefreshCw className="w-4 h-4 text-gray-500" />
-        </button>
+    <Card
+      title={
+        <Space>
+          <Activity className="w-5 h-5" />
+          系统健康状态
+        </Space>
+      }
+      extra={
+        <Button
+          type="text"
+          icon={<RefreshCw className="w-4 h-4" />}
+          size="small"
+        />
+      }
+    >
+      <div style={{ marginBottom: token.marginLG }}>
+        <Space align="center" size="large">
+          <Avatar
+            size={48}
+            style={{ backgroundColor: healthStatus.color, border: "none" }}
+            icon={<HealthIcon className="w-6 h-6" />}
+          />
+          <div>
+            <Title level={3} style={{ margin: 0, color: healthStatus.color }}>
+              {healthStatus.text}
+            </Title>
+            <Text type="secondary">系统运行时间: {systemHealth.uptime}</Text>
+          </div>
+        </Space>
       </div>
 
-      <div className="flex items-center space-x-3 mb-4">
-        <div
-          className={`p-2 rounded-lg ${getHealthColor(systemHealth.overall)}`}
-        >
-          <HealthIcon className="w-5 h-5" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-gray-900 capitalize">
-            {systemHealth.overall === "excellent"
-              ? "优秀"
-              : systemHealth.overall === "good"
-              ? "良好"
-              : systemHealth.overall === "warning"
-              ? "警告"
-              : "严重"}
-          </p>
-          <p className="text-sm text-gray-600">
-            系统运行时间: {systemHealth.uptime}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        {Object.entries(systemHealth.services).map(([service, status]) => {
-          const ServiceIcon = getHealthIcon(status);
+      <List
+        grid={{ column: 2, gutter: 16 }}
+        dataSource={serviceList}
+        renderItem={(item) => {
+          const ServiceIcon = item.icon;
+          const serviceStatus = getHealthStatus(item.status);
           return (
-            <div key={service} className="flex items-center space-x-2">
-              <ServiceIcon
-                className={`w-4 h-4 ${getHealthColor(status).split(" ")[0]}`}
-              />
-              <span className="text-sm text-gray-700 capitalize">
-                {service === "database"
-                  ? "数据库"
-                  : service === "api"
-                  ? "API服务"
-                  : service === "cache"
-                  ? "缓存"
-                  : "消息队列"}
-              </span>
-            </div>
+            <List.Item>
+              <Space align="center">
+                <ServiceIcon
+                  className="w-4 h-4"
+                  style={{ color: serviceStatus.color }}
+                />
+                <Text>{item.name}</Text>
+                <Tag color={serviceStatus.type}>{serviceStatus.text}</Tag>
+              </Space>
+            </List.Item>
           );
-        })}
-      </div>
+        }}
+      />
 
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
+      <div
+        style={{
+          marginTop: token.marginLG,
+          paddingTop: token.paddingSM,
+          borderTop: `1px solid ${token.colorBorder}`,
+        }}
+      >
+        <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
           最后更新: {systemHealth.lastUpdate}
-        </p>
+        </Text>
       </div>
-    </div>
+    </Card>
   );
 };
 
 // 增强的统计卡片组件
 const EnhancedStatCard = ({ stat }: { stat: (typeof systemStats)[0] }) => {
+  const { token } = theme.useToken();
   const Icon = stat.icon;
   const isPositive = stat.trend === "up";
 
+  const getColorByName = (colorName: string) => {
+    switch (colorName) {
+      case "blue":
+        return token.colorPrimary;
+      case "green":
+        return token.colorSuccess;
+      case "purple":
+        return "#722ed1";
+      case "red":
+        return token.colorError;
+      default:
+        return token.colorPrimary;
+    }
+  };
+
+  const trendColor = isPositive ? token.colorSuccess : token.colorError;
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 group">
-      <div className="flex items-center justify-between mb-4">
-        <div
-          className={`p-3 rounded-lg bg-${stat.color}-100 group-hover:scale-110 transition-transform`}
-        >
-          <Icon className={`w-6 h-6 text-${stat.color}-600`} />
-        </div>
-        <div
-          className={`flex items-center space-x-1 text-sm font-medium ${
-            isPositive ? "text-green-600" : "text-red-600"
-          }`}
+    <Card hoverable style={{ height: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: token.marginLG,
+        }}
+      >
+        <Avatar
+          size={48}
+          style={{
+            backgroundColor: getColorByName(stat.color),
+            border: "none",
+          }}
+          icon={<Icon className="w-6 h-6" />}
+        />
+        <Space
+          align="center"
+          style={{
+            color: trendColor,
+            fontSize: token.fontSizeSM,
+            fontWeight: 600,
+          }}
         >
           <TrendingUp className={`w-4 h-4 ${isPositive ? "" : "rotate-180"}`} />
           <span>{stat.change}</span>
-        </div>
+        </Space>
       </div>
 
-      <div>
-        <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-        <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
-        <p className="text-sm text-gray-500">{stat.description}</p>
-      </div>
-    </div>
+      <Statistic
+        title={stat.title}
+        value={stat.value}
+        valueStyle={{ color: token.colorText, fontSize: 28, fontWeight: 700 }}
+      />
+      <Paragraph
+        type="secondary"
+        style={{ marginTop: token.marginSM, marginBottom: 0 }}
+      >
+        {stat.description}
+      </Paragraph>
+    </Card>
   );
 };
 
@@ -398,57 +490,129 @@ const QuickActionGroup = ({
   group,
   actions,
 }: {
-  group: any;
-  actions: any[];
+  group: {
+    title: string;
+    description: string;
+    actions: Array<{
+      title: string;
+      description: string;
+      href: string;
+      icon: React.ComponentType<{ className?: string }>;
+      color: string;
+      stats: string;
+    }>;
+  };
+  actions: Array<{
+    title: string;
+    description: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    stats: string;
+  }>;
 }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          {group.title}
-        </h3>
-        <p className="text-sm text-gray-600">{group.description}</p>
-      </div>
+  const { token } = theme.useToken();
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  const getColorByClass = (colorClass: string) => {
+    const colorMap: { [key: string]: string } = {
+      "bg-blue-500": token.colorPrimary,
+      "bg-indigo-500": "#6366f1",
+      "bg-cyan-500": "#06b6d4",
+      "bg-purple-500": "#722ed1",
+      "bg-green-500": token.colorSuccess,
+      "bg-emerald-500": "#10b981",
+      "bg-teal-500": "#14b8a6",
+      "bg-yellow-500": token.colorWarning,
+      "bg-orange-500": "#f97316",
+      "bg-red-500": token.colorError,
+      "bg-pink-500": "#ec4899",
+      "bg-slate-500": "#64748b",
+      "bg-violet-500": "#8b5cf6",
+      "bg-gray-500": token.colorTextSecondary,
+    };
+    return colorMap[colorClass] || token.colorPrimary;
+  };
+
+  return (
+    <Card
+      title={
+        <div>
+          <Title level={4} style={{ margin: 0 }}>
+            {group.title}
+          </Title>
+          <Text type="secondary">{group.description}</Text>
+        </div>
+      }
+    >
+      <Row gutter={[16, 16]}>
         {actions.map((action, index) => {
           const Icon = action.icon;
           return (
-            <Link
-              key={index}
-              href={action.href}
-              className="group p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
-            >
-              <div className="flex items-start space-x-3">
-                <div
-                  className={`${action.color} p-2 rounded-lg group-hover:scale-110 transition-transform`}
+            <Col xs={24} md={12} key={index}>
+              <Link href={action.href} style={{ textDecoration: "none" }}>
+                <Card
+                  size="small"
+                  hoverable
+                  style={{ height: "100%" }}
+                  bodyStyle={{ padding: token.paddingMD }}
                 >
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {action.title}
-                    </h4>
-                    <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                  </div>
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                    {action.description}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2 font-medium">
-                    {action.stats}
-                  </p>
-                </div>
-              </div>
-            </Link>
+                  <Space align="start" style={{ width: "100%" }}>
+                    <Avatar
+                      size={40}
+                      style={{
+                        backgroundColor: getColorByClass(action.color),
+                        border: "none",
+                      }}
+                      icon={<Icon className="w-5 h-5" />}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 4,
+                        }}
+                      >
+                        <Text strong style={{ color: token.colorText }}>
+                          {action.title}
+                        </Text>
+                        <ArrowUpRight
+                          className="w-4 h-4"
+                          style={{ color: token.colorTextSecondary }}
+                        />
+                      </div>
+                      <Paragraph
+                        type="secondary"
+                        style={{
+                          fontSize: token.fontSizeSM,
+                          margin: "4px 0",
+                          lineHeight: 1.4,
+                        }}
+                        ellipsis={{ rows: 2 }}
+                      >
+                        {action.description}
+                      </Paragraph>
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: token.fontSizeSM, fontWeight: 500 }}
+                      >
+                        {action.stats}
+                      </Text>
+                    </div>
+                  </Space>
+                </Card>
+              </Link>
+            </Col>
           );
         })}
-      </div>
-    </div>
+      </Row>
+    </Card>
   );
 };
 
 const AdminDashboard = () => {
+  const { token } = theme.useToken();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -459,184 +623,271 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div style={{ padding: token.paddingLG }}>
       {/* 页面头部 - 增强版 */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">系统管理中心</h1>
-            <p className="text-blue-100 text-lg">
+      <Card
+        style={{
+          background: `linear-gradient(135deg, ${token.colorPrimary} 0%, #722ed1 100%)`,
+          marginBottom: token.marginLG,
+          border: "none",
+        }}
+        bodyStyle={{ padding: token.paddingXL }}
+      >
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Title
+              level={1}
+              style={{
+                color: "white",
+                margin: 0,
+                marginBottom: token.marginSM,
+              }}
+            >
+              系统管理中心
+            </Title>
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.9)",
+                fontSize: token.fontSizeLG,
+              }}
+            >
               欢迎使用ITSM Pro企业级系统管理中心
-            </p>
-            <p className="text-blue-200 text-sm mt-2">
+            </Text>
+            <br />
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: token.fontSizeSM,
+                marginTop: token.marginXS,
+              }}
+            >
               这里您可以配置和管理整个ITSM平台的各项功能
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-mono">
+            </Text>
+          </Col>
+          <Col style={{ textAlign: "right" }}>
+            <div
+              style={{
+                color: "white",
+                fontSize: 24,
+                fontFamily: "monospace",
+                marginBottom: 4,
+              }}
+            >
               {currentTime.toLocaleTimeString()}
             </div>
-            <div className="text-blue-200 text-sm">
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: token.fontSizeSM,
+              }}
+            >
               {currentTime.toLocaleDateString("zh-CN", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
                 weekday: "long",
               })}
-            </div>
-          </div>
-        </div>
-      </div>
+            </Text>
+          </Col>
+        </Row>
+      </Card>
 
       {/* 系统概览统计 */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2" />
+      <div style={{ marginBottom: token.marginLG }}>
+        <Title level={3} style={{ marginBottom: token.marginLG }}>
+          <BarChart3
+            className="w-5 h-5"
+            style={{ marginRight: token.marginXS, color: token.colorPrimary }}
+          />
           系统概览
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        </Title>
+        <Row gutter={[16, 16]}>
           {systemStats.map((stat, index) => (
-            <EnhancedStatCard key={index} stat={stat} />
+            <Col xs={24} sm={12} lg={6} key={index}>
+              <EnhancedStatCard stat={stat} />
+            </Col>
           ))}
-        </div>
+        </Row>
       </div>
 
       {/* 系统健康状态和最近活动 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SystemHealthCard />
+      <Row gutter={[24, 24]} style={{ marginBottom: token.marginLG }}>
+        <Col xs={24} lg={8}>
+          <SystemHealthCard />
+        </Col>
 
         {/* 最近活动 */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Activity className="w-5 h-5 mr-2" />
-              最近系统活动
-            </h3>
-            <Link
-              href="#"
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              查看全部
-            </Link>
-          </div>
+        <Col xs={24} lg={16}>
+          <Card
+            title={
+              <Space>
+                <Activity className="w-5 h-5" />
+                最近系统活动
+              </Space>
+            }
+            extra={
+              <Button type="link" size="small">
+                查看全部
+              </Button>
+            }
+            style={{ height: "100%" }}
+          >
+            <List
+              dataSource={recentActivities}
+              renderItem={(activity) => {
+                const Icon = activity.icon;
+                const getActivityColor = (colorClass: string) => {
+                  if (colorClass.includes("blue")) return token.colorPrimary;
+                  if (colorClass.includes("green")) return token.colorSuccess;
+                  if (colorClass.includes("purple")) return "#722ed1";
+                  if (colorClass.includes("orange")) return "#f97316";
+                  if (colorClass.includes("yellow")) return token.colorWarning;
+                  return token.colorPrimary;
+                };
 
-          <div className="space-y-4">
-            {recentActivities.map((activity) => {
-              const Icon = activity.icon;
-              return (
-                <div
-                  key={activity.id}
-                  className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className={`p-2 rounded-lg ${activity.color}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-900">
-                        {activity.title}
-                      </p>
-                      <p className="text-xs text-gray-500 flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {activity.time}
-                      </p>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {activity.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+                return (
+                  <List.Item
+                    style={{
+                      padding: `${token.paddingSM}px 0`,
+                      borderBottom: `1px solid ${token.colorBorder}`,
+                    }}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar
+                          style={{
+                            backgroundColor: getActivityColor(activity.color),
+                          }}
+                          icon={<Icon className="w-4 h-4" />}
+                        />
+                      }
+                      title={
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text strong>{activity.title}</Text>
+                          <Space
+                            align="center"
+                            style={{
+                              color: token.colorTextSecondary,
+                              fontSize: token.fontSizeSM,
+                            }}
+                          >
+                            <Clock className="w-3 h-3" />
+                            {activity.time}
+                          </Space>
+                        </div>
+                      }
+                      description={activity.description}
+                    />
+                  </List.Item>
+                );
+              }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* 快速操作分组 */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-          <Zap className="w-5 h-5 mr-2" />
+      <div style={{ marginBottom: token.marginLG }}>
+        <Title level={3} style={{ marginBottom: token.marginLG }}>
+          <Zap
+            className="w-5 h-5"
+            style={{ marginRight: token.marginXS, color: token.colorPrimary }}
+          />
           快速操作
-        </h2>
-        <div className="space-y-6">
+        </Title>
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
           {Object.entries(quickActionGroups).map(([key, group]) => (
             <QuickActionGroup key={key} group={group} actions={group.actions} />
           ))}
-        </div>
+        </Space>
       </div>
 
       {/* 系统信息和帮助 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Row gutter={[24, 24]}>
         {/* 系统信息 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Settings className="w-5 h-5 mr-2" />
-            系统信息
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">系统版本</span>
-              <span className="text-sm font-medium text-gray-900">
-                ITSM Pro v2.0.1
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">数据库版本</span>
-              <span className="text-sm font-medium text-gray-900">
-                PostgreSQL 14.2
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">许可证状态</span>
-              <span className="text-sm font-medium text-green-600">已激活</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">许可证到期</span>
-              <span className="text-sm font-medium text-gray-900">
-                2024-12-31
-              </span>
-            </div>
-          </div>
-        </div>
+        <Col xs={24} lg={12}>
+          <Card
+            title={
+              <Space>
+                <Settings className="w-5 h-5" />
+                系统信息
+              </Space>
+            }
+            style={{ height: "100%" }}
+          >
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <Text type="secondary">系统版本</Text>
+                <Text strong>ITSM Pro v2.0.1</Text>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <Text type="secondary">数据库版本</Text>
+                <Text strong>PostgreSQL 14.2</Text>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <Text type="secondary">许可证状态</Text>
+                <Tag color="success">已激活</Tag>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <Text type="secondary">许可证到期</Text>
+                <Text strong>2024-12-31</Text>
+              </div>
+            </Space>
+          </Card>
+        </Col>
 
         {/* 帮助和支持 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <FileText className="w-5 h-5 mr-2" />
-            帮助和支持
-          </h3>
-          <div className="space-y-3">
-            <Link
-              href="#"
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-sm text-gray-700">系统配置指南</span>
-              <ArrowUpRight className="w-4 h-4 text-gray-400" />
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-sm text-gray-700">API文档</span>
-              <ArrowUpRight className="w-4 h-4 text-gray-400" />
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-sm text-gray-700">技术支持</span>
-              <ArrowUpRight className="w-4 h-4 text-gray-400" />
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-sm text-gray-700">更新日志</span>
-              <ArrowUpRight className="w-4 h-4 text-gray-400" />
-            </Link>
-          </div>
-        </div>
-      </div>
+        <Col xs={24} lg={12}>
+          <Card
+            title={
+              <Space>
+                <FileText className="w-5 h-5" />
+                帮助和支持
+              </Space>
+            }
+            style={{ height: "100%" }}
+          >
+            <List
+              dataSource={[
+                { title: "系统配置指南", href: "#" },
+                { title: "API文档", href: "#" },
+                { title: "技术支持", href: "#" },
+                { title: "更新日志", href: "#" },
+              ]}
+              renderItem={(item) => (
+                <List.Item>
+                  <Link
+                    href={item.href}
+                    style={{ textDecoration: "none", width: "100%" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: `${token.paddingSM}px 0`,
+                        width: "100%",
+                      }}
+                    >
+                      <Text>{item.title}</Text>
+                      <ArrowUpRight
+                        className="w-4 h-4"
+                        style={{ color: token.colorTextSecondary }}
+                      />
+                    </div>
+                  </Link>
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

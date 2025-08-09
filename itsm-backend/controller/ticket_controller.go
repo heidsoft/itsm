@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"strconv"
-
+	"fmt"
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -24,395 +25,561 @@ func NewTicketController(ticketService *service.TicketService, logger *zap.Sugar
 }
 
 // CreateTicket 创建工单
-// @Summary 创建工单
-// @Description 创建新的工单
-// @Tags tickets
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateTicketRequest true "创建工单请求"
-// @Success 200 {object} common.Response{data=ent.Ticket}
-// @Failure 400 {object} common.Response
-// @Failure 401 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Security BearerAuth
-// @Router /api/tickets [post]
 func (tc *TicketController) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		tc.logger.Errorw("Invalid request parameters", "error", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	// 从上下文获取用户ID（需要认证中间件）
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
-		return
-	}
+	// 获取租户ID（从中间件注入）
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
 
-	requesterID, ok := userID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
-		return
-	}
+	// 设置请求者ID为当前用户
+	req.RequesterID = userID
 
-	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &req, requesterID)
+	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		tc.logger.Errorw("Failed to create ticket", "error", err)
+		tc.logger.Errorw("Failed to create ticket", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	response := dto.ToTicketResponse(ticket)
-	common.Success(c, response)
-}
-
-// GetTicket 获取工单详情
-// @Summary 获取工单详情
-// @Description 根据ID获取工单详细信息
-// @Tags tickets
-// @Produce json
-// @Param id path int true "工单ID"
-// @Success 200 {object} common.Response{data=dto.TicketResponse}
-// @Failure 400 {object} common.Response
-// @Failure 404 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Router /tickets/{id} [get]
-func (tc *TicketController) GetTicket(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "工单ID格式错误")
-		return
-	}
-
-	ticket, err := tc.ticketService.GetTicketByID(c.Request.Context(), id)
-	if err != nil {
-		tc.logger.Errorw("Failed to get ticket", "ticket_id", id, "error", err)
-		if err.Error() == "工单不存在" {
-			common.Fail(c, common.NotFoundCode, err.Error())
-		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
-		}
-		return
-	}
-
-	response := dto.ToTicketResponse(ticket)
-	common.Success(c, response)
+	common.Success(c, ticket)
 }
 
 // UpdateTicket 更新工单
-// @Summary 更新工单
-// @Description 更新工单状态和信息
-// @Tags tickets
-// @Accept json
-// @Produce json
-// @Param id path int true "工单ID"
-// @Param ticket body dto.UpdateTicketRequest true "更新信息"
-// @Success 200 {object} common.Response{data=dto.TicketResponse}
-// @Failure 400 {object} common.Response
-// @Failure 403 {object} common.Response
-// @Failure 404 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Router /tickets/{id} [patch]
 func (tc *TicketController) UpdateTicket(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "工单ID格式错误")
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
 		return
 	}
 
 	var req dto.UpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		tc.logger.Errorw("Invalid request parameters", "error", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
-		return
-	}
+	tenantID := c.GetInt("tenant_id")
+	req.UserID = c.GetInt("user_id")
 
-	userIDInt, ok := userID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
-		return
-	}
-
-	ticket, err := tc.ticketService.UpdateTicket(c.Request.Context(), id, &req, userIDInt)
+	ticket, err := tc.ticketService.UpdateTicket(c.Request.Context(), ticketID, &req, tenantID)
 	if err != nil {
-		tc.logger.Errorw("Failed to update ticket", "ticket_id", id, "error", err)
-		if err.Error() == "工单不存在" {
-			common.Fail(c, common.NotFoundCode, err.Error())
-		} else if err.Error() == "无权限更新此工单" {
-			common.Fail(c, common.ForbiddenCode, err.Error())
-		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
-		}
-		return
-	}
-
-	response := dto.ToTicketResponse(ticket)
-	common.Success(c, response)
-}
-
-// ApproveTicket 审批工单
-// @Summary 审批工单
-// @Description 对工单进行审批操作
-// @Tags tickets
-// @Accept json
-// @Produce json
-// @Param id path int true "工单ID"
-// @Param approval body dto.ApprovalRequest true "审批信息"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
-// @Failure 404 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Router /tickets/{id}/approve [post]
-func (tc *TicketController) ApproveTicket(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "工单ID格式错误")
-		return
-	}
-
-	var req dto.ApprovalRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		tc.logger.Errorw("Invalid request parameters", "error", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
-		return
-	}
-
-	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	approverID, ok := userID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
-		return
-	}
-
-	err = tc.ticketService.ApproveTicket(c.Request.Context(), id, &req, approverID)
-	if err != nil {
-		tc.logger.Errorw("Failed to approve ticket", "ticket_id", id, "error", err)
-		if err.Error() == "工单不存在" {
-			common.Fail(c, common.NotFoundCode, err.Error())
-		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
-		}
-		return
-	}
-
-	common.Success(c, gin.H{"message": "审批成功"})
-}
-
-// AddComment 添加评论
-// @Summary 添加评论
-// @Description 为工单添加评论
-// @Tags tickets
-// @Accept json
-// @Produce json
-// @Param id path int true "工单ID"
-// @Param comment body dto.CommentRequest true "评论内容"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
-// @Failure 404 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Router /tickets/{id}/comment [post]
-func (tc *TicketController) AddComment(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "工单ID格式错误")
-		return
-	}
-
-	var req dto.CommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		tc.logger.Errorw("Invalid request parameters", "error", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
-		return
-	}
-
-	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	userIDInt, ok := userID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
-		return
-	}
-
-	err = tc.ticketService.AddComment(c.Request.Context(), id, &req, userIDInt)
-	if err != nil {
-		tc.logger.Errorw("Failed to add comment", "ticket_id", id, "error", err)
-		if err.Error() == "工单不存在" {
-			common.Fail(c, common.NotFoundCode, err.Error())
-		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
-		}
-		return
-	}
-
-	common.Success(c, gin.H{"message": "评论添加成功"})
-}
-
-// GetTickets 获取工单列表
-// @Summary 获取工单列表
-// @Description 获取工单列表，支持分页和筛选
-// @Tags tickets
-// @Produce json
-// @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(10)
-// @Param status query string false "状态筛选"
-// @Param priority query string false "优先级筛选"
-// @Success 200 {object} common.Response{data=dto.TicketListResponse}
-// @Failure 400 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Router /tickets [get]
-func (tc *TicketController) GetTickets(c *gin.Context) {
-	// 获取查询参数
-	page := 1
-	size := 10
-	if pageStr := c.Query("page"); pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
-	}
-	if sizeStr := c.Query("size"); sizeStr != "" {
-		if s, err := strconv.Atoi(sizeStr); err == nil && s > 0 && s <= 100 {
-			size = s
-		}
-	}
-
-	status := c.Query("status")
-	priority := c.Query("priority")
-
-	// 从上下文获取用户ID和租户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	userIDInt, ok := userID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
-		return
-	}
-
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
-		return
-	}
-
-	tenantIDInt, ok := tenantID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户ID格式错误")
-		return
-	}
-
-	req := &dto.GetTicketsRequest{
-		Page: page,
-		Size: size,
-		Status: func() *string {
-			if status != "" {
-				return &status
-			} else {
-				return nil
-			}
-		}(),
-		Priority: func() *string {
-			if priority != "" {
-				return &priority
-			} else {
-				return nil
-			}
-		}(),
-		UserID:   userIDInt,
-		TenantID: tenantIDInt,
-	}
-
-	result, err := tc.ticketService.GetTickets(c.Request.Context(), req)
-	if err != nil {
-		tc.logger.Errorw("Failed to get tickets", "error", err)
+		tc.logger.Errorw("Failed to update ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	common.Success(c, result)
+	common.Success(c, ticket)
 }
 
-// UpdateTicketStatus 更新工单状态
-// @Summary 更新工单状态
-// @Description 更新工单状态
-// @Tags tickets
-// @Accept json
-// @Produce json
-// @Param id path int true "工单ID"
-// @Param status body dto.UpdateStatusRequest true "状态信息"
-// @Success 200 {object} common.Response{data=dto.TicketResponse}
-// @Failure 400 {object} common.Response
-// @Failure 403 {object} common.Response
-// @Failure 404 {object} common.Response
-// @Failure 500 {object} common.Response
-// @Router /tickets/{id}/status [put]
-func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+// GetTicket 获取工单详情
+func (tc *TicketController) GetTicket(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "工单ID格式错误")
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
 		return
 	}
 
-	var req dto.UpdateStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		tc.logger.Errorw("Invalid request parameters", "error", err)
-		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
-		return
-	}
+	tenantID := c.GetInt("tenant_id")
 
-	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
-		return
-	}
-
-	userIDInt, ok := userID.(int)
-	if !ok {
-		common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
-		return
-	}
-
-	ticket, err := tc.ticketService.UpdateTicketStatus(c.Request.Context(), id, req.Status, userIDInt)
+	ticket, err := tc.ticketService.GetTicket(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
-		tc.logger.Errorw("Failed to update ticket status", "ticket_id", id, "error", err)
-		if err.Error() == "工单不存在" {
-			common.Fail(c, common.NotFoundCode, err.Error())
-		} else if err.Error() == "无权限更新此工单" {
-			common.Fail(c, common.ForbiddenCode, err.Error())
-		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
-		}
+		tc.logger.Errorw("Failed to get ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.NotFoundCode, "工单不存在")
 		return
 	}
 
-	response := dto.ToTicketResponse(ticket)
+	common.Success(c, ticket)
+}
+
+// ListTickets 获取工单列表
+func (tc *TicketController) ListTickets(c *gin.Context) {
+	var req dto.ListTicketsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	response, err := tc.ticketService.ListTickets(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to list tickets", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
 	common.Success(c, response)
+}
+
+// DeleteTicket 删除工单
+func (tc *TicketController) DeleteTicket(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	err = tc.ticketService.DeleteTicket(c.Request.Context(), ticketID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to delete ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "工单删除成功"})
+}
+
+// BatchDeleteTickets 批量删除工单
+func (tc *TicketController) BatchDeleteTickets(c *gin.Context) {
+	var req dto.BatchDeleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	err := tc.ticketService.BatchDeleteTickets(c.Request.Context(), req.TicketIDs, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to batch delete tickets", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"message":       "批量删除成功",
+		"deleted_count": len(req.TicketIDs),
+	})
+}
+
+// GetTicketStats 获取工单统计
+func (tc *TicketController) GetTicketStats(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+
+	stats, err := tc.ticketService.GetTicketStats(c.Request.Context(), tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get ticket stats", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, stats)
+}
+
+// AssignTicket 分配工单
+func (tc *TicketController) AssignTicket(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	var req struct {
+		AssigneeID int `json:"assignee_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	assignedBy := c.GetInt("user_id")
+
+	ticket, err := tc.ticketService.AssignTicket(c.Request.Context(), ticketID, req.AssigneeID, tenantID, assignedBy)
+	if err != nil {
+		tc.logger.Errorw("Failed to assign ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, ticket)
+}
+
+// EscalateTicket 升级工单
+func (tc *TicketController) EscalateTicket(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	escalatedBy := c.GetInt("user_id")
+
+	ticket, err := tc.ticketService.EscalateTicket(c.Request.Context(), ticketID, req.Reason, tenantID, escalatedBy)
+	if err != nil {
+		tc.logger.Errorw("Failed to escalate ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, ticket)
+}
+
+// ResolveTicket 解决工单
+func (tc *TicketController) ResolveTicket(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	var req struct {
+		Resolution string `json:"resolution" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	resolvedBy := c.GetInt("user_id")
+
+	ticket, err := tc.ticketService.ResolveTicket(c.Request.Context(), ticketID, req.Resolution, tenantID, resolvedBy)
+	if err != nil {
+		tc.logger.Errorw("Failed to resolve ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, ticket)
+}
+
+// CloseTicket 关闭工单
+func (tc *TicketController) CloseTicket(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	var req struct {
+		Feedback string `json:"feedback"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	closedBy := c.GetInt("user_id")
+
+	ticket, err := tc.ticketService.CloseTicket(c.Request.Context(), ticketID, req.Feedback, tenantID, closedBy)
+	if err != nil {
+		tc.logger.Errorw("Failed to close ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, ticket)
+}
+
+// SearchTickets 搜索工单
+func (tc *TicketController) SearchTickets(c *gin.Context) {
+	searchTerm := c.Query("q")
+	if searchTerm == "" {
+		common.Fail(c, common.ParamErrorCode, "搜索关键词不能为空")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	tickets, err := tc.ticketService.SearchTickets(c.Request.Context(), searchTerm, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to search tickets", "error", err, "search_term", searchTerm, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, tickets)
+}
+
+// GetOverdueTickets 获取逾期工单
+func (tc *TicketController) GetOverdueTickets(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+
+	tickets, err := tc.ticketService.GetOverdueTickets(c.Request.Context(), tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get overdue tickets", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, tickets)
+}
+
+// GetTicketsByAssignee 获取指定处理人的工单
+func (tc *TicketController) GetTicketsByAssignee(c *gin.Context) {
+	assigneeID, err := strconv.Atoi(c.Param("assignee_id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的处理人ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	tickets, err := tc.ticketService.GetTicketsByAssignee(c.Request.Context(), assigneeID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get tickets by assignee", "error", err, "assignee_id", assigneeID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, tickets)
+}
+
+// GetTicketActivity 获取工单活动日志
+func (tc *TicketController) GetTicketActivity(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	activities, err := tc.ticketService.GetTicketActivity(c.Request.Context(), ticketID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get ticket activity", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, activities)
+}
+
+// ExportTickets 导出工单
+func (tc *TicketController) ExportTickets(c *gin.Context) {
+	var req dto.TicketExportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现导出功能
+	filters := map[string]interface{}{
+		"status":   req.Filters.Status,
+		"priority": req.Filters.Priority,
+	}
+	data, err := tc.ticketService.ExportTickets(c.Request.Context(), tenantID, filters, req.Format)
+	if err != nil {
+		tc.logger.Errorw("Export tickets failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "导出失败: "+err.Error())
+		return
+	}
+
+	// 设置响应头
+	filename := fmt.Sprintf("tickets_%s.%s", time.Now().Format("20060102"), req.Format)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Type", "application/octet-stream")
+	c.Data(200, "application/octet-stream", data)
+}
+
+// ImportTickets 导入工单
+func (tc *TicketController) ImportTickets(c *gin.Context) {
+	var req dto.TicketImportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 解析文件数据
+	fileData := []byte(req.File) // 这里应该从文件上传中获取
+
+	// 实现导入功能
+	err := tc.ticketService.ImportTickets(c.Request.Context(), tenantID, fileData, req.Format)
+	if err != nil {
+		tc.logger.Errorw("Import tickets failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "导入失败: "+err.Error())
+		return
+	}
+
+	tc.logger.Infow("Import tickets successful", "format", req.Format, "tenant_id", tenantID)
+	common.Success(c, gin.H{
+		"message": "工单导入成功",
+		"format":  req.Format,
+	})
+}
+
+// AssignTickets 分配工单
+func (tc *TicketController) AssignTickets(c *gin.Context) {
+	var req dto.TicketAssignmentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现工单分配功能
+	err := tc.ticketService.AssignTickets(c.Request.Context(), tenantID, req.TicketIDs, req.AssigneeID)
+	if err != nil {
+		tc.logger.Errorw("Assign tickets failed", "error", err, "ticket_ids", req.TicketIDs, "assignee_id", req.AssigneeID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "分配失败: "+err.Error())
+		return
+	}
+
+	tc.logger.Infow("Assign tickets successful", "ticket_ids", req.TicketIDs, "assignee_id", req.AssigneeID, "tenant_id", tenantID)
+	common.Success(c, gin.H{
+		"message":        "工单分配成功",
+		"assigned_count": len(req.TicketIDs),
+	})
+}
+
+// GetTicketAnalytics 获取工单分析
+func (tc *TicketController) GetTicketAnalytics(c *gin.Context) {
+	var req dto.TicketAnalyticsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现工单分析功能
+	analytics, err := tc.ticketService.GetTicketAnalytics(c.Request.Context(), tenantID, req.DateFrom, req.DateTo)
+	if err != nil {
+		tc.logger.Errorw("Get ticket analytics failed", "error", err, "date_from", req.DateFrom, "date_to", req.DateTo, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取分析数据失败: "+err.Error())
+		return
+	}
+
+	tc.logger.Infow("Get ticket analytics successful", "date_from", req.DateFrom, "date_to", req.DateTo, "tenant_id", tenantID)
+	common.Success(c, analytics)
+}
+
+// GetTicketTemplates 获取工单模板
+func (tc *TicketController) GetTicketTemplates(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现获取工单模板功能
+	_, err := tc.ticketService.GetTicketTemplates(c.Request.Context(), tenantID)
+	if err != nil {
+		tc.logger.Errorw("Get ticket templates failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取模板失败: "+err.Error())
+		return
+	}
+
+	// 模拟模板数据
+	mockTemplates := []dto.TicketTemplate{
+		{
+			ID:          1,
+			Name:        "系统故障模板",
+			Description: "用于报告系统故障的标准模板",
+			Category:    "系统问题",
+			Priority:    "high",
+			IsActive:    true,
+		},
+		{
+			ID:          2,
+			Name:        "硬件故障模板",
+			Description: "用于报告硬件故障的标准模板",
+			Category:    "硬件问题",
+			Priority:    "medium",
+			IsActive:    true,
+		},
+	}
+
+	tc.logger.Infow("Get ticket templates successful", "tenant_id", tenantID)
+	common.Success(c, mockTemplates)
+}
+
+// CreateTicketTemplate 创建工单模板
+func (tc *TicketController) CreateTicketTemplate(c *gin.Context) {
+	var template dto.TicketTemplate
+	if err := c.ShouldBindJSON(&template); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现创建工单模板功能
+	_, err := tc.ticketService.CreateTicketTemplate(c.Request.Context(), tenantID, template)
+	if err != nil {
+		tc.logger.Errorw("Create ticket template failed", "error", err, "name", template.Name, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "创建模板失败: "+err.Error())
+		return
+	}
+
+	tc.logger.Infow("Create ticket template successful", "name", template.Name, "tenant_id", tenantID)
+	common.Success(c, gin.H{
+		"message":       "工单模板创建成功",
+		"template_name": template.Name,
+	})
+}
+
+// UpdateTicketTemplate 更新工单模板
+func (tc *TicketController) UpdateTicketTemplate(c *gin.Context) {
+	var template dto.TicketTemplate
+	if err := c.ShouldBindJSON(&template); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现更新工单模板功能
+	_, err := tc.ticketService.UpdateTicketTemplate(c.Request.Context(), template.ID, template)
+	if err != nil {
+		tc.logger.Errorw("Update ticket template failed", "error", err, "template_id", template.ID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "更新模板失败: "+err.Error())
+		return
+	}
+
+	tc.logger.Infow("Update ticket template successful", "template_id", template.ID, "tenant_id", tenantID)
+	common.Success(c, gin.H{
+		"message":     "工单模板更新成功",
+		"template_id": template.ID,
+	})
+}
+
+// DeleteTicketTemplate 删除工单模板
+func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
+	templateID := c.Param("id")
+	if templateID == "" {
+		common.Fail(c, common.ParamErrorCode, "模板ID不能为空")
+		return
+	}
+
+	id, err := strconv.Atoi(templateID)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 实现删除工单模板功能
+	err = tc.ticketService.DeleteTicketTemplate(c.Request.Context(), id)
+	if err != nil {
+		tc.logger.Errorw("Delete ticket template failed", "error", err, "template_id", id, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "删除模板失败: "+err.Error())
+		return
+	}
+
+	tc.logger.Infow("Delete ticket template successful", "template_id", id, "tenant_id", tenantID)
+	common.Success(c, gin.H{
+		"message":     "工单模板删除成功",
+		"template_id": id,
+	})
 }
