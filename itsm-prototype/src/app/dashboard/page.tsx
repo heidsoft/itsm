@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AppLayout } from "../components/AppLayout";
+import { AIMetrics } from "../components/AIMetrics";
 import {
   Card,
   Row,
@@ -274,6 +275,13 @@ export default function DashboardPage() {
               </div>
             </div>
           </Card>
+        </Col>
+      </Row>
+
+      {/* AI 使用指标 */}
+      <Row gutter={[16, 16]} className="mt-6">
+        <Col xs={24}>
+          <AIMetrics />
         </Col>
       </Row>
 

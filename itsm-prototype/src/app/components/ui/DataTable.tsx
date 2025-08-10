@@ -1,6 +1,6 @@
 import { Search, Download, ChevronDown, ChevronUp } from "lucide-react";
-
 import React, { useMemo, useState, useCallback } from "react";
+import LoadingEmptyError from "./LoadingEmptyError";
 interface Column<T> {
   key: keyof T;
   title: string;
@@ -204,29 +204,16 @@ export function DataTable<T extends Record<string, unknown>>({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td
-                  colSpan={columns.length + (rowSelection ? 1 : 0)}
-                  className="px-4 py-8 text-center"
-                >
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-gray-600">加载中...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : filteredData.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length + (rowSelection ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-500"
-                >
-                  暂无数据
-                </td>
-              </tr>
-            ) : (
-              filteredData.map((record, index) => (
+            <LoadingEmptyError
+              state={loading ? 'loading' : filteredData.length === 0 ? 'empty' : 'success'}
+              loadingText="加载中..."
+              empty={{
+                title: "暂无数据",
+                description: "当前没有找到匹配的数据"
+              }}
+              minHeight={200}
+            >
+              {filteredData.map((record, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   {rowSelection && (
                     <td className="px-4 py-4">
@@ -264,8 +251,8 @@ export function DataTable<T extends Record<string, unknown>>({
                     </td>
                   ))}
                 </tr>
-              ))
-            )}
+              ))}
+            </LoadingEmptyError>
           </tbody>
         </table>
       </div>

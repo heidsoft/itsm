@@ -56,6 +56,18 @@ func (f CITypeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CITypeMutation", m)
 }
 
+// The ChangeFunc type is an adapter to allow the use of ordinary
+// function as Change mutator.
+type ChangeFunc func(context.Context, *ent.ChangeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChangeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChangeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChangeMutation", m)
+}
+
 // The ConfigurationItemFunc type is an adapter to allow the use of ordinary
 // function as ConfigurationItem mutator.
 type ConfigurationItemFunc func(context.Context, *ent.ConfigurationItemMutation) (ent.Value, error)
@@ -126,6 +138,18 @@ func (f NotificationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NotificationMutation", m)
+}
+
+// The ProblemFunc type is an adapter to allow the use of ordinary
+// function as Problem mutator.
+type ProblemFunc func(context.Context, *ent.ProblemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProblemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProblemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProblemMutation", m)
 }
 
 // The PromptTemplateFunc type is an adapter to allow the use of ordinary
@@ -212,6 +236,42 @@ func (f TicketFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketMutation", m)
 }
 
+// The TicketCategoryFunc type is an adapter to allow the use of ordinary
+// function as TicketCategory mutator.
+type TicketCategoryFunc func(context.Context, *ent.TicketCategoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketCategoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketCategoryMutation", m)
+}
+
+// The TicketTagFunc type is an adapter to allow the use of ordinary
+// function as TicketTag mutator.
+type TicketTagFunc func(context.Context, *ent.TicketTagMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketTagFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketTagMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketTagMutation", m)
+}
+
+// The TicketTemplateFunc type is an adapter to allow the use of ordinary
+// function as TicketTemplate mutator.
+type TicketTemplateFunc func(context.Context, *ent.TicketTemplateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketTemplateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketTemplateMutation", m)
+}
+
 // The ToolInvocationFunc type is an adapter to allow the use of ordinary
 // function as ToolInvocation mutator.
 type ToolInvocationFunc func(context.Context, *ent.ToolInvocationMutation) (ent.Value, error)
@@ -234,6 +294,30 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The WorkflowFunc type is an adapter to allow the use of ordinary
+// function as Workflow mutator.
+type WorkflowFunc func(context.Context, *ent.WorkflowMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorkflowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorkflowMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowMutation", m)
+}
+
+// The WorkflowInstanceFunc type is an adapter to allow the use of ordinary
+// function as WorkflowInstance mutator.
+type WorkflowInstanceFunc func(context.Context, *ent.WorkflowInstanceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorkflowInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorkflowInstanceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowInstanceMutation", m)
 }
 
 // Condition is a hook condition function.

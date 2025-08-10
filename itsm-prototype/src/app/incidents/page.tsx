@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import { AlertTriangle, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { IncidentAPI, Incident } from "../lib/incident-api";
+import LoadingEmptyError from "../components/ui/LoadingEmptyError";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -315,25 +316,49 @@ export default function IncidentsPage() {
 
       {/* 事件列表 */}
       <Card title="事件列表">
-        <Table
-          columns={columns}
-          dataSource={incidents}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
+        <LoadingEmptyError
+          state={
+            loading ? "loading" : incidents.length === 0 ? "empty" : "success"
+          }
+          loadingText="正在加载事件列表..."
+          empty={{
+            title: "暂无事件",
+            description: "当前没有事件记录，您可以创建新的事件",
+            actions: [
+              {
+                text: "新建事件",
+                icon: <PlusOutlined />,
+                onClick: () => console.log("新建事件"),
+                type: "primary",
+              },
+            ],
           }}
-        />
+          error={{
+            title: "加载失败",
+            description: "无法获取事件列表，请稍后重试",
+            onRetry: loadIncidents,
+          }}
+        >
+          <Table
+            columns={columns}
+            dataSource={incidents}
+            rowKey="id"
+            loading={false}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
+          />
+        </LoadingEmptyError>
       </Card>
     </div>
   );

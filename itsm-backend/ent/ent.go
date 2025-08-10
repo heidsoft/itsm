@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
@@ -16,6 +17,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/problem"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -23,8 +25,13 @@ import (
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
+	"itsm-backend/ent/workflow"
+	"itsm-backend/ent/workflowinstance"
 	"reflect"
 	"sync"
 
@@ -95,12 +102,14 @@ func checkColumn(table, column string) error {
 			ciattributedefinition.Table: ciattributedefinition.ValidColumn,
 			cirelationship.Table:        cirelationship.ValidColumn,
 			citype.Table:                citype.ValidColumn,
+			change.Table:                change.ValidColumn,
 			configurationitem.Table:     configurationitem.ValidColumn,
 			conversation.Table:          conversation.ValidColumn,
 			incident.Table:              incident.ValidColumn,
 			knowledgearticle.Table:      knowledgearticle.ValidColumn,
 			message.Table:               message.ValidColumn,
 			notification.Table:          notification.ValidColumn,
+			problem.Table:               problem.ValidColumn,
 			prompttemplate.Table:        prompttemplate.ValidColumn,
 			sladefinition.Table:         sladefinition.ValidColumn,
 			slaviolation.Table:          slaviolation.ValidColumn,
@@ -108,8 +117,13 @@ func checkColumn(table, column string) error {
 			servicerequest.Table:        servicerequest.ValidColumn,
 			tenant.Table:                tenant.ValidColumn,
 			ticket.Table:                ticket.ValidColumn,
+			ticketcategory.Table:        ticketcategory.ValidColumn,
+			tickettag.Table:             tickettag.ValidColumn,
+			tickettemplate.Table:        tickettemplate.ValidColumn,
 			toolinvocation.Table:        toolinvocation.ValidColumn,
 			user.Table:                  user.ValidColumn,
+			workflow.Table:              workflow.ValidColumn,
+			workflowinstance.Table:      workflowinstance.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

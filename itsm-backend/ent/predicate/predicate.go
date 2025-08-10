@@ -18,6 +18,9 @@ type CIRelationship func(*sql.Selector)
 // CIType is the predicate function for citype builders.
 type CIType func(*sql.Selector)
 
+// Change is the predicate function for change builders.
+type Change func(*sql.Selector)
+
 // ConfigurationItem is the predicate function for configurationitem builders.
 type ConfigurationItem func(*sql.Selector)
 
@@ -35,6 +38,9 @@ type Message func(*sql.Selector)
 
 // Notification is the predicate function for notification builders.
 type Notification func(*sql.Selector)
+
+// Problem is the predicate function for problem builders.
+type Problem func(*sql.Selector)
 
 // PromptTemplate is the predicate function for prompttemplate builders.
 type PromptTemplate func(*sql.Selector)
@@ -57,8 +63,23 @@ type Tenant func(*sql.Selector)
 // Ticket is the predicate function for ticket builders.
 type Ticket func(*sql.Selector)
 
+// TicketCategory is the predicate function for ticketcategory builders.
+type TicketCategory func(*sql.Selector)
+
+// TicketTag is the predicate function for tickettag builders.
+type TicketTag func(*sql.Selector)
+
+// TicketTemplate is the predicate function for tickettemplate builders.
+type TicketTemplate func(*sql.Selector)
+
 // ToolInvocation is the predicate function for toolinvocation builders.
 type ToolInvocation func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// Workflow is the predicate function for workflow builders.
+type Workflow func(*sql.Selector)
+
+// WorkflowInstance is the predicate function for workflowinstance builders.
+type WorkflowInstance func(*sql.Selector)

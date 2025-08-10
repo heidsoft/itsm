@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -92,6 +93,21 @@ func AssigneeID(v int) predicate.Ticket {
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldTenantID, v))
+}
+
+// TemplateID applies equality check predicate on the "template_id" field. It's identical to TemplateIDEQ.
+func TemplateID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTemplateID, v))
+}
+
+// CategoryID applies equality check predicate on the "category_id" field. It's identical to CategoryIDEQ.
+func CategoryID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldCategoryID, v))
+}
+
+// ParentTicketID applies equality check predicate on the "parent_ticket_id" field. It's identical to ParentTicketIDEQ.
+func ParentTicketID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldParentTicketID, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -569,6 +585,96 @@ func TenantIDLTE(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldTenantID, v))
 }
 
+// TemplateIDEQ applies the EQ predicate on the "template_id" field.
+func TemplateIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldTemplateID, v))
+}
+
+// TemplateIDNEQ applies the NEQ predicate on the "template_id" field.
+func TemplateIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldTemplateID, v))
+}
+
+// TemplateIDIn applies the In predicate on the "template_id" field.
+func TemplateIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldTemplateID, vs...))
+}
+
+// TemplateIDNotIn applies the NotIn predicate on the "template_id" field.
+func TemplateIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldTemplateID, vs...))
+}
+
+// TemplateIDIsNil applies the IsNil predicate on the "template_id" field.
+func TemplateIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldTemplateID))
+}
+
+// TemplateIDNotNil applies the NotNil predicate on the "template_id" field.
+func TemplateIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldTemplateID))
+}
+
+// CategoryIDEQ applies the EQ predicate on the "category_id" field.
+func CategoryIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldCategoryID, v))
+}
+
+// CategoryIDNEQ applies the NEQ predicate on the "category_id" field.
+func CategoryIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldCategoryID, v))
+}
+
+// CategoryIDIn applies the In predicate on the "category_id" field.
+func CategoryIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDNotIn applies the NotIn predicate on the "category_id" field.
+func CategoryIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldCategoryID, vs...))
+}
+
+// CategoryIDIsNil applies the IsNil predicate on the "category_id" field.
+func CategoryIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldCategoryID))
+}
+
+// CategoryIDNotNil applies the NotNil predicate on the "category_id" field.
+func CategoryIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldCategoryID))
+}
+
+// ParentTicketIDEQ applies the EQ predicate on the "parent_ticket_id" field.
+func ParentTicketIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldParentTicketID, v))
+}
+
+// ParentTicketIDNEQ applies the NEQ predicate on the "parent_ticket_id" field.
+func ParentTicketIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldParentTicketID, v))
+}
+
+// ParentTicketIDIn applies the In predicate on the "parent_ticket_id" field.
+func ParentTicketIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldParentTicketID, vs...))
+}
+
+// ParentTicketIDNotIn applies the NotIn predicate on the "parent_ticket_id" field.
+func ParentTicketIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldParentTicketID, vs...))
+}
+
+// ParentTicketIDIsNil applies the IsNil predicate on the "parent_ticket_id" field.
+func ParentTicketIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldParentTicketID))
+}
+
+// ParentTicketIDNotNil applies the NotNil predicate on the "parent_ticket_id" field.
+func ParentTicketIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldParentTicketID))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -647,6 +753,144 @@ func UpdatedAtLT(v time.Time) predicate.Ticket {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasTemplate applies the HasEdge predicate on the "template" edge.
+func HasTemplate() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTemplateWith applies the HasEdge predicate on the "template" edge with a given conditions (other predicates).
+func HasTemplateWith(preds ...predicate.TicketTemplate) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newTemplateStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCategory applies the HasEdge predicate on the "category" edge.
+func HasCategory() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCategoryWith applies the HasEdge predicate on the "category" edge with a given conditions (other predicates).
+func HasCategoryWith(preds ...predicate.TicketCategory) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newCategoryStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTags applies the HasEdge predicate on the "tags" edge.
+func HasTags() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTagsWith applies the HasEdge predicate on the "tags" edge with a given conditions (other predicates).
+func HasTagsWith(preds ...predicate.TicketTag) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newTagsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRelatedTickets applies the HasEdge predicate on the "related_tickets" edge.
+func HasRelatedTickets() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RelatedTicketsTable, RelatedTicketsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRelatedTicketsWith applies the HasEdge predicate on the "related_tickets" edge with a given conditions (other predicates).
+func HasRelatedTicketsWith(preds ...predicate.Ticket) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newRelatedTicketsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasParentTicket applies the HasEdge predicate on the "parent_ticket" edge.
+func HasParentTicket() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ParentTicketTable, ParentTicketColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasParentTicketWith applies the HasEdge predicate on the "parent_ticket" edge with a given conditions (other predicates).
+func HasParentTicketWith(preds ...predicate.Ticket) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newParentTicketStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasWorkflowInstances applies the HasEdge predicate on the "workflow_instances" edge.
+func HasWorkflowInstances() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWorkflowInstancesWith applies the HasEdge predicate on the "workflow_instances" edge with a given conditions (other predicates).
+func HasWorkflowInstancesWith(preds ...predicate.WorkflowInstance) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newWorkflowInstancesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

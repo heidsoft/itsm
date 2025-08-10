@@ -39,6 +39,7 @@ import {
   Activity,
 } from "lucide-react";
 import { TicketApi } from "../lib/ticket-api";
+import LoadingEmptyError from "../components/ui/LoadingEmptyError";
 
 const { Option } = Select;
 
@@ -77,6 +78,7 @@ const TicketManagementPage = () => {
   const { modal } = App.useApp();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -185,13 +187,15 @@ const TicketManagementPage = () => {
 
   const loadTickets = async () => {
     setLoading(true);
+    setError(null);
     try {
       // 模拟API调用
       await new Promise((resolve) => setTimeout(resolve, 500));
       setTickets(mockTickets);
       setPagination((prev) => ({ ...prev, total: mockTickets.length }));
-    } catch {
-      message.error("加载工单失败");
+    } catch (error) {
+      console.error("加载工单失败:", error);
+      setError(error instanceof Error ? error.message : "加载工单失败");
     } finally {
       setLoading(false);
     }
@@ -705,26 +709,59 @@ const TicketManagementPage = () => {
 
       {/* 工单表格 */}
       <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredTickets}
-          rowKey="id"
-          loading={loading}
-          rowSelection={rowSelection}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-            onChange: (page, pageSize) => {
-              setPagination({ ...pagination, current: page, pageSize });
-            },
+        <LoadingEmptyError
+          state={
+            loading
+              ? "loading"
+              : filteredTickets.length === 0
+              ? "empty"
+              : "success"
+          }
+          loadingText="正在加载工单列表..."
+          empty={{
+            title: "暂无工单",
+            description: "当前没有找到匹配的工单记录",
+            actions: [
+              {
+                text: "创建工单",
+                icon: <Plus className="w-4 h-4" />,
+                onClick: handleCreateTicket,
+                type: "primary",
+              },
+              {
+                text: "刷新",
+                icon: <RefreshCw className="w-4 h-4" />,
+                onClick: loadTickets,
+              },
+            ],
           }}
-          scroll={{ x: 1200 }}
-        />
+          error={{
+            title: "加载失败",
+            description: "无法获取工单列表，请稍后重试",
+            onRetry: loadTickets,
+          }}
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredTickets}
+            rowKey="id"
+            loading={false}
+            rowSelection={rowSelection}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              onChange: (page, pageSize) => {
+                setPagination({ ...pagination, current: page, pageSize });
+              },
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </LoadingEmptyError>
       </Card>
 
       {/* 创建/编辑工单模态框 */}

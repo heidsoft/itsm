@@ -19,6 +19,12 @@ func SetupRouter(
 	userController *controller.UserController,
 	knowledgeController *controller.KnowledgeController,
 	aiController *controller.AIController,
+	workflowController *controller.WorkflowController,
+	ticketTagController *controller.TicketTagController,
+	ticketAssignmentController *controller.TicketAssignmentController,
+	ticketCategoryController *controller.TicketCategoryController,
+	problemController *controller.ProblemController,
+	changeController *controller.ChangeController,
 	client *ent.Client,
 	jwtSecret string,
 ) *gin.Engine {
@@ -83,6 +89,45 @@ func SetupRouter(
 				tickets.DELETE("/:id", ticketController.DeleteTicket)
 			}
 
+			// 工单标签管理路由
+			if ticketTagController != nil {
+				ticketTags := auth.Group("/ticket-tags")
+				{
+					ticketTags.GET("", ticketTagController.ListTags)
+					ticketTags.POST("", ticketTagController.CreateTag)
+					ticketTags.GET("/:id", ticketTagController.GetTag)
+					ticketTags.PUT("/:id", ticketTagController.UpdateTag)
+					ticketTags.DELETE("/:id", ticketTagController.DeleteTag)
+					// 工单标签分配
+					ticketTags.POST("/tickets/:ticketId/assign", ticketTagController.AssignTagsToTicket)
+					ticketTags.DELETE("/tickets/:ticketId/remove", ticketTagController.RemoveTagsFromTicket)
+				}
+			}
+
+			// 工单分类管理路由
+			if ticketCategoryController != nil {
+				ticketCategories := auth.Group("/ticket-categories")
+				{
+					ticketCategories.GET("", ticketCategoryController.ListCategories)
+					ticketCategories.POST("", ticketCategoryController.CreateCategory)
+					ticketCategories.GET("/:id", ticketCategoryController.GetCategory)
+					ticketCategories.PUT("/:id", ticketCategoryController.UpdateCategory)
+					ticketCategories.DELETE("/:id", ticketCategoryController.DeleteCategory)
+				}
+			}
+
+			// 工单智能分配路由
+			if ticketAssignmentController != nil {
+				ticketAssignment := auth.Group("/ticket-assignment")
+				{
+					ticketAssignment.POST("/assign", ticketAssignmentController.AssignTicket)
+					ticketAssignment.GET("/workload/user", ticketAssignmentController.GetUserWorkload)
+					ticketAssignment.GET("/workload/team", ticketAssignmentController.GetTeamWorkload)
+					ticketAssignment.POST("/reassign", ticketAssignmentController.ReassignTicket)
+					ticketAssignment.POST("/load-balance", ticketAssignmentController.LoadBalance)
+				}
+			}
+
 			// 工单模板路由
 			templates := auth.Group("/ticket-templates")
 			{
@@ -90,6 +135,21 @@ func SetupRouter(
 				templates.POST("", ticketController.CreateTicketTemplate)
 				templates.PUT("/:id", ticketController.UpdateTicketTemplate)
 				templates.DELETE("/:id", ticketController.DeleteTicketTemplate)
+			}
+
+			// 工作流管理路由
+			if workflowController != nil {
+				workflows := auth.Group("/workflows")
+				{
+					workflows.GET("", workflowController.ListWorkflows)
+					workflows.POST("", workflowController.CreateWorkflow)
+					workflows.GET("/:id", workflowController.GetWorkflow)
+					workflows.PUT("/:id", workflowController.UpdateWorkflow)
+					workflows.DELETE("/:id", workflowController.DeleteWorkflow)
+					// 工作流实例操作
+					workflows.POST("/:id/start", workflowController.StartWorkflow)
+					workflows.POST("/:id/execute-step", workflowController.ExecuteWorkflowStep)
+				}
 			}
 
 			// 服务目录路由
@@ -148,23 +208,22 @@ func SetupRouter(
 			// 问题管理路由
 			problems := auth.Group("/problems")
 			{
-				problems.GET("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"code": 0, "message": "问题管理功能开发中"})
-				})
-				problems.POST("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"code": 0, "message": "问题管理功能开发中"})
-				})
+				problems.GET("", problemController.ListProblems)
+				problems.POST("", problemController.CreateProblem)
+				problems.GET("/stats", problemController.GetProblemStats)
+				problems.GET("/:id", problemController.GetProblem)
+				problems.PUT("/:id", problemController.UpdateProblem)
+				problems.DELETE("/:id", problemController.DeleteProblem)
 			}
 
 			// 变更管理路由
 			changes := auth.Group("/changes")
 			{
-				changes.GET("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"code": 0, "message": "变更管理功能开发中"})
-				})
-				changes.POST("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"code": 0, "message": "变更管理功能开发中"})
-				})
+				changes.GET("", changeController.ListChanges)
+				changes.POST("", changeController.CreateChange)
+				changes.GET("/:id", changeController.GetChange)
+				changes.PUT("/:id", changeController.UpdateChange)
+				changes.DELETE("/:id", changeController.DeleteChange)
 			}
 
 			// 知识库路由
@@ -194,6 +253,8 @@ func SetupRouter(
 					ai.POST("/tools/:id/approve", aiController.ApproveTool)
 					ai.GET("/tools/:id", aiController.GetToolInvocation)
 					ai.POST("/embed/run", aiController.RunEmbed)
+					ai.POST("/feedback", aiController.SaveFeedback)
+					ai.GET("/metrics", aiController.GetMetrics)
 				}
 			}
 

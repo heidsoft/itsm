@@ -103,6 +103,38 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 		log.Printf("pgvector extension not available. Vector features will be disabled.")
 	}
 
+	// Create ai_feedbacks table for AI telemetry
+	if _, err := db.ExecContext(ctx, `
+            CREATE TABLE IF NOT EXISTS ai_feedbacks (
+                id BIGSERIAL PRIMARY KEY,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                tenant_id INT NOT NULL,
+                user_id INT NOT NULL,
+                request_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                query TEXT,
+                item_type TEXT,
+                item_id INT,
+                useful BOOLEAN NOT NULL,
+                score INT,
+                notes TEXT
+            );
+        `); err != nil {
+		log.Printf("create ai_feedbacks table failed (non-fatal): %v", err)
+	}
+
+	// Create indexes for ai_feedbacks
+	if _, err := db.ExecContext(ctx, `
+            CREATE INDEX IF NOT EXISTS ai_feedbacks_tenant_idx ON ai_feedbacks(tenant_id);
+        `); err != nil {
+		log.Printf("create ai_feedbacks tenant index failed (non-fatal): %v", err)
+	}
+	if _, err := db.ExecContext(ctx, `
+            CREATE INDEX IF NOT EXISTS ai_feedbacks_created_idx ON ai_feedbacks(created_at);
+        `); err != nil {
+		log.Printf("create ai_feedbacks created index failed (non-fatal): %v", err)
+	}
+
 	// Compatibility fix: if legacy column "author" exists and is NOT NULL, relax constraint to allow inserts via current schema (author_id)
 	var hasAuthorColumn bool
 	if err := db.QueryRowContext(ctx, `SELECT EXISTS (

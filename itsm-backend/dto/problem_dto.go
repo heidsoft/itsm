@@ -1,6 +1,3 @@
-//go:build problem
-// +build problem
-
 package dto
 
 import (

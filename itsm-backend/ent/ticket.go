@@ -5,6 +5,8 @@ package ent
 import (
 	"fmt"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettemplate"
 	"strings"
 	"time"
 
@@ -33,11 +35,100 @@ type Ticket struct {
 	AssigneeID int `json:"assignee_id,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 模板ID
+	TemplateID int `json:"template_id,omitempty"`
+	// 分类ID
+	CategoryID int `json:"category_id,omitempty"`
+	// 父工单ID
+	ParentTicketID int `json:"parent_ticket_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
-	selectValues sql.SelectValues
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the TicketQuery when eager-loading is set.
+	Edges              TicketEdges `json:"edges"`
+	ticket_tag_tickets *int
+	selectValues       sql.SelectValues
+}
+
+// TicketEdges holds the relations/edges for other nodes in the graph.
+type TicketEdges struct {
+	// 工单模板
+	Template *TicketTemplate `json:"template,omitempty"`
+	// 工单分类
+	Category *TicketCategory `json:"category,omitempty"`
+	// 工单标签
+	Tags []*TicketTag `json:"tags,omitempty"`
+	// 关联工单
+	RelatedTickets []*Ticket `json:"related_tickets,omitempty"`
+	// 父工单
+	ParentTicket *Ticket `json:"parent_ticket,omitempty"`
+	// 工作流实例
+	WorkflowInstances []*WorkflowInstance `json:"workflow_instances,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [6]bool
+}
+
+// TemplateOrErr returns the Template value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) TemplateOrErr() (*TicketTemplate, error) {
+	if e.Template != nil {
+		return e.Template, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: tickettemplate.Label}
+	}
+	return nil, &NotLoadedError{edge: "template"}
+}
+
+// CategoryOrErr returns the Category value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) CategoryOrErr() (*TicketCategory, error) {
+	if e.Category != nil {
+		return e.Category, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: ticketcategory.Label}
+	}
+	return nil, &NotLoadedError{edge: "category"}
+}
+
+// TagsOrErr returns the Tags value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) TagsOrErr() ([]*TicketTag, error) {
+	if e.loadedTypes[2] {
+		return e.Tags, nil
+	}
+	return nil, &NotLoadedError{edge: "tags"}
+}
+
+// RelatedTicketsOrErr returns the RelatedTickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) RelatedTicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[3] {
+		return e.RelatedTickets, nil
+	}
+	return nil, &NotLoadedError{edge: "related_tickets"}
+}
+
+// ParentTicketOrErr returns the ParentTicket value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) ParentTicketOrErr() (*Ticket, error) {
+	if e.ParentTicket != nil {
+		return e.ParentTicket, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: ticket.Label}
+	}
+	return nil, &NotLoadedError{edge: "parent_ticket"}
+}
+
+// WorkflowInstancesOrErr returns the WorkflowInstances value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
+	if e.loadedTypes[5] {
+		return e.WorkflowInstances, nil
+	}
+	return nil, &NotLoadedError{edge: "workflow_instances"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -45,12 +136,14 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID:
+		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldParentTicketID:
 			values[i] = new(sql.NullInt64)
 		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber:
 			values[i] = new(sql.NullString)
 		case ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case ticket.ForeignKeys[0]: // ticket_tag_tickets
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -120,6 +213,24 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.TenantID = int(value.Int64)
 			}
+		case ticket.FieldTemplateID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field template_id", values[i])
+			} else if value.Valid {
+				t.TemplateID = int(value.Int64)
+			}
+		case ticket.FieldCategoryID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field category_id", values[i])
+			} else if value.Valid {
+				t.CategoryID = int(value.Int64)
+			}
+		case ticket.FieldParentTicketID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field parent_ticket_id", values[i])
+			} else if value.Valid {
+				t.ParentTicketID = int(value.Int64)
+			}
 		case ticket.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -132,6 +243,13 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.UpdatedAt = value.Time
 			}
+		case ticket.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field ticket_tag_tickets", value)
+			} else if value.Valid {
+				t.ticket_tag_tickets = new(int)
+				*t.ticket_tag_tickets = int(value.Int64)
+			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
 		}
@@ -143,6 +261,36 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (t *Ticket) Value(name string) (ent.Value, error) {
 	return t.selectValues.Get(name)
+}
+
+// QueryTemplate queries the "template" edge of the Ticket entity.
+func (t *Ticket) QueryTemplate() *TicketTemplateQuery {
+	return NewTicketClient(t.config).QueryTemplate(t)
+}
+
+// QueryCategory queries the "category" edge of the Ticket entity.
+func (t *Ticket) QueryCategory() *TicketCategoryQuery {
+	return NewTicketClient(t.config).QueryCategory(t)
+}
+
+// QueryTags queries the "tags" edge of the Ticket entity.
+func (t *Ticket) QueryTags() *TicketTagQuery {
+	return NewTicketClient(t.config).QueryTags(t)
+}
+
+// QueryRelatedTickets queries the "related_tickets" edge of the Ticket entity.
+func (t *Ticket) QueryRelatedTickets() *TicketQuery {
+	return NewTicketClient(t.config).QueryRelatedTickets(t)
+}
+
+// QueryParentTicket queries the "parent_ticket" edge of the Ticket entity.
+func (t *Ticket) QueryParentTicket() *TicketQuery {
+	return NewTicketClient(t.config).QueryParentTicket(t)
+}
+
+// QueryWorkflowInstances queries the "workflow_instances" edge of the Ticket entity.
+func (t *Ticket) QueryWorkflowInstances() *WorkflowInstanceQuery {
+	return NewTicketClient(t.config).QueryWorkflowInstances(t)
 }
 
 // Update returns a builder for updating this Ticket.
@@ -191,6 +339,15 @@ func (t *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("template_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.TemplateID))
+	builder.WriteString(", ")
+	builder.WriteString("category_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.CategoryID))
+	builder.WriteString(", ")
+	builder.WriteString("parent_ticket_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.ParentTicketID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(t.CreatedAt.Format(time.ANSIC))

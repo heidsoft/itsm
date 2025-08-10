@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/edge"
 )
 
 // Ticket holds the schema definition for the Ticket entity.
@@ -40,6 +41,15 @@ func (Ticket) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),
+		field.Int("template_id").
+			Comment("模板ID").
+			Optional(),
+		field.Int("category_id").
+			Comment("分类ID").
+			Optional(),
+		field.Int("parent_ticket_id").
+			Comment("父工单ID").
+			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
@@ -52,5 +62,27 @@ func (Ticket) Fields() []ent.Field {
 
 // Edges of the Ticket.
 func (Ticket) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("template", TicketTemplate.Type).
+			Ref("tickets").
+			Field("template_id").
+			Unique().
+			Comment("工单模板"),
+		edge.From("category", TicketCategory.Type).
+			Ref("tickets").
+			Field("category_id").
+			Unique().
+			Comment("工单分类"),
+		edge.To("tags", TicketTag.Type).
+			Comment("工单标签"),
+		edge.To("related_tickets", Ticket.Type).
+			Comment("关联工单"),
+		edge.From("parent_ticket", Ticket.Type).
+			Ref("related_tickets").
+			Field("parent_ticket_id").
+			Unique().
+			Comment("父工单"),
+		edge.To("workflow_instances", WorkflowInstance.Type).
+			Comment("工作流实例"),
+	}
 }

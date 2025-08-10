@@ -20,6 +20,8 @@ type Tx struct {
 	CIRelationship *CIRelationshipClient
 	// CIType is the client for interacting with the CIType builders.
 	CIType *CITypeClient
+	// Change is the client for interacting with the Change builders.
+	Change *ChangeClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
 	// Conversation is the client for interacting with the Conversation builders.
@@ -32,6 +34,8 @@ type Tx struct {
 	Message *MessageClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
+	// Problem is the client for interacting with the Problem builders.
+	Problem *ProblemClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
@@ -46,10 +50,20 @@ type Tx struct {
 	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
+	// TicketCategory is the client for interacting with the TicketCategory builders.
+	TicketCategory *TicketCategoryClient
+	// TicketTag is the client for interacting with the TicketTag builders.
+	TicketTag *TicketTagClient
+	// TicketTemplate is the client for interacting with the TicketTemplate builders.
+	TicketTemplate *TicketTemplateClient
 	// ToolInvocation is the client for interacting with the ToolInvocation builders.
 	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// Workflow is the client for interacting with the Workflow builders.
+	Workflow *WorkflowClient
+	// WorkflowInstance is the client for interacting with the WorkflowInstance builders.
+	WorkflowInstance *WorkflowInstanceClient
 
 	// lazily loaded.
 	client     *Client
@@ -185,12 +199,14 @@ func (tx *Tx) init() {
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)
+	tx.Change = NewChangeClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
+	tx.Problem = NewProblemClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
@@ -198,8 +214,13 @@ func (tx *Tx) init() {
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
+	tx.TicketCategory = NewTicketCategoryClient(tx.config)
+	tx.TicketTag = NewTicketTagClient(tx.config)
+	tx.TicketTemplate = NewTicketTemplateClient(tx.config)
 	tx.ToolInvocation = NewToolInvocationClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.Workflow = NewWorkflowClient(tx.config)
+	tx.WorkflowInstance = NewWorkflowInstanceClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

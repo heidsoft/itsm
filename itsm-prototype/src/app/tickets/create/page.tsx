@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { aiSearchKB, aiSummarize, aiTriage, RagAnswer } from "../../lib/ai-api";
+import { AIFeedback } from "../../components/AIFeedback";
 
 const CreateTicketPage: React.FC = () => {
   const router = useRouter();
@@ -263,15 +264,33 @@ const CreateTicketPage: React.FC = () => {
               <div className="text-sm text-red-600 mb-2">{aiError}</div>
             )}
             {triage && (
-              <div className="text-sm text-gray-700 mb-2 flex items-center">
-                <UserCircle className="w-4 h-4 mr-1" />
-                建议分类：{triage.category}，优先级：{triage.priority}
-                ，建议受理人ID：{triage.assignee_id}，置信度：
-                {Math.round((triage.confidence || 0) * 100)}%
+              <div className="text-sm text-gray-700 mb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <UserCircle className="w-4 h-4 mr-1" />
+                    建议分类：{triage.category}，优先级：{triage.priority}
+                    ，建议受理人ID：{triage.assignee_id}，置信度：
+                    {Math.round((triage.confidence || 0) * 100)}%
+                  </div>
+                  <AIFeedback
+                    kind="triage"
+                    query={`${formData.title}\n${formData.description}`}
+                    className="ml-2"
+                  />
+                </div>
               </div>
             )}
             {summary && (
-              <div className="text-sm text-gray-600 mb-2">摘要：{summary}</div>
+              <div className="text-sm text-gray-600 mb-2">
+                <div className="flex items-center justify-between">
+                  <span>摘要：{summary}</span>
+                  <AIFeedback
+                    kind="summarize"
+                    query={`${formData.title}\n${formData.description}`}
+                    className="ml-2"
+                  />
+                </div>
+              </div>
             )}
             {kbAnswers.length > 0 && (
               <div>
@@ -284,8 +303,19 @@ const CreateTicketPage: React.FC = () => {
                       key={idx}
                       className="text-sm p-2 bg-white border rounded"
                     >
-                      <div className="font-medium">{a.title || "相关内容"}</div>
-                      <div className="text-gray-600">{a.snippet}</div>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium">{a.title || "相关内容"}</div>
+                          <div className="text-gray-600">{a.snippet}</div>
+                        </div>
+                        <AIFeedback
+                          kind="search"
+                          query={`${formData.title}\n${formData.description}`}
+                          itemType="knowledge"
+                          itemId={a.id}
+                          className="ml-2 flex-shrink-0"
+                        />
+                      </div>
                     </li>
                   ))}
                 </ul>

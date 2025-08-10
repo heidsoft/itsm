@@ -7,6 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettag"
+	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/workflowinstance"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -100,6 +104,48 @@ func (tc *TicketCreate) SetTenantID(i int) *TicketCreate {
 	return tc
 }
 
+// SetTemplateID sets the "template_id" field.
+func (tc *TicketCreate) SetTemplateID(i int) *TicketCreate {
+	tc.mutation.SetTemplateID(i)
+	return tc
+}
+
+// SetNillableTemplateID sets the "template_id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableTemplateID(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetTemplateID(*i)
+	}
+	return tc
+}
+
+// SetCategoryID sets the "category_id" field.
+func (tc *TicketCreate) SetCategoryID(i int) *TicketCreate {
+	tc.mutation.SetCategoryID(i)
+	return tc
+}
+
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableCategoryID(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetCategoryID(*i)
+	}
+	return tc
+}
+
+// SetParentTicketID sets the "parent_ticket_id" field.
+func (tc *TicketCreate) SetParentTicketID(i int) *TicketCreate {
+	tc.mutation.SetParentTicketID(i)
+	return tc
+}
+
+// SetNillableParentTicketID sets the "parent_ticket_id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableParentTicketID(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetParentTicketID(*i)
+	}
+	return tc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tc *TicketCreate) SetCreatedAt(t time.Time) *TicketCreate {
 	tc.mutation.SetCreatedAt(t)
@@ -126,6 +172,66 @@ func (tc *TicketCreate) SetNillableUpdatedAt(t *time.Time) *TicketCreate {
 		tc.SetUpdatedAt(*t)
 	}
 	return tc
+}
+
+// SetTemplate sets the "template" edge to the TicketTemplate entity.
+func (tc *TicketCreate) SetTemplate(t *TicketTemplate) *TicketCreate {
+	return tc.SetTemplateID(t.ID)
+}
+
+// SetCategory sets the "category" edge to the TicketCategory entity.
+func (tc *TicketCreate) SetCategory(t *TicketCategory) *TicketCreate {
+	return tc.SetCategoryID(t.ID)
+}
+
+// AddTagIDs adds the "tags" edge to the TicketTag entity by IDs.
+func (tc *TicketCreate) AddTagIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddTagIDs(ids...)
+	return tc
+}
+
+// AddTags adds the "tags" edges to the TicketTag entity.
+func (tc *TicketCreate) AddTags(t ...*TicketTag) *TicketCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTagIDs(ids...)
+}
+
+// AddRelatedTicketIDs adds the "related_tickets" edge to the Ticket entity by IDs.
+func (tc *TicketCreate) AddRelatedTicketIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddRelatedTicketIDs(ids...)
+	return tc
+}
+
+// AddRelatedTickets adds the "related_tickets" edges to the Ticket entity.
+func (tc *TicketCreate) AddRelatedTickets(t ...*Ticket) *TicketCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddRelatedTicketIDs(ids...)
+}
+
+// SetParentTicket sets the "parent_ticket" edge to the Ticket entity.
+func (tc *TicketCreate) SetParentTicket(t *Ticket) *TicketCreate {
+	return tc.SetParentTicketID(t.ID)
+}
+
+// AddWorkflowInstanceIDs adds the "workflow_instances" edge to the WorkflowInstance entity by IDs.
+func (tc *TicketCreate) AddWorkflowInstanceIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddWorkflowInstanceIDs(ids...)
+	return tc
+}
+
+// AddWorkflowInstances adds the "workflow_instances" edges to the WorkflowInstance entity.
+func (tc *TicketCreate) AddWorkflowInstances(w ...*WorkflowInstance) *TicketCreate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return tc.AddWorkflowInstanceIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -292,6 +398,105 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticket.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := tc.mutation.TemplateIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.TemplateTable,
+			Columns: []string{ticket.TemplateColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.TemplateID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.CategoryTable,
+			Columns: []string{ticket.CategoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CategoryID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.TagsTable,
+			Columns: []string{ticket.TagsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.RelatedTicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RelatedTicketsTable,
+			Columns: []string{ticket.RelatedTicketsColumn},
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ParentTicketIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.ParentTicketTable,
+			Columns: []string{ticket.ParentTicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ParentTicketID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.WorkflowInstancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.WorkflowInstancesTable,
+			Columns: []string{ticket.WorkflowInstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

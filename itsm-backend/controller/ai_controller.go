@@ -2,7 +2,9 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
@@ -12,18 +14,19 @@ import (
 )
 
 type AIController struct {
-	rag      *service.RAGService
-	tools    *service.ToolRegistry
-	client   *ent.Client
-	queue    *service.ToolQueue
-	embedder service.Embedder
-	vectors  *service.VectorStore
-	triage   *service.TriageService
-	summary  *service.SummarizeService
+	rag                *service.RAGService
+	tools              *service.ToolRegistry
+	client             *ent.Client
+	queue              *service.ToolQueue
+	embedder           service.Embedder
+	vectors            *service.VectorStore
+	triage             *service.TriageService
+	summary            *service.SummarizeService
+	aiTelemetryService *service.AITelemetryService
 }
 
-func NewAIController(rag *service.RAGService, client *ent.Client) *AIController {
-	return &AIController{rag: rag, client: client, triage: service.NewTriageService(), summary: service.NewSummarizeService()}
+func NewAIController(rag *service.RAGService, client *ent.Client, aiTelemetryService *service.AITelemetryService) *AIController {
+	return &AIController{rag: rag, client: client, triage: service.NewTriageService(), summary: service.NewSummarizeService(), aiTelemetryService: aiTelemetryService}
 }
 
 func (a *AIController) SetToolRegistry(tr *service.ToolRegistry) { a.tools = tr }
@@ -390,4 +393,66 @@ func (a *AIController) RunEmbed(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{"status": "ok", "embedded": req.Limit})
+}
+
+// FeedbackRequest represents the request body for AI feedback
+type FeedbackRequest struct {
+	Kind     string  `json:"kind" binding:"required"`
+	Query    string  `json:"query"`
+	ItemType *string `json:"item_type"`
+	ItemID   *int    `json:"item_id"`
+	Useful   bool    `json:"useful" binding:"required"`
+	Score    *int    `json:"score"`
+	Notes    *string `json:"notes"`
+}
+
+// SaveFeedback saves user feedback on AI suggestions
+func (a *AIController) SaveFeedback(c *gin.Context) {
+	var req FeedbackRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
+	requestID := c.GetString("request_id")
+
+	if requestID == "" {
+		requestID = fmt.Sprintf("req_%d_%d", time.Now().Unix(), userID)
+	}
+
+	// Handle pointer types for optional fields
+	var itemTypeVal string
+	if req.ItemType != nil {
+		itemTypeVal = *req.ItemType
+	}
+
+	err := a.aiTelemetryService.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Kind, req.Query, itemTypeVal, req.ItemID, req.Useful, req.Score, req.Notes)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, "Failed to save feedback")
+		return
+	}
+
+	common.Success(c, gin.H{"message": "Feedback saved successfully"})
+}
+
+// GetMetrics retrieves AI usage metrics
+func (a *AIController) GetMetrics(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+
+	lookbackDays := 7 // default to 7 days
+	if daysStr := c.Query("days"); daysStr != "" {
+		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 && days <= 365 {
+			lookbackDays = days
+		}
+	}
+
+	metrics, err := a.aiTelemetryService.GetMetrics(c.Request.Context(), tenantID, lookbackDays)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, "Failed to get metrics")
+		return
+	}
+
+	common.Success(c, metrics)
 }

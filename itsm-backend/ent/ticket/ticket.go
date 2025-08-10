@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -29,12 +30,66 @@ const (
 	FieldAssigneeID = "assignee_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
+	// FieldTemplateID holds the string denoting the template_id field in the database.
+	FieldTemplateID = "template_id"
+	// FieldCategoryID holds the string denoting the category_id field in the database.
+	FieldCategoryID = "category_id"
+	// FieldParentTicketID holds the string denoting the parent_ticket_id field in the database.
+	FieldParentTicketID = "parent_ticket_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeTemplate holds the string denoting the template edge name in mutations.
+	EdgeTemplate = "template"
+	// EdgeCategory holds the string denoting the category edge name in mutations.
+	EdgeCategory = "category"
+	// EdgeTags holds the string denoting the tags edge name in mutations.
+	EdgeTags = "tags"
+	// EdgeRelatedTickets holds the string denoting the related_tickets edge name in mutations.
+	EdgeRelatedTickets = "related_tickets"
+	// EdgeParentTicket holds the string denoting the parent_ticket edge name in mutations.
+	EdgeParentTicket = "parent_ticket"
+	// EdgeWorkflowInstances holds the string denoting the workflow_instances edge name in mutations.
+	EdgeWorkflowInstances = "workflow_instances"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
+	// TemplateTable is the table that holds the template relation/edge.
+	TemplateTable = "tickets"
+	// TemplateInverseTable is the table name for the TicketTemplate entity.
+	// It exists in this package in order to avoid circular dependency with the "tickettemplate" package.
+	TemplateInverseTable = "ticket_templates"
+	// TemplateColumn is the table column denoting the template relation/edge.
+	TemplateColumn = "template_id"
+	// CategoryTable is the table that holds the category relation/edge.
+	CategoryTable = "tickets"
+	// CategoryInverseTable is the table name for the TicketCategory entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketcategory" package.
+	CategoryInverseTable = "ticket_categories"
+	// CategoryColumn is the table column denoting the category relation/edge.
+	CategoryColumn = "category_id"
+	// TagsTable is the table that holds the tags relation/edge.
+	TagsTable = "ticket_tags"
+	// TagsInverseTable is the table name for the TicketTag entity.
+	// It exists in this package in order to avoid circular dependency with the "tickettag" package.
+	TagsInverseTable = "ticket_tags"
+	// TagsColumn is the table column denoting the tags relation/edge.
+	TagsColumn = "ticket_tags"
+	// RelatedTicketsTable is the table that holds the related_tickets relation/edge.
+	RelatedTicketsTable = "tickets"
+	// RelatedTicketsColumn is the table column denoting the related_tickets relation/edge.
+	RelatedTicketsColumn = "parent_ticket_id"
+	// ParentTicketTable is the table that holds the parent_ticket relation/edge.
+	ParentTicketTable = "tickets"
+	// ParentTicketColumn is the table column denoting the parent_ticket relation/edge.
+	ParentTicketColumn = "parent_ticket_id"
+	// WorkflowInstancesTable is the table that holds the workflow_instances relation/edge.
+	WorkflowInstancesTable = "workflow_instances"
+	// WorkflowInstancesInverseTable is the table name for the WorkflowInstance entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowinstance" package.
+	WorkflowInstancesInverseTable = "workflow_instances"
+	// WorkflowInstancesColumn is the table column denoting the workflow_instances relation/edge.
+	WorkflowInstancesColumn = "ticket_workflow_instances"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -48,14 +103,28 @@ var Columns = []string{
 	FieldRequesterID,
 	FieldAssigneeID,
 	FieldTenantID,
+	FieldTemplateID,
+	FieldCategoryID,
+	FieldParentTicketID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "tickets"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"ticket_tag_tickets",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -131,6 +200,21 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
+// ByTemplateID orders the results by the template_id field.
+func ByTemplateID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTemplateID, opts...).ToFunc()
+}
+
+// ByCategoryID orders the results by the category_id field.
+func ByCategoryID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCategoryID, opts...).ToFunc()
+}
+
+// ByParentTicketID orders the results by the parent_ticket_id field.
+func ByParentTicketID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParentTicketID, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -139,4 +223,109 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByTemplateField orders the results by template field.
+func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTemplateStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCategoryField orders the results by category field.
+func ByCategoryField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByTagsCount orders the results by tags count.
+func ByTagsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTagsStep(), opts...)
+	}
+}
+
+// ByTags orders the results by tags terms.
+func ByTags(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTagsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRelatedTicketsCount orders the results by related_tickets count.
+func ByRelatedTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRelatedTicketsStep(), opts...)
+	}
+}
+
+// ByRelatedTickets orders the results by related_tickets terms.
+func ByRelatedTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRelatedTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByParentTicketField orders the results by parent_ticket field.
+func ByParentTicketField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentTicketStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByWorkflowInstancesCount orders the results by workflow_instances count.
+func ByWorkflowInstancesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowInstancesStep(), opts...)
+	}
+}
+
+// ByWorkflowInstances orders the results by workflow_instances terms.
+func ByWorkflowInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowInstancesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTemplateStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TemplateInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
+	)
+}
+func newCategoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CategoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
+	)
+}
+func newTagsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TagsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TagsTable, TagsColumn),
+	)
+}
+func newRelatedTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RelatedTicketsTable, RelatedTicketsColumn),
+	)
+}
+func newParentTicketStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ParentTicketTable, ParentTicketColumn),
+	)
+}
+func newWorkflowInstancesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowInstancesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
+	)
 }

@@ -1,11 +1,9 @@
-//go:build problem
-// +build problem
-
 package controller
 
 import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -14,13 +12,15 @@ import (
 
 // ProblemController 问题管理控制器
 type ProblemController struct {
-	logger *zap.SugaredLogger
+	logger         *zap.SugaredLogger
+	problemService *service.ProblemService
 }
 
 // NewProblemController 创建问题管理控制器
-func NewProblemController(logger *zap.SugaredLogger) *ProblemController {
+func NewProblemController(logger *zap.SugaredLogger, problemService *service.ProblemService) *ProblemController {
 	return &ProblemController{
-		logger: logger,
+		logger:         logger,
+		problemService: problemService,
 	}
 }
 
@@ -33,13 +33,21 @@ func (pc *ProblemController) CreateProblem(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
 
-	// TODO: 实现创建问题功能
-	pc.logger.Infow("Create problem requested", "title", req.Title, "tenant_id", tenantID)
+	// 设置创建者ID
+	req.CreatedBy = userID
+
+	problem, err := pc.problemService.CreateProblem(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		pc.logger.Errorw("Create problem failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "创建问题失败: "+err.Error())
+		return
+	}
 
 	common.Success(c, gin.H{
 		"message":    "问题创建成功",
-		"problem_id": 123,
+		"problem_id": problem.ID,
 	})
 }
 
@@ -53,21 +61,11 @@ func (pc *ProblemController) GetProblem(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	// TODO: 实现获取问题详情功能
-	pc.logger.Infow("Get problem requested", "problem_id", problemID, "tenant_id", tenantID)
-
-	// 模拟问题数据
-	problem := gin.H{
-		"id":          problemID,
-		"title":       "系统性能问题",
-		"description": "系统响应时间过长，影响用户体验",
-		"status":      "open",
-		"priority":    "high",
-		"category":    "系统问题",
-		"root_cause":  "数据库查询优化不足",
-		"impact":      "影响所有用户",
-		"created_at":  "2024-01-15T10:00:00Z",
-		"updated_at":  "2024-01-15T10:00:00Z",
+	problem, err := pc.problemService.GetProblem(c.Request.Context(), problemID, tenantID)
+	if err != nil {
+		pc.logger.Errorw("Get problem failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取问题失败: "+err.Error())
+		return
 	}
 
 	common.Success(c, problem)
@@ -83,46 +81,22 @@ func (pc *ProblemController) ListProblems(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	// TODO: 实现获取问题列表功能
-	pc.logger.Infow("List problems requested", "page", req.Page, "page_size", req.PageSize, "tenant_id", tenantID)
-
-	// 模拟问题列表数据
-	problems := []gin.H{
-		{
-			"id":          1,
-			"title":       "系统性能问题",
-			"description": "系统响应时间过长，影响用户体验",
-			"status":      "open",
-			"priority":    "high",
-			"category":    "系统问题",
-			"created_at":  "2024-01-15T10:00:00Z",
-		},
-		{
-			"id":          2,
-			"title":       "数据库连接异常",
-			"description": "数据库连接池耗尽，导致服务不可用",
-			"status":      "in_progress",
-			"priority":    "critical",
-			"category":    "数据库问题",
-			"created_at":  "2024-01-14T15:30:00Z",
-		},
-		{
-			"id":          3,
-			"title":       "网络延迟问题",
-			"description": "用户反馈网络访问延迟较高",
-			"status":      "resolved",
-			"priority":    "medium",
-			"category":    "网络问题",
-			"created_at":  "2024-01-13T09:15:00Z",
-		},
+	// 设置默认分页参数
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 10
 	}
 
-	common.Success(c, gin.H{
-		"problems":  problems,
-		"total":     3,
-		"page":      req.Page,
-		"page_size": req.PageSize,
-	})
+	response, err := pc.problemService.ListProblems(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		pc.logger.Errorw("List problems failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取问题列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, response)
 }
 
 // UpdateProblem 更新问题
@@ -141,12 +115,16 @@ func (pc *ProblemController) UpdateProblem(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	// TODO: 实现更新问题功能
-	pc.logger.Infow("Update problem requested", "problem_id", problemID, "tenant_id", tenantID)
+	problem, err := pc.problemService.UpdateProblem(c.Request.Context(), problemID, &req, tenantID)
+	if err != nil {
+		pc.logger.Errorw("Update problem failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "更新问题失败: "+err.Error())
+		return
+	}
 
 	common.Success(c, gin.H{
 		"message":    "问题更新成功",
-		"problem_id": problemID,
+		"problem_id": problem.ID,
 	})
 }
 
@@ -160,8 +138,12 @@ func (pc *ProblemController) DeleteProblem(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	// TODO: 实现删除问题功能
-	pc.logger.Infow("Delete problem requested", "problem_id", problemID, "tenant_id", tenantID)
+	err = pc.problemService.DeleteProblem(c.Request.Context(), problemID, tenantID)
+	if err != nil {
+		pc.logger.Errorw("Delete problem failed", "error", err, "problem_id", problemID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "删除问题失败: "+err.Error())
+		return
+	}
 
 	common.Success(c, gin.H{
 		"message":    "问题删除成功",
@@ -173,17 +155,11 @@ func (pc *ProblemController) DeleteProblem(c *gin.Context) {
 func (pc *ProblemController) GetProblemStats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 
-	// TODO: 实现获取问题统计功能
-	pc.logger.Infow("Get problem stats requested", "tenant_id", tenantID)
-
-	// 模拟统计数据
-	stats := gin.H{
-		"total":         15,
-		"open":          5,
-		"in_progress":   3,
-		"resolved":      6,
-		"closed":        1,
-		"high_priority": 8,
+	stats, err := pc.problemService.GetProblemStats(c.Request.Context(), tenantID)
+	if err != nil {
+		pc.logger.Errorw("Get problem stats failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取问题统计失败: "+err.Error())
+		return
 	}
 
 	common.Success(c, stats)

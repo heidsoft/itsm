@@ -10,137 +10,10 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-// 模拟变更详情数据
-const mockChangeDetail = {
-  "CHG-00001": {
-    title: "CRM系统数据库升级",
-    description:
-      "将生产环境CRM系统的MySQL数据库从5.7升级到8.0，以提升性能和安全性。预计停机时间2小时。",
-    justification:
-      "解决PRB-00001（CRM系统间歇性登录失败）的根本原因，提升系统稳定性。",
-    type: "普通变更",
-    status: "待审批",
-    priority: "高",
-    assignee: "李四",
-    createdAt: "2025-06-25 10:00:00",
-    plannedStartDate: "2025-07-10 02:00:00",
-    plannedEndDate: "2025-07-10 04:00:00",
-    impactScope: "高 (影响核心业务)",
-    riskLevel: "中",
-    implementationPlan:
-      "1. 备份数据库；2. 升级MySQL版本；3. 数据迁移和验证；4. 应用连接测试。",
-    rollbackPlan: "如果升级失败，回滚到备份的5.7数据库。",
-    approvals: [
-      { role: "业务负责人", status: "待审批", approver: null, comment: null },
-      { role: "技术负责人", status: "待审批", approver: null, comment: null },
-    ],
-    relatedTickets: [
-      {
-        id: "PRB-00001",
-        type: "问题",
-        title: "CRM系统间歇性登录失败",
-        status: "调查中",
-      },
-    ],
-    affectedCIs: [
-      { id: "CI-RDS-001", name: "CRM数据库-生产环境", type: "云数据库" },
-      { id: "CI-APP-CRM", name: "CRM应用系统", type: "应用系统" },
-    ],
-    logs: ["[2025-06-25 10:05] 变更请求创建并提交审批。"],
-    comments: [
-      {
-        author: "李四",
-        timestamp: "2025-06-25 10:10",
-        text: "已提交变更请求，等待业务和技术负责人审批。",
-      },
-    ],
-  },
-  "CHG-00002": {
-    title: "新增VPN网关防火墙规则",
-    description:
-      "为新上线的远程办公应用，在VPN网关防火墙上开放特定端口和IP范围。",
-    justification: "支持新远程办公应用上线，确保用户正常访问。",
-    type: "标准变更",
-    status: "已批准",
-    priority: "中",
-    assignee: "张三",
-    createdAt: "2025-06-20 14:00:00",
-    plannedStartDate: "2025-06-21 09:00:00",
-    plannedEndDate: "2025-06-21 09:30:00",
-    impactScope: "低",
-    riskLevel: "低",
-    implementationPlan: "1. 登录防火墙；2. 添加新规则；3. 测试连通性。",
-    rollbackPlan: "删除新增规则。",
-    approvals: [
-      {
-        role: "网络负责人",
-        status: "已批准",
-        approver: "王小明",
-        comment: "规则已审核，符合安全策略。",
-      },
-    ],
-    relatedTickets: [
-      {
-        id: "INC-00110",
-        type: "事件",
-        title: "VPN连接失败告警",
-        status: "已解决",
-      },
-    ],
-    affectedCIs: [{ id: "CI-VPN-GW-001", name: "VPN网关", type: "网络设备" }],
-    logs: [
-      "[2025-06-20 14:05] 变更请求创建并提交审批。",
-      "[2025-06-20 15:00] 网络负责人批准。",
-      "[2025-06-21 09:00] 变更开始实施。",
-      "[2025-06-21 09:20] 变更实施完成并验证。",
-    ],
-    comments: [],
-  },
-  "CHG-00003": {
-    title: "紧急修复Web服务器安全漏洞",
-    description:
-      "针对发现的Apache Log4j漏洞进行紧急补丁修复，以防止潜在的安全攻击。",
-    justification: "响应紧急安全漏洞，避免潜在的数据泄露和系统入侵。",
-    type: "紧急变更",
-    status: "实施中",
-    priority: "紧急",
-    assignee: "王五",
-    createdAt: "2025-06-18 20:00:00",
-    plannedStartDate: "2025-06-18 20:30:00",
-    plannedEndDate: "2025-06-18 21:00:00",
-    impactScope: "高",
-    riskLevel: "高",
-    implementationPlan: "1. 下载补丁；2. 应用补丁；3. 重启服务；4. 验证。",
-    rollbackPlan: "卸载补丁，恢复旧版本。",
-    approvals: [
-      {
-        role: "安全负责人",
-        status: "已批准",
-        approver: "陈大明",
-        comment: "紧急变更，已批准。",
-      },
-    ],
-    relatedTickets: [
-      {
-        id: "INC-00123",
-        type: "事件",
-        title: "检测到可疑的SSH登录尝试",
-        status: "处理中",
-      },
-    ],
-    affectedCIs: [
-      { id: "CI-ECS-001", name: "Web服务器-生产环境", type: "云服务器" },
-    ],
-    logs: [
-      "[2025-06-18 20:05] 紧急变更请求创建并自动批准。",
-      "[2025-06-18 20:30] 变更开始实施。",
-    ],
-    comments: [],
-  },
-};
+import { changeService, Change } from "../../lib/services/change-service";
 
 const ApprovalStatusBadge = ({ status }) => {
   const colors = {
@@ -161,18 +34,67 @@ const ChangeDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const changeId = params.changeId as string;
-  const [change, setChange] = useState(mockChangeDetail[changeId]); // 使用useState来管理变更状态
+  const [change, setChange] = useState<Change | null>(null);
+  const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
 
-  const updateChangeStatus = (newStatus, logMessage) => {
-    const updatedChange = {
-      ...change,
-      status: newStatus,
-      logs: [...change.logs, `[${new Date().toLocaleString()}] ${logMessage}`],
+  // 加载变更详情
+  useEffect(() => {
+    const loadChangeDetail = async () => {
+      if (!changeId) return;
+
+      try {
+        setLoading(true);
+        // 从URL中提取数字ID
+        const numericId = parseInt(changeId.replace("CHG-", ""));
+        if (isNaN(numericId)) {
+          console.error("无效的变更ID");
+          return;
+        }
+
+        const changeData = await changeService.getChange(numericId);
+        setChange(changeData);
+      } catch (error) {
+        console.error("加载变更详情失败:", error);
+        // 可以在这里添加错误处理UI
+      } finally {
+        setLoading(false);
+      }
     };
-    setChange(updatedChange);
-    alert(`变更状态已更新为: ${newStatus}`);
-    // 在真实应用中，这里会调用API更新后端数据
+
+    loadChangeDetail();
+  }, [changeId]);
+
+  const updateChangeStatus = async (newStatus, logMessage) => {
+    if (!change) return;
+
+    try {
+      const numericId = parseInt(changeId.replace("CHG-", ""));
+      if (isNaN(numericId)) {
+        alert("无效的变更ID");
+        return;
+      }
+
+      // 调用API更新状态
+      const updatedChange = await changeService.updateChange(numericId, {
+        status: newStatus,
+      });
+
+      // 更新本地状态
+      setChange({
+        ...change,
+        ...updatedChange,
+        logs: [
+          ...(change.logs || []),
+          `[${new Date().toLocaleString()}] ${logMessage}`,
+        ],
+      });
+
+      alert(`变更状态已更新为: ${newStatus}`);
+    } catch (error) {
+      console.error("更新变更状态失败:", error);
+      alert(`更新状态失败: ${error.message}`);
+    }
   };
 
   const handleApprove = (index) => {
@@ -187,11 +109,13 @@ const ChangeDetailPage = () => {
     alert(`审批人 ${updatedApprovals[index].role} 已批准变更 ${changeId}！`);
     // 检查是否所有审批都已完成，如果是，则将变更状态更新为“已批准”
     if (updatedApprovals.every((app) => app.status === "已批准")) {
-      updateChangeStatus("已批准", "所有审批已完成，变更已批准。");
+      updateChangeStatus("approved", "所有审批已完成，变更已批准。");
     }
   };
 
   const handleReject = (index) => {
+    if (!change?.approvals) return;
+
     const comment = prompt("请输入拒绝理由：");
     if (comment) {
       const updatedApprovals = [...change.approvals];
@@ -203,28 +127,28 @@ const ChangeDetailPage = () => {
       };
       setChange({ ...change, approvals: updatedApprovals });
       alert(`审批人 ${updatedApprovals[index].role} 已拒绝变更 ${changeId}！`);
-      updateChangeStatus("已拒绝", `变更被拒绝。理由：${comment}`);
+      updateChangeStatus("rejected", `变更被拒绝。理由：${comment}`);
       // 实际应用中会更新后端状态
     }
   };
 
   const handleStartImplementation = () => {
-    if (change.status !== "已批准") {
+    if (change.status !== "approved") {
       alert("变更未处于已批准状态，无法开始实施。");
       return;
     }
-    updateChangeStatus("实施中", "变更实施已开始。");
+    updateChangeStatus("implementing", "变更实施已开始。");
   };
 
   const handleCompleteImplementation = () => {
-    if (change.status !== "实施中") {
+    if (change.status !== "implementing") {
       alert("变更未处于实施中状态，无法完成实施。");
       return;
     }
     const implementationNotes = prompt("请输入实施结果描述：");
     if (implementationNotes) {
       updateChangeStatus(
-        "已完成",
+        "completed",
         `变更实施已完成。结果：${implementationNotes}`
       );
     }

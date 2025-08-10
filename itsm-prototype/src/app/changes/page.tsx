@@ -24,7 +24,7 @@ import {
   GitBranch,
   Calendar,
 } from "lucide-react";
-import { mockChangesData } from "../lib/mock-data";
+import { changeService, Change, ChangeStats } from "../lib/services/change-service";
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
@@ -77,22 +77,75 @@ const getRiskLevel = (risk: string) => {
 const ChangeListPage = () => {
   const [filter, setFilter] = useState("全部");
   const [searchText, setSearchText] = useState("");
-  const [changes] = useState(mockChangesData);
-
-  const filteredChanges = changes.filter((change) => {
-    const matchesFilter = filter === "全部" || change.status === filter;
-    const matchesSearch =
-      change.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      change.id.toLowerCase().includes(searchText.toLowerCase());
-    return matchesFilter && matchesSearch;
+  const [changes, setChanges] = useState<Change[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<ChangeStats>({
+    total: 0,
+    draft: 0,
+    pending: 0,
+    approved: 0,
+    implementing: 0,
+    completed: 0,
+    cancelled: 0,
   });
 
+  // 加载变更数据
+  const loadChanges = async () => {
+    setLoading(true);
+    try {
+      const isHealthy = await changeService.healthCheck();
+      if (!isHealthy) {
+        console.warn("后端服务不可用，使用Mock数据");
+        // 这里可以添加fallback到mock数据的逻辑
+        setChanges([]);
+        return;
+      }
+
+      const data = await changeService.getChanges({
+        status: filter === "全部" ? undefined : filter,
+        search: searchText || undefined,
+      });
+
+      setChanges(data.changes);
+      setStats({
+        total: data.total,
+        draft: data.changes.filter(c => c.status === 'draft').length,
+        pending: data.changes.filter(c => c.status === 'pending').length,
+        approved: data.changes.filter(c => c.status === 'approved').length,
+        implementing: data.changes.filter(c => c.status === 'implementing').length,
+        completed: data.changes.filter(c => c.status === 'completed').length,
+        cancelled: data.changes.filter(c => c.status === 'cancelled').length,
+      });
+    } catch (error) {
+      console.error("加载变更数据失败:", error);
+      setChanges([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 搜索和筛选
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    loadChanges();
+  };
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value);
+    loadChanges();
+  };
+
+  // 初始加载
+  React.useEffect(() => {
+    loadChanges();
+  }, []);
+
   const statusCounts = {
-    total: changes.length,
-    pending: changes.filter((c) => c.status === "待审批").length,
-    approved: changes.filter((c) => c.status === "已批准").length,
-    implementing: changes.filter((c) => c.status === "实施中").length,
-    completed: changes.filter((c) => c.status === "已完成").length,
+    total: stats.total,
+    pending: stats.pending,
+    approved: stats.approved,
+    implementing: stats.implementing,
+    completed: stats.completed,
   };
 
   const columns = [
@@ -101,10 +154,10 @@ const ChangeListPage = () => {
       dataIndex: "id",
       key: "id",
       width: 120,
-      render: (text: string) => (
+      render: (text: number) => (
         <Link href={`/changes/${text}`}>
           <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-            {text}
+            {`CHG-${text.toString().padStart(5, '0')}`}
           </span>
         </Link>
       ),
@@ -120,26 +173,48 @@ const ChangeListPage = () => {
       dataIndex: "type",
       key: "type",
       width: 120,
-      render: (type: string) => (
-        <Tag color={getChangeTypeColor(type)}>{type}</Tag>
-      ),
+      render: (type: string) => {
+        const typeMap = {
+          'normal': '普通变更',
+          'standard': '标准变更',
+          'emergency': '紧急变更'
+        };
+        return (
+          <Tag color={getChangeTypeColor(typeMap[type as keyof typeof typeMap] || type)}>
+            {typeMap[type as keyof typeof typeMap] || type}
+          </Tag>
+        );
+      },
     },
     {
       title: "状态",
       dataIndex: "status",
       key: "status",
       width: 100,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
+      render: (status: string) => {
+        const statusMap = {
+          'draft': '草稿',
+          'pending': '待审批',
+          'approved': '已批准',
+          'rejected': '已拒绝',
+          'implementing': '实施中',
+          'completed': '已完成',
+          'cancelled': '已取消'
+        };
+        return (
+          <Tag color={getStatusColor(statusMap[status as keyof typeof statusMap] || status)}>
+            {statusMap[status as keyof typeof statusMap] || status}
+          </Tag>
+        );
+      },
     },
     {
       title: "风险等级",
-      dataIndex: "risk",
-      key: "risk",
+      dataIndex: "riskLevel",
+      key: "riskLevel",
       width: 120,
-      render: (risk: string) => {
-        const riskInfo = getRiskLevel(risk);
+      render: (riskLevel: string) => {
+        const riskInfo = getRiskLevel(riskLevel);
         return (
           <div style={{ width: 80 }}>
             <Progress
@@ -148,7 +223,7 @@ const ChangeListPage = () => {
               status={
                 riskInfo.color as "active" | "exception" | "normal" | "success"
               }
-              format={() => risk}
+              format={() => riskLevel}
             />
           </div>
         );
@@ -156,15 +231,16 @@ const ChangeListPage = () => {
     },
     {
       title: "申请人",
-      dataIndex: "requester",
-      key: "requester",
+      dataIndex: "createdByName",
+      key: "createdByName",
       width: 100,
     },
     {
       title: "计划实施时间",
-      dataIndex: "scheduledDate",
-      key: "scheduledDate",
+      dataIndex: "plannedStartDate",
+      key: "plannedStartDate",
       width: 150,
+      render: (date: string) => date ? new Date(date).toLocaleDateString() : '-',
     },
     {
       title: "操作",
@@ -266,6 +342,7 @@ const ChangeListPage = () => {
               placeholder="搜索变更ID或标题"
               allowClear
               value={searchText}
+              onSearch={handleSearch}
               onChange={(e) => setSearchText(e.target.value)}
               prefix={<Search size={16} />}
             />
@@ -273,17 +350,17 @@ const ChangeListPage = () => {
           <Col span={4}>
             <Select
               value={filter}
-              onChange={setFilter}
+              onChange={handleFilterChange}
               style={{ width: "100%" }}
               placeholder="状态筛选"
             >
               <Option value="全部">全部状态</Option>
-              <Option value="待审批">待审批</Option>
-              <Option value="已批准">已批准</Option>
-              <Option value="实施中">实施中</Option>
-              <Option value="已完成">已完成</Option>
-              <Option value="已回滚">已回滚</Option>
-              <Option value="已拒绝">已拒绝</Option>
+              <Option value="pending">待审批</Option>
+              <Option value="approved">已批准</Option>
+              <Option value="implementing">实施中</Option>
+              <Option value="completed">已完成</Option>
+              <Option value="rejected">已拒绝</Option>
+              <Option value="draft">草稿</Option>
             </Select>
           </Col>
           <Col span={4}>
@@ -296,10 +373,11 @@ const ChangeListPage = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={filteredChanges}
+          dataSource={changes}
           rowKey="id"
+          loading={loading}
           pagination={{
-            total: filteredChanges.length,
+            total: stats.total,
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,

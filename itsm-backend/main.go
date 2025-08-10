@@ -81,6 +81,13 @@ func main() {
 	cmdbService := service.NewCMDBService(client, sugar)
 	dashboardService := service.NewDashboardService(client, sugar)
 	knowledgeService := service.NewKnowledgeService(client, sugar)
+	// 新增服务
+	workflowService := service.NewWorkflowService(client)
+	ticketTagService := service.NewTicketTagService(client)
+	ticketAssignmentService := service.NewTicketAssignmentService(client)
+	ticketCategoryService := service.NewTicketCategoryService(client)
+	problemService := service.NewProblemService(client, sugar)
+	changeService := service.NewChangeService(client, sugar)
 	// 5.1 初始化 LLM/Embedding/VectorStore
 	// LLM/Embedding Provider: use cfg.LLM
 	var embedder service.Embedder
@@ -91,6 +98,7 @@ func main() {
 	}
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGService(client, vectorStore, embedder)
+	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
 
 	// 6. 初始化控制器层
 	// 控制器层处理HTTP请求，调用服务层执行业务逻辑
@@ -106,7 +114,14 @@ func main() {
 	cmdbController := controller.NewCMDBController(cmdbService)
 	dashboardController := controller.NewDashboardController(dashboardService, sugar)
 	knowledgeController := controller.NewKnowledgeController(knowledgeService, sugar)
-	aiController := controller.NewAIController(ragService, client)
+	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
+	// 新增控制器
+	workflowController := controller.NewWorkflowController(workflowService, logger)
+	ticketTagController := controller.NewTicketTagController(ticketTagService, logger)
+	ticketAssignmentController := controller.NewTicketAssignmentController(ticketAssignmentService, logger)
+	ticketCategoryController := controller.NewTicketCategoryController(ticketCategoryService, sugar)
+	problemController := controller.NewProblemController(sugar, problemService)
+	changeController := controller.NewChangeController(changeService, sugar)
 	// 初始化 ToolRegistry（含只读与危险工具）
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, cmdbService, client)
 	aiController.SetToolRegistry(toolRegistry)
@@ -132,6 +147,11 @@ func main() {
 		userController,
 		knowledgeController,
 		aiController,
+		workflowController,
+		ticketTagController,
+		ticketAssignmentController,
+		ticketCategoryController,
+		problemController,
 		client,
 		cfg.JWT.Secret,
 	)

@@ -955,6 +955,128 @@ paths:
       summary: 执行工具
       tags:
       - ai
+  /ai/feedback:
+    post:
+      consumes:
+      - application/json
+      description: 保存用户对AI建议的反馈
+      parameters:
+      - description: 反馈信息
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - kind
+            - useful
+          properties:
+            kind:
+              type: string
+              description: AI操作类型（如triage、search、summarize）
+            query:
+              type: string
+              description: 触发AI响应的原始查询
+            item_type:
+              type: string
+              description: 引用项目的类型
+            item_id:
+              type: integer
+              description: 引用项目的ID
+            useful:
+              type: boolean
+              description: AI建议是否有用
+            score:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: 可选评分（1-5）
+            notes:
+              type: string
+              description: 额外反馈说明
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 反馈保存成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: 内部服务器错误
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 保存AI反馈
+      tags:
+      - ai
+  /ai/metrics:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前租户的AI使用指标
+      parameters:
+      - description: 回溯天数（默认7天，最大365天）
+        in: query
+        name: days
+        required: false
+        type: integer
+        minimum: 1
+        maximum: 365
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 指标获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  type: object
+                  properties:
+                    total_requests:
+                      type: integer
+                      description: 期间内总AI请求数
+                    total_feedback:
+                      type: integer
+                      description: 总反馈提交数
+                    useful_feedback:
+                      type: integer
+                      description: 有用反馈提交数
+                    useful_rate:
+                      type: number
+                      format: float
+                      description: 有用反馈比例
+                    by_kind:
+                      type: object
+                      description: 按AI操作类型分类的指标
+                    avg_response_time_seconds:
+                      type: number
+                      format: float
+                      description: 平均响应时间（秒）
+              type: object
+        "500":
+          description: 内部服务器错误
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取AI指标
+      tags:
+      - ai
   /api/admin/tenants:
     get:
       consumes:

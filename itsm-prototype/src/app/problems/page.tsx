@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -14,60 +14,108 @@ import {
   Select,
   Input,
   Tooltip,
+  message,
+  Spin,
 } from "antd";
-import { PlusCircle, Search, Eye, Edit, AlertTriangle } from "lucide-react";
-import { mockProblemsData } from "../lib/mock-data";
+import { PlusCircle, Search, Eye, Edit, AlertTriangle, Reload } from "lucide-react";
+import { problemService, Problem, ProblemStatus, ProblemPriority, ListProblemsParams } from "../lib/services/problem-service";
+import LoadingEmptyError from "../components/ui/LoadingEmptyError";
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
 
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "高":
-      return "red";
-    case "中":
-      return "orange";
-    case "低":
-      return "green";
-    default:
-      return "default";
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "调查中":
-      return "processing";
-    case "已解决":
-      return "success";
-    case "已知错误":
-      return "warning";
-    case "已关闭":
-      return "default";
-    default:
-      return "default";
-  }
-};
-
 const ProblemListPage = () => {
-  const [filter, setFilter] = useState("全部");
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [filter, setFilter] = useState<string>("");
   const [searchText, setSearchText] = useState("");
-  const [problems] = useState(mockProblemsData);
-
-  const filteredProblems = problems.filter((problem) => {
-    const matchesFilter = filter === "全部" || problem.status === filter;
-    const matchesSearch =
-      problem.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      problem.id.toLowerCase().includes(searchText.toLowerCase());
-    return matchesFilter && matchesSearch;
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [stats, setStats] = useState({
+    total: 0,
+    open: 0,
+    in_progress: 0,
+    resolved: 0,
+    closed: 0,
+    high_priority: 0,
   });
 
-  const statusCounts = {
-    total: problems.length,
-    investigating: problems.filter((p) => p.status === "调查中").length,
-    resolved: problems.filter((p) => p.status === "已解决").length,
-    knownError: problems.filter((p) => p.status === "已知错误").length,
-    closed: problems.filter((p) => p.status === "已关闭").length,
+  // 加载问题列表
+  const loadProblems = async (params: ListProblemsParams = {}) => {
+    setLoading(true);
+    try {
+      const response = await problemService.listProblems({
+        page: pagination.current,
+        page_size: pagination.pageSize,
+        status: filter || undefined,
+        keyword: searchText || undefined,
+        ...params,
+      });
+      
+      setProblems(response.problems);
+      setPagination(prev => ({
+        ...prev,
+        total: response.total,
+        current: response.page,
+        pageSize: response.page_size,
+      }));
+    } catch (error) {
+      console.error('加载问题列表失败:', error);
+      message.error('加载问题列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 加载统计数据
+  const loadStats = async () => {
+    setStatsLoading(true);
+    try {
+      const response = await problemService.getProblemStats();
+      setStats(response);
+    } catch (error) {
+      console.error('加载统计数据失败:', error);
+      message.error('加载统计数据失败');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // 初始加载
+  useEffect(() => {
+    loadProblems();
+    loadStats();
+  }, []);
+
+  // 搜索和筛选变化时重新加载
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadProblems({ page: 1 });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText, filter]);
+
+  // 处理分页变化
+  const handleTableChange = (pagination: any) => {
+    setPagination(prev => ({
+      ...prev,
+      current: pagination.current,
+      pageSize: pagination.pageSize,
+    }));
+    loadProblems({
+      page: pagination.current,
+      page_size: pagination.pageSize,
+    });
+  };
+
+  // 刷新数据
+  const handleRefresh = () => {
+    loadProblems();
+    loadStats();
   };
 
   const columns = [
@@ -76,10 +124,10 @@ const ProblemListPage = () => {
       dataIndex: "id",
       key: "id",
       width: 120,
-      render: (text: string) => (
-        <Link href={`/problems/${text}`}>
+      render: (id: number) => (
+        <Link href={`/problems/${id}`}>
           <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-            {text}
+            PRB-{String(id).padStart(5, '0')}
           </span>
         </Link>
       ),
@@ -95,8 +143,10 @@ const ProblemListPage = () => {
       dataIndex: "priority",
       key: "priority",
       width: 100,
-      render: (priority: string) => (
-        <Tag color={getPriorityColor(priority)}>{priority}</Tag>
+      render: (priority: ProblemPriority) => (
+        <Tag color={problemService.getPriorityColor(priority)}>
+          {problemService.getPriorityLabel(priority)}
+        </Tag>
       ),
     },
     {
@@ -104,27 +154,37 @@ const ProblemListPage = () => {
       dataIndex: "status",
       key: "status",
       width: 100,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
+      render: (status: ProblemStatus) => (
+        <Tag color={problemService.getStatusColor(status)}>
+          {problemService.getStatusLabel(status)}
+        </Tag>
       ),
+    },
+    {
+      title: "分类",
+      dataIndex: "category",
+      key: "category",
+      width: 120,
     },
     {
       title: "负责人",
       dataIndex: "assignee",
       key: "assignee",
       width: 100,
+      render: (assignee: any) => assignee?.name || '-',
     },
     {
       title: "创建时间",
-      dataIndex: "createdAt",
-      key: "createdAt",
+      dataIndex: "created_at",
+      key: "created_at",
       width: 150,
+      render: (date: string) => new Date(date).toLocaleDateString('zh-CN'),
     },
     {
       title: "操作",
       key: "actions",
       width: 120,
-      render: (_, record) => (
+      render: (_, record: Problem) => (
         <Space size="small">
           <Tooltip title="查看详情">
             <Link href={`/problems/${record.id}`}>
@@ -165,11 +225,20 @@ const ProblemListPage = () => {
             管理和跟踪系统问题，防止重复事件发生
           </p>
         </div>
-        <Link href="/problems/new">
-          <Button type="primary" icon={<PlusCircle size={16} />}>
-            新建问题
+        <Space>
+          <Button 
+            icon={<Reload size={16} />} 
+            onClick={handleRefresh}
+            loading={loading || statsLoading}
+          >
+            刷新
           </Button>
-        </Link>
+          <Link href="/problems/new">
+            <Button type="primary" icon={<PlusCircle size={16} />}>
+              新建问题
+            </Button>
+          </Link>
+        </Space>
       </div>
 
       {/* 统计卡片 */}
@@ -178,17 +247,29 @@ const ProblemListPage = () => {
           <Card>
             <Statistic
               title="总问题数"
-              value={statusCounts.total}
+              value={stats.total}
               prefix={<AlertTriangle size={16} style={{ color: "#3b82f6" }} />}
+              loading={statsLoading}
             />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
             <Statistic
-              title="调查中"
-              value={statusCounts.investigating}
+              title="待处理"
+              value={stats.open}
               valueStyle={{ color: "#faad14" }}
+              loading={statsLoading}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="处理中"
+              value={stats.in_progress}
+              valueStyle={{ color: "#1890ff" }}
+              loading={statsLoading}
             />
           </Card>
         </Col>
@@ -196,17 +277,9 @@ const ProblemListPage = () => {
           <Card>
             <Statistic
               title="已解决"
-              value={statusCounts.resolved}
+              value={stats.resolved}
               valueStyle={{ color: "#52c41a" }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="已知错误"
-              value={statusCounts.knownError}
-              valueStyle={{ color: "#f5222d" }}
+              loading={statsLoading}
             />
           </Card>
         </Col>
@@ -217,7 +290,7 @@ const ProblemListPage = () => {
         <Row gutter={16} align="middle">
           <Col span={8}>
             <SearchInput
-              placeholder="搜索问题ID或标题"
+              placeholder="搜索问题标题或描述"
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -230,12 +303,13 @@ const ProblemListPage = () => {
               onChange={setFilter}
               style={{ width: "100%" }}
               placeholder="状态筛选"
+              allowClear
             >
-              <Option value="全部">全部状态</Option>
-              <Option value="调查中">调查中</Option>
-              <Option value="已解决">已解决</Option>
-              <Option value="已知错误">已知错误</Option>
-              <Option value="已关闭">已关闭</Option>
+              <Option value="">全部状态</Option>
+              <Option value="open">待处理</Option>
+              <Option value="in_progress">处理中</Option>
+              <Option value="resolved">已解决</Option>
+              <Option value="closed">已关闭</Option>
             </Select>
           </Col>
         </Row>
@@ -245,16 +319,19 @@ const ProblemListPage = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={filteredProblems}
+          dataSource={problems}
           rowKey="id"
+          loading={loading}
           pagination={{
-            total: filteredProblems.length,
-            pageSize: 10,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
           }}
+          onChange={handleTableChange}
           scroll={{ x: 800 }}
         />
       </Card>

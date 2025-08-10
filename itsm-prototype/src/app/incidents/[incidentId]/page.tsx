@@ -19,6 +19,7 @@ import {
 
 import React, { useState } from "react";
 import { aiSearchKB, aiSimilarIncidents, aiSummarize } from "../../lib/ai-api";
+import { AIFeedback } from "../../components/AIFeedback";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 // 模拟数据
@@ -567,7 +568,16 @@ const IncidentDetailPage = () => {
             </div>
             {summary && (
               <div className="text-sm text-gray-700 p-2 bg-gray-50 rounded mb-3">
-                {summary}
+                <div className="flex items-center justify-between">
+                  <span>{summary}</span>
+                  <AIFeedback
+                    kind="summarize"
+                    query={`${incident.title}\n${incident.description}`}
+                    itemType="incident"
+                    itemId={parseInt(incidentId)}
+                    className="ml-2"
+                  />
+                </div>
               </div>
             )}
             <div className="space-y-3">
@@ -577,13 +587,23 @@ const IncidentDetailPage = () => {
                 </div>
               ) : (
                 kbAnswers.map((a: any, i: number) => (
-                  <KnowledgeBaseSuggestion
-                    key={i}
-                    title={a.title || "相关内容"}
-                    similarity={
-                      (a.score ? Math.round(a.score * 100) : 85) + "%"
-                    }
-                  />
+                  <div key={i} className="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{a.title || "相关内容"}</p>
+                        <span className="text-sm text-green-600">相似度: {(a.score ? Math.round(a.score * 100) : 85) + "%"}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 ml-2">
+                        <button className="text-sm text-blue-600 hover:underline">查看</button>
+                        <AIFeedback
+                          kind="search"
+                          query={`${incident.title}\n${incident.description}`}
+                          itemType="knowledge"
+                          itemId={a.id}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
@@ -601,8 +621,19 @@ const IncidentDetailPage = () => {
               ) : (
                 similar.map((s: any, i: number) => (
                   <div key={i} className="p-3 bg-gray-100 rounded">
-                    <div className="font-medium">{s.title}</div>
-                    <div className="text-gray-600 text-sm">{s.snippet}</div>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium">{s.title}</div>
+                        <div className="text-gray-600 text-sm">{s.snippet}</div>
+                      </div>
+                      <AIFeedback
+                        kind="similar-incidents"
+                        query={`${incident.title}\n${incident.description}`}
+                        itemType="incident"
+                        itemId={parseInt(incidentId)}
+                        className="ml-2"
+                      />
+                    </div>
                   </div>
                 ))
               )}

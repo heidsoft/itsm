@@ -87,6 +87,37 @@ var (
 		Columns:    CiTypesColumns,
 		PrimaryKey: []*schema.Column{CiTypesColumns[0]},
 	}
+	// ChangesColumns holds the columns for the "changes" table.
+	ChangesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "justification", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "type", Type: field.TypeString, Default: "normal"},
+		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "impact_scope", Type: field.TypeString, Default: "medium"},
+		{Name: "risk_level", Type: field.TypeString, Default: "medium"},
+		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_by", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "planned_start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "planned_end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "actual_start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "actual_end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "implementation_plan", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "rollback_plan", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "affected_cis", Type: field.TypeJSON, Nullable: true},
+		{Name: "related_tickets", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ChangesTable holds the schema information for the "changes" table.
+	ChangesTable = &schema.Table{
+		Name:       "changes",
+		Columns:    ChangesColumns,
+		PrimaryKey: []*schema.Column{ChangesColumns[0]},
+	}
 	// ConfigurationItemsColumns holds the columns for the "configuration_items" table.
 	ConfigurationItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -208,6 +239,28 @@ var (
 		Columns:    NotificationsColumns,
 		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
 	}
+	// ProblemsColumns holds the columns for the "problems" table.
+	ProblemsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "status", Type: field.TypeString, Default: "open"},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "root_cause", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "impact", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_by", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProblemsTable holds the schema information for the "problems" table.
+	ProblemsTable = &schema.Table{
+		Name:       "problems",
+		Columns:    ProblemsColumns,
+		PrimaryKey: []*schema.Column{ProblemsColumns[0]},
+	}
 	// PromptTemplatesColumns holds the columns for the "prompt_templates" table.
 	PromptTemplatesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -325,12 +378,116 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parent_ticket_id", Type: field.TypeInt, Nullable: true},
+		{Name: "category_id", Type: field.TypeInt, Nullable: true},
+		{Name: "ticket_tag_tickets", Type: field.TypeInt, Nullable: true},
+		{Name: "template_id", Type: field.TypeInt, Nullable: true},
 	}
 	// TicketsTable holds the schema information for the "tickets" table.
 	TicketsTable = &schema.Table{
 		Name:       "tickets",
 		Columns:    TicketsColumns,
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tickets_tickets_related_tickets",
+				Columns:    []*schema.Column{TicketsColumns[11]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_ticket_categories_tickets",
+				Columns:    []*schema.Column{TicketsColumns[12]},
+				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_ticket_tags_tickets",
+				Columns:    []*schema.Column{TicketsColumns[13]},
+				RefColumns: []*schema.Column{TicketTagsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_ticket_templates_tickets",
+				Columns:    []*schema.Column{TicketsColumns[14]},
+				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TicketCategoriesColumns holds the columns for the "ticket_categories" table.
+	TicketCategoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "level", Type: field.TypeInt, Default: 1},
+		{Name: "sort_order", Type: field.TypeInt, Default: 0},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parent_id", Type: field.TypeInt, Nullable: true},
+	}
+	// TicketCategoriesTable holds the schema information for the "ticket_categories" table.
+	TicketCategoriesTable = &schema.Table{
+		Name:       "ticket_categories",
+		Columns:    TicketCategoriesColumns,
+		PrimaryKey: []*schema.Column{TicketCategoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_categories_ticket_categories_children",
+				Columns:    []*schema.Column{TicketCategoriesColumns[10]},
+				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TicketTagsColumns holds the columns for the "ticket_tags" table.
+	TicketTagsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "color", Type: field.TypeString, Default: "#1890ff"},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ticket_tags", Type: field.TypeInt, Nullable: true},
+	}
+	// TicketTagsTable holds the schema information for the "ticket_tags" table.
+	TicketTagsTable = &schema.Table{
+		Name:       "ticket_tags",
+		Columns:    TicketTagsColumns,
+		PrimaryKey: []*schema.Column{TicketTagsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_tags_tickets_tags",
+				Columns:    []*schema.Column{TicketTagsColumns[8]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TicketTemplatesColumns holds the columns for the "ticket_templates" table.
+	TicketTemplatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "category", Type: field.TypeString},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "form_fields", Type: field.TypeJSON, Nullable: true},
+		{Name: "workflow_steps", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// TicketTemplatesTable holds the schema information for the "ticket_templates" table.
+	TicketTemplatesTable = &schema.Table{
+		Name:       "ticket_templates",
+		Columns:    TicketTemplatesColumns,
+		PrimaryKey: []*schema.Column{TicketTemplatesColumns[0]},
 	}
 	// ToolInvocationsColumns holds the columns for the "tool_invocations" table.
 	ToolInvocationsColumns = []*schema.Column{
@@ -384,18 +541,75 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// WorkflowsColumns holds the columns for the "workflows" table.
+	WorkflowsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "type", Type: field.TypeString, Default: "ticket"},
+		{Name: "definition", Type: field.TypeJSON},
+		{Name: "version", Type: field.TypeString, Default: "1.0.0"},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// WorkflowsTable holds the schema information for the "workflows" table.
+	WorkflowsTable = &schema.Table{
+		Name:       "workflows",
+		Columns:    WorkflowsColumns,
+		PrimaryKey: []*schema.Column{WorkflowsColumns[0]},
+	}
+	// WorkflowInstancesColumns holds the columns for the "workflow_instances" table.
+	WorkflowInstancesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "status", Type: field.TypeString, Default: "running"},
+		{Name: "current_step", Type: field.TypeString, Nullable: true},
+		{Name: "context", Type: field.TypeJSON, Nullable: true},
+		{Name: "entity_id", Type: field.TypeInt},
+		{Name: "entity_type", Type: field.TypeString, Default: "ticket"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ticket_workflow_instances", Type: field.TypeInt, Nullable: true},
+		{Name: "workflow_id", Type: field.TypeInt},
+	}
+	// WorkflowInstancesTable holds the schema information for the "workflow_instances" table.
+	WorkflowInstancesTable = &schema.Table{
+		Name:       "workflow_instances",
+		Columns:    WorkflowInstancesColumns,
+		PrimaryKey: []*schema.Column{WorkflowInstancesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workflow_instances_tickets_workflow_instances",
+				Columns:    []*schema.Column{WorkflowInstancesColumns[11]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "workflow_instances_workflows_workflow_instances",
+				Columns:    []*schema.Column{WorkflowInstancesColumns[12]},
+				RefColumns: []*schema.Column{WorkflowsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AuditLogsTable,
 		CiAttributeDefinitionsTable,
 		CiRelationshipsTable,
 		CiTypesTable,
+		ChangesTable,
 		ConfigurationItemsTable,
 		ConversationsTable,
 		IncidentsTable,
 		KnowledgeArticlesTable,
 		MessagesTable,
 		NotificationsTable,
+		ProblemsTable,
 		PromptTemplatesTable,
 		SLADefinitionsTable,
 		SLAViolationsTable,
@@ -403,12 +617,25 @@ var (
 		ServiceRequestsTable,
 		TenantsTable,
 		TicketsTable,
+		TicketCategoriesTable,
+		TicketTagsTable,
+		TicketTemplatesTable,
 		ToolInvocationsTable,
 		UsersTable,
+		WorkflowsTable,
+		WorkflowInstancesTable,
 	}
 )
 
 func init() {
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
+	TicketsTable.ForeignKeys[0].RefTable = TicketsTable
+	TicketsTable.ForeignKeys[1].RefTable = TicketCategoriesTable
+	TicketsTable.ForeignKeys[2].RefTable = TicketTagsTable
+	TicketsTable.ForeignKeys[3].RefTable = TicketTemplatesTable
+	TicketCategoriesTable.ForeignKeys[0].RefTable = TicketCategoriesTable
+	TicketTagsTable.ForeignKeys[0].RefTable = TicketsTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
+	WorkflowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
+	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
 }
