@@ -4,6 +4,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/service"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -12,13 +13,28 @@ import (
 // WorkflowController 工作流控制器
 type WorkflowController struct {
 	workflowService *service.WorkflowService
+	workflowEngine  *service.WorkflowEngine
+	approvalService *service.WorkflowApprovalService
+	taskService     *service.WorkflowTaskService
+	monitorService  *service.WorkflowMonitorService
 	logger          *zap.Logger
 }
 
 // NewWorkflowController 创建工作流控制器
-func NewWorkflowController(workflowService *service.WorkflowService, logger *zap.Logger) *WorkflowController {
+func NewWorkflowController(
+	workflowService *service.WorkflowService,
+	workflowEngine *service.WorkflowEngine,
+	approvalService *service.WorkflowApprovalService,
+	taskService *service.WorkflowTaskService,
+	monitorService *service.WorkflowMonitorService,
+	logger *zap.Logger,
+) *WorkflowController {
 	return &WorkflowController{
 		workflowService: workflowService,
+		workflowEngine:  workflowEngine,
+		approvalService: approvalService,
+		taskService:     taskService,
+		monitorService:  monitorService,
 		logger:          logger,
 	}
 }
@@ -123,11 +139,11 @@ func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 	}
 
 	req := &service.ListWorkflowsRequest{
-		Page:        page,
-		PageSize:    pageSize,
-		Type:        workflowType,
-		IsActive:    active,
-		TenantID:    tenantID,
+		Page:     page,
+		PageSize: pageSize,
+		Type:     workflowType,
+		IsActive: active,
+		TenantID: tenantID,
 	}
 
 	workflows, total, err := wc.workflowService.ListWorkflows(c.Request.Context(), req)
@@ -180,4 +196,284 @@ func (wc *WorkflowController) ExecuteWorkflowStep(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{"message": "工作流步骤执行成功"})
+}
+
+// CompleteWorkflowStep 完成工作流步骤
+func (wc *WorkflowController) CompleteWorkflowStep(c *gin.Context) {
+	var req service.CompleteWorkflowStepRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	err := wc.workflowEngine.CompleteWorkflowStep(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to complete workflow step", zap.Error(err), zap.Int("instance_id", req.InstanceID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "工作流步骤完成成功"})
+}
+
+// GetApprovalTasks 获取审批任务列表
+func (wc *WorkflowController) GetApprovalTasks(c *gin.Context) {
+	assigneeID := c.GetInt("user_id")
+	status := c.Query("status")
+	priority := c.Query("priority")
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+
+	req := &service.GetApprovalTasksRequest{
+		AssigneeID: assigneeID,
+		Status:     status,
+		Priority:   priority,
+		Page:       page,
+		PageSize:   pageSize,
+	}
+
+	tasks, total, err := wc.approvalService.GetApprovalTasks(c.Request.Context(), req)
+	if err != nil {
+		wc.logger.Error("Failed to get approval tasks", zap.Error(err), zap.Int("assignee_id", assigneeID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"tasks": tasks,
+		"total": total,
+	})
+}
+
+// ApproveTask 审批通过
+func (wc *WorkflowController) ApproveTask(c *gin.Context) {
+	var req service.ApproveTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	req.UserID = c.GetInt("user_id")
+
+	err := wc.approvalService.ApproveTask(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to approve task", zap.Error(err), zap.Int("task_id", req.TaskID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "审批通过成功"})
+}
+
+// RejectTask 审批拒绝
+func (wc *WorkflowController) RejectTask(c *gin.Context) {
+	var req service.RejectTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	req.UserID = c.GetInt("user_id")
+
+	err := wc.approvalService.RejectTask(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to reject task", zap.Error(err), zap.Int("task_id", req.TaskID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "审批拒绝成功"})
+}
+
+// GetWorkflowTasks 获取工作流任务列表
+func (wc *WorkflowController) GetWorkflowTasks(c *gin.Context) {
+	assigneeID := c.GetInt("user_id")
+	instanceIDStr := c.Query("instance_id")
+	status := c.Query("status")
+	priority := c.Query("priority")
+	taskType := c.Query("task_type")
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+
+	var instanceID int
+	if instanceIDStr != "" {
+		instanceID, _ = strconv.Atoi(instanceIDStr)
+	}
+
+	req := &service.GetTasksRequest{
+		InstanceID: instanceID,
+		AssigneeID: assigneeID,
+		Status:     status,
+		Priority:   priority,
+		TaskType:   taskType,
+		Page:       page,
+		PageSize:   pageSize,
+	}
+
+	tasks, total, err := wc.taskService.GetTasks(c.Request.Context(), req)
+	if err != nil {
+		wc.logger.Error("Failed to get workflow tasks", zap.Error(err), zap.Int("assignee_id", assigneeID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"tasks": tasks,
+		"total": total,
+	})
+}
+
+// StartTask 开始执行任务
+func (wc *WorkflowController) StartTask(c *gin.Context) {
+	var req service.StartTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	req.UserID = c.GetInt("user_id")
+
+	err := wc.taskService.StartTask(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to start task", zap.Error(err), zap.Int("task_id", req.TaskID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "任务开始执行成功"})
+}
+
+// CompleteTask 完成任务
+func (wc *WorkflowController) CompleteTask(c *gin.Context) {
+	var req service.CompleteTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	req.UserID = c.GetInt("user_id")
+
+	err := wc.taskService.CompleteTask(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to complete task", zap.Error(err), zap.Int("task_id", req.TaskID))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "任务完成成功"})
+}
+
+// GetWorkflowMetrics 获取工作流指标
+func (wc *WorkflowController) GetWorkflowMetrics(c *gin.Context) {
+	workflowIDStr := c.Query("workflow_id")
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	var req service.GetWorkflowMetricsRequest
+	if workflowIDStr != "" {
+		if workflowID, err := strconv.Atoi(workflowIDStr); err == nil {
+			req.WorkflowID = workflowID
+		}
+	}
+
+	if startDateStr != "" {
+		if startDate, err := time.Parse("2006-01-02", startDateStr); err == nil {
+			req.StartDate = startDate
+		}
+	}
+
+	if endDateStr != "" {
+		if endDate, err := time.Parse("2006-01-02", endDateStr); err == nil {
+			req.EndDate = endDate
+		}
+	}
+
+	metrics, err := wc.monitorService.GetWorkflowMetrics(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to get workflow metrics", zap.Error(err))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, metrics)
+}
+
+// GetStepMetrics 获取步骤指标
+func (wc *WorkflowController) GetStepMetrics(c *gin.Context) {
+	instanceIDStr := c.Query("instance_id")
+	stepID := c.Query("step_id")
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	var req service.GetStepMetricsRequest
+	if instanceIDStr != "" {
+		if instanceID, err := strconv.Atoi(instanceIDStr); err == nil {
+			req.InstanceID = instanceID
+		}
+	}
+	req.StepID = stepID
+
+	if startDateStr != "" {
+		if startDate, err := time.Parse("2006-01-02", startDateStr); err == nil {
+			req.StartDate = startDate
+		}
+	}
+
+	if endDateStr != "" {
+		if endDate, err := time.Parse("2006-01-02", endDateStr); err == nil {
+			req.EndDate = endDate
+		}
+	}
+
+	metrics, err := wc.monitorService.GetStepMetrics(c.Request.Context(), &req)
+	if err != nil {
+		wc.logger.Error("Failed to get step metrics", zap.Error(err))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, metrics)
+}
+
+// GetAlerts 获取告警列表
+func (wc *WorkflowController) GetAlerts(c *gin.Context) {
+	status := c.Query("status")
+	severity := c.Query("severity")
+	workflowIDStr := c.Query("workflow_id")
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+
+	var workflowID int
+	if workflowIDStr != "" {
+		workflowID, _ = strconv.Atoi(workflowIDStr)
+	}
+
+	req := &service.GetAlertsRequest{
+		Status:     status,
+		Severity:   severity,
+		WorkflowID: workflowID,
+		Page:       page,
+		PageSize:   pageSize,
+	}
+
+	alerts, total, err := wc.monitorService.GetAlerts(c.Request.Context(), req)
+	if err != nil {
+		wc.logger.Error("Failed to get alerts", zap.Error(err))
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"alerts": alerts,
+		"total":  total,
+	})
 }

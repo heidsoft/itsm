@@ -1,5 +1,7 @@
 "use client";
 
+import { Search, Edit, Eye, Calendar, Tag as TagIcon, PlusCircle, GitBranch } from 'lucide-react';
+
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -16,14 +18,6 @@ import {
   Tooltip,
   Progress,
 } from "antd";
-import {
-  PlusCircle,
-  Search,
-  Eye,
-  Edit,
-  GitBranch,
-  Calendar,
-} from "lucide-react";
 import { changeService, Change, ChangeStats } from "../lib/services/change-service";
 
 const { Search: SearchInput } = Input;

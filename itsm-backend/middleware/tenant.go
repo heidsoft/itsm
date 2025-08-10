@@ -141,3 +141,17 @@ func GetTenantID(c *gin.Context) (int, error) {
 	}
 	return tenantCtx.TenantID, nil
 }
+
+// GetUserID 获取用户ID
+func GetUserID(c *gin.Context) (int, error) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		return 0, errors.New("用户ID不存在")
+	}
+
+	if id, ok := userID.(int); ok {
+		return id, nil
+	}
+
+	return 0, errors.New("用户ID类型错误")
+}

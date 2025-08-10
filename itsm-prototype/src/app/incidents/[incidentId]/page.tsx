@@ -1,27 +1,59 @@
 "use client";
 
-import {
-  CheckCircle,
-  XCircle,
-  Cpu,
-  BookOpen,
-  MessageSquare,
-  PlusCircle,
-  Zap,
-  ArrowLeft,
-  PlayCircle,
-  PauseCircle,
-  LinkIcon,
-  Search,
-  Sparkles,
-  FileText,
-} from "lucide-react";
+import { CheckCircle, Search, XCircle, Cpu, BookOpen, MessageSquare, PlusCircle, FileText, Zap, ArrowLeft, PlayCircle, PauseCircle, LinkIcon, Sparkles } from "lucide-react";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { aiSearchKB, aiSimilarIncidents, aiSummarize } from "../../lib/ai-api";
+import { IncidentAPI } from "../../lib/incident-api";
 import { AIFeedback } from "../../components/AIFeedback";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+
+// 配置项信息接口
+interface ConfigurationItem {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  description?: string;
+}
+
+// 事件详情接口
+interface IncidentDetail {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  source: string;
+  type: string;
+  incident_number: string;
+  is_major_incident: boolean;
+  reporter?: {
+    id: number;
+    name: string;
+  };
+  assignee?: {
+    id: number;
+    name: string;
+  };
+  configuration_item_id?: number;
+  configuration_item?: ConfigurationItem;
+  created_at: string;
+  updated_at: string;
+  detected_at?: string;
+  confirmed_at?: string;
+  resolved_at?: string;
+  closed_at?: string;
+  // 处理日志和评论
+  logs?: string[];
+  comments?: Array<{
+    author: string;
+    timestamp: string;
+    text: string;
+  }>;
+}
+
 // 模拟数据
 const mockIncidentDetail = {
   "INC-00125": {
@@ -174,22 +206,34 @@ const mockCIData = {
   "CI-AD-SERVER-01": { status: "运行中" },
 };
 
-// 辅助函数：计算时间差（分钟）
-const calculateTimeDiffInMinutes = (start, end) => {
+// 计算时间差（分钟）
+const calculateTimeDiffInMinutes = (start: string, end: string): string => {
   if (!start || !end) return "N/A";
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const diff = Math.abs(endDate.getTime() - startDate.getTime());
-  return `${Math.round(diff / (1000 * 60))} 分钟`;
+  const startTime = new Date(start);
+  const endTime = new Date(end);
+  const diffInMinutes = Math.round(
+    (endTime.getTime() - startTime.getTime()) / (1000 * 60)
+  );
+  return `${diffInMinutes} 分钟`;
 };
 
-const KnowledgeBaseSuggestion = ({ title, similarity }) => (
-  <div className="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex justify-between items-center">
-    <div>
-      <p className="font-semibold text-gray-800">{title}</p>
-      <span className="text-sm text-green-600">相似度: {similarity}</span>
+// 知识库建议组件
+const KnowledgeBaseSuggestion = ({
+  title,
+  similarity,
+}: {
+  title: string;
+  similarity: number;
+}) => (
+  <div className="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+    <div className="flex items-start justify-between">
+      <div className="flex-1">
+        <p className="font-semibold text-gray-800">{title}</p>
+        <span className="text-sm text-green-600">
+          相似度: {Math.round(similarity * 100)}%
+        </span>
+      </div>
     </div>
-    <button className="text-sm text-blue-600 hover:underline">查看</button>
   </div>
 );
 
@@ -197,155 +241,225 @@ const IncidentDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const incidentId = params.incidentId as string;
-  const [incident, setIncident] = useState(mockIncidentDetail[incidentId]); // 使用useState来管理事件状态
+  const [incident, setIncident] = useState<IncidentDetail | null>(null); // 使用useState来管理事件状态
   const [newComment, setNewComment] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [kbAnswers, setKbAnswers] = useState<
-    Array<{ title?: string; snippet: string; score?: number }>
-  >([]);
-  const [similar, setSimilar] = useState<
-    Array<{ title: string; snippet: string; score?: number }>
+    Array<{ title?: string; score?: number }>
   >([]);
   const [summary, setSummary] = useState<string>("");
 
-  const updateIncidentStatus = (newStatus, logMessage, updateTimes = {}) => {
-    const updatedIncident = {
-      ...incident,
-      status: newStatus,
-      logs: [
-        ...incident.logs,
-        `[${new Date().toLocaleString()}] ${logMessage}`,
-      ],
-      ...updateTimes,
+  useEffect(() => {
+    const fetchIncident = async () => {
+      try {
+        const incidentData = await IncidentAPI.getIncident(
+          parseInt(incidentId)
+        );
+        setIncident(incidentData);
+      } catch (error) {
+        console.error("Failed to fetch incident:", error);
+        setIncident(null);
+      }
     };
-    setIncident(updatedIncident);
-    alert(`事件状态已更新为: ${newStatus}`);
-    // 在真实应用中，这里会调用API更新后端数据
+    fetchIncident();
+  }, [incidentId]);
 
-    // 模拟CMDB CI状态联动
-    if (
-      newStatus === "已解决" &&
-      incident.affectedCI &&
-      mockCIData[incident.affectedCI.id]
-    ) {
-      mockCIData[incident.affectedCI.id].status = "运行中"; // 假设解决事件后CI恢复正常
-      alert(`关联CI ${incident.affectedCI.name} 的状态已更新为：运行中`);
-      console.log(`CMDB CI ${incident.affectedCI.id} 状态更新为: 运行中`);
+  // 如果没有事件数据，显示加载状态
+  if (!incident) {
+    return (
+      <div className="p-10 bg-gray-50 min-h-full">
+        <div className="text-center">
+          <div className="text-lg text-gray-600">加载中...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const mtta = calculateTimeDiffInMinutes(
+    incident.created_at,
+    incident.confirmed_at || incident.created_at
+  );
+  const mttr = calculateTimeDiffInMinutes(
+    incident.confirmed_at || incident.created_at,
+    incident.resolved_at || incident.updated_at
+  );
+
+  const updateIncidentStatus = async (
+    newStatus: string,
+    logMessage: string,
+    updateTimes: Record<string, unknown> = {}
+  ) => {
+    if (!incident) return;
+    try {
+      const updatedIncident = await IncidentAPI.updateIncident(incident.id, {
+        status: newStatus,
+        ...updateTimes,
+      });
+      setIncident(updatedIncident);
+      alert(`事件状态已更新为: ${newStatus}`);
+      // 在真实应用中，这里会调用API更新后端数据
+
+      // 模拟CMDB CI状态联动
+      if (newStatus === "已解决" && updatedIncident.configuration_item_id) {
+        // 这里应该调用CMDB API更新配置项状态
+        console.log(
+          `CMDB CI ${updatedIncident.configuration_item_id} 状态更新为: 运行中`
+        );
+      }
+    } catch (error) {
+      console.error("Failed to update incident status:", error);
+      alert("更新事件状态失败。");
     }
   };
 
-  const handleResolveIncident = () => {
-    if (incident.status === "已解决" || incident.status === "已关闭") {
+  const handleResolveIncident = async () => {
+    if (incident?.status === "已解决" || incident?.status === "已关闭") {
       alert("事件已解决或已关闭，无需重复操作。");
       return;
     }
     const resolutionNotes = prompt("请输入解决方案描述：");
     if (resolutionNotes) {
-      updateIncidentStatus(
-        "已解决",
-        `事件已解决。解决方案：${resolutionNotes}`,
-        { resolvedAt: new Date().toLocaleString() }
-      );
+      try {
+        const updatedIncident = await IncidentAPI.updateIncident(
+          incident?.id || 0,
+          {
+            status: "已解决",
+            resolution_notes: resolutionNotes,
+            resolved_at: new Date().toISOString(),
+          }
+        );
+        setIncident(updatedIncident);
+        alert(`事件已解决。解决方案：${resolutionNotes}`);
+      } catch (error) {
+        console.error("Failed to resolve incident:", error);
+        alert("解决事件失败。");
+      }
     }
   };
 
-  const handleCloseIncident = () => {
-    if (incident.status === "已关闭") {
+  const handleCloseIncident = async () => {
+    if (incident?.status === "已关闭") {
       alert("事件已关闭，无需重复操作。");
       return;
     }
-    if (incident.status !== "已解决") {
+    if (incident?.status !== "已解决") {
       const confirmClose = confirm("事件尚未解决，确定要直接关闭吗？");
       if (!confirmClose) return;
     }
-    updateIncidentStatus("已关闭", "事件已关闭。");
+    try {
+      const updatedIncident = await IncidentAPI.updateIncident(
+        incident?.id || 0,
+        {
+          status: "已关闭",
+          closed_at: new Date().toISOString(),
+        }
+      );
+      setIncident(updatedIncident);
+      alert("事件已关闭。");
+    } catch (error) {
+      console.error("Failed to close incident:", error);
+      alert("关闭事件失败。");
+    }
   };
 
-  const handleSuspendIncident = () => {
-    if (incident.status === "挂起") {
+  const handleSuspendIncident = async () => {
+    if (incident?.status === "挂起") {
       alert("事件已处于挂起状态。");
       return;
     }
     const suspendReason = prompt("请输入挂起原因：");
     if (suspendReason) {
-      updateIncidentStatus("挂起", `事件已挂起。原因：${suspendReason}`);
+      try {
+        const updatedIncident = await IncidentAPI.updateIncident(
+          incident?.id || 0,
+          {
+            status: "挂起",
+            suspend_reason: suspendReason,
+          }
+        );
+        setIncident(updatedIncident);
+        alert(`事件已挂起。原因：${suspendReason}`);
+      } catch (error) {
+        console.error("Failed to suspend incident:", error);
+        alert("挂起事件失败。");
+      }
     }
   };
 
-  const handleResumeIncident = () => {
-    if (incident.status !== "挂起") {
+  const handleResumeIncident = async () => {
+    if (incident?.status !== "挂起") {
       alert("事件未处于挂起状态。");
       return;
     }
-    updateIncidentStatus("处理中", "事件已恢复处理。");
+    try {
+      const updatedIncident = await IncidentAPI.updateIncident(
+        incident?.id || 0,
+        {
+          status: "处理中",
+          suspend_reason: undefined, // 恢复处理时清除挂起原因
+        }
+      );
+      setIncident(updatedIncident);
+      alert("事件已恢复处理。");
+    } catch (error) {
+      console.error("Failed to resume incident:", error);
+      alert("恢复事件失败。");
+    }
   };
 
-  const handleMarkAsMajorIncident = () => {
-    if (incident.isMajorIncident) {
+  const handleMarkAsMajorIncident = async () => {
+    if (incident?.is_major_incident) {
       alert("此事件已是重大事件。");
       return;
     }
     const confirmMajor = confirm(
-      "确定要将此事件标记为重大事件吗？这将触发重大事件响应流程。"
+      "标记为重大事件将触发MIM流程，包括：\n1. 通知高层管理人员\n2. 创建重大事件会议\n3. 启动升级流程\n\n确定要标记为重大事件吗？"
     );
     if (confirmMajor) {
-      setIncident({ ...incident, isMajorIncident: true });
-      alert("事件已标记为重大事件！重大事件响应团队已被通知。");
-      // 实际应用中，这里会触发更复杂的MIM流程，如创建会议、通知高层等
-    }
-  };
-
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      const updatedIncident = {
-        ...incident,
-        comments: [
-          ...incident.comments,
+      try {
+        const updatedIncident = await IncidentAPI.updateIncident(
+          incident?.id || 0,
           {
-            author: "当前用户",
-            timestamp: new Date().toLocaleString(),
-            text: newComment.trim(),
-          },
-        ],
-      };
-      setIncident(updatedIncident);
-      setNewComment("");
-      // 在真实应用中，这里会调用API保存评论
+            is_major_incident: true,
+          }
+        );
+        setIncident(updatedIncident);
+        alert("事件已标记为重大事件！重大事件响应团队已被通知。");
+        // 实际应用中，这里会触发更复杂的MIM流程，如创建会议、通知高层等
+      } catch (error) {
+        console.error("Failed to mark as major incident:", error);
+        alert("标记为重大事件失败。");
+      }
     }
   };
 
-  if (!incident) {
-    return <div className="p-10">事件不存在或加载失败。</div>;
-  }
-
-  const mtta = calculateTimeDiffInMinutes(
-    incident.createdAt,
-    incident.confirmedAt
-  );
-  const mttr = calculateTimeDiffInMinutes(
-    incident.confirmedAt,
-    incident.resolvedAt
-  );
+  const handleAddComment = async () => {
+    if (newComment.trim()) {
+      try {
+        const updatedIncident = await IncidentAPI.addComment(
+          incident?.id || 0,
+          {
+            text: newComment.trim(),
+          }
+        );
+        setIncident(updatedIncident);
+        setNewComment("");
+        alert("评论已添加。");
+      } catch (error) {
+        console.error("Failed to add comment:", error);
+        alert("添加评论失败。");
+      }
+    }
+  };
 
   const handleAISidebar = async () => {
     setAiLoading(true);
     try {
-      const text = `${incident.title}\n${incident.description}`;
-      const [kb, sim, sum] = await Promise.all([
-        aiSearchKB(text, 5),
-        aiSimilarIncidents(text, 5),
-        aiSummarize(text, 180),
+      const [kb, sum] = await Promise.all([
+        aiSearchKB(`${incident.title}\n${incident.description}`),
+        aiSummarize(`${incident.title}\n${incident.description}`),
       ]);
       setKbAnswers(kb.answers || []);
-      setSimilar(
-        (sim.incidents || []).map(
-          (x: { id: number; snippet: string; score?: number }) => ({
-            title: `事件 #${x.id}`,
-            snippet: x.snippet,
-            score: x.score,
-          })
-        )
-      );
       setSummary(sum.summary);
     } finally {
       setAiLoading(false);
@@ -366,7 +480,7 @@ const IncidentDetailPage = () => {
           <div>
             <h2 className="text-4xl font-bold text-gray-800 flex items-center">
               {incident.title}
-              {incident.isMajorIncident && (
+              {incident.is_major_incident && (
                 <span className="ml-4 px-3 py-1 text-sm font-bold rounded-full bg-red-600 text-white flex items-center animate-pulse">
                   <Zap className="w-4 h-4 mr-2" /> 重大事件
                 </span>
@@ -375,7 +489,7 @@ const IncidentDetailPage = () => {
             <p className="text-gray-500 mt-1">事件ID: {incidentId}</p>
           </div>
           <div className="flex space-x-4">
-            {!incident.isMajorIncident && (
+            {!incident.is_major_incident && (
               <button
                 onClick={handleMarkAsMajorIncident}
                 className="flex items-center bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
@@ -444,7 +558,7 @@ const IncidentDetailPage = () => {
 
           <h3 className="text-xl font-semibold text-gray-700 mb-4">处理日志</h3>
           <div className="space-y-4">
-            {incident.logs.map((log, i) => (
+            {incident.logs?.map((log, i) => (
               <p key={i} className="text-sm text-gray-500 font-mono">
                 {log}
               </p>
@@ -457,7 +571,7 @@ const IncidentDetailPage = () => {
               <MessageSquare className="w-5 h-5 mr-2" /> 内部评论/备注
             </h3>
             <div className="space-y-4 mb-4">
-              {incident.comments.length > 0 ? (
+              {incident.comments?.length > 0 ? (
                 incident.comments.map((comment, i) => (
                   <div key={i} className="bg-gray-50 p-3 rounded-lg">
                     <p className="text-sm font-semibold text-gray-800">
@@ -508,7 +622,9 @@ const IncidentDetailPage = () => {
               </div>
               <div className="flex justify-between">
                 <span>负责人:</span>
-                <span className="font-semibold">{incident.assignee}</span>
+                <span className="font-semibold">
+                  {incident.assignee?.name || "未分配"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>来源:</span>
@@ -516,7 +632,7 @@ const IncidentDetailPage = () => {
               </div>
               <div className="flex justify-between">
                 <span>创建时间:</span>
-                <span className="font-semibold">{incident.createdAt}</span>
+                <span className="font-semibold">{incident.created_at}</span>
               </div>
               <div className="flex justify-between">
                 <span>平均确认时间 (MTTA):</span>
@@ -533,20 +649,32 @@ const IncidentDetailPage = () => {
             <h3 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
               <LinkIcon className="w-5 h-5 mr-2" /> 关联的配置项 (CI)
             </h3>
-            <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-              <Cpu className="w-6 h-6 text-blue-600 mr-3" />
-              <div>
-                <Link
-                  href={incident.affectedCI.link}
-                  className="font-semibold text-blue-700 hover:underline"
-                >
-                  {incident.affectedCI.name}
-                </Link>
-                <p className="text-sm text-gray-600">
-                  {incident.affectedCI.type}
-                </p>
+            {incident.configuration_item ? (
+              <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                <Cpu className="w-6 h-6 text-blue-600 mr-3" />
+                <div>
+                  <Link
+                    href={`/cmdb/ci/${incident.configuration_item.id}`}
+                    className="font-semibold text-blue-700 hover:underline"
+                  >
+                    {incident.configuration_item.name}
+                  </Link>
+                  <p className="text-sm text-gray-600">
+                    {incident.configuration_item.type}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    状态: {incident.configuration_item.status}
+                  </p>
+                  {incident.configuration_item.description && (
+                    <p className="text-sm text-gray-600">
+                      描述: {incident.configuration_item.description}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-sm text-gray-500">暂无关联的配置项。</div>
+            )}
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
@@ -574,7 +702,7 @@ const IncidentDetailPage = () => {
                     kind="summarize"
                     query={`${incident.title}\n${incident.description}`}
                     itemType="incident"
-                    itemId={parseInt(incidentId)}
+                    itemId={incident.id}
                     className="ml-2"
                   />
                 </div>
@@ -587,14 +715,24 @@ const IncidentDetailPage = () => {
                 </div>
               ) : (
                 kbAnswers.map((a: any, i: number) => (
-                  <div key={i} className="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                  <div
+                    key={i}
+                    className="p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-800">{a.title || "相关内容"}</p>
-                        <span className="text-sm text-green-600">相似度: {(a.score ? Math.round(a.score * 100) : 85) + "%"}</span>
+                        <p className="font-semibold text-gray-800">
+                          {a.title || "相关内容"}
+                        </p>
+                        <span className="text-sm text-green-600">
+                          相似度:{" "}
+                          {(a.score ? Math.round(a.score * 100) : 85) + "%"}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2 ml-2">
-                        <button className="text-sm text-blue-600 hover:underline">查看</button>
+                        <button className="text-sm text-blue-600 hover:underline">
+                          查看
+                        </button>
                         <AIFeedback
                           kind="search"
                           query={`${incident.title}\n${incident.description}`}
@@ -614,7 +752,7 @@ const IncidentDetailPage = () => {
               <Search className="w-5 h-5 mr-2" /> 相似事件
             </h3>
             <div className="space-y-3">
-              {similar.length === 0 ? (
+              {/* similar.length === 0 ? (
                 <div className="text-sm text-gray-400">
                   暂无相似事件，点击上方“知识库助手”中的一键推荐会同步拉取。
                 </div>
@@ -630,13 +768,13 @@ const IncidentDetailPage = () => {
                         kind="similar-incidents"
                         query={`${incident.title}\n${incident.description}`}
                         itemType="incident"
-                        itemId={parseInt(incidentId)}
+                        itemId={incident.id}
                         className="ml-2"
                       />
                     </div>
                   </div>
                 ))
-              )}
+              )} */}
             </div>
           </div>
         </div>

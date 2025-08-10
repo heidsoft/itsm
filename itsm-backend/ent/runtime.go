@@ -15,6 +15,12 @@ import (
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
@@ -379,6 +385,256 @@ func init() {
 	problem.DefaultUpdatedAt = problemDescUpdatedAt.Default.(func() time.Time)
 	// problem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	problem.UpdateDefaultUpdatedAt = problemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processdefinitionFields := schema.ProcessDefinition{}.Fields()
+	_ = processdefinitionFields
+	// processdefinitionDescKey is the schema descriptor for key field.
+	processdefinitionDescKey := processdefinitionFields[0].Descriptor()
+	// processdefinition.KeyValidator is a validator for the "key" field. It is called by the builders before save.
+	processdefinition.KeyValidator = processdefinitionDescKey.Validators[0].(func(string) error)
+	// processdefinitionDescName is the schema descriptor for name field.
+	processdefinitionDescName := processdefinitionFields[1].Descriptor()
+	// processdefinition.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	processdefinition.NameValidator = processdefinitionDescName.Validators[0].(func(string) error)
+	// processdefinitionDescVersion is the schema descriptor for version field.
+	processdefinitionDescVersion := processdefinitionFields[3].Descriptor()
+	// processdefinition.DefaultVersion holds the default value on creation for the version field.
+	processdefinition.DefaultVersion = processdefinitionDescVersion.Default.(string)
+	// processdefinitionDescCategory is the schema descriptor for category field.
+	processdefinitionDescCategory := processdefinitionFields[4].Descriptor()
+	// processdefinition.DefaultCategory holds the default value on creation for the category field.
+	processdefinition.DefaultCategory = processdefinitionDescCategory.Default.(string)
+	// processdefinitionDescIsActive is the schema descriptor for is_active field.
+	processdefinitionDescIsActive := processdefinitionFields[7].Descriptor()
+	// processdefinition.DefaultIsActive holds the default value on creation for the is_active field.
+	processdefinition.DefaultIsActive = processdefinitionDescIsActive.Default.(bool)
+	// processdefinitionDescIsLatest is the schema descriptor for is_latest field.
+	processdefinitionDescIsLatest := processdefinitionFields[8].Descriptor()
+	// processdefinition.DefaultIsLatest holds the default value on creation for the is_latest field.
+	processdefinition.DefaultIsLatest = processdefinitionDescIsLatest.Default.(bool)
+	// processdefinitionDescDeploymentID is the schema descriptor for deployment_id field.
+	processdefinitionDescDeploymentID := processdefinitionFields[9].Descriptor()
+	// processdefinition.DeploymentIDValidator is a validator for the "deployment_id" field. It is called by the builders before save.
+	processdefinition.DeploymentIDValidator = processdefinitionDescDeploymentID.Validators[0].(func(int) error)
+	// processdefinitionDescDeployedAt is the schema descriptor for deployed_at field.
+	processdefinitionDescDeployedAt := processdefinitionFields[11].Descriptor()
+	// processdefinition.DefaultDeployedAt holds the default value on creation for the deployed_at field.
+	processdefinition.DefaultDeployedAt = processdefinitionDescDeployedAt.Default.(func() time.Time)
+	// processdefinitionDescTenantID is the schema descriptor for tenant_id field.
+	processdefinitionDescTenantID := processdefinitionFields[12].Descriptor()
+	// processdefinition.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processdefinition.TenantIDValidator = processdefinitionDescTenantID.Validators[0].(func(int) error)
+	// processdefinitionDescCreatedAt is the schema descriptor for created_at field.
+	processdefinitionDescCreatedAt := processdefinitionFields[13].Descriptor()
+	// processdefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processdefinition.DefaultCreatedAt = processdefinitionDescCreatedAt.Default.(func() time.Time)
+	// processdefinitionDescUpdatedAt is the schema descriptor for updated_at field.
+	processdefinitionDescUpdatedAt := processdefinitionFields[14].Descriptor()
+	// processdefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processdefinition.DefaultUpdatedAt = processdefinitionDescUpdatedAt.Default.(func() time.Time)
+	// processdefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processdefinition.UpdateDefaultUpdatedAt = processdefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processdeploymentFields := schema.ProcessDeployment{}.Fields()
+	_ = processdeploymentFields
+	// processdeploymentDescDeploymentID is the schema descriptor for deployment_id field.
+	processdeploymentDescDeploymentID := processdeploymentFields[0].Descriptor()
+	// processdeployment.DeploymentIDValidator is a validator for the "deployment_id" field. It is called by the builders before save.
+	processdeployment.DeploymentIDValidator = processdeploymentDescDeploymentID.Validators[0].(func(string) error)
+	// processdeploymentDescDeploymentName is the schema descriptor for deployment_name field.
+	processdeploymentDescDeploymentName := processdeploymentFields[1].Descriptor()
+	// processdeployment.DeploymentNameValidator is a validator for the "deployment_name" field. It is called by the builders before save.
+	processdeployment.DeploymentNameValidator = processdeploymentDescDeploymentName.Validators[0].(func(string) error)
+	// processdeploymentDescDeploymentTime is the schema descriptor for deployment_time field.
+	processdeploymentDescDeploymentTime := processdeploymentFields[3].Descriptor()
+	// processdeployment.DefaultDeploymentTime holds the default value on creation for the deployment_time field.
+	processdeployment.DefaultDeploymentTime = processdeploymentDescDeploymentTime.Default.(func() time.Time)
+	// processdeploymentDescIsActive is the schema descriptor for is_active field.
+	processdeploymentDescIsActive := processdeploymentFields[6].Descriptor()
+	// processdeployment.DefaultIsActive holds the default value on creation for the is_active field.
+	processdeployment.DefaultIsActive = processdeploymentDescIsActive.Default.(bool)
+	// processdeploymentDescDeploymentCategory is the schema descriptor for deployment_category field.
+	processdeploymentDescDeploymentCategory := processdeploymentFields[7].Descriptor()
+	// processdeployment.DefaultDeploymentCategory holds the default value on creation for the deployment_category field.
+	processdeployment.DefaultDeploymentCategory = processdeploymentDescDeploymentCategory.Default.(string)
+	// processdeploymentDescTenantID is the schema descriptor for tenant_id field.
+	processdeploymentDescTenantID := processdeploymentFields[9].Descriptor()
+	// processdeployment.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processdeployment.TenantIDValidator = processdeploymentDescTenantID.Validators[0].(func(int) error)
+	// processdeploymentDescCreatedAt is the schema descriptor for created_at field.
+	processdeploymentDescCreatedAt := processdeploymentFields[10].Descriptor()
+	// processdeployment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processdeployment.DefaultCreatedAt = processdeploymentDescCreatedAt.Default.(func() time.Time)
+	// processdeploymentDescUpdatedAt is the schema descriptor for updated_at field.
+	processdeploymentDescUpdatedAt := processdeploymentFields[11].Descriptor()
+	// processdeployment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processdeployment.DefaultUpdatedAt = processdeploymentDescUpdatedAt.Default.(func() time.Time)
+	// processdeployment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processdeployment.UpdateDefaultUpdatedAt = processdeploymentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processexecutionhistoryFields := schema.ProcessExecutionHistory{}.Fields()
+	_ = processexecutionhistoryFields
+	// processexecutionhistoryDescHistoryID is the schema descriptor for history_id field.
+	processexecutionhistoryDescHistoryID := processexecutionhistoryFields[0].Descriptor()
+	// processexecutionhistory.HistoryIDValidator is a validator for the "history_id" field. It is called by the builders before save.
+	processexecutionhistory.HistoryIDValidator = processexecutionhistoryDescHistoryID.Validators[0].(func(string) error)
+	// processexecutionhistoryDescProcessInstanceID is the schema descriptor for process_instance_id field.
+	processexecutionhistoryDescProcessInstanceID := processexecutionhistoryFields[1].Descriptor()
+	// processexecutionhistory.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
+	processexecutionhistory.ProcessInstanceIDValidator = processexecutionhistoryDescProcessInstanceID.Validators[0].(func(string) error)
+	// processexecutionhistoryDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
+	processexecutionhistoryDescProcessDefinitionKey := processexecutionhistoryFields[2].Descriptor()
+	// processexecutionhistory.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
+	processexecutionhistory.ProcessDefinitionKeyValidator = processexecutionhistoryDescProcessDefinitionKey.Validators[0].(func(string) error)
+	// processexecutionhistoryDescActivityType is the schema descriptor for activity_type field.
+	processexecutionhistoryDescActivityType := processexecutionhistoryFields[5].Descriptor()
+	// processexecutionhistory.ActivityTypeValidator is a validator for the "activity_type" field. It is called by the builders before save.
+	processexecutionhistory.ActivityTypeValidator = processexecutionhistoryDescActivityType.Validators[0].(func(string) error)
+	// processexecutionhistoryDescEventType is the schema descriptor for event_type field.
+	processexecutionhistoryDescEventType := processexecutionhistoryFields[6].Descriptor()
+	// processexecutionhistory.EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
+	processexecutionhistory.EventTypeValidator = processexecutionhistoryDescEventType.Validators[0].(func(string) error)
+	// processexecutionhistoryDescTimestamp is the schema descriptor for timestamp field.
+	processexecutionhistoryDescTimestamp := processexecutionhistoryFields[11].Descriptor()
+	// processexecutionhistory.DefaultTimestamp holds the default value on creation for the timestamp field.
+	processexecutionhistory.DefaultTimestamp = processexecutionhistoryDescTimestamp.Default.(func() time.Time)
+	// processexecutionhistoryDescTenantID is the schema descriptor for tenant_id field.
+	processexecutionhistoryDescTenantID := processexecutionhistoryFields[15].Descriptor()
+	// processexecutionhistory.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processexecutionhistory.TenantIDValidator = processexecutionhistoryDescTenantID.Validators[0].(func(int) error)
+	// processexecutionhistoryDescCreatedAt is the schema descriptor for created_at field.
+	processexecutionhistoryDescCreatedAt := processexecutionhistoryFields[16].Descriptor()
+	// processexecutionhistory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processexecutionhistory.DefaultCreatedAt = processexecutionhistoryDescCreatedAt.Default.(func() time.Time)
+	processinstanceFields := schema.ProcessInstance{}.Fields()
+	_ = processinstanceFields
+	// processinstanceDescProcessInstanceID is the schema descriptor for process_instance_id field.
+	processinstanceDescProcessInstanceID := processinstanceFields[0].Descriptor()
+	// processinstance.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
+	processinstance.ProcessInstanceIDValidator = processinstanceDescProcessInstanceID.Validators[0].(func(string) error)
+	// processinstanceDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
+	processinstanceDescProcessDefinitionKey := processinstanceFields[2].Descriptor()
+	// processinstance.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
+	processinstance.ProcessDefinitionKeyValidator = processinstanceDescProcessDefinitionKey.Validators[0].(func(string) error)
+	// processinstanceDescProcessDefinitionID is the schema descriptor for process_definition_id field.
+	processinstanceDescProcessDefinitionID := processinstanceFields[3].Descriptor()
+	// processinstance.ProcessDefinitionIDValidator is a validator for the "process_definition_id" field. It is called by the builders before save.
+	processinstance.ProcessDefinitionIDValidator = processinstanceDescProcessDefinitionID.Validators[0].(func(string) error)
+	// processinstanceDescStatus is the schema descriptor for status field.
+	processinstanceDescStatus := processinstanceFields[4].Descriptor()
+	// processinstance.DefaultStatus holds the default value on creation for the status field.
+	processinstance.DefaultStatus = processinstanceDescStatus.Default.(string)
+	// processinstanceDescStartTime is the schema descriptor for start_time field.
+	processinstanceDescStartTime := processinstanceFields[8].Descriptor()
+	// processinstance.DefaultStartTime holds the default value on creation for the start_time field.
+	processinstance.DefaultStartTime = processinstanceDescStartTime.Default.(func() time.Time)
+	// processinstanceDescTenantID is the schema descriptor for tenant_id field.
+	processinstanceDescTenantID := processinstanceFields[12].Descriptor()
+	// processinstance.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processinstance.TenantIDValidator = processinstanceDescTenantID.Validators[0].(func(int) error)
+	// processinstanceDescCreatedAt is the schema descriptor for created_at field.
+	processinstanceDescCreatedAt := processinstanceFields[16].Descriptor()
+	// processinstance.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processinstance.DefaultCreatedAt = processinstanceDescCreatedAt.Default.(func() time.Time)
+	// processinstanceDescUpdatedAt is the schema descriptor for updated_at field.
+	processinstanceDescUpdatedAt := processinstanceFields[17].Descriptor()
+	// processinstance.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processinstance.DefaultUpdatedAt = processinstanceDescUpdatedAt.Default.(func() time.Time)
+	// processinstance.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processinstance.UpdateDefaultUpdatedAt = processinstanceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processtaskFields := schema.ProcessTask{}.Fields()
+	_ = processtaskFields
+	// processtaskDescTaskID is the schema descriptor for task_id field.
+	processtaskDescTaskID := processtaskFields[0].Descriptor()
+	// processtask.TaskIDValidator is a validator for the "task_id" field. It is called by the builders before save.
+	processtask.TaskIDValidator = processtaskDescTaskID.Validators[0].(func(string) error)
+	// processtaskDescProcessInstanceID is the schema descriptor for process_instance_id field.
+	processtaskDescProcessInstanceID := processtaskFields[1].Descriptor()
+	// processtask.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
+	processtask.ProcessInstanceIDValidator = processtaskDescProcessInstanceID.Validators[0].(func(string) error)
+	// processtaskDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
+	processtaskDescProcessDefinitionKey := processtaskFields[2].Descriptor()
+	// processtask.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
+	processtask.ProcessDefinitionKeyValidator = processtaskDescProcessDefinitionKey.Validators[0].(func(string) error)
+	// processtaskDescTaskDefinitionKey is the schema descriptor for task_definition_key field.
+	processtaskDescTaskDefinitionKey := processtaskFields[3].Descriptor()
+	// processtask.TaskDefinitionKeyValidator is a validator for the "task_definition_key" field. It is called by the builders before save.
+	processtask.TaskDefinitionKeyValidator = processtaskDescTaskDefinitionKey.Validators[0].(func(string) error)
+	// processtaskDescTaskName is the schema descriptor for task_name field.
+	processtaskDescTaskName := processtaskFields[4].Descriptor()
+	// processtask.TaskNameValidator is a validator for the "task_name" field. It is called by the builders before save.
+	processtask.TaskNameValidator = processtaskDescTaskName.Validators[0].(func(string) error)
+	// processtaskDescTaskType is the schema descriptor for task_type field.
+	processtaskDescTaskType := processtaskFields[5].Descriptor()
+	// processtask.DefaultTaskType holds the default value on creation for the task_type field.
+	processtask.DefaultTaskType = processtaskDescTaskType.Default.(string)
+	// processtaskDescStatus is the schema descriptor for status field.
+	processtaskDescStatus := processtaskFields[9].Descriptor()
+	// processtask.DefaultStatus holds the default value on creation for the status field.
+	processtask.DefaultStatus = processtaskDescStatus.Default.(string)
+	// processtaskDescPriority is the schema descriptor for priority field.
+	processtaskDescPriority := processtaskFields[10].Descriptor()
+	// processtask.DefaultPriority holds the default value on creation for the priority field.
+	processtask.DefaultPriority = processtaskDescPriority.Default.(string)
+	// processtaskDescCreatedTime is the schema descriptor for created_time field.
+	processtaskDescCreatedTime := processtaskFields[12].Descriptor()
+	// processtask.DefaultCreatedTime holds the default value on creation for the created_time field.
+	processtask.DefaultCreatedTime = processtaskDescCreatedTime.Default.(func() time.Time)
+	// processtaskDescTenantID is the schema descriptor for tenant_id field.
+	processtaskDescTenantID := processtaskFields[21].Descriptor()
+	// processtask.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processtask.TenantIDValidator = processtaskDescTenantID.Validators[0].(func(int) error)
+	// processtaskDescCreatedAt is the schema descriptor for created_at field.
+	processtaskDescCreatedAt := processtaskFields[22].Descriptor()
+	// processtask.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processtask.DefaultCreatedAt = processtaskDescCreatedAt.Default.(func() time.Time)
+	// processtaskDescUpdatedAt is the schema descriptor for updated_at field.
+	processtaskDescUpdatedAt := processtaskFields[23].Descriptor()
+	// processtask.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processtask.DefaultUpdatedAt = processtaskDescUpdatedAt.Default.(func() time.Time)
+	// processtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processtask.UpdateDefaultUpdatedAt = processtaskDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processvariableFields := schema.ProcessVariable{}.Fields()
+	_ = processvariableFields
+	// processvariableDescVariableID is the schema descriptor for variable_id field.
+	processvariableDescVariableID := processvariableFields[0].Descriptor()
+	// processvariable.VariableIDValidator is a validator for the "variable_id" field. It is called by the builders before save.
+	processvariable.VariableIDValidator = processvariableDescVariableID.Validators[0].(func(string) error)
+	// processvariableDescProcessInstanceID is the schema descriptor for process_instance_id field.
+	processvariableDescProcessInstanceID := processvariableFields[1].Descriptor()
+	// processvariable.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
+	processvariable.ProcessInstanceIDValidator = processvariableDescProcessInstanceID.Validators[0].(func(string) error)
+	// processvariableDescVariableName is the schema descriptor for variable_name field.
+	processvariableDescVariableName := processvariableFields[3].Descriptor()
+	// processvariable.VariableNameValidator is a validator for the "variable_name" field. It is called by the builders before save.
+	processvariable.VariableNameValidator = processvariableDescVariableName.Validators[0].(func(string) error)
+	// processvariableDescVariableType is the schema descriptor for variable_type field.
+	processvariableDescVariableType := processvariableFields[4].Descriptor()
+	// processvariable.DefaultVariableType holds the default value on creation for the variable_type field.
+	processvariable.DefaultVariableType = processvariableDescVariableType.Default.(string)
+	// processvariableDescScope is the schema descriptor for scope field.
+	processvariableDescScope := processvariableFields[6].Descriptor()
+	// processvariable.DefaultScope holds the default value on creation for the scope field.
+	processvariable.DefaultScope = processvariableDescScope.Default.(string)
+	// processvariableDescIsTransient is the schema descriptor for is_transient field.
+	processvariableDescIsTransient := processvariableFields[7].Descriptor()
+	// processvariable.DefaultIsTransient holds the default value on creation for the is_transient field.
+	processvariable.DefaultIsTransient = processvariableDescIsTransient.Default.(bool)
+	// processvariableDescSerializationFormat is the schema descriptor for serialization_format field.
+	processvariableDescSerializationFormat := processvariableFields[8].Descriptor()
+	// processvariable.DefaultSerializationFormat holds the default value on creation for the serialization_format field.
+	processvariable.DefaultSerializationFormat = processvariableDescSerializationFormat.Default.(string)
+	// processvariableDescTenantID is the schema descriptor for tenant_id field.
+	processvariableDescTenantID := processvariableFields[9].Descriptor()
+	// processvariable.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processvariable.TenantIDValidator = processvariableDescTenantID.Validators[0].(func(int) error)
+	// processvariableDescCreatedAt is the schema descriptor for created_at field.
+	processvariableDescCreatedAt := processvariableFields[10].Descriptor()
+	// processvariable.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processvariable.DefaultCreatedAt = processvariableDescCreatedAt.Default.(func() time.Time)
+	// processvariableDescUpdatedAt is the schema descriptor for updated_at field.
+	processvariableDescUpdatedAt := processvariableFields[11].Descriptor()
+	// processvariable.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processvariable.DefaultUpdatedAt = processvariableDescUpdatedAt.Default.(func() time.Time)
+	// processvariable.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processvariable.UpdateDefaultUpdatedAt = processvariableDescUpdatedAt.UpdateDefault.(func() time.Time)
 	prompttemplateFields := schema.PromptTemplate{}.Fields()
 	_ = prompttemplateFields
 	// prompttemplateDescCreatedAt is the schema descriptor for created_at field.

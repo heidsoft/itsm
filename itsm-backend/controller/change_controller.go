@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"net/http"
 	"strconv"
 
 	"itsm-backend/common"
@@ -30,8 +29,8 @@ func NewChangeController(logger *zap.SugaredLogger, changeService *service.Chang
 // ListChanges 获取变更列表
 func (cc *ChangeController) ListChanges(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
@@ -56,15 +55,15 @@ func (cc *ChangeController) ListChanges(c *gin.Context) {
 // CreateChange 创建变更
 func (cc *ChangeController) CreateChange(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 
 	// 获取用户信息
-	userID := middleware.GetUserID(c)
-	if userID == 0 {
+	userID, err := middleware.GetUserID(c)
+	if err != nil || userID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
@@ -90,8 +89,8 @@ func (cc *ChangeController) CreateChange(c *gin.Context) {
 // GetChange 获取变更详情
 func (cc *ChangeController) GetChange(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
@@ -121,8 +120,8 @@ func (cc *ChangeController) GetChange(c *gin.Context) {
 // UpdateChange 更新变更
 func (cc *ChangeController) UpdateChange(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
@@ -159,8 +158,8 @@ func (cc *ChangeController) UpdateChange(c *gin.Context) {
 // DeleteChange 删除变更
 func (cc *ChangeController) DeleteChange(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
@@ -190,8 +189,8 @@ func (cc *ChangeController) DeleteChange(c *gin.Context) {
 // GetChangeStats 获取变更统计
 func (cc *ChangeController) GetChangeStats(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
@@ -210,8 +209,8 @@ func (cc *ChangeController) GetChangeStats(c *gin.Context) {
 // UpdateChangeStatus 更新变更状态
 func (cc *ChangeController) UpdateChangeStatus(c *gin.Context) {
 	// 获取租户信息
-	tenantID := middleware.GetTenantID(c)
-	if tenantID == 0 {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}

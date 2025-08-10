@@ -1,5 +1,7 @@
 "use client";
 
+import { Search, Edit, Eye, BookOpen, PlusCircle } from 'lucide-react';
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -14,19 +16,9 @@ import {
   Select,
   Input,
   Tooltip,
-  Avatar,
   Typography,
   List,
 } from "antd";
-import {
-  Search,
-  PlusCircle,
-  Eye,
-  Edit,
-  BookOpen,
-  User,
-  TrendingUp,
-} from "lucide-react";
 import { KnowledgeApi } from "../lib/knowledge-api";
 
 const { Search: SearchInput } = Input;

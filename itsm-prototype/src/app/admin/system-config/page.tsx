@@ -1,5 +1,7 @@
 "use client";
 
+import { Clock, Settings, HardDrive, Shield, Bell, RefreshCw, Save, Mail, Network, Globe } from 'lucide-react';
+
 import React, { useState } from "react";
 import {
   Card,
@@ -24,32 +26,6 @@ import {
   Modal,
   Progress,
 } from "antd";
-import {
-  Settings,
-  AlertTriangle,
-  RefreshCw,
-  Save,
-  Server,
-  Shield,
-  Mail,
-  Database,
-  Globe,
-  Bell,
-  CheckCircle,
-  Clock,
-  HardDrive,
-  Network,
-  Key,
-  Lock,
-  Eye,
-  EyeOff,
-  TestTube,
-  Activity,
-  Cpu,
-  MemoryStick,
-  Wifi,
-} from "lucide-react";
-
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;

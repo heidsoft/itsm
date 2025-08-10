@@ -1,6 +1,4 @@
 
-import { Cpu, User, Shield } from 'lucide-react';
-
 // 模拟事件数据 (从 incidents/[incidentId]/page.tsx 复制并转换为数组)
 export const mockIncidentsData = [
     { id: 'INC-00125', title: '杭州可用区J的Web服务器CPU使用率超过95%', priority: '高', status: '处理中', source: '阿里云监控', sourceIcon: Cpu, lastUpdate: '5分钟前', isMajorIncident: false, assignee: '张三', createdAt: '2025-06-28 10:15:23' },

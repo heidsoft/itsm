@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus, CheckCircle, Clock, Search, Trash2, Edit, Eye, TrendingUp, Target, Tag } from 'lucide-react';
+
 import React, { useState } from "react";
 import {
   Card,
@@ -9,7 +11,6 @@ import {
   Select,
   Space,
   Typography,
-  Tag,
   Modal,
   Form,
   Row,
@@ -22,22 +23,6 @@ import {
   List,
   Badge,
 } from "antd";
-import {
-  Plus,
-  CheckCircle,
-  Clock,
-  Search,
-  Target,
-  Edit,
-  Eye,
-  Trash2,
-  AlertTriangle,
-  Activity,
-  Timer,
-  TrendingUp,
-  Shield,
-} from "lucide-react";
-
 const { Title, Text } = Typography;
 const { Option } = Select;
 

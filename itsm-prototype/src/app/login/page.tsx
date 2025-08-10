@@ -1,20 +1,11 @@
 "use client";
 
+import { Lock, User, Shield, Zap, AlertCircle, ArrowRight, Globe, Sparkles } from 'lucide-react';
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "../lib/auth-service";
 import { Form, Input, Button, Card, Typography, Space, Alert } from "antd";
-import {
-  User,
-  Lock,
-  Globe,
-  AlertCircle,
-  Shield,
-  Zap,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
-
 const { Title, Text } = Typography;
 
 interface LoginFormValues {

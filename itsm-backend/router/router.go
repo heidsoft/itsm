@@ -20,11 +20,14 @@ func SetupRouter(
 	knowledgeController *controller.KnowledgeController,
 	aiController *controller.AIController,
 	workflowController *controller.WorkflowController,
+	bpmnWorkflowController *controller.BPMNWorkflowController,
+	bpmnMonitoringController *controller.BPMNMonitoringController,
 	ticketTagController *controller.TicketTagController,
 	ticketAssignmentController *controller.TicketAssignmentController,
 	ticketCategoryController *controller.TicketCategoryController,
 	problemController *controller.ProblemController,
 	changeController *controller.ChangeController,
+	knowledgeIntegrationController *controller.KnowledgeIntegrationController,
 	client *ent.Client,
 	jwtSecret string,
 ) *gin.Engine {
@@ -87,6 +90,13 @@ func SetupRouter(
 				tickets.GET("/:id", ticketController.GetTicket)
 				tickets.PUT("/:id", ticketController.UpdateTicket)
 				tickets.DELETE("/:id", ticketController.DeleteTicket)
+
+				// 知识库集成路由
+				tickets.GET("/:id/knowledge/recommendations", knowledgeIntegrationController.RecommendSolutions)
+				tickets.POST("/:id/knowledge/associate", knowledgeIntegrationController.AssociateWithKnowledge)
+				tickets.GET("/:id/knowledge/ai-recommendations", knowledgeIntegrationController.GetAIRecommendations)
+				tickets.GET("/:id/knowledge/related-articles", knowledgeIntegrationController.GetRelatedArticles)
+				tickets.GET("/:id/knowledge/associations", knowledgeIntegrationController.GetKnowledgeAssociations)
 			}
 
 			// 工单标签管理路由
@@ -149,7 +159,33 @@ func SetupRouter(
 					// 工作流实例操作
 					workflows.POST("/:id/start", workflowController.StartWorkflow)
 					workflows.POST("/:id/execute-step", workflowController.ExecuteWorkflowStep)
+					workflows.POST("/:id/complete-step", workflowController.CompleteWorkflowStep)
+
+					// 工作流审批相关API
+					workflows.GET("/approval-tasks", workflowController.GetApprovalTasks)
+					workflows.POST("/approval-tasks/:id/approve", workflowController.ApproveTask)
+					workflows.POST("/approval-tasks/:id/reject", workflowController.RejectTask)
+
+					// 工作流任务管理API
+					workflows.GET("/tasks", workflowController.GetWorkflowTasks)
+					workflows.POST("/tasks/:id/start", workflowController.StartTask)
+					workflows.POST("/tasks/:id/complete", workflowController.CompleteTask)
+
+					// 工作流监控API
+					workflows.GET("/metrics", workflowController.GetWorkflowMetrics)
+					workflows.GET("/step-metrics", workflowController.GetStepMetrics)
+					workflows.GET("/alerts", workflowController.GetAlerts)
 				}
+			}
+
+			// BPMN工作流管理路由
+			if bpmnWorkflowController != nil {
+				bpmnWorkflowController.RegisterRoutes(auth)
+			}
+
+			// BPMN监控路由
+			if bpmnMonitoringController != nil {
+				bpmnMonitoringController.RegisterRoutes(auth)
 			}
 
 			// 服务目录路由
@@ -199,6 +235,7 @@ func SetupRouter(
 				incidents.GET("", incidentController.GetIncidents)
 				incidents.POST("", incidentController.CreateIncident)
 				incidents.GET("/stats", incidentController.GetIncidentStats)
+				incidents.GET("/configuration-items", incidentController.GetConfigurationItemsForIncident)
 
 				incidents.GET("/:id", incidentController.GetIncident)
 				incidents.PUT("/:id", incidentController.UpdateIncident)
@@ -236,6 +273,14 @@ func SetupRouter(
 					knowledge.PUT("/:id", knowledgeController.UpdateArticle)
 					knowledge.DELETE("/:id", knowledgeController.DeleteArticle)
 					knowledge.GET("/categories", knowledgeController.GetCategories)
+				}
+			}
+
+			// 知识库集成路由
+			if knowledgeIntegrationController != nil {
+				knowledge := auth.Group("/knowledge")
+				{
+					knowledge.POST("/search", knowledgeIntegrationController.SearchKnowledgeBase)
 				}
 			}
 

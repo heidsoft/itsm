@@ -21,6 +21,12 @@ import {
   Popconfirm,
   Tooltip,
   Badge,
+  Collapse,
+  InputNumber,
+  Checkbox,
+  Radio,
+  Tabs,
+  List,
 } from "antd";
 import {
   Plus,
@@ -40,6 +46,8 @@ import {
   RefreshCw,
   Download,
   Upload,
+  GripVertical,
+  Trash2,
 } from "lucide-react";
 import LoadingEmptyError from "../components/ui/LoadingEmptyError";
 import {
@@ -47,11 +55,15 @@ import {
   type TicketTemplate,
   type CreateTemplateRequest,
   type UpdateTemplateRequest,
+  type FormField,
+  type WorkflowStep,
 } from "../../lib/services/ticket-template-service";
 
 const { TextArea } = Input;
 const { Option } = Select;
 const { Title, Text } = Typography;
+const { Panel } = Collapse;
+const { TabPane } = Tabs;
 
 // 工单模板接口
 interface TicketTemplate {
@@ -115,6 +127,11 @@ const TicketTemplatePage: React.FC = () => {
   );
   const [filters, setFilters] = useState<TemplateFilters>({});
   const [form] = Form.useForm();
+  const [activeTab, setActiveTab] = useState("basic");
+
+  // 表单字段和工作流步骤状态
+  const [formFields, setFormFields] = useState<FormField[]>([]);
+  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
 
   // 模拟数据（作为备用）
   const mockTemplates: TicketTemplate[] = [];
@@ -133,7 +150,7 @@ const TicketTemplatePage: React.FC = () => {
         sort_order: "desc",
       });
 
-      setTemplates(response.data);
+      setTemplates(response.data || []);
     } catch (error) {
       console.error("加载模板失败:", error);
       // 如果API调用失败，使用模拟数据作为备用
@@ -151,13 +168,33 @@ const TicketTemplatePage: React.FC = () => {
   // 处理创建模板
   const handleCreateTemplate = () => {
     setEditingTemplate(null);
+    setFormFields([]);
+    setWorkflowSteps([]);
     form.resetFields();
     setModalVisible(true);
+    setActiveTab("basic");
   };
 
   // 处理编辑模板
   const handleEditTemplate = (template: TicketTemplate) => {
     setEditingTemplate(template);
+
+    // 解析表单字段和工作流步骤
+    try {
+      if (template.form_fields) {
+        const fields = Array.isArray(template.form_fields)
+          ? template.form_fields
+          : Object.values(template.form_fields);
+        setFormFields(fields as FormField[]);
+      }
+
+      if (template.workflow_steps) {
+        setWorkflowSteps(template.workflow_steps);
+      }
+    } catch (error) {
+      console.error("解析模板数据失败:", error);
+    }
+
     form.setFieldsValue({
       name: template.name,
       description: template.description,
@@ -167,6 +204,7 @@ const TicketTemplatePage: React.FC = () => {
       is_active: template.is_active,
     });
     setModalVisible(true);
+    setActiveTab("basic");
   };
 
   // 处理删除模板
@@ -183,14 +221,14 @@ const TicketTemplatePage: React.FC = () => {
   };
 
   // 处理复制模板
-    const handleCopyTemplate = async (template: TicketTemplate) => {
+  const handleCopyTemplate = async (template: TicketTemplate) => {
     try {
       const newName = `${template.name} - 副本`;
       const copiedTemplate = await ticketTemplateService.copyTemplate(
         template.id,
         newName
       );
-      
+
       setTemplates([copiedTemplate, ...templates]);
       message.success("模板复制成功");
     } catch (error) {
@@ -202,7 +240,7 @@ const TicketTemplatePage: React.FC = () => {
   // 处理表单提交
   const handleFormSubmit = async (values: any) => {
     try {
-            if (editingTemplate) {
+      if (editingTemplate) {
         // 更新模板
         const updatedTemplate = await ticketTemplateService.updateTemplate(
           editingTemplate.id,
@@ -212,12 +250,14 @@ const TicketTemplatePage: React.FC = () => {
             category: values.category,
             priority: values.priority,
             form_fields: {
-              assignee_group: values.assignee_group,
+              ...values.form_fields,
+              fields: formFields,
             },
+            workflow_steps: workflowSteps,
             is_active: values.is_active,
           }
         );
-        
+
         setTemplates(
           templates.map((t) =>
             t.id === editingTemplate.id ? updatedTemplate : t
@@ -232,9 +272,10 @@ const TicketTemplatePage: React.FC = () => {
           category: values.category,
           priority: values.priority,
           form_fields: {
-            assignee_group: values.assignee_group,
+            ...values.form_fields,
+            fields: formFields,
           },
-          workflow_steps: [],
+          workflow_steps: workflowSteps,
           is_active: values.is_active,
         });
 
@@ -244,11 +285,79 @@ const TicketTemplatePage: React.FC = () => {
 
       setModalVisible(false);
       setEditingTemplate(null);
+      setFormFields([]);
+      setWorkflowSteps([]);
       form.resetFields();
     } catch (error) {
       message.error("操作失败");
       console.error("操作失败:", error);
     }
+  };
+
+  // 表单字段管理
+  const addFormField = () => {
+    const newField: FormField = {
+      id: `field_${Date.now()}`,
+      name: "",
+      label: "",
+      type: "text",
+      required: false,
+      order: formFields.length,
+    };
+    setFormFields([...formFields, newField]);
+  };
+
+  const updateFormField = (index: number, field: Partial<FormField>) => {
+    const updatedFields = [...formFields];
+    updatedFields[index] = { ...updatedFields[index], ...field };
+    setFormFields(updatedFields);
+  };
+
+  const removeFormField = (index: number) => {
+    setFormFields(formFields.filter((_, i) => i !== index));
+  };
+
+  const moveFormField = (fromIndex: number, toIndex: number) => {
+    const updatedFields = [...formFields];
+    const [movedField] = updatedFields.splice(fromIndex, 1);
+    updatedFields.splice(toIndex, 0, movedField);
+    // 更新顺序
+    updatedFields.forEach((field, index) => {
+      field.order = index;
+    });
+    setFormFields(updatedFields);
+  };
+
+  // 工作流步骤管理
+  const addWorkflowStep = () => {
+    const newStep: WorkflowStep = {
+      id: `step_${Date.now()}`,
+      name: "",
+      type: "assignment",
+      order: workflowSteps.length,
+    };
+    setWorkflowSteps([...workflowSteps, newStep]);
+  };
+
+  const updateWorkflowStep = (index: number, step: Partial<WorkflowStep>) => {
+    const updatedSteps = [...workflowSteps];
+    updatedSteps[index] = { ...updatedSteps[index], ...step };
+    setWorkflowSteps(updatedSteps);
+  };
+
+  const removeWorkflowStep = (index: number) => {
+    setWorkflowSteps(workflowSteps.filter((_, i) => i !== index));
+  };
+
+  const moveWorkflowStep = (fromIndex: number, toIndex: number) => {
+    const updatedSteps = [...workflowSteps];
+    const [movedStep] = updatedSteps.splice(fromIndex, 1);
+    updatedSteps.splice(toIndex, 0, movedStep);
+    // 更新顺序
+    updatedSteps.forEach((step, index) => {
+      step.order = index;
+    });
+    setWorkflowSteps(updatedSteps);
   };
 
   // 获取状态颜色
@@ -571,97 +680,380 @@ const TicketTemplatePage: React.FC = () => {
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
-        width={800}
+        width={1000}
         destroyOnClose
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleFormSubmit}
-          initialValues={{
-            priority: "medium",
-            impact: "medium",
-            urgency: "medium",
-            is_active: true,
-            sla_response_time: 60,
-            sla_resolution_time: 240,
-          }}
-        >
-          <Row gutter={16}>
-            <Col span={12}>
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          <TabPane tab="基本信息" key="basic">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleFormSubmit}
+              initialValues={{
+                priority: "medium",
+                impact: "medium",
+                urgency: "medium",
+                is_active: true,
+                sla_response_time: 60,
+                sla_resolution_time: 240,
+              }}
+            >
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="name"
+                    label="模板名称"
+                    rules={[{ required: true, message: "请输入模板名称" }]}
+                  >
+                    <Input placeholder="请输入模板名称" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="category"
+                    label="分类"
+                    rules={[{ required: true, message: "请选择分类" }]}
+                  >
+                    <Select placeholder="选择分类">
+                      <Option value="系统问题">系统问题</Option>
+                      <Option value="用户管理">用户管理</Option>
+                      <Option value="硬件问题">硬件问题</Option>
+                      <Option value="网络问题">网络问题</Option>
+                      <Option value="软件问题">软件问题</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
               <Form.Item
-                name="name"
-                label="模板名称"
-                rules={[{ required: true, message: "请输入模板名称" }]}
+                name="description"
+                label="描述"
+                rules={[{ required: true, message: "请输入模板描述" }]}
               >
-                <Input placeholder="请输入模板名称" />
+                <TextArea rows={3} placeholder="请输入模板描述" />
               </Form.Item>
-            </Col>
-            <Col span={12}>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="priority"
+                    label="默认优先级"
+                    rules={[{ required: true, message: "请选择优先级" }]}
+                  >
+                    <Select placeholder="选择优先级">
+                      <Option value="low">低</Option>
+                      <Option value="medium">中</Option>
+                      <Option value="high">高</Option>
+                      <Option value="critical">紧急</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="assignee_group" label="默认处理组">
+                    <Select placeholder="选择处理组" allowClear>
+                      <Option value="一线支持">一线支持</Option>
+                      <Option value="系统维护组">系统维护组</Option>
+                      <Option value="用户管理组">用户管理组</Option>
+                      <Option value="网络维护组">网络维护组</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
               <Form.Item
-                name="category"
-                label="分类"
-                rules={[{ required: true, message: "请选择分类" }]}
+                name="is_active"
+                label="启用状态"
+                valuePropName="checked"
               >
-                <Select placeholder="选择分类">
-                  <Option value="系统问题">系统问题</Option>
-                  <Option value="用户管理">用户管理</Option>
-                  <Option value="硬件问题">硬件问题</Option>
-                  <Option value="网络问题">网络问题</Option>
-                  <Option value="软件问题">软件问题</Option>
-                </Select>
+                <Switch />
               </Form.Item>
-            </Col>
-          </Row>
 
-          <Form.Item
-            name="description"
-            label="描述"
-            rules={[{ required: true, message: "请输入模板描述" }]}
-          >
-            <TextArea rows={3} placeholder="请输入模板描述" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="priority"
-                label="默认优先级"
-                rules={[{ required: true, message: "请选择优先级" }]}
-              >
-                <Select placeholder="选择优先级">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">紧急</Option>
-                </Select>
+              <Form.Item>
+                <Space>
+                  <Button type="primary" htmlType="submit">
+                    {editingTemplate ? "更新" : "创建"}
+                  </Button>
+                  <Button onClick={() => setModalVisible(false)}>取消</Button>
+                </Space>
               </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="assignee_group" label="默认处理组">
-                <Select placeholder="选择处理组" allowClear>
-                  <Option value="一线支持">一线支持</Option>
-                  <Option value="系统维护组">系统维护组</Option>
-                  <Option value="用户管理组">用户管理组</Option>
-                  <Option value="网络维护组">网络维护组</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+            </Form>
+          </TabPane>
 
-          <Form.Item name="is_active" label="启用状态" valuePropName="checked">
-            <Switch />
-          </Form.Item>
+          <TabPane tab="表单字段" key="fields">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">表单字段配置</h3>
+                <Button
+                  type="primary"
+                  icon={<Plus className="w-4 h-4" />}
+                  onClick={addFormField}
+                >
+                  添加字段
+                </Button>
+              </div>
 
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingTemplate ? "更新" : "创建"}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
-            </Space>
-          </Form.Item>
-        </Form>
+              {formFields.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  暂无表单字段，点击"添加字段"开始配置
+                </div>
+              ) : (
+                <DragDropContext
+                  onDragEnd={(result) => {
+                    if (result.destination) {
+                      moveFormField(
+                        result.source.index,
+                        result.destination.index
+                      );
+                    }
+                  }}
+                >
+                  <Droppable droppableId="form-fields">
+                    {(provided) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {formFields.map((field, index) => (
+                          <Draggable
+                            key={field.id}
+                            draggableId={field.id}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="border rounded-lg p-4 mb-3 bg-gray-50"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="cursor-move"
+                                  >
+                                    <GripVertical className="w-4 h-4 text-gray-400" />
+                                  </div>
+
+                                  <div className="flex-1 grid grid-cols-2 gap-3">
+                                    <Input
+                                      placeholder="字段名称"
+                                      value={field.name}
+                                      onChange={(e) =>
+                                        updateFormField(index, {
+                                          name: e.target.value,
+                                        })
+                                      }
+                                    />
+                                    <Input
+                                      placeholder="显示标签"
+                                      value={field.label}
+                                      onChange={(e) =>
+                                        updateFormField(index, {
+                                          label: e.target.value,
+                                        })
+                                      }
+                                    />
+                                    <Select
+                                      placeholder="字段类型"
+                                      value={field.type}
+                                      onChange={(value) =>
+                                        updateFormField(index, { type: value })
+                                      }
+                                    >
+                                      <Option value="text">文本</Option>
+                                      <Option value="textarea">多行文本</Option>
+                                      <Option value="select">下拉选择</Option>
+                                      <Option value="number">数字</Option>
+                                      <Option value="date">日期</Option>
+                                      <Option value="checkbox">复选框</Option>
+                                      <Option value="radio">单选框</Option>
+                                    </Select>
+                                    <Input
+                                      placeholder="默认值"
+                                      value={field.default_value || ""}
+                                      onChange={(e) =>
+                                        updateFormField(index, {
+                                          default_value: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </div>
+
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={field.required}
+                                      onChange={(e) =>
+                                        updateFormField(index, {
+                                          required: e.target.checked,
+                                        })
+                                      }
+                                    >
+                                      必填
+                                    </Checkbox>
+                                    <Button
+                                      type="text"
+                                      icon={<Trash2 className="w-4 h-4" />}
+                                      danger
+                                      onClick={() => removeFormField(index)}
+                                    />
+                                  </div>
+                                </div>
+
+                                {field.type === "select" && (
+                                  <div className="mt-3">
+                                    <Input
+                                      placeholder="选项值，用逗号分隔"
+                                      value={field.options?.join(", ") || ""}
+                                      onChange={(e) =>
+                                        updateFormField(index, {
+                                          options: e.target.value
+                                            .split(",")
+                                            .map((s) => s.trim())
+                                            .filter((s) => s),
+                                        })
+                                      }
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              )}
+            </div>
+          </TabPane>
+
+          <TabPane tab="工作流" key="workflow">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">工作流步骤配置</h3>
+                <Button
+                  type="primary"
+                  icon={<Plus className="w-4 h-4" />}
+                  onClick={addWorkflowStep}
+                >
+                  添加步骤
+                </Button>
+              </div>
+
+              {workflowSteps.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  暂无工作流步骤，点击"添加步骤"开始配置
+                </div>
+              ) : (
+                <DragDropContext
+                  onDragEnd={(result) => {
+                    if (result.destination) {
+                      moveWorkflowStep(
+                        result.source.index,
+                        result.destination.index
+                      );
+                    }
+                  }}
+                >
+                  <Droppable droppableId="workflow-steps">
+                    {(provided) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {workflowSteps.map((step, index) => (
+                          <Draggable
+                            key={step.id}
+                            draggableId={step.id}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="border rounded-lg p-4 mb-3 bg-gray-50"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="cursor-move"
+                                  >
+                                    <GripVertical className="w-4 h-4 text-gray-400" />
+                                  </div>
+
+                                  <div className="flex-1 grid grid-cols-2 gap-3">
+                                    <Input
+                                      placeholder="步骤名称"
+                                      value={step.name}
+                                      onChange={(e) =>
+                                        updateWorkflowStep(index, {
+                                          name: e.target.value,
+                                        })
+                                      }
+                                    />
+                                    <Select
+                                      placeholder="步骤类型"
+                                      value={step.type}
+                                      onChange={(value) =>
+                                        updateWorkflowStep(index, {
+                                          type: value,
+                                        })
+                                      }
+                                    >
+                                      <Option value="approval">审批</Option>
+                                      <Option value="assignment">分配</Option>
+                                      <Option value="notification">通知</Option>
+                                      <Option value="automation">自动化</Option>
+                                    </Select>
+                                    <Input
+                                      placeholder="处理组"
+                                      value={step.assignee_group || ""}
+                                      onChange={(e) =>
+                                        updateWorkflowStep(index, {
+                                          assignee_group: e.target.value,
+                                        })
+                                      }
+                                    />
+                                    <InputNumber
+                                      placeholder="预计耗时(小时)"
+                                      value={step.due_time || undefined}
+                                      onChange={(value) =>
+                                        updateWorkflowStep(index, {
+                                          due_time: value || undefined,
+                                        })
+                                      }
+                                      min={0}
+                                    />
+                                  </div>
+
+                                  <div className="flex items-center space-x-2">
+                                    <Button
+                                      type="text"
+                                      icon={<Trash2 className="w-4 h-4" />}
+                                      danger
+                                      onClick={() => removeWorkflowStep(index)}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="mt-3">
+                                  <Input
+                                    placeholder="执行条件（可选）"
+                                    value={step.conditions || ""}
+                                    onChange={(e) =>
+                                      updateWorkflowStep(index, {
+                                        conditions: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              )}
+            </div>
+          </TabPane>
+        </Tabs>
       </Modal>
     </div>
   );

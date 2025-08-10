@@ -97,6 +97,133 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/activity`);
   }
 
+  // 获取工单评论
+  static async getTicketComments(id: number): Promise<Array<{
+    id: number;
+    content: string;
+    type: string;
+    created_by: number;
+    created_at: string;
+    author?: {
+      id: number;
+      name: string;
+      username: string;
+    };
+    is_internal: boolean;
+  }>> {
+    return httpClient.get(`/api/v1/tickets/${id}/comments`);
+  }
+
+  // 添加工单评论
+  static async addTicketComment(id: number, data: {
+    content: string;
+    type: 'comment' | 'work_note';
+    is_internal?: boolean;
+  }): Promise<unknown> {
+    return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
+  }
+
+  // 获取工单附件
+  static async getTicketAttachments(id: number): Promise<Array<{
+    id: number;
+    filename: string;
+    original_name: string;
+    file_size: number;
+    mime_type: string;
+    url: string;
+    uploaded_by: number;
+    uploaded_at: string;
+  }>> {
+    return httpClient.get(`/api/v1/tickets/${id}/attachments`);
+  }
+
+  // 上传工单附件
+  static async uploadTicketAttachment(id: number, file: File): Promise<unknown> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return httpClient.post(`/api/v1/tickets/${id}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  // 删除工单附件
+  static async deleteTicketAttachment(ticketId: number, attachmentId: number): Promise<void> {
+    return httpClient.delete(`/api/v1/tickets/${ticketId}/attachments/${attachmentId}`);
+  }
+
+  // 获取工单工作流
+  static async getTicketWorkflow(id: number): Promise<Array<{
+    id: number;
+    step_name: string;
+    step_order: number;
+    status: string;
+    assignee_id?: number;
+    assignee?: {
+      id: number;
+      name: string;
+    };
+    started_at?: string;
+    completed_at?: string;
+    comments?: string;
+    required_approval: boolean;
+    approval_status?: string;
+    approval_comments?: string;
+  }>> {
+    return httpClient.get(`/api/v1/tickets/${id}/workflow`);
+  }
+
+  // 更新工作流步骤状态
+  static async updateWorkflowStep(ticketId: number, stepId: number, data: {
+    status: string;
+    comments?: string;
+    assignee_id?: number;
+  }): Promise<unknown> {
+    return httpClient.patch(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
+  }
+
+  // 获取工单SLA信息
+  static async getTicketSLA(id: number): Promise<{
+    sla_id: number;
+    sla_name: string;
+    response_time: number;
+    resolution_time: number;
+    start_time: string;
+    due_time: string;
+    breach_time?: string;
+    status: string;
+  }> {
+    return httpClient.get(`/api/v1/tickets/${id}/sla`);
+  }
+
+  // 添加工单标签
+  static async addTicketTags(id: number, tags: string[]): Promise<unknown> {
+    return httpClient.post(`/api/v1/tickets/${id}/tags`, { tags });
+  }
+
+  // 移除工单标签
+  static async removeTicketTags(id: number, tags: string[]): Promise<unknown> {
+    return httpClient.delete(`/api/v1/tickets/${id}/tags`, { data: { tags } });
+  }
+
+  // 获取工单历史记录
+  static async getTicketHistory(id: number): Promise<Array<{
+    id: number;
+    field_name: string;
+    old_value: string;
+    new_value: string;
+    changed_by: number;
+    changed_at: string;
+    change_reason?: string;
+    user?: {
+      id: number;
+      name: string;
+    };
+  }>> {
+    return httpClient.get(`/api/v1/tickets/${id}/history`);
+  }
+
   // 批量删除工单
   static async batchDeleteTickets(ticketIds: number[]): Promise<void> {
     return httpClient.post('/api/v1/tickets/batch-delete', { ticket_ids: ticketIds });

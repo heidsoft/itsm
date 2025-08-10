@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  GitMerge,
-  AlertTriangle,
-  MessageSquare,
-  ArrowLeft,
-  PlayCircle,
-  Flag,
-  ClipboardCheck,
-} from "lucide-react";
+import { GitMerge, AlertTriangle, MessageSquare, ArrowLeft, PlayCircle, Flag, ClipboardCheck } from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";

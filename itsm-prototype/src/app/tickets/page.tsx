@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus, CheckCircle, Clock, Search, Trash2, Edit, Eye, TrendingUp, AlertTriangle, User, Tag as TagIcon, MoreHorizontal, FileText, UserPlus, RefreshCw, Download, X, Activity, CheckSquare } from "lucide-react";
+
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
@@ -18,28 +20,8 @@ import {
   Statistic,
   App,
 } from "antd";
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Eye,
-  Trash2,
-  Download,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  User,
-  FileText,
-  RefreshCw,
-  UserPlus,
-  TrendingUp,
-  CheckSquare,
-  X,
-  Activity,
-} from "lucide-react";
 import { TicketApi } from "../lib/ticket-api";
-import LoadingEmptyError from "../components/ui/LoadingEmptyError";
+import { LoadingEmptyError } from "../components/ui/LoadingEmptyError";
 
 const { Option } = Select;
 

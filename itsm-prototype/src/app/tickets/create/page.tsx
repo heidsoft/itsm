@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TicketApi } from "../../lib/ticket-api";
 import { CreateTicketRequest } from "../../lib/api-config";
@@ -11,10 +11,17 @@ import {
   Sparkles,
   UserCircle,
   BookOpen,
+  FileText,
+  Eye,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { aiSearchKB, aiSummarize, aiTriage, RagAnswer } from "../../lib/ai-api";
 import { AIFeedback } from "../../components/AIFeedback";
+import {
+  ticketTemplateService,
+  type TicketTemplate,
+} from "../../lib/services/ticket-template-service";
 
 const CreateTicketPage: React.FC = () => {
   const router = useRouter();
@@ -23,9 +30,16 @@ const CreateTicketPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateTicketRequest>({
     title: "",
     description: "",
-    priority: "medium", // 改为英文默认值
+    priority: "medium",
     form_fields: {},
   });
+
+  // 模板相关状态
+  const [templates, setTemplates] = useState<TicketTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TicketTemplate | null>(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateLoading, setTemplateLoading] = useState(false);
 
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -46,7 +60,55 @@ const CreateTicketPage: React.FC = () => {
     紧急: "critical",
   };
 
-  // 反向映射显示如需可启用
+  // 加载模板数据
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setTemplateLoading(true);
+      const response = await ticketTemplateService.getTemplates({
+        page: 1,
+        size: 100,
+        is_active: true,
+        sort_by: "name",
+        sort_order: "asc",
+      });
+      setTemplates(response.data || []);
+    } catch (error) {
+      console.error("加载模板失败:", error);
+    } finally {
+      setTemplateLoading(false);
+    }
+  };
+
+  // 应用模板
+  const applyTemplate = (template: TicketTemplate) => {
+    setFormData({
+      title: "",
+      description: "",
+      priority: template.priority || "medium",
+      form_fields: {
+        ...template.form_fields,
+        category: template.category,
+        template_id: template.id,
+      },
+    });
+    setSelectedTemplate(template);
+    setShowTemplateModal(false);
+  };
+
+  // 清除模板
+  const clearTemplate = () => {
+    setSelectedTemplate(null);
+    setFormData({
+      title: "",
+      description: "",
+      priority: "medium",
+      form_fields: {},
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +206,64 @@ const CreateTicketPage: React.FC = () => {
           返回
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">创建工单</h1>
+      </div>
+
+      {/* 模板选择器 */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <FileText className="w-5 h-5 mr-2 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">选择模板</h2>
+          </div>
+          {selectedTemplate && (
+            <button
+              onClick={clearTemplate}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              清除模板
+            </button>
+          )}
+        </div>
+
+        {selectedTemplate ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <CheckCircle className="w-5 h-5 text-blue-600 mr-2" />
+                <div>
+                  <div className="font-medium text-blue-900">
+                    已选择模板：{selectedTemplate.name}
+                  </div>
+                  <div className="text-sm text-blue-700">
+                    {selectedTemplate.description}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    分类：{selectedTemplate.category} | 默认优先级：
+                    {selectedTemplate.priority}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTemplateModal(true)}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                更换模板
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500 mb-4">选择一个模板来快速创建工单</p>
+            <button
+              onClick={() => setShowTemplateModal(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              选择模板
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 错误提示 */}
@@ -305,7 +425,9 @@ const CreateTicketPage: React.FC = () => {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="font-medium">{a.title || "相关内容"}</div>
+                          <div className="font-medium">
+                            {a.title || "相关内容"}
+                          </div>
                           <div className="text-gray-600">{a.snippet}</div>
                         </div>
                         <AIFeedback
@@ -346,6 +468,114 @@ const CreateTicketPage: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* 模板选择模态框 */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">
+                选择工单模板
+              </h2>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {templateLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-500">加载模板中...</p>
+                </div>
+              ) : templates.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">暂无可用模板</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {templates.map((template) => (
+                    <div
+                      key={template.id}
+                      className="border rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => applyTemplate(template)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-2">
+                            <h3 className="text-lg font-medium text-gray-900 mr-3">
+                              {template.name}
+                            </h3>
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                template.is_active
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {template.is_active ? "启用" : "禁用"}
+                            </span>
+                          </div>
+                          <p className="text-gray-600 mb-3">
+                            {template.description}
+                          </p>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <span>分类：{template.category}</span>
+                            <span>优先级：{template.priority}</span>
+                            <span>
+                              更新时间：
+                              {new Date(template.updated_at).toLocaleDateString(
+                                "zh-CN"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // 这里可以添加模板预览功能
+                            }}
+                            className="p-2 text-gray-400 hover:text-gray-600"
+                            title="预览模板"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              applyTemplate(template);
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            应用模板
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

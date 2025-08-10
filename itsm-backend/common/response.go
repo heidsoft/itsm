@@ -15,13 +15,15 @@ type Response struct {
 
 // 响应码定义
 const (
-	SuccessCode        = 0
-	ParamErrorCode     = 1001
-	ValidationError    = 1002
-	AuthFailedCode     = 2001
-	ForbiddenCode      = 2003
-	NotFoundCode       = 4004
-	InternalErrorCode  = 5001
+	SuccessCode       = 0
+	ParamErrorCode    = 1001
+	ValidationError   = 1002
+	AuthFailedCode    = 2001
+	UnauthorizedCode  = 2002
+	ForbiddenCode     = 2003
+	NotFoundCode      = 4004
+	BadRequestCode    = 4000
+	InternalErrorCode = 5001
 )
 
 // Success 成功响应

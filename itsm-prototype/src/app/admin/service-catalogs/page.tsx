@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus, CheckCircle, Clock, Search, Trash2, Edit, Filter, Eye, BookOpen, Tag, MoreHorizontal, RefreshCw, AlertCircle, Download, Upload } from 'lucide-react';
+
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -9,7 +11,6 @@ import {
   Modal,
   Form,
   Select,
-  Tag,
   Space,
   Row,
   Col,
@@ -20,23 +21,6 @@ import {
   Tooltip,
   App,
 } from "antd";
-import {
-  Plus,
-  Search,
-  Trash2,
-  Edit,
-  Eye,
-  MoreHorizontal,
-  Filter,
-  RefreshCw,
-  Download,
-  Upload,
-  Settings,
-  BookOpen,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
 import {
   ServiceCatalogApi,
   ServiceCatalog,

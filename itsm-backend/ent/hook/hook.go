@@ -152,6 +152,78 @@ func (f ProblemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProblemMutation", m)
 }
 
+// The ProcessDefinitionFunc type is an adapter to allow the use of ordinary
+// function as ProcessDefinition mutator.
+type ProcessDefinitionFunc func(context.Context, *ent.ProcessDefinitionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessDefinitionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessDefinitionMutation", m)
+}
+
+// The ProcessDeploymentFunc type is an adapter to allow the use of ordinary
+// function as ProcessDeployment mutator.
+type ProcessDeploymentFunc func(context.Context, *ent.ProcessDeploymentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessDeploymentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessDeploymentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessDeploymentMutation", m)
+}
+
+// The ProcessExecutionHistoryFunc type is an adapter to allow the use of ordinary
+// function as ProcessExecutionHistory mutator.
+type ProcessExecutionHistoryFunc func(context.Context, *ent.ProcessExecutionHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessExecutionHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessExecutionHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessExecutionHistoryMutation", m)
+}
+
+// The ProcessInstanceFunc type is an adapter to allow the use of ordinary
+// function as ProcessInstance mutator.
+type ProcessInstanceFunc func(context.Context, *ent.ProcessInstanceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessInstanceMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessInstanceMutation", m)
+}
+
+// The ProcessTaskFunc type is an adapter to allow the use of ordinary
+// function as ProcessTask mutator.
+type ProcessTaskFunc func(context.Context, *ent.ProcessTaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessTaskMutation", m)
+}
+
+// The ProcessVariableFunc type is an adapter to allow the use of ordinary
+// function as ProcessVariable mutator.
+type ProcessVariableFunc func(context.Context, *ent.ProcessVariableMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessVariableFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessVariableMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessVariableMutation", m)
+}
+
 // The PromptTemplateFunc type is an adapter to allow the use of ordinary
 // function as PromptTemplate mutator.
 type PromptTemplateFunc func(context.Context, *ent.PromptTemplateMutation) (ent.Value, error)

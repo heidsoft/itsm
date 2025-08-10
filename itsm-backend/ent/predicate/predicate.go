@@ -42,6 +42,24 @@ type Notification func(*sql.Selector)
 // Problem is the predicate function for problem builders.
 type Problem func(*sql.Selector)
 
+// ProcessDefinition is the predicate function for processdefinition builders.
+type ProcessDefinition func(*sql.Selector)
+
+// ProcessDeployment is the predicate function for processdeployment builders.
+type ProcessDeployment func(*sql.Selector)
+
+// ProcessExecutionHistory is the predicate function for processexecutionhistory builders.
+type ProcessExecutionHistory func(*sql.Selector)
+
+// ProcessInstance is the predicate function for processinstance builders.
+type ProcessInstance func(*sql.Selector)
+
+// ProcessTask is the predicate function for processtask builders.
+type ProcessTask func(*sql.Selector)
+
+// ProcessVariable is the predicate function for processvariable builders.
+type ProcessVariable func(*sql.Selector)
+
 // PromptTemplate is the predicate function for prompttemplate builders.
 type PromptTemplate func(*sql.Selector)
 

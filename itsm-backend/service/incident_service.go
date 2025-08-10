@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/user"
@@ -146,7 +147,32 @@ func (s *IncidentService) GetIncidents(ctx context.Context, req *dto.GetIncident
 	// 转换为DTO
 	incidentDTOs := make([]dto.Incident, len(incidents))
 	for i, incident := range incidents {
-		incidentDTOs[i] = *dto.ToIncidentResponse(incident)
+		incidentDTO := *dto.ToIncidentResponse(incident)
+
+		// 如果有关联的配置项，获取配置项详细信息
+		if incident.ConfigurationItemID > 0 {
+			ci, err := s.client.ConfigurationItem.Query().
+				Where(configurationitem.ID(incident.ConfigurationItemID)).
+				Where(configurationitem.TenantID(req.TenantID)).
+				Only(ctx)
+			if err == nil {
+				// 获取配置项类型信息
+				ciType, err := s.client.CIType.Query().
+					Where(citype.ID(ci.CiTypeID)).
+					Only(ctx)
+				if err == nil {
+					incidentDTO.ConfigurationItem = &dto.ConfigurationItemInfo{
+						ID:          ci.ID,
+						Name:        ci.Name,
+						Type:        ciType.Name,
+						Status:      ci.Status,
+						Description: ci.Description,
+					}
+				}
+			}
+		}
+
+		incidentDTOs[i] = incidentDTO
 	}
 
 	return &dto.IncidentListResponse{
@@ -167,7 +193,33 @@ func (s *IncidentService) GetIncident(ctx context.Context, incidentID, tenantID 
 		return nil, fmt.Errorf("事件不存在或无权限: %w", err)
 	}
 
-	return dto.ToIncidentResponse(incident), nil
+	// 转换为DTO
+	incidentDTO := dto.ToIncidentResponse(incident)
+
+	// 如果有关联的配置项，获取配置项详细信息
+	if incident.ConfigurationItemID > 0 {
+		ci, err := s.client.ConfigurationItem.Query().
+			Where(configurationitem.ID(incident.ConfigurationItemID)).
+			Where(configurationitem.TenantID(tenantID)).
+			Only(ctx)
+		if err == nil {
+			// 获取配置项类型信息
+			ciType, err := s.client.CIType.Query().
+				Where(citype.ID(ci.CiTypeID)).
+				Only(ctx)
+			if err == nil {
+				incidentDTO.ConfigurationItem = &dto.ConfigurationItemInfo{
+					ID:          ci.ID,
+					Name:        ci.Name,
+					Type:        ciType.Name,
+					Status:      ci.Status,
+					Description: ci.Description,
+				}
+			}
+		}
+	}
+
+	return incidentDTO, nil
 }
 
 // UpdateIncident 更新事件
@@ -422,4 +474,50 @@ func (s *IncidentService) GetCurrentTenantID(c *gin.Context) (int, error) {
 		return 0, fmt.Errorf("租户ID不存在")
 	}
 	return tenantID.(int), nil
+}
+
+// GetConfigurationItemsForIncident 获取可关联的配置项列表
+func (s *IncidentService) GetConfigurationItemsForIncident(ctx context.Context, tenantID int, search, ciType, status string) ([]dto.ConfigurationItemInfo, error) {
+	// 构建查询条件
+	query := s.client.ConfigurationItem.Query().
+		Where(configurationitem.TenantID(tenantID))
+
+	// 添加搜索条件
+	if search != "" {
+		query = query.Where(configurationitem.NameContains(search))
+	}
+
+	// 添加状态过滤
+	if status != "" {
+		query = query.Where(configurationitem.Status(status))
+	}
+
+	// 限制返回数量，避免数据过多
+	query = query.Limit(50)
+
+	// 执行查询
+	cis, err := query.All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询配置项失败: %w", err)
+	}
+
+	// 转换为响应格式
+	var ciInfos []dto.ConfigurationItemInfo
+	for _, ci := range cis {
+		// 获取配置项类型信息
+		ciType, err := s.client.CIType.Query().
+			Where(citype.ID(ci.CiTypeID)).
+			Only(ctx)
+		if err == nil {
+			ciInfos = append(ciInfos, dto.ConfigurationItemInfo{
+				ID:          ci.ID,
+				Name:        ci.Name,
+				Type:        ciType.Name,
+				Status:      ci.Status,
+				Description: ci.Description,
+			})
+		}
+	}
+
+	return ciInfos, nil
 }

@@ -1,5 +1,25 @@
 "use client";
 
+import {
+  Plus,
+  CheckCircle,
+  Clock,
+  Search,
+  Trash2,
+  Edit,
+  Eye,
+  Target,
+  MessageSquare,
+  Tag,
+  Bell,
+  Copy,
+  Zap,
+  ArrowUp,
+  Mail,
+  Phone,
+  Megaphone,
+} from "lucide-react";
+
 import React, { useState } from "react";
 import {
   Card,
@@ -9,7 +29,6 @@ import {
   Select,
   Space,
   Typography,
-  Tag,
   Modal,
   Form,
   Switch,
@@ -27,30 +46,6 @@ import {
   Checkbox,
   App,
 } from "antd";
-import {
-  Plus,
-  CheckCircle,
-  Clock,
-  Users,
-  Search,
-  Settings,
-  Trash2,
-  Edit,
-  Filter,
-  Eye,
-  AlertTriangle,
-  Zap,
-  ArrowUp,
-  Timer,
-  Target,
-  Activity,
-  Bell,
-  Mail,
-  Phone,
-  MessageSquare,
-  Megaphone,
-} from "lucide-react";
-
 const { Title, Text } = Typography;
 const { Option } = Select;
 

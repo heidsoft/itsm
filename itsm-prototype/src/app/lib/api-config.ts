@@ -72,6 +72,73 @@ export interface Ticket {
   requester?: User;
   assignee?: User;
   tenant?: Tenant;
+  // 新增字段
+  category?: string;
+  subcategory?: string;
+  impact?: string;
+  urgency?: string;
+  resolution?: string;
+  work_notes?: string;
+  attachments?: Attachment[];
+  workflow_steps?: WorkflowStep[];
+  comments?: Comment[];
+  sla_info?: SLAInfo;
+  tags?: string[];
+  due_date?: string;
+  escalation_level?: number;
+}
+
+// 附件接口
+export interface Attachment {
+  id: number;
+  filename: string;
+  original_name: string;
+  file_size: number;
+  mime_type: string;
+  url: string;
+  uploaded_by: number;
+  uploaded_at: string;
+  uploader?: User;
+}
+
+// 工作流步骤接口
+export interface WorkflowStep {
+  id: number;
+  step_name: string;
+  step_order: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  assignee_id?: number;
+  assignee?: User;
+  started_at?: string;
+  completed_at?: string;
+  comments?: string;
+  required_approval: boolean;
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  approval_comments?: string;
+}
+
+// 评论接口
+export interface Comment {
+  id: number;
+  content: string;
+  type: 'comment' | 'work_note' | 'system';
+  created_by: number;
+  created_at: string;
+  updated_at?: string;
+  author?: User;
+  is_internal: boolean;
+}
+
+// SLA信息接口
+export interface SLAInfo {
+  sla_id: number;
+  sla_name: string;
+  response_time: number; // 分钟
+  resolution_time: number; // 分钟
+  start_time: string;
+  due_time: string;
+  breach_time?: string;
+  status: 'active' | 'breached' | 'completed';
 }
 
 export interface User {

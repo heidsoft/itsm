@@ -24,6 +24,7 @@ import {
   Select,
   DatePicker,
 } from "antd";
+import KnowledgeIntegration from "./KnowledgeIntegration";
 import {
   User,
   Clock,
@@ -51,6 +52,7 @@ import {
   Phone,
   Mail,
   MapPin,
+  BookOpen,
 } from "lucide-react";
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 
@@ -927,6 +929,23 @@ export const EnhancedTicketDetail: React.FC<EnhancedTicketDetailProps> = ({
                   ))}
                 </Timeline>
               </Card>
+            ),
+          },
+          {
+            key: "knowledge",
+            label: (
+              <span className="flex items-center space-x-2">
+                <BookOpen className="w-4 h-4" />
+                <span>知识库集成</span>
+              </span>
+            ),
+            children: (
+              <KnowledgeIntegration
+                ticketId={ticket.id}
+                ticketTitle={ticket.title}
+                ticketDescription={ticket.description}
+                ticketCategory={ticket.category}
+              />
             ),
           },
         ]}

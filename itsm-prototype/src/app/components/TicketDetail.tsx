@@ -1,55 +1,40 @@
 "use client";
 
-import {
-  CheckCircle,
-  Clock,
-  XCircle,
-  Edit,
-  FileText,
-  Save,
-  ChevronDown,
-  X,
-  ArrowRight,
-  ChevronUp,
-} from "lucide-react";
+import { CheckCircle, Clock, Trash2, XCircle, Edit, Calendar, User, MessageSquare, FileText, Save, Download, Upload, X, AlertTriangle, Send, History } from "lucide-react";
 
-import React, { useState } from "react";
-// 工单详情组件的 Props 接口
+import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Card,
+  Space,
+  Typography,
+  App,
+  Badge,
+  Tag as AntTag,
+  Upload as AntUpload,
+  Modal,
+  Input,
+  Select,
+  Timeline,
+  Avatar,
+  List,
+  Tabs,
+} from "antd";
+import { TicketApi } from "../lib/ticket-api";
+import {
+  Ticket,
+  Attachment,
+  Comment,
+  WorkflowStep,
+  SLAInfo,
+} from "../lib/api-config";
+
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
+const { TabPane } = Tabs;
+
 interface TicketDetailProps {
-  ticket: {
-    id: string;
-    title: string;
-    type: "Incident" | "Problem" | "Change" | "Service Request";
-    status: string;
-    priority: string;
-    assignee: string;
-    reporter: string;
-    createdAt: string;
-    lastUpdate: string;
-    description: string;
-    category?: string;
-    subcategory?: string;
-    impact?: string;
-    urgency?: string;
-    resolution?: string;
-    workNotes?: string;
-    attachments?: Array<{ name: string; url: string; size: string }>;
-  };
-  workflow?: Array<{
-    step: string;
-    status: "completed" | "current" | "pending";
-    assignee?: string;
-    completedAt?: string;
-    comments?: string;
-  }>;
-  logs?: Array<{
-    id: string;
-    timestamp: string;
-    user: string;
-    action: string;
-    details: string;
-    type: "system" | "user" | "approval";
-  }>;
+  ticket: Ticket;
   onApprove?: () => void;
   onReject?: () => void;
   onAssign?: (assignee: string) => void;
@@ -60,7 +45,10 @@ interface TicketDetailProps {
 
 // 获取优先级配置
 const getPriorityConfig = (priority: string) => {
-  const configs = {
+  const configs: Record<
+    string,
+    { color: string; bgColor: string; textColor: string; borderColor: string }
+  > = {
     紧急: {
       color: "red",
       bgColor: "bg-red-100",
@@ -91,39 +79,46 @@ const getPriorityConfig = (priority: string) => {
 
 // 获取状态配置
 const getStatusConfig = (status: string) => {
-  const configs = {
+  const configs: Record<string, { bgColor: string; textColor: string }> = {
     处理中: { bgColor: "bg-blue-100", textColor: "text-blue-800" },
     已分配: { bgColor: "bg-purple-100", textColor: "text-purple-800" },
     已解决: { bgColor: "bg-green-100", textColor: "text-green-800" },
     已关闭: { bgColor: "bg-gray-200", textColor: "text-gray-800" },
     待审批: { bgColor: "bg-yellow-100", textColor: "text-yellow-800" },
     已批准: { bgColor: "bg-green-100", textColor: "text-green-800" },
-    实施中: { bgColor: "bg-blue-100", textColor: "text-blue-800" },
-    已完成: { bgColor: "bg-gray-200", textColor: "text-gray-800" },
-    已拒绝: { bgColor: "bg-red-100", textColor: "text-red-800" },
-    调查中: { bgColor: "bg-blue-100", textColor: "text-blue-800" },
-    已知错误: { bgColor: "bg-purple-100", textColor: "text-purple-800" },
   };
   return (
     configs[status] || { bgColor: "bg-gray-100", textColor: "text-gray-800" }
   );
 };
 
-// 获取工单类型图标
+// 获取类型图标
 const getTypeIcon = (type: string) => {
-  const icons = {
+  const icons: Record<string, React.ComponentType<any>> = {
     Incident: AlertTriangle,
-    Problem: Cpu,
-    Change: GitMerge,
-    "Service Request": User,
+    Problem: AlertTriangle,
+    Change: Edit,
+    "Service Request": FileText,
   };
   return icons[type] || FileText;
 };
 
+// 格式化文件大小
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
+
+// 格式化时间
+const formatDateTime = (dateString: string) => {
+  return new Date(dateString).toLocaleString("zh-CN");
+};
+
 export const TicketDetail: React.FC<TicketDetailProps> = ({
   ticket,
-  workflow = [],
-  logs = [],
   onApprove,
   onReject,
   onAssign,
@@ -131,15 +126,66 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   canApprove = false,
   canEdit = false,
 }) => {
+  const { message: antMessage } = App.useApp();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTicket, setEditedTicket] = useState(ticket);
-  const [showLogs, setShowLogs] = useState(true);
-  const [newComment, setNewComment] = useState("");
+  const [editedTicket, setEditedTicket] = useState<Ticket>(ticket);
   const [assigneeInput, setAssigneeInput] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [commentType, setCommentType] = useState<"comment" | "work_note">(
+    "comment"
+  );
+  const [isInternal, setIsInternal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  const priorityConfig = getPriorityConfig(ticket.priority);
-  const statusConfig = getStatusConfig(ticket.status);
-  const TypeIcon = getTypeIcon(ticket.type);
+  // 状态管理
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
+  const [slaInfo, setSlaInfo] = useState<SLAInfo | null>(null);
+  const [ticketHistory, setTicketHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 获取工单相关数据
+  useEffect(() => {
+    fetchTicketData();
+  }, [ticket.id]);
+
+  const fetchTicketData = async () => {
+    setLoading(true);
+    try {
+      // 并行获取所有数据
+      const [attachmentsRes, commentsRes, workflowRes, slaRes, historyRes] =
+        await Promise.allSettled([
+          TicketApi.getTicketAttachments(ticket.id),
+          TicketApi.getTicketComments(ticket.id),
+          TicketApi.getTicketWorkflow(ticket.id),
+          TicketApi.getTicketSLA(ticket.id),
+          TicketApi.getTicketHistory(ticket.id),
+        ]);
+
+      if (attachmentsRes.status === "fulfilled") {
+        setAttachments(attachmentsRes.value || []);
+      }
+      if (commentsRes.status === "fulfilled") {
+        setComments((commentsRes.value as Comment[]) || []);
+      }
+      if (workflowRes.status === "fulfilled") {
+        setWorkflowSteps((workflowRes.value as WorkflowStep[]) || []);
+      }
+      if (slaRes.status === "fulfilled") {
+        setSlaInfo((slaRes.value as SLAInfo) || null);
+      }
+      if (historyRes.status === "fulfilled") {
+        setTicketHistory(historyRes.value || []);
+      }
+    } catch (error) {
+      console.error("获取工单数据失败:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = () => {
     onUpdate?.(editedTicket);
@@ -158,369 +204,630 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     }
   };
 
+  // 添加评论
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      await TicketApi.addTicketComment(ticket.id, {
+        content: newComment,
+        type: commentType,
+        is_internal: isInternal,
+      });
+
+      antMessage.success("评论添加成功");
+      setNewComment("");
+      fetchTicketData(); // 刷新评论列表
+    } catch (error) {
+      antMessage.error("添加评论失败");
+    }
+  };
+
+  // 上传附件
+  const handleUploadAttachment = async () => {
+    if (!uploadingFile) return;
+
+    try {
+      await TicketApi.uploadTicketAttachment(ticket.id, uploadingFile);
+      antMessage.success("附件上传成功");
+      setShowUploadModal(false);
+      setUploadingFile(null);
+      fetchTicketData(); // 刷新附件列表
+    } catch (error) {
+      antMessage.error("附件上传失败");
+    }
+  };
+
+  // 删除附件
+  const handleDeleteAttachment = async (attachmentId: number) => {
+    try {
+      await TicketApi.deleteTicketAttachment(ticket.id, attachmentId);
+      antMessage.success("附件删除成功");
+      fetchTicketData(); // 刷新附件列表
+    } catch (error) {
+      antMessage.error("附件删除失败");
+    }
+  };
+
+  const TypeIcon = getTypeIcon(ticket.type || "Service Request");
+  const priorityConfig = getPriorityConfig(ticket.priority || "中");
+  const statusConfig = getStatusConfig(ticket.status || "待处理");
+
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-      {/* 头部信息 */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <TypeIcon className="w-8 h-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {ticket.title}
-              </h1>
-              <p className="text-gray-600">
-                {ticket.type} #{ticket.id}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            {canEdit && (
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-              >
-                {isEditing ? (
-                  <X className="w-4 h-4 mr-1" />
-                ) : (
-                  <Edit className="w-4 h-4 mr-1" />
-                )}
-                {isEditing ? "取消" : "编辑"}
-              </button>
-            )}
-            {isEditing && (
-              <button
-                onClick={handleSave}
-                className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Save className="w-4 h-4 mr-1" />
-                保存
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* 状态和优先级标签 */}
-        <div className="flex items-center space-x-4 mb-6">
-          <span
-            className={`px-3 py-1 text-sm font-medium rounded-full ${statusConfig.bgColor} ${statusConfig.textColor}`}
-          >
-            {ticket.status}
-          </span>
-          <span
-            className={`px-3 py-1 text-sm font-semibold rounded-full border ${priorityConfig.bgColor} ${priorityConfig.textColor} ${priorityConfig.borderColor}`}
-          >
-            优先级: {ticket.priority}
-          </span>
-        </div>
-
-        {/* 基本信息网格 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              负责人
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editedTicket.assignee}
-                onChange={(e) =>
-                  setEditedTicket({ ...editedTicket, assignee: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ) : (
-              <p className="text-gray-900">{ticket.assignee}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              报告人
-            </label>
-            <p className="text-gray-900">{ticket.reporter}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              创建时间
-            </label>
-            <p className="text-gray-900">{ticket.createdAt}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              最后更新
-            </label>
-            <p className="text-gray-900">{ticket.lastUpdate}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 左侧：详细信息 */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* 描述 */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              问题描述
-            </h3>
-            {isEditing ? (
-              <textarea
-                value={editedTicket.description}
-                onChange={(e) =>
-                  setEditedTicket({
-                    ...editedTicket,
-                    description: e.target.value,
-                  })
-                }
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ) : (
-              <p className="text-gray-700 whitespace-pre-wrap">
-                {ticket.description}
-              </p>
-            )}
-          </div>
-
-          {/* 工作流程图 */}
-          {workflow.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                处理流程
-              </h3>
-              <div className="space-y-4">
-                {workflow.map((step, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <div
-                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        step.status === "completed"
-                          ? "bg-green-100 text-green-600"
-                          : step.status === "current"
-                          ? "bg-blue-100 text-blue-600"
-                          : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {step.status === "completed" ? (
-                        <CheckCircle className="w-5 h-5" />
-                      ) : step.status === "current" ? (
-                        <Clock className="w-5 h-5" />
-                      ) : (
-                        <div className="w-3 h-3 rounded-full bg-current" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p
-                        className={`font-medium ${
-                          step.status === "completed"
-                            ? "text-green-900"
-                            : step.status === "current"
-                            ? "text-blue-900"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {step.step}
-                      </p>
-                      {step.assignee && (
-                        <p className="text-sm text-gray-600">
-                          负责人: {step.assignee}
-                        </p>
-                      )}
-                      {step.completedAt && (
-                        <p className="text-sm text-gray-500">
-                          完成时间: {step.completedAt}
-                        </p>
-                      )}
-                      {step.comments && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          {step.comments}
-                        </p>
-                      )}
-                    </div>
-                    {index < workflow.length - 1 && (
-                      <ArrowRight className="w-4 h-4 text-gray-400" />
-                    )}
-                  </div>
-                ))}
+    <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      {/* 页面头部 */}
+      <div className="bg-white shadow-sm border-b mb-6">
+        <div className="px-6 py-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <TypeIcon className="w-8 h-8 text-blue-600" />
+              <div>
+                <Title level={2} className="mb-1">
+                  {ticket.title}
+                </Title>
+                <Text type="secondary">
+                  {ticket.type || "Service Request"} #
+                  {ticket.ticket_number || ticket.id}
+                </Text>
               </div>
             </div>
-          )}
-
-          {/* 解决方案 */}
-          {ticket.resolution && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                解决方案
-              </h3>
-              {isEditing ? (
-                <textarea
-                  value={editedTicket.resolution}
-                  onChange={(e) =>
-                    setEditedTicket({
-                      ...editedTicket,
-                      resolution: e.target.value,
-                    })
-                  }
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ) : (
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {ticket.resolution}
-                </p>
+            <div className="flex items-center space-x-3">
+              {canEdit && (
+                <Button
+                  icon={isEditing ? <X /> : <Edit />}
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  {isEditing ? "取消" : "编辑"}
+                </Button>
+              )}
+              {isEditing && (
+                <Button type="primary" icon={<Save />} onClick={handleSave}>
+                  保存
+                </Button>
               )}
             </div>
-          )}
-
-          {/* 附件 */}
-          {ticket.attachments && ticket.attachments.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">附件</h3>
-              <div className="space-y-2">
-                {ticket.attachments.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-5 h-5 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-900">
-                        {file.name}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ({file.size})
-                      </span>
-                    </div>
-                    <a
-                      href={file.url}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      download
-                    >
-                      下载
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 右侧：操作和日志 */}
-        <div className="space-y-6">
-          {/* 审批操作 */}
-          {canApprove && ticket.status === "待审批" && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                审批操作
-              </h3>
-              <div className="space-y-3">
-                <button
-                  onClick={onApprove}
-                  className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  批准
-                </button>
-                <button
-                  onClick={onReject}
-                  className="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors"
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  拒绝
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 分配操作 */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              分配工单
-            </h3>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={assigneeInput}
-                onChange={(e) => setAssigneeInput(e.target.value)}
-                placeholder="输入负责人姓名"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleAssign}
-                disabled={!assigneeInput.trim()}
-                className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                分配
-              </button>
-            </div>
           </div>
 
-          {/* 活动日志 */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">活动日志</h3>
-              <button
-                onClick={() => setShowLogs(!showLogs)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                {showLogs ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
-              </button>
-            </div>
+          {/* 状态和优先级标签 */}
+          <div className="flex items-center space-x-4 mb-4">
+            <Badge
+              status={
+                ticket.status === "open"
+                  ? "processing"
+                  : ticket.status === "closed"
+                  ? "success"
+                  : "warning"
+              }
+              text={ticket.status || "待处理"}
+            />
+            <AntTag color={priorityConfig.color}>
+              优先级: {ticket.priority || "中"}
+            </AntTag>
+            {ticket.category && <AntTag color="blue">{ticket.category}</AntTag>}
+            {ticket.tags &&
+              ticket.tags.map((tag, index) => (
+                <AntTag key={index} color="green">
+                  {tag}
+                </AntTag>
+              ))}
+          </div>
 
-            {showLogs && (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {logs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="border-l-2 border-gray-200 pl-4 pb-4"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-900">
-                        {log.user}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {log.timestamp}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">{log.action}</p>
-                    <p className="text-xs text-gray-600">{log.details}</p>
-                  </div>
-                ))}
-
-                {logs.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">暂无活动记录</p>
-                )}
+          {/* 基本信息网格 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <Text type="secondary" className="text-sm">
+                负责人
+              </Text>
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-gray-500" />
+                <Text>{ticket.assignee?.name || "未分配"}</Text>
               </div>
-            )}
-
-            {/* 添加评论 */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="添加工作备注..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-              <button
-                onClick={() => {
-                  if (newComment.trim()) {
-                    // 这里可以调用添加评论的回调
-                    console.log("添加评论:", newComment);
-                    setNewComment("");
-                  }
-                }}
-                disabled={!newComment.trim()}
-                className="mt-2 w-full px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                添加备注
-              </button>
+            </div>
+            <div>
+              <Text type="secondary" className="text-sm">
+                报告人
+              </Text>
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-gray-500" />
+                <Text>{ticket.requester?.name || "未知"}</Text>
+              </div>
+            </div>
+            <div>
+              <Text type="secondary" className="text-sm">
+                创建时间
+              </Text>
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <Text>{formatDateTime(ticket.created_at)}</Text>
+              </div>
+            </div>
+            <div>
+              <Text type="secondary" className="text-sm">
+                最后更新
+              </Text>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-gray-500" />
+                <Text>{formatDateTime(ticket.updated_at)}</Text>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* 主要内容区域 */}
+      <div className="px-6">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          className="bg-white rounded-lg shadow-sm"
+        >
+          {/* 概览标签页 */}
+          <TabPane tab="概览" key="overview">
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* 左侧：详细信息 */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* 问题描述 */}
+                  <Card title="问题描述" className="shadow-sm">
+                    {isEditing ? (
+                      <TextArea
+                        value={editedTicket.description}
+                        onChange={(e) =>
+                          setEditedTicket({
+                            ...editedTicket,
+                            description: e.target.value,
+                          })
+                        }
+                        rows={4}
+                      />
+                    ) : (
+                      <Paragraph className="whitespace-pre-wrap">
+                        {ticket.description}
+                      </Paragraph>
+                    )}
+                  </Card>
+
+                  {/* 解决方案 */}
+                  {ticket.resolution && (
+                    <Card title="解决方案" className="shadow-sm">
+                      {isEditing ? (
+                        <TextArea
+                          value={editedTicket.resolution}
+                          onChange={(e) =>
+                            setEditedTicket({
+                              ...editedTicket,
+                              resolution: e.target.value,
+                            })
+                          }
+                          rows={3}
+                        />
+                      ) : (
+                        <Paragraph className="whitespace-pre-wrap">
+                          {ticket.resolution}
+                        </Paragraph>
+                      )}
+                    </Card>
+                  )}
+
+                  {/* 工作流程图 */}
+                  {workflowSteps.length > 0 && (
+                    <Card title="处理流程" className="shadow-sm">
+                      <Timeline>
+                        {workflowSteps.map((step, index) => (
+                          <Timeline.Item
+                            key={step.id}
+                            color={
+                              step.status === "completed"
+                                ? "green"
+                                : step.status === "in_progress"
+                                ? "blue"
+                                : "gray"
+                            }
+                            dot={
+                              step.status === "completed" ? (
+                                <CheckCircle className="w-4 h-4" />
+                              ) : step.status === "in_progress" ? (
+                                <Clock className="w-4 h-4" />
+                              ) : undefined
+                            }
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Text strong>{step.step_name}</Text>
+                                {step.assignee && (
+                                  <div className="text-sm text-gray-500">
+                                    负责人: {step.assignee.name}
+                                  </div>
+                                )}
+                                {step.comments && (
+                                  <div className="text-sm text-gray-600 mt-1">
+                                    {step.comments}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <Badge
+                                  status={
+                                    step.status === "completed"
+                                      ? "success"
+                                      : step.status === "in_progress"
+                                      ? "processing"
+                                      : "default"
+                                  }
+                                  text={
+                                    step.status === "completed"
+                                      ? "已完成"
+                                      : step.status === "in_progress"
+                                      ? "进行中"
+                                      : "待处理"
+                                  }
+                                />
+                                {step.completed_at && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {formatDateTime(step.completed_at)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </Timeline.Item>
+                        ))}
+                      </Timeline>
+                    </Card>
+                  )}
+                </div>
+
+                {/* 右侧：操作和SLA */}
+                <div className="space-y-6">
+                  {/* 审批操作 */}
+                  {canApprove && ticket.status === "待审批" && (
+                    <Card title="审批操作" className="shadow-sm">
+                      <Space direction="vertical" className="w-full">
+                        <Button
+                          type="primary"
+                          icon={<CheckCircle />}
+                          onClick={onApprove}
+                          className="w-full"
+                        >
+                          批准
+                        </Button>
+                        <Button
+                          danger
+                          icon={<XCircle />}
+                          onClick={onReject}
+                          className="w-full"
+                        >
+                          拒绝
+                        </Button>
+                      </Space>
+                    </Card>
+                  )}
+
+                  {/* 分配操作 */}
+                  <Card title="分配工单" className="shadow-sm">
+                    <Space direction="vertical" className="w-full">
+                      <Input
+                        value={assigneeInput}
+                        onChange={(e) => setAssigneeInput(e.target.value)}
+                        placeholder="输入负责人姓名"
+                      />
+                      <Button
+                        type="primary"
+                        onClick={handleAssign}
+                        disabled={!assigneeInput.trim()}
+                        className="w-full"
+                      >
+                        分配
+                      </Button>
+                    </Space>
+                  </Card>
+
+                  {/* SLA信息 */}
+                  {slaInfo && (
+                    <Card title="SLA信息" className="shadow-sm">
+                      <div className="space-y-3">
+                        <div>
+                          <Text type="secondary" className="text-sm">
+                            SLA名称
+                          </Text>
+                          <div className="font-medium">{slaInfo.sla_name}</div>
+                        </div>
+                        <div>
+                          <Text type="secondary" className="text-sm">
+                            响应时间
+                          </Text>
+                          <div className="font-medium">
+                            {slaInfo.response_time} 分钟
+                          </div>
+                        </div>
+                        <div>
+                          <Text type="secondary" className="text-sm">
+                            解决时间
+                          </Text>
+                          <div className="font-medium">
+                            {slaInfo.resolution_time} 分钟
+                          </div>
+                        </div>
+                        <div>
+                          <Text type="secondary" className="text-sm">
+                            到期时间
+                          </Text>
+                          <div className="font-medium">
+                            {formatDateTime(slaInfo.due_time)}
+                          </div>
+                        </div>
+                        <div>
+                          <Text type="secondary" className="text-sm">
+                            状态
+                          </Text>
+                          <Badge
+                            status={
+                              slaInfo.status === "active"
+                                ? "processing"
+                                : slaInfo.status === "breached"
+                                ? "error"
+                                : "success"
+                            }
+                            text={
+                              slaInfo.status === "active"
+                                ? "进行中"
+                                : slaInfo.status === "breached"
+                                ? "已违反"
+                                : "已完成"
+                            }
+                          />
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabPane>
+
+          {/* 附件标签页 */}
+          <TabPane tab="附件" key="attachments">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <Title level={4}>附件管理</Title>
+                <Button
+                  type="primary"
+                  icon={<Upload />}
+                  onClick={() => setShowUploadModal(true)}
+                >
+                  上传附件
+                </Button>
+              </div>
+
+              {attachments.length > 0 ? (
+                <List
+                  dataSource={attachments}
+                  renderItem={(attachment) => (
+                    <List.Item
+                      actions={[
+                        <Button
+                          key="download"
+                          type="link"
+                          icon={<Download />}
+                          onClick={() => window.open(attachment.url)}
+                        >
+                          下载
+                        </Button>,
+                        <Button
+                          key="delete"
+                          type="link"
+                          danger
+                          icon={<Trash2 />}
+                          onClick={() => handleDeleteAttachment(attachment.id)}
+                        >
+                          删除
+                        </Button>,
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={<FileText className="w-8 h-8 text-blue-500" />}
+                        title={attachment.original_name}
+                        description={
+                          <div className="text-sm text-gray-500">
+                            <div>
+                              大小: {formatFileSize(attachment.file_size)}
+                            </div>
+                            <div>类型: {attachment.mime_type}</div>
+                            <div>
+                              上传时间: {formatDateTime(attachment.uploaded_at)}
+                            </div>
+                          </div>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <Text>暂无附件</Text>
+                </div>
+              )}
+            </div>
+          </TabPane>
+
+          {/* 评论标签页 */}
+          <TabPane tab="评论" key="comments">
+            <div className="p-6">
+              <div className="mb-6">
+                <Card title="添加评论" className="shadow-sm">
+                  <div className="space-y-4">
+                    <div className="flex space-x-4">
+                      <Select
+                        value={commentType}
+                        onChange={setCommentType}
+                        style={{ width: 120 }}
+                      >
+                        <Select.Option value="comment">公开评论</Select.Option>
+                        <Select.Option value="work_note">
+                          工作备注
+                        </Select.Option>
+                      </Select>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="internal"
+                          checked={isInternal}
+                          onChange={(e) => setIsInternal(e.target.checked)}
+                        />
+                        <label
+                          htmlFor="internal"
+                          className="text-sm text-gray-600"
+                        >
+                          仅内部可见
+                        </label>
+                      </div>
+                    </div>
+                    <TextArea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="输入您的评论..."
+                      rows={3}
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        type="primary"
+                        icon={<Send />}
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim()}
+                      >
+                        发送评论
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                {comments.map((comment) => (
+                  <Card key={comment.id} className="shadow-sm">
+                    <div className="flex items-start space-x-3">
+                      <Avatar size="small" icon={<User />} />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Text strong>
+                            {comment.author?.name || "未知用户"}
+                          </Text>
+                          <AntTag
+                            color={
+                              comment.type === "work_note" ? "blue" : "green"
+                            }
+                          >
+                            {comment.type === "work_note"
+                              ? "工作备注"
+                              : "公开评论"}
+                          </AntTag>
+                          {comment.is_internal && (
+                            <AntTag color="orange">仅内部可见</AntTag>
+                          )}
+                          <Text type="secondary" className="text-sm">
+                            {formatDateTime(comment.created_at)}
+                          </Text>
+                        </div>
+                        <Paragraph className="mb-0">
+                          {comment.content}
+                        </Paragraph>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                {comments.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <Text>暂无评论</Text>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabPane>
+
+          {/* 历史记录标签页 */}
+          <TabPane tab="历史记录" key="history">
+            <div className="p-6">
+              <Title level={4}>操作历史</Title>
+              {ticketHistory.length > 0 ? (
+                <Timeline>
+                  {ticketHistory.map((record) => (
+                    <Timeline.Item key={record.id}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Text strong>{record.user?.name || "系统"}</Text>
+                          <div className="text-sm text-gray-600">
+                            修改了 {record.field_name}
+                          </div>
+                          {record.change_reason && (
+                            <div className="text-sm text-gray-500">
+                              原因: {record.change_reason}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-500">
+                            {formatDateTime(record.changed_at)}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {record.old_value} → {record.new_value}
+                          </div>
+                        </div>
+                      </div>
+                    </Timeline.Item>
+                  ))}
+                </Timeline>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <History className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <Text>暂无历史记录</Text>
+                </div>
+              )}
+            </div>
+          </TabPane>
+        </Tabs>
+      </div>
+
+      {/* 上传附件模态框 */}
+      <Modal
+        title="上传附件"
+        open={showUploadModal}
+        onOk={handleUploadAttachment}
+        onCancel={() => {
+          setShowUploadModal(false);
+          setUploadingFile(null);
+        }}
+        okText="上传"
+        cancelText="取消"
+        okButtonProps={{ disabled: !uploadingFile }}
+      >
+        <div className="space-y-4">
+          <AntUpload
+            beforeUpload={(file) => {
+              setUploadingFile(file);
+              return false; // 阻止自动上传
+            }}
+            maxCount={1}
+            accept="*/*"
+          >
+            <Button icon={<Upload />}>选择文件</Button>
+          </AntUpload>
+          {uploadingFile && (
+            <div className="p-3 bg-gray-50 rounded border">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <span className="text-sm font-medium">
+                  {uploadingFile.name}
+                </span>
+                <span className="text-xs text-gray-500">
+                  ({formatFileSize(uploadingFile.size)})
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

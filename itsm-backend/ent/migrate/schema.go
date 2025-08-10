@@ -261,6 +261,436 @@ var (
 		Columns:    ProblemsColumns,
 		PrimaryKey: []*schema.Column{ProblemsColumns[0]},
 	}
+	// ProcessDefinitionsColumns holds the columns for the "process_definitions" table.
+	ProcessDefinitionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "version", Type: field.TypeString, Default: "1.0.0"},
+		{Name: "category", Type: field.TypeString, Default: "default"},
+		{Name: "bpmn_xml", Type: field.TypeJSON},
+		{Name: "process_variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "is_latest", Type: field.TypeBool, Default: true},
+		{Name: "deployment_id", Type: field.TypeInt},
+		{Name: "deployment_name", Type: field.TypeString, Nullable: true},
+		{Name: "deployed_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProcessDefinitionsTable holds the schema information for the "process_definitions" table.
+	ProcessDefinitionsTable = &schema.Table{
+		Name:       "process_definitions",
+		Columns:    ProcessDefinitionsColumns,
+		PrimaryKey: []*schema.Column{ProcessDefinitionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processdefinition_key_version",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessDefinitionsColumns[1], ProcessDefinitionsColumns[4]},
+			},
+			{
+				Name:    "processdefinition_tenant_id_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDefinitionsColumns[13], ProcessDefinitionsColumns[1]},
+			},
+			{
+				Name:    "processdefinition_deployment_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDefinitionsColumns[10]},
+			},
+			{
+				Name:    "processdefinition_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDefinitionsColumns[8]},
+			},
+			{
+				Name:    "processdefinition_is_latest",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDefinitionsColumns[9]},
+			},
+		},
+	}
+	// ProcessDeploymentsColumns holds the columns for the "process_deployments" table.
+	ProcessDeploymentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "deployment_id", Type: field.TypeString, Unique: true},
+		{Name: "deployment_name", Type: field.TypeString},
+		{Name: "deployment_source", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "deployment_time", Type: field.TypeTime},
+		{Name: "deployed_by", Type: field.TypeString, Nullable: true},
+		{Name: "deployment_comment", Type: field.TypeString, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "deployment_category", Type: field.TypeString, Default: "default"},
+		{Name: "deployment_metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProcessDeploymentsTable holds the schema information for the "process_deployments" table.
+	ProcessDeploymentsTable = &schema.Table{
+		Name:       "process_deployments",
+		Columns:    ProcessDeploymentsColumns,
+		PrimaryKey: []*schema.Column{ProcessDeploymentsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processdeployment_deployment_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[1]},
+			},
+			{
+				Name:    "processdeployment_deployment_name",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[2]},
+			},
+			{
+				Name:    "processdeployment_deployment_time",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[4]},
+			},
+			{
+				Name:    "processdeployment_deployed_by",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[5]},
+			},
+			{
+				Name:    "processdeployment_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[7]},
+			},
+			{
+				Name:    "processdeployment_deployment_category",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[8]},
+			},
+			{
+				Name:    "processdeployment_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[10]},
+			},
+			{
+				Name:    "processdeployment_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessDeploymentsColumns[11]},
+			},
+		},
+	}
+	// ProcessExecutionHistoriesColumns holds the columns for the "process_execution_histories" table.
+	ProcessExecutionHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "history_id", Type: field.TypeString, Unique: true},
+		{Name: "process_instance_id", Type: field.TypeString},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "activity_id", Type: field.TypeString, Nullable: true},
+		{Name: "activity_name", Type: field.TypeString, Nullable: true},
+		{Name: "activity_type", Type: field.TypeString},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "event_detail", Type: field.TypeString, Nullable: true},
+		{Name: "variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "user_id", Type: field.TypeString, Nullable: true},
+		{Name: "user_name", Type: field.TypeString, Nullable: true},
+		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "comment", Type: field.TypeString, Nullable: true},
+		{Name: "error_message", Type: field.TypeString, Nullable: true},
+		{Name: "error_code", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// ProcessExecutionHistoriesTable holds the schema information for the "process_execution_histories" table.
+	ProcessExecutionHistoriesTable = &schema.Table{
+		Name:       "process_execution_histories",
+		Columns:    ProcessExecutionHistoriesColumns,
+		PrimaryKey: []*schema.Column{ProcessExecutionHistoriesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processexecutionhistory_history_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[1]},
+			},
+			{
+				Name:    "processexecutionhistory_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[2]},
+			},
+			{
+				Name:    "processexecutionhistory_process_definition_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[3]},
+			},
+			{
+				Name:    "processexecutionhistory_activity_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[4]},
+			},
+			{
+				Name:    "processexecutionhistory_activity_type",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[6]},
+			},
+			{
+				Name:    "processexecutionhistory_event_type",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[7]},
+			},
+			{
+				Name:    "processexecutionhistory_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[10]},
+			},
+			{
+				Name:    "processexecutionhistory_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[12]},
+			},
+			{
+				Name:    "processexecutionhistory_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[16]},
+			},
+			{
+				Name:    "processexecutionhistory_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[17]},
+			},
+		},
+	}
+	// ProcessInstancesColumns holds the columns for the "process_instances" table.
+	ProcessInstancesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "process_instance_id", Type: field.TypeString, Unique: true},
+		{Name: "business_key", Type: field.TypeString, Nullable: true},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "process_definition_id", Type: field.TypeString},
+		{Name: "status", Type: field.TypeString, Default: "running"},
+		{Name: "current_activity_id", Type: field.TypeString, Nullable: true},
+		{Name: "current_activity_name", Type: field.TypeString, Nullable: true},
+		{Name: "variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "start_time", Type: field.TypeTime},
+		{Name: "end_time", Type: field.TypeTime, Nullable: true},
+		{Name: "suspended_time", Type: field.TypeTime, Nullable: true},
+		{Name: "suspended_reason", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "initiator", Type: field.TypeString, Nullable: true},
+		{Name: "parent_process_instance_id", Type: field.TypeString, Nullable: true},
+		{Name: "root_process_instance_id", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProcessInstancesTable holds the schema information for the "process_instances" table.
+	ProcessInstancesTable = &schema.Table{
+		Name:       "process_instances",
+		Columns:    ProcessInstancesColumns,
+		PrimaryKey: []*schema.Column{ProcessInstancesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processinstance_process_instance_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessInstancesColumns[1]},
+			},
+			{
+				Name:    "processinstance_business_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[2]},
+			},
+			{
+				Name:    "processinstance_process_definition_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[3]},
+			},
+			{
+				Name:    "processinstance_process_definition_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[4]},
+			},
+			{
+				Name:    "processinstance_status",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[5]},
+			},
+			{
+				Name:    "processinstance_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[13]},
+			},
+			{
+				Name:    "processinstance_initiator",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[14]},
+			},
+			{
+				Name:    "processinstance_start_time",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[9]},
+			},
+			{
+				Name:    "processinstance_parent_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[15]},
+			},
+			{
+				Name:    "processinstance_root_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessInstancesColumns[16]},
+			},
+		},
+	}
+	// ProcessTasksColumns holds the columns for the "process_tasks" table.
+	ProcessTasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "task_id", Type: field.TypeString, Unique: true},
+		{Name: "process_instance_id", Type: field.TypeString},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "task_definition_key", Type: field.TypeString},
+		{Name: "task_name", Type: field.TypeString},
+		{Name: "task_type", Type: field.TypeString, Default: "user_task"},
+		{Name: "assignee", Type: field.TypeString, Nullable: true},
+		{Name: "candidate_users", Type: field.TypeString, Nullable: true},
+		{Name: "candidate_groups", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "created"},
+		{Name: "priority", Type: field.TypeString, Default: "normal"},
+		{Name: "due_date", Type: field.TypeTime, Nullable: true},
+		{Name: "created_time", Type: field.TypeTime},
+		{Name: "assigned_time", Type: field.TypeTime, Nullable: true},
+		{Name: "started_time", Type: field.TypeTime, Nullable: true},
+		{Name: "completed_time", Type: field.TypeTime, Nullable: true},
+		{Name: "form_key", Type: field.TypeString, Nullable: true},
+		{Name: "task_variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "parent_task_id", Type: field.TypeString, Nullable: true},
+		{Name: "root_task_id", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProcessTasksTable holds the schema information for the "process_tasks" table.
+	ProcessTasksTable = &schema.Table{
+		Name:       "process_tasks",
+		Columns:    ProcessTasksColumns,
+		PrimaryKey: []*schema.Column{ProcessTasksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processtask_task_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessTasksColumns[1]},
+			},
+			{
+				Name:    "processtask_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[2]},
+			},
+			{
+				Name:    "processtask_process_definition_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[3]},
+			},
+			{
+				Name:    "processtask_task_definition_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[4]},
+			},
+			{
+				Name:    "processtask_assignee",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[7]},
+			},
+			{
+				Name:    "processtask_status",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[10]},
+			},
+			{
+				Name:    "processtask_priority",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[11]},
+			},
+			{
+				Name:    "processtask_due_date",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[12]},
+			},
+			{
+				Name:    "processtask_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[22]},
+			},
+			{
+				Name:    "processtask_created_time",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[13]},
+			},
+			{
+				Name:    "processtask_parent_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[20]},
+			},
+			{
+				Name:    "processtask_root_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTasksColumns[21]},
+			},
+		},
+	}
+	// ProcessVariablesColumns holds the columns for the "process_variables" table.
+	ProcessVariablesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "variable_id", Type: field.TypeString, Unique: true},
+		{Name: "process_instance_id", Type: field.TypeString},
+		{Name: "task_id", Type: field.TypeString, Nullable: true},
+		{Name: "variable_name", Type: field.TypeString},
+		{Name: "variable_type", Type: field.TypeString, Default: "string"},
+		{Name: "variable_value", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "scope", Type: field.TypeString, Default: "process"},
+		{Name: "is_transient", Type: field.TypeBool, Default: false},
+		{Name: "serialization_format", Type: field.TypeString, Default: "json"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProcessVariablesTable holds the schema information for the "process_variables" table.
+	ProcessVariablesTable = &schema.Table{
+		Name:       "process_variables",
+		Columns:    ProcessVariablesColumns,
+		PrimaryKey: []*schema.Column{ProcessVariablesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processvariable_variable_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessVariablesColumns[1]},
+			},
+			{
+				Name:    "processvariable_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVariablesColumns[2]},
+			},
+			{
+				Name:    "processvariable_task_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVariablesColumns[3]},
+			},
+			{
+				Name:    "processvariable_variable_name",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVariablesColumns[4]},
+			},
+			{
+				Name:    "processvariable_scope",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVariablesColumns[7]},
+			},
+			{
+				Name:    "processvariable_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVariablesColumns[10]},
+			},
+			{
+				Name:    "processvariable_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVariablesColumns[11]},
+			},
+		},
+	}
 	// PromptTemplatesColumns holds the columns for the "prompt_templates" table.
 	PromptTemplatesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -610,6 +1040,12 @@ var (
 		MessagesTable,
 		NotificationsTable,
 		ProblemsTable,
+		ProcessDefinitionsTable,
+		ProcessDeploymentsTable,
+		ProcessExecutionHistoriesTable,
+		ProcessInstancesTable,
+		ProcessTasksTable,
+		ProcessVariablesTable,
 		PromptTemplatesTable,
 		SLADefinitionsTable,
 		SLAViolationsTable,

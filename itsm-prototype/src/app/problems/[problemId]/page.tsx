@@ -5,14 +5,16 @@ import {
   BookOpen,
   AlertTriangle,
   MessageSquare,
+  Tag as TagIcon,
   ArrowLeft,
-  Loader2,
 } from "lucide-react";
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, Tag, Button, TextArea, message, Spin } from "antd";
+import { Card, Button, message, Spin, Tag, Input } from "antd";
+
+const { TextArea } = Input;
 import {
   problemService,
   Problem,

@@ -36,6 +36,18 @@ type Tx struct {
 	Notification *NotificationClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
+	ProcessDefinition *ProcessDefinitionClient
+	// ProcessDeployment is the client for interacting with the ProcessDeployment builders.
+	ProcessDeployment *ProcessDeploymentClient
+	// ProcessExecutionHistory is the client for interacting with the ProcessExecutionHistory builders.
+	ProcessExecutionHistory *ProcessExecutionHistoryClient
+	// ProcessInstance is the client for interacting with the ProcessInstance builders.
+	ProcessInstance *ProcessInstanceClient
+	// ProcessTask is the client for interacting with the ProcessTask builders.
+	ProcessTask *ProcessTaskClient
+	// ProcessVariable is the client for interacting with the ProcessVariable builders.
+	ProcessVariable *ProcessVariableClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
@@ -207,6 +219,12 @@ func (tx *Tx) init() {
 	tx.Message = NewMessageClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
+	tx.ProcessDefinition = NewProcessDefinitionClient(tx.config)
+	tx.ProcessDeployment = NewProcessDeploymentClient(tx.config)
+	tx.ProcessExecutionHistory = NewProcessExecutionHistoryClient(tx.config)
+	tx.ProcessInstance = NewProcessInstanceClient(tx.config)
+	tx.ProcessTask = NewProcessTaskClient(tx.config)
+	tx.ProcessVariable = NewProcessVariableClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)

@@ -216,3 +216,41 @@ func (c *IncidentController) GetIncidentStats(ctx *gin.Context) {
 	c.logger.Infow("获取事件统计成功", "tenant_id", tenantID)
 	common.Success(ctx, stats)
 }
+
+// GetConfigurationItemsForIncident 获取可关联的配置项列表
+// @Summary 获取可关联的配置项列表
+// @Description 获取当前租户下可关联到事件的配置项列表
+// @Tags 事件管理
+// @Produce json
+// @Param search query string false "搜索关键词"
+// @Param type query string false "配置项类型"
+// @Param status query string false "配置项状态"
+// @Success 200 {object} common.Response{data=[]dto.ConfigurationItemInfo}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/incidents/configuration-items [get]
+func (c *IncidentController) GetConfigurationItemsForIncident(ctx *gin.Context) {
+	// 获取查询参数
+	search := ctx.Query("search")
+	ciType := ctx.Query("type")
+	status := ctx.Query("status")
+
+	// 获取当前租户ID
+	tenantID, err := c.incidentService.GetCurrentTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("获取当前租户ID失败", "error", err)
+		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		return
+	}
+
+	// 调用服务层方法获取配置项列表
+	ciInfos, err := c.incidentService.GetConfigurationItemsForIncident(ctx, tenantID, search, ciType, status)
+	if err != nil {
+		c.logger.Errorw("获取配置项列表失败", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, "获取配置项列表失败: "+err.Error())
+		return
+	}
+
+	c.logger.Infow("获取配置项列表成功", "count", len(ciInfos), "tenant_id", tenantID)
+	common.Success(ctx, ciInfos)
+}

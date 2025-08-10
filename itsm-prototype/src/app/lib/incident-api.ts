@@ -19,6 +19,15 @@ export interface Incident {
     id: number;
     name: string;
   };
+  // 配置项关联
+  configuration_item_id?: number;
+  configuration_item?: {
+    id: number;
+    name: string;
+    type: string;
+    status: string;
+    description?: string;
+  };
   // 阿里云相关字段
   alibaba_cloud_instance_id?: string;
   alibaba_cloud_region?: string;
@@ -47,6 +56,7 @@ export interface CreateIncidentRequest {
   type: string;
   is_major_incident?: boolean;
   assignee_id?: number;
+  configuration_item_id?: number;
   // 阿里云相关字段
   alibaba_cloud_instance_id?: string;
   alibaba_cloud_region?: string;
@@ -67,8 +77,13 @@ export interface UpdateIncidentRequest {
   description?: string;
   priority?: string;
   type?: string;
+  status?: string;
   assignee_id?: number;
   is_major_incident?: boolean;
+  resolution_notes?: string;
+  suspend_reason?: string;
+  resolved_at?: string;
+  closed_at?: string;
 }
 
 export interface UpdateIncidentStatusRequest {
@@ -87,6 +102,7 @@ export interface ListIncidentsRequest {
   assignee_id?: number;
   is_major_incident?: boolean;
   keyword?: string;
+  [key: string]: unknown;
 }
 
 export interface ListIncidentsResponse {
@@ -185,9 +201,38 @@ export class IncidentAPI {
     return response;
   }
 
+  // 添加评论
+  static async addComment(id: number, data: { text: string }): Promise<Incident> {
+    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/comments`, data);
+    return response;
+  }
+
   // 获取事件指标
   static async getIncidentMetrics(): Promise<IncidentMetrics> {
     const response = await httpClient.get<IncidentMetrics>('/api/v1/incidents/stats');
+    return response;
+  }
+
+  // 获取可关联的配置项列表
+  static async getConfigurationItems(search?: string, type?: string, status?: string): Promise<Array<{
+    id: number;
+    name: string;
+    type: string;
+    status: string;
+    description?: string;
+  }>> {
+    const params: Record<string, string> = {};
+    if (search) params.search = search;
+    if (type) params.type = type;
+    if (status) params.status = status;
+    
+    const response = await httpClient.get<Array<{
+      id: number;
+      name: string;
+      type: string;
+      status: string;
+      description?: string;
+    }>>('/api/v1/incidents/configuration-items', params);
     return response;
   }
 

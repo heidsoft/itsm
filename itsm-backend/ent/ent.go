@@ -18,6 +18,12 @@ import (
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -98,32 +104,38 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			auditlog.Table:              auditlog.ValidColumn,
-			ciattributedefinition.Table: ciattributedefinition.ValidColumn,
-			cirelationship.Table:        cirelationship.ValidColumn,
-			citype.Table:                citype.ValidColumn,
-			change.Table:                change.ValidColumn,
-			configurationitem.Table:     configurationitem.ValidColumn,
-			conversation.Table:          conversation.ValidColumn,
-			incident.Table:              incident.ValidColumn,
-			knowledgearticle.Table:      knowledgearticle.ValidColumn,
-			message.Table:               message.ValidColumn,
-			notification.Table:          notification.ValidColumn,
-			problem.Table:               problem.ValidColumn,
-			prompttemplate.Table:        prompttemplate.ValidColumn,
-			sladefinition.Table:         sladefinition.ValidColumn,
-			slaviolation.Table:          slaviolation.ValidColumn,
-			servicecatalog.Table:        servicecatalog.ValidColumn,
-			servicerequest.Table:        servicerequest.ValidColumn,
-			tenant.Table:                tenant.ValidColumn,
-			ticket.Table:                ticket.ValidColumn,
-			ticketcategory.Table:        ticketcategory.ValidColumn,
-			tickettag.Table:             tickettag.ValidColumn,
-			tickettemplate.Table:        tickettemplate.ValidColumn,
-			toolinvocation.Table:        toolinvocation.ValidColumn,
-			user.Table:                  user.ValidColumn,
-			workflow.Table:              workflow.ValidColumn,
-			workflowinstance.Table:      workflowinstance.ValidColumn,
+			auditlog.Table:                auditlog.ValidColumn,
+			ciattributedefinition.Table:   ciattributedefinition.ValidColumn,
+			cirelationship.Table:          cirelationship.ValidColumn,
+			citype.Table:                  citype.ValidColumn,
+			change.Table:                  change.ValidColumn,
+			configurationitem.Table:       configurationitem.ValidColumn,
+			conversation.Table:            conversation.ValidColumn,
+			incident.Table:                incident.ValidColumn,
+			knowledgearticle.Table:        knowledgearticle.ValidColumn,
+			message.Table:                 message.ValidColumn,
+			notification.Table:            notification.ValidColumn,
+			problem.Table:                 problem.ValidColumn,
+			processdefinition.Table:       processdefinition.ValidColumn,
+			processdeployment.Table:       processdeployment.ValidColumn,
+			processexecutionhistory.Table: processexecutionhistory.ValidColumn,
+			processinstance.Table:         processinstance.ValidColumn,
+			processtask.Table:             processtask.ValidColumn,
+			processvariable.Table:         processvariable.ValidColumn,
+			prompttemplate.Table:          prompttemplate.ValidColumn,
+			sladefinition.Table:           sladefinition.ValidColumn,
+			slaviolation.Table:            slaviolation.ValidColumn,
+			servicecatalog.Table:          servicecatalog.ValidColumn,
+			servicerequest.Table:          servicerequest.ValidColumn,
+			tenant.Table:                  tenant.ValidColumn,
+			ticket.Table:                  ticket.ValidColumn,
+			ticketcategory.Table:          ticketcategory.ValidColumn,
+			tickettag.Table:               tickettag.ValidColumn,
+			tickettemplate.Table:          tickettemplate.ValidColumn,
+			toolinvocation.Table:          toolinvocation.ValidColumn,
+			user.Table:                    user.ValidColumn,
+			workflow.Table:                workflow.ValidColumn,
+			workflowinstance.Table:        workflowinstance.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

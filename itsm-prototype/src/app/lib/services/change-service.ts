@@ -1,4 +1,4 @@
-import { apiConfig } from '../api-config';
+import { API_BASE_URL } from '../api-config';
 
 export interface Change {
   id: number;
@@ -69,7 +69,7 @@ export interface ChangeStats {
 }
 
 class ChangeService {
-  private baseUrl = `${apiConfig.baseUrl}/changes`;
+  private baseUrl = `${API_BASE_URL}/changes`;
 
   // 获取变更列表
   async getChanges(params: {

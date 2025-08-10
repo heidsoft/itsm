@@ -6,22 +6,32 @@ import (
 	"itsm-backend/ent"
 )
 
+// ConfigurationItemInfo 配置项信息
+type ConfigurationItemInfo struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Status      string `json:"status"`
+	Description string `json:"description,omitempty"`
+}
+
 // Incident 事件DTO
 type Incident struct {
-	ID                  int        `json:"id"`
-	IncidentNumber      string     `json:"incident_number"`
-	Title               string     `json:"title"`
-	Description         string     `json:"description"`
-	Status              string     `json:"status"`
-	Priority            string     `json:"priority"`
-	ReporterID          int        `json:"reporter_id"`
-	AssigneeID          *int       `json:"assignee_id,omitempty"`
-	ConfigurationItemID *int       `json:"configuration_item_id,omitempty"`
-	TenantID            int        `json:"tenant_id"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           time.Time  `json:"updated_at"`
-	ResolvedAt          *time.Time `json:"resolved_at,omitempty"`
-	ClosedAt            *time.Time `json:"closed_at,omitempty"`
+	ID                  int                    `json:"id"`
+	IncidentNumber      string                 `json:"incident_number"`
+	Title               string                 `json:"title"`
+	Description         string                 `json:"description"`
+	Status              string                 `json:"status"`
+	Priority            string                 `json:"priority"`
+	ReporterID          int                    `json:"reporter_id"`
+	AssigneeID          *int                   `json:"assignee_id,omitempty"`
+	ConfigurationItemID *int                   `json:"configuration_item_id,omitempty"`
+	ConfigurationItem   *ConfigurationItemInfo `json:"configuration_item,omitempty"`
+	TenantID            int                    `json:"tenant_id"`
+	CreatedAt           time.Time              `json:"created_at"`
+	UpdatedAt           time.Time              `json:"updated_at"`
+	ResolvedAt          *time.Time             `json:"resolved_at,omitempty"`
+	ClosedAt            *time.Time             `json:"closed_at,omitempty"`
 }
 
 // CreateIncidentRequest 创建事件请求

@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { useAuthStore } from "../store";
+import { useAuthStore } from "../../app/lib/store";
 
 // API响应类型定义
 export interface ApiResponse<T = unknown> {

@@ -1,12 +1,13 @@
 "use client";
 
+import { Search, Edit, Eye, AlertTriangle, Tag as TagIcon, PlusCircle, RefreshCw } from 'lucide-react';
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Card,
   Table,
   Button,
-  Tag,
   Space,
   Row,
   Col,
@@ -15,9 +16,8 @@ import {
   Input,
   Tooltip,
   message,
-  Spin,
+  Tag,
 } from "antd";
-import { PlusCircle, Search, Eye, Edit, AlertTriangle, Reload } from "lucide-react";
 import { problemService, Problem, ProblemStatus, ProblemPriority, ListProblemsParams } from "../lib/services/problem-service";
 import LoadingEmptyError from "../components/ui/LoadingEmptyError";
 

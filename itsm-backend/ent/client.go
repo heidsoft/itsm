@@ -23,6 +23,12 @@ import (
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -73,6 +79,18 @@ type Client struct {
 	Notification *NotificationClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
+	ProcessDefinition *ProcessDefinitionClient
+	// ProcessDeployment is the client for interacting with the ProcessDeployment builders.
+	ProcessDeployment *ProcessDeploymentClient
+	// ProcessExecutionHistory is the client for interacting with the ProcessExecutionHistory builders.
+	ProcessExecutionHistory *ProcessExecutionHistoryClient
+	// ProcessInstance is the client for interacting with the ProcessInstance builders.
+	ProcessInstance *ProcessInstanceClient
+	// ProcessTask is the client for interacting with the ProcessTask builders.
+	ProcessTask *ProcessTaskClient
+	// ProcessVariable is the client for interacting with the ProcessVariable builders.
+	ProcessVariable *ProcessVariableClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
@@ -124,6 +142,12 @@ func (c *Client) init() {
 	c.Message = NewMessageClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
 	c.Problem = NewProblemClient(c.config)
+	c.ProcessDefinition = NewProcessDefinitionClient(c.config)
+	c.ProcessDeployment = NewProcessDeploymentClient(c.config)
+	c.ProcessExecutionHistory = NewProcessExecutionHistoryClient(c.config)
+	c.ProcessInstance = NewProcessInstanceClient(c.config)
+	c.ProcessTask = NewProcessTaskClient(c.config)
+	c.ProcessVariable = NewProcessVariableClient(c.config)
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
 	c.SLADefinition = NewSLADefinitionClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
@@ -228,34 +252,40 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:                   ctx,
-		config:                cfg,
-		AuditLog:              NewAuditLogClient(cfg),
-		CIAttributeDefinition: NewCIAttributeDefinitionClient(cfg),
-		CIRelationship:        NewCIRelationshipClient(cfg),
-		CIType:                NewCITypeClient(cfg),
-		Change:                NewChangeClient(cfg),
-		ConfigurationItem:     NewConfigurationItemClient(cfg),
-		Conversation:          NewConversationClient(cfg),
-		Incident:              NewIncidentClient(cfg),
-		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
-		Message:               NewMessageClient(cfg),
-		Notification:          NewNotificationClient(cfg),
-		Problem:               NewProblemClient(cfg),
-		PromptTemplate:        NewPromptTemplateClient(cfg),
-		SLADefinition:         NewSLADefinitionClient(cfg),
-		SLAViolation:          NewSLAViolationClient(cfg),
-		ServiceCatalog:        NewServiceCatalogClient(cfg),
-		ServiceRequest:        NewServiceRequestClient(cfg),
-		Tenant:                NewTenantClient(cfg),
-		Ticket:                NewTicketClient(cfg),
-		TicketCategory:        NewTicketCategoryClient(cfg),
-		TicketTag:             NewTicketTagClient(cfg),
-		TicketTemplate:        NewTicketTemplateClient(cfg),
-		ToolInvocation:        NewToolInvocationClient(cfg),
-		User:                  NewUserClient(cfg),
-		Workflow:              NewWorkflowClient(cfg),
-		WorkflowInstance:      NewWorkflowInstanceClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		AuditLog:                NewAuditLogClient(cfg),
+		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
+		CIRelationship:          NewCIRelationshipClient(cfg),
+		CIType:                  NewCITypeClient(cfg),
+		Change:                  NewChangeClient(cfg),
+		ConfigurationItem:       NewConfigurationItemClient(cfg),
+		Conversation:            NewConversationClient(cfg),
+		Incident:                NewIncidentClient(cfg),
+		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
+		Message:                 NewMessageClient(cfg),
+		Notification:            NewNotificationClient(cfg),
+		Problem:                 NewProblemClient(cfg),
+		ProcessDefinition:       NewProcessDefinitionClient(cfg),
+		ProcessDeployment:       NewProcessDeploymentClient(cfg),
+		ProcessExecutionHistory: NewProcessExecutionHistoryClient(cfg),
+		ProcessInstance:         NewProcessInstanceClient(cfg),
+		ProcessTask:             NewProcessTaskClient(cfg),
+		ProcessVariable:         NewProcessVariableClient(cfg),
+		PromptTemplate:          NewPromptTemplateClient(cfg),
+		SLADefinition:           NewSLADefinitionClient(cfg),
+		SLAViolation:            NewSLAViolationClient(cfg),
+		ServiceCatalog:          NewServiceCatalogClient(cfg),
+		ServiceRequest:          NewServiceRequestClient(cfg),
+		Tenant:                  NewTenantClient(cfg),
+		Ticket:                  NewTicketClient(cfg),
+		TicketCategory:          NewTicketCategoryClient(cfg),
+		TicketTag:               NewTicketTagClient(cfg),
+		TicketTemplate:          NewTicketTemplateClient(cfg),
+		ToolInvocation:          NewToolInvocationClient(cfg),
+		User:                    NewUserClient(cfg),
+		Workflow:                NewWorkflowClient(cfg),
+		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
 	}, nil
 }
 
@@ -273,34 +303,40 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:                   ctx,
-		config:                cfg,
-		AuditLog:              NewAuditLogClient(cfg),
-		CIAttributeDefinition: NewCIAttributeDefinitionClient(cfg),
-		CIRelationship:        NewCIRelationshipClient(cfg),
-		CIType:                NewCITypeClient(cfg),
-		Change:                NewChangeClient(cfg),
-		ConfigurationItem:     NewConfigurationItemClient(cfg),
-		Conversation:          NewConversationClient(cfg),
-		Incident:              NewIncidentClient(cfg),
-		KnowledgeArticle:      NewKnowledgeArticleClient(cfg),
-		Message:               NewMessageClient(cfg),
-		Notification:          NewNotificationClient(cfg),
-		Problem:               NewProblemClient(cfg),
-		PromptTemplate:        NewPromptTemplateClient(cfg),
-		SLADefinition:         NewSLADefinitionClient(cfg),
-		SLAViolation:          NewSLAViolationClient(cfg),
-		ServiceCatalog:        NewServiceCatalogClient(cfg),
-		ServiceRequest:        NewServiceRequestClient(cfg),
-		Tenant:                NewTenantClient(cfg),
-		Ticket:                NewTicketClient(cfg),
-		TicketCategory:        NewTicketCategoryClient(cfg),
-		TicketTag:             NewTicketTagClient(cfg),
-		TicketTemplate:        NewTicketTemplateClient(cfg),
-		ToolInvocation:        NewToolInvocationClient(cfg),
-		User:                  NewUserClient(cfg),
-		Workflow:              NewWorkflowClient(cfg),
-		WorkflowInstance:      NewWorkflowInstanceClient(cfg),
+		ctx:                     ctx,
+		config:                  cfg,
+		AuditLog:                NewAuditLogClient(cfg),
+		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
+		CIRelationship:          NewCIRelationshipClient(cfg),
+		CIType:                  NewCITypeClient(cfg),
+		Change:                  NewChangeClient(cfg),
+		ConfigurationItem:       NewConfigurationItemClient(cfg),
+		Conversation:            NewConversationClient(cfg),
+		Incident:                NewIncidentClient(cfg),
+		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
+		Message:                 NewMessageClient(cfg),
+		Notification:            NewNotificationClient(cfg),
+		Problem:                 NewProblemClient(cfg),
+		ProcessDefinition:       NewProcessDefinitionClient(cfg),
+		ProcessDeployment:       NewProcessDeploymentClient(cfg),
+		ProcessExecutionHistory: NewProcessExecutionHistoryClient(cfg),
+		ProcessInstance:         NewProcessInstanceClient(cfg),
+		ProcessTask:             NewProcessTaskClient(cfg),
+		ProcessVariable:         NewProcessVariableClient(cfg),
+		PromptTemplate:          NewPromptTemplateClient(cfg),
+		SLADefinition:           NewSLADefinitionClient(cfg),
+		SLAViolation:            NewSLAViolationClient(cfg),
+		ServiceCatalog:          NewServiceCatalogClient(cfg),
+		ServiceRequest:          NewServiceRequestClient(cfg),
+		Tenant:                  NewTenantClient(cfg),
+		Ticket:                  NewTicketClient(cfg),
+		TicketCategory:          NewTicketCategoryClient(cfg),
+		TicketTag:               NewTicketTagClient(cfg),
+		TicketTemplate:          NewTicketTemplateClient(cfg),
+		ToolInvocation:          NewToolInvocationClient(cfg),
+		User:                    NewUserClient(cfg),
+		Workflow:                NewWorkflowClient(cfg),
+		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
 	}, nil
 }
 
@@ -332,10 +368,11 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
 		c.ConfigurationItem, c.Conversation, c.Incident, c.KnowledgeArticle, c.Message,
-		c.Notification, c.Problem, c.PromptTemplate, c.SLADefinition, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.Tenant, c.Ticket, c.TicketCategory,
-		c.TicketTag, c.TicketTemplate, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance,
+		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.PromptTemplate, c.SLADefinition, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.Tenant, c.Ticket, c.TicketCategory, c.TicketTag,
+		c.TicketTemplate, c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
 	} {
 		n.Use(hooks...)
 	}
@@ -347,10 +384,11 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
 		c.ConfigurationItem, c.Conversation, c.Incident, c.KnowledgeArticle, c.Message,
-		c.Notification, c.Problem, c.PromptTemplate, c.SLADefinition, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.Tenant, c.Ticket, c.TicketCategory,
-		c.TicketTag, c.TicketTemplate, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance,
+		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.PromptTemplate, c.SLADefinition, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.Tenant, c.Ticket, c.TicketCategory, c.TicketTag,
+		c.TicketTemplate, c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -383,6 +421,18 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Notification.mutate(ctx, m)
 	case *ProblemMutation:
 		return c.Problem.mutate(ctx, m)
+	case *ProcessDefinitionMutation:
+		return c.ProcessDefinition.mutate(ctx, m)
+	case *ProcessDeploymentMutation:
+		return c.ProcessDeployment.mutate(ctx, m)
+	case *ProcessExecutionHistoryMutation:
+		return c.ProcessExecutionHistory.mutate(ctx, m)
+	case *ProcessInstanceMutation:
+		return c.ProcessInstance.mutate(ctx, m)
+	case *ProcessTaskMutation:
+		return c.ProcessTask.mutate(ctx, m)
+	case *ProcessVariableMutation:
+		return c.ProcessVariable.mutate(ctx, m)
 	case *PromptTemplateMutation:
 		return c.PromptTemplate.mutate(ctx, m)
 	case *SLADefinitionMutation:
@@ -2057,6 +2107,804 @@ func (c *ProblemClient) mutate(ctx context.Context, m *ProblemMutation) (Value, 
 		return (&ProblemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Problem mutation op: %q", m.Op())
+	}
+}
+
+// ProcessDefinitionClient is a client for the ProcessDefinition schema.
+type ProcessDefinitionClient struct {
+	config
+}
+
+// NewProcessDefinitionClient returns a client for the ProcessDefinition from the given config.
+func NewProcessDefinitionClient(c config) *ProcessDefinitionClient {
+	return &ProcessDefinitionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processdefinition.Hooks(f(g(h())))`.
+func (c *ProcessDefinitionClient) Use(hooks ...Hook) {
+	c.hooks.ProcessDefinition = append(c.hooks.ProcessDefinition, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processdefinition.Intercept(f(g(h())))`.
+func (c *ProcessDefinitionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessDefinition = append(c.inters.ProcessDefinition, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessDefinition entity.
+func (c *ProcessDefinitionClient) Create() *ProcessDefinitionCreate {
+	mutation := newProcessDefinitionMutation(c.config, OpCreate)
+	return &ProcessDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessDefinition entities.
+func (c *ProcessDefinitionClient) CreateBulk(builders ...*ProcessDefinitionCreate) *ProcessDefinitionCreateBulk {
+	return &ProcessDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessDefinitionClient) MapCreateBulk(slice any, setFunc func(*ProcessDefinitionCreate, int)) *ProcessDefinitionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessDefinitionCreateBulk{err: fmt.Errorf("calling to ProcessDefinitionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessDefinitionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessDefinitionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessDefinition.
+func (c *ProcessDefinitionClient) Update() *ProcessDefinitionUpdate {
+	mutation := newProcessDefinitionMutation(c.config, OpUpdate)
+	return &ProcessDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessDefinitionClient) UpdateOne(pd *ProcessDefinition) *ProcessDefinitionUpdateOne {
+	mutation := newProcessDefinitionMutation(c.config, OpUpdateOne, withProcessDefinition(pd))
+	return &ProcessDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessDefinitionClient) UpdateOneID(id int) *ProcessDefinitionUpdateOne {
+	mutation := newProcessDefinitionMutation(c.config, OpUpdateOne, withProcessDefinitionID(id))
+	return &ProcessDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessDefinition.
+func (c *ProcessDefinitionClient) Delete() *ProcessDefinitionDelete {
+	mutation := newProcessDefinitionMutation(c.config, OpDelete)
+	return &ProcessDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessDefinitionClient) DeleteOne(pd *ProcessDefinition) *ProcessDefinitionDeleteOne {
+	return c.DeleteOneID(pd.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessDefinitionClient) DeleteOneID(id int) *ProcessDefinitionDeleteOne {
+	builder := c.Delete().Where(processdefinition.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessDefinitionDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessDefinition.
+func (c *ProcessDefinitionClient) Query() *ProcessDefinitionQuery {
+	return &ProcessDefinitionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessDefinition},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessDefinition entity by its id.
+func (c *ProcessDefinitionClient) Get(ctx context.Context, id int) (*ProcessDefinition, error) {
+	return c.Query().Where(processdefinition.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessDefinitionClient) GetX(ctx context.Context, id int) *ProcessDefinition {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessDefinitionClient) Hooks() []Hook {
+	return c.hooks.ProcessDefinition
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessDefinitionClient) Interceptors() []Interceptor {
+	return c.inters.ProcessDefinition
+}
+
+func (c *ProcessDefinitionClient) mutate(ctx context.Context, m *ProcessDefinitionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessDefinitionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessDefinitionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessDefinitionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessDefinition mutation op: %q", m.Op())
+	}
+}
+
+// ProcessDeploymentClient is a client for the ProcessDeployment schema.
+type ProcessDeploymentClient struct {
+	config
+}
+
+// NewProcessDeploymentClient returns a client for the ProcessDeployment from the given config.
+func NewProcessDeploymentClient(c config) *ProcessDeploymentClient {
+	return &ProcessDeploymentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processdeployment.Hooks(f(g(h())))`.
+func (c *ProcessDeploymentClient) Use(hooks ...Hook) {
+	c.hooks.ProcessDeployment = append(c.hooks.ProcessDeployment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processdeployment.Intercept(f(g(h())))`.
+func (c *ProcessDeploymentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessDeployment = append(c.inters.ProcessDeployment, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessDeployment entity.
+func (c *ProcessDeploymentClient) Create() *ProcessDeploymentCreate {
+	mutation := newProcessDeploymentMutation(c.config, OpCreate)
+	return &ProcessDeploymentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessDeployment entities.
+func (c *ProcessDeploymentClient) CreateBulk(builders ...*ProcessDeploymentCreate) *ProcessDeploymentCreateBulk {
+	return &ProcessDeploymentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessDeploymentClient) MapCreateBulk(slice any, setFunc func(*ProcessDeploymentCreate, int)) *ProcessDeploymentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessDeploymentCreateBulk{err: fmt.Errorf("calling to ProcessDeploymentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessDeploymentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessDeploymentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessDeployment.
+func (c *ProcessDeploymentClient) Update() *ProcessDeploymentUpdate {
+	mutation := newProcessDeploymentMutation(c.config, OpUpdate)
+	return &ProcessDeploymentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessDeploymentClient) UpdateOne(pd *ProcessDeployment) *ProcessDeploymentUpdateOne {
+	mutation := newProcessDeploymentMutation(c.config, OpUpdateOne, withProcessDeployment(pd))
+	return &ProcessDeploymentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessDeploymentClient) UpdateOneID(id int) *ProcessDeploymentUpdateOne {
+	mutation := newProcessDeploymentMutation(c.config, OpUpdateOne, withProcessDeploymentID(id))
+	return &ProcessDeploymentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessDeployment.
+func (c *ProcessDeploymentClient) Delete() *ProcessDeploymentDelete {
+	mutation := newProcessDeploymentMutation(c.config, OpDelete)
+	return &ProcessDeploymentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessDeploymentClient) DeleteOne(pd *ProcessDeployment) *ProcessDeploymentDeleteOne {
+	return c.DeleteOneID(pd.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessDeploymentClient) DeleteOneID(id int) *ProcessDeploymentDeleteOne {
+	builder := c.Delete().Where(processdeployment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessDeploymentDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessDeployment.
+func (c *ProcessDeploymentClient) Query() *ProcessDeploymentQuery {
+	return &ProcessDeploymentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessDeployment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessDeployment entity by its id.
+func (c *ProcessDeploymentClient) Get(ctx context.Context, id int) (*ProcessDeployment, error) {
+	return c.Query().Where(processdeployment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessDeploymentClient) GetX(ctx context.Context, id int) *ProcessDeployment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessDeploymentClient) Hooks() []Hook {
+	return c.hooks.ProcessDeployment
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessDeploymentClient) Interceptors() []Interceptor {
+	return c.inters.ProcessDeployment
+}
+
+func (c *ProcessDeploymentClient) mutate(ctx context.Context, m *ProcessDeploymentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessDeploymentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessDeploymentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessDeploymentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessDeploymentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessDeployment mutation op: %q", m.Op())
+	}
+}
+
+// ProcessExecutionHistoryClient is a client for the ProcessExecutionHistory schema.
+type ProcessExecutionHistoryClient struct {
+	config
+}
+
+// NewProcessExecutionHistoryClient returns a client for the ProcessExecutionHistory from the given config.
+func NewProcessExecutionHistoryClient(c config) *ProcessExecutionHistoryClient {
+	return &ProcessExecutionHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processexecutionhistory.Hooks(f(g(h())))`.
+func (c *ProcessExecutionHistoryClient) Use(hooks ...Hook) {
+	c.hooks.ProcessExecutionHistory = append(c.hooks.ProcessExecutionHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processexecutionhistory.Intercept(f(g(h())))`.
+func (c *ProcessExecutionHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessExecutionHistory = append(c.inters.ProcessExecutionHistory, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessExecutionHistory entity.
+func (c *ProcessExecutionHistoryClient) Create() *ProcessExecutionHistoryCreate {
+	mutation := newProcessExecutionHistoryMutation(c.config, OpCreate)
+	return &ProcessExecutionHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessExecutionHistory entities.
+func (c *ProcessExecutionHistoryClient) CreateBulk(builders ...*ProcessExecutionHistoryCreate) *ProcessExecutionHistoryCreateBulk {
+	return &ProcessExecutionHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessExecutionHistoryClient) MapCreateBulk(slice any, setFunc func(*ProcessExecutionHistoryCreate, int)) *ProcessExecutionHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessExecutionHistoryCreateBulk{err: fmt.Errorf("calling to ProcessExecutionHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessExecutionHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessExecutionHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessExecutionHistory.
+func (c *ProcessExecutionHistoryClient) Update() *ProcessExecutionHistoryUpdate {
+	mutation := newProcessExecutionHistoryMutation(c.config, OpUpdate)
+	return &ProcessExecutionHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessExecutionHistoryClient) UpdateOne(peh *ProcessExecutionHistory) *ProcessExecutionHistoryUpdateOne {
+	mutation := newProcessExecutionHistoryMutation(c.config, OpUpdateOne, withProcessExecutionHistory(peh))
+	return &ProcessExecutionHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessExecutionHistoryClient) UpdateOneID(id int) *ProcessExecutionHistoryUpdateOne {
+	mutation := newProcessExecutionHistoryMutation(c.config, OpUpdateOne, withProcessExecutionHistoryID(id))
+	return &ProcessExecutionHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessExecutionHistory.
+func (c *ProcessExecutionHistoryClient) Delete() *ProcessExecutionHistoryDelete {
+	mutation := newProcessExecutionHistoryMutation(c.config, OpDelete)
+	return &ProcessExecutionHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessExecutionHistoryClient) DeleteOne(peh *ProcessExecutionHistory) *ProcessExecutionHistoryDeleteOne {
+	return c.DeleteOneID(peh.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessExecutionHistoryClient) DeleteOneID(id int) *ProcessExecutionHistoryDeleteOne {
+	builder := c.Delete().Where(processexecutionhistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessExecutionHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessExecutionHistory.
+func (c *ProcessExecutionHistoryClient) Query() *ProcessExecutionHistoryQuery {
+	return &ProcessExecutionHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessExecutionHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessExecutionHistory entity by its id.
+func (c *ProcessExecutionHistoryClient) Get(ctx context.Context, id int) (*ProcessExecutionHistory, error) {
+	return c.Query().Where(processexecutionhistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessExecutionHistoryClient) GetX(ctx context.Context, id int) *ProcessExecutionHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessExecutionHistoryClient) Hooks() []Hook {
+	return c.hooks.ProcessExecutionHistory
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessExecutionHistoryClient) Interceptors() []Interceptor {
+	return c.inters.ProcessExecutionHistory
+}
+
+func (c *ProcessExecutionHistoryClient) mutate(ctx context.Context, m *ProcessExecutionHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessExecutionHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessExecutionHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessExecutionHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessExecutionHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessExecutionHistory mutation op: %q", m.Op())
+	}
+}
+
+// ProcessInstanceClient is a client for the ProcessInstance schema.
+type ProcessInstanceClient struct {
+	config
+}
+
+// NewProcessInstanceClient returns a client for the ProcessInstance from the given config.
+func NewProcessInstanceClient(c config) *ProcessInstanceClient {
+	return &ProcessInstanceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processinstance.Hooks(f(g(h())))`.
+func (c *ProcessInstanceClient) Use(hooks ...Hook) {
+	c.hooks.ProcessInstance = append(c.hooks.ProcessInstance, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processinstance.Intercept(f(g(h())))`.
+func (c *ProcessInstanceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessInstance = append(c.inters.ProcessInstance, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessInstance entity.
+func (c *ProcessInstanceClient) Create() *ProcessInstanceCreate {
+	mutation := newProcessInstanceMutation(c.config, OpCreate)
+	return &ProcessInstanceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessInstance entities.
+func (c *ProcessInstanceClient) CreateBulk(builders ...*ProcessInstanceCreate) *ProcessInstanceCreateBulk {
+	return &ProcessInstanceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessInstanceClient) MapCreateBulk(slice any, setFunc func(*ProcessInstanceCreate, int)) *ProcessInstanceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessInstanceCreateBulk{err: fmt.Errorf("calling to ProcessInstanceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessInstanceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessInstanceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessInstance.
+func (c *ProcessInstanceClient) Update() *ProcessInstanceUpdate {
+	mutation := newProcessInstanceMutation(c.config, OpUpdate)
+	return &ProcessInstanceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessInstanceClient) UpdateOne(pi *ProcessInstance) *ProcessInstanceUpdateOne {
+	mutation := newProcessInstanceMutation(c.config, OpUpdateOne, withProcessInstance(pi))
+	return &ProcessInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessInstanceClient) UpdateOneID(id int) *ProcessInstanceUpdateOne {
+	mutation := newProcessInstanceMutation(c.config, OpUpdateOne, withProcessInstanceID(id))
+	return &ProcessInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessInstance.
+func (c *ProcessInstanceClient) Delete() *ProcessInstanceDelete {
+	mutation := newProcessInstanceMutation(c.config, OpDelete)
+	return &ProcessInstanceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessInstanceClient) DeleteOne(pi *ProcessInstance) *ProcessInstanceDeleteOne {
+	return c.DeleteOneID(pi.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessInstanceClient) DeleteOneID(id int) *ProcessInstanceDeleteOne {
+	builder := c.Delete().Where(processinstance.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessInstanceDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessInstance.
+func (c *ProcessInstanceClient) Query() *ProcessInstanceQuery {
+	return &ProcessInstanceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessInstance},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessInstance entity by its id.
+func (c *ProcessInstanceClient) Get(ctx context.Context, id int) (*ProcessInstance, error) {
+	return c.Query().Where(processinstance.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessInstanceClient) GetX(ctx context.Context, id int) *ProcessInstance {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessInstanceClient) Hooks() []Hook {
+	return c.hooks.ProcessInstance
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessInstanceClient) Interceptors() []Interceptor {
+	return c.inters.ProcessInstance
+}
+
+func (c *ProcessInstanceClient) mutate(ctx context.Context, m *ProcessInstanceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessInstanceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessInstanceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessInstanceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessInstanceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessInstance mutation op: %q", m.Op())
+	}
+}
+
+// ProcessTaskClient is a client for the ProcessTask schema.
+type ProcessTaskClient struct {
+	config
+}
+
+// NewProcessTaskClient returns a client for the ProcessTask from the given config.
+func NewProcessTaskClient(c config) *ProcessTaskClient {
+	return &ProcessTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processtask.Hooks(f(g(h())))`.
+func (c *ProcessTaskClient) Use(hooks ...Hook) {
+	c.hooks.ProcessTask = append(c.hooks.ProcessTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processtask.Intercept(f(g(h())))`.
+func (c *ProcessTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessTask = append(c.inters.ProcessTask, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessTask entity.
+func (c *ProcessTaskClient) Create() *ProcessTaskCreate {
+	mutation := newProcessTaskMutation(c.config, OpCreate)
+	return &ProcessTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessTask entities.
+func (c *ProcessTaskClient) CreateBulk(builders ...*ProcessTaskCreate) *ProcessTaskCreateBulk {
+	return &ProcessTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessTaskClient) MapCreateBulk(slice any, setFunc func(*ProcessTaskCreate, int)) *ProcessTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessTaskCreateBulk{err: fmt.Errorf("calling to ProcessTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessTask.
+func (c *ProcessTaskClient) Update() *ProcessTaskUpdate {
+	mutation := newProcessTaskMutation(c.config, OpUpdate)
+	return &ProcessTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessTaskClient) UpdateOne(pt *ProcessTask) *ProcessTaskUpdateOne {
+	mutation := newProcessTaskMutation(c.config, OpUpdateOne, withProcessTask(pt))
+	return &ProcessTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessTaskClient) UpdateOneID(id int) *ProcessTaskUpdateOne {
+	mutation := newProcessTaskMutation(c.config, OpUpdateOne, withProcessTaskID(id))
+	return &ProcessTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessTask.
+func (c *ProcessTaskClient) Delete() *ProcessTaskDelete {
+	mutation := newProcessTaskMutation(c.config, OpDelete)
+	return &ProcessTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessTaskClient) DeleteOne(pt *ProcessTask) *ProcessTaskDeleteOne {
+	return c.DeleteOneID(pt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessTaskClient) DeleteOneID(id int) *ProcessTaskDeleteOne {
+	builder := c.Delete().Where(processtask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessTask.
+func (c *ProcessTaskClient) Query() *ProcessTaskQuery {
+	return &ProcessTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessTask entity by its id.
+func (c *ProcessTaskClient) Get(ctx context.Context, id int) (*ProcessTask, error) {
+	return c.Query().Where(processtask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessTaskClient) GetX(ctx context.Context, id int) *ProcessTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessTaskClient) Hooks() []Hook {
+	return c.hooks.ProcessTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessTaskClient) Interceptors() []Interceptor {
+	return c.inters.ProcessTask
+}
+
+func (c *ProcessTaskClient) mutate(ctx context.Context, m *ProcessTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessTask mutation op: %q", m.Op())
+	}
+}
+
+// ProcessVariableClient is a client for the ProcessVariable schema.
+type ProcessVariableClient struct {
+	config
+}
+
+// NewProcessVariableClient returns a client for the ProcessVariable from the given config.
+func NewProcessVariableClient(c config) *ProcessVariableClient {
+	return &ProcessVariableClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processvariable.Hooks(f(g(h())))`.
+func (c *ProcessVariableClient) Use(hooks ...Hook) {
+	c.hooks.ProcessVariable = append(c.hooks.ProcessVariable, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processvariable.Intercept(f(g(h())))`.
+func (c *ProcessVariableClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessVariable = append(c.inters.ProcessVariable, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessVariable entity.
+func (c *ProcessVariableClient) Create() *ProcessVariableCreate {
+	mutation := newProcessVariableMutation(c.config, OpCreate)
+	return &ProcessVariableCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessVariable entities.
+func (c *ProcessVariableClient) CreateBulk(builders ...*ProcessVariableCreate) *ProcessVariableCreateBulk {
+	return &ProcessVariableCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessVariableClient) MapCreateBulk(slice any, setFunc func(*ProcessVariableCreate, int)) *ProcessVariableCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessVariableCreateBulk{err: fmt.Errorf("calling to ProcessVariableClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessVariableCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessVariableCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessVariable.
+func (c *ProcessVariableClient) Update() *ProcessVariableUpdate {
+	mutation := newProcessVariableMutation(c.config, OpUpdate)
+	return &ProcessVariableUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessVariableClient) UpdateOne(pv *ProcessVariable) *ProcessVariableUpdateOne {
+	mutation := newProcessVariableMutation(c.config, OpUpdateOne, withProcessVariable(pv))
+	return &ProcessVariableUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessVariableClient) UpdateOneID(id int) *ProcessVariableUpdateOne {
+	mutation := newProcessVariableMutation(c.config, OpUpdateOne, withProcessVariableID(id))
+	return &ProcessVariableUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessVariable.
+func (c *ProcessVariableClient) Delete() *ProcessVariableDelete {
+	mutation := newProcessVariableMutation(c.config, OpDelete)
+	return &ProcessVariableDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessVariableClient) DeleteOne(pv *ProcessVariable) *ProcessVariableDeleteOne {
+	return c.DeleteOneID(pv.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessVariableClient) DeleteOneID(id int) *ProcessVariableDeleteOne {
+	builder := c.Delete().Where(processvariable.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessVariableDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessVariable.
+func (c *ProcessVariableClient) Query() *ProcessVariableQuery {
+	return &ProcessVariableQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessVariable},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessVariable entity by its id.
+func (c *ProcessVariableClient) Get(ctx context.Context, id int) (*ProcessVariable, error) {
+	return c.Query().Where(processvariable.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessVariableClient) GetX(ctx context.Context, id int) *ProcessVariable {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessVariableClient) Hooks() []Hook {
+	return c.hooks.ProcessVariable
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessVariableClient) Interceptors() []Interceptor {
+	return c.inters.ProcessVariable
+}
+
+func (c *ProcessVariableClient) mutate(ctx context.Context, m *ProcessVariableMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessVariableCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessVariableUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessVariableUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessVariableDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessVariable mutation op: %q", m.Op())
 	}
 }
 
@@ -4151,16 +4999,19 @@ type (
 	hooks struct {
 		AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
 		ConfigurationItem, Conversation, Incident, KnowledgeArticle, Message,
-		Notification, Problem, PromptTemplate, SLADefinition, SLAViolation,
-		ServiceCatalog, ServiceRequest, Tenant, Ticket, TicketCategory, TicketTag,
-		TicketTemplate, ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
+		Notification, Problem, ProcessDefinition, ProcessDeployment,
+		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
+		PromptTemplate, SLADefinition, SLAViolation, ServiceCatalog, ServiceRequest,
+		Tenant, Ticket, TicketCategory, TicketTag, TicketTemplate, ToolInvocation,
+		User, Workflow, WorkflowInstance []ent.Hook
 	}
 	inters struct {
 		AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
 		ConfigurationItem, Conversation, Incident, KnowledgeArticle, Message,
-		Notification, Problem, PromptTemplate, SLADefinition, SLAViolation,
-		ServiceCatalog, ServiceRequest, Tenant, Ticket, TicketCategory, TicketTag,
-		TicketTemplate, ToolInvocation, User, Workflow,
-		WorkflowInstance []ent.Interceptor
+		Notification, Problem, ProcessDefinition, ProcessDeployment,
+		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
+		PromptTemplate, SLADefinition, SLAViolation, ServiceCatalog, ServiceRequest,
+		Tenant, Ticket, TicketCategory, TicketTag, TicketTemplate, ToolInvocation,
+		User, Workflow, WorkflowInstance []ent.Interceptor
 	}
 )

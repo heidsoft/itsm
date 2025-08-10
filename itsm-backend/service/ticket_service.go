@@ -804,26 +804,120 @@ func (s *TicketService) GetTicketAnalytics(ctx context.Context, tenantID int, da
 
 // CreateTicketTemplate 创建工单模板
 func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, req interface{}) (interface{}, error) {
-	// 简化实现，直接返回nil
-	return nil, fmt.Errorf("工单模板功能暂未实现")
+	// 调用专门的工单模板服务
+	templateService := NewTicketTemplateService(s.client)
+
+	// 类型断言
+	createReq, ok := req.(*dto.TicketTemplate)
+	if !ok {
+		return nil, fmt.Errorf("无效的请求参数类型")
+	}
+
+	// 转换为服务请求格式
+	serviceReq := &CreateTemplateRequest{
+		Name:          createReq.Name,
+		Description:   createReq.Description,
+		Category:      createReq.Category,
+		Priority:      createReq.Priority,
+		FormFields:    createReq.FormFields,
+		WorkflowSteps: nil, // 暂时设为nil，后续可以扩展
+		IsActive:      createReq.IsActive,
+		TenantID:      tenantID,
+	}
+
+	template, err := templateService.CreateTemplate(ctx, serviceReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return template, nil
 }
 
 // UpdateTicketTemplate 更新工单模板
 func (s *TicketService) UpdateTicketTemplate(ctx context.Context, templateID int, req interface{}) (interface{}, error) {
-	// 简化实现，直接返回nil
-	return nil, fmt.Errorf("工单模板功能暂未实现")
+	// 调用专门的工单模板服务
+	templateService := NewTicketTemplateService(s.client)
+
+	// 类型断言
+	updateReq, ok := req.(*dto.TicketTemplate)
+	if !ok {
+		return nil, fmt.Errorf("无效的请求参数类型")
+	}
+
+	// 转换为服务请求格式
+	serviceReq := &UpdateTemplateRequest{
+		Name:          updateReq.Name,
+		Description:   updateReq.Description,
+		Category:      updateReq.Category,
+		Priority:      updateReq.Priority,
+		FormFields:    updateReq.FormFields,
+		WorkflowSteps: nil, // 暂时设为nil，后续可以扩展
+		IsActive:      &updateReq.IsActive,
+	}
+
+	template, err := templateService.UpdateTemplate(ctx, templateID, serviceReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return template, nil
 }
 
 // DeleteTicketTemplate 删除工单模板
 func (s *TicketService) DeleteTicketTemplate(ctx context.Context, templateID int) error {
-	// 简化实现
-	return fmt.Errorf("工单模板功能暂未实现")
+	// 调用专门的工单模板服务
+	templateService := NewTicketTemplateService(s.client)
+	return templateService.DeleteTemplate(ctx, templateID)
 }
 
 // GetTicketTemplates 获取工单模板列表
 func (s *TicketService) GetTicketTemplates(ctx context.Context, tenantID int) ([]interface{}, error) {
-	// 简化实现，返回空列表
-	return []interface{}{}, nil
+	// 调用专门的工单模板服务
+	templateService := NewTicketTemplateService(s.client)
+
+	// 构建请求参数
+	req := &ListTemplatesRequest{
+		Page:      1,
+		PageSize:  100,
+		TenantID:  tenantID,
+		SortBy:    "created_at",
+		SortOrder: "desc",
+	}
+
+	templates, _, err := templateService.ListTemplates(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为DTO格式
+	var result []interface{}
+	for _, template := range templates {
+		// 反序列化表单字段
+		var formFields map[string]interface{}
+		if len(template.FormFields) > 0 {
+			if err := json.Unmarshal(template.FormFields, &formFields); err != nil {
+				s.logger.Warnw("反序列化表单字段失败", "error", err, "template_id", template.ID)
+				formFields = make(map[string]interface{})
+			}
+		} else {
+			formFields = make(map[string]interface{})
+		}
+
+		dtoTemplate := &dto.TicketTemplate{
+			ID:          template.ID,
+			Name:        template.Name,
+			Description: template.Description,
+			Category:    template.Category,
+			Priority:    template.Priority,
+			FormFields:  formFields,
+			IsActive:    template.IsActive,
+			CreatedAt:   template.CreatedAt,
+			UpdatedAt:   template.UpdatedAt,
+		}
+		result = append(result, dtoTemplate)
+	}
+
+	return result, nil
 }
 
 // 辅助方法

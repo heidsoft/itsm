@@ -81,6 +81,7 @@ func main() {
 	cmdbService := service.NewCMDBService(client, sugar)
 	dashboardService := service.NewDashboardService(client, sugar)
 	knowledgeService := service.NewKnowledgeService(client, sugar)
+	knowledgeIntegrationService := service.NewKnowledgeIntegrationService(client)
 	// 新增服务
 	workflowService := service.NewWorkflowService(client)
 	ticketTagService := service.NewTicketTagService(client)
@@ -114,14 +115,38 @@ func main() {
 	cmdbController := controller.NewCMDBController(cmdbService)
 	dashboardController := controller.NewDashboardController(dashboardService, sugar)
 	knowledgeController := controller.NewKnowledgeController(knowledgeService, sugar)
+	knowledgeIntegrationController := controller.NewKnowledgeIntegrationController(knowledgeIntegrationService, sugar)
 	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
+	// 初始化工作流引擎和相关服务
+	workflowEngine := service.NewWorkflowEngine(client)
+	workflowApprovalService := service.NewWorkflowApprovalService(client, workflowEngine)
+	workflowTaskService := service.NewWorkflowTaskService(client, workflowEngine)
+	workflowMonitorService := service.NewWorkflowMonitorService(client, workflowEngine)
+	
+	// 初始化BPMN工作流引擎
+	bpmnProcessEngine := service.NewBPMNProcessEngine(client)
+
 	// 新增控制器
-	workflowController := controller.NewWorkflowController(workflowService, logger)
+	workflowController := controller.NewWorkflowController(
+		workflowService,
+		workflowEngine,
+		workflowApprovalService,
+		workflowTaskService,
+		workflowMonitorService,
+		logger,
+	)
+	
+	// 初始化BPMN工作流控制器
+	bpmnWorkflowController := controller.NewBPMNWorkflowController(bpmnProcessEngine)
+	
+	// 初始化BPMN监控控制器
+	bpmnMonitoringService := service.NewBPMNMonitoringService(client)
+	bpmnMonitoringController := controller.NewBPMNMonitoringController(bpmnMonitoringService)
 	ticketTagController := controller.NewTicketTagController(ticketTagService, logger)
 	ticketAssignmentController := controller.NewTicketAssignmentController(ticketAssignmentService, logger)
 	ticketCategoryController := controller.NewTicketCategoryController(ticketCategoryService, sugar)
 	problemController := controller.NewProblemController(sugar, problemService)
-	changeController := controller.NewChangeController(changeService, sugar)
+	changeController := controller.NewChangeController(sugar, changeService)
 	// 初始化 ToolRegistry（含只读与危险工具）
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, cmdbService, client)
 	aiController.SetToolRegistry(toolRegistry)
@@ -148,10 +173,14 @@ func main() {
 		knowledgeController,
 		aiController,
 		workflowController,
+		bpmnWorkflowController,
+		bpmnMonitoringController,
 		ticketTagController,
 		ticketAssignmentController,
 		ticketCategoryController,
 		problemController,
+		changeController,
+		knowledgeIntegrationController,
 		client,
 		cfg.JWT.Secret,
 	)

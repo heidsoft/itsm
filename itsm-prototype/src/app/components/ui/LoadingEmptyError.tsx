@@ -1,11 +1,11 @@
 import React from 'react';
 import { Spin, Empty, Alert, Button, Space } from 'antd';
 import { 
-  LoadingOutlined, 
-  ExclamationCircleOutlined, 
-  ReloadOutlined,
-  PlusOutlined,
-  SearchOutlined,
+  Loader2, 
+  AlertCircle, 
+  RotateCcw,
+  Plus,
+  Search,
   FileText,
   AlertTriangle,
   HelpCircle,
@@ -166,7 +166,7 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
       >
         <div className="text-center">
           <Spin 
-            indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}
+            indicator={<Loader2 style={{ fontSize: 24 }} spin />}
             size="large"
           />
           <div className="mt-4 text-gray-600">{loadingText}</div>
@@ -197,7 +197,7 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
               <Space>
                 {error?.onRetry && (
                   <Button 
-                    icon={<ReloadOutlined />}
+                    icon={<RotateCcw />}
                     onClick={error.onRetry}
                     type="primary"
                   >
@@ -219,7 +219,7 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
           }
           type="error"
           showIcon
-          icon={<ExclamationCircleOutlined />}
+                          icon={<AlertCircle />}
           className="max-w-md"
         />
       </div>

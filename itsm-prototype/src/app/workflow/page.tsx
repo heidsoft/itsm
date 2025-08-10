@@ -38,9 +38,11 @@ import {
   GitBranch,
   Clock,
   CheckCircle,
+  Code,
 } from "lucide-react";
 
-import { WorkflowDesigner } from "../components/WorkflowDesigner";
+import EnhancedBPMNDesigner from "../../components/EnhancedBPMNDesigner";
+import { WorkflowAPI } from "../lib/workflow-api";
 
 import { useRouter } from "next/navigation";
 
@@ -53,6 +55,7 @@ interface Workflow {
   category: string;
   version: string;
   status: "draft" | "active" | "inactive" | "archived";
+  bpmn_xml?: string;
   created_at: string;
   updated_at: string;
   instances_count: number;
@@ -96,6 +99,38 @@ const WorkflowManagementPage = () => {
         category: "ticket_approval",
         version: "1.0.0",
         status: "active",
+        bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                   id="Definitions_1" 
+                   targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_1" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="开始">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="UserTask_1" name="提交工单">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_2" name="审核工单">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_3" name="处理工单">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_1" name="结束">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="UserTask_1" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="UserTask_1" targetRef="UserTask_2" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="UserTask_2" targetRef="UserTask_3" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="UserTask_3" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>`,
         created_at: "2024-01-15T10:30:00Z",
         updated_at: "2024-01-15T14:20:00Z",
         instances_count: 156,
@@ -109,6 +144,46 @@ const WorkflowManagementPage = () => {
         category: "事件处理",
         version: "2.1.0",
         status: "active",
+        bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                   id="Definitions_3" 
+                   targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_3" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_3" name="事件报告">
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="UserTask_7" name="事件分类">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_2" name="优先级判断">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="UserTask_8" name="紧急处理">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_9" name="常规处理">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_3" name="事件解决">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="StartEvent_3" targetRef="UserTask_7" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="UserTask_7" targetRef="Gateway_2" />
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Gateway_2" targetRef="UserTask_8" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Gateway_2" targetRef="UserTask_9" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="UserTask_8" targetRef="EndEvent_3" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="UserTask_9" targetRef="EndEvent_3" />
+  </bpmn:process>
+</bpmn:definitions>`,
         created_at: "2024-01-14T09:15:00Z",
         updated_at: "2024-01-15T11:45:00Z",
         instances_count: 89,
@@ -122,6 +197,43 @@ const WorkflowManagementPage = () => {
         category: "变更管理",
         version: "1.5.0",
         status: "draft",
+        bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                   id="Definitions_4" 
+                   targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_4" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_4" name="变更申请">
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="UserTask_10" name="变更评估">
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_11" name="变更审批">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_12" name="变更实施">
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_13" name="变更验证">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_4" name="变更完成">
+      <bpmn:incoming>Flow_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="StartEvent_4" targetRef="UserTask_10" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="UserTask_10" targetRef="UserTask_11" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="UserTask_11" targetRef="UserTask_12" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="UserTask_12" targetRef="UserTask_13" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="UserTask_13" targetRef="EndEvent_4" />
+  </bpmn:process>
+</bpmn:definitions>`,
         created_at: "2024-01-13T16:20:00Z",
         updated_at: "2024-01-14T10:30:00Z",
         instances_count: 45,
@@ -204,6 +316,35 @@ const WorkflowManagementPage = () => {
       // 通用工作流使用BPMN设计器
       setDesignerVisible(true);
     }
+  };
+
+  const handleViewBPMN = (workflow: Workflow) => {
+    if (!workflow.bpmn_xml) {
+      message.warning("该工作流没有BPMN定义");
+      return;
+    }
+
+    // 显示BPMN XML内容
+    Modal.info({
+      title: `${workflow.name} - BPMN XML`,
+      width: 800,
+      content: (
+        <div style={{ maxHeight: "500px", overflow: "auto" }}>
+          <pre
+            style={{
+              background: "#f5f5f5",
+              padding: "16px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              lineHeight: "1.4",
+            }}
+          >
+            {workflow.bpmn_xml}
+          </pre>
+        </div>
+      ),
+      okText: "关闭",
+    });
   };
 
   const handleDeleteWorkflow = async (id: number) => {
@@ -568,6 +709,16 @@ const WorkflowManagementPage = () => {
       ),
     },
     {
+      title: "BPMN状态",
+      key: "bpmn_status",
+      width: 120,
+      render: (record: Workflow) => (
+        <Tag color={record.bpmn_xml ? "green" : "orange"}>
+          {record.bpmn_xml ? "已定义" : "未定义"}
+        </Tag>
+      ),
+    },
+    {
       title: "实例统计",
       key: "instances",
       width: 150,
@@ -677,6 +828,13 @@ const WorkflowManagementPage = () => {
                       `/workflow/versions?workflowId=${record.id}`,
                       "_blank"
                     ),
+                },
+                {
+                  key: "viewBPMN",
+                  label: "查看BPMN",
+                  icon: <Code className="w-4 h-4" />,
+                  onClick: () => handleViewBPMN(record),
+                  disabled: !record.bpmn_xml,
                 },
                 {
                   type: "divider" as const,
@@ -838,6 +996,15 @@ const WorkflowManagementPage = () => {
                       label: "通用工作流",
                       icon: <GitBranch className="w-4 h-4" />,
                       onClick: handleCreateWorkflow,
+                    },
+                    {
+                      key: "bpmn",
+                      label: "BPMN工作流",
+                      icon: <Code className="w-4 h-4" />,
+                      onClick: () => {
+                        setEditingWorkflow(null);
+                        setDesignerVisible(true);
+                      },
                     },
                   ],
                 }}
@@ -1023,22 +1190,69 @@ const WorkflowManagementPage = () => {
 
       {/* 工作流设计器 */}
       <Modal
-        title={`工作流设计器 - ${editingWorkflow?.name || "新建工作流"}`}
+        title={`BPMN工作流设计器 - ${editingWorkflow?.name || "新建工作流"}`}
         open={designerVisible}
         onCancel={() => setDesignerVisible(false)}
         footer={null}
-        width="90%"
-        style={{ top: 20 }}
+        width="95%"
+        style={{ top: 10 }}
         destroyOnHidden
       >
-        <WorkflowDesigner
-          workflow={editingWorkflow}
-          onSave={() => {
-            message.success("工作流保存成功");
-            setDesignerVisible(false);
-            loadWorkflows();
+        <EnhancedBPMNDesigner
+          initialXML={editingWorkflow?.bpmn_xml || ""}
+          onSave={async (xml: string) => {
+            try {
+              if (editingWorkflow) {
+                // 更新现有工作流
+                await WorkflowAPI.updateWorkflow(editingWorkflow.id, {
+                  bpmn_xml: xml,
+                });
+                message.success("工作流保存成功");
+              } else {
+                // 创建新工作流
+                await WorkflowAPI.createWorkflow({
+                  name: "新建BPMN工作流",
+                  description: "通过BPMN设计器创建的工作流",
+                  category: "审批流程",
+                  bpmn_xml: xml,
+                });
+                message.success("工作流创建成功");
+              }
+              setDesignerVisible(false);
+              loadWorkflows();
+            } catch (error) {
+              message.error("保存失败: " + (error as Error).message);
+            }
           }}
-          onCancel={() => setDesignerVisible(false)}
+          onDeploy={async (xml: string) => {
+            try {
+              if (editingWorkflow) {
+                // 先保存BPMN XML
+                await WorkflowAPI.updateWorkflow(editingWorkflow.id, {
+                  bpmn_xml: xml,
+                });
+                // 然后部署工作流
+                await WorkflowAPI.deployWorkflow(editingWorkflow.id);
+                message.success("工作流部署成功");
+              } else {
+                // 创建并部署新工作流
+                const newWorkflow = await WorkflowAPI.createWorkflow({
+                  name: "新建BPMN工作流",
+                  description: "通过BPMN设计器创建的工作流",
+                  category: "审批流程",
+                  bpmn_xml: xml,
+                });
+                await WorkflowAPI.deployWorkflow(newWorkflow.id);
+                message.success("工作流创建并部署成功");
+              }
+              setDesignerVisible(false);
+              loadWorkflows();
+            } catch (error) {
+              message.error("部署失败: " + (error as Error).message);
+            }
+          }}
+          height={700}
+          showPropertiesPanel={true}
         />
       </Modal>
     </>

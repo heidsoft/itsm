@@ -105,33 +105,33 @@ func (s *KnowledgeIntegrationService) RecommendSolutions(ctx context.Context, ti
 // extractKeywords 提取关键词
 func (s *KnowledgeIntegrationService) extractKeywords(title, description string) []string {
 	var keywords []string
-	
+
 	// 合并标题和描述
 	text := strings.ToLower(title + " " + description)
-	
+
 	// 简单的关键词提取（实际项目中可以使用NLP库）
 	words := strings.Fields(text)
 	wordCount := make(map[string]int)
-	
+
 	for _, word := range words {
 		// 过滤掉常见的停用词
 		if len(word) > 2 && !s.isStopWord(word) {
 			wordCount[word]++
 		}
 	}
-	
+
 	// 选择出现频率最高的词作为关键词
 	for word, count := range wordCount {
 		if count >= 2 { // 至少出现2次
 			keywords = append(keywords, word)
 		}
 	}
-	
+
 	// 限制关键词数量
 	if len(keywords) > 10 {
 		keywords = keywords[:10]
 	}
-	
+
 	return keywords
 }
 
@@ -149,7 +149,7 @@ func (s *KnowledgeIntegrationService) isStopWord(word string) bool {
 		"us": true, "them": true, "my": true, "your": true, "his": true, "hers": true,
 		"its": true, "our": true, "their": true, "mine": true, "yours": true, "ours": true, "theirs": true,
 	}
-	
+
 	return stopWords[word]
 }
 
@@ -167,14 +167,14 @@ func (s *KnowledgeIntegrationService) searchKnowledgeArticles(ctx context.Contex
 	// 添加关键词搜索条件
 	var conditions []predicate.KnowledgeArticle
 	for _, keyword := range keywords {
-		conditions = append(conditions, 
+		conditions = append(conditions,
 			knowledgearticle.Or(
 				knowledgearticle.TitleContains(keyword),
 				knowledgearticle.ContentContains(keyword),
 			),
 		)
 	}
-	
+
 	if len(conditions) > 0 {
 		query = query.Where(knowledgearticle.And(conditions...))
 	}
@@ -184,7 +184,7 @@ func (s *KnowledgeIntegrationService) searchKnowledgeArticles(ctx context.Contex
 		Order(ent.Desc(knowledgearticle.FieldUpdatedAt)).
 		Limit(limit).
 		All(ctx)
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("搜索知识库文章失败: %w", err)
 	}
@@ -221,7 +221,7 @@ func (s *KnowledgeIntegrationService) calculateTextMatchScore(text1, text2 strin
 
 	text1Lower := strings.ToLower(text1)
 	text2Lower := strings.ToLower(text2)
-	
+
 	matched := 0
 	for _, keyword := range keywords {
 		if strings.Contains(text1Lower, keyword) && strings.Contains(text2Lower, keyword) {
@@ -288,7 +288,7 @@ func (s *KnowledgeIntegrationService) addKnowledgeTagToTicket(ctx context.Contex
 	_, err := s.client.TicketTag.Query().
 		Where(tickettag.NameEQ(tagName)).
 		First(ctx)
-	
+
 	if err != nil {
 		// 创建新标签
 		_, err = s.client.TicketTag.Create().
@@ -317,7 +317,7 @@ func (s *KnowledgeIntegrationService) GetAIRecommendations(ctx context.Context, 
 
 	// 2. 分析工单内容
 	keywords := s.extractKeywords(ticket.Title, ticket.Description)
-	
+
 	// 3. 基于内容分析生成建议
 	recommendation := &AIRecommendation{
 		TicketID:   ticketID,
@@ -356,17 +356,17 @@ func (s *KnowledgeIntegrationService) GetAIRecommendations(ctx context.Context, 
 func (s *KnowledgeIntegrationService) suggestCategory(ctx context.Context, keywords []string, tenantID int) string {
 	// 这里简化处理，实际应该使用机器学习模型
 	// 基于关键词匹配历史数据来建议分类
-	
+
 	// 简单的关键词到分类映射
 	keywordToCategory := map[string]string{
-		"network":   "网络问题",
-		"server":    "服务器问题",
-		"database":  "数据库问题",
+		"network":     "网络问题",
+		"server":      "服务器问题",
+		"database":    "数据库问题",
 		"application": "应用问题",
-		"hardware":  "硬件问题",
-		"software":  "软件问题",
-		"user":      "用户问题",
-		"access":    "权限问题",
+		"hardware":    "硬件问题",
+		"software":    "软件问题",
+		"user":        "用户问题",
+		"access":      "权限问题",
 	}
 
 	for _, keyword := range keywords {
@@ -381,13 +381,13 @@ func (s *KnowledgeIntegrationService) suggestCategory(ctx context.Context, keywo
 // suggestPriority 建议优先级
 func (s *KnowledgeIntegrationService) suggestPriority(ctx context.Context, keywords []string, tenantID int) string {
 	// 基于关键词和内容分析建议优先级
-	
+
 	// 高优先级关键词
 	highPriorityWords := []string{"urgent", "critical", "error", "failed", "down", "broken", "emergency"}
-	
+
 	// 中优先级关键词
 	mediumPriorityWords := []string{"issue", "problem", "slow", "performance", "bug"}
-	
+
 	// 低优先级关键词
 	lowPriorityWords := []string{"question", "request", "enhancement", "feature"}
 
@@ -416,7 +416,7 @@ func (s *KnowledgeIntegrationService) suggestPriority(ctx context.Context, keywo
 func (s *KnowledgeIntegrationService) suggestTags(ctx context.Context, keywords []string, tenantID int) []string {
 	// 基于关键词建议标签
 	var suggestedTags []string
-	
+
 	// 简单的关键词到标签映射
 	keywordToTags := map[string][]string{
 		"network":     {"网络", "连接", "通信"},
@@ -465,7 +465,7 @@ func (s *KnowledgeIntegrationService) GetRelatedArticles(ctx context.Context, ti
 
 	// 提取关键词
 	keywords := s.extractKeywords(ticket.Title, ticket.Description)
-	
+
 	// 搜索相关文章
 	articles, err := s.searchKnowledgeArticles(ctx, keywords, ticket.TenantID, limit)
 	if err != nil {
@@ -480,4 +480,28 @@ func (s *KnowledgeIntegrationService) UpdateArticleViewCount(ctx context.Context
 	// 由于KnowledgeArticle没有ViewCount字段，这个方法暂时不实现
 	// 实际项目中需要先添加该字段到schema中
 	return fmt.Errorf("文章查看次数字段未实现")
+}
+
+// AssociateWithKnowledgeRequest 关联知识库文章请求
+type AssociateWithKnowledgeRequest struct {
+	ArticleID       int    `json:"article_id" binding:"required"`
+	AssociationType string `json:"association_type" binding:"required"` // auto, manual, suggested
+}
+
+// SearchKnowledgeRequest 搜索知识库请求
+type SearchKnowledgeRequest struct {
+	Keywords []string `json:"keywords" binding:"required"`
+	Limit    int      `json:"limit"`
+}
+
+// GetKnowledgeAssociations 获取工单的知识库关联
+func (s *KnowledgeIntegrationService) GetKnowledgeAssociations(ctx context.Context, ticketID int) ([]*KnowledgeAssociation, error) {
+	// 这里简化处理，实际应该查询关联表
+	// 暂时返回空数组，表示没有关联
+	return []*KnowledgeAssociation{}, nil
+}
+
+// SearchKnowledgeArticles 公开的搜索知识库文章方法
+func (s *KnowledgeIntegrationService) SearchKnowledgeArticles(ctx context.Context, keywords []string, tenantID int, limit int) ([]*ent.KnowledgeArticle, error) {
+	return s.searchKnowledgeArticles(ctx, keywords, tenantID, limit)
 }
