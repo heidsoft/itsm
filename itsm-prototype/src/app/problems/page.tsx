@@ -1,6 +1,14 @@
 "use client";
 
-import { Search, Edit, Eye, AlertTriangle, Tag as TagIcon, PlusCircle, RefreshCw } from 'lucide-react';
+import {
+  Search,
+  Edit,
+  Eye,
+  AlertTriangle,
+  Tag as TagIcon,
+  PlusCircle,
+  RefreshCw,
+} from "lucide-react";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -18,8 +26,16 @@ import {
   message,
   Tag,
 } from "antd";
-import { problemService, Problem, ProblemStatus, ProblemPriority, ListProblemsParams } from "../lib/services/problem-service";
-import LoadingEmptyError from "../components/ui/LoadingEmptyError";
+import {
+  problemService,
+  Problem,
+  ProblemStatus,
+  ProblemPriority,
+  ListProblemsParams,
+} from "../lib/services/problem-service";
+import { LoadingEmptyError } from "../components/ui/LoadingEmptyError";
+// AppLayout is handled by layout.tsx
+import { useRouter } from "next/navigation";
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
@@ -44,6 +60,8 @@ const ProblemListPage = () => {
     high_priority: 0,
   });
 
+  const router = useRouter();
+
   // 加载问题列表
   const loadProblems = async (params: ListProblemsParams = {}) => {
     setLoading(true);
@@ -55,17 +73,17 @@ const ProblemListPage = () => {
         keyword: searchText || undefined,
         ...params,
       });
-      
+
       setProblems(response.problems);
-      setPagination(prev => ({
+      setPagination((prev) => ({
         ...prev,
         total: response.total,
         current: response.page,
         pageSize: response.page_size,
       }));
     } catch (error) {
-      console.error('加载问题列表失败:', error);
-      message.error('加载问题列表失败');
+      console.error("加载问题列表失败:", error);
+      message.error("加载问题列表失败");
     } finally {
       setLoading(false);
     }
@@ -78,8 +96,8 @@ const ProblemListPage = () => {
       const response = await problemService.getProblemStats();
       setStats(response);
     } catch (error) {
-      console.error('加载统计数据失败:', error);
-      message.error('加载统计数据失败');
+      console.error("加载统计数据失败:", error);
+      message.error("加载统计数据失败");
     } finally {
       setStatsLoading(false);
     }
@@ -101,7 +119,7 @@ const ProblemListPage = () => {
 
   // 处理分页变化
   const handleTableChange = (pagination: any) => {
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       current: pagination.current,
       pageSize: pagination.pageSize,
@@ -127,7 +145,7 @@ const ProblemListPage = () => {
       render: (id: number) => (
         <Link href={`/problems/${id}`}>
           <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-            PRB-{String(id).padStart(5, '0')}
+            PRB-{String(id).padStart(5, "0")}
           </span>
         </Link>
       ),
@@ -171,14 +189,14 @@ const ProblemListPage = () => {
       dataIndex: "assignee",
       key: "assignee",
       width: 100,
-      render: (assignee: any) => assignee?.name || '-',
+      render: (assignee: any) => assignee?.name || "-",
     },
     {
       title: "创建时间",
       dataIndex: "created_at",
       key: "created_at",
       width: 150,
-      render: (date: string) => new Date(date).toLocaleDateString('zh-CN'),
+      render: (date: string) => new Date(date).toLocaleDateString("zh-CN"),
     },
     {
       title: "操作",
@@ -200,34 +218,16 @@ const ProblemListPage = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* 页面头部 */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-        }}
-      >
+    <>
+      {/* 页面头部操作 */}
+      <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1
-            style={{
-              fontSize: 24,
-              fontWeight: 600,
-              color: "#1e293b",
-              margin: 0,
-            }}
-          >
-            问题管理
-          </h1>
-          <p style={{ color: "#64748b", marginTop: 4, marginBottom: 0 }}>
-            管理和跟踪系统问题，防止重复事件发生
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">问题管理</h1>
+          <p className="text-gray-600 mt-1">管理和跟踪系统问题，防止重复事件发生</p>
         </div>
         <Space>
-          <Button 
-            icon={<Reload size={16} />} 
+          <Button
+            icon={<RefreshCw size={16} />}
             onClick={handleRefresh}
             loading={loading || statsLoading}
           >
@@ -240,7 +240,6 @@ const ProblemListPage = () => {
           </Link>
         </Space>
       </div>
-
       {/* 统计卡片 */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
@@ -299,43 +298,77 @@ const ProblemListPage = () => {
           </Col>
           <Col span={4}>
             <Select
+              placeholder="状态筛选"
+              style={{ width: "100%" }}
+              allowClear
               value={filter}
               onChange={setFilter}
-              style={{ width: "100%" }}
-              placeholder="状态筛选"
-              allowClear
             >
               <Option value="">全部状态</Option>
-              <Option value="open">待处理</Option>
-              <Option value="in_progress">处理中</Option>
-              <Option value="resolved">已解决</Option>
-              <Option value="closed">已关闭</Option>
+              <Option value={ProblemStatus.OPEN}>待处理</Option>
+              <Option value={ProblemStatus.IN_PROGRESS}>处理中</Option>
+              <Option value={ProblemStatus.RESOLVED}>已解决</Option>
+              <Option value={ProblemStatus.CLOSED}>已关闭</Option>
             </Select>
+          </Col>
+          <Col span={4}>
+            <Button type="primary" onClick={() => loadProblems()}>
+              搜索
+            </Button>
           </Col>
         </Row>
       </Card>
 
       {/* 问题列表 */}
       <Card>
-        <Table
-          columns={columns}
-          dataSource={problems}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+        <LoadingEmptyError
+          state={
+            loading ? "loading" : problems.length === 0 ? "empty" : "success"
+          }
+          loadingText="正在加载问题列表..."
+          empty={{
+            title: "暂无问题",
+            description: "当前没有问题记录，您可以创建新的问题",
+            actions: [
+              {
+                text: "新建问题",
+                icon: <PlusCircle size={16} />,
+                onClick: () => router.push("/problems/new"),
+                type: "primary",
+              },
+            ],
           }}
-          onChange={handleTableChange}
-          scroll={{ x: 800 }}
-        />
+          error={{
+            title: "加载失败",
+            description: "无法获取问题列表，请稍后重试",
+            onRetry: () => loadProblems(),
+          }}
+        >
+          <Table
+            columns={columns}
+            dataSource={problems}
+            rowKey="id"
+            loading={false}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              onChange: (page, size) => {
+                setPagination((prev) => ({
+                  ...prev,
+                  current: page,
+                  pageSize: size,
+                }));
+              },
+            }}
+          />
+        </LoadingEmptyError>
       </Card>
-    </div>
+    </>
   );
 };
 

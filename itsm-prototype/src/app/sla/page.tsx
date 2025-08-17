@@ -5,7 +5,6 @@ import {
   CheckCircle,
   Search,
   XCircle,
-  Tag as TagIcon,
   AlertCircle,
   BarChart3,
 } from "lucide-react";
@@ -25,7 +24,9 @@ import {
   Typography,
   Tag,
 } from "antd";
-const { Title, Text } = Typography;
+// AppLayout is handled by layout.tsx
+
+const { Text } = Typography;
 
 // 模拟SLA数据
 const mockSLAs = [
@@ -173,43 +174,27 @@ const SLAListPage = () => {
   ];
 
   return (
-    <div style={{ padding: token.paddingLG }}>
-      {/* 页面头部 */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: token.marginLG,
-        }}
-      >
+    <>
+      {/* 页面头部操作 */}
+      <div className="mb-6 flex justify-between items-center">
         <div>
-          <Title level={2} style={{ margin: 0, color: token.colorText }}>
-            服务级别管理
-          </Title>
-          <Text type="secondary" style={{ marginTop: token.marginXS }}>
-            定义、监控和管理IT服务的性能和质量
-          </Text>
+          <h1 className="text-2xl font-bold text-gray-900">服务级别管理</h1>
+          <p className="text-gray-600 mt-1">定义、监控和管理IT服务的性能和质量</p>
         </div>
         <Link href="/sla/new">
-          <Button
-            type="primary"
-            icon={<Plus className="w-4 h-4" />}
-            size="large"
-          >
+          <Button type="primary" icon={<Plus size={16} />} size="large">
             新建SLA
           </Button>
         </Link>
       </div>
-
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: token.marginLG }}>
+      <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
               title="总SLA数量"
               value={stats.total}
-              prefix={<BarChart3 className="w-5 h-5" />}
+              prefix={<BarChart3 size={16} />}
               valueStyle={{ color: token.colorPrimary }}
             />
           </Card>
@@ -219,7 +204,7 @@ const SLAListPage = () => {
             <Statistic
               title="达标"
               value={stats.compliant}
-              prefix={<CheckCircle className="w-5 h-5" />}
+              prefix={<CheckCircle size={16} />}
               valueStyle={{ color: token.colorSuccess }}
             />
           </Card>
@@ -229,7 +214,7 @@ const SLAListPage = () => {
             <Statistic
               title="轻微违约"
               value={stats.warning}
-              prefix={<AlertCircle className="w-5 h-5" />}
+              prefix={<AlertCircle size={16} />}
               valueStyle={{ color: token.colorWarning }}
             />
           </Card>
@@ -239,7 +224,7 @@ const SLAListPage = () => {
             <Statistic
               title="违约"
               value={stats.violation}
-              prefix={<XCircle className="w-5 h-5" />}
+              prefix={<XCircle size={16} />}
               valueStyle={{ color: token.colorError }}
             />
           </Card>
@@ -247,12 +232,12 @@ const SLAListPage = () => {
       </Row>
 
       {/* 筛选器 */}
-      <Card style={{ marginBottom: token.marginLG }}>
-        <Row gutter={[16, 16]} align="middle">
+      <Card style={{ marginBottom: 24 }}>
+        <Row gutter={16} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="搜索SLA名称或服务..."
-              prefix={<Search className="w-4 h-4" />}
+              prefix={<Search size={16} />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
@@ -289,7 +274,7 @@ const SLAListPage = () => {
           scroll={{ x: 800 }}
         />
       </Card>
-    </div>
+    </>
   );
 };
 

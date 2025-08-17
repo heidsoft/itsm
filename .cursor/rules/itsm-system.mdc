@@ -1,0 +1,180 @@
+---
+description: ITSM系统开发规范，适用于基于Go、Gin、Ent框架的ITSM系统开发
+globs:
+  - "itsm-backend/controller/**/*.go"
+  - "itsm-backend/service/**/*.go"
+  - "itsm-backend/dto/**/*.go"
+  - "itsm-backend/middleware/**/*.go"
+  - "itsm-backend/common/**/*.go"
+  - "itsm-backend/config/**/*.go"
+  - "itsm-backend/cache/**/*.go"
+  - "itsm-backend/router/**/*.go"
+  - "itsm-prototype/src/app/**/*"
+  - "itsm-prototype/src/components/**/*"
+  - "itsm-prototype/src/lib/**/*"
+  - "!itsm-backend/ent/**"
+  - "!itsm-backend/vendor/**"
+  - "!itsm-backend/*_test.go"
+alwaysApply: false
+---
+
+# ITSM System
+
+## 项目结构
+
+```markdown
+itsm/
+├── itsm-backend/          # Go 后端服务
+│   ├── cache/             # Redis缓存实现
+│   ├── common/            # 公共错误和响应结构
+│   ├── config/            # 配置加载
+│   ├── controller/        # REST API控制器
+│   ├── database/          # 数据库连接初始化
+│   ├── docs/              # API文档
+│   ├── dto/               # 数据传输对象
+│   ├── ent/               # ORM模型（Ent框架）
+│   ├── middleware/        # 请求中间件
+│   ├── router/            # API路由注册
+│   ├── service/           # 业务逻辑实现
+│   ├── scripts/           # 辅助脚本
+│   ├── main.go            # 启动入口
+│   └── migrate_*.go       # 数据库迁移脚本
+├── itsm-prototype/        # Next.js 前端应用
+│   ├── src/
+│   │   ├── app/           # 应用页面和布局
+│   │   ├── components/    # React组件
+│   │   └── lib/           # 工具库和服务
+│   ├── next.config.ts     # Next.js配置
+│   └── package.json       # 依赖管理
+├── Makefile              # 构建和运行脚本
+└── README.md             # 项目文档
+```
+
+## 后端开发规范 (Go)
+
+### 技术栈
+
+- Go语言
+- Gin Web框架
+- Ent ORM框架
+- PostgreSQL数据库
+- Redis缓存
+- Swagger API文档
+
+### 分层架构
+
+- Controller层：处理HTTP请求和响应
+- Service层：实现业务逻辑
+- Repository层：数据访问（通过Ent ORM）
+- DTO层：数据传输对象
+
+### API设计原则
+
+- 使用RESTful API风格
+- 统一的响应格式:
+
+  ```go
+  {
+    "code": 200,
+    "message": "success",
+    "data": {}
+  }
+  ```
+
+- 错误处理统一格式:
+
+  ```go
+  {
+    "code": 400,
+    "message": "错误描述",
+    "data": null
+  }
+  ```
+
+### 代码规范
+
+- 命名使用清晰、具有描述性的驼峰命名法（camelCase）
+- 函数长度不超过50行，避免过深的嵌套层级
+- 每个函数都应该有对应的单元测试，测试覆盖率应达到80%以上
+- 所有可能出错的函数必须返回错误，不要忽略错误返回值
+
+### 数据库设计
+
+- 使用Ent ORM生成数据库实体代码
+- 不要手动修改Ent生成的代码
+- 使用Ent的Mutation API进行数据变更
+- 合理使用Ent的Hook机制
+- 每个表必须包含id, created_at, updated_at字段
+
+## 前端开发规范 (Next.js/TypeScript)
+
+### 前端技术栈
+
+- React 18 + Next.js App Router
+- TypeScript
+- Tailwind CSS
+- Ant Design组件库
+- Axios HTTP客户端
+- Zustand状态管理
+
+### 目录结构
+
+```markdown
+itsm-prototype/src/
+├── app/                    # Next.js App Router
+│   ├── [module]/          # 功能模块目录
+│   │   ├── page.tsx       # 模块主页面
+│   │   ├── [id]/          # 详情页面
+│   │   │   └── page.tsx
+│   │   └── components/    # 模块级组件
+│   ├── components/         # 全局共享组件
+│   ├── lib/               # 工具库和服务
+│   └── types/             # TypeScript类型定义
+├── components/             # 公共组件
+└── public/                # 静态资源
+```
+
+### 组件规范
+
+- 组件文件名使用PascalCase命名法
+- 组件导出名与文件名保持一致
+- 所有组件必须明确定义Props类型
+- 页面组件以Page结尾
+
+### API集成规范
+
+- 使用TypeScript强类型
+- 统一封装axios实例
+- 使用react-query进行数据获取和缓存
+- API调用函数命名规范: 动词+资源名 (如: getTickets, createTicket)
+
+## 前后端对接规范
+
+### 接口契约
+
+- 使用Swagger/OpenAPI规范定义API
+- 前后端基于接口文档开发
+- 接口变更需要同步更新文档
+
+### 数据传输格式
+
+- JSON格式传输
+- 时间格式统一使用ISO 8601标准
+- 枚举值使用字符串而非数字
+
+### 认证和安全
+
+- 前端开发环境配置代理解决跨域
+- 使用JWT Token进行认证
+- 请求头统一添加 `Authorization: Bearer token`
+- 敏感信息通过环境变量配置
+
+### 错误处理
+
+- 统一错误码:
+  - 200: 成功
+  - 400: 请求参数错误
+  - 401: 未认证
+  - 403: 无权限
+  - 404: 资源不存在
+  - 500: 服务器内部错误

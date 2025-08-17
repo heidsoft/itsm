@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/sladefinition"
 	"strings"
@@ -21,6 +22,18 @@ type SLADefinition struct {
 	Name string `json:"name,omitempty"`
 	// SLA描述
 	Description string `json:"description,omitempty"`
+	// 服务类型
+	ServiceType string `json:"service_type,omitempty"`
+	// 优先级
+	Priority string `json:"priority,omitempty"`
+	// 响应时间(分钟)
+	ResponseTime int `json:"response_time,omitempty"`
+	// 解决时间(分钟)
+	ResolutionTime int `json:"resolution_time,omitempty"`
+	// 营业时间配置
+	BusinessHours map[string]interface{} `json:"business_hours,omitempty"`
+	// 是否激活
+	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
@@ -35,9 +48,13 @@ func (*SLADefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sladefinition.FieldID, sladefinition.FieldTenantID:
+		case sladefinition.FieldBusinessHours:
+			values[i] = new([]byte)
+		case sladefinition.FieldIsActive:
+			values[i] = new(sql.NullBool)
+		case sladefinition.FieldID, sladefinition.FieldResponseTime, sladefinition.FieldResolutionTime, sladefinition.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case sladefinition.FieldName, sladefinition.FieldDescription:
+		case sladefinition.FieldName, sladefinition.FieldDescription, sladefinition.FieldServiceType, sladefinition.FieldPriority:
 			values[i] = new(sql.NullString)
 		case sladefinition.FieldCreatedAt, sladefinition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -73,6 +90,44 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				sd.Description = value.String
+			}
+		case sladefinition.FieldServiceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field service_type", values[i])
+			} else if value.Valid {
+				sd.ServiceType = value.String
+			}
+		case sladefinition.FieldPriority:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field priority", values[i])
+			} else if value.Valid {
+				sd.Priority = value.String
+			}
+		case sladefinition.FieldResponseTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field response_time", values[i])
+			} else if value.Valid {
+				sd.ResponseTime = int(value.Int64)
+			}
+		case sladefinition.FieldResolutionTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution_time", values[i])
+			} else if value.Valid {
+				sd.ResolutionTime = int(value.Int64)
+			}
+		case sladefinition.FieldBusinessHours:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field business_hours", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sd.BusinessHours); err != nil {
+					return fmt.Errorf("unmarshal field business_hours: %w", err)
+				}
+			}
+		case sladefinition.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				sd.IsActive = value.Bool
 			}
 		case sladefinition.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -133,6 +188,24 @@ func (sd *SLADefinition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(sd.Description)
+	builder.WriteString(", ")
+	builder.WriteString("service_type=")
+	builder.WriteString(sd.ServiceType)
+	builder.WriteString(", ")
+	builder.WriteString("priority=")
+	builder.WriteString(sd.Priority)
+	builder.WriteString(", ")
+	builder.WriteString("response_time=")
+	builder.WriteString(fmt.Sprintf("%v", sd.ResponseTime))
+	builder.WriteString(", ")
+	builder.WriteString("resolution_time=")
+	builder.WriteString(fmt.Sprintf("%v", sd.ResolutionTime))
+	builder.WriteString(", ")
+	builder.WriteString("business_hours=")
+	builder.WriteString(fmt.Sprintf("%v", sd.BusinessHours))
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", sd.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", sd.TenantID))

@@ -64,6 +64,31 @@ func Description(v string) predicate.SLADefinition {
 	return predicate.SLADefinition(sql.FieldEQ(FieldDescription, v))
 }
 
+// ServiceType applies equality check predicate on the "service_type" field. It's identical to ServiceTypeEQ.
+func ServiceType(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldServiceType, v))
+}
+
+// Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
+func Priority(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldPriority, v))
+}
+
+// ResponseTime applies equality check predicate on the "response_time" field. It's identical to ResponseTimeEQ.
+func ResponseTime(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldResponseTime, v))
+}
+
+// ResolutionTime applies equality check predicate on the "resolution_time" field. It's identical to ResolutionTimeEQ.
+func ResolutionTime(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldResolutionTime, v))
+}
+
+// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
+func IsActive(v bool) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldIsActive, v))
+}
+
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.SLADefinition {
 	return predicate.SLADefinition(sql.FieldEQ(FieldTenantID, v))
@@ -217,6 +242,256 @@ func DescriptionEqualFold(v string) predicate.SLADefinition {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.SLADefinition {
 	return predicate.SLADefinition(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// ServiceTypeEQ applies the EQ predicate on the "service_type" field.
+func ServiceTypeEQ(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldServiceType, v))
+}
+
+// ServiceTypeNEQ applies the NEQ predicate on the "service_type" field.
+func ServiceTypeNEQ(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNEQ(FieldServiceType, v))
+}
+
+// ServiceTypeIn applies the In predicate on the "service_type" field.
+func ServiceTypeIn(vs ...string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIn(FieldServiceType, vs...))
+}
+
+// ServiceTypeNotIn applies the NotIn predicate on the "service_type" field.
+func ServiceTypeNotIn(vs ...string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotIn(FieldServiceType, vs...))
+}
+
+// ServiceTypeGT applies the GT predicate on the "service_type" field.
+func ServiceTypeGT(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGT(FieldServiceType, v))
+}
+
+// ServiceTypeGTE applies the GTE predicate on the "service_type" field.
+func ServiceTypeGTE(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGTE(FieldServiceType, v))
+}
+
+// ServiceTypeLT applies the LT predicate on the "service_type" field.
+func ServiceTypeLT(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLT(FieldServiceType, v))
+}
+
+// ServiceTypeLTE applies the LTE predicate on the "service_type" field.
+func ServiceTypeLTE(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLTE(FieldServiceType, v))
+}
+
+// ServiceTypeContains applies the Contains predicate on the "service_type" field.
+func ServiceTypeContains(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldContains(FieldServiceType, v))
+}
+
+// ServiceTypeHasPrefix applies the HasPrefix predicate on the "service_type" field.
+func ServiceTypeHasPrefix(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldHasPrefix(FieldServiceType, v))
+}
+
+// ServiceTypeHasSuffix applies the HasSuffix predicate on the "service_type" field.
+func ServiceTypeHasSuffix(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldHasSuffix(FieldServiceType, v))
+}
+
+// ServiceTypeIsNil applies the IsNil predicate on the "service_type" field.
+func ServiceTypeIsNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIsNull(FieldServiceType))
+}
+
+// ServiceTypeNotNil applies the NotNil predicate on the "service_type" field.
+func ServiceTypeNotNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotNull(FieldServiceType))
+}
+
+// ServiceTypeEqualFold applies the EqualFold predicate on the "service_type" field.
+func ServiceTypeEqualFold(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEqualFold(FieldServiceType, v))
+}
+
+// ServiceTypeContainsFold applies the ContainsFold predicate on the "service_type" field.
+func ServiceTypeContainsFold(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldContainsFold(FieldServiceType, v))
+}
+
+// PriorityEQ applies the EQ predicate on the "priority" field.
+func PriorityEQ(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldPriority, v))
+}
+
+// PriorityNEQ applies the NEQ predicate on the "priority" field.
+func PriorityNEQ(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNEQ(FieldPriority, v))
+}
+
+// PriorityIn applies the In predicate on the "priority" field.
+func PriorityIn(vs ...string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIn(FieldPriority, vs...))
+}
+
+// PriorityNotIn applies the NotIn predicate on the "priority" field.
+func PriorityNotIn(vs ...string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotIn(FieldPriority, vs...))
+}
+
+// PriorityGT applies the GT predicate on the "priority" field.
+func PriorityGT(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGT(FieldPriority, v))
+}
+
+// PriorityGTE applies the GTE predicate on the "priority" field.
+func PriorityGTE(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGTE(FieldPriority, v))
+}
+
+// PriorityLT applies the LT predicate on the "priority" field.
+func PriorityLT(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLT(FieldPriority, v))
+}
+
+// PriorityLTE applies the LTE predicate on the "priority" field.
+func PriorityLTE(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLTE(FieldPriority, v))
+}
+
+// PriorityContains applies the Contains predicate on the "priority" field.
+func PriorityContains(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldContains(FieldPriority, v))
+}
+
+// PriorityHasPrefix applies the HasPrefix predicate on the "priority" field.
+func PriorityHasPrefix(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldHasPrefix(FieldPriority, v))
+}
+
+// PriorityHasSuffix applies the HasSuffix predicate on the "priority" field.
+func PriorityHasSuffix(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldHasSuffix(FieldPriority, v))
+}
+
+// PriorityIsNil applies the IsNil predicate on the "priority" field.
+func PriorityIsNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIsNull(FieldPriority))
+}
+
+// PriorityNotNil applies the NotNil predicate on the "priority" field.
+func PriorityNotNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotNull(FieldPriority))
+}
+
+// PriorityEqualFold applies the EqualFold predicate on the "priority" field.
+func PriorityEqualFold(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEqualFold(FieldPriority, v))
+}
+
+// PriorityContainsFold applies the ContainsFold predicate on the "priority" field.
+func PriorityContainsFold(v string) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldContainsFold(FieldPriority, v))
+}
+
+// ResponseTimeEQ applies the EQ predicate on the "response_time" field.
+func ResponseTimeEQ(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldResponseTime, v))
+}
+
+// ResponseTimeNEQ applies the NEQ predicate on the "response_time" field.
+func ResponseTimeNEQ(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNEQ(FieldResponseTime, v))
+}
+
+// ResponseTimeIn applies the In predicate on the "response_time" field.
+func ResponseTimeIn(vs ...int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIn(FieldResponseTime, vs...))
+}
+
+// ResponseTimeNotIn applies the NotIn predicate on the "response_time" field.
+func ResponseTimeNotIn(vs ...int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotIn(FieldResponseTime, vs...))
+}
+
+// ResponseTimeGT applies the GT predicate on the "response_time" field.
+func ResponseTimeGT(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGT(FieldResponseTime, v))
+}
+
+// ResponseTimeGTE applies the GTE predicate on the "response_time" field.
+func ResponseTimeGTE(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGTE(FieldResponseTime, v))
+}
+
+// ResponseTimeLT applies the LT predicate on the "response_time" field.
+func ResponseTimeLT(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLT(FieldResponseTime, v))
+}
+
+// ResponseTimeLTE applies the LTE predicate on the "response_time" field.
+func ResponseTimeLTE(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLTE(FieldResponseTime, v))
+}
+
+// ResolutionTimeEQ applies the EQ predicate on the "resolution_time" field.
+func ResolutionTimeEQ(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldResolutionTime, v))
+}
+
+// ResolutionTimeNEQ applies the NEQ predicate on the "resolution_time" field.
+func ResolutionTimeNEQ(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNEQ(FieldResolutionTime, v))
+}
+
+// ResolutionTimeIn applies the In predicate on the "resolution_time" field.
+func ResolutionTimeIn(vs ...int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIn(FieldResolutionTime, vs...))
+}
+
+// ResolutionTimeNotIn applies the NotIn predicate on the "resolution_time" field.
+func ResolutionTimeNotIn(vs ...int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotIn(FieldResolutionTime, vs...))
+}
+
+// ResolutionTimeGT applies the GT predicate on the "resolution_time" field.
+func ResolutionTimeGT(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGT(FieldResolutionTime, v))
+}
+
+// ResolutionTimeGTE applies the GTE predicate on the "resolution_time" field.
+func ResolutionTimeGTE(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldGTE(FieldResolutionTime, v))
+}
+
+// ResolutionTimeLT applies the LT predicate on the "resolution_time" field.
+func ResolutionTimeLT(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLT(FieldResolutionTime, v))
+}
+
+// ResolutionTimeLTE applies the LTE predicate on the "resolution_time" field.
+func ResolutionTimeLTE(v int) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldLTE(FieldResolutionTime, v))
+}
+
+// BusinessHoursIsNil applies the IsNil predicate on the "business_hours" field.
+func BusinessHoursIsNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIsNull(FieldBusinessHours))
+}
+
+// BusinessHoursNotNil applies the NotNil predicate on the "business_hours" field.
+func BusinessHoursNotNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotNull(FieldBusinessHours))
+}
+
+// IsActiveEQ applies the EQ predicate on the "is_active" field.
+func IsActiveEQ(v bool) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
+func IsActiveNEQ(v bool) predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNEQ(FieldIsActive, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.

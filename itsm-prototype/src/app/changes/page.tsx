@@ -1,6 +1,14 @@
 "use client";
 
-import { Search, Edit, Eye, Calendar, Tag as TagIcon, PlusCircle, GitBranch } from 'lucide-react';
+import {
+  Search,
+  Edit,
+  Eye,
+  Calendar,
+  Tag as TagIcon,
+  PlusCircle,
+  GitBranch,
+} from "lucide-react";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -18,7 +26,12 @@ import {
   Tooltip,
   Progress,
 } from "antd";
-import { changeService, Change, ChangeStats } from "../lib/services/change-service";
+import {
+  changeService,
+  Change,
+  ChangeStats,
+} from "../lib/services/change-service";
+// AppLayout is handled by layout.tsx
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
@@ -103,12 +116,13 @@ const ChangeListPage = () => {
       setChanges(data.changes);
       setStats({
         total: data.total,
-        draft: data.changes.filter(c => c.status === 'draft').length,
-        pending: data.changes.filter(c => c.status === 'pending').length,
-        approved: data.changes.filter(c => c.status === 'approved').length,
-        implementing: data.changes.filter(c => c.status === 'implementing').length,
-        completed: data.changes.filter(c => c.status === 'completed').length,
-        cancelled: data.changes.filter(c => c.status === 'cancelled').length,
+        draft: data.changes.filter((c) => c.status === "draft").length,
+        pending: data.changes.filter((c) => c.status === "pending").length,
+        approved: data.changes.filter((c) => c.status === "approved").length,
+        implementing: data.changes.filter((c) => c.status === "implementing")
+          .length,
+        completed: data.changes.filter((c) => c.status === "completed").length,
+        cancelled: data.changes.filter((c) => c.status === "cancelled").length,
       });
     } catch (error) {
       console.error("加载变更数据失败:", error);
@@ -151,7 +165,7 @@ const ChangeListPage = () => {
       render: (text: number) => (
         <Link href={`/changes/${text}`}>
           <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-            {`CHG-${text.toString().padStart(5, '0')}`}
+            {`CHG-${text.toString().padStart(5, "0")}`}
           </span>
         </Link>
       ),
@@ -169,12 +183,16 @@ const ChangeListPage = () => {
       width: 120,
       render: (type: string) => {
         const typeMap = {
-          'normal': '普通变更',
-          'standard': '标准变更',
-          'emergency': '紧急变更'
+          normal: "普通变更",
+          standard: "标准变更",
+          emergency: "紧急变更",
         };
         return (
-          <Tag color={getChangeTypeColor(typeMap[type as keyof typeof typeMap] || type)}>
+          <Tag
+            color={getChangeTypeColor(
+              typeMap[type as keyof typeof typeMap] || type
+            )}
+          >
             {typeMap[type as keyof typeof typeMap] || type}
           </Tag>
         );
@@ -187,16 +205,20 @@ const ChangeListPage = () => {
       width: 100,
       render: (status: string) => {
         const statusMap = {
-          'draft': '草稿',
-          'pending': '待审批',
-          'approved': '已批准',
-          'rejected': '已拒绝',
-          'implementing': '实施中',
-          'completed': '已完成',
-          'cancelled': '已取消'
+          draft: "草稿",
+          pending: "待审批",
+          approved: "已批准",
+          rejected: "已拒绝",
+          implementing: "实施中",
+          completed: "已完成",
+          cancelled: "已取消",
         };
         return (
-          <Tag color={getStatusColor(statusMap[status as keyof typeof statusMap] || status)}>
+          <Tag
+            color={getStatusColor(
+              statusMap[status as keyof typeof statusMap] || status
+            )}
+          >
             {statusMap[status as keyof typeof statusMap] || status}
           </Tag>
         );
@@ -234,7 +256,8 @@ const ChangeListPage = () => {
       dataIndex: "plannedStartDate",
       key: "plannedStartDate",
       width: 150,
-      render: (date: string) => date ? new Date(date).toLocaleDateString() : '-',
+      render: (date: string) =>
+        date ? new Date(date).toLocaleDateString() : "-",
     },
     {
       title: "操作",
@@ -256,30 +279,12 @@ const ChangeListPage = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* 页面头部 */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-        }}
-      >
+    <>
+      {/* 页面头部操作 */}
+      <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1
-            style={{
-              fontSize: 24,
-              fontWeight: 600,
-              color: "#1e293b",
-              margin: 0,
-            }}
-          >
-            变更管理
-          </h1>
-          <p style={{ color: "#64748b", marginTop: 4, marginBottom: 0 }}>
-            管理系统变更请求，确保变更的安全性和可控性
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">变更管理</h1>
+          <p className="text-gray-600 mt-1">管理系统变更请求，确保变更的安全性和可控性</p>
         </div>
         <Link href="/changes/new">
           <Button type="primary" icon={<PlusCircle size={16} />}>
@@ -287,7 +292,6 @@ const ChangeListPage = () => {
           </Button>
         </Link>
       </div>
-
       {/* 统计卡片 */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
@@ -329,7 +333,7 @@ const ChangeListPage = () => {
       </Row>
 
       {/* 筛选和搜索 */}
-      <Card className="mb-6">
+      <Card style={{ marginBottom: 24 }}>
         <Row gutter={16} align="middle">
           <Col span={8}>
             <SearchInput
@@ -381,7 +385,7 @@ const ChangeListPage = () => {
           scroll={{ x: 1000 }}
         />
       </Card>
-    </div>
+    </>
   );
 };
 

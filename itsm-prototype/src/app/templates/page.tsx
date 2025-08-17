@@ -49,6 +49,7 @@ import {
   GripVertical,
   Trash2,
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import LoadingEmptyError from "../components/ui/LoadingEmptyError";
 import {
   ticketTemplateService,
@@ -57,7 +58,7 @@ import {
   type UpdateTemplateRequest,
   type FormField,
   type WorkflowStep,
-} from "../../lib/services/ticket-template-service";
+} from "../lib/services/ticket-template-service";
 
 const { TextArea } = Input;
 const { Option } = Select;

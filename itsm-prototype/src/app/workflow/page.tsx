@@ -41,7 +41,7 @@ import {
   Code,
 } from "lucide-react";
 
-import EnhancedBPMNDesigner from "../../components/EnhancedBPMNDesigner";
+import { WorkflowDesigner } from "../components/WorkflowDesigner";
 import { WorkflowAPI } from "../lib/workflow-api";
 
 import { useRouter } from "next/navigation";

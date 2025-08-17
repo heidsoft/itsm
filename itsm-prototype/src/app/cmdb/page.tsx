@@ -29,6 +29,7 @@ import {
   Network,
 } from "lucide-react";
 import { CMDBApi } from "../lib/cmdb-api";
+// AppLayout is handled by layout.tsx
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
@@ -282,14 +283,12 @@ const CMDBListPage = () => {
   ];
 
   return (
-    <div className="p-6">
-      {/* 页面头部 */}
-      <div className="flex justify-between items-center mb-6">
+    <>
+      {/* 页面头部操作 */}
+      <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">配置管理数据库</h1>
-          <p className="text-gray-600 mt-1">
-            管理IT基础设施和服务的配置项及其关系
-          </p>
+          <p className="text-gray-600 mt-1">管理IT基础设施和服务的配置项及其关系</p>
         </div>
         <Space>
           <Button icon={<Network size={16} />}>关系视图</Button>
@@ -298,9 +297,8 @@ const CMDBListPage = () => {
           </Button>
         </Space>
       </div>
-
       {/* 统计卡片 */}
-      <Row gutter={16} className="mb-6">
+      <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card>
             <Statistic
@@ -340,7 +338,7 @@ const CMDBListPage = () => {
       </Row>
 
       {/* 类型统计 */}
-      <Row gutter={16} className="mb-6">
+      <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card size="small">
             <Statistic
@@ -391,7 +389,7 @@ const CMDBListPage = () => {
               children: (
                 <>
                   {/* 筛选和搜索 */}
-                  <div className="mb-4">
+                  <div style={{ marginBottom: 16 }}>
                     <Row gutter={16} align="middle">
                       <Col span={8}>
                         <SearchInput
@@ -452,8 +450,16 @@ const CMDBListPage = () => {
               key: "relationship",
               label: "关系图",
               children: (
-                <div className="p-4">
-                  <h3 className="text-lg font-medium mb-4">配置项关系图</h3>
+                <div style={{ padding: 16 }}>
+                  <h3
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "500",
+                      marginBottom: 16,
+                    }}
+                  >
+                    配置项关系图
+                  </h3>
                   <Tree
                     showLine
                     showIcon
@@ -466,7 +472,7 @@ const CMDBListPage = () => {
           ]}
         />
       </Card>
-    </div>
+    </>
   );
 };
 

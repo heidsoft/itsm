@@ -15,7 +15,7 @@ import {
   App,
 } from "antd";
 import { ArrowLeft, Save, PlayCircle, Download, Upload } from "lucide-react";
-import EnhancedBPMNDesigner from "../../../components/EnhancedBPMNDesigner";
+import EnhancedBPMNDesigner from "../../components/EnhancedBPMNDesigner";
 import { WorkflowAPI } from "../../lib/workflow-api";
 
 const { Header, Content, Sider } = Layout;

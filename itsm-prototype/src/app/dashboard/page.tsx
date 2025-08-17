@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AppLayout } from "../components/AppLayout";
+// AppLayout is handled by layout.tsx
 import { AIMetrics } from "../components/AIMetrics";
 import {
   Card,
@@ -102,7 +102,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <AppLayout title="仪表盘">
+    <>
       {/* 系统状态 */}
       {systemAlerts.length > 0 && (
         <Alert
@@ -297,6 +297,6 @@ export default function DashboardPage() {
           <Button icon={<BarChart3 size={16} />}>查看报表</Button>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

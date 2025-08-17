@@ -1,542 +1,607 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Button,
   Modal,
   Form,
   Input,
-  Switch,
-  InputNumber,
   Select,
-  message,
   Space,
+  Tag,
+  message,
+  Popconfirm,
+  Tooltip,
   Tree,
   Row,
   Col,
-  Statistic,
-  Popconfirm,
   Typography,
-  Empty,
-  Upload,
+  Switch,
+  InputNumber,
+  Table,
 } from "antd";
 import {
   Plus,
   Edit,
   Delete,
-  Folder,
-  FolderOpen,
-  FileText,
-  GripVertical,
   Eye,
-  EyeOff,
-  RefreshCw,
-  Search,
-  Download,
+  FolderOpen,
+  Folder,
+  GripVertical,
+  Settings,
+  Copy,
 } from "lucide-react";
-import {
-  ticketCategoryService,
-  type TicketCategory,
-  type CategoryTreeItem,
-} from "@/app/lib/services/ticket-category-service";
-import { LoadingEmptyError } from "@/app/components/ui/LoadingEmptyError";
-import TicketCategoryDragSort from "@/app/components/TicketCategoryDragSort";
-import TicketCategoryImport from "@/app/components/TicketCategoryImport";
-import TicketCategoryExport from "@/app/components/TicketCategoryExport";
+import { LoadingEmptyError } from "../../components/ui/LoadingEmptyError";
+import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 
 const { TextArea } = Input;
+const { Title, Text } = Typography;
 const { Option } = Select;
-const { Title } = Typography;
 
-// 定义树形数据项的类型
-interface TreeDataItem {
-  key: number;
-  title: React.ReactNode;
-  children?: TreeDataItem[];
-  isLeaf: boolean;
+interface TicketCategory {
+  id: number;
+  name: string;
+  description: string;
+  parent_id?: number;
+  level: number;
+  path: string;
+  sort_order: number;
+  is_active: boolean;
+  is_default: boolean;
+  color: string;
+  icon?: string;
+  created_at: string;
+  updated_at: string;
+  children?: TicketCategory[];
+  ticket_count: number;
 }
 
-const TicketCategoriesPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<CategoryTreeItem[]>([]);
-  const [flatCategories, setFlatCategories] = useState<TicketCategory[]>([]);
+interface TicketCategoryFormData {
+  name: string;
+  description: string;
+  parent_id?: number;
+  color: string;
+  icon?: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+const TicketCategoryManagementPage = () => {
+  const [categories, setCategories] = useState<TicketCategory[]>([]);
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<TicketCategory | null>(
     null
   );
   const [form] = Form.useForm();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterActive, setFilterActive] = useState<boolean | null>(null);
-  const [viewMode, setViewMode] = useState<"tree" | "list" | "drag">("tree");
-  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
-  const [importModalVisible, setImportModalVisible] = useState(false);
-  const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "tree">("table");
 
-  // 加载分类数据
-  const loadCategories = useCallback(async () => {
+  // 模拟加载分类数据
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
+      // 模拟API调用
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const [treeData, listData] = await Promise.all([
-        ticketCategoryService.getCategoryTree(),
-        ticketCategoryService.listCategories({ page_size: 1000 }),
-      ]);
+      // 模拟分类数据
+      const mockCategories: TicketCategory[] = [
+        {
+          id: 1,
+          name: "硬件故障",
+          description: "计算机硬件相关问题和故障",
+          parent_id: undefined,
+          level: 1,
+          path: "硬件故障",
+          sort_order: 1,
+          is_active: true,
+          is_default: false,
+          color: "#ff4d4f",
+          icon: "💻",
+          created_at: "2024-01-01 00:00:00",
+          updated_at: "2024-01-15 10:00:00",
+          ticket_count: 45,
+          children: [
+            {
+              id: 2,
+              name: "显示器问题",
+              description: "显示器故障和显示异常",
+              parent_id: 1,
+              level: 2,
+              path: "硬件故障/显示器问题",
+              sort_order: 1,
+              is_active: true,
+              is_default: false,
+              color: "#fa8c16",
+              icon: "🖥️",
+              created_at: "2024-01-01 00:00:00",
+              updated_at: "2024-01-15 10:00:00",
+              ticket_count: 12,
+            },
+            {
+              id: 3,
+              name: "键盘鼠标",
+              description: "键盘鼠标故障和连接问题",
+              parent_id: 1,
+              level: 2,
+              path: "硬件故障/键盘鼠标",
+              sort_order: 2,
+              is_active: true,
+              is_default: false,
+              color: "#fa8c16",
+              icon: "⌨️",
+              created_at: "2024-01-01 00:00:00",
+              updated_at: "2024-01-15 10:00:00",
+              ticket_count: 8,
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: "软件故障",
+          description: "软件安装、配置和运行问题",
+          parent_id: undefined,
+          level: 1,
+          path: "软件故障",
+          sort_order: 2,
+          is_active: true,
+          is_default: false,
+          color: "#1890ff",
+          icon: "🔧",
+          created_at: "2024-01-01 00:00:00",
+          updated_at: "2024-01-15 10:00:00",
+          ticket_count: 67,
+          children: [
+            {
+              id: 5,
+              name: "办公软件",
+              description: "Office、WPS等办公软件问题",
+              parent_id: 4,
+              level: 2,
+              path: "软件故障/办公软件",
+              sort_order: 1,
+              is_active: true,
+              is_default: false,
+              color: "#52c41a",
+              icon: "📄",
+              created_at: "2024-01-01 00:00:00",
+              updated_at: "2024-01-15 10:00:00",
+              ticket_count: 23,
+            },
+            {
+              id: 6,
+              name: "系统软件",
+              description: "操作系统和系统工具问题",
+              parent_id: 4,
+              level: 2,
+              path: "软件故障/系统软件",
+              sort_order: 2,
+              is_active: true,
+              is_default: false,
+              color: "#52c41a",
+              icon: "⚙️",
+              created_at: "2024-01-01 00:00:00",
+              updated_at: "2024-01-15 10:00:00",
+              ticket_count: 18,
+            },
+          ],
+        },
+        {
+          id: 7,
+          name: "网络故障",
+          description: "网络连接和网络配置问题",
+          parent_id: undefined,
+          level: 1,
+          path: "网络故障",
+          sort_order: 3,
+          is_active: true,
+          is_default: false,
+          color: "#722ed1",
+          icon: "🌐",
+          created_at: "2024-01-01 00:00:00",
+          updated_at: "2024-01-15 10:00:00",
+          ticket_count: 34,
+        },
+        {
+          id: 8,
+          name: "权限问题",
+          description: "用户权限和访问控制问题",
+          parent_id: undefined,
+          level: 1,
+          path: "权限问题",
+          sort_order: 4,
+          is_active: true,
+          is_default: false,
+          color: "#eb2f96",
+          icon: "🔐",
+          created_at: "2024-01-01 00:00:00",
+          updated_at: "2024-01-15 10:00:00",
+          ticket_count: 15,
+        },
+      ];
 
-      setCategories(treeData);
-      setFlatCategories(listData.categories);
-
-      // 设置默认展开的节点
-      const rootKeys = treeData.map((item: CategoryTreeItem) => item.id);
-      setExpandedKeys(rootKeys);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "加载分类数据失败");
-      message.error("加载分类数据失败");
+      setCategories(mockCategories);
+    } catch (error) {
+      message.error("加载分类失败");
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
-
-  // 处理表单提交
-  const handleSubmit = async (values: {
-    name: string;
-    code: string;
-    description?: string;
-    parent_id: number;
-    sort_order: number;
-    is_active: boolean;
-  }) => {
-    try {
-      if (editingCategory) {
-        // 更新分类
-        await ticketCategoryService.updateCategory(editingCategory.id, values);
-        message.success("分类更新成功");
-      } else {
-        // 创建分类 - 确保 description 有值
-        const createData = {
-          ...values,
-          description: values.description || "",
-        };
-        await ticketCategoryService.createCategory(createData);
-        message.success("分类创建成功");
-      }
-
-      setModalVisible(false);
-      form.resetFields();
-      setEditingCategory(null);
-      loadCategories();
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : "操作失败");
-    }
   };
 
-  // 处理编辑
-  const handleEdit = (category: TicketCategory) => {
+  const handleCreateCategory = () => {
+    setEditingCategory(null);
+    form.resetFields();
+    setModalVisible(true);
+  };
+
+  const handleEditCategory = (category: TicketCategory) => {
     setEditingCategory(category);
     form.setFieldsValue({
       name: category.name,
       description: category.description,
-      code: category.code,
-      parent_id: category.parent_id || 0,
+      parent_id: category.parent_id,
+      color: category.color,
+      icon: category.icon,
       sort_order: category.sort_order,
       is_active: category.is_active,
     });
     setModalVisible(true);
   };
 
-  // 处理删除
-  const handleDelete = async (id: number) => {
+  const handleCopyCategory = (category: TicketCategory) => {
+    const newCategory = {
+      ...category,
+      id: Date.now(),
+      name: `${category.name} - 副本`,
+      is_default: false,
+      created_at: new Date().toLocaleString(),
+      updated_at: new Date().toLocaleString(),
+    };
+
+    setCategories((prev) => [newCategory, ...prev]);
+    message.success("分类复制成功");
+  };
+
+  const handleDeleteCategory = async (id: number) => {
     try {
-      await ticketCategoryService.deleteCategory(id);
+      // 模拟API调用
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setCategories((prev) => prev.filter((c) => c.id !== id));
       message.success("分类删除成功");
-      loadCategories();
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : "删除失败");
+    } catch (error) {
+      message.error("删除失败");
     }
   };
 
-  // 处理创建新分类
-  const handleCreate = () => {
-    setEditingCategory(null);
-    form.resetFields();
-    form.setFieldsValue({
-      parent_id: 0,
-      sort_order: 0,
-      is_active: true,
-    });
-    setModalVisible(true);
+  const handleSaveCategory = async () => {
+    try {
+      const values = await form.validateFields();
+
+      if (editingCategory) {
+        // 更新分类
+        const updatedCategory = {
+          ...editingCategory,
+          ...values,
+          updated_at: new Date().toLocaleString(),
+        };
+
+        setCategories((prev) =>
+          prev.map((c) => (c.id === editingCategory.id ? updatedCategory : c))
+        );
+        message.success("分类更新成功");
+      } else {
+        // 创建新分类
+        const newCategory: TicketCategory = {
+          id: Date.now(),
+          ...values,
+          level: values.parent_id ? 2 : 1,
+          path: values.parent_id ? `父分类/${values.name}` : values.name,
+          sort_order: values.sort_order || 1,
+          is_active: values.is_active !== false,
+          is_default: false,
+          created_at: new Date().toLocaleString(),
+          updated_at: new Date().toLocaleString(),
+          ticket_count: 0,
+        };
+
+        setCategories((prev) => [newCategory, ...prev]);
+        message.success("分类创建成功");
+      }
+
+      setModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("保存分类失败:", error);
+    }
   };
 
-  // 过滤和搜索分类
-  const filteredCategories = flatCategories.filter((category) => {
-    const matchesSearch =
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesActive =
-      filterActive === null || category.is_active === filterActive;
-    return matchesSearch && matchesActive;
-  });
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "green";
+      case "inactive":
+        return "red";
+      default:
+        return "default";
+    }
+  };
 
-  // 构建树形数据
-  const buildTreeData = (items: TicketCategory[]): TreeDataItem[] => {
-    const itemMap = new Map<number, TreeDataItem>();
-    const result: TreeDataItem[] = [];
+  const columns = [
+    {
+      title: "分类名称",
+      dataIndex: "name",
+      key: "name",
+      render: (text: string, record: TicketCategory) => (
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{record.icon}</span>
+          <div>
+            <div className="font-medium">{text}</div>
+            <div className="text-sm text-gray-500">{record.path}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "描述",
+      dataIndex: "description",
+      key: "description",
+      render: (text: string) => (
+        <div className="max-w-xs truncate" title={text}>
+          {text}
+        </div>
+      ),
+    },
+    {
+      title: "层级",
+      dataIndex: "level",
+      key: "level",
+      render: (level: number) => (
+        <Tag color={level === 1 ? "blue" : "cyan"}>
+          {level === 1 ? "一级" : "二级"}
+        </Tag>
+      ),
+    },
+    {
+      title: "排序",
+      dataIndex: "sort_order",
+      key: "sort_order",
+      render: (order: number) => (
+        <div className="flex items-center gap-1">
+          <GripVertical size={14} className="text-gray-400" />
+          <span>{order}</span>
+        </div>
+      ),
+    },
+    {
+      title: "工单数量",
+      dataIndex: "ticket_count",
+      key: "ticket_count",
+      render: (count: number) => <Tag color="orange">{count}</Tag>,
+    },
+    {
+      title: "状态",
+      key: "status",
+      render: (record: TicketCategory) => (
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={record.is_active}
+            size="small"
+            onChange={(checked) => {
+              setCategories((prev) =>
+                prev.map((c) =>
+                  c.id === record.id ? { ...c, is_active: checked } : c
+                )
+              );
+            }}
+          />
+          {record.is_default && <Tag color="green">默认</Tag>}
+        </div>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      render: (record: TicketCategory) => (
+        <Space>
+          <Tooltip title="查看详情">
+            <Button size="small" icon={<Eye size={14} />} />
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button
+              size="small"
+              icon={<Edit size={14} />}
+              onClick={() => handleEditCategory(record)}
+            />
+          </Tooltip>
+          <Tooltip title="复制">
+            <Button
+              size="small"
+              icon={<Copy size={14} />}
+              onClick={() => handleCopyCategory(record)}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="确定要删除这个分类吗？"
+            onConfirm={() => handleDeleteCategory(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button size="small" danger icon={<Delete size={14} />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
-    items.forEach((item: TicketCategory) => {
-      itemMap.set(item.id, {
-        key: item.id,
+  const treeData = categories.map((category) => ({
+    key: category.id,
+    title: (
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{category.icon}</span>
+          <span className="font-medium">{category.name}</span>
+          <Tag color="orange">{category.ticket_count}</Tag>
+        </div>
+        <div className="flex items-center gap-1">
+          <Switch
+            checked={category.is_active}
+            size="small"
+            onChange={(checked) => {
+              setCategories((prev) =>
+                prev.map((c) =>
+                  c.id === category.id ? { ...c, is_active: checked } : c
+                )
+              );
+            }}
+          />
+          <Button
+            size="small"
+            icon={<Edit size={12} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditCategory(category);
+            }}
+          />
+        </div>
+      </div>
+    ),
+    children:
+      category.children?.map((child) => ({
+        key: child.id,
         title: (
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center">
-              {item.children && item.children.length > 0 ? (
-                <FolderOpen className="w-4 h-4 mr-2 text-blue-500" />
-              ) : (
-                <FileText className="w-4 h-4 mr-2 text-gray-500" />
-              )}
-              <span className="font-medium">{item.name}</span>
-              <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                {item.code}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{child.icon}</span>
+              <span>{child.name}</span>
+              <Tag color="orange">{child.ticket_count}</Tag>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-1">
               <Switch
-                checked={item.is_active}
+                checked={child.is_active}
                 size="small"
-                onChange={async (checked) => {
-                  try {
-                    await ticketCategoryService.updateCategory(item.id, {
-                      is_active: checked,
-                    });
-                    loadCategories();
-                  } catch {
-                    message.error("状态更新失败");
-                  }
+                onChange={(checked) => {
+                  setCategories((prev) =>
+                    prev.map((c) =>
+                      c.id === child.id ? { ...c, is_active: checked } : c
+                    )
+                  );
                 }}
               />
               <Button
-                type="text"
                 size="small"
-                icon={<Edit className="w-3 h-3" />}
+                icon={<Edit size={12} />}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleEdit(item);
+                  handleEditCategory(child);
                 }}
               />
-              <Popconfirm
-                title="确定要删除这个分类吗？"
-                description="删除后无法恢复，请谨慎操作。"
-                onConfirm={() => handleDelete(item.id)}
-                okText="确定"
-                cancelText="取消"
-              >
-                <Button
-                  type="text"
-                  size="small"
-                  danger
-                  icon={<Delete className="w-3 h-3" />}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </Popconfirm>
             </div>
           </div>
         ),
-        children: item.children ? buildTreeData(item.children) : [],
-        isLeaf: !item.children || item.children.length === 0,
-      });
-    });
-
-    items.forEach((item: TicketCategory) => {
-      if (item.parent_id === 0) {
-        const itemData = itemMap.get(item.id);
-        if (itemData) {
-          result.push(itemData);
-        }
-      } else {
-        const parent = itemMap.get(item.parent_id);
-        const itemData = itemMap.get(item.id);
-        if (parent && itemData) {
-          if (!parent.children) parent.children = [];
-          parent.children.push(itemData);
-        }
-      }
-    });
-
-    return result;
-  };
-
-  // 统计信息
-  const stats = {
-    total: flatCategories.length,
-    active: flatCategories.filter((c) => c.is_active).length,
-    inactive: flatCategories.filter((c) => !c.is_active).length,
-    root: flatCategories.filter((c) => c.parent_id === 0).length,
-  };
+      })) || [],
+  }));
 
   if (loading) {
-    return <LoadingEmptyError state="loading" />;
+    return <LoadingSkeleton type="table" rows={8} columns={7} />;
   }
 
-  if (error) {
+  if (categories.length === 0) {
     return (
       <LoadingEmptyError
-        state="error"
-        error={{
-          title: "加载失败",
-          description: error,
-          onRetry: loadCategories,
+        state="empty"
+        empty={{
+          title: "暂无工单分类",
+          description: "创建第一个工单分类来组织工单管理",
+          actionText: "创建分类",
+          onAction: handleCreateCategory,
         }}
       />
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Title level={2} className="mb-0">
-          工单分类管理
-        </Title>
-        <Space>
-          <Button
-            icon={<RefreshCw className="w-4 h-4" />}
-            onClick={loadCategories}
-          >
-            刷新
-          </Button>
-          <Button
-            type="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={handleCreate}
-          >
-            新建分类
-          </Button>
-          <Button
-            icon={<Upload className="w-4 h-4" />}
-            onClick={() => setImportModalVisible(true)}
-          >
-            批量导入
-          </Button>
-        </Space>
-      </div>
-
-      {/* 统计卡片 */}
-      <Row gutter={16}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="总分类数"
-              value={stats.total}
-              prefix={<Folder className="w-5 h-5 text-blue-500" />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="启用分类"
-              value={stats.active}
-              prefix={<Eye className="w-5 h-5 text-green-500" />}
-              valueStyle={{ color: "#3f8600" }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="禁用分类"
-              value={stats.inactive}
-              prefix={<EyeOff className="w-5 h-5 text-red-500" />}
-              valueStyle={{ color: "#cf1322" }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="顶级分类"
-              value={stats.root}
-              prefix={<FolderOpen className="w-5 h-5 text-orange-500" />}
-              valueStyle={{ color: "#fa8c16" }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 工具栏 */}
+    <div className="space-y-6">
+      {/* 头部操作区 */}
       <Card>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
-            <Input
-              placeholder="搜索分类名称、代码或描述"
-              prefix={<Search className="w-4 h-4 text-gray-400" />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ width: 300 }}
-            />
-            <Select
-              placeholder="状态筛选"
-              value={filterActive}
-              onChange={setFilterActive}
-              style={{ width: 120 }}
-              allowClear
-            >
-              <Option value={true}>启用</Option>
-              <Option value={false}>禁用</Option>
-            </Select>
+        <div className="flex justify-between items-center">
+          <div>
+            <Title level={4} className="mb-1">
+              工单分类管理
+            </Title>
+            <Text type="secondary">
+              管理和配置工单分类体系，支持树形结构和权限控制
+            </Text>
           </div>
-          <div className="flex items-center space-x-2">
+          <Space>
+            <Button.Group>
+              <Button
+                type={viewMode === "table" ? "primary" : "default"}
+                icon={<Table size={16} />}
+                onClick={() => setViewMode("table")}
+              >
+                表格视图
+              </Button>
+              <Button
+                type={viewMode === "tree" ? "primary" : "default"}
+                icon={<Folder size={16} />}
+                onClick={() => setViewMode("tree")}
+              >
+                树形视图
+              </Button>
+            </Button.Group>
             <Button
-              type={viewMode === "tree" ? "primary" : "default"}
-              icon={<Folder className="w-4 h-4" />}
-              onClick={() => setViewMode("tree")}
+              type="primary"
+              icon={<Plus size={16} />}
+              onClick={handleCreateCategory}
             >
-              树形视图
+              创建分类
             </Button>
-            <Button
-              type={viewMode === "list" ? "primary" : "default"}
-              icon={<FileText className="w-4 h-4" />}
-              onClick={() => setViewMode("list")}
-            >
-              列表视图
-            </Button>
-            <Button
-              type={viewMode === "drag" ? "primary" : "default"}
-              icon={<GripVertical className="w-4 h-4" />}
-              onClick={() => setViewMode("drag")}
-            >
-              拖拽排序
-            </Button>
-            <Button
-              icon={<Download className="w-4 h-4" />}
-              onClick={() => setExportModalVisible(true)}
-            >
-              导出分类
-            </Button>
-          </div>
+          </Space>
         </div>
+      </Card>
 
-        {/* 内容区域 */}
-        {viewMode === "tree" ? (
-          <div className="border rounded-lg p-4">
-            {categories.length > 0 ? (
-              <Tree
-                treeData={buildTreeData(flatCategories)}
-                expandedKeys={expandedKeys}
-                selectedKeys={selectedKeys}
-                onExpand={setExpandedKeys}
-                onSelect={setSelectedKeys}
-                showLine
-                showIcon={false}
-                className="category-tree"
-              />
-            ) : (
-              <Empty description="暂无分类数据" />
-            )}
-          </div>
-        ) : viewMode === "drag" ? (
-          <TicketCategoryDragSort
-            onSave={(updatedCategories: CategoryTreeItem[]) => {
-              setCategories(updatedCategories);
-              loadCategories();
+      {/* 分类内容 */}
+      <Card>
+        {viewMode === "table" ? (
+          <Table
+            columns={columns}
+            dataSource={categories}
+            rowKey="id"
+            pagination={{
+              pageSize: 20,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             }}
           />
         ) : (
-          <div className="border rounded-lg">
-            {filteredCategories.length > 0 ? (
-              <div className="divide-y">
-                {filteredCategories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="p-4 hover:bg-gray-50 flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <div className="font-medium">{category.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {category.description || "暂无描述"}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          代码: {category.code} | 层级: {category.level} | 排序:{" "}
-                          {category.sort_order}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={category.is_active}
-                        size="small"
-                        onChange={async (checked) => {
-                          try {
-                            await ticketCategoryService.updateCategory(
-                              category.id,
-                              { is_active: checked }
-                            );
-                            loadCategories();
-                          } catch {
-                            message.error("状态更新失败");
-                          }
-                        }}
-                      />
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<Edit className="w-4 h-4" />}
-                        onClick={() => handleEdit(category)}
-                      />
-                      <Popconfirm
-                        title="确定要删除这个分类吗？"
-                        description="删除后无法恢复，请谨慎操作。"
-                        onConfirm={() => handleDelete(category.id)}
-                        okText="确定"
-                        cancelText="取消"
-                      >
-                        <Button
-                          type="text"
-                          size="small"
-                          danger
-                          icon={<Delete className="w-4 h-4" />}
-                        />
-                      </Popconfirm>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty description="暂无符合条件的分类" />
-            )}
-          </div>
+          <Tree
+            treeData={treeData}
+            defaultExpandAll
+            showLine
+            showIcon={false}
+            className="category-tree"
+          />
         )}
       </Card>
 
       {/* 创建/编辑分类模态框 */}
       <Modal
-        title={editingCategory ? "编辑分类" : "新建分类"}
+        title={editingCategory ? "编辑分类" : "创建分类"}
         open={modalVisible}
-        onCancel={() => {
-          setModalVisible(false);
-          setEditingCategory(null);
-          form.resetFields();
-        }}
-        footer={null}
+        onOk={handleSaveCategory}
+        onCancel={() => setModalVisible(false)}
+        okText="保存"
+        cancelText="取消"
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            parent_id: 0,
-            sort_order: 0,
-            is_active: true,
-          }}
-        >
+        <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -548,27 +613,10 @@ const TicketCategoriesPage: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name="code"
-                label="分类代码"
-                rules={[{ required: true, message: "请输入分类代码" }]}
-              >
-                <Input placeholder="请输入分类代码" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item name="description" label="分类描述">
-            <TextArea rows={3} placeholder="请输入分类描述（可选）" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="parent_id" label="父分类">
-                <Select placeholder="选择父分类">
-                  <Option value={0}>顶级分类</Option>
-                  {flatCategories
-                    .filter((c) => c.id !== editingCategory?.id)
+              <Form.Item name="parent_id" label="父级分类">
+                <Select placeholder="请选择父级分类" allowClear>
+                  {categories
+                    .filter((c) => !c.parent_id)
                     .map((category) => (
                       <Option key={category.id} value={category.id}>
                         {category.name}
@@ -577,58 +625,46 @@ const TicketCategoriesPage: React.FC = () => {
                 </Select>
               </Form.Item>
             </Col>
+          </Row>
+
+          <Form.Item name="description" label="分类描述">
+            <TextArea rows={3} placeholder="请输入分类描述" />
+          </Form.Item>
+
+          <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="sort_order" label="排序顺序">
-                <InputNumber
-                  min={0}
-                  placeholder="排序顺序"
-                  style={{ width: "100%" }}
-                />
+              <Form.Item name="color" label="主题色彩" initialValue="#1890ff">
+                <Input type="color" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="icon" label="分类图标">
+                <Input placeholder="输入emoji或图标名称" />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name="is_active" label="是否启用" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              onClick={() => {
-                setModalVisible(false);
-                setEditingCategory(null);
-                form.resetFields();
-              }}
-            >
-              取消
-            </Button>
-            <Button type="primary" htmlType="submit">
-              {editingCategory ? "更新" : "创建"}
-            </Button>
-          </div>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="sort_order" label="排序顺序" initialValue={1}>
+                <InputNumber min={1} placeholder="数字越小越靠前" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="is_active"
+                label="启用状态"
+                valuePropName="checked"
+                initialValue={true}
+              >
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
-
-      {/* 批量导入模态框 */}
-      <TicketCategoryImport
-        visible={importModalVisible}
-        onCancel={() => setImportModalVisible(false)}
-        onSuccess={() => {
-          setImportModalVisible(false);
-          loadCategories();
-        }}
-      />
-
-      {/* 导出模态框 */}
-      <TicketCategoryExport
-        visible={exportModalVisible}
-        onCancel={() => setExportModalVisible(false)}
-        onSuccess={() => {
-          setExportModalVisible(false);
-        }}
-      />
     </div>
   );
 };
 
-export default TicketCategoriesPage;
+export default TicketCategoryManagementPage;

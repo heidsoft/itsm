@@ -1,8 +1,25 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Search, Trash2, Edit, Eye, TrendingUp, AlertTriangle, User, Tag as TagIcon, MoreHorizontal, FileText, UserPlus, RefreshCw, Download, X, Activity, CheckSquare } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Eye,
+  FileText,
+  RefreshCw,
+  Download,
+  Activity,
+  Filter,
+  AlertTriangle,
+  Settings,
+  Zap,
+  BookOpen,
+  Shield,
+  Target,
+  Workflow,
+} from "lucide-react";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Table,
@@ -12,49 +29,132 @@ import {
   Modal,
   Form,
   message,
-  Tag,
+  Tag as AntdTag,
   Space,
-  Dropdown,
   Row,
   Col,
   Statistic,
   App,
+  Tooltip,
+  Badge,
+  Typography,
+  Avatar,
+  DatePicker,
 } from "antd";
-import { TicketApi } from "../lib/ticket-api";
+import {
+  ticketService,
+  Ticket,
+  TicketStatus,
+  TicketPriority,
+  TicketType,
+} from "../lib/services/ticket-service";
 import { LoadingEmptyError } from "../components/ui/LoadingEmptyError";
 
 const { Option } = Select;
-
-// 定义页面使用的Ticket接口
-interface Ticket {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  category?: string;
-  assignee?: string;
-  requester?: string;
-  created_at: string;
-  updated_at: string;
-  sla_deadline?: string;
-  tags?: string[];
-  attachments?: number;
-  comments?: number;
-  ticket_number: string;
-  requester_id: number;
-  assignee_id?: number;
-  tenant_id: number;
-}
+const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 
 interface TicketFilters {
-  status?: string;
-  priority?: string;
-  assignee?: string;
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  type?: TicketType;
+  category?: string;
+  assignee_id?: number;
   keyword?: string;
   dateRange?: [string, string];
-  category?: string;
+  tags?: string[];
+  source?: string;
+  impact?: string;
+  urgency?: string;
 }
+
+interface TicketTemplate {
+  id: number;
+  name: string;
+  type: TicketType;
+  category: string;
+  priority: TicketPriority;
+  description: string;
+  estimatedTime: string;
+  sla: string;
+  icon: React.ReactNode;
+}
+
+// 工单模板数据
+const ticketTemplates: TicketTemplate[] = [
+  {
+    id: 1,
+    name: "系统登录问题",
+    type: TicketType.INCIDENT,
+    category: "系统访问",
+    priority: TicketPriority.MEDIUM,
+    description: "用户无法登录系统，需要技术支持",
+    estimatedTime: "2小时",
+    sla: "4小时",
+    icon: <Shield size={20} />,
+  },
+  {
+    id: 2,
+    name: "打印机故障",
+    type: TicketType.INCIDENT,
+    category: "硬件设备",
+    priority: TicketPriority.HIGH,
+    description: "办公室打印机无法正常工作",
+    estimatedTime: "1小时",
+    sla: "2小时",
+    icon: <Settings size={20} />,
+  },
+  {
+    id: 3,
+    name: "软件安装请求",
+    type: TicketType.SERVICE_REQUEST,
+    category: "软件服务",
+    priority: TicketPriority.LOW,
+    description: "需要安装新的办公软件",
+    estimatedTime: "30分钟",
+    sla: "24小时",
+    icon: <Zap size={20} />,
+  },
+  {
+    id: 4,
+    name: "网络连接问题",
+    type: TicketType.INCIDENT,
+    category: "网络服务",
+    priority: TicketPriority.HIGH,
+    description: "网络连接不稳定或无法访问",
+    estimatedTime: "3小时",
+    sla: "4小时",
+    icon: <Target size={20} />,
+  },
+];
+
+// 快速操作选项
+const quickActions = [
+  {
+    key: "incident",
+    label: "创建事件",
+    icon: <AlertTriangle size={16} />,
+    color: "red",
+  },
+  {
+    key: "request",
+    label: "服务请求",
+    icon: <FileText size={16} />,
+    color: "blue",
+  },
+  {
+    key: "problem",
+    label: "问题管理",
+    icon: <BookOpen size={16} />,
+    color: "orange",
+  },
+  {
+    key: "change",
+    label: "变更请求",
+    icon: <Workflow size={16} />,
+    color: "purple",
+  },
+];
 
 const TicketManagementPage = () => {
   const { modal } = App.useApp();
@@ -75,16 +175,22 @@ const TicketManagementPage = () => {
     open: 0,
     resolved: 0,
     highPriority: 0,
+    overdue: 0,
+    slaBreach: 0,
   });
 
   // 新增企业级功能状态管理
-  const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [escalateModalVisible, setEscalateModalVisible] = useState(false);
-  const [resolveModalVisible, setResolveModalVisible] = useState(false);
   const [activityModalVisible, setActivityModalVisible] = useState(false);
+  const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  const [quickCreateModalVisible, setQuickCreateModalVisible] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<TicketTemplate | null>(null);
   const [selectedTicketForAction, setSelectedTicketForAction] =
     useState<Ticket | null>(null);
-  const [ticketActivity, setTicketActivity] = useState<
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [bulkActionModalVisible, setBulkActionModalVisible] = useState(false);
+  const [bulkAction, setBulkAction] = useState<string>("");
+  const [ticketActivity] = useState<
     Array<{
       action: string;
       timestamp: string;
@@ -92,75 +198,12 @@ const TicketManagementPage = () => {
       details: string;
     }>
   >([]);
-  const [userList] = useState([
-    { id: 1, name: "张三", role: "技术支持" },
-    { id: 2, name: "李四", role: "高级工程师" },
-    { id: 3, name: "王五", role: "项目经理" },
-  ]);
 
-  // 模拟数据
-  const mockTickets: Ticket[] = [
-    {
-      id: 1,
-      title: "系统登录异常",
-      description: "用户反馈无法正常登录系统，显示密码错误",
-      status: "open",
-      priority: "high",
-      category: "系统问题",
-      assignee: "张三",
-      requester: "李四",
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-15T14:20:00Z",
-      sla_deadline: "2024-01-16T10:30:00Z",
-      tags: ["登录", "系统"],
-      attachments: 2,
-      comments: 5,
-      ticket_number: "T001",
-      requester_id: 1,
-      assignee_id: 2,
-      tenant_id: 1,
-    },
-    {
-      id: 2,
-      title: "打印机无法连接",
-      description: "办公室打印机显示离线状态，无法打印文档",
-      status: "in_progress",
-      priority: "medium",
-      category: "硬件问题",
-      assignee: "王五",
-      requester: "赵六",
-      created_at: "2024-01-14T09:15:00Z",
-      updated_at: "2024-01-15T11:30:00Z",
-      sla_deadline: "2024-01-17T09:15:00Z",
-      tags: ["打印机", "硬件"],
-      attachments: 1,
-      comments: 3,
-      ticket_number: "T002",
-      requester_id: 3,
-      assignee_id: 4,
-      tenant_id: 1,
-    },
-    {
-      id: 3,
-      title: "网络连接不稳定",
-      description: "WiFi信号时强时弱，影响正常工作",
-      status: "resolved",
-      priority: "high",
-      category: "网络问题",
-      assignee: "张三",
-      requester: "钱七",
-      created_at: "2024-01-13T14:20:00Z",
-      updated_at: "2024-01-14T16:45:00Z",
-      sla_deadline: "2024-01-15T14:20:00Z",
-      tags: ["网络", "WiFi"],
-      attachments: 0,
-      comments: 8,
-      ticket_number: "T003",
-      requester_id: 5,
-      assignee_id: 2,
-      tenant_id: 1,
-    },
-  ];
+  const [userList] = useState([
+    { id: 1, name: "张三", role: "技术支持", avatar: "张" },
+    { id: 2, name: "李四", role: "高级工程师", avatar: "李" },
+    { id: 3, name: "王五", role: "项目经理", avatar: "王" },
+  ]);
 
   useEffect(() => {
     loadTickets();
@@ -171,10 +214,18 @@ const TicketManagementPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setTickets(mockTickets);
-      setPagination((prev) => ({ ...prev, total: mockTickets.length }));
+      const response = await ticketService.listTickets({
+        page: pagination.current,
+        page_size: pagination.pageSize,
+        status: filters.status,
+        priority: filters.priority,
+        type: filters.type,
+        category: filters.category,
+        assignee_id: filters.assignee_id,
+        keyword: filters.keyword,
+      });
+      setTickets(response.tickets);
+      setPagination((prev) => ({ ...prev, total: response.total }));
     } catch (error) {
       console.error("加载工单失败:", error);
       setError(error instanceof Error ? error.message : "加载工单失败");
@@ -185,11 +236,14 @@ const TicketManagementPage = () => {
 
   const loadStats = async () => {
     try {
+      const response = await ticketService.getTicketStats();
       setStats({
-        total: mockTickets.length,
-        open: mockTickets.filter((t) => t.status === "open").length,
-        resolved: mockTickets.filter((t) => t.status === "resolved").length,
-        highPriority: mockTickets.filter((t) => t.priority === "high").length,
+        total: response.total,
+        open: response.open,
+        resolved: response.resolved,
+        highPriority: response.high_priority,
+        overdue: response.overdue || 0,
+        slaBreach: response.sla_breach || 0,
       });
     } catch (error) {
       console.error("加载统计数据失败:", error);
@@ -201,6 +255,16 @@ const TicketManagementPage = () => {
     setModalVisible(true);
   };
 
+  const handleQuickCreate = (type: string) => {
+    setQuickCreateModalVisible(true);
+    // 根据类型预填充表单
+  };
+
+  const handleTemplateSelect = (template: TicketTemplate) => {
+    setSelectedTemplate(template);
+    setModalVisible(true);
+  };
+
   const handleEditTicket = (record: Ticket) => {
     setEditingTicket(record);
     setModalVisible(true);
@@ -208,7 +272,7 @@ const TicketManagementPage = () => {
 
   const handleDeleteTicket = async (id: number) => {
     try {
-      await TicketApi.deleteTicket(id);
+      await ticketService.deleteTicket(id);
       message.success("工单删除成功");
       loadTickets();
     } catch {
@@ -238,598 +302,672 @@ const TicketManagementPage = () => {
     });
   };
 
-  const handleExport = () => {
-    message.success("导出功能开发中");
-  };
-
-  // 新增企业级功能处理函数
-  const handleAssignTicket = (ticket: Ticket) => {
-    setSelectedTicketForAction(ticket);
-    setAssignModalVisible(true);
-  };
-
-  const handleEscalateTicket = (ticket: Ticket) => {
-    setSelectedTicketForAction(ticket);
-    setEscalateModalVisible(true);
-  };
-
-  const handleResolveTicket = (ticket: Ticket) => {
-    setSelectedTicketForAction(ticket);
-    setResolveModalVisible(true);
-  };
-
-  const handleViewActivity = async (ticket: Ticket) => {
-    setSelectedTicketForAction(ticket);
-    try {
-      const activity = await TicketApi.getTicketActivity(ticket.id);
-      setTicketActivity(activity);
-      setActivityModalVisible(true);
-    } catch (error) {
-      message.error("获取工单活动记录失败");
+  const handleBulkAction = (action: string) => {
+    if (selectedRowKeys.length === 0) {
+      message.warning("请选择要操作的工单");
+      return;
     }
+    setBulkAction(action);
+    setBulkActionModalVisible(true);
   };
 
-  const handleAssignSubmit = async (values: { assignee_id: number }) => {
-    if (!selectedTicketForAction) return;
-
-    try {
-      await TicketApi.assignTicket(
-        selectedTicketForAction.id,
-        values.assignee_id
-      );
-      message.success("工单分配成功");
-      setAssignModalVisible(false);
-      loadTickets();
-    } catch {
-      message.error("工单分配失败");
-    }
+  const handleViewActivity = (record: Ticket) => {
+    setSelectedTicketForAction(record);
+    setActivityModalVisible(true);
   };
 
-  const handleEscalateSubmit = async (values: { reason: string }) => {
-    if (!selectedTicketForAction) return;
-
-    try {
-      await TicketApi.escalateTicket(selectedTicketForAction.id, values.reason);
-      message.success("工单升级成功");
-      setEscalateModalVisible(false);
-      loadTickets();
-    } catch {
-      message.error("工单升级失败");
-    }
+  const handleSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, keyword: value }));
+    setPagination((prev) => ({ ...prev, current: 1 }));
   };
 
-  const handleResolveSubmit = async (values: { resolution: string }) => {
-    if (!selectedTicketForAction) return;
-
-    try {
-      await TicketApi.resolveTicket(
-        selectedTicketForAction.id,
-        values.resolution
-      );
-      message.success("工单解决成功");
-      setResolveModalVisible(false);
-      loadTickets();
-    } catch {
-      message.error("工单解决失败");
-    }
+  const handleFilterChange = (
+    key: keyof TicketFilters,
+    value: string | number | string[] | undefined
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPagination((prev) => ({ ...prev, current: 1 }));
   };
 
-  const handleCloseTicket = async (ticket: Ticket) => {
-    modal.confirm({
-      title: "确认关闭工单",
-      content: "确定要关闭这个工单吗？",
-      onOk: async () => {
-        try {
-          await TicketApi.closeTicket(ticket.id);
-          message.success("工单关闭成功");
-          loadTickets();
-        } catch {
-          message.error("工单关闭失败");
-        }
-      },
-    });
+  const handleTableChange = (pagination: {
+    current?: number;
+    pageSize?: number;
+  }) => {
+    setPagination((prev) => ({
+      ...prev,
+      current: pagination.current || prev.current,
+      pageSize: pagination.pageSize || prev.pageSize,
+    }));
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      open: "red",
-      in_progress: "blue",
-      resolved: "green",
-      closed: "gray",
-    };
-    return colors[status as keyof typeof colors] || "default";
+  const handleRefresh = () => {
+    loadTickets();
+    loadStats();
   };
 
-  const getPriorityColor = (priority: string) => {
-    const colors = {
-      low: "green",
-      medium: "orange",
-      high: "red",
-      critical: "purple",
-    };
-    return colors[priority as keyof typeof colors] || "default";
+  const handleResetFilters = () => {
+    setFilters({});
+    setPagination((prev) => ({ ...prev, current: 1 }));
   };
 
-  const getStatusText = (status: string) => {
-    const texts = {
-      open: "待处理",
-      in_progress: "处理中",
-      resolved: "已解决",
-      closed: "已关闭",
-    };
-    return texts[status as keyof typeof texts] || status;
-  };
+  // 渲染空状态
+  const renderEmptyState = () => (
+    <div className="text-center py-16">
+      <div className="mb-6">
+        <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full mb-4">
+          <FileText size={48} className="text-blue-500" />
+        </div>
+        <Title level={3} className="text-gray-700 mb-2">
+          欢迎使用工单管理系统
+        </Title>
+        <Text type="secondary" className="text-base">
+          这是您的ITSM工单管理中心，可以管理事件、服务请求、问题和变更
+        </Text>
+      </div>
 
-  const getPriorityText = (priority: string) => {
-    const texts = {
-      low: "低",
-      medium: "中",
-      high: "高",
-      critical: "紧急",
-    };
-    return texts[priority as keyof typeof texts] || priority;
-  };
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+        {quickActions.map((action) => (
+          <Card
+            key={action.key}
+            hoverable
+            className="text-center cursor-pointer border-2 border-dashed border-gray-200 hover:border-blue-300 transition-colors"
+            onClick={() => handleQuickCreate(action.key)}
+          >
+            <div
+              className={`inline-flex items-center justify-center w-12 h-12 bg-${action.color}-50 rounded-full mb-3`}
+            >
+              <span className={`text-${action.color}-500`}>{action.icon}</span>
+            </div>
+            <Text strong className="block">
+              {action.label}
+            </Text>
+            <Text type="secondary" className="text-sm">
+              快速创建
+            </Text>
+          </Card>
+        ))}
+      </div>
+
+      <div className="mb-8">
+        <Title level={4} className="text-gray-600 mb-4">
+          常用工单模板
+        </Title>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {ticketTemplates.map((template) => (
+            <Card
+              key={template.id}
+              hoverable
+              className="cursor-pointer"
+              onClick={() => handleTemplateSelect(template)}
+            >
+              <div className="flex items-center mb-3">
+                <span className="text-blue-500 mr-2">{template.icon}</span>
+                <Text strong className="flex-1">
+                  {template.name}
+                </Text>
+              </div>
+              <Text type="secondary" className="text-sm mb-2 block">
+                {template.description}
+              </Text>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>预计: {template.estimatedTime}</span>
+                <span>SLA: {template.sla}</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-center space-x-4">
+        <Button
+          type="primary"
+          size="large"
+          icon={<Plus size={20} />}
+          onClick={handleCreateTicket}
+        >
+          创建工单
+        </Button>
+        <Button
+          size="large"
+          icon={<BookOpen size={20} />}
+          onClick={() => setTemplateModalVisible(true)}
+        >
+          查看所有模板
+        </Button>
+      </div>
+    </div>
+  );
+
+  // 渲染统计卡片
+  const renderStatsCards = () => (
+    <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Col span={6}>
+        <Card>
+          <Statistic
+            title="总工单数"
+            value={stats.total}
+            prefix={<FileText size={16} style={{ color: "#3b82f6" }} />}
+            suffix={
+              <div className="text-xs text-gray-500 mt-1">
+                <div>本月新增: +12</div>
+                <div className="text-green-500">↑ 8.5%</div>
+              </div>
+            }
+          />
+        </Card>
+      </Col>
+      <Col span={6}>
+        <Card>
+          <Statistic
+            title="待处理"
+            value={stats.open}
+            valueStyle={{ color: "#faad14" }}
+            suffix={
+              <div className="text-xs text-gray-500 mt-1">
+                <div>平均响应: 2.3h</div>
+                <div className="text-orange-500">SLA: 4h</div>
+              </div>
+            }
+          />
+        </Card>
+      </Col>
+      <Col span={6}>
+        <Card>
+          <Statistic
+            title="已解决"
+            value={stats.resolved}
+            valueStyle={{ color: "#52c41a" }}
+            suffix={
+              <div className="text-xs text-gray-500 mt-1">
+                <div>平均解决: 8.7h</div>
+                <div className="text-green-500">满意度: 4.2/5</div>
+              </div>
+            }
+          />
+        </Card>
+      </Col>
+      <Col span={6}>
+        <Card>
+          <Statistic
+            title="高优先级"
+            value={stats.highPriority}
+            valueStyle={{ color: "#ff4d4f" }}
+            suffix={
+              <div className="text-xs text-gray-500 mt-1">
+                <div>超时: {stats.overdue}</div>
+                <div className="text-red-500">SLA违规: {stats.slaBreach}</div>
+              </div>
+            }
+          />
+        </Card>
+      </Col>
+    </Row>
+  );
+
+  // 渲染筛选器
+  const renderFilters = () => (
+    <Card style={{ marginBottom: 24 }}>
+      <div className="flex items-center justify-between mb-4">
+        <Title level={5} className="mb-0">
+          筛选条件
+        </Title>
+        <Space>
+          <Button
+            type="text"
+            icon={<Filter size={16} />}
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+          >
+            {showAdvancedFilters ? "隐藏高级筛选" : "显示高级筛选"}
+          </Button>
+          <Button onClick={handleResetFilters}>重置</Button>
+        </Space>
+      </div>
+
+      <Row gutter={16} align="middle">
+        <Col span={6}>
+          <Input.Search
+            placeholder="搜索工单标题、描述或工单号"
+            allowClear
+            onSearch={handleSearch}
+            prefix={<Search size={16} />}
+          />
+        </Col>
+        <Col span={4}>
+          <Select
+            value={filters.status}
+            onChange={(value) => handleFilterChange("status", value)}
+            style={{ width: "100%" }}
+            placeholder="状态筛选"
+            allowClear
+          >
+            <Option value={TicketStatus.OPEN}>待处理</Option>
+            <Option value={TicketStatus.IN_PROGRESS}>处理中</Option>
+            <Option value={TicketStatus.PENDING}>等待中</Option>
+            <Option value={TicketStatus.RESOLVED}>已解决</Option>
+            <Option value={TicketStatus.CLOSED}>已关闭</Option>
+          </Select>
+        </Col>
+        <Col span={4}>
+          <Select
+            value={filters.priority}
+            onChange={(value) => handleFilterChange("priority", value)}
+            style={{ width: "100%" }}
+            placeholder="优先级筛选"
+            allowClear
+          >
+            <Option value={TicketPriority.LOW}>低</Option>
+            <Option value={TicketPriority.MEDIUM}>中</Option>
+            <Option value={TicketPriority.HIGH}>高</Option>
+            <Option value={TicketPriority.URGENT}>紧急</Option>
+          </Select>
+        </Col>
+        <Col span={4}>
+          <Select
+            value={filters.type}
+            onChange={(value) => handleFilterChange("type", value)}
+            style={{ width: "100%" }}
+            placeholder="类型筛选"
+            allowClear
+          >
+            <Option value={TicketType.INCIDENT}>事件</Option>
+            <Option value={TicketType.SERVICE_REQUEST}>服务请求</Option>
+            <Option value={TicketType.PROBLEM}>问题</Option>
+            <Option value={TicketType.CHANGE}>变更</Option>
+          </Select>
+        </Col>
+        <Col span={6}>
+          <Space>
+            <Button type="primary" onClick={loadTickets}>
+              应用筛选
+            </Button>
+            <Button icon={<RefreshCw size={16} />} onClick={handleRefresh}>
+              刷新
+            </Button>
+          </Space>
+        </Col>
+      </Row>
+
+      {showAdvancedFilters && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <Row gutter={16}>
+            <Col span={6}>
+              <Select
+                value={filters.source}
+                onChange={(value) => handleFilterChange("source", value)}
+                style={{ width: "100%" }}
+                placeholder="来源筛选"
+                allowClear
+              >
+                <Option value="web">Web门户</Option>
+                <Option value="email">邮件</Option>
+                <Option value="phone">电话</Option>
+                <Option value="chat">在线聊天</Option>
+              </Select>
+            </Col>
+            <Col span={6}>
+              <Select
+                value={filters.impact}
+                onChange={(value) => handleFilterChange("impact", value)}
+                style={{ width: "100%" }}
+                placeholder="影响范围"
+                allowClear
+              >
+                <Option value="individual">个人</Option>
+                <Option value="department">部门</Option>
+                <Option value="organization">组织</Option>
+                <Option value="customer">客户</Option>
+              </Select>
+            </Col>
+            <Col span={6}>
+              <Select
+                value={filters.urgency}
+                onChange={(value) => handleFilterChange("urgency", value)}
+                style={{ width: "100%" }}
+                placeholder="紧急程度"
+                allowClear
+              >
+                <Option value="low">低</Option>
+                <Option value="medium">中</Option>
+                <Option value="high">高</Option>
+                <Option value="critical">严重</Option>
+              </Select>
+            </Col>
+            <Col span={6}>
+              <RangePicker
+                placeholder={["开始日期", "结束日期"]}
+                onChange={(dates) => {
+                  if (dates) {
+                    handleFilterChange("dateRange", [
+                      dates[0]?.toISOString() || "",
+                      dates[1]?.toISOString() || "",
+                    ]);
+                  }
+                }}
+                style={{ width: "100%" }}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
+    </Card>
+  );
+
+  // 渲染工单列表
+  const renderTicketList = () => (
+    <Card>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-4">
+          <Title level={5} className="mb-0">
+            工单列表
+          </Title>
+          <Badge count={tickets.length} showZero />
+        </div>
+        <Space>
+          <Button
+            danger
+            disabled={selectedRowKeys.length === 0}
+            onClick={() => handleBulkAction("delete")}
+          >
+            批量删除 ({selectedRowKeys.length})
+          </Button>
+          <Button
+            disabled={selectedRowKeys.length === 0}
+            onClick={() => handleBulkAction("assign")}
+          >
+            批量分配 ({selectedRowKeys.length})
+          </Button>
+          <Button
+            disabled={selectedRowKeys.length === 0}
+            onClick={() => handleBulkAction("status")}
+          >
+            批量状态变更 ({selectedRowKeys.length})
+          </Button>
+          <Button icon={<Download size={16} />}>导出</Button>
+        </Space>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={tickets}
+        rowKey="id"
+        loading={loading}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+        }}
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+        }}
+        onChange={handleTableChange}
+        scroll={{ x: 1200 }}
+      />
+    </Card>
+  );
 
   const columns = [
     {
       title: "工单号",
-      dataIndex: "id",
-      key: "id",
-      width: 100,
-      render: (id: number) => (
-        <span className="font-mono text-sm">
-          #{String(id).padStart(5, "0")}
-        </span>
+      dataIndex: "ticket_number",
+      key: "ticket_number",
+      width: 120,
+      render: (ticketNumber: string, record: Ticket) => (
+        <a
+          href={`/tickets/${record.id}`}
+          className="text-blue-600 hover:text-blue-800 font-medium"
+        >
+          {ticketNumber}
+        </a>
       ),
     },
     {
       title: "标题",
       dataIndex: "title",
       key: "title",
-      render: (title: string, record: Ticket) => (
-        <div className="max-w-xs">
-          <div className="font-medium text-gray-900 truncate">{title}</div>
-          <div className="text-xs text-gray-500 mt-1">
-            {record.category} • {record.requester}
-          </div>
-        </div>
-      ),
+      ellipsis: true,
+      width: 200,
     },
     {
       title: "状态",
       dataIndex: "status",
       key: "status",
-      width: 120,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
+      width: 100,
+      render: (status: TicketStatus) => (
+        <AntdTag color={ticketService.getStatusColor(status)}>
+          {ticketService.getStatusLabel(status)}
+        </AntdTag>
       ),
-      filters: [
-        { text: "待处理", value: "open" },
-        { text: "处理中", value: "in_progress" },
-        { text: "已解决", value: "resolved" },
-        { text: "已关闭", value: "closed" },
-      ],
     },
     {
       title: "优先级",
       dataIndex: "priority",
       key: "priority",
       width: 100,
-      render: (priority: string) => (
-        <Tag color={getPriorityColor(priority)}>
-          {getPriorityText(priority)}
-        </Tag>
+      render: (priority: TicketPriority) => (
+        <AntdTag color={ticketService.getPriorityColor(priority)}>
+          {ticketService.getPriorityLabel(priority)}
+        </AntdTag>
       ),
     },
     {
-      title: "处理人",
+      title: "类型",
+      dataIndex: "type",
+      key: "type",
+      width: 100,
+      render: (type: TicketType) => (
+        <AntdTag color={ticketService.getTypeColor(type)}>
+          {ticketService.getTypeLabel(type)}
+        </AntdTag>
+      ),
+    },
+    {
+      title: "分类",
+      dataIndex: "category",
+      key: "category",
+      width: 120,
+    },
+    {
+      title: "负责人",
       dataIndex: "assignee",
       key: "assignee",
-      width: 120,
-      render: (assignee: string) => (
-        <div className="flex items-center">
-          <User className="w-4 h-4 mr-1 text-gray-400" />
-          <span>{assignee}</span>
-        </div>
-      ),
+      width: 100,
+      render: (assignee: { name: string } | undefined) =>
+        assignee ? (
+          <div className="flex items-center">
+            <Avatar size="small" className="mr-2">
+              {assignee.name[0]}
+            </Avatar>
+            <span>{assignee.name}</span>
+          </div>
+        ) : (
+          <span className="text-gray-400">未分配</span>
+        ),
     },
     {
       title: "创建时间",
       dataIndex: "created_at",
       key: "created_at",
       width: 150,
-      render: (date: string) => (
-        <div className="text-sm">
-          {new Date(date).toLocaleDateString("zh-CN")}
-        </div>
-      ),
-      sorter: true,
-    },
-    {
-      title: "SLA",
-      key: "sla",
-      width: 120,
-      render: (record: Ticket) => {
-        if (!record.sla_deadline) {
-          return <Tag color="default">无SLA</Tag>;
-        }
-        const deadline = new Date(record.sla_deadline);
-        const now = new Date();
-        const diff = deadline.getTime() - now.getTime();
-        const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
-
-        if (hoursLeft < 0) {
-          return <Tag color="red">已超时</Tag>;
-        } else if (hoursLeft < 24) {
-          return <Tag color="orange">{hoursLeft}小时</Tag>;
-        } else {
-          return <Tag color="green">正常</Tag>;
-        }
-      },
+      render: (date: string) => new Date(date).toLocaleDateString("zh-CN"),
     },
     {
       title: "操作",
-      key: "action",
-      width: 120,
-      render: (record: Ticket) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: "view",
-                label: "查看详情",
-                icon: <Eye className="w-4 h-4" />,
-                onClick: () => window.open(`/tickets/${record.id}`, "_blank"),
-              },
-              {
-                key: "activity",
-                label: "查看活动",
-                icon: <Activity className="w-4 h-4" />,
-                onClick: () => handleViewActivity(record),
-              },
-              {
-                type: "divider",
-              },
-              {
-                key: "assign",
-                label: "分配工单",
-                icon: <UserPlus className="w-4 h-4" />,
-                onClick: () => handleAssignTicket(record),
-                disabled: record.status === "closed",
-              },
-              {
-                key: "escalate",
-                label: "升级工单",
-                icon: <TrendingUp className="w-4 h-4" />,
-                onClick: () => handleEscalateTicket(record),
-                disabled:
-                  record.status === "closed" || record.priority === "critical",
-              },
-              {
-                key: "resolve",
-                label: "解决工单",
-                icon: <CheckSquare className="w-4 h-4" />,
-                onClick: () => handleResolveTicket(record),
-                disabled:
-                  record.status === "closed" || record.status === "resolved",
-              },
-              {
-                key: "close",
-                label: "关闭工单",
-                icon: <X className="w-4 h-4" />,
-                onClick: () => handleCloseTicket(record),
-                disabled: record.status === "closed",
-              },
-              {
-                type: "divider",
-              },
-              {
-                key: "edit",
-                label: "编辑",
-                icon: <Edit className="w-4 h-4" />,
-                onClick: () => handleEditTicket(record),
-              },
-              {
-                key: "delete",
-                label: "删除",
-                icon: <Trash2 className="w-4 h-4" />,
-                danger: true,
-                onClick: () => handleDeleteTicket(record.id),
-              },
-            ],
-          }}
-        >
-          <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} />
-        </Dropdown>
+      key: "actions",
+      width: 200,
+      render: (_: unknown, record: Ticket) => (
+        <Space size="small">
+          <Tooltip title="查看详情">
+            <Button
+              type="text"
+              size="small"
+              icon={<Eye size={14} />}
+              onClick={() => window.open(`/tickets/${record.id}`)}
+            />
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button
+              type="text"
+              size="small"
+              icon={<Edit size={14} />}
+              onClick={() => handleEditTicket(record)}
+            />
+          </Tooltip>
+          <Tooltip title="查看活动日志">
+            <Button
+              type="text"
+              size="small"
+              icon={<Activity size={14} />}
+              onClick={() => handleViewActivity(record)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
 
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
-    },
-  };
-
-  const filteredTickets = useMemo(() => {
-    return tickets.filter((ticket) => {
-      if (filters.status && ticket.status !== filters.status) return false;
-      if (filters.priority && ticket.priority !== filters.priority)
-        return false;
-      if (
-        filters.keyword &&
-        !ticket.title.toLowerCase().includes(filters.keyword.toLowerCase())
-      )
-        return false;
-      return true;
-    });
-  }, [tickets, filters]);
+  // 使用LoadingEmptyError组件处理加载、空状态和错误状态
+  if (error) {
+    return (
+      <LoadingEmptyError
+        state="error"
+        error={{
+          title: "加载失败",
+          description: error,
+          actionText: "重试",
+          onAction: loadTickets,
+        }}
+      />
+    );
+  }
 
   return (
     <>
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-stat-card">
-            <Statistic
-              title="总工单数"
-              value={stats.total}
-              prefix={<FileText className="w-5 h-5" />}
-              valueStyle={{ color: "#3b82f6" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-stat-card">
-            <Statistic
-              title="待处理"
-              value={stats.open}
-              prefix={<Clock className="w-5 h-5" />}
-              valueStyle={{ color: "#f59e0b" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-stat-card">
-            <Statistic
-              title="已解决"
-              value={stats.resolved}
-              prefix={<CheckCircle className="w-5 h-5" />}
-              valueStyle={{ color: "#22c55e" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-stat-card">
-            <Statistic
-              title="高优先级"
-              value={stats.highPriority}
-              prefix={<AlertTriangle className="w-5 h-5" />}
-              valueStyle={{ color: "#ef4444" }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {loading ? (
+        <LoadingEmptyError state="loading" loadingText="正在加载工单数据..." />
+      ) : tickets.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <>
+          {/* 工单统计概览 */}
+          {renderStatsCards()}
 
-      {/* 工具栏 */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]} align="middle">
-          <Col flex="auto">
-            <Space size="middle">
-              <Input
-                placeholder="搜索工单..."
-                prefix={<Search className="w-4 h-4" />}
-                style={{ width: 300 }}
-                value={filters.keyword}
-                onChange={(e) =>
-                  setFilters({ ...filters, keyword: e.target.value })
-                }
-              />
-              <Select
-                placeholder="状态筛选"
-                style={{ width: 120 }}
-                allowClear
-                value={filters.status}
-                onChange={(value) => setFilters({ ...filters, status: value })}
-              >
-                <Option value="open">待处理</Option>
-                <Option value="in_progress">处理中</Option>
-                <Option value="resolved">已解决</Option>
-                <Option value="closed">已关闭</Option>
-              </Select>
-              <Select
-                placeholder="优先级"
-                style={{ width: 120 }}
-                allowClear
-                value={filters.priority}
-                onChange={(value) =>
-                  setFilters({ ...filters, priority: value })
-                }
-              >
-                <Option value="low">低</Option>
-                <Option value="medium">中</Option>
-                <Option value="high">高</Option>
-                <Option value="critical">紧急</Option>
-              </Select>
-              <Button
-                icon={<RefreshCw className="w-4 h-4" />}
-                onClick={loadTickets}
-              >
-                刷新
-              </Button>
-            </Space>
-          </Col>
-          <Col>
-            <Space>
-              {selectedRowKeys.length > 0 && (
-                <Button
-                  danger
-                  icon={<Trash2 className="w-4 h-4" />}
-                  onClick={handleBatchDelete}
-                >
-                  批量删除 ({selectedRowKeys.length})
-                </Button>
-              )}
-              <Button
-                icon={<Download className="w-4 h-4" />}
-                onClick={handleExport}
-              >
-                导出
-              </Button>
-              <Button
-                type="primary"
-                icon={<Plus className="w-4 h-4" />}
-                onClick={handleCreateTicket}
-              >
-                创建工单
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* 工单表格 */}
-      <Card>
-        <LoadingEmptyError
-          state={
-            loading
-              ? "loading"
-              : filteredTickets.length === 0
-              ? "empty"
-              : "success"
-          }
-          loadingText="正在加载工单列表..."
-          empty={{
-            title: "暂无工单",
-            description: "当前没有找到匹配的工单记录",
-            actions: [
-              {
-                text: "创建工单",
-                icon: <Plus className="w-4 h-4" />,
-                onClick: handleCreateTicket,
-                type: "primary",
-              },
-              {
-                text: "刷新",
-                icon: <RefreshCw className="w-4 h-4" />,
-                onClick: loadTickets,
-              },
-            ],
-          }}
-          error={{
-            title: "加载失败",
-            description: "无法获取工单列表，请稍后重试",
-            onRetry: loadTickets,
-          }}
-        >
-          <Table
-            columns={columns}
-            dataSource={filteredTickets}
-            rowKey="id"
-            loading={false}
-            rowSelection={rowSelection}
-            pagination={{
-              current: pagination.current,
-              pageSize: pagination.pageSize,
-              total: pagination.total,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-              onChange: (page, pageSize) => {
-                setPagination({ ...pagination, current: page, pageSize });
-              },
-            }}
-            scroll={{ x: 1200 }}
-          />
-        </LoadingEmptyError>
-      </Card>
+          {/* 工单列表区域 */}
+          <Card title="工单列表">
+            {renderFilters()}
+            {renderTicketList()}
+          </Card>
+        </>
+      )}
 
       {/* 创建/编辑工单模态框 */}
       <Modal
-        title={editingTicket ? "编辑工单" : "创建工单"}
+        title={editingTicket ? "编辑工单" : "新建工单"}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
-        width={600}
-        destroyOnHidden
-        className="enterprise-modal"
+        width={800}
       >
-        <Form
-          layout="vertical"
-          initialValues={editingTicket || {}}
-          className="enterprise-form"
-          onFinish={async (values) => {
-            try {
-              if (editingTicket) {
-                await TicketApi.updateTicket(editingTicket.id, values);
-                message.success("工单更新成功");
-              } else {
-                await TicketApi.createTicket(values);
-                message.success("工单创建成功");
-              }
-              setModalVisible(false);
-              loadTickets();
-            } catch {
-              message.error("操作失败");
-            }
-          }}
-        >
-          <Form.Item
-            name="title"
-            label="标题"
-            rules={[{ required: true, message: "请输入标题" }]}
-          >
-            <Input placeholder="请输入工单标题" />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="描述"
-            rules={[{ required: true, message: "请输入描述" }]}
-          >
-            <Input.TextArea rows={4} placeholder="请详细描述问题" />
-          </Form.Item>
-
+        <Form layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="priority"
-                label="优先级"
-                rules={[{ required: true, message: "请选择优先级" }]}
+                label="标题"
+                name="title"
+                rules={[{ required: true, message: "请输入工单标题" }]}
               >
-                <Select placeholder="选择优先级">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">紧急</Option>
-                </Select>
+                <Input placeholder="请输入工单标题" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="category"
-                label="分类"
-                rules={[{ required: true, message: "请选择分类" }]}
+                label="类型"
+                name="type"
+                rules={[{ required: true, message: "请选择工单类型" }]}
               >
-                <Select placeholder="选择分类">
-                  <Option value="系统问题">系统问题</Option>
-                  <Option value="硬件问题">硬件问题</Option>
-                  <Option value="网络问题">网络问题</Option>
-                  <Option value="软件问题">软件问题</Option>
+                <Select placeholder="请选择工单类型">
+                  <Option value={TicketType.INCIDENT}>事件</Option>
+                  <Option value={TicketType.SERVICE_REQUEST}>服务请求</Option>
+                  <Option value={TicketType.PROBLEM}>问题</Option>
+                  <Option value={TicketType.CHANGE}>变更</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name="assignee" label="处理人">
-            <Select placeholder="选择处理人" allowClear>
-              <Option value="张三">张三</Option>
-              <Option value="李四">李四</Option>
-              <Option value="王五">王五</Option>
-            </Select>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="优先级"
+                name="priority"
+                rules={[{ required: true, message: "请选择优先级" }]}
+              >
+                <Select placeholder="请选择优先级">
+                  <Option value={TicketPriority.LOW}>低</Option>
+                  <Option value={TicketPriority.MEDIUM}>中</Option>
+                  <Option value={TicketPriority.HIGH}>高</Option>
+                  <Option value={TicketPriority.URGENT}>紧急</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="分类"
+                name="category"
+                rules={[{ required: true, message: "请选择分类" }]}
+              >
+                <Select placeholder="请选择分类">
+                  <Option value="系统问题">系统问题</Option>
+                  <Option value="硬件问题">硬件问题</Option>
+                  <Option value="网络问题">网络问题</Option>
+                  <Option value="软件问题">软件问题</Option>
+                  <Option value="用户管理">用户管理</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            label="描述"
+            name="description"
+            rules={[{ required: true, message: "请输入工单描述" }]}
+          >
+            <Input.TextArea rows={4} placeholder="请详细描述问题或需求" />
           </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="处理人" name="assignee_id">
+                <Select placeholder="请选择处理人" allowClear>
+                  {userList.map((user) => (
+                    <Option key={user.id} value={user.id}>
+                      <div className="flex items-center">
+                        <Avatar size="small" className="mr-2">
+                          {user.avatar}
+                        </Avatar>
+                        <span>
+                          {user.name} ({user.role})
+                        </span>
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="标签" name="tags">
+                <Select
+                  mode="tags"
+                  placeholder="请输入标签，按回车确认"
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item>
             <Space>
@@ -842,141 +980,190 @@ const TicketManagementPage = () => {
         </Form>
       </Modal>
 
-      {/* 分配工单模态框 */}
+      {/* 快速创建模态框 */}
       <Modal
-        title="分配工单"
-        open={assignModalVisible}
-        onCancel={() => setAssignModalVisible(false)}
+        title="快速创建工单"
+        open={quickCreateModalVisible}
+        onCancel={() => setQuickCreateModalVisible(false)}
         footer={null}
+        width={600}
       >
-        <Form onFinish={handleAssignSubmit} layout="vertical">
-          <Form.Item
-            name="assignee_id"
-            label="分配给"
-            rules={[{ required: true, message: "请选择处理人" }]}
-          >
-            <Select placeholder="选择处理人">
-              {userList.map((user) => (
-                <Option key={user.id} value={user.id}>
-                  {user.name} - {user.role}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                分配
-              </Button>
-              <Button onClick={() => setAssignModalVisible(false)}>取消</Button>
-            </Space>
-          </Form.Item>
-        </Form>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {quickActions.map((action) => (
+              <Card
+                key={action.key}
+                hoverable
+                className="text-center cursor-pointer"
+                onClick={() => {
+                  setQuickCreateModalVisible(false);
+                  handleQuickCreate(action.key);
+                }}
+              >
+                <div
+                  className={`inline-flex items-center justify-center w-12 h-12 bg-${action.color}-50 rounded-full mb-3`}
+                >
+                  <span className={`text-${action.color}-500`}>
+                    {action.icon}
+                  </span>
+                </div>
+                <Title level={5} className="mb-2">
+                  {action.label}
+                </Title>
+                <Text type="secondary" className="text-sm">
+                  点击创建
+                </Text>
+              </Card>
+            ))}
+          </div>
+        </div>
       </Modal>
 
-      {/* 升级工单模态框 */}
+      {/* 模板选择模态框 */}
       <Modal
-        title="升级工单"
-        open={escalateModalVisible}
-        onCancel={() => setEscalateModalVisible(false)}
+        title="选择工单模板"
+        open={templateModalVisible}
+        onCancel={() => setTemplateModalVisible(false)}
         footer={null}
-      >
-        <Form onFinish={handleEscalateSubmit} layout="vertical">
-          <Form.Item
-            name="reason"
-            label="升级原因"
-            rules={[{ required: true, message: "请输入升级原因" }]}
-          >
-            <Input.TextArea
-              rows={4}
-              placeholder="请详细说明升级原因，如：超出SLA时限、问题复杂度提升、需要上级处理等"
-            />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" danger>
-                升级
-              </Button>
-              <Button onClick={() => setEscalateModalVisible(false)}>
-                取消
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 解决工单模态框 */}
-      <Modal
-        title="解决工单"
-        open={resolveModalVisible}
-        onCancel={() => setResolveModalVisible(false)}
-        footer={null}
-      >
-        <Form onFinish={handleResolveSubmit} layout="vertical">
-          <Form.Item
-            name="resolution"
-            label="解决方案"
-            rules={[{ required: true, message: "请输入解决方案" }]}
-          >
-            <Input.TextArea
-              rows={6}
-              placeholder="请详细描述解决方案和处理过程，包括：&#10;1. 问题根本原因&#10;2. 采取的解决措施&#10;3. 验证结果&#10;4. 预防措施"
-            />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                标记为已解决
-              </Button>
-              <Button onClick={() => setResolveModalVisible(false)}>
-                取消
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 工单活动日志模态框 */}
-      <Modal
-        title={`工单活动记录 - ${selectedTicketForAction?.title}`}
-        open={activityModalVisible}
-        onCancel={() => setActivityModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setActivityModalVisible(false)}>
-            关闭
-          </Button>,
-        ]}
         width={800}
       >
         <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ticketTemplates.map((template) => (
+              <Card
+                key={template.id}
+                hoverable
+                className="cursor-pointer"
+                onClick={() => {
+                  setTemplateModalVisible(false);
+                  handleTemplateSelect(template);
+                }}
+              >
+                <div className="flex items-center mb-3">
+                  <span className="text-blue-500 mr-2">{template.icon}</span>
+                  <Text strong className="flex-1">
+                    {template.name}
+                  </Text>
+                </div>
+                <Text type="secondary" className="text-sm mb-2 block">
+                  {template.description}
+                </Text>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>预计: {template.estimatedTime}</span>
+                  <span>SLA: {template.sla}</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <div className="text-center pt-4">
+            <Button
+              type="link"
+              onClick={() => window.open("/tickets/templates")}
+            >
+              管理工单模板 →
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 工单活动记录模态框 */}
+      <Modal
+        title="工单活动记录"
+        open={activityModalVisible}
+        onCancel={() => setActivityModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <div>
           {ticketActivity.map((activity, index) => (
             <div
               key={index}
-              className="flex space-x-3 p-3 bg-gray-50 rounded-lg"
+              style={{
+                marginBottom: 16,
+                padding: 12,
+                border: "1px solid #f0f0f0",
+              }}
             >
-              <div className="flex-shrink-0">
-                <Activity className="w-5 h-5 text-blue-500" />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: 8,
+                }}
+              >
+                <span style={{ fontWeight: "bold" }}>{activity.action}</span>
+                <span style={{ color: "#666" }}>{activity.timestamp}</span>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-medium text-gray-900">
-                    {activity.action}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(activity.timestamp).toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">{activity.details}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  操作人: 用户 #{activity.user_id}
-                </p>
-              </div>
+              <div>{activity.details}</div>
             </div>
           ))}
-          {ticketActivity.length === 0 && (
-            <div className="text-center py-8 text-gray-500">暂无活动记录</div>
-          )}
         </div>
+      </Modal>
+
+      {/* 批量操作模态框 */}
+      <Modal
+        title="批量操作"
+        open={bulkActionModalVisible}
+        onCancel={() => setBulkActionModalVisible(false)}
+        onOk={() => {
+          // 实现批量操作逻辑
+          setBulkActionModalVisible(false);
+        }}
+      >
+        <Form layout="vertical">
+          <Form.Item label="操作类型">
+            <Text strong>
+              {bulkAction === "delete"
+                ? "批量删除"
+                : bulkAction === "assign"
+                ? "批量分配"
+                : "批量状态变更"}
+            </Text>
+          </Form.Item>
+          <Form.Item label="选中工单数量">
+            <Text>{selectedRowKeys.length} 个工单</Text>
+          </Form.Item>
+          {bulkAction === "assign" && (
+            <Form.Item
+              label="分配给"
+              name="assignee_id"
+              rules={[{ required: true }]}
+            >
+              <Select placeholder="请选择处理人">
+                {userList.map((user) => (
+                  <Option key={user.id} value={user.id}>
+                    <div className="flex items-center">
+                      <Avatar size="small" className="mr-2">
+                        {user.avatar}
+                      </Avatar>
+                      <span>
+                        {user.name} ({user.role})
+                      </span>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+          {bulkAction === "status" && (
+            <Form.Item
+              label="新状态"
+              name="status"
+              rules={[{ required: true }]}
+            >
+              <Select placeholder="请选择新状态">
+                <Option value={TicketStatus.OPEN}>待处理</Option>
+                <Option value={TicketStatus.IN_PROGRESS}>处理中</Option>
+                <Option value={TicketStatus.PENDING}>等待中</Option>
+                <Option value={TicketStatus.RESOLVED}>已解决</Option>
+                <Option value={TicketStatus.CLOSED}>已关闭</Option>
+              </Select>
+            </Form.Item>
+          )}
+          <Form.Item label="操作原因" name="reason">
+            <Input.TextArea rows={3} placeholder="请输入操作原因" />
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   );

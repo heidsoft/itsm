@@ -20887,19 +20887,27 @@ func (m *PromptTemplateMutation) ResetEdge(name string) error {
 // SLADefinitionMutation represents an operation that mutates the SLADefinition nodes in the graph.
 type SLADefinitionMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	name          *string
-	description   *string
-	tenant_id     *int
-	addtenant_id  *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*SLADefinition, error)
-	predicates    []predicate.SLADefinition
+	op                 Op
+	typ                string
+	id                 *int
+	name               *string
+	description        *string
+	service_type       *string
+	priority           *string
+	response_time      *int
+	addresponse_time   *int
+	resolution_time    *int
+	addresolution_time *int
+	business_hours     *map[string]interface{}
+	is_active          *bool
+	tenant_id          *int
+	addtenant_id       *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	clearedFields      map[string]struct{}
+	done               bool
+	oldValue           func(context.Context) (*SLADefinition, error)
+	predicates         []predicate.SLADefinition
 }
 
 var _ ent.Mutation = (*SLADefinitionMutation)(nil)
@@ -21085,6 +21093,301 @@ func (m *SLADefinitionMutation) ResetDescription() {
 	delete(m.clearedFields, sladefinition.FieldDescription)
 }
 
+// SetServiceType sets the "service_type" field.
+func (m *SLADefinitionMutation) SetServiceType(s string) {
+	m.service_type = &s
+}
+
+// ServiceType returns the value of the "service_type" field in the mutation.
+func (m *SLADefinitionMutation) ServiceType() (r string, exists bool) {
+	v := m.service_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceType returns the old "service_type" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldServiceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceType: %w", err)
+	}
+	return oldValue.ServiceType, nil
+}
+
+// ClearServiceType clears the value of the "service_type" field.
+func (m *SLADefinitionMutation) ClearServiceType() {
+	m.service_type = nil
+	m.clearedFields[sladefinition.FieldServiceType] = struct{}{}
+}
+
+// ServiceTypeCleared returns if the "service_type" field was cleared in this mutation.
+func (m *SLADefinitionMutation) ServiceTypeCleared() bool {
+	_, ok := m.clearedFields[sladefinition.FieldServiceType]
+	return ok
+}
+
+// ResetServiceType resets all changes to the "service_type" field.
+func (m *SLADefinitionMutation) ResetServiceType() {
+	m.service_type = nil
+	delete(m.clearedFields, sladefinition.FieldServiceType)
+}
+
+// SetPriority sets the "priority" field.
+func (m *SLADefinitionMutation) SetPriority(s string) {
+	m.priority = &s
+}
+
+// Priority returns the value of the "priority" field in the mutation.
+func (m *SLADefinitionMutation) Priority() (r string, exists bool) {
+	v := m.priority
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriority returns the old "priority" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldPriority(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriority is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriority requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriority: %w", err)
+	}
+	return oldValue.Priority, nil
+}
+
+// ClearPriority clears the value of the "priority" field.
+func (m *SLADefinitionMutation) ClearPriority() {
+	m.priority = nil
+	m.clearedFields[sladefinition.FieldPriority] = struct{}{}
+}
+
+// PriorityCleared returns if the "priority" field was cleared in this mutation.
+func (m *SLADefinitionMutation) PriorityCleared() bool {
+	_, ok := m.clearedFields[sladefinition.FieldPriority]
+	return ok
+}
+
+// ResetPriority resets all changes to the "priority" field.
+func (m *SLADefinitionMutation) ResetPriority() {
+	m.priority = nil
+	delete(m.clearedFields, sladefinition.FieldPriority)
+}
+
+// SetResponseTime sets the "response_time" field.
+func (m *SLADefinitionMutation) SetResponseTime(i int) {
+	m.response_time = &i
+	m.addresponse_time = nil
+}
+
+// ResponseTime returns the value of the "response_time" field in the mutation.
+func (m *SLADefinitionMutation) ResponseTime() (r int, exists bool) {
+	v := m.response_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResponseTime returns the old "response_time" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldResponseTime(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResponseTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResponseTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResponseTime: %w", err)
+	}
+	return oldValue.ResponseTime, nil
+}
+
+// AddResponseTime adds i to the "response_time" field.
+func (m *SLADefinitionMutation) AddResponseTime(i int) {
+	if m.addresponse_time != nil {
+		*m.addresponse_time += i
+	} else {
+		m.addresponse_time = &i
+	}
+}
+
+// AddedResponseTime returns the value that was added to the "response_time" field in this mutation.
+func (m *SLADefinitionMutation) AddedResponseTime() (r int, exists bool) {
+	v := m.addresponse_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResponseTime resets all changes to the "response_time" field.
+func (m *SLADefinitionMutation) ResetResponseTime() {
+	m.response_time = nil
+	m.addresponse_time = nil
+}
+
+// SetResolutionTime sets the "resolution_time" field.
+func (m *SLADefinitionMutation) SetResolutionTime(i int) {
+	m.resolution_time = &i
+	m.addresolution_time = nil
+}
+
+// ResolutionTime returns the value of the "resolution_time" field in the mutation.
+func (m *SLADefinitionMutation) ResolutionTime() (r int, exists bool) {
+	v := m.resolution_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolutionTime returns the old "resolution_time" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldResolutionTime(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolutionTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolutionTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolutionTime: %w", err)
+	}
+	return oldValue.ResolutionTime, nil
+}
+
+// AddResolutionTime adds i to the "resolution_time" field.
+func (m *SLADefinitionMutation) AddResolutionTime(i int) {
+	if m.addresolution_time != nil {
+		*m.addresolution_time += i
+	} else {
+		m.addresolution_time = &i
+	}
+}
+
+// AddedResolutionTime returns the value that was added to the "resolution_time" field in this mutation.
+func (m *SLADefinitionMutation) AddedResolutionTime() (r int, exists bool) {
+	v := m.addresolution_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetResolutionTime resets all changes to the "resolution_time" field.
+func (m *SLADefinitionMutation) ResetResolutionTime() {
+	m.resolution_time = nil
+	m.addresolution_time = nil
+}
+
+// SetBusinessHours sets the "business_hours" field.
+func (m *SLADefinitionMutation) SetBusinessHours(value map[string]interface{}) {
+	m.business_hours = &value
+}
+
+// BusinessHours returns the value of the "business_hours" field in the mutation.
+func (m *SLADefinitionMutation) BusinessHours() (r map[string]interface{}, exists bool) {
+	v := m.business_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBusinessHours returns the old "business_hours" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldBusinessHours(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBusinessHours is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBusinessHours requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBusinessHours: %w", err)
+	}
+	return oldValue.BusinessHours, nil
+}
+
+// ClearBusinessHours clears the value of the "business_hours" field.
+func (m *SLADefinitionMutation) ClearBusinessHours() {
+	m.business_hours = nil
+	m.clearedFields[sladefinition.FieldBusinessHours] = struct{}{}
+}
+
+// BusinessHoursCleared returns if the "business_hours" field was cleared in this mutation.
+func (m *SLADefinitionMutation) BusinessHoursCleared() bool {
+	_, ok := m.clearedFields[sladefinition.FieldBusinessHours]
+	return ok
+}
+
+// ResetBusinessHours resets all changes to the "business_hours" field.
+func (m *SLADefinitionMutation) ResetBusinessHours() {
+	m.business_hours = nil
+	delete(m.clearedFields, sladefinition.FieldBusinessHours)
+}
+
+// SetIsActive sets the "is_active" field.
+func (m *SLADefinitionMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *SLADefinitionMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the SLADefinition entity.
+// If the SLADefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLADefinitionMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *SLADefinitionMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (m *SLADefinitionMutation) SetTenantID(i int) {
 	m.tenant_id = &i
@@ -21247,12 +21550,30 @@ func (m *SLADefinitionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SLADefinitionMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 11)
 	if m.name != nil {
 		fields = append(fields, sladefinition.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, sladefinition.FieldDescription)
+	}
+	if m.service_type != nil {
+		fields = append(fields, sladefinition.FieldServiceType)
+	}
+	if m.priority != nil {
+		fields = append(fields, sladefinition.FieldPriority)
+	}
+	if m.response_time != nil {
+		fields = append(fields, sladefinition.FieldResponseTime)
+	}
+	if m.resolution_time != nil {
+		fields = append(fields, sladefinition.FieldResolutionTime)
+	}
+	if m.business_hours != nil {
+		fields = append(fields, sladefinition.FieldBusinessHours)
+	}
+	if m.is_active != nil {
+		fields = append(fields, sladefinition.FieldIsActive)
 	}
 	if m.tenant_id != nil {
 		fields = append(fields, sladefinition.FieldTenantID)
@@ -21275,6 +21596,18 @@ func (m *SLADefinitionMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case sladefinition.FieldDescription:
 		return m.Description()
+	case sladefinition.FieldServiceType:
+		return m.ServiceType()
+	case sladefinition.FieldPriority:
+		return m.Priority()
+	case sladefinition.FieldResponseTime:
+		return m.ResponseTime()
+	case sladefinition.FieldResolutionTime:
+		return m.ResolutionTime()
+	case sladefinition.FieldBusinessHours:
+		return m.BusinessHours()
+	case sladefinition.FieldIsActive:
+		return m.IsActive()
 	case sladefinition.FieldTenantID:
 		return m.TenantID()
 	case sladefinition.FieldCreatedAt:
@@ -21294,6 +21627,18 @@ func (m *SLADefinitionMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldName(ctx)
 	case sladefinition.FieldDescription:
 		return m.OldDescription(ctx)
+	case sladefinition.FieldServiceType:
+		return m.OldServiceType(ctx)
+	case sladefinition.FieldPriority:
+		return m.OldPriority(ctx)
+	case sladefinition.FieldResponseTime:
+		return m.OldResponseTime(ctx)
+	case sladefinition.FieldResolutionTime:
+		return m.OldResolutionTime(ctx)
+	case sladefinition.FieldBusinessHours:
+		return m.OldBusinessHours(ctx)
+	case sladefinition.FieldIsActive:
+		return m.OldIsActive(ctx)
 	case sladefinition.FieldTenantID:
 		return m.OldTenantID(ctx)
 	case sladefinition.FieldCreatedAt:
@@ -21322,6 +21667,48 @@ func (m *SLADefinitionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case sladefinition.FieldServiceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceType(v)
+		return nil
+	case sladefinition.FieldPriority:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriority(v)
+		return nil
+	case sladefinition.FieldResponseTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResponseTime(v)
+		return nil
+	case sladefinition.FieldResolutionTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolutionTime(v)
+		return nil
+	case sladefinition.FieldBusinessHours:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBusinessHours(v)
+		return nil
+	case sladefinition.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
 		return nil
 	case sladefinition.FieldTenantID:
 		v, ok := value.(int)
@@ -21352,6 +21739,12 @@ func (m *SLADefinitionMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *SLADefinitionMutation) AddedFields() []string {
 	var fields []string
+	if m.addresponse_time != nil {
+		fields = append(fields, sladefinition.FieldResponseTime)
+	}
+	if m.addresolution_time != nil {
+		fields = append(fields, sladefinition.FieldResolutionTime)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, sladefinition.FieldTenantID)
 	}
@@ -21363,6 +21756,10 @@ func (m *SLADefinitionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *SLADefinitionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case sladefinition.FieldResponseTime:
+		return m.AddedResponseTime()
+	case sladefinition.FieldResolutionTime:
+		return m.AddedResolutionTime()
 	case sladefinition.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -21374,6 +21771,20 @@ func (m *SLADefinitionMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *SLADefinitionMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case sladefinition.FieldResponseTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResponseTime(v)
+		return nil
+	case sladefinition.FieldResolutionTime:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResolutionTime(v)
+		return nil
 	case sladefinition.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -21392,6 +21803,15 @@ func (m *SLADefinitionMutation) ClearedFields() []string {
 	if m.FieldCleared(sladefinition.FieldDescription) {
 		fields = append(fields, sladefinition.FieldDescription)
 	}
+	if m.FieldCleared(sladefinition.FieldServiceType) {
+		fields = append(fields, sladefinition.FieldServiceType)
+	}
+	if m.FieldCleared(sladefinition.FieldPriority) {
+		fields = append(fields, sladefinition.FieldPriority)
+	}
+	if m.FieldCleared(sladefinition.FieldBusinessHours) {
+		fields = append(fields, sladefinition.FieldBusinessHours)
+	}
 	return fields
 }
 
@@ -21409,6 +21829,15 @@ func (m *SLADefinitionMutation) ClearField(name string) error {
 	case sladefinition.FieldDescription:
 		m.ClearDescription()
 		return nil
+	case sladefinition.FieldServiceType:
+		m.ClearServiceType()
+		return nil
+	case sladefinition.FieldPriority:
+		m.ClearPriority()
+		return nil
+	case sladefinition.FieldBusinessHours:
+		m.ClearBusinessHours()
+		return nil
 	}
 	return fmt.Errorf("unknown SLADefinition nullable field %s", name)
 }
@@ -21422,6 +21851,24 @@ func (m *SLADefinitionMutation) ResetField(name string) error {
 		return nil
 	case sladefinition.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case sladefinition.FieldServiceType:
+		m.ResetServiceType()
+		return nil
+	case sladefinition.FieldPriority:
+		m.ResetPriority()
+		return nil
+	case sladefinition.FieldResponseTime:
+		m.ResetResponseTime()
+		return nil
+	case sladefinition.FieldResolutionTime:
+		m.ResetResolutionTime()
+		return nil
+	case sladefinition.FieldBusinessHours:
+		m.ResetBusinessHours()
+		return nil
+	case sladefinition.FieldIsActive:
+		m.ResetIsActive()
 		return nil
 	case sladefinition.FieldTenantID:
 		m.ResetTenantID()

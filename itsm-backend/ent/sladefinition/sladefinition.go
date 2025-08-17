@@ -17,6 +17,18 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldServiceType holds the string denoting the service_type field in the database.
+	FieldServiceType = "service_type"
+	// FieldPriority holds the string denoting the priority field in the database.
+	FieldPriority = "priority"
+	// FieldResponseTime holds the string denoting the response_time field in the database.
+	FieldResponseTime = "response_time"
+	// FieldResolutionTime holds the string denoting the resolution_time field in the database.
+	FieldResolutionTime = "resolution_time"
+	// FieldBusinessHours holds the string denoting the business_hours field in the database.
+	FieldBusinessHours = "business_hours"
+	// FieldIsActive holds the string denoting the is_active field in the database.
+	FieldIsActive = "is_active"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -32,6 +44,12 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDescription,
+	FieldServiceType,
+	FieldPriority,
+	FieldResponseTime,
+	FieldResolutionTime,
+	FieldBusinessHours,
+	FieldIsActive,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -50,6 +68,16 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultResponseTime holds the default value on creation for the "response_time" field.
+	DefaultResponseTime int
+	// ResponseTimeValidator is a validator for the "response_time" field. It is called by the builders before save.
+	ResponseTimeValidator func(int) error
+	// DefaultResolutionTime holds the default value on creation for the "resolution_time" field.
+	DefaultResolutionTime int
+	// ResolutionTimeValidator is a validator for the "resolution_time" field. It is called by the builders before save.
+	ResolutionTimeValidator func(int) error
+	// DefaultIsActive holds the default value on creation for the "is_active" field.
+	DefaultIsActive bool
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -76,6 +104,31 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByServiceType orders the results by the service_type field.
+func ByServiceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldServiceType, opts...).ToFunc()
+}
+
+// ByPriority orders the results by the priority field.
+func ByPriority(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPriority, opts...).ToFunc()
+}
+
+// ByResponseTime orders the results by the response_time field.
+func ByResponseTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResponseTime, opts...).ToFunc()
+}
+
+// ByResolutionTime orders the results by the resolution_time field.
+func ByResolutionTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolutionTime, opts...).ToFunc()
+}
+
+// ByIsActive orders the results by the is_active field.
+func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
