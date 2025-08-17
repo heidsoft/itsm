@@ -1,17 +1,23 @@
 "use client";
 
-import React, { Component, ReactNode } from "react";
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Button, Result, Typography } from "antd";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+
+const { Text } = Typography;
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
-class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -21,46 +27,111 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Error caught by boundary:", error, errorInfo);
+    this.setState({
+      error,
+      errorInfo,
+    });
+
+    // 可以在这里发送错误到监控服务
+    // logErrorToService(error, errorInfo);
   }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
+  handleGoHome = () => {
+    window.location.href = "/dashboard";
+  };
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        <div style={{ 
+          minHeight: "100vh", 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          background: "#f5f5f5"
+        }}>
+          <Result
+            status="error"
+            icon={<AlertTriangle style={{ color: "#ff4d4f" }} />}
+            title="页面出现错误"
+            subTitle={
+              <div style={{ textAlign: "left", maxWidth: 500 }}>
+                <Text type="secondary">
+                  很抱歉，页面遇到了一个意外错误。这可能是由于：
+                </Text>
+                <ul style={{ marginTop: 16, paddingLeft: 20 }}>
+                  <li>
+                    <Text type="secondary">网络连接问题</Text>
+                  </li>
+                  <li>
+                    <Text type="secondary">服务器暂时不可用</Text>
+                  </li>
+                  <li>
+                    <Text type="secondary">浏览器兼容性问题</Text>
+                  </li>
+                </ul>
+                {process.env.NODE_ENV === "development" && this.state.error && (
+                  <details style={{ marginTop: 16 }}>
+                    <summary style={{ cursor: "pointer", color: "#1890ff" }}>
+                      查看错误详情
+                    </summary>
+                    <div style={{ 
+                      marginTop: 8, 
+                      padding: 12, 
+                      background: "#f6f6f6", 
+                      borderRadius: 4,
+                      fontFamily: "monospace",
+                      fontSize: "12px",
+                      overflow: "auto"
+                    }}>
+                      <div><strong>错误信息:</strong> {this.state.error.message}</div>
+                      <div><strong>错误堆栈:</strong></div>
+                      <pre style={{ margin: "8px 0", whiteSpace: "pre-wrap" }}>
+                        {this.state.error.stack}
+                      </pre>
+                      {this.state.errorInfo && (
+                        <>
+                          <div><strong>组件堆栈:</strong></div>
+                          <pre style={{ margin: "8px 0", whiteSpace: "pre-wrap" }}>
+                            {this.state.errorInfo.componentStack}
+                          </pre>
+                        </>
+                      )}
+                    </div>
+                  </details>
+                )}
+              </div>
+            }
+            extra={[
+              <Button
+                key="retry"
+                type="primary"
+                icon={<RefreshCw size={16} />}
+                onClick={this.handleRetry}
+                size="large"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                Something went wrong
-              </h3>
-              <p className="mt-2 text-sm text-gray-500">
-                We&apos;re sorry, but something unexpected happened. Please try
-                refreshing the page.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                重试
+              </Button>,
+              <Button
+                key="home"
+                icon={<Home size={16} />}
+                onClick={this.handleGoHome}
+                size="large"
               >
-                Refresh Page
-              </button>
-            </div>
-          </div>
+                返回首页
+              </Button>,
+            ]}
+          />
         </div>
       );
     }
@@ -69,4 +140,31 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundary;
+// 函数式组件的错误边界 Hook
+export const useErrorHandler = () => {
+  const [error, setError] = React.useState<Error | null>(null);
+
+  const handleError = React.useCallback((error: Error) => {
+    console.error("Error caught by hook:", error);
+    setError(error);
+  }, []);
+
+  const clearError = React.useCallback(() => {
+    setError(null);
+  }, []);
+
+  return { error, handleError, clearError };
+};
+
+// 异步错误处理 Hook
+export const useAsyncError = () => {
+  const [, setError] = React.useState();
+  return React.useCallback(
+    (e: Error) => {
+      setError(() => {
+        throw e;
+      });
+    },
+    []
+  );
+};

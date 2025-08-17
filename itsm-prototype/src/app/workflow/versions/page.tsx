@@ -45,7 +45,7 @@ import {
   Code,
   Diff,
 } from "lucide-react";
-import AppLayout from "../../components/AppLayout";
+// AppLayout is handled by parent layout
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -351,13 +351,12 @@ const WorkflowVersionsPage = () => {
   ];
 
   return (
-    <AppLayout
-      title="工作流版本管理"
-      breadcrumb={[
-        { title: "工作流管理", href: "/workflow" },
-        { title: "版本管理", href: "/workflow/versions" },
-      ]}
-    >
+    <>
+      {/* 页面头部 */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">工作流版本管理</h1>
+        <p className="text-gray-600 mt-1">管理工作流的不同版本，支持版本控制和回滚</p>
+      </div>
       {/* 工具栏 */}
       <Card className="enterprise-card mb-6">
         <Row gutter={[16, 16]} align="middle">
@@ -641,7 +640,7 @@ const WorkflowVersionsPage = () => {
           </div>
         )}
       </Modal>
-    </AppLayout>
+    </>
   );
 };
 

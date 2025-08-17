@@ -41,7 +41,7 @@ import {
   Activity,
   History,
 } from "lucide-react";
-import AppLayout from "../../components/AppLayout";
+// AppLayout is handled by parent layout
 import {
   WorkflowAPI,
   WorkflowInstance,
@@ -355,13 +355,12 @@ const WorkflowInstancesPage = () => {
   ];
 
   return (
-    <AppLayout
-      title="工作流实例"
-      breadcrumb={[
-        { title: "工作流管理", href: "/workflow" },
-        { title: "工作流实例", href: "/workflow/instances" },
-      ]}
-    >
+    <>
+      {/* 页面头部 */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">工作流实例</h1>
+        <p className="text-gray-600 mt-1">管理工作流实例的执行状态和生命周期</p>
+      </div>
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
@@ -563,7 +562,7 @@ const WorkflowInstancesPage = () => {
           </div>
         )}
       </Modal>
-    </AppLayout>
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
-import { Search, Download, ChevronDown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { Pagination } from 'antd';
 
 import React, { useMemo, useState, useCallback } from "react";
 import LoadingEmptyError from "./LoadingEmptyError";
@@ -30,7 +31,7 @@ interface DataTableProps<T> {
   onExport?: () => void;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export const DataTable = React.memo(<T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
@@ -39,7 +40,7 @@ export function DataTable<T extends Record<string, unknown>>({
   searchable = true,
   exportable = false,
   onExport,
-}: DataTableProps<T>) {
+}: DataTableProps<T>) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof T | null;
     direction: "asc" | "desc";
@@ -300,4 +301,4 @@ export function DataTable<T extends Record<string, unknown>>({
       )}
     </div>
   );
-}
+});

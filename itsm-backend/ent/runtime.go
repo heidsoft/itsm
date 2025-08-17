@@ -661,16 +661,32 @@ func init() {
 	sladefinitionDescName := sladefinitionFields[0].Descriptor()
 	// sladefinition.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	sladefinition.NameValidator = sladefinitionDescName.Validators[0].(func(string) error)
+	// sladefinitionDescResponseTime is the schema descriptor for response_time field.
+	sladefinitionDescResponseTime := sladefinitionFields[4].Descriptor()
+	// sladefinition.DefaultResponseTime holds the default value on creation for the response_time field.
+	sladefinition.DefaultResponseTime = sladefinitionDescResponseTime.Default.(int)
+	// sladefinition.ResponseTimeValidator is a validator for the "response_time" field. It is called by the builders before save.
+	sladefinition.ResponseTimeValidator = sladefinitionDescResponseTime.Validators[0].(func(int) error)
+	// sladefinitionDescResolutionTime is the schema descriptor for resolution_time field.
+	sladefinitionDescResolutionTime := sladefinitionFields[5].Descriptor()
+	// sladefinition.DefaultResolutionTime holds the default value on creation for the resolution_time field.
+	sladefinition.DefaultResolutionTime = sladefinitionDescResolutionTime.Default.(int)
+	// sladefinition.ResolutionTimeValidator is a validator for the "resolution_time" field. It is called by the builders before save.
+	sladefinition.ResolutionTimeValidator = sladefinitionDescResolutionTime.Validators[0].(func(int) error)
+	// sladefinitionDescIsActive is the schema descriptor for is_active field.
+	sladefinitionDescIsActive := sladefinitionFields[7].Descriptor()
+	// sladefinition.DefaultIsActive holds the default value on creation for the is_active field.
+	sladefinition.DefaultIsActive = sladefinitionDescIsActive.Default.(bool)
 	// sladefinitionDescTenantID is the schema descriptor for tenant_id field.
-	sladefinitionDescTenantID := sladefinitionFields[2].Descriptor()
+	sladefinitionDescTenantID := sladefinitionFields[8].Descriptor()
 	// sladefinition.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	sladefinition.TenantIDValidator = sladefinitionDescTenantID.Validators[0].(func(int) error)
 	// sladefinitionDescCreatedAt is the schema descriptor for created_at field.
-	sladefinitionDescCreatedAt := sladefinitionFields[3].Descriptor()
+	sladefinitionDescCreatedAt := sladefinitionFields[9].Descriptor()
 	// sladefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
 	sladefinition.DefaultCreatedAt = sladefinitionDescCreatedAt.Default.(func() time.Time)
 	// sladefinitionDescUpdatedAt is the schema descriptor for updated_at field.
-	sladefinitionDescUpdatedAt := sladefinitionFields[4].Descriptor()
+	sladefinitionDescUpdatedAt := sladefinitionFields[10].Descriptor()
 	// sladefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	sladefinition.DefaultUpdatedAt = sladefinitionDescUpdatedAt.Default.(func() time.Time)
 	// sladefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

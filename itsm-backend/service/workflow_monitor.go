@@ -105,10 +105,10 @@ func (s *WorkflowMonitorService) GetPerformanceMetrics(ctx context.Context, req 
 }
 
 // GetBottlenecks 获取瓶颈分析
-func (s *WorkflowMonitorService) GetBottlenecks(ctx context.Context, req *GetBottlenecksRequest) ([]*BottleneckAnalysis, error) {
+func (s *WorkflowMonitorService) GetBottlenecks(ctx context.Context, req *GetBottlenecksRequest) ([]*BottleneckTask, error) {
 	// 这里应该分析工作流瓶颈
 	// 暂时返回空列表
-	return []*BottleneckAnalysis{}, nil
+	return []*BottleneckTask{}, nil
 }
 
 // CreateAlertRule 创建告警规则
@@ -206,17 +206,7 @@ type GetBottlenecksRequest struct {
 	Limit      int       `json:"limit"`
 }
 
-// BottleneckAnalysis 瓶颈分析
-type BottleneckAnalysis struct {
-	StepID             string   `json:"step_id"`
-	StepName           string   `json:"step_name"`
-	BottleneckScore    float64  `json:"bottleneck_score"`
-	AverageWaitTime    float64  `json:"average_wait_time"`
-	AverageProcessTime float64  `json:"average_process_time"`
-	QueueLength        int      `json:"queue_length"`
-	TimeoutRate        float64  `json:"timeout_rate"`
-	Recommendations    []string `json:"recommendations"`
-}
+
 
 // CreateAlertRuleRequest 创建告警规则请求
 type CreateAlertRuleRequest struct {

@@ -1,11 +1,11 @@
 
 // 模拟事件数据 (从 incidents/[incidentId]/page.tsx 复制并转换为数组)
 export const mockIncidentsData = [
-    { id: 'INC-00125', title: '杭州可用区J的Web服务器CPU使用率超过95%', priority: '高', status: '处理中', source: '阿里云监控', sourceIcon: Cpu, lastUpdate: '5分钟前', isMajorIncident: false, assignee: '张三', createdAt: '2025-06-28 10:15:23' },
-    { id: 'INC-00124', title: '用户报告无法访问CRM系统', priority: '高', status: '已分配', source: '服务台', sourceIcon: User, lastUpdate: '25分钟前', isMajorIncident: false, assignee: '王五', createdAt: '2025-06-28 09:45:10' },
-    { id: 'INC-00123', title: '检测到可疑的SSH登录尝试 (47.98.x.x)', priority: '中', status: '处理中', source: '安全中心', sourceIcon: Shield, lastUpdate: '1小时前', isMajorIncident: true, assignee: '赵六', createdAt: '2025-06-28 08:30:00' },
-    { id: 'INC-00122', title: '生产数据库主备同步延迟', priority: '中', status: '已解决', source: '阿里云监控', sourceIcon: Cpu, lastUpdate: '3小时前', isMajorIncident: false, assignee: '钱七', createdAt: '2025-06-27 18:00:00' },
-    { id: 'INC-00121', title: '用户请求重置密码失败', priority: '低', status: '已关闭', source: '服务台', sourceIcon: User, lastUpdate: '1天前', isMajorIncident: false, assignee: '周九', createdAt: '2025-06-27 10:00:00' },
+    { id: 'INC-00125', title: '杭州可用区J的Web服务器CPU使用率超过95%', priority: '高', status: '处理中', source: '阿里云监控', sourceIcon: 'cpu', lastUpdate: '5分钟前', isMajorIncident: false, assignee: '张三', createdAt: '2025-06-28 10:15:23' },
+    { id: 'INC-00124', title: '用户报告无法访问CRM系统', priority: '高', status: '已分配', source: '服务台', sourceIcon: 'user', lastUpdate: '25分钟前', isMajorIncident: false, assignee: '王五', createdAt: '2025-06-28 09:45:10' },
+    { id: 'INC-00123', title: '检测到可疑的SSH登录尝试 (47.98.x.x)', priority: '中', status: '处理中', source: '安全中心', sourceIcon: 'shield', lastUpdate: '1小时前', isMajorIncident: true, assignee: '赵六', createdAt: '2025-06-28 08:30:00' },
+    { id: 'INC-00122', title: '生产数据库主备同步延迟', priority: '中', status: '已解决', source: '阿里云监控', sourceIcon: 'cpu', lastUpdate: '3小时前', isMajorIncident: false, assignee: '钱七', createdAt: '2025-06-27 18:00:00' },
+    { id: 'INC-00121', title: '用户请求重置密码失败', priority: '低', status: '已关闭', source: '服务台', sourceIcon: 'user', lastUpdate: '1天前', isMajorIncident: false, assignee: '周九', createdAt: '2025-06-27 10:00:00' },
 ];
 
 // 模拟问题数据 (从 problems/[problemId]/page.tsx 复制并转换为数组)

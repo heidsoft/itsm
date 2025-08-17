@@ -35,7 +35,7 @@ import {
   CheckCircle,
   RefreshCw,
 } from "lucide-react";
-import AppLayout from "../../components/AppLayout";
+// AppLayout is handled by parent layout
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -300,13 +300,12 @@ const WorkflowAutomationPage = () => {
   });
 
   return (
-    <AppLayout
-      title="工作流自动化"
-      breadcrumb={[
-        { title: "工作流管理", href: "/workflow" },
-        { title: "工作流自动化", href: "/workflow/automation" },
-      ]}
-    >
+    <>
+      {/* 页面头部 */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">工作流自动化</h1>
+        <p className="text-gray-600 mt-1">配置和管理工作流自动化规则，提高流程效率</p>
+      </div>
       {/* 全局设置 */}
       <Card className="enterprise-card mb-6">
         <Row gutter={[16, 16]} align="middle">
@@ -687,7 +686,7 @@ const WorkflowAutomationPage = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </AppLayout>
+    </>
   );
 };
 

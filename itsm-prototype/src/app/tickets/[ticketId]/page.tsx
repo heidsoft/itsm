@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { TicketApi } from "../../lib/ticket-api";
-import { Ticket } from "../../lib/api-config";
+import { ticketService, Ticket } from "../../lib/services/ticket-service";
 import { TicketDetail } from "../../components/TicketDetail";
 import {
   ArrowLeft,

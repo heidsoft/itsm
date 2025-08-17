@@ -40,6 +40,82 @@ func (sdc *SLADefinitionCreate) SetNillableDescription(s *string) *SLADefinition
 	return sdc
 }
 
+// SetServiceType sets the "service_type" field.
+func (sdc *SLADefinitionCreate) SetServiceType(s string) *SLADefinitionCreate {
+	sdc.mutation.SetServiceType(s)
+	return sdc
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillableServiceType(s *string) *SLADefinitionCreate {
+	if s != nil {
+		sdc.SetServiceType(*s)
+	}
+	return sdc
+}
+
+// SetPriority sets the "priority" field.
+func (sdc *SLADefinitionCreate) SetPriority(s string) *SLADefinitionCreate {
+	sdc.mutation.SetPriority(s)
+	return sdc
+}
+
+// SetNillablePriority sets the "priority" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillablePriority(s *string) *SLADefinitionCreate {
+	if s != nil {
+		sdc.SetPriority(*s)
+	}
+	return sdc
+}
+
+// SetResponseTime sets the "response_time" field.
+func (sdc *SLADefinitionCreate) SetResponseTime(i int) *SLADefinitionCreate {
+	sdc.mutation.SetResponseTime(i)
+	return sdc
+}
+
+// SetNillableResponseTime sets the "response_time" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillableResponseTime(i *int) *SLADefinitionCreate {
+	if i != nil {
+		sdc.SetResponseTime(*i)
+	}
+	return sdc
+}
+
+// SetResolutionTime sets the "resolution_time" field.
+func (sdc *SLADefinitionCreate) SetResolutionTime(i int) *SLADefinitionCreate {
+	sdc.mutation.SetResolutionTime(i)
+	return sdc
+}
+
+// SetNillableResolutionTime sets the "resolution_time" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillableResolutionTime(i *int) *SLADefinitionCreate {
+	if i != nil {
+		sdc.SetResolutionTime(*i)
+	}
+	return sdc
+}
+
+// SetBusinessHours sets the "business_hours" field.
+func (sdc *SLADefinitionCreate) SetBusinessHours(m map[string]interface{}) *SLADefinitionCreate {
+	sdc.mutation.SetBusinessHours(m)
+	return sdc
+}
+
+// SetIsActive sets the "is_active" field.
+func (sdc *SLADefinitionCreate) SetIsActive(b bool) *SLADefinitionCreate {
+	sdc.mutation.SetIsActive(b)
+	return sdc
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (sdc *SLADefinitionCreate) SetNillableIsActive(b *bool) *SLADefinitionCreate {
+	if b != nil {
+		sdc.SetIsActive(*b)
+	}
+	return sdc
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (sdc *SLADefinitionCreate) SetTenantID(i int) *SLADefinitionCreate {
 	sdc.mutation.SetTenantID(i)
@@ -109,6 +185,18 @@ func (sdc *SLADefinitionCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sdc *SLADefinitionCreate) defaults() {
+	if _, ok := sdc.mutation.ResponseTime(); !ok {
+		v := sladefinition.DefaultResponseTime
+		sdc.mutation.SetResponseTime(v)
+	}
+	if _, ok := sdc.mutation.ResolutionTime(); !ok {
+		v := sladefinition.DefaultResolutionTime
+		sdc.mutation.SetResolutionTime(v)
+	}
+	if _, ok := sdc.mutation.IsActive(); !ok {
+		v := sladefinition.DefaultIsActive
+		sdc.mutation.SetIsActive(v)
+	}
 	if _, ok := sdc.mutation.CreatedAt(); !ok {
 		v := sladefinition.DefaultCreatedAt()
 		sdc.mutation.SetCreatedAt(v)
@@ -128,6 +216,25 @@ func (sdc *SLADefinitionCreate) check() error {
 		if err := sladefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.name": %w`, err)}
 		}
+	}
+	if _, ok := sdc.mutation.ResponseTime(); !ok {
+		return &ValidationError{Name: "response_time", err: errors.New(`ent: missing required field "SLADefinition.response_time"`)}
+	}
+	if v, ok := sdc.mutation.ResponseTime(); ok {
+		if err := sladefinition.ResponseTimeValidator(v); err != nil {
+			return &ValidationError{Name: "response_time", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.response_time": %w`, err)}
+		}
+	}
+	if _, ok := sdc.mutation.ResolutionTime(); !ok {
+		return &ValidationError{Name: "resolution_time", err: errors.New(`ent: missing required field "SLADefinition.resolution_time"`)}
+	}
+	if v, ok := sdc.mutation.ResolutionTime(); ok {
+		if err := sladefinition.ResolutionTimeValidator(v); err != nil {
+			return &ValidationError{Name: "resolution_time", err: fmt.Errorf(`ent: validator failed for field "SLADefinition.resolution_time": %w`, err)}
+		}
+	}
+	if _, ok := sdc.mutation.IsActive(); !ok {
+		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "SLADefinition.is_active"`)}
 	}
 	if _, ok := sdc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "SLADefinition.tenant_id"`)}
@@ -176,6 +283,30 @@ func (sdc *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSp
 	if value, ok := sdc.mutation.Description(); ok {
 		_spec.SetField(sladefinition.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if value, ok := sdc.mutation.ServiceType(); ok {
+		_spec.SetField(sladefinition.FieldServiceType, field.TypeString, value)
+		_node.ServiceType = value
+	}
+	if value, ok := sdc.mutation.Priority(); ok {
+		_spec.SetField(sladefinition.FieldPriority, field.TypeString, value)
+		_node.Priority = value
+	}
+	if value, ok := sdc.mutation.ResponseTime(); ok {
+		_spec.SetField(sladefinition.FieldResponseTime, field.TypeInt, value)
+		_node.ResponseTime = value
+	}
+	if value, ok := sdc.mutation.ResolutionTime(); ok {
+		_spec.SetField(sladefinition.FieldResolutionTime, field.TypeInt, value)
+		_node.ResolutionTime = value
+	}
+	if value, ok := sdc.mutation.BusinessHours(); ok {
+		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeJSON, value)
+		_node.BusinessHours = value
+	}
+	if value, ok := sdc.mutation.IsActive(); ok {
+		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
+		_node.IsActive = value
 	}
 	if value, ok := sdc.mutation.TenantID(); ok {
 		_spec.SetField(sladefinition.FieldTenantID, field.TypeInt, value)

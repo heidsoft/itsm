@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Edit, Eye, BookOpen, PlusCircle } from 'lucide-react';
+import { Search, Edit, Eye, BookOpen, PlusCircle } from "lucide-react";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -20,16 +20,17 @@ import {
   List,
 } from "antd";
 import { KnowledgeApi } from "../lib/knowledge-api";
+// AppLayout is handled by layout.tsx
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // 模拟知识文章数据
 // const mockArticles = [] as any[];
 
 const getCategoryColor = (category: string) => {
-  const colors = {
+  const colors: Record<string, string> = {
     账号管理: "blue",
     故障排除: "red",
     网络连接: "green",
@@ -39,13 +40,22 @@ const getCategoryColor = (category: string) => {
   return colors[category] || "default";
 };
 
+interface Article {
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  views: number;
+  content?: string;
+}
+
 const KnowledgeBaseListPage = () => {
   const [filter, setFilter] = useState("全部");
   const [searchText, setSearchText] = useState("");
   const [viewMode, setViewMode] = useState("table"); // table or card
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [articles, setArticles] = useState<any[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -62,10 +72,10 @@ const KnowledgeBaseListPage = () => {
           category: filter === "全部" ? undefined : filter,
           search: searchText || undefined,
         });
-        setArticles(resp.articles as any[]);
+        setArticles(resp.articles as unknown as Article[]);
         setTotal(resp.total);
-      } catch (e: any) {
-        setError(e?.message || "加载失败");
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "加载失败");
       } finally {
         setLoading(false);
       }
@@ -92,7 +102,7 @@ const KnowledgeBaseListPage = () => {
     {
       title: "标题",
       key: "title",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: Article) => (
         <div>
           <Link href={`/knowledge-base/${record.id}`}>
             <Text
@@ -102,20 +112,6 @@ const KnowledgeBaseListPage = () => {
               {record.title}
             </Text>
           </Link>
-          <div style={{ marginTop: 4 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {(record.content || "").slice(0, 80)}
-            </Text>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <Space wrap>
-              {(record.tags || []).map((tag: string) => (
-                <Tag key={tag} size="small">
-                  {tag}
-                </Tag>
-              ))}
-            </Space>
-          </div>
         </div>
       ),
     },
@@ -123,25 +119,27 @@ const KnowledgeBaseListPage = () => {
       title: "分类",
       dataIndex: "category",
       key: "category",
-      width: 120,
       render: (category: string) => (
         <Tag color={getCategoryColor(category)}>{category}</Tag>
       ),
     },
     {
-      title: "发布日期",
-      dataIndex: "created_at",
-      key: "created_at",
-      width: 160,
-      render: (v: string) => new Date(v).toLocaleString("zh-CN"),
+      title: "浏览量",
+      dataIndex: "views",
+      key: "views",
+      render: (views: number) => (
+        <span>
+          <Eye size={14} style={{ marginRight: 4 }} />
+          {views}
+        </span>
+      ),
     },
     {
       title: "操作",
       key: "actions",
-      width: 120,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: Article) => (
         <Space size="small">
-          <Tooltip title="查看">
+          <Tooltip title="查看详情">
             <Link href={`/knowledge-base/${record.id}`}>
               <Button type="text" size="small" icon={<Eye size={14} />} />
             </Link>
@@ -155,30 +153,19 @@ const KnowledgeBaseListPage = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* 页面头部 */}
-      <div style={{ marginBottom: 24 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              知识库
-            </Title>
-            <Text type="secondary">查找和分享IT知识，提高问题解决效率</Text>
-          </div>
-          <Link href="/knowledge-base/new">
-            <Button type="primary" icon={<PlusCircle size={16} />}>
-              新建文章
-            </Button>
-          </Link>
+    <>
+      {/* 页面头部操作 */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
+          <p className="text-gray-600 mt-1">查找和分享IT知识，提高问题解决效率</p>
         </div>
+        <Link href="/knowledge-base/new">
+          <Button type="primary" icon={<PlusCircle size={16} />}>
+            新建文章
+          </Button>
+        </Link>
       </div>
-
       <Row gutter={16}>
         {/* 左侧主要内容 */}
         <Col span={18}>
@@ -291,36 +278,57 @@ const KnowledgeBaseListPage = () => {
               <List
                 grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 3 }}
                 dataSource={articles}
-                renderItem={(article: any) => (
+                renderItem={(article: Article) => (
                   <List.Item>
                     <Card
                       hoverable
                       actions={[
                         <Link key="view" href={`/knowledge-base/${article.id}`}>
-                          <Button type="text" size="small">
-                            查看详情
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<Eye size={14} />}
+                          >
+                            查看
                           </Button>
                         </Link>,
+                        <Button
+                          key="edit"
+                          type="text"
+                          size="small"
+                          icon={<Edit size={14} />}
+                        >
+                          编辑
+                        </Button>,
                       ]}
                     >
                       <Card.Meta
                         title={
                           <Link href={`/knowledge-base/${article.id}`}>
-                            <span className="text-blue-600 hover:text-blue-800">
+                            <Text
+                              strong
+                              className="text-blue-600 hover:text-blue-800"
+                            >
                               {article.title}
-                            </span>
+                            </Text>
                           </Link>
                         }
                         description={
                           <div>
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {(article.content || "").slice(0, 80)}
+                            <Text
+                              type="secondary"
+                              style={{ display: "block", marginBottom: 8 }}
+                            >
+                              {article.summary}
                             </Text>
-                            <div style={{ marginTop: 8 }}>
-                              <Tag
-                                color={getCategoryColor(article.category)}
-                                size="small"
-                              >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Tag color={getCategoryColor(article.category)}>
                                 {article.category}
                               </Tag>
                             </div>
@@ -414,7 +422,7 @@ const KnowledgeBaseListPage = () => {
           </Card>
         </Col>
       </Row>
-    </div>
+    </>
   );
 };
 
