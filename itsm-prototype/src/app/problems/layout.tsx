@@ -7,7 +7,7 @@ export default function ProblemsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout title="问题管理" breadcrumb={[{ title: "问题管理" }]}>
+    <AppLayout>
       {children}
     </AppLayout>
   );

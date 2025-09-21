@@ -1,327 +1,477 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Users, Search, Settings, Calendar, MoreHorizontal, Building2, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Users, Search, Settings, Calendar, MoreHorizontal, Building2, AlertCircle, Edit, Eye, Trash2 } from 'lucide-react';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  Table,
+  Button,
+  Input,
+  Select,
+  Space,
+  Typography,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Statistic,
+  Badge,
+  Tooltip,
+  Popconfirm,
+  message,
+  Divider,
+  Tag,
+} from "antd";
+const { Title, Text } = Typography;
+const { Option } = Select;
+
 // 租户状态配置
 const TENANT_STATUS = {
   active: {
     label: "活跃",
-    color: "bg-green-100 text-green-800",
+    color: "success",
     icon: CheckCircle,
   },
   suspended: {
     label: "暂停",
-    color: "bg-yellow-100 text-yellow-800",
+    color: "warning",
     icon: AlertCircle,
   },
-  expired: { label: "过期", color: "bg-red-100 text-red-800", icon: XCircle },
-  trial: { label: "试用", color: "bg-blue-100 text-blue-800", icon: Clock },
+  expired: { label: "过期", color: "error", icon: AlertCircle },
+  trial: { label: "试用", color: "processing", icon: Clock },
 };
 
 // 租户类型配置
 const TENANT_TYPES = {
-  trial: { label: "试用版", color: "bg-gray-100 text-gray-800" },
-  standard: { label: "标准版", color: "bg-blue-100 text-blue-800" },
-  professional: { label: "专业版", color: "bg-purple-100 text-purple-800" },
-  enterprise: { label: "企业版", color: "bg-gold-100 text-gold-800" },
+  trial: { label: "试用版", color: "default" },
+  standard: { label: "标准版", color: "blue" },
+  professional: { label: "专业版", color: "purple" },
+  enterprise: { label: "企业版", color: "gold" },
 };
 
-// 模拟租户数据
-const mockTenants = [
-  {
-    id: 1,
-    name: "阿里巴巴集团",
-    code: "alibaba",
-    domain: "alibaba.itsm.com",
-    type: "enterprise",
-    status: "active",
-    userCount: 1250,
-    ticketCount: 8934,
-    createdAt: "2024-01-15",
-    expiresAt: "2025-01-15",
-    quota: {
-      maxUsers: 2000,
-      maxTickets: 50000,
-      storage: "100GB",
-    },
-  },
-  {
-    id: 2,
-    name: "腾讯科技",
-    code: "tencent",
-    domain: "tencent.itsm.com",
-    type: "enterprise",
-    status: "active",
-    userCount: 980,
-    ticketCount: 6721,
-    createdAt: "2024-02-01",
-    expiresAt: "2025-02-01",
-    quota: {
-      maxUsers: 1500,
-      maxTickets: 30000,
-      storage: "80GB",
-    },
-  },
-  {
-    id: 3,
-    name: "字节跳动",
-    code: "bytedance",
-    domain: "bytedance.itsm.com",
-    type: "professional",
-    status: "trial",
-    userCount: 156,
-    ticketCount: 892,
-    createdAt: "2024-03-10",
-    expiresAt: "2024-04-10",
-    quota: {
-      maxUsers: 500,
-      maxTickets: 10000,
-      storage: "20GB",
-    },
-  },
-];
+// 引入租户API
+import { TenantAPI } from "../../lib/tenant-api";
 
-const TenantManagement = () => {
-  const [tenants, setTenants] = useState(mockTenants);
+export default function TenantManagement() {
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<any>(null);
+  const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState(null);
-
-  // 过滤租户
-  const filteredTenants = tenants.filter((tenant) => {
-    const matchesSearch =
-      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || tenant.status === statusFilter;
-    const matchesType = typeFilter === "all" || tenant.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    suspended: 0,
+    trial: 0,
   });
 
-  // 统计数据
-  const stats = {
-    total: tenants.length,
-    active: tenants.filter((t) => t.status === "active").length,
-    trial: tenants.filter((t) => t.status === "trial").length,
-    suspended: tenants.filter((t) => t.status === "suspended").length,
+  // 加载租户数据
+  const loadTenants = async () => {
+    setLoading(true);
+    try {
+      const response = await TenantAPI.getTenants({
+        search: searchTerm || undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        type: typeFilter !== "all" ? typeFilter : undefined,
+      });
+      
+      setTenants(response.tenants);
+      
+      // 计算统计数据
+      const total = response.tenants.length;
+      const active = response.tenants.filter(t => t.status === "active").length;
+      const suspended = response.tenants.filter(t => t.status === "suspended").length;
+      const trial = response.tenants.filter(t => t.status === "trial").length;
+      
+      setStats({
+        total,
+        active,
+        suspended,
+        trial,
+      });
+    } catch (error) {
+      console.error("加载租户数据失败:", error);
+      message.error("加载租户数据失败");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* 页面头部 */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">租户管理</h1>
-          <p className="text-gray-600 mt-1">管理系统中的所有租户和订阅</p>
+  // 初始化加载数据
+  useEffect(() => {
+    loadTenants();
+  }, [searchTerm, statusFilter, typeFilter]);
+
+  // 处理保存租户
+  const handleSaveTenant = async () => {
+    try {
+      const values = await form.validateFields();
+      
+      if (selectedTenant) {
+        // 更新租户
+        await TenantAPI.updateTenant(selectedTenant.id, values);
+        message.success("租户更新成功");
+      } else {
+        // 创建租户
+        await TenantAPI.createTenant(values);
+        message.success("租户创建成功");
+      }
+      
+      setShowModal(false);
+      form.resetFields();
+      setSelectedTenant(null);
+      loadTenants(); // 重新加载数据
+    } catch (error) {
+      console.error("保存租户失败:", error);
+      message.error("保存租户失败");
+    }
+  };
+
+  // 处理删除租户
+  const handleDeleteTenant = async (id: number) => {
+    try {
+      await TenantAPI.deleteTenant(id);
+      message.success("租户删除成功");
+      loadTenants(); // 重新加载数据
+    } catch (error) {
+      console.error("删除租户失败:", error);
+      message.error("删除租户失败");
+    }
+  };
+
+  // 表格列定义
+  const columns = [
+    {
+      title: "租户信息",
+      key: "info",
+      render: (_: any, record: any) => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+            <Building2 className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="ml-4">
+            <div className="text-sm font-medium text-gray-900">{record.name}</div>
+            <div className="text-sm text-gray-500">{record.code} • {record.domain}</div>
+          </div>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          新建租户
-        </button>
+      ),
+    },
+    {
+      title: "类型/状态",
+      key: "type-status",
+      render: (_: any, record: any) => (
+        <div className="space-y-1">
+          <Tag color={TENANT_TYPES[record.type]?.color || "default"}>
+            {TENANT_TYPES[record.type]?.label || record.type}
+          </Tag>
+          <div className="flex items-center">
+            <Tag color={TENANT_STATUS[record.status]?.color || "default"}>
+              {TENANT_STATUS[record.status]?.label || record.status}
+            </Tag>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "资源使用",
+      key: "usage",
+      render: (_: any, record: any) => (
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <Users className="w-4 h-4 mr-1 text-gray-400" />
+            <span>
+              {record.userCount || 0} 用户
+            </span>
+          </div>
+          <div className="text-xs text-gray-500">
+            {record.ticketCount || 0} 工单
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "到期时间",
+      key: "expires",
+      dataIndex: "expires_at",
+      render: (expiresAt: string) => (
+        <div className="flex items-center">
+          <Calendar className="w-4 h-4 mr-1 text-gray-400" />
+          {expiresAt ? new Date(expiresAt).toLocaleDateString() : "无"}
+        </div>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      width: 120,
+      render: (_: any, record: any) => (
+        <Space size="small">
+          <Tooltip title="编辑">
+            <Button
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedTenant(record);
+                form.setFieldsValue(record);
+                setShowModal(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="查看">
+            <Button
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedTenant(record);
+                form.setFieldsValue(record);
+                setShowModal(true);
+              }}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="确认删除"
+            description="确定要删除这个租户吗？此操作不可恢复。"
+            onConfirm={() => handleDeleteTenant(record.id)}
+            okText="确认"
+            cancelText="取消"
+          >
+            <Tooltip title="删除">
+              <Button
+                type="text"
+                danger
+                icon={<Trash2 className="w-4 h-4" />}
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Building2 className="inline-block w-6 h-6 mr-2" />
+          租户管理
+        </Title>
+        <Text type="secondary">管理系统中的租户和组织</Text>
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">总租户数</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            </div>
-            <Building2 className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">活跃租户</p>
-              <p className="text-2xl font-bold text-green-600">
-                {stats.active}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">试用租户</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.trial}</p>
-            </div>
-            <Clock className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">暂停租户</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {stats.suspended}
-              </p>
-            </div>
-            <AlertCircle className="w-8 h-8 text-yellow-600" />
-          </div>
-        </div>
-      </div>
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="总租户数"
+              value={stats.total}
+              prefix={<Building2 className="w-5 h-5" />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="活跃租户"
+              value={stats.active}
+              prefix={<CheckCircle className="w-5 h-5" />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="暂停租户"
+              value={stats.suspended}
+              prefix={<AlertCircle className="w-5 h-5" />}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="enterprise-card">
+            <Statistic
+              title="试用租户"
+              value={stats.trial}
+              prefix={<Clock className="w-5 h-5" />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
       {/* 搜索和过滤 */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="搜索租户名称或代码..."
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} md={12} lg={8}>
+            <Input
+              placeholder="搜索租户名称、编码或域名..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              allowClear
             />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">所有状态</option>
-            <option value="active">活跃</option>
-            <option value="trial">试用</option>
-            <option value="suspended">暂停</option>
-            <option value="expired">过期</option>
-          </select>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">所有类型</option>
-            <option value="trial">试用版</option>
-            <option value="standard">标准版</option>
-            <option value="professional">专业版</option>
-            <option value="enterprise">企业版</option>
-          </select>
-        </div>
-      </div>
+          </Col>
+          <Col xs={24} md={8} lg={4}>
+            <Select
+              placeholder="筛选状态"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部状态</Option>
+              <Option value="active">活跃</Option>
+              <Option value="suspended">暂停</Option>
+              <Option value="expired">过期</Option>
+              <Option value="trial">试用</Option>
+            </Select>
+          </Col>
+          <Col xs={24} md={8} lg={4}>
+            <Select
+              placeholder="筛选类型"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              style={{ width: "100%" }}
+            >
+              <Option value="all">全部类型</Option>
+              <Option value="trial">试用版</Option>
+              <Option value="standard">标准版</Option>
+              <Option value="professional">专业版</Option>
+              <Option value="enterprise">企业版</Option>
+            </Select>
+          </Col>
+          <Col xs={24} md={4} lg={8} className="text-right">
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => {
+                setSelectedTenant(null);
+                form.resetFields();
+                setShowModal(true);
+              }}
+            >
+              新建租户
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
       {/* 租户列表 */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  租户信息
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  类型/状态
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  使用情况
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  到期时间
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTenants.map((tenant) => {
-                const StatusIcon =
-                  TENANT_STATUS[tenant.status]?.icon || AlertCircle;
-                return (
-                  <tr key={tenant.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <Building2 className="w-5 h-5 text-blue-600" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {tenant.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {tenant.code} • {tenant.domain}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="space-y-1">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            TENANT_TYPES[tenant.type]?.color ||
-                            "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {TENANT_TYPES[tenant.type]?.label || tenant.type}
-                        </span>
-                        <div className="flex items-center">
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              TENANT_STATUS[tenant.status]?.color ||
-                              "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {TENANT_STATUS[tenant.status]?.label ||
-                              tenant.status}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="space-y-1">
-                        <div className="flex items-center">
-                          <Users className="w-4 h-4 mr-1 text-gray-400" />
-                          <span>
-                            {tenant.userCount}/{tenant.quota.maxUsers} 用户
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {tenant.ticketCount} 工单 • {tenant.quota.storage}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                        {tenant.expiresAt}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedTenant(tenant);
-                            setShowModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Settings className="w-4 h-4" />
-                        </button>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card className="enterprise-card">
+        <Table
+          columns={columns}
+          dataSource={tenants}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            total: tenants.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
+          className="enterprise-table"
+        />
+      </Card>
+
+      {/* 租户编辑模态框 */}
+      <Modal
+        title={
+          <span>
+            {selectedTenant ? (
+              <>
+                <Edit className="w-4 h-4 mr-2" />
+                编辑租户
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                新建租户
+              </>
+            )}
+          </span>
+        }
+        open={showModal}
+        onOk={handleSaveTenant}
+        onCancel={() => {
+          setShowModal(false);
+          setSelectedTenant(null);
+          form.resetFields();
+        }}
+        width={600}
+        confirmLoading={loading}
+        okText="保存"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item
+            label="租户名称"
+            name="name"
+            rules={[{ required: true, message: "请输入租户名称" }]}
+          >
+            <Input placeholder="请输入租户名称" />
+          </Form.Item>
+          
+          <Form.Item
+            label="租户编码"
+            name="code"
+            rules={[{ required: true, message: "请输入租户编码" }]}
+          >
+            <Input placeholder="请输入租户编码" />
+          </Form.Item>
+          
+          <Form.Item
+            label="域名"
+            name="domain"
+          >
+            <Input placeholder="请输入域名" />
+          </Form.Item>
+          
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="租户类型"
+                name="type"
+                rules={[{ required: true, message: "请选择租户类型" }]}
+              >
+                <Select placeholder="请选择租户类型">
+                  <Option value="trial">试用版</Option>
+                  <Option value="standard">标准版</Option>
+                  <Option value="professional">专业版</Option>
+                  <Option value="enterprise">企业版</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            
+            <Col span={12}>
+              <Form.Item
+                label="状态"
+                name="status"
+                rules={[{ required: true, message: "请选择状态" }]}
+              >
+                <Select placeholder="请选择状态">
+                  <Option value="active">活跃</Option>
+                  <Option value="suspended">暂停</Option>
+                  <Option value="expired">过期</Option>
+                  <Option value="trial">试用</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          
+          <Form.Item
+            label="到期时间"
+            name="expires_at"
+          >
+            <Input type="date" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
-};
-
-export default TenantManagement;
+}

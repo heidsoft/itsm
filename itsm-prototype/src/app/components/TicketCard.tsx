@@ -7,9 +7,6 @@ import {
   Info,
   ChevronsDown,
   Clock,
-  User,
-  Calendar,
-  Tag,
 } from "lucide-react";
 
 const priorityConfig = {
@@ -24,7 +21,16 @@ const playAlertSound = () => {
   audio.play().catch((e) => console.error("Error playing sound:", e));
 };
 
-export const TicketCard = ({
+interface TicketCardProps {
+  id: string | number;
+  title: string;
+  status: string;
+  priority: "P1" | "P2" | "P3" | "P4";
+  lastUpdate: string;
+  type?: string;
+}
+
+export const TicketCard: React.FC<TicketCardProps> = ({
   id,
   title,
   status,
@@ -35,7 +41,7 @@ export const TicketCard = ({
   const config = priorityConfig[priority] || priorityConfig.P4; // 默认P4
   const Icon = config.icon;
 
-  const cardRef = useRef(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (priority === "P1") {

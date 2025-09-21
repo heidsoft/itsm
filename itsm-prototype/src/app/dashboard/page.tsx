@@ -1,302 +1,353 @@
 "use client";
 
-import React, { useState } from "react";
-// AppLayout is handled by layout.tsx
-import { AIMetrics } from "../components/AIMetrics";
-import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Progress,
-  Alert,
-  List,
-  Tag,
-  Timeline,
-  Button,
-} from "antd";
-import {
-  Users,
-  Clock,
-  CheckCircle,
-  Activity,
-  BarChart3,
-  FileText,
-  AlertTriangle,
-  Settings,
-} from "lucide-react";
+import React from "react";
+import { Card, Row, Col, Typography, Space, Button, Progress } from 'antd';
+import { 
+  RefreshCw, 
+  Settings, 
+  FileText, 
+  AlertTriangle, 
+  Users, 
+  Clock, 
+  Activity, 
+  CheckCircle, 
+  TrendingUp, 
+  TrendingDown
+} from 'lucide-react';
+import { useDashboardData } from "../hooks/useDashboardData";
+import ErrorBoundary from "../components/common/ErrorBoundary";
+import LoadingStateManager from "../components/common/LoadingStateManager";
+
+const { Title, Text } = Typography;
 
 export default function DashboardPage() {
-  const [systemAlerts] = useState([
-    {
-      type: "warning",
-      message: "系统负载较高，建议检查服务器状态",
-      time: "2分钟前",
-    },
-    {
-      type: "info",
-      message: "数据库备份已完成",
-      time: "5分钟前",
-    },
-  ]);
+  const { 
+    data, 
+    loading, 
+    error, 
+    refreshData, 
+    lastUpdated,
+    retryCount
+  } = useDashboardData();
 
-  const [recentTickets] = useState([
+  // KPI数据
+  const kpiData = [
     {
-      id: "T-2024-001",
-      title: "网络连接异常",
-      priority: "high",
-      status: "processing",
-      assignee: "张三",
-      time: "10分钟前",
+      title: "总工单数",
+      value: data?.kpiData?.totalTickets?.value || 0,
+      change: data?.kpiData?.totalTickets?.change || 0,
+      trend: data?.kpiData?.totalTickets?.trend || 'up',
+      icon: FileText,
+      color: "#1890ff"
     },
     {
-      id: "T-2024-002",
-      title: "软件安装失败",
-      priority: "medium",
-      status: "pending",
-      assignee: "李四",
-      time: "30分钟前",
+      title: "待处理事件",
+      value: data?.kpiData?.pendingEvents?.value || 0,
+      change: data?.kpiData?.pendingEvents?.change || 0,
+      trend: data?.kpiData?.pendingEvents?.trend || 'down',
+      icon: AlertTriangle,
+      color: "#ff4d4f"
     },
     {
-      id: "T-2024-003",
-      title: "权限申请",
-      priority: "low",
-      status: "resolved",
-      assignee: "王五",
-      time: "1小时前",
-    },
-  ]);
-
-  const [recentActivities] = useState([
-    {
-      operator: "张三",
-      action: "处理了工单",
-      target: "T-2024-001",
-      time: "10分钟前",
+      title: "活跃用户",
+      value: data?.kpiData?.activeUsers?.value || 0,
+      change: data?.kpiData?.activeUsers?.change || 0,
+      trend: data?.kpiData?.activeUsers?.trend || 'up',
+      icon: Users,
+      color: "#52c41a"
     },
     {
-      operator: "系统",
-      action: "自动分配工单",
-      target: "T-2024-002",
-      time: "30分钟前",
-    },
-    {
-      operator: "李四",
-      action: "更新了配置",
-      target: "数据库配置",
-      time: "1小时前",
-    },
-  ]);
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "red";
-      case "medium":
-        return "orange";
-      case "low":
-        return "blue";
-      default:
-        return "default";
+      title: "平均响应时间",
+      value: data?.kpiData?.avgResponseTime?.value || 0,
+      change: data?.kpiData?.avgResponseTime?.change || 0,
+      trend: data?.kpiData?.avgResponseTime?.trend || 'down',
+      icon: Clock,
+      color: "#faad14",
+      suffix: "min"
     }
-  };
+  ];
 
   return (
-    <>
-      {/* 系统状态 */}
-      {systemAlerts.length > 0 && (
-        <Alert
-          message="系统状态"
-          description="当前系统运行状态良好，但有需要注意的事项"
-          type="info"
-          showIcon
-          className="mb-6"
-        />
-      )}
+    <ErrorBoundary>
+      <LoadingStateManager
+        loading={loading}
+        error={error}
+        onRetry={refreshData}
+        retryCount={retryCount}
+      >
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto p-6 space-y-8">
+            {/* 页面标题 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Title level={2} className="mb-2 text-gray-800">
+                  仪表盘
+                </Title>
+                <Text className="text-gray-500">
+                  系统概览和关键指标监控
+                  {lastUpdated && (
+                    <span className="ml-2">
+                      · 最后更新: {new Date(lastUpdated).toLocaleTimeString()}
+                    </span>
+                  )}
+                </Text>
+              </div>
+              <Space>
+                <Button 
+                  icon={<RefreshCw size={16} />} 
+                  onClick={refreshData}
+                  loading={loading}
+                >
+                  刷新
+                </Button>
+                <Button 
+                  icon={<Settings size={16} />} 
+                  type="default"
+                >
+                  设置
+                </Button>
+              </Space>
+            </div>
 
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总工单数"
-              value={1128}
-              prefix={<FileText size={20} className="text-blue-500" />}
-              valueStyle={{ color: "#3f8600" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="待处理事件"
-              value={93}
-              prefix={<AlertTriangle size={20} className="text-red-500" />}
-              valueStyle={{ color: "#cf1322" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="活跃用户"
-              value={256}
-              prefix={<Users size={20} className="text-green-500" />}
-              valueStyle={{ color: "#1890ff" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="平均响应时间"
-              value="2.5"
-              suffix="小时"
-              prefix={<Clock size={20} className="text-purple-500" />}
-              valueStyle={{ color: "#722ed1" }}
-            />
-          </Card>
-        </Col>
-      </Row>
+            {/* KPI 指标卡片 */}
+            <Row gutter={[24, 24]}>
+              {kpiData.map((kpi, index) => {
+                const IconComponent = kpi.icon;
+                return (
+                  <Col xs={24} sm={12} lg={6} key={index}>
+                    <Card 
+                      className="h-full border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-white"
+                      bodyStyle={{ padding: '24px' }}
+                    >
+                      {/* 图标和标题 */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div 
+                            className="w-12 h-12 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: `${kpi.color}15` }}
+                          >
+                            <IconComponent 
+                              size={24} 
+                              style={{ color: kpi.color }}
+                            />
+                          </div>
+                          <div>
+                            <Text className="text-sm text-gray-500 font-medium block">
+                              {kpi.title}
+                            </Text>
+                          </div>
+                        </div>
+                        {kpi.trend === 'up' ? (
+                          <TrendingUp size={20} className="text-green-500" />
+                        ) : (
+                          <TrendingDown size={20} className="text-red-500" />
+                        )}
+                      </div>
+                      
+                      {/* 数值显示 */}
+                      <div className="mb-4">
+                        <div className="flex items-baseline space-x-2">
+                          <span 
+                            className="text-3xl font-bold"
+                            style={{ color: kpi.color }}
+                          >
+                            {kpi.value.toLocaleString()}
+                          </span>
+                          {kpi.suffix && (
+                            <span className="text-lg text-gray-400 font-medium">
+                              {kpi.suffix}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* 变化百分比 */}
+                      <div className="flex items-center justify-between">
+                        <span 
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+                            kpi.trend === 'up' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {kpi.change > 0 ? '+' : ''}{kpi.change}%
+                        </span>
+                        <Text className="text-xs text-gray-400 font-medium">
+                          较上月
+                        </Text>
+                      </div>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
 
-      <Row gutter={[16, 16]}>
-        {/* 最近工单 */}
-        <Col xs={24} lg={12}>
-          <Card title="最近工单" className="h-full">
-            <List
-              dataSource={recentTickets}
-              renderItem={(item) => (
-                <List.Item>
-                  <div className="flex items-center justify-between w-full">
+            {/* 主要内容区域 */}
+            <Row gutter={[32, 32]}>
+              {/* 系统状态 */}
+              <Col xs={24} lg={12}>
+                <Card 
+                  title={(
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                          <Activity size={20} className="text-blue-600" />
+                        </div>
+                        <div>
+                          <Title level={4} className="mb-0 text-gray-800">系统状态</Title>
+                          <Text className="text-xs text-gray-500">实时监控</Text>
+                        </div>
+                      </div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+                    </div>
+                  )}
+                  className="h-full border-0 shadow-sm hover:shadow-md transition-shadow duration-300"
+                  styles={{
+                    header: { 
+                      borderBottom: '1px solid #f0f0f0',
+                      paddingBottom: '16px',
+                      marginBottom: '8px'
+                    }
+                  }}
+                >
+                  <div className="space-y-8">
+                    <div className="relative">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                          <Text className="font-semibold text-gray-700">CPU 使用率</Text>
+                        </div>
+                        <div className="text-right">
+                          <Text className="text-2xl font-bold text-blue-600">65</Text>
+                          <Text className="text-sm text-gray-400 ml-1">%</Text>
+                        </div>
+                      </div>
+                      <Progress 
+                        percent={65} 
+                        strokeColor={{
+                          '0%': '#1890ff',
+                          '100%': '#40a9ff',
+                        }}
+                        trailColor="#f0f0f0"
+                        size={8}
+                        showInfo={false}
+                        className="mb-2"
+                      />
+                      <Text className="text-xs text-gray-400">正常范围: 0-80%</Text>
+                    </div>
+                    
+                    <div className="relative">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full" />
+                          <Text className="font-semibold text-gray-700">内存使用率</Text>
+                        </div>
+                        <div className="text-right">
+                          <Text className="text-2xl font-bold text-green-600">78</Text>
+                          <Text className="text-sm text-gray-400 ml-1">%</Text>
+                        </div>
+                      </div>
+                      <Progress 
+                        percent={78} 
+                        strokeColor={{
+                          '0%': '#52c41a',
+                          '100%': '#73d13d',
+                        }}
+                        trailColor="#f0f0f0"
+                        size={8}
+                        showInfo={false}
+                        className="mb-2"
+                      />
+                      <Text className="text-xs text-gray-400">正常范围: 0-85%</Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              {/* SLA 合规性 */}
+              <Col xs={24} lg={12}>
+                <Card 
+                  title={(
                     <div className="flex items-center space-x-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">
-                          {item.title}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {item.id} • {item.assignee}
-                        </span>
+                      <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                        <CheckCircle size={20} className="text-green-600" />
+                      </div>
+                      <div>
+                        <Title level={4} className="mb-0 text-gray-800">SLA 合规性</Title>
+                        <Text className="text-xs text-gray-500">服务水平协议</Text>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Tag color={getPriorityColor(item.priority)}>
-                        {item.priority}
-                      </Tag>
-                      <span className="text-xs text-gray-400">{item.time}</span>
+                  )}
+                  className="h-full border-0 shadow-sm hover:shadow-md transition-shadow duration-300"
+                  styles={{
+                    header: { 
+                      borderBottom: '1px solid #f0f0f0',
+                      paddingBottom: '16px',
+                      marginBottom: '8px'
+                    }
+                  }}
+                >
+                  <div className="space-y-6">
+                    <div className="relative p-5 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-100 hover:shadow-sm transition-all duration-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Activity size={24} className="text-blue-600" />
+                          </div>
+                          <div>
+                            <Text className="font-semibold text-gray-700 block">解决时间</Text>
+                            <Text className="text-xs text-gray-500">&lt; 24小时</Text>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold text-blue-600">95.2</div>
+                          <Text className="text-sm text-gray-500">%</Text>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Progress 
+                          percent={95.2} 
+                          strokeColor="#1890ff" 
+                          trailColor="#f0f0f0"
+                          size={6}
+                          showInfo={false}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="relative p-5 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-100 hover:shadow-sm transition-all duration-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                            <CheckCircle size={24} className="text-purple-600" />
+                          </div>
+                          <div>
+                            <Text className="font-semibold text-gray-700 block">系统可用性</Text>
+                            <Text className="text-xs text-gray-500">7×24小时</Text>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold text-purple-600">99.9</div>
+                          <Text className="text-sm text-gray-500">%</Text>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <Progress 
+                          percent={99.9} 
+                          strokeColor="#722ed1" 
+                          trailColor="#f0f0f0"
+                          size={6}
+                          showInfo={false}
+                        />
+                      </div>
                     </div>
                   </div>
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-
-        {/* 最近活动 */}
-        <Col xs={24} lg={12}>
-          <Card title="最近活动" className="h-full">
-            <Timeline
-              items={recentActivities.map((activity) => ({
-                children: (
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900">
-                      {activity.operator}
-                    </span>
-                    <span className="text-gray-600">{activity.action}</span>
-                    <span className="text-blue-600">{activity.target}</span>
-                    <span className="text-xs text-gray-400">
-                      {activity.time}
-                    </span>
-                  </div>
-                ),
-              }))}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} className="mt-6">
-        {/* 系统性能 */}
-        <Col xs={24} lg={12}>
-          <Card title="系统性能">
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">CPU 使用率</span>
-                  <span className="text-sm text-gray-500">65%</span>
-                </div>
-                <Progress percent={65} strokeColor="#52c41a" />
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">内存使用率</span>
-                  <span className="text-sm text-gray-500">78%</span>
-                </div>
-                <Progress percent={78} strokeColor="#1890ff" />
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">磁盘使用率</span>
-                  <span className="text-sm text-gray-500">45%</span>
-                </div>
-                <Progress percent={45} strokeColor="#722ed1" />
-              </div>
-            </div>
-          </Card>
-        </Col>
-
-        {/* SLA监控 */}
-        <Col xs={24} lg={12}>
-          <Card title="SLA监控">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle size={16} className="text-green-500" />
-                  <span className="text-sm">响应时间 SLA</span>
-                </div>
-                <span className="text-sm font-medium text-green-600">
-                  98.5%
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Activity size={16} className="text-blue-500" />
-                  <span className="text-sm">解决时间 SLA</span>
-                </div>
-                <span className="text-sm font-medium text-blue-600">95.2%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <BarChart3 size={16} className="text-purple-500" />
-                  <span className="text-sm">可用性 SLA</span>
-                </div>
-                <span className="text-sm font-medium text-purple-600">
-                  99.9%
-                </span>
-              </div>
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* AI 使用指标 */}
-      <Row gutter={[16, 16]} className="mt-6">
-        <Col xs={24}>
-          <AIMetrics />
-        </Col>
-      </Row>
-
-      {/* 快速操作 */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="text-lg font-medium mb-4">快速操作</h3>
-        <div className="flex flex-wrap gap-3">
-          <Button type="primary" icon={<FileText size={16} />}>
-            创建工单
-          </Button>
-          <Button icon={<AlertTriangle size={16} />}>报告事件</Button>
-          <Button icon={<Settings size={16} />}>系统设置</Button>
-          <Button icon={<BarChart3 size={16} />}>查看报表</Button>
+                </Card>
+              </Col>
+            </Row>
+          </div>
         </div>
-      </div>
-    </>
+      </LoadingStateManager>
+    </ErrorBoundary>
   );
 }

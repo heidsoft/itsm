@@ -7,7 +7,7 @@ export default function ChangesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout title="变更管理" breadcrumb={[{ title: "变更管理" }]}>
+    <AppLayout>
       {children}
     </AppLayout>
   );

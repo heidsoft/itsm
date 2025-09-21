@@ -7,6 +7,7 @@ import {
   XCircle,
   AlertCircle,
   BarChart3,
+  MoreHorizontal
 } from "lucide-react";
 
 import React, { useState, useEffect } from "react";
@@ -23,6 +24,9 @@ import {
   theme,
   Typography,
   Tag,
+  Space,
+  Badge,
+  Progress,
 } from "antd";
 // AppLayout is handled by layout.tsx
 
@@ -50,232 +54,341 @@ const mockSLAs = [
   },
   {
     id: "SLA-003",
-    name: "云资源申请交付时间",
-    service: "云资源服务",
-    target: "90% 2工作日内交付",
-    actual: "88%",
-    status: "违约",
-    lastReview: "2025-06-20",
+    name: "核心数据库性能",
+    service: "数据库服务",
+    target: "99.95% 可用性",
+    actual: "99.97%",
+    status: "优秀",
+    lastReview: "2025-06-10",
   },
   {
     id: "SLA-004",
-    name: "邮件服务可用性",
-    service: "邮件服务",
+    name: "网络连接稳定性",
+    service: "网络服务",
     target: "99.99% 可用性",
     actual: "99.99%",
-    status: "达标",
+    status: "优秀",
     lastReview: "2025-06-05",
   },
 ];
 
-const SLAListPage = () => {
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case "优秀":
+      return {
+        color: "#52c41a",
+        text: "优秀",
+        backgroundColor: "#f6ffed",
+      };
+    case "达标":
+      return {
+        color: "#1890ff",
+        text: "达标",
+        backgroundColor: "#e6f7ff",
+      };
+    case "轻微违约":
+      return {
+        color: "#fa8c16",
+        text: "轻微违约",
+        backgroundColor: "#fff7e6",
+      };
+    case "严重违约":
+      return {
+        color: "#ff4d4f",
+        text: "严重违约",
+        backgroundColor: "#fff2f0",
+      };
+    default:
+      return {
+        color: "#00000073",
+        text: status,
+        backgroundColor: "#fafafa",
+      };
+  }
+};
+
+export default function SLAPage() {
   const { token } = theme.useToken();
-  const [filter, setFilter] = useState("全部");
+  const [slas, setSlas] = useState(mockSLAs);
+  const [loading, setLoading] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [searchText, setSearchText] = useState("");
+
+  // 统计数据
   const [stats, setStats] = useState({
     total: 0,
+    excellent: 0,
     compliant: 0,
-    warning: 0,
-    violation: 0,
+    violated: 0,
   });
 
   useEffect(() => {
-    // 计算统计数据
-    const total = mockSLAs.length;
-    const compliant = mockSLAs.filter((sla) => sla.status === "达标").length;
-    const warning = mockSLAs.filter((sla) => sla.status === "轻微违约").length;
-    const violation = mockSLAs.filter((sla) => sla.status === "违约").length;
-
-    setStats({ total, compliant, warning, violation });
+    loadSLAs();
+    loadStats();
   }, []);
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      达标: "success",
-      轻微违约: "warning",
-      违约: "error",
-    };
-    return colors[status as keyof typeof colors] || "default";
+  const loadSLAs = async () => {
+    setLoading(true);
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setSlas(mockSLAs);
+    } catch (error) {
+      console.error("加载SLA数据失败:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredSLAs = mockSLAs.filter((sla) => {
-    if (filter !== "全部" && sla.status !== filter) return false;
-    if (
-      searchText &&
-      !sla.name.toLowerCase().includes(searchText.toLowerCase()) &&
-      !sla.service.toLowerCase().includes(searchText.toLowerCase())
-    )
-      return false;
-    return true;
-  });
+  const loadStats = async () => {
+    try {
+      // 模拟统计数据
+      setStats({
+        total: 12,
+        excellent: 7,
+        compliant: 4,
+        violated: 1,
+      });
+    } catch (error) {
+      console.error("加载统计数据失败:", error);
+    }
+  };
 
+  const handleCreateSLA = () => {
+    window.location.href = "/sla/new";
+  };
+
+  // 渲染统计卡片
+  const renderStatsCards = () => (
+    <div style={{ marginBottom: 24 }}>
+      <Row gutter={16}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="SLA总数"
+              value={stats.total}
+              prefix={<BarChart3 size={16} style={{ color: "#1890ff" }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="优秀"
+              value={stats.excellent}
+              valueStyle={{ color: "#52c41a" }}
+              prefix={<CheckCircle size={16} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="达标"
+              value={stats.compliant}
+              valueStyle={{ color: "#1890ff" }}
+              prefix={<CheckCircle size={16} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="违约"
+              value={stats.violated}
+              valueStyle={{ color: "#ff4d4f" }}
+              prefix={<XCircle size={16} />}
+            />
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
+
+  // 渲染筛选器
+  const renderFilters = () => (
+    <Card style={{ marginBottom: 24 }}>
+      <Row gutter={20} align="middle">
+        <Col xs={24} sm={12} md={8}>
+          <Input.Search
+            placeholder="搜索SLA名称或服务..."
+            allowClear
+            onSearch={(value) => setSearchText(value)}
+            size="large"
+            enterButton
+          />
+        </Col>
+        <Col xs={24} sm={12} md={4}>
+          <Button
+            icon={<Search size={20} />}
+            onClick={loadSLAs}
+            loading={loading}
+            size="large"
+            style={{ width: "100%" }}
+          >
+            刷新
+          </Button>
+        </Col>
+        <Col xs={24} sm={12} md={4}>
+          <Button
+            type="primary"
+            icon={<Plus size={20} />}
+            size="large"
+            style={{ width: "100%" }}
+            onClick={handleCreateSLA}
+          >
+            新建SLA
+          </Button>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  // 渲染SLA列表
+  const renderSLAList = () => (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <div>
+          {selectedRowKeys.length > 0 && (
+            <Badge count={selectedRowKeys.length} showZero style={{ backgroundColor: "#1890ff" }} />
+          )}
+        </div>
+      </div>
+
+      <Table
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+        }}
+        columns={columns}
+        dataSource={slas}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+        }}
+        scroll={{ x: 1000 }}
+      />
+    </div>
+  );
+
+  // 表格列定义
   const columns = [
     {
-      title: "SLA ID",
-      dataIndex: "id",
-      key: "id",
-      width: 120,
-      render: (id: string) => (
-        <Link
-          href={`/sla/${id}`}
-          style={{ color: token.colorPrimary, fontWeight: 600 }}
-        >
-          {id}
-        </Link>
+      title: "SLA信息",
+      key: "sla_info",
+      width: 300,
+      render: (_: unknown, record: any) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ width: 40, height: 40, backgroundColor: "#e6f7ff", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+            <BarChart3 size={20} style={{ color: "#1890ff" }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: "medium", color: "#000", marginBottom: 4 }}>{record.name}</div>
+            <div style={{ fontSize: "small", color: "#666" }}>
+              服务: {record.service}
+            </div>
+          </div>
+        </div>
       ),
     },
     {
-      title: "SLA 名称",
-      dataIndex: "name",
-      key: "name",
-      ellipsis: true,
-      render: (name: string) => (
-        <Text strong style={{ color: token.colorText }}>
-          {name}
-        </Text>
-      ),
-    },
-    {
-      title: "服务对象",
-      dataIndex: "service",
-      key: "service",
-      width: 150,
-      render: (service: string) => <Tag color="blue">{service}</Tag>,
-    },
-    {
-      title: "目标",
+      title: "目标值",
       dataIndex: "target",
       key: "target",
-      width: 180,
+      width: 200,
+      render: (target: string) => (
+        <div style={{ fontSize: "small" }}>{target}</div>
+      ),
     },
     {
-      title: "实际达成",
+      title: "实际值",
       dataIndex: "actual",
       key: "actual",
-      width: 120,
-      render: (actual: string) => <Text strong>{actual}</Text>,
+      width: 150,
+      render: (actual: string) => (
+        <div style={{ fontSize: "small" }}>{actual}</div>
+      ),
     },
     {
       title: "状态",
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
+      render: (status: string) => {
+        const config = getStatusConfig(status);
+        return (
+          <span
+            style={{
+              padding: "4px 12px",
+              borderRadius: 16,
+              fontSize: "small",
+              fontWeight: 500,
+              color: config.color,
+              backgroundColor: config.backgroundColor,
+            }}
+          >
+            {config.text}
+          </span>
+        );
+      },
+    },
+    {
+      title: "达成率",
+      key: "achievement",
+      width: 150,
+      render: (_: unknown, record: any) => {
+        // 简单计算达成率，实际应根据具体数据计算
+        const rate = record.status === "优秀" ? 95 : 
+                    record.status === "达标" ? 85 : 
+                    record.status === "轻微违约" ? 75 : 40;
+        return (
+          <div>
+            <Progress percent={rate} size="small" />
+          </div>
+        );
+      },
     },
     {
       title: "最后评审",
       dataIndex: "lastReview",
       key: "lastReview",
       width: 120,
-      render: (date: string) => <Text type="secondary">{date}</Text>,
+      render: (lastReview: string) => (
+        <div style={{ fontSize: "small" }}>{lastReview}</div>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      width: 150,
+      render: (_: unknown, record: any) => (
+        <Space size="small">
+          <Button
+            type="text"
+            size="small"
+            icon={<BarChart3 size={16} />}
+            onClick={() => window.open(`/sla/${record.id}`)}
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<MoreHorizontal size={16} />}
+          />
+        </Space>
+      ),
     },
   ];
 
   return (
-    <>
-      {/* 页面头部操作 */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">服务级别管理</h1>
-          <p className="text-gray-600 mt-1">定义、监控和管理IT服务的性能和质量</p>
-        </div>
-        <Link href="/sla/new">
-          <Button type="primary" icon={<Plus size={16} />} size="large">
-            新建SLA
-          </Button>
-        </Link>
-      </div>
-      {/* 统计卡片 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总SLA数量"
-              value={stats.total}
-              prefix={<BarChart3 size={16} />}
-              valueStyle={{ color: token.colorPrimary }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="达标"
-              value={stats.compliant}
-              prefix={<CheckCircle size={16} />}
-              valueStyle={{ color: token.colorSuccess }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="轻微违约"
-              value={stats.warning}
-              prefix={<AlertCircle size={16} />}
-              valueStyle={{ color: token.colorWarning }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="违约"
-              value={stats.violation}
-              prefix={<XCircle size={16} />}
-              valueStyle={{ color: token.colorError }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 筛选器 */}
-      <Card style={{ marginBottom: 24 }}>
-        <Row gutter={16} align="middle">
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder="搜索SLA名称或服务..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="状态筛选"
-              value={filter}
-              onChange={setFilter}
-              style={{ width: "100%" }}
-            >
-              <Select.Option value="全部">全部</Select.Option>
-              <Select.Option value="达标">达标</Select.Option>
-              <Select.Option value="轻微违约">轻微违约</Select.Option>
-              <Select.Option value="违约">违约</Select.Option>
-            </Select>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* SLA列表表格 */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredSLAs}
-          rowKey="id"
-          pagination={{
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-          }}
-          scroll={{ x: 800 }}
-        />
-      </Card>
-    </>
+    <div>
+      {renderStatsCards()}
+      {renderFilters()}
+      {renderSLAList()}
+    </div>
   );
-};
-
-export default SLAListPage;
+}

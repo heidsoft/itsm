@@ -31,7 +31,6 @@ interface FormFieldProps {
 export const FormField: React.FC<FormFieldProps> = ({
   type,
   label,
-  name,
   value,
   onChange,
   options,
@@ -49,7 +48,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       return `${label}是必填项`;
     }
 
-    if (validation.pattern && !validation.pattern.test(val)) {
+    if (validation.pattern && typeof val === 'string' && !validation.pattern.test(val)) {
       return `${label}格式不正确`;
     }
 
@@ -72,7 +71,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         return (
           <FormInput
             label={label}
-            value={value}
+            value={String(value || '')}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
@@ -83,7 +82,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         return (
           <FormTextarea
             label={label}
-            value={value}
+            value={String(value || '')}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
@@ -97,7 +96,7 @@ export const FormField: React.FC<FormFieldProps> = ({
               {label}
             </label>
             <select
-              value={value}
+              value={String(value || '')}
               onChange={(e) => handleChange(e.target.value)}
               disabled={disabled}
               className={`w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white hover:bg-white ${
@@ -106,7 +105,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             >
               <option value="">{placeholder || "请选择..."}</option>
               {options?.map((option) => (
-                <option key={option.value} value={option.value}>
+                <option key={String(option.value)} value={String(option.value)}>
                   {option.label}
                 </option>
               ))}

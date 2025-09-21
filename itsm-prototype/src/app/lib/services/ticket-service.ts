@@ -64,7 +64,7 @@ export interface Ticket {
   impact?: string;
   urgency?: string;
   business_value?: string;
-  custom_fields?: Record<string, any>;
+  custom_fields?: Record<string, unknown>;
 }
 
 // 创建工单请求
@@ -81,7 +81,7 @@ export interface CreateTicketRequest {
   impact?: string;
   urgency?: string;
   business_value?: string;
-  custom_fields?: Record<string, any>;
+  custom_fields?: Record<string, unknown>;
 }
 
 // 更新工单请求
@@ -99,7 +99,7 @@ export interface UpdateTicketRequest {
   impact?: string;
   urgency?: string;
   business_value?: string;
-  custom_fields?: Record<string, any>;
+  custom_fields?: Record<string, unknown>;
 }
 
 // 工单列表查询参数

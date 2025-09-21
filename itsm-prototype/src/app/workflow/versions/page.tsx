@@ -260,8 +260,10 @@ const WorkflowVersionsPage = () => {
       dataIndex: "change_log",
       key: "change_log",
       render: (changeLog: string) => (
-        <div className="max-w-xs">
-          <Text ellipsis={{ tooltip: changeLog }}>{changeLog}</Text>
+        <div className="max-w-xs truncate">
+          <Tooltip title={changeLog}>
+            <span>{changeLog}</span>
+          </Tooltip>
         </div>
       ),
     },

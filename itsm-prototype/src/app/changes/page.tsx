@@ -1,91 +1,126 @@
 "use client";
 
 import {
-  Search,
-  Edit,
-  Eye,
-  Calendar,
-  Tag as TagIcon,
-  PlusCircle,
+  AlertTriangle,
+  RefreshCw,
   GitBranch,
+  Plus,
+  Eye,
+  Edit,
+  MoreHorizontal
 } from "lucide-react";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Table,
   Button,
-  Tag,
   Space,
   Row,
   Col,
-  Statistic,
   Select,
   Input,
-  Tooltip,
-  Progress,
+  Badge,
 } from "antd";
 import {
-  changeService,
   Change,
   ChangeStats,
 } from "../lib/services/change-service";
-// AppLayout is handled by layout.tsx
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;
 
-const getChangeTypeColor = (type: string) => {
-  switch (type) {
-    case "普通变更":
-      return "blue";
-    case "标准变更":
-      return "green";
-    case "紧急变更":
-      return "red";
-    default:
-      return "default";
-  }
-};
-
-const getStatusColor = (status: string) => {
+const getChangeStatusColor = (status: string) => {
   switch (status) {
-    case "待审批":
-      return "warning";
-    case "已批准":
-      return "success";
-    case "实施中":
-      return "processing";
-    case "已完成":
-      return "success";
-    case "已回滚":
-      return "error";
-    case "已拒绝":
-      return "error";
+    case "pending":
+      return {
+        color: "#fa8c16",
+        text: "待审批",
+        backgroundColor: "#fff7e6",
+      };
+    case "approved":
+      return {
+        color: "#1890ff",
+        text: "审批通过",
+        backgroundColor: "#e6f7ff",
+      };
+    case "implementing":
+      return {
+        color: "#722ed1",
+        text: "实施中",
+        backgroundColor: "#f9f0ff",
+      };
+    case "completed":
+      return {
+        color: "#52c41a",
+        text: "已完成",
+        backgroundColor: "#f6ffed",
+      };
+    case "cancelled":
+      return {
+        color: "#ff4d4f",
+        text: "已取消",
+        backgroundColor: "#fff2f0",
+      };
+    case "draft":
+      return {
+        color: "#8c8c8c",
+        text: "草稿",
+        backgroundColor: "#f5f5f5",
+      };
+    case "rejected":
+      return {
+        color: "#ff4d4f",
+        text: "已拒绝",
+        backgroundColor: "#fff2f0",
+      };
     default:
-      return "default";
+      return {
+        color: "#8c8c8c",
+        text: status,
+        backgroundColor: "#f5f5f5",
+      };
   }
 };
 
-const getRiskLevel = (risk: string) => {
-  switch (risk) {
-    case "高":
-      return { color: "red", percent: 80 };
-    case "中":
-      return { color: "orange", percent: 50 };
-    case "低":
-      return { color: "green", percent: 20 };
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case "urgent":
+      return {
+        color: "#ff4d4f",
+        text: "紧急",
+        backgroundColor: "#fff2f0",
+      };
+    case "high":
+      return {
+        color: "#fa8c16",
+        text: "高",
+        backgroundColor: "#fff7e6",
+      };
+    case "medium":
+      return {
+        color: "#1890ff",
+        text: "中",
+        backgroundColor: "#e6f7ff",
+      };
+    case "low":
+      return {
+        color: "#52c41a",
+        text: "低",
+        backgroundColor: "#f6ffed",
+      };
     default:
-      return { color: "gray", percent: 0 };
+      return {
+        color: "#8c8c8c",
+        text: priority,
+        backgroundColor: "#f5f5f5",
+      };
   }
 };
 
 const ChangeListPage = () => {
-  const [filter, setFilter] = useState("全部");
-  const [searchText, setSearchText] = useState("");
   const [changes, setChanges] = useState<Change[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<ChangeStats>({
     total: 0,
     draft: 0,
@@ -93,155 +128,153 @@ const ChangeListPage = () => {
     approved: 0,
     implementing: 0,
     completed: 0,
-    cancelled: 0,
+    cancelled: 0
   });
+  const [filter, setFilter] = useState('全部');
+  const [searchText, setSearchText] = useState('');
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // 加载变更数据
-  const loadChanges = async () => {
-    setLoading(true);
+  // 模拟数据
+  const mockChanges: Change[] = [
+    {
+      id: 1,
+      title: '系统升级变更',
+      description: '升级核心系统版本',
+      justification: '提升系统性能和安全性',
+      status: 'pending',
+      priority: 'high',
+      type: 'standard',
+      impactScope: 'high',
+      riskLevel: 'medium',
+      createdBy: 1,
+      createdByName: '张三',
+      assigneeName: '李四',
+      tenantId: 1,
+      plannedStartDate: '2024-01-15T09:00:00Z',
+      plannedEndDate: '2024-01-15T18:00:00Z',
+      implementationPlan: '系统升级实施计划',
+      rollbackPlan: '系统回滚计划',
+      createdAt: '2024-01-10T10:00:00Z',
+      updatedAt: '2024-01-10T10:00:00Z'
+    },
+    {
+      id: 2,
+      title: '数据库配置变更',
+      description: '调整数据库连接池配置',
+      justification: '优化数据库性能',
+      status: 'approved',
+      priority: 'medium',
+      type: 'normal',
+      impactScope: 'medium',
+      riskLevel: 'low',
+      createdBy: 2,
+      createdByName: '王五',
+      assigneeName: '赵六',
+      tenantId: 1,
+      plannedStartDate: '2024-01-16T14:00:00Z',
+      plannedEndDate: '2024-01-16T16:00:00Z',
+      implementationPlan: '数据库配置变更计划',
+      rollbackPlan: '数据库配置回滚计划',
+      createdAt: '2024-01-12T14:30:00Z',
+      updatedAt: '2024-01-12T14:30:00Z'
+    }
+  ];
+
+  const mockStats: ChangeStats = {
+    total: 156,
+    draft: 12,
+    pending: 23,
+    approved: 45,
+    implementing: 18,
+    completed: 88,
+    cancelled: 5
+  };
+
+  const fetchChanges = async () => {
     try {
-      const isHealthy = await changeService.healthCheck();
-      if (!isHealthy) {
-        console.warn("后端服务不可用，使用Mock数据");
-        // 这里可以添加fallback到mock数据的逻辑
-        setChanges([]);
-        return;
-      }
-
-      const data = await changeService.getChanges({
-        status: filter === "全部" ? undefined : filter,
-        search: searchText || undefined,
-      });
-
-      setChanges(data.changes);
-      setStats({
-        total: data.total,
-        draft: data.changes.filter((c) => c.status === "draft").length,
-        pending: data.changes.filter((c) => c.status === "pending").length,
-        approved: data.changes.filter((c) => c.status === "approved").length,
-        implementing: data.changes.filter((c) => c.status === "implementing")
-          .length,
-        completed: data.changes.filter((c) => c.status === "completed").length,
-        cancelled: data.changes.filter((c) => c.status === "cancelled").length,
-      });
+      setLoading(true);
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setChanges(mockChanges);
+      setPagination(prev => ({ ...prev, total: mockChanges.length }));
     } catch (error) {
-      console.error("加载变更数据失败:", error);
-      setChanges([]);
+      console.error('获取变更列表失败:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 搜索和筛选
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-    loadChanges();
+  const fetchStats = async () => {
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setStats(mockStats);
+    } catch (error) {
+      console.error('获取统计数据失败:', error);
+    }
   };
 
-  const handleFilterChange = (value: string) => {
-    setFilter(value);
-    loadChanges();
-  };
-
-  // 初始加载
-  React.useEffect(() => {
-    loadChanges();
+  useEffect(() => {
+    fetchChanges();
+    fetchStats();
   }, []);
 
-  const statusCounts = {
-    total: stats.total,
-    pending: stats.pending,
-    approved: stats.approved,
-    implementing: stats.implementing,
-    completed: stats.completed,
+  const handleCreateChange = () => {
+    console.log('创建变更');
+  };
+
+  const handleTableChange = (paginationInfo: { current?: number; pageSize?: number; total?: number }) => {
+    setPagination(prev => ({ ...prev, ...paginationInfo }));
+    fetchChanges();
   };
 
   const columns = [
     {
-      title: "变更ID",
-      dataIndex: "id",
-      key: "id",
-      width: 120,
-      render: (text: number) => (
-        <Link href={`/changes/${text}`}>
-          <span className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
-            {`CHG-${text.toString().padStart(5, "0")}`}
-          </span>
-        </Link>
-      ),
-    },
-    {
-      title: "变更标题",
+      title: "变更信息",
       dataIndex: "title",
       key: "title",
-      ellipsis: true,
-    },
-    {
-      title: "变更类型",
-      dataIndex: "type",
-      key: "type",
-      width: 120,
-      render: (type: string) => {
-        const typeMap = {
-          normal: "普通变更",
-          standard: "标准变更",
-          emergency: "紧急变更",
-        };
-        return (
-          <Tag
-            color={getChangeTypeColor(
-              typeMap[type as keyof typeof typeMap] || type
-            )}
-          >
-            {typeMap[type as keyof typeof typeMap] || type}
-          </Tag>
-        );
-      },
+      width: 300,
+      render: (_: unknown, record: Change) => (
+        <div>
+          <div className="font-medium text-gray-900 mb-1">{record.title}</div>
+          <div className="text-sm text-gray-500 mb-2">{record.description}</div>
+          <div className="flex items-center space-x-2">
+            <Badge
+              color={record.type === 'emergency' ? 'red' : record.type === 'standard' ? 'green' : 'blue'}
+              text={record.type === 'emergency' ? '紧急变更' : record.type === 'standard' ? '标准变更' : '普通变更'}
+            />
+          </div>
+        </div>
+      ),
     },
     {
       title: "状态",
       dataIndex: "status",
       key: "status",
-      width: 100,
+      width: 120,
       render: (status: string) => {
-        const statusMap = {
-          draft: "草稿",
-          pending: "待审批",
-          approved: "已批准",
-          rejected: "已拒绝",
-          implementing: "实施中",
-          completed: "已完成",
-          cancelled: "已取消",
-        };
+        const statusConfig = getChangeStatusColor(status);
         return (
-          <Tag
-            color={getStatusColor(
-              statusMap[status as keyof typeof statusMap] || status
-            )}
-          >
-            {statusMap[status as keyof typeof statusMap] || status}
-          </Tag>
+          <Badge
+            color={statusConfig.color}
+            text={statusConfig.text}
+          />
         );
       },
     },
     {
-      title: "风险等级",
-      dataIndex: "riskLevel",
-      key: "riskLevel",
-      width: 120,
-      render: (riskLevel: string) => {
-        const riskInfo = getRiskLevel(riskLevel);
+      title: "优先级",
+      dataIndex: "priority",
+      key: "priority",
+      width: 100,
+      render: (priority: string) => {
+        const priorityConfig = getPriorityColor(priority);
         return (
-          <div style={{ width: 80 }}>
-            <Progress
-              percent={riskInfo.percent}
-              size="small"
-              status={
-                riskInfo.color as "active" | "exception" | "normal" | "success"
-              }
-              format={() => riskLevel}
-            />
-          </div>
+          <Badge
+            color={priorityConfig.color}
+            text={priorityConfig.text}
+          />
         );
       },
     },
@@ -249,143 +282,224 @@ const ChangeListPage = () => {
       title: "申请人",
       dataIndex: "createdByName",
       key: "createdByName",
-      width: 100,
+      width: 120,
+      render: (createdByName: string) => (
+        <div style={{ fontSize: "small" }}>{createdByName}</div>
+      ),
     },
     {
-      title: "计划实施时间",
-      dataIndex: "plannedStartDate",
-      key: "plannedStartDate",
-      width: 150,
-      render: (date: string) =>
-        date ? new Date(date).toLocaleDateString() : "-",
+      title: "审批人",
+      dataIndex: "assigneeName",
+      key: "assigneeName",
+      width: 120,
+      render: (assigneeName: string) => (
+        <div style={{ fontSize: "small" }}>{assigneeName || "未分配"}</div>
+      ),
+    },
+    {
+      title: "计划时间",
+      key: "plannedTime",
+      width: 180,
+      render: (_: unknown, record: Change) => (
+        <div style={{ fontSize: "small" }}>
+          {record.plannedStartDate && (
+            <>
+              <div>{new Date(record.plannedStartDate).toLocaleDateString("zh-CN")}</div>
+              <div style={{ color: "#666" }}>
+                {new Date(record.plannedStartDate).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })} -{" "}
+                {record.plannedEndDate && new Date(record.plannedEndDate).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+              </div>
+            </>
+          )}
+        </div>
+      ),
     },
     {
       title: "操作",
-      key: "actions",
+      key: "action",
       width: 120,
-      render: (_, record) => (
+      render: (_: unknown, record: Change) => (
         <Space size="small">
-          <Tooltip title="查看详情">
-            <Link href={`/changes/${record.id}`}>
-              <Button type="text" size="small" icon={<Eye size={14} />} />
-            </Link>
-          </Tooltip>
-          <Tooltip title="编辑">
-            <Button type="text" size="small" icon={<Edit size={14} />} />
-          </Tooltip>
+          <Button
+            type="text"
+            icon={<Eye size={16} />}
+            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+            title="查看详情"
+            onClick={() => console.log('查看变更', record.id)}
+          />
+          <Button
+            type="text"
+            icon={<Edit size={16} />}
+            className="text-green-600 hover:text-green-800 hover:bg-green-50"
+            title="编辑变更"
+            onClick={() => console.log('编辑变更', record.id)}
+          />
+          <Button
+            type="text"
+            icon={<MoreHorizontal size={16} />}
+            className="text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+            title="更多操作"
+            onClick={() => console.log('更多操作', record.id)}
+          />
         </Space>
       ),
     },
   ];
 
   return (
-    <>
-      {/* 页面头部操作 */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">变更管理</h1>
-          <p className="text-gray-600 mt-1">管理系统变更请求，确保变更的安全性和可控性</p>
-        </div>
-        <Link href="/changes/new">
-          <Button type="primary" icon={<PlusCircle size={16} />}>
-            新建变更
-          </Button>
-        </Link>
-      </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* 统计卡片 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="总变更数"
-              value={statusCounts.total}
-              prefix={<GitBranch size={16} style={{ color: "#1890ff" }} />}
-            />
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} md={6}>
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-center">
+              <GitBranch className="mx-auto mb-3 text-white" size={32} />
+              <div className="text-3xl font-bold text-white">{stats.total}</div>
+              <div className="text-blue-100">总变更数</div>
+            </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="待审批"
-              value={statusCounts.pending}
-              valueStyle={{ color: "#faad14" }}
-            />
+        <Col xs={24} sm={12} md={6}>
+          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-center">
+              <AlertTriangle className="mx-auto mb-3 text-white" size={32} />
+              <div className="text-3xl font-bold text-white">{stats.pending}</div>
+              <div className="text-orange-100">待审批</div>
+            </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="实施中"
-              value={statusCounts.implementing}
-              valueStyle={{ color: "#1890ff" }}
-            />
+        <Col xs={24} sm={12} md={6}>
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-center">
+              <GitBranch className="mx-auto mb-3 text-white" size={32} />
+              <div className="text-3xl font-bold text-white">{stats.approved}</div>
+              <div className="text-green-100">已批准</div>
+            </div>
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="已完成"
-              value={statusCounts.completed}
-              valueStyle={{ color: "#52c41a" }}
-            />
+        <Col xs={24} sm={12} md={6}>
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="text-center">
+              <GitBranch className="mx-auto mb-3 text-white" size={32} />
+              <div className="text-3xl font-bold text-white">{stats.completed}</div>
+              <div className="text-purple-100">已完成</div>
+            </div>
           </Card>
         </Col>
       </Row>
 
-      {/* 筛选和搜索 */}
-      <Card style={{ marginBottom: 24 }}>
-        <Row gutter={16} align="middle">
-          <Col span={8}>
+      {/* 筛选器 */}
+      <Card className="mb-6 shadow-sm border-0">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">筛选条件</h3>
+        </div>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={12} md={8}>
             <SearchInput
-              placeholder="搜索变更ID或标题"
-              allowClear
+              placeholder="搜索变更标题或描述"
               value={searchText}
-              onSearch={handleSearch}
               onChange={(e) => setSearchText(e.target.value)}
-              prefix={<Search size={16} />}
+              onSearch={fetchChanges}
+              className="rounded-lg"
+              size="large"
             />
           </Col>
-          <Col span={4}>
+          <Col xs={24} sm={12} md={6}>
             <Select
               value={filter}
-              onChange={handleFilterChange}
-              style={{ width: "100%" }}
-              placeholder="状态筛选"
+              onChange={setFilter}
+              className="w-full"
+              size="large"
+              placeholder="选择状态"
             >
-              <Option value="全部">全部状态</Option>
-              <Option value="pending">待审批</Option>
-              <Option value="approved">已批准</Option>
-              <Option value="implementing">实施中</Option>
-              <Option value="completed">已完成</Option>
-              <Option value="rejected">已拒绝</Option>
-              <Option value="draft">草稿</Option>
+              <Option value="全部">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
+                  全部状态
+                </div>
+              </Option>
+              <Option value="pending">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
+                  待审批
+                </div>
+              </Option>
+              <Option value="approved">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                  已批准
+                </div>
+              </Option>
+              <Option value="completed">
+                <div className="flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                  已完成
+                </div>
+              </Option>
             </Select>
           </Col>
-          <Col span={4}>
-            <Button icon={<Calendar size={16} />}>时间筛选</Button>
+          <Col xs={24} sm={12} md={4}>
+            <Button
+              icon={<RefreshCw size={20} />}
+              onClick={fetchChanges}
+              loading={loading}
+              size="large"
+              className="w-full bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300"
+            >
+              刷新
+            </Button>
           </Col>
         </Row>
       </Card>
 
       {/* 变更列表 */}
-      <Card>
+      <Card className="shadow-sm border-0">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-1">变更列表</h3>
+            <p className="text-gray-600">管理和跟踪所有变更请求</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            {selectedRowKeys.length > 0 && (
+              <Badge
+                count={selectedRowKeys.length}
+                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+              >
+                已选择 {selectedRowKeys.length} 项
+              </Badge>
+            )}
+            <Button
+              type="primary"
+              icon={<Plus size={20} />}
+              onClick={handleCreateChange}
+              size="large"
+              className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 shadow-sm"
+            >
+              创建变更
+            </Button>
+          </div>
+        </div>
+
         <Table
           columns={columns}
           dataSource={changes}
           rowKey="id"
           loading={loading}
           pagination={{
-            total: stats.total,
-            pageSize: 10,
+            ...pagination,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
           }}
-          scroll={{ x: 1000 }}
+          onChange={handleTableChange}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: setSelectedRowKeys,
+          }}
+          className="[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-gray-100"
         />
       </Card>
-    </>
+    </div>
   );
 };
 

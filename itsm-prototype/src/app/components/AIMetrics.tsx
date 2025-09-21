@@ -1,38 +1,89 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Clock, Star, MessageSquare } from 'lucide-react';
-import { aiGetMetrics, AIMetrics } from '../lib/ai-api';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  BarChart3,
+  TrendingUp,
+  Clock,
+  Star,
+  MessageSquare,
+} from "lucide-react";
+import { aiGetMetrics, type AIMetrics as AIMetricsType } from "../lib/ai-api";
 
 interface AIMetricsProps {
   className?: string;
   days?: number;
 }
 
-export const AIMetrics: React.FC<AIMetricsProps> = ({ 
-  className = "", 
-  days = 7 
+const AIMetricsComponent: React.FC<AIMetricsProps> = ({
+  className = "",
+  days = 7,
 }) => {
-  const [metrics, setMetrics] = useState<AIMetrics | null>(null);
+  const [metrics, setMetrics] = useState<AIMetricsType | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadMetrics();
-  }, [days]);
+  // 将所有hooks移到组件顶部
+  const formatResponseTime = useCallback((seconds: number) => {
+    if (seconds < 1) return `${Math.round(seconds * 1000)}ms`;
+    if (seconds < 60) return `${seconds.toFixed(1)}s`;
+    return `${Math.round(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+  }, []);
 
-  const loadMetrics = async () => {
+  const getKindLabel = useCallback((kind: string) => {
+    const labels: Record<string, string> = {
+      triage: "智能分类",
+      search: "知识搜索",
+      summarize: "智能摘要",
+      "similar-incidents": "相似事件",
+      chat: "AI对话",
+    };
+    return labels[kind] || kind;
+  }, []);
+
+  // 缓存排序后的数据
+  const sortedKindData = useMemo(() => {
+    if (!metrics?.by_kind) return [];
+    return Object.entries(metrics.by_kind).sort(([, a], [, b]) => b - a);
+  }, [metrics?.by_kind]);
+
+  const loadMetrics = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await aiGetMetrics(days);
       setMetrics(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载指标失败');
+      console.error("AI Metrics加载失败:", err);
+
+      // 根据错误类型提供不同的错误信息
+      let errorMessage = "加载指标失败";
+      if (err instanceof Error) {
+        if (
+          err.message.includes("401") ||
+          err.message.includes("Authentication failed")
+        ) {
+          errorMessage = "需要登录才能查看AI指标";
+        } else if (err.message.includes("500")) {
+          errorMessage = "服务器暂时不可用，请稍后重试";
+        } else if (err.message.includes("404")) {
+          errorMessage = "AI指标接口不可用";
+        } else if (err.message.includes("Failed to fetch")) {
+          errorMessage = "网络连接失败，请检查网络设置";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [days]);
+
+  useEffect(() => {
+    loadMetrics();
+  }, [loadMetrics]);
 
   if (loading) {
     return (
@@ -51,7 +102,9 @@ export const AIMetrics: React.FC<AIMetricsProps> = ({
 
   if (error) {
     return (
-      <div className={`p-4 bg-red-50 border border-red-200 rounded-lg ${className}`}>
+      <div
+        className={`p-4 bg-red-50 border border-red-200 rounded-lg ${className}`}
+      >
         <div className="text-red-600 text-sm">{error}</div>
         <button
           onClick={loadMetrics}
@@ -67,23 +120,6 @@ export const AIMetrics: React.FC<AIMetricsProps> = ({
     return null;
   }
 
-  const formatResponseTime = (seconds: number) => {
-    if (seconds < 1) return `${Math.round(seconds * 1000)}ms`;
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    return `${Math.round(seconds / 60)}m ${Math.round(seconds % 60)}s`;
-  };
-
-  const getKindLabel = (kind: string) => {
-    const labels: Record<string, string> = {
-      'triage': '智能分类',
-      'search': '知识搜索',
-      'summarize': '智能摘要',
-      'similar-incidents': '相似事件',
-      'chat': 'AI对话'
-    };
-    return labels[kind] || kind;
-  };
-
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
       {/* Header */}
@@ -93,9 +129,7 @@ export const AIMetrics: React.FC<AIMetricsProps> = ({
             <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
             AI 使用指标
           </h3>
-          <span className="text-sm text-gray-500">
-            最近 {days} 天
-          </span>
+          <span className="text-sm text-gray-500">最近 {days} 天</span>
         </div>
       </div>
 
@@ -167,22 +201,25 @@ export const AIMetrics: React.FC<AIMetricsProps> = ({
         </div>
 
         {/* Usage by Kind */}
-        {Object.keys(metrics.by_kind).length > 0 && (
+        {sortedKindData.length > 0 && (
           <div>
-            <h4 className="text-md font-semibold text-gray-700 mb-3">按功能分类</h4>
+            <h4 className="text-md font-semibold text-gray-700 mb-3">
+              按功能分类
+            </h4>
             <div className="space-y-2">
-              {Object.entries(metrics.by_kind)
-                .sort(([,a], [,b]) => b - a)
-                .map(([kind, count]) => (
-                  <div key={kind} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-600">
-                      {getKindLabel(kind)}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-800">
-                      {count}
-                    </span>
-                  </div>
-                ))}
+              {sortedKindData.map(([kind, count]) => (
+                <div
+                  key={kind}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                >
+                  <span className="text-sm text-gray-600">
+                    {getKindLabel(kind)}
+                  </span>
+                  <span className="text-sm font-semibold text-gray-800">
+                    {count}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -190,3 +227,8 @@ export const AIMetrics: React.FC<AIMetricsProps> = ({
     </div>
   );
 };
+
+// 使用React.memo优化性能
+export const AIMetrics = React.memo(AIMetricsComponent, (prevProps, nextProps) => {
+  return prevProps.className === nextProps.className && prevProps.days === nextProps.days;
+});

@@ -10,6 +10,7 @@
     "lint:check": "next lint"
   },
   "dependencies": {
+    "@ant-design/charts": "^2.6.2",
     "@bpmn-io/element-template-chooser": "^2.0.0",
     "@bpmn-io/properties-panel": "^3.31.0",
     "@hello-pangea/dnd": "^18.0.1",

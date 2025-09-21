@@ -1,15 +1,12 @@
 "use client";
 
 import React from "react";
-import { Button, Empty, Result, Spin, Typography } from "antd";
+import { Button, Result, Spin, Typography } from "antd";
 import {
   RotateCcw,
   Plus,
-  Search,
   FileText,
   AlertTriangle,
-  CheckCircle,
-  Clock,
   User,
   Database,
   Settings,
@@ -50,36 +47,7 @@ interface LoadingEmptyErrorProps {
   children?: React.ReactNode;
 }
 
-// 预定义的图标映射
-const getDefaultIcon = (state: LoadingEmptyErrorState, context?: string) => {
-  switch (state) {
-    case "empty":
-      switch (context) {
-        case "tickets":
-          return <FileText size={48} />;
-        case "incidents":
-          return <AlertTriangle size={48} />;
-        case "problems":
-          return <AlertTriangle size={48} />;
-        case "changes":
-          return <Settings size={48} />;
-        case "cmdb":
-          return <Database size={48} />;
-        case "users":
-          return <User size={48} />;
-        case "workflows":
-          return <Settings size={48} />;
-        default:
-          return <FileText size={48} />;
-      }
-    case "error":
-      return <AlertTriangle size={48} />;
-    case "success":
-      return <CheckCircle size={48} />;
-    default:
-      return <FileText size={48} />;
-  }
-};
+
 
 // 预定义的空状态配置
 const getDefaultEmptyConfig = (context?: string) => {
@@ -319,6 +287,12 @@ export const Empty = ({
   actionText,
   onAction,
   className = "",
+}: {
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
 }) => (
   <LoadingEmptyError
     state="empty"
@@ -333,6 +307,12 @@ export const Error = ({
   actionText = "重试",
   onAction,
   className = "",
+}: {
+  title?: string;
+  description?: string;
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
 }) => (
   <LoadingEmptyError
     state="error"

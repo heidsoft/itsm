@@ -7,7 +7,7 @@ export default function CMDBLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout title="配置管理" breadcrumb={[{ title: "配置管理" }]}>
+    <AppLayout>
       {children}
     </AppLayout>
   );

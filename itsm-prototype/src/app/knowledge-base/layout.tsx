@@ -7,7 +7,7 @@ export default function KnowledgeBaseLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout title="知识库" breadcrumb={[{ title: "知识库" }]}>
+    <AppLayout>
       {children}
     </AppLayout>
   );

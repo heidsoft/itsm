@@ -1,4 +1,4 @@
-import { httpClient } from './api-config';
+import { httpClient } from './http-client';
 
 // 用户相关的接口定义
 export interface User {
