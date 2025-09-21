@@ -6,9 +6,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AppLayout title="仪表盘" breadcrumb={[{ title: "仪表盘" }]}>
-      {children}
-    </AppLayout>
-  );
+  return <AppLayout>{children}</AppLayout>;
 }

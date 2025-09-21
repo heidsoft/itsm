@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Sector } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // --- 模拟数据 ---
 
@@ -22,7 +22,7 @@ const resourceHealthData = [
     { name: '错误', value: 15 },
 ];
 
-const COLORS = { '运行中': '#22c55e', '已停止': '#f97316', '警告': '#facc15', '错误': '#ef4444' };
+const COLORS: Record<string, string> = { '运行中': '#22c55e', '已停止': '#f97316', '警告': '#facc15', '错误': '#ef4444' };
 
 // --- 图表组件 ---
 
@@ -57,7 +57,7 @@ export const ResourceHealthPieChart = () => (
                     outerRadius={120}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
                 >
                     {resourceHealthData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[entry.name]} />

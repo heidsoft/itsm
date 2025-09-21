@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Button, Card, Space } from "antd";
-import { Plus, RotateCcw } from "lucide-react";
-import LoadingEmptyError, { useLoadingEmptyError } from "./LoadingEmptyError";
+import LoadingEmptyError from "./LoadingEmptyError";
 
 // 示例1: 基础用法
 export const BasicExample = () => {
@@ -29,222 +28,149 @@ export const BasicExample = () => {
         empty={{
           title: "暂无数据",
           description: "当前没有相关数据，您可以创建新的记录",
-          actions: [
-            {
-              text: "创建记录",
-              icon: <Plus />,
-              onClick: () => console.log("创建记录"),
-              type: "primary",
-            },
-          ],
+          actionText: "创建记录",
+          onAction: () => console.log("创建记录"),
+          showAction: true,
         }}
         error={{
           title: "加载失败",
           description: "数据加载过程中发生错误，请稍后重试",
-          details: "错误代码: 500, 服务器内部错误",
-          onRetry: () => console.log("重试"),
-          actions: [
-            {
-              text: "联系支持",
-              onClick: () => console.log("联系支持"),
-              type: "default",
-            },
-          ],
+          actionText: "重试",
+          onAction: () => console.log("重试"),
+          showRetry: true,
+          showAction: true,
         }}
       >
-        <div className="p-4 bg-green-50 border border-green-200 rounded">
-          <h3 className="text-green-800">数据加载成功！</h3>
-          <p className="text-green-600">这里是成功状态下的内容展示区域</p>
-        </div>
+        {state === "success" && (
+          <div className="p-4 text-center">
+            <h3 className="text-lg font-semibold text-green-600">数据加载成功！</h3>
+            <p className="text-gray-600">这里显示实际的数据内容</p>
+          </div>
+        )}
       </LoadingEmptyError>
     </Card>
   );
 };
 
-// 示例2: 使用Hook的用法
-export const HookExample = () => {
-  const { state, data, error, refetch } = useLoadingEmptyError(
-    async () => {
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+// 示例2: 工单列表示例
+interface Ticket {
+  id: number;
+  title: string;
+}
 
-      // 模拟随机结果
+export const TicketListExample = () => {
+  const [loading, setLoading] = useState(false);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTickets = async () => {
+    setLoading(true);
+    setError(null);
+    
+    // 模拟API调用
+    setTimeout(() => {
       const random = Math.random();
       if (random < 0.3) {
-        throw new Error("网络连接失败");
+        setError("网络错误");
+        setTickets([]);
       } else if (random < 0.6) {
-        return []; // 空数据
+        setTickets([]);
       } else {
-        return [
-          { id: 1, name: "示例数据1" },
-          { id: 2, name: "示例数据2" },
-        ];
+        setTickets([{ id: 1, title: "示例工单" }]);
       }
-    },
-    {
-      autoFetch: true,
-      onSuccess: (data) => console.log("数据加载成功:", data),
-      onError: (error) => console.log("数据加载失败:", error),
-    }
-  );
+      setLoading(false);
+    }, 2000);
+  };
+
+  const getState = () => {
+    if (loading) return "loading";
+    if (error) return "error";
+    if (tickets.length === 0) return "empty";
+    return "success";
+  };
 
   return (
-    <Card title="Hook用法示例" className="mb-6">
-      <Button icon={<RotateCcw />} onClick={refetch} className="mb-4">
-        重新加载
-      </Button>
-
-      <LoadingEmptyError
-        state={state}
-        loadingText="正在获取数据..."
-        empty={{
-          title: "暂无数据",
-          description: "当前没有找到相关数据",
-          actions: [
-            {
-              text: "刷新",
-              icon: <RotateCcw />,
-              onClick: refetch,
-            },
-          ],
-        }}
-        error={{
-          title: "加载失败",
-          description: error?.message || "未知错误",
-          onRetry: refetch,
-        }}
-      >
-        <div className="space-y-2">
-          {data?.map((item: any) => (
-            <div
-              key={item.id}
-              className="p-3 bg-blue-50 border border-blue-200 rounded"
-            >
-              {item.name}
-            </div>
-          ))}
-        </div>
-      </LoadingEmptyError>
-    </Card>
-  );
-};
-
-// 示例3: 工单列表场景
-export const TicketListExample = () => {
-  const [state, setState] = useState<"loading" | "empty" | "error" | "success">(
-    "loading"
-  );
-
-  const loadTickets = () => setState("loading");
-  const showEmpty = () => setState("empty");
-  const showError = () => setState("error");
-  const showSuccess = () => setState("success");
-
-  return (
-    <Card title="工单列表场景示例" className="mb-6">
+    <Card title="工单列表示例" className="mb-6">
       <Space className="mb-4">
-        <Button onClick={loadTickets}>加载工单</Button>
-        <Button onClick={showEmpty}>显示空状态</Button>
-        <Button onClick={showError}>显示错误</Button>
-        <Button onClick={showSuccess}>显示成功</Button>
+        <Button onClick={fetchTickets} loading={loading}>
+          获取工单列表
+        </Button>
       </Space>
 
       <LoadingEmptyError
-        state={state}
-        type="tickets"
+        state={getState()}
         loadingText="正在加载工单列表..."
         empty={{
           title: "暂无工单",
-          description: "当前没有工单记录，您可以创建新的工单",
-          actions: [
-            {
-              text: "创建工单",
-              icon: <Plus />,
-              onClick: () => console.log("创建工单"),
-              type: "primary",
-            },
-            {
-              text: "刷新",
-              icon: <RotateCcw />,
-              onClick: loadTickets,
-            },
-          ],
+          description: "当前没有工单数据，点击下方按钮创建第一个工单",
+          actionText: "创建工单",
+          onAction: () => console.log("创建工单"),
+          showAction: true,
         }}
         error={{
-          title: "工单加载失败",
-          description: "无法获取工单列表，请检查网络连接",
-          onRetry: loadTickets,
+          title: "加载失败",
+          description: error || "工单列表加载失败，请稍后重试",
+          actionText: "重试",
+          onAction: fetchTickets,
+          showRetry: true,
+          showAction: true,
         }}
-        bordered
-        minHeight={300}
       >
-        <div className="space-y-3">
-          <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <h4 className="font-medium">工单 #TICKET-001</h4>
-            <p className="text-gray-600">系统登录问题</p>
-            <div className="mt-2">
-              <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                处理中
-              </span>
-            </div>
+        {tickets.length > 0 && (
+          <div className="space-y-2">
+            {tickets.map((ticket) => (
+              <div key={ticket.id} className="p-3 border rounded">
+                {ticket.title}
+              </div>
+            ))}
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <h4 className="font-medium">工单 #TICKET-002</h4>
-            <p className="text-gray-600">打印机故障</p>
-            <div className="mt-2">
-              <span className="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                已解决
-              </span>
-            </div>
-          </div>
-        </div>
+        )}
       </LoadingEmptyError>
     </Card>
   );
 };
 
-// 示例4: 不同模块的空状态
+// 示例3: 模块化示例
 export const ModuleExamples = () => {
-  const modules = [
-    { key: "incidents", name: "事件管理" },
-    { key: "problems", name: "问题管理" },
-    { key: "changes", name: "变更管理" },
-    { key: "cmdb", name: "配置管理" },
-    { key: "workflow", name: "工作流" },
-  ];
-
   return (
-    <Card title="不同模块的空状态示例">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {modules.map((module) => (
-          <div
-            key={module.key}
-            className="border border-gray-200 rounded-lg p-4"
-          >
-            <h4 className="font-medium mb-3">{module.name}</h4>
-            <LoadingEmptyError
-              state="empty"
-              type={module.key as any}
-              bordered={false}
-              minHeight={150}
-            />
-          </div>
-        ))}
-      </div>
-    </Card>
+    <div className="space-y-6">
+      <Card title="不同模块的空状态">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <LoadingEmptyError
+            state="empty"
+            empty={{
+              title: "暂无事件",
+              description: "当前没有事件数据",
+              actionText: "创建事件",
+              onAction: () => console.log("创建事件"),
+              showAction: true,
+            }}
+            minHeight={150}
+          />
+          
+          <LoadingEmptyError
+            state="empty"
+            empty={{
+              title: "暂无问题",
+              description: "当前没有问题数据",
+              actionText: "创建问题",
+              onAction: () => console.log("创建问题"),
+              showAction: true,
+            }}
+            minHeight={150}
+          />
+        </div>
+      </Card>
+    </div>
   );
 };
 
 // 主示例组件
 export const LoadingEmptyErrorExamples = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">
-        LoadingEmptyError 组件使用示例
-      </h1>
-
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold mb-6">LoadingEmptyError 组件示例</h1>
       <BasicExample />
-      <HookExample />
       <TicketListExample />
       <ModuleExamples />
     </div>

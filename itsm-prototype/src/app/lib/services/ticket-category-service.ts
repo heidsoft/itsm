@@ -61,6 +61,10 @@ export interface CategoryTreeItem {
   sort_order: number;
   is_active: boolean;
   children: CategoryTreeItem[];
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 // 移动分类请求

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Edit, Eye, BookOpen, PlusCircle } from "lucide-react";
+import { Search, Edit, Eye, BookOpen, PlusCircle, MoreHorizontal } from "lucide-react";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import {
   Tooltip,
   Typography,
   List,
+  Badge,
 } from "antd";
 import { KnowledgeApi } from "../lib/knowledge-api";
 // AppLayout is handled by layout.tsx
@@ -49,69 +50,234 @@ interface Article {
   content?: string;
 }
 
-const KnowledgeBaseListPage = () => {
-  const [filter, setFilter] = useState("全部");
-  const [searchText, setSearchText] = useState("");
-  const [viewMode, setViewMode] = useState("table"); // table or card
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const KnowledgeBasePage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [categories, setCategories] = useState<string[]>(["全部"]);
+  const [loading, setLoading] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+
+  // 统计数据
+  const [stats, setStats] = useState({
+    total: 0,
+    accountManagement: 0,
+    troubleshooting: 0,
+    network: 0,
+  });
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const resp = await KnowledgeApi.list({
-          page,
-          page_size: pageSize,
-          category: filter === "全部" ? undefined : filter,
-          search: searchText || undefined,
-        });
-        setArticles(resp.articles as unknown as Article[]);
-        setTotal(resp.total);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "加载失败");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [page, pageSize, filter, searchText]);
-
-  useEffect(() => {
-    KnowledgeApi.categories()
-      .then((cats) => setCategories(["全部", ...cats]))
-      .catch(() => {});
+    loadArticles();
+    loadStats();
   }, []);
 
-  const stats = {
-    total,
-    published: total,
-    totalViews: 0,
-    totalLikes: 0,
+  const loadArticles = async () => {
+    setLoading(true);
+    try {
+      // 模拟数据
+      const mockArticles: Article[] = [
+        {
+          id: "1",
+          title: "如何重置企业邮箱密码",
+          summary: "本文介绍了如何通过自助服务重置企业邮箱密码的详细步骤。",
+          category: "账号管理",
+          views: 128,
+        },
+        {
+          id: "2",
+          title: "VPN连接常见问题及解决方案",
+          summary: "整理了VPN连接过程中可能遇到的问题及其解决方案。",
+          category: "故障排除",
+          views: 96,
+        },
+        {
+          id: "3",
+          title: "内部系统访问权限申请流程",
+          summary: "详细说明了如何申请和审批内部系统的访问权限。",
+          category: "流程指南",
+          views: 75,
+        },
+      ];
+      setArticles(mockArticles);
+    } catch (error) {
+      console.error("加载知识库文章失败:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const popularArticles = articles.slice(0, 5);
+  const loadStats = async () => {
+    try {
+      // 模拟统计数据
+      setStats({
+        total: 42,
+        accountManagement: 12,
+        troubleshooting: 18,
+        network: 8,
+      });
+    } catch (error) {
+      console.error("加载统计数据失败:", error);
+    }
+  };
 
+  const handleCreateArticle = () => {
+    window.location.href = "/knowledge-base/new";
+  };
+
+  // 渲染统计卡片
+  const renderStatsCards = () => (
+    <div style={{ marginBottom: 24 }}>
+      <Row gutter={16}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="文章总数"
+              value={stats.total}
+              prefix={<BookOpen size={16} style={{ color: "#1890ff" }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="账号管理"
+              value={stats.accountManagement}
+              valueStyle={{ color: "#1890ff" }}
+              prefix={<BookOpen size={16} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="故障排除"
+              value={stats.troubleshooting}
+              valueStyle={{ color: "#ff4d4f" }}
+              prefix={<BookOpen size={16} />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="网络连接"
+              value={stats.network}
+              valueStyle={{ color: "#52c41a" }}
+              prefix={<BookOpen size={16} />}
+            />
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
+
+  // 渲染筛选器
+  const renderFilters = () => (
+    <Card style={{ marginBottom: 24 }}>
+      <Row gutter={20} align="middle">
+        <Col xs={24} sm={12} md={8}>
+          <SearchInput
+            placeholder="搜索文章标题或摘要..."
+            allowClear
+            onSearch={(value) => setSearchText(value)}
+            size="large"
+            enterButton
+          />
+        </Col>
+        <Col xs={24} sm={12} md={4}>
+          <Select
+            placeholder="分类筛选"
+            size="large"
+            allowClear
+            value={categoryFilter}
+            onChange={(value) => setCategoryFilter(value)}
+            style={{ width: "100%" }}
+          >
+            <Option value="账号管理">账号管理</Option>
+            <Option value="故障排除">故障排除</Option>
+            <Option value="网络连接">网络连接</Option>
+            <Option value="流程指南">流程指南</Option>
+            <Option value="系统配置">系统配置</Option>
+          </Select>
+        </Col>
+        <Col xs={24} sm={12} md={4}>
+          <Button
+            icon={<Search size={20} />}
+            onClick={() => {}}
+            loading={loading}
+            size="large"
+            style={{ width: "100%" }}
+          >
+            刷新
+          </Button>
+        </Col>
+        <Col xs={24} sm={12} md={4}>
+          <Button
+            type="primary"
+            icon={<PlusCircle size={20} />}
+            size="large"
+            style={{ width: "100%" }}
+            onClick={handleCreateArticle}
+          >
+            新建文章
+          </Button>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  // 渲染文章列表
+  const renderArticleList = () => (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <div>
+          {selectedRowKeys.length > 0 && (
+            <Badge count={selectedRowKeys.length} showZero style={{ backgroundColor: "#1890ff" }} />
+          )}
+        </div>
+      </div>
+
+      <Table
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+        }}
+        columns={columns}
+        dataSource={articles}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+        }}
+        scroll={{ x: 1000 }}
+      />
+    </div>
+  );
+
+  // 表格列定义
   const columns = [
     {
-      title: "标题",
-      key: "title",
+      title: "文章信息",
+      key: "article_info",
+      width: 400,
       render: (_: unknown, record: Article) => (
-        <div>
-          <Link href={`/knowledge-base/${record.id}`}>
-            <Text
-              strong
-              className="text-blue-600 hover:text-blue-800 cursor-pointer"
-            >
-              {record.title}
-            </Text>
-          </Link>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ width: 40, height: 40, backgroundColor: "#e6f7ff", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+            <BookOpen size={20} style={{ color: "#1890ff" }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: "medium", color: "#000", marginBottom: 4 }}>
+              <Link href={`/knowledge-base/${record.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                {record.title}
+              </Link>
+            </div>
+            <div style={{ fontSize: "small", color: "#666" }}>
+              {record.summary}
+            </div>
+          </div>
         </div>
       ),
     },
@@ -119,6 +285,7 @@ const KnowledgeBaseListPage = () => {
       title: "分类",
       dataIndex: "category",
       key: "category",
+      width: 120,
       render: (category: string) => (
         <Tag color={getCategoryColor(category)}>{category}</Tag>
       ),
@@ -127,303 +294,46 @@ const KnowledgeBaseListPage = () => {
       title: "浏览量",
       dataIndex: "views",
       key: "views",
+      width: 100,
       render: (views: number) => (
-        <span>
-          <Eye size={14} style={{ marginRight: 4 }} />
-          {views}
-        </span>
+        <div style={{ fontSize: "small" }}>{views}</div>
       ),
     },
     {
       title: "操作",
       key: "actions",
+      width: 150,
       render: (_: unknown, record: Article) => (
         <Space size="small">
-          <Tooltip title="查看详情">
-            <Link href={`/knowledge-base/${record.id}`}>
-              <Button type="text" size="small" icon={<Eye size={14} />} />
-            </Link>
-          </Tooltip>
-          <Tooltip title="编辑">
-            <Button type="text" size="small" icon={<Edit size={14} />} />
-          </Tooltip>
+          <Button
+            type="text"
+            size="small"
+            icon={<Eye size={16} />}
+            onClick={() => window.open(`/knowledge-base/${record.id}`)}
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<Edit size={16} />}
+            onClick={() => window.open(`/knowledge-base/${record.id}/edit`)}
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<MoreHorizontal size={16} />}
+          />
         </Space>
       ),
     },
   ];
 
   return (
-    <>
-      {/* 页面头部操作 */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
-          <p className="text-gray-600 mt-1">查找和分享IT知识，提高问题解决效率</p>
-        </div>
-        <Link href="/knowledge-base/new">
-          <Button type="primary" icon={<PlusCircle size={16} />}>
-            新建文章
-          </Button>
-        </Link>
-      </div>
-      <Row gutter={16}>
-        {/* 左侧主要内容 */}
-        <Col span={18}>
-          {/* 统计卡片 */}
-          <Row gutter={16} style={{ marginBottom: 24 }}>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="总文章数"
-                  value={stats.total}
-                  prefix={<BookOpen size={16} style={{ color: "#1890ff" }} />}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="已发布"
-                  value={stats.published}
-                  valueStyle={{ color: "#52c41a" }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="总浏览量"
-                  value={stats.totalViews}
-                  valueStyle={{ color: "#1890ff" }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="总点赞数"
-                  value={stats.totalLikes}
-                  valueStyle={{ color: "#faad14" }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* 搜索和筛选 */}
-          <Card style={{ marginBottom: 24 }}>
-            <Row gutter={16} align="middle">
-              <Col span={12}>
-                <SearchInput
-                  placeholder="搜索文章标题或标签"
-                  allowClear
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  prefix={<Search size={16} />}
-                />
-              </Col>
-              <Col span={6}>
-                <Select
-                  value={filter}
-                  onChange={setFilter}
-                  style={{ width: "100%" }}
-                  placeholder="选择分类"
-                >
-                  {categories.map((category) => (
-                    <Option key={category} value={category}>
-                      {category}
-                    </Option>
-                  ))}
-                </Select>
-              </Col>
-              <Col span={6}>
-                <Select
-                  value={viewMode}
-                  onChange={setViewMode}
-                  style={{ width: "100%" }}
-                >
-                  <Option value="table">表格视图</Option>
-                  <Option value="card">卡片视图</Option>
-                </Select>
-              </Col>
-            </Row>
-          </Card>
-
-          {/* 文章列表 */}
-          <Card>
-            {error ? (
-              <div style={{ padding: 24, color: "#ff4d4f" }}>
-                加载失败：{error}
-              </div>
-            ) : viewMode === "table" ? (
-              <Table
-                columns={columns as any}
-                dataSource={articles}
-                rowKey="id"
-                loading={loading}
-                pagination={{
-                  current: page,
-                  pageSize,
-                  total,
-                  showSizeChanger: true,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-                  onChange: (p, ps) => {
-                    setPage(p);
-                    setPageSize(ps);
-                  },
-                }}
-              />
-            ) : (
-              <List
-                grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 3 }}
-                dataSource={articles}
-                renderItem={(article: Article) => (
-                  <List.Item>
-                    <Card
-                      hoverable
-                      actions={[
-                        <Link key="view" href={`/knowledge-base/${article.id}`}>
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={<Eye size={14} />}
-                          >
-                            查看
-                          </Button>
-                        </Link>,
-                        <Button
-                          key="edit"
-                          type="text"
-                          size="small"
-                          icon={<Edit size={14} />}
-                        >
-                          编辑
-                        </Button>,
-                      ]}
-                    >
-                      <Card.Meta
-                        title={
-                          <Link href={`/knowledge-base/${article.id}`}>
-                            <Text
-                              strong
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              {article.title}
-                            </Text>
-                          </Link>
-                        }
-                        description={
-                          <div>
-                            <Text
-                              type="secondary"
-                              style={{ display: "block", marginBottom: 8 }}
-                            >
-                              {article.summary}
-                            </Text>
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Tag color={getCategoryColor(article.category)}>
-                                {article.category}
-                              </Tag>
-                            </div>
-                          </div>
-                        }
-                      />
-                    </Card>
-                  </List.Item>
-                )}
-              />
-            )}
-          </Card>
-        </Col>
-
-        {/* 右侧边栏 */}
-        <Col span={6}>
-          <Card title="热门文章" size="small">
-            <List
-              size="small"
-              dataSource={popularArticles}
-              renderItem={(article, index) => (
-                <List.Item>
-                  <div style={{ width: "100%" }}>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <div
-                        style={{
-                          minWidth: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          backgroundColor: index < 3 ? "#ff7a45" : "#d9d9d9",
-                          color: "white",
-                          fontSize: 12,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          marginRight: 8,
-                        }}
-                      >
-                        {index + 1}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <Link href={`/knowledge-base/${article.id}`}>
-                          <Text
-                            style={{
-                              fontSize: 13,
-                              display: "block",
-                              marginBottom: 4,
-                            }}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            {article.title}
-                          </Text>
-                        </Link>
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          <Eye size={10} /> {article.views} 次浏览
-                        </Text>
-                      </div>
-                    </div>
-                  </div>
-                </List.Item>
-              )}
-            />
-          </Card>
-
-          <Card title="分类统计" size="small" style={{ marginTop: 16 }}>
-            <List
-              size="small"
-              dataSource={categories.filter((c) => c !== "全部")}
-              renderItem={(category) => {
-                const count = articles.filter(
-                  (a) => a.category === category
-                ).length;
-                return (
-                  <List.Item style={{ padding: "8px 0" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        width: "100%",
-                      }}
-                    >
-                      <Tag color={getCategoryColor(category)}>{category}</Tag>
-                      <span style={{ fontSize: 12, color: "#999" }}>
-                        {count} 篇
-                      </span>
-                    </div>
-                  </List.Item>
-                );
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </>
+    <div>
+      {renderStatsCards()}
+      {renderFilters()}
+      {renderArticleList()}
+    </div>
   );
 };
 
-export default KnowledgeBaseListPage;
+export default KnowledgeBasePage;

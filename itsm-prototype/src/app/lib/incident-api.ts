@@ -1,4 +1,5 @@
 import { httpClient } from './http-client';
+import { PaginationRequest, PaginationResponse } from './api-config';
 
 // 事件管理API接口
 export interface Incident {
@@ -46,6 +47,10 @@ export interface Incident {
   closed_at?: string;
   created_at: string;
   updated_at: string;
+  // 新增字段
+  category?: string;
+  subcategory?: string;
+  resolution?: string;
 }
 
 export interface CreateIncidentRequest {
@@ -57,6 +62,8 @@ export interface CreateIncidentRequest {
   is_major_incident?: boolean;
   assignee_id?: number;
   configuration_item_id?: number;
+  category?: string;
+  subcategory?: string;
   // 阿里云相关字段
   alibaba_cloud_instance_id?: string;
   alibaba_cloud_region?: string;
@@ -70,6 +77,93 @@ export interface CreateIncidentRequest {
   security_event_details?: unknown;
   // 关联的配置项
   affected_configuration_item_ids?: number[];
+  form_fields?: Record<string, string | number | boolean>;
+}
+
+// 根因分析接口
+export interface RootCauseAnalysis {
+  id?: number;
+  incident_id: number;
+  analysis_method: string; // "5-whys" | "fishbone" | "timeline" | "fault-tree"
+  root_cause: string;
+  contributing_factors: string[];
+  evidence: string[];
+  preventive_actions: string[];
+  status: "draft" | "in-progress" | "completed" | "approved";
+  analyst_id?: number;
+  analyst_name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 影响评估接口
+export interface ImpactAssessment {
+  id?: number;
+  incident_id: number;
+  business_impact: "low" | "medium" | "high" | "critical";
+  technical_impact: "low" | "medium" | "high" | "critical";
+  affected_services: string[];
+  affected_users_count: number;
+  financial_impact: number;
+  reputation_impact: "low" | "medium" | "high" | "critical";
+  compliance_impact: boolean;
+  assessment_notes: string;
+  assessor_id?: number;
+  assessor_name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 事件分类接口
+export interface IncidentClassification {
+  id?: number;
+  incident_id: number;
+  category: string;
+  subcategory: string;
+  service_type: string;
+  failure_type: string;
+  urgency: "low" | "medium" | "high" | "critical";
+  impact: "low" | "medium" | "high" | "critical";
+  classification_confidence: number; // 0-100
+  auto_classified: boolean;
+  classifier_id?: number;
+  classifier_name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateRootCauseAnalysisRequest {
+  incident_id: number;
+  analysis_method: string;
+  root_cause: string;
+  contributing_factors: string[];
+  evidence: string[];
+  preventive_actions: string[];
+  status: string;
+}
+
+export interface CreateImpactAssessmentRequest {
+  incident_id: number;
+  business_impact: string;
+  technical_impact: string;
+  affected_services: string[];
+  affected_users_count: number;
+  financial_impact: number;
+  reputation_impact: string;
+  compliance_impact: boolean;
+  assessment_notes: string;
+}
+
+export interface CreateIncidentClassificationRequest {
+  incident_id: number;
+  category: string;
+  subcategory: string;
+  service_type: string;
+  failure_type: string;
+  urgency: string;
+  impact: string;
+  classification_confidence?: number;
+  auto_classified?: boolean;
 }
 
 export interface UpdateIncidentRequest {
@@ -80,10 +174,14 @@ export interface UpdateIncidentRequest {
   status?: string;
   assignee_id?: number;
   is_major_incident?: boolean;
+  category?: string;
+  subcategory?: string;
+  resolution?: string;
   resolution_notes?: string;
   suspend_reason?: string;
   resolved_at?: string;
   closed_at?: string;
+  form_fields?: Record<string, string | number | boolean>;
 }
 
 export interface UpdateIncidentStatusRequest {
@@ -92,24 +190,22 @@ export interface UpdateIncidentStatusRequest {
   suspend_reason?: string;
 }
 
-export interface ListIncidentsRequest {
-  page?: number;
-  page_size?: number;
+export interface ListIncidentsRequest extends PaginationRequest {
   status?: string;
   priority?: string;
   source?: string;
   type?: string;
+  category?: string;
   assignee_id?: number;
   is_major_incident?: boolean;
   keyword?: string;
+  date_from?: string;
+  date_to?: string;
   [key: string]: unknown;
 }
 
-export interface ListIncidentsResponse {
-  incidents: Incident[];
-  total: number;
-  page: number;
-  page_size: number;
+export interface ListIncidentsResponse extends PaginationResponse<Incident> {
+  incidents: Incident[]; // 保持向后兼容
 }
 
 export interface IncidentMetrics {
@@ -211,6 +307,118 @@ export class IncidentAPI {
   static async getIncidentMetrics(): Promise<IncidentMetrics> {
     const response = await httpClient.get<IncidentMetrics>('/api/v1/incidents/stats');
     return response;
+  }
+
+  // 根因分析相关API
+  static async getRootCauseAnalysis(incidentId: number): Promise<RootCauseAnalysis> {
+    try {
+      const response = await httpClient.get<RootCauseAnalysis>(`/api/incidents/${incidentId}/root-cause`);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.getRootCauseAnalysis error:', error);
+      throw error;
+    }
+  }
+
+  static async createRootCauseAnalysis(request: CreateRootCauseAnalysisRequest): Promise<RootCauseAnalysis> {
+    try {
+      const response = await httpClient.post<RootCauseAnalysis>('/api/incidents/root-cause', request);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.createRootCauseAnalysis error:', error);
+      throw error;
+    }
+  }
+
+  static async updateRootCauseAnalysis(id: number, request: Partial<CreateRootCauseAnalysisRequest>): Promise<RootCauseAnalysis> {
+    try {
+      const response = await httpClient.put<RootCauseAnalysis>(`/api/incidents/root-cause/${id}`, request);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.updateRootCauseAnalysis error:', error);
+      throw error;
+    }
+  }
+
+  // 影响评估相关API
+  static async getImpactAssessment(incidentId: number): Promise<ImpactAssessment> {
+    try {
+      const response = await httpClient.get<ImpactAssessment>(`/api/incidents/${incidentId}/impact-assessment`);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.getImpactAssessment error:', error);
+      throw error;
+    }
+  }
+
+  static async createImpactAssessment(request: CreateImpactAssessmentRequest): Promise<ImpactAssessment> {
+    try {
+      const response = await httpClient.post<ImpactAssessment>('/api/incidents/impact-assessment', request);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.createImpactAssessment error:', error);
+      throw error;
+    }
+  }
+
+  static async updateImpactAssessment(id: number, request: Partial<CreateImpactAssessmentRequest>): Promise<ImpactAssessment> {
+    try {
+      const response = await httpClient.put<ImpactAssessment>(`/api/incidents/impact-assessment/${id}`, request);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.updateImpactAssessment error:', error);
+      throw error;
+    }
+  }
+
+  // 事件分类相关API
+  static async getIncidentClassification(incidentId: number): Promise<IncidentClassification> {
+    try {
+      const response = await httpClient.get<IncidentClassification>(`/api/incidents/${incidentId}/classification`);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.getIncidentClassification error:', error);
+      throw error;
+    }
+  }
+
+  static async createIncidentClassification(request: CreateIncidentClassificationRequest): Promise<IncidentClassification> {
+    try {
+      const response = await httpClient.post<IncidentClassification>('/api/incidents/classification', request);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.createIncidentClassification error:', error);
+      throw error;
+    }
+  }
+
+  static async updateIncidentClassification(id: number, request: Partial<CreateIncidentClassificationRequest>): Promise<IncidentClassification> {
+    try {
+      const response = await httpClient.put<IncidentClassification>(`/api/incidents/classification/${id}`, request);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.updateIncidentClassification error:', error);
+      throw error;
+    }
+  }
+
+  // AI辅助分析
+  static async analyzeIncidentWithAI(incidentId: number): Promise<{
+    suggested_classification: Partial<IncidentClassification>;
+    suggested_root_causes: string[];
+    similar_incidents: Incident[];
+  }> {
+    try {
+      const response = await httpClient.post<{
+        suggested_classification: Partial<IncidentClassification>;
+        suggested_root_causes: string[];
+        similar_incidents: Incident[];
+      }>(`/api/incidents/${incidentId}/ai-analysis`);
+      return response;
+    } catch (error) {
+      console.error('IncidentAPI.analyzeIncidentWithAI error:', error);
+      throw error;
+    }
   }
 
   // 获取可关联的配置项列表
@@ -324,4 +532,4 @@ export class IncidentAPI {
 
     return this.createIncidentFromCloudProductEvent(mockCloudEvent);
   }
-} 
+}

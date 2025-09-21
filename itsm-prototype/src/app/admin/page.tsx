@@ -14,6 +14,7 @@ import {
   Avatar,
   theme,
   List,
+  Tooltip,
 } from "antd";
 import {
   Users,
@@ -582,17 +583,18 @@ const QuickActionGroup = ({
                           style={{ color: token.colorTextSecondary }}
                         />
                       </div>
-                      <Paragraph
-                        type="secondary"
-                        style={{
-                          fontSize: token.fontSizeSM,
-                          margin: "4px 0",
-                          lineHeight: 1.4,
-                        }}
-                        ellipsis={{ rows: 2 }}
-                      >
-                        {action.description}
-                      </Paragraph>
+                      <Tooltip title={action.description}>
+                        <p
+                          className="truncate"
+                          style={{
+                            fontSize: token.fontSizeSM,
+                            margin: "4px 0",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {action.description}
+                        </p>
+                      </Tooltip>
                       <Text
                         type="secondary"
                         style={{ fontSize: token.fontSizeSM, fontWeight: 500 }}

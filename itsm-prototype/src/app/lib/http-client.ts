@@ -1,9 +1,19 @@
 import { API_BASE_URL } from './api-config';
+import { security } from './security';
 
+// 请求配置接口
 interface RequestConfig {
-  method: string;
-  body?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   headers?: Record<string, string>;
+  body?: string;
+  timeout?: number;
+}
+
+// API响应接口
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
 }
 
 class HttpClient {
@@ -11,9 +21,11 @@ class HttpClient {
   private token: string | null = null;
   private tenantId: number | null = null;
   private tenantCode: string | null = null;
+  private readonly timeout: number;
 
   constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = baseURL;
+    this.baseURL = process.env.NEXT_PUBLIC_API_URL || baseURL;
+    this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
     // 从localStorage获取token和租户ID
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('access_token'); // 改为 access_token
@@ -50,6 +62,7 @@ class HttpClient {
 
   setTenantCode(code: string | null) {
     this.tenantCode = code;
+    console.log('HttpClient.setTenantCode:', code);
     if (typeof window !== 'undefined') {
       if (code) {
         localStorage.setItem('current_tenant_code', code);
@@ -59,13 +72,20 @@ class HttpClient {
     }
   }
 
+  // 获取租户代码
+  getTenantCode(): string | null {
+    return this.tenantCode;
+  }
+
   getTenantId(): number | null {
     return this.tenantId;
   }
 
   private getHeaders(): Record<string, string> {
+    // 设置安全请求头
+    const csrfToken = security.csrf.getTokenFromMeta();
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...security.network.getSecureHeaders(csrfToken || undefined),
     };
 
     // 动态获取最新的token和tenantId
@@ -143,7 +163,15 @@ class HttpClient {
     });
 
     try {
-      const response = await fetch(url, requestConfig);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      
+      const response = await fetch(url, {
+        ...requestConfig,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
       
       console.log('HTTP Client Response:', {
         status: response.status,
@@ -169,7 +197,7 @@ class HttpClient {
             const suffix = rid ? ` [RID: ${rid}]` : '';
             throw new Error(`HTTP error! status: ${retryResponse.status}${suffix}`);
           }
-          const retryData = await retryResponse.json() as { code: number; message: string; data: T };
+          const retryData = await retryResponse.json() as ApiResponse<T>;
           console.log('HTTP Client Retry Response Data:', retryData);
           
           // 检查响应码
@@ -197,7 +225,7 @@ class HttpClient {
         throw new Error(`HTTP error! status: ${response.status}${suffix}`);
       }
 
-      const responseData = await response.json() as { code: number; message: string; data: T };
+      const responseData = await response.json() as ApiResponse<T>;
       console.log('HTTP Client Raw Response Data:', responseData);
       
       // 检查响应码
@@ -210,6 +238,9 @@ class HttpClient {
       return responseData.data;
     } catch (error: unknown) {
       console.error('Request failed:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('请求超时，请稍后重试');
+      }
       throw error;
     }
   }

@@ -1,583 +1,467 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TicketApi } from "../../lib/ticket-api";
-import { CreateTicketRequest } from "../../lib/api-config";
 import {
-  ArrowLeft,
-  Save,
-  Brain,
-  Sparkles,
-  UserCircle,
-  BookOpen,
+  Card,
+  Form,
+  Input,
+  Select,
+  Button,
+  message,
+  Space,
+  Typography,
+  Row,
+  Col,
+  Divider,
+  Alert,
+  Tag,
+  Steps,
+  Collapse,
+} from "antd";
+import {
   FileText,
-  Eye,
+  User,
+  Calendar,
+  Tag as TagIcon,
+  Paperclip,
+  Send,
+  Bot,
+  Lightbulb,
+  Workflow,
   CheckCircle,
 } from "lucide-react";
-import Link from "next/link";
-import { aiSearchKB, aiSummarize, aiTriage, RagAnswer } from "../../lib/ai-api";
-import { AIFeedback } from "../../components/AIFeedback";
+import { AIWorkflowAssistant } from "../../components/AIWorkflowAssistant";
 import {
-  ticketTemplateService,
-  type TicketTemplate,
-} from "../../lib/services/ticket-template-service";
+  ticketService,
+  TicketPriority,
+  TicketType,
+} from "../../lib/services/ticket-service";
 
-const CreateTicketPage: React.FC = () => {
+const { TextArea } = Input;
+const { Option } = Select;
+const { Title, Text } = Typography;
+const { Step } = Steps;
+const { Panel } = Collapse;
+
+interface CreateTicketForm {
+  title: string;
+  description: string;
+  priority: TicketPriority;
+  type: TicketType;
+  category: string;
+  subcategory?: string;
+  tags: string[];
+  attachments: File[];
+}
+
+export default function CreateTicketPage() {
   const router = useRouter();
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<CreateTicketRequest>({
-    title: "",
-    description: "",
-    priority: "medium",
-    form_fields: {},
-  });
+  const [currentStep, setCurrentStep] = useState(0);
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [formData, setFormData] = useState<Partial<CreateTicketForm>>({});
 
-  // 模板相关状态
-  const [templates, setTemplates] = useState<TicketTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<TicketTemplate | null>(null);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [templateLoading, setTemplateLoading] = useState(false);
+  const steps = [
+    {
+      title: "基本信息",
+      icon: <FileText />,
+      content: "填写工单基本信息和描述",
+    },
+    {
+      title: "AI智能分析",
+      icon: <Bot />,
+      content: "AI分析工单内容并提供建议",
+    },
+    {
+      title: "确认创建",
+      icon: <CheckCircle />,
+      content: "确认工单信息并创建",
+    },
+  ];
 
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [kbAnswers, setKbAnswers] = useState<RagAnswer[]>([]);
-  const [triage, setTriage] = useState<{
-    category: string;
-    priority: string;
-    assignee_id: number;
-    confidence: number;
-  } | null>(null);
-  const [summary, setSummary] = useState<string>("");
+  const handleAISuggestion = (suggestion: any) => {
+    setAiSuggestion(suggestion);
 
-  // 添加优先级映射函数
-  const priorityMap: { [key: string]: string } = {
-    低: "low",
-    中: "medium",
-    高: "high",
-    紧急: "critical",
+    // 自动填充表单
+    form.setFieldsValue({
+      priority: suggestion.priority,
+      category: suggestion.category,
+      tags: [suggestion.category, suggestion.priority],
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      priority: suggestion.priority,
+      category: suggestion.category,
+      tags: [suggestion.category, suggestion.priority],
+    }));
+
+    message.success("AI建议已应用，请检查并确认");
   };
 
-  // 加载模板数据
-  useEffect(() => {
-    loadTemplates();
-  }, []);
+  const handleFormChange = (changedValues: any, allValues: any) => {
+    setFormData(allValues);
+  };
 
-  const loadTemplates = async () => {
+  const handleSubmit = async (values: CreateTicketForm) => {
+    setLoading(true);
     try {
-      setTemplateLoading(true);
-      const response = await ticketTemplateService.getTemplates({
-        page: 1,
-        size: 100,
-        is_active: true,
-        sort_by: "name",
-        sort_order: "asc",
+      const response = await ticketService.createTicket({
+        title: values.title,
+        description: values.description,
+        priority: values.priority,
+        type: values.type,
+        category: values.category,
+        subcategory: values.subcategory,
+        tags: values.tags,
       });
-      setTemplates(response.data || []);
+
+      message.success(`工单创建成功！工单号: ${response.ticket_id}`);
+      router.push(`/tickets/${response.ticket_id}`);
     } catch (error) {
-      console.error("加载模板失败:", error);
-    } finally {
-      setTemplateLoading(false);
-    }
-  };
-
-  // 应用模板
-  const applyTemplate = (template: TicketTemplate) => {
-    setFormData({
-      title: "",
-      description: "",
-      priority: template.priority || "medium",
-      form_fields: {
-        ...template.form_fields,
-        category: template.category,
-        template_id: template.id,
-      },
-    });
-    setSelectedTemplate(template);
-    setShowTemplateModal(false);
-  };
-
-  // 清除模板
-  const clearTemplate = () => {
-    setSelectedTemplate(null);
-    setFormData({
-      title: "",
-      description: "",
-      priority: "medium",
-      form_fields: {},
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.title.trim() || !formData.description.trim()) {
-      setError("请填写标题和描述");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // 创建提交数据，确保priority是英文值
-      const submitData = {
-        ...formData,
-        priority: priorityMap[formData.priority] || formData.priority,
-      };
-
-      const response = await TicketApi.createTicket(submitData);
-
-      if (response && response.id) {
-        router.push(`/tickets/${response.id}`);
-      } else {
-        setError("创建工单失败");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "网络错误");
+      console.error("创建工单失败:", error);
+      message.error("创建工单失败，请稍后重试");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (
-    field: keyof CreateTicketRequest,
-    value: unknown
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
-  const handleAISuggest = async () => {
-    if (!formData.title.trim() && !formData.description.trim()) return;
-    setAiLoading(true);
-    setAiError(null);
-    try {
-      const [t, kb, sum] = await Promise.all([
-        aiTriage(formData.title, formData.description),
-        aiSearchKB(`${formData.title}\n${formData.description}`, 5),
-        aiSummarize(`${formData.title}\n${formData.description}`, 160),
-      ]);
-      setTriage(t);
-      setKbAnswers(kb.answers || []);
-      setSummary(sum.summary);
-      // 回填优先级
-      if (t?.priority) {
-        // triage 返回的可能是 low|medium|high|urgent，简单映射
-        const p = t.priority.toLowerCase();
-        const normalized =
-          p === "urgent"
-            ? "critical"
-            : ["low", "medium", "high", "critical"].includes(p)
-            ? p
-            : "medium";
-        setFormData((prev) => ({
-          ...prev,
-          priority: normalized as CreateTicketRequest["priority"],
-          assignee_id: t.assignee_id || prev.assignee_id,
-          form_fields: {
-            ...(prev.form_fields || {}),
-            category: t.category || (prev.form_fields as any)?.category || "",
-          },
-        }));
-      }
-      // TODO: 回填受理人（assignee_id）与分类（需要前端有对应字段/下拉）
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "智能建议失败";
-      setAiError(msg);
-    } finally {
-      setAiLoading(false);
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-6">
+            <Alert
+              message="智能工单创建"
+              description="填写工单信息，AI将帮助您优化分类、优先级和工作流程"
+              type="info"
+              showIcon
+              icon={<Lightbulb />}
+            />
+
+            <Form
+              form={form}
+              layout="vertical"
+              onValuesChange={handleFormChange}
+              initialValues={{
+                priority: TicketPriority.MEDIUM,
+                type: TicketType.INCIDENT,
+                tags: [],
+              }}
+            >
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item
+                    name="title"
+                    label="工单标题"
+                    rules={[{ required: true, message: "请输入工单标题" }]}
+                  >
+                    <Input
+                      placeholder="请简要描述问题..."
+                      size="large"
+                      prefix={<FileText />}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item
+                    name="description"
+                    label="详细描述"
+                    rules={[{ required: true, message: "请输入详细描述" }]}
+                  >
+                    <TextArea
+                      placeholder="请详细描述问题现象、影响范围、复现步骤等..."
+                      rows={6}
+                      showCount
+                      maxLength={1000}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="type"
+                    label="工单类型"
+                    rules={[{ required: true, message: "请选择工单类型" }]}
+                  >
+                    <Select size="large">
+                      <Option value={TicketType.INCIDENT}>事件</Option>
+                      <Option value={TicketType.SERVICE_REQUEST}>
+                        服务请求
+                      </Option>
+                      <Option value={TicketType.PROBLEM}>问题</Option>
+                      <Option value={TicketType.CHANGE}>变更</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="priority"
+                    label="优先级"
+                    rules={[{ required: true, message: "请选择优先级" }]}
+                  >
+                    <Select size="large">
+                      <Option value={TicketPriority.LOW}>低</Option>
+                      <Option value={TicketPriority.MEDIUM}>中</Option>
+                      <Option value={TicketPriority.HIGH}>高</Option>
+                      <Option value={TicketPriority.URGENT}>紧急</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="category"
+                    label="分类"
+                    rules={[{ required: true, message: "请选择分类" }]}
+                  >
+                    <Select size="large" placeholder="选择问题分类">
+                      <Option value="system">系统问题</Option>
+                      <Option value="network">网络问题</Option>
+                      <Option value="database">数据库问题</Option>
+                      <Option value="hardware">硬件问题</Option>
+                      <Option value="software">软件问题</Option>
+                      <Option value="access">访问权限</Option>
+                      <Option value="other">其他</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="subcategory" label="子分类">
+                    <Select size="large" placeholder="选择子分类（可选）">
+                      <Option value="login">登录问题</Option>
+                      <Option value="performance">性能问题</Option>
+                      <Option value="error">错误信息</Option>
+                      <Option value="configuration">配置问题</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item name="tags" label="标签">
+                    <Select
+                      mode="tags"
+                      size="large"
+                      placeholder="添加相关标签"
+                      prefix={<TagIcon />}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          </div>
+        );
+
+      case 1:
+        return (
+          <div className="space-y-6">
+            <Alert
+              message="AI智能分析"
+              description="AI将分析您的工单内容，提供分类建议、优先级推荐和最佳工作流程"
+              type="success"
+              showIcon
+              icon={<Bot />}
+            />
+
+            <AIWorkflowAssistant onSuggestion={handleAISuggestion} />
+
+            {aiSuggestion && (
+              <Card
+                title={
+                  <Space>
+                    <CheckCircle className="text-green-600" />
+                    <span>AI建议已应用</span>
+                  </Space>
+                }
+                className="border-green-200 bg-green-50"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Text>推荐分类:</Text>
+                    <Tag color="blue">{aiSuggestion.category}</Tag>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Text>推荐优先级:</Text>
+                    <Tag
+                      color={
+                        aiSuggestion.priority === "urgent" ? "red" : "orange"
+                      }
+                    >
+                      {aiSuggestion.priority.toUpperCase()}
+                    </Tag>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Text>预计处理时间:</Text>
+                    <Text strong>{aiSuggestion.estimatedTime}</Text>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Text>置信度:</Text>
+                    <Text strong>
+                      {Math.round(aiSuggestion.confidence * 100)}%
+                    </Text>
+                  </div>
+                </div>
+              </Card>
+            )}
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <Alert
+              message="确认工单信息"
+              description="请确认工单信息无误后点击创建"
+              type="warning"
+              showIcon
+              icon={<CheckCircle />}
+            />
+
+            <Card title="工单信息预览">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Text type="secondary">标题</Text>
+                    <div className="mt-1 font-medium">{formData.title}</div>
+                  </div>
+                  <div>
+                    <Text type="secondary">类型</Text>
+                    <div className="mt-1">
+                      <Tag color="blue">{formData.type}</Tag>
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary">优先级</Text>
+                    <div className="mt-1">
+                      <Tag
+                        color={
+                          formData.priority === "urgent"
+                            ? "red"
+                            : formData.priority === "high"
+                            ? "orange"
+                            : formData.priority === "medium"
+                            ? "blue"
+                            : "green"
+                        }
+                      >
+                        {formData.priority?.toUpperCase()}
+                      </Tag>
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary">分类</Text>
+                    <div className="mt-1 font-medium">{formData.category}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <Text type="secondary">描述</Text>
+                  <div className="mt-1 p-3 bg-gray-50 rounded">
+                    {formData.description}
+                  </div>
+                </div>
+
+                {formData.tags && formData.tags.length > 0 && (
+                  <div>
+                    <Text type="secondary">标签</Text>
+                    <div className="mt-1">
+                      {formData.tags.map((tag, index) => (
+                        <Tag key={index} className="mb-1">
+                          {tag}
+                        </Tag>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="p-6">
-      {/* 头部 */}
-      <div className="flex items-center mb-6">
-        <Link
-          href="/tickets"
-          className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          返回
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">创建工单</h1>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="mb-6">
+        <Title level={2}>
+          <FileText className="mr-3 text-blue-600" />
+          创建工单
+        </Title>
+        <Text type="secondary">
+          智能工单创建系统，AI助手将帮助您优化工单分类和工作流程
+        </Text>
       </div>
 
-      {/* 模板选择器 */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <FileText className="w-5 h-5 mr-2 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">选择模板</h2>
-          </div>
-          {selectedTemplate && (
-            <button
-              onClick={clearTemplate}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              清除模板
-            </button>
-          )}
-        </div>
+      <Card>
+        <Steps current={currentStep} className="mb-8">
+          {steps.map((step, index) => (
+            <Step
+              key={index}
+              title={step.title}
+              description={step.content}
+              icon={step.icon}
+            />
+          ))}
+        </Steps>
 
-        {selectedTemplate ? (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-blue-600 mr-2" />
-                <div>
-                  <div className="font-medium text-blue-900">
-                    已选择模板：{selectedTemplate.name}
-                  </div>
-                  <div className="text-sm text-blue-700">
-                    {selectedTemplate.description}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    分类：{selectedTemplate.category} | 默认优先级：
-                    {selectedTemplate.priority}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowTemplateModal(true)}
-                className="text-sm text-blue-600 hover:text-blue-800"
+        <div className="min-h-[400px]">{renderStepContent()}</div>
+
+        <Divider />
+
+        <div className="flex justify-between">
+          <Button
+            onClick={prevStep}
+            disabled={currentStep === 0}
+            icon={<Calendar />}
+          >
+            上一步
+          </Button>
+
+          <Space>
+            {currentStep < steps.length - 1 ? (
+              <Button type="primary" onClick={nextStep} icon={<Workflow />}>
+                下一步
+              </Button>
+            ) : (
+              <Button
+                type="primary"
+                onClick={() => form.submit()}
+                loading={loading}
+                icon={<Send />}
+                size="large"
               >
-                更换模板
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500 mb-4">选择一个模板来快速创建工单</p>
-            <button
-              onClick={() => setShowTemplateModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              选择模板
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* 错误提示 */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+                创建工单
+              </Button>
+            )}
+          </Space>
         </div>
-      )}
-
-      {/* 表单 */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 标题 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              工单标题 *
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="请输入工单标题"
-              required
-            />
-          </div>
-
-          {/* 优先级 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              优先级
-            </label>
-            <select
-              value={formData.priority}
-              onChange={(e) => handleInputChange("priority", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="low">低</option>
-              <option value="medium">中</option>
-              <option value="high">高</option>
-              <option value="critical">紧急</option>
-            </select>
-          </div>
-
-          {/* 受理人ID（可选） */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              受理人ID（可选）
-            </label>
-            <input
-              type="number"
-              value={formData.assignee_id ?? ""}
-              onChange={(e) =>
-                handleInputChange(
-                  "assignee_id",
-                  e.target.value ? Number(e.target.value) : undefined
-                )
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="填写受理人用户ID"
-            />
-          </div>
-
-          {/* 分类（可选，写入表单字段） */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              分类（可选）
-            </label>
-            <input
-              type="text"
-              value={(formData.form_fields as any)?.category || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  form_fields: {
-                    ...(prev.form_fields || {}),
-                    category: e.target.value,
-                  },
-                }))
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="如 database / network / general"
-            />
-          </div>
-
-          {/* 描述 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              问题描述 *
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="请详细描述遇到的问题..."
-              required
-            />
-          </div>
-
-          {/* 智能建议 */}
-          <div className="p-4 border rounded-md bg-gray-50">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center">
-                <Brain className="w-4 h-4 mr-2" />
-                <span className="font-semibold">智能建议</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleAISuggest}
-                disabled={aiLoading}
-                className="text-sm flex items-center px-2 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-              >
-                <Sparkles className="w-4 h-4 mr-1" /> 一键生成
-              </button>
-            </div>
-            {aiError && (
-              <div className="text-sm text-red-600 mb-2">{aiError}</div>
-            )}
-            {triage && (
-              <div className="text-sm text-gray-700 mb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <UserCircle className="w-4 h-4 mr-1" />
-                    建议分类：{triage.category}，优先级：{triage.priority}
-                    ，建议受理人ID：{triage.assignee_id}，置信度：
-                    {Math.round((triage.confidence || 0) * 100)}%
-                  </div>
-                  <AIFeedback
-                    kind="triage"
-                    query={`${formData.title}\n${formData.description}`}
-                    className="ml-2"
-                  />
-                </div>
-              </div>
-            )}
-            {summary && (
-              <div className="text-sm text-gray-600 mb-2">
-                <div className="flex items-center justify-between">
-                  <span>摘要：{summary}</span>
-                  <AIFeedback
-                    kind="summarize"
-                    query={`${formData.title}\n${formData.description}`}
-                    className="ml-2"
-                  />
-                </div>
-              </div>
-            )}
-            {kbAnswers.length > 0 && (
-              <div>
-                <div className="text-sm font-semibold mb-2 flex items-center">
-                  <BookOpen className="w-4 h-4 mr-1" /> 知识推荐
-                </div>
-                <ul className="space-y-2">
-                  {kbAnswers.map((a, idx) => (
-                    <li
-                      key={idx}
-                      className="text-sm p-2 bg-white border rounded"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-medium">
-                            {a.title || "相关内容"}
-                          </div>
-                          <div className="text-gray-600">{a.snippet}</div>
-                        </div>
-                        <AIFeedback
-                          kind="search"
-                          query={`${formData.title}\n${formData.description}`}
-                          itemType="knowledge"
-                          itemId={a.id}
-                          className="ml-2 flex-shrink-0"
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* 提交按钮 */}
-          <div className="flex justify-end space-x-3">
-            <Link
-              href="/tickets"
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              取消
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              {loading ? "创建中..." : "创建工单"}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* 模板选择模态框 */}
-      {showTemplateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">
-                选择工单模板
-              </h2>
-              <button
-                onClick={() => setShowTemplateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
-              {templateLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">加载模板中...</p>
-                </div>
-              ) : templates.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">暂无可用模板</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {templates.map((template) => (
-                    <div
-                      key={template.id}
-                      className="border rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => applyTemplate(template)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-2">
-                            <h3 className="text-lg font-medium text-gray-900 mr-3">
-                              {template.name}
-                            </h3>
-                            <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                template.is_active
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {template.is_active ? "启用" : "禁用"}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 mb-3">
-                            {template.description}
-                          </p>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>分类：{template.category}</span>
-                            <span>优先级：{template.priority}</span>
-                            <span>
-                              更新时间：
-                              {new Date(template.updated_at).toLocaleDateString(
-                                "zh-CN"
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // 这里可以添加模板预览功能
-                            }}
-                            className="p-2 text-gray-400 hover:text-gray-600"
-                            title="预览模板"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              applyTemplate(template);
-                            }}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
-                          >
-                            应用模板
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      </Card>
     </div>
   );
-};
-
-export default CreateTicketPage;
+}

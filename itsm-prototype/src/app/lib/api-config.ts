@@ -1,11 +1,39 @@
-// API基础配置
+// API 基础配置
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
+export const API_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 
-// 统一响应接口
-export interface ApiResponse<T = any> {
+// 通用 API 响应接口
+export interface ApiResponse<T> {
   code: number;
   message: string;
   data: T;
+}
+
+// API 错误码定义
+export const API_ERROR_CODES = {
+  SUCCESS: 0,
+  PARAM_ERROR: 1001,
+  VALIDATION_ERROR: 1002,
+  AUTH_FAILED: 2001,
+  FORBIDDEN: 2003,
+  NOT_FOUND: 4004,
+  INTERNAL_ERROR: 5001,
+} as const;
+
+// 分页请求接口
+export interface PaginationRequest {
+  page?: number;
+  page_size?: number;
+}
+
+// 分页响应接口
+export interface PaginationResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
 }
 
 // 租户相关接口
@@ -62,6 +90,7 @@ export interface Ticket {
   description: string;
   status: string;
   priority: string;
+  type?: string;
   form_fields?: Record<string, unknown>;
   ticket_number: string;
   requester_id: number;
@@ -206,4 +235,70 @@ export interface ServiceRequest {
   catalog?: ServiceCatalog;
   requester?: User;
   tenant?: Tenant;
+}
+
+// 角色相关接口
+export interface Role {
+  id: number;
+  name: string;
+  description: string;
+  permissions: string[];
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoleListResponse {
+  roles: Role[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface CreateRoleRequest {
+  name: string;
+  description: string;
+  permissions: string[];
+  status: 'active' | 'inactive';
+}
+
+export interface UpdateRoleRequest {
+  name?: string;
+  description?: string;
+  permissions?: string[];
+  status?: 'active' | 'inactive';
+}
+
+export interface GetRolesParams {
+  page?: number;
+  size?: number;
+  status?: string;
+  search?: string;
+}
+
+// 系统配置相关接口
+export interface SystemConfig {
+  id: number;
+  key: string;
+  value: string;
+  description?: string;
+  category: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SystemConfigListResponse {
+  configs: SystemConfig[];
+  total: number;
+}
+
+export interface UpdateSystemConfigRequest {
+  key: string;
+  value: string;
+  description?: string;
+}
+
+export interface GetSystemConfigsParams {
+  category?: string;
+  search?: string;
 }

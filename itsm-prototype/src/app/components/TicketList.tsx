@@ -234,15 +234,17 @@ export const TicketList: React.FC<TicketListProps> = ({
         title: "标题",
         dataIndex: "title",
         key: "title",
-        ellipsis: true,
         render: (text: string, record: Ticket) => (
-          <Button
-            type="link"
-            className="p-0 h-auto text-left"
-            onClick={() => onTicketSelect?.(record)}
-          >
-            {text}
-          </Button>
+          <Tooltip title={text}>
+            <Button
+              type="link"
+              className="p-0 h-auto text-left truncate"
+              style={{ maxWidth: '100%' }}
+              onClick={() => onTicketSelect?.(record)}
+            >
+              <span className="truncate">{text}</span>
+            </Button>
+          </Tooltip>
         ),
       },
       {

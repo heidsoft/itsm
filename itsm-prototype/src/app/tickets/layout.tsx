@@ -6,9 +6,5 @@ export default function TicketsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AppLayout title="工单管理" breadcrumb={[{ title: "工单管理" }]}>
-      {children}
-    </AppLayout>
-  );
+  return <AppLayout>{children}</AppLayout>;
 }

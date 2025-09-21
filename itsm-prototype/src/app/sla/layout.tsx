@@ -7,7 +7,7 @@ export default function SLALayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout title="SLA管理" breadcrumb={[{ title: "SLA管理" }]}>
+    <AppLayout>
       {children}
     </AppLayout>
   );
