@@ -2,10 +2,9 @@
 
 import React from "react";
 import { ChartPlaceholder } from "../../components/ChartPlaceholder";
-import { mockIncidentsData } from "../../lib/mock-data";
 
 const IncidentTrendsPage = () => {
-  // 数据聚合逻辑已简化，使用占位符组件
+  // Data aggregation logic simplified, using placeholder components
 
   return (
     <div className="p-10 bg-gray-50 min-h-full">
@@ -25,8 +24,8 @@ const IncidentTrendsPage = () => {
           </h3>
           <ChartPlaceholder
             type="line"
-            title="每日事件数量趋势"
-            description="显示每日事件数量的变化趋势"
+            title="Daily Incident Count Trend"
+            description="Shows the trend of daily incident counts"
             height={300}
           />
         </div>
@@ -37,8 +36,8 @@ const IncidentTrendsPage = () => {
           </h3>
           <ChartPlaceholder
             type="bar"
-            title="按优先级统计事件"
-            description="显示不同优先级的事件数量分布"
+            title="Incidents by Priority Statistics"
+            description="Shows the distribution of incident counts by different priorities"
             height={300}
           />
         </div>

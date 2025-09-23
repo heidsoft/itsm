@@ -161,98 +161,88 @@ const { Step } = Steps;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
-// 模拟数据
+// Mock data
 const mockData = {
   overview: {
     totalTickets: 1247,
-    openTickets: 89,
+    pendingTickets: 89,
     resolvedTickets: 1158,
-    avgResolutionTime: "8.7小时",
-    slaCompliance: 94.2,
-    customerSatisfaction: 4.3,
-    teamPerformance: 87.5,
-    monthlyGrowth: 12.5,
+    avgResponseTime: "2.3 hours",
+    avgResolutionTime: "8.7 hours",
+    customerSatisfaction: 4.2,
   },
   slaMetrics: {
     totalSLA: 1247,
-    withinSLA: 1174,
-    breachedSLA: 73,
-    avgResponseTime: "2.3小时",
-    avgResolutionTime: "8.7小时",
-    criticalSLA: 15,
-    highPrioritySLA: 42,
-    mediumPrioritySLA: 156,
-    lowPrioritySLA: 1034,
+    metSLA: 1175,
+    breachedSLA: 72,
+    avgResponseTime: "2.3 hours",
+    avgResolutionTime: "8.7 hours",
+    complianceRate: 94.2,
   },
   teamPerformance: [
     {
       id: 1,
-      name: "张三",
-      avatar: "张",
-      role: "技术支持",
-      ticketsAssigned: 45,
-      ticketsResolved: 42,
-      avgResolutionTime: "6.2小时",
+      name: "Zhang San",
+      avatar: "Z",
+      role: "Technical Support",
+      assignedTickets: 45,
+      resolvedTickets: 42,
+      avgResolutionTime: "6.2 hours",
       slaCompliance: 96.8,
       customerRating: 4.5,
       efficiency: 93.3,
     },
     {
       id: 2,
-      name: "李四",
-      avatar: "李",
-      role: "高级工程师",
-      ticketsAssigned: 38,
-      ticketsResolved: 36,
-      avgResolutionTime: "7.8小时",
-      slaCompliance: 94.7,
+      name: "Li Si",
+      avatar: "L",
+      role: "Senior Engineer",
+      assignedTickets: 38,
+      resolvedTickets: 35,
+      avgResolutionTime: "7.8 hours",
+      slaCompliance: 92.1,
       customerRating: 4.3,
-      efficiency: 89.5,
+      efficiency: 92.1,
     },
     {
       id: 3,
-      name: "王五",
-      avatar: "王",
-      role: "项目经理",
-      ticketsAssigned: 32,
-      ticketsResolved: 30,
-      avgResolutionTime: "9.1小时",
-      slaCompliance: 93.8,
-      customerRating: 4.4,
-      efficiency: 87.2,
+      name: "Wang Wu",
+      avatar: "W",
+      role: "Project Manager",
+      assignedTickets: 32,
+      resolvedTickets: 29,
+      avgResolutionTime: "9.1 hours",
+      slaCompliance: 90.6,
+      customerRating: 4.1,
+      efficiency: 90.6,
     },
   ],
   recentActivities: [
     {
       id: 1,
-      action: "工单已解决",
-      ticketNumber: "TICKET-001",
-      user: "张三",
+      action: "Ticket resolved",
       timestamp: "2024-01-15 14:30",
-      details: "系统登录问题已解决，用户反馈良好",
+      user: "Zhang San",
+      ticketId: "TICKET-001",
+      details: "System login issue resolved, user feedback positive",
     },
     {
       id: 2,
-      action: "工单已分配",
-      ticketNumber: "TICKET-002",
-      user: "李四",
-      timestamp: "2024-01-15 14:25",
-      details: "打印机故障工单已分配给硬件团队",
+      action: "Ticket assigned",
+      timestamp: "2024-01-15 13:45",
+      user: "Li Si",
+      ticketId: "TICKET-002",
+      details: "Printer malfunction ticket assigned to hardware team",
     },
     {
       id: 3,
-      action: "SLA预警",
-      ticketNumber: "TICKET-003",
-      user: "系统",
-      timestamp: "2024-01-15 14:20",
-      details: "高优先级工单即将超时，请及时处理",
+      action: "SLA warning",
+      timestamp: "2024-01-15 13:00",
+      user: "System",
+      ticketId: "TICKET-003",
+      details: "High priority ticket about to timeout, please handle promptly",
     },
   ],
-  trends: {
-    daily: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
-    weekly: [85, 92, 78, 105, 98, 115, 108],
-    monthly: [320, 345, 298, 378, 356, 412, 389, 445, 423, 478, 456, 512],
-  },
 };
 
 const TicketDashboardPage = () => {
@@ -270,445 +260,442 @@ const TicketDashboardPage = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
+      // Mock API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      message.error("加载仪表板数据失败");
+      message.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderOverviewCards = () => (
-    <Row gutter={16} className="mb-6">
-      <Col span={6}>
-        <Card>
-          <Statistic
-            title="总工单数"
-            value={mockData.overview.totalTickets}
-            prefix={<FileText size={16} style={{ color: "#3b82f6" }} />}
-            suffix={
-              <div className="text-xs text-gray-500 mt-1">
-                <div className="flex items-center">
-                  <TrendingUp size={12} className="text-green-500 mr-1" />
-                  <span className="text-green-500">
-                    +{mockData.overview.monthlyGrowth}%
-                  </span>
+    const renderOverviewCards = () => (
+      <Row gutter={16} className="mb-6">
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Total Tickets"
+              value={mockData.overview.totalTickets}
+              prefix={<FileText size={16} style={{ color: "#3b82f6" }} />}
+              suffix={
+                <div className="text-xs text-gray-500 mt-1">
+                  <div className="flex items-center">
+                    <TrendingUp size={12} className="text-green-500 mr-1" />
+                    <span className="text-green-500">
+                      +{mockData.overview.monthlyGrowth}%
+                    </span>
+                  </div>
+                  <div>Monthly Growth</div>
                 </div>
-                <div>本月增长</div>
-              </div>
-            }
-          />
-        </Card>
-      </Col>
-      <Col span={6}>
-        <Card>
-          <Statistic
-            title="待处理工单"
-            value={mockData.overview.openTickets}
-            valueStyle={{ color: "#faad14" }}
-            prefix={<Clock size={16} />}
-            suffix={
-              <div className="text-xs text-gray-500 mt-1">
-                <div>平均响应: 2.3h</div>
-                <div className="text-orange-500">SLA: 4h</div>
-              </div>
-            }
-          />
-        </Card>
-      </Col>
-      <Col span={6}>
-        <Card>
-          <Statistic
-            title="已解决工单"
-            value={mockData.overview.resolvedTickets}
-            valueStyle={{ color: "#52c41a" }}
-            prefix={<CheckCircle size={16} />}
-            suffix={
-              <div className="text-xs text-gray-500 mt-1">
-                <div>平均解决: {mockData.overview.avgResolutionTime}</div>
-                <div className="text-green-500">
-                  满意度: {mockData.overview.customerSatisfaction}/5
-                </div>
-              </div>
-            }
-          />
-        </Card>
-      </Col>
-      <Col span={6}>
-        <Card>
-          <Statistic
-            title="SLA合规率"
-            value={mockData.overview.slaCompliance}
-            valueStyle={{ color: "#52c41a" }}
-            prefix={<Target size={16} />}
-            suffix="%"
-          />
-          <Progress
-            percent={mockData.overview.slaCompliance}
-            strokeColor="#52c41a"
-            showInfo={false}
-            className="mt-2"
-          />
-        </Card>
-      </Col>
-    </Row>
-  );
-
-  const renderSLAMetrics = () => (
-    <Row gutter={16} className="mb-6">
-      <Col span={8}>
-        <Card title="SLA概览" className="h-full">
-          <div className="text-center mb-4">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {mockData.slaMetrics.withinSLA}
-            </div>
-            <Text type="secondary">符合SLA</Text>
-          </div>
-          <Progress
-            percent={
-              (mockData.slaMetrics.withinSLA / mockData.slaMetrics.totalSLA) *
-              100
-            }
-            strokeColor="#52c41a"
-            showInfo={false}
-          />
-          <div className="mt-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>总工单: {mockData.slaMetrics.totalSLA}</span>
-              <span>违规: {mockData.slaMetrics.breachedSLA}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>平均响应: {mockData.slaMetrics.avgResponseTime}</span>
-              <span>平均解决: {mockData.slaMetrics.avgResolutionTime}</span>
-            </div>
-          </div>
-        </Card>
-      </Col>
-      <Col span={8}>
-        <Card title="优先级分布" className="h-full">
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-2">
-                <Text>紧急</Text>
-                <Text strong>{mockData.slaMetrics.criticalSLA}</Text>
-              </div>
-              <Progress
-                percent={
-                  (mockData.slaMetrics.criticalSLA /
-                    mockData.slaMetrics.totalSLA) *
-                  100
-                }
-                strokeColor="#ff4d4f"
-                showInfo={false}
-              />
-            </div>
-            <div>
-              <div className="flex justify-between mb-2">
-                <Text>高</Text>
-                <Text strong>{mockData.slaMetrics.highPrioritySLA}</Text>
-              </div>
-              <Progress
-                percent={
-                  (mockData.slaMetrics.highPrioritySLA /
-                    mockData.slaMetrics.totalSLA) *
-                  100
-                }
-                strokeColor="#faad14"
-                showInfo={false}
-              />
-            </div>
-            <div>
-              <div className="flex justify-between mb-2">
-                <Text>中</Text>
-                <Text strong>{mockData.slaMetrics.mediumPrioritySLA}</Text>
-              </div>
-              <Progress
-                percent={
-                  (mockData.slaMetrics.mediumPrioritySLA /
-                    mockData.slaMetrics.totalSLA) *
-                  100
-                }
-                strokeColor="#1890ff"
-                showInfo={false}
-              />
-            </div>
-            <div>
-              <div className="flex justify-between mb-2">
-                <Text>低</Text>
-                <Text strong>{mockData.slaMetrics.lowPrioritySLA}</Text>
-              </div>
-              <Progress
-                percent={
-                  (mockData.slaMetrics.lowPrioritySLA /
-                    mockData.slaMetrics.totalSLA) *
-                  100
-                }
-                strokeColor="#52c41a"
-                showInfo={false}
-              />
-            </div>
-          </div>
-        </Card>
-      </Col>
-      <Col span={8}>
-        <Card title="SLA预警" className="h-full">
-          <div className="space-y-3">
-            <Alert
-              message="紧急工单即将超时"
-              description="TICKET-003 将在30分钟内超时"
-              type="error"
-              showIcon
-              icon={<AlertTriangle size={16} />}
+              }
             />
-            <Alert
-              message="高优先级工单预警"
-              description="2个高优先级工单将在2小时内超时"
-              type="warning"
-              showIcon
-              icon={<Clock size={16} />}
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Pending Tickets"
+              value={mockData.overview.openTickets}
+              valueStyle={{ color: "#faad14" }}
+              prefix={<Clock size={16} />}
+              suffix={
+                <div className="text-xs text-gray-500 mt-1">
+                  <div>Avg Response: 2.3h</div>
+                  <div className="text-orange-500">SLA: 4h</div>
+                </div>
+              }
             />
-            <Alert
-              message="SLA合规率良好"
-              description="当前SLA合规率为94.2%，高于目标值"
-              type="success"
-              showIcon
-              icon={<CheckCircle size={16} />}
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Resolved Tickets"
+              value={mockData.overview.resolvedTickets}
+              valueStyle={{ color: "#52c41a" }}
+              prefix={<CheckCircle size={16} />}
+              suffix={
+                <div className="text-xs text-gray-500 mt-1">
+                  <div>Avg Resolution: {mockData.overview.avgResolutionTime}</div>
+                  <div className="text-green-500">
+                    Satisfaction: {mockData.overview.customerSatisfaction}/5
+                  </div>
+                </div>
+              }
             />
-          </div>
-        </Card>
-      </Col>
-    </Row>
-  );
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="SLA Compliance"
+              value={mockData.overview.slaCompliance}
+              valueStyle={{ color: "#52c41a" }}
+              prefix={<Target size={16} />}
+              suffix="%"
+            />
+            <Progress
+              percent={mockData.overview.slaCompliance}
+              strokeColor="#52c41a"
+              showInfo={false}
+              className="mt-2"
+            />
+          </Card>
+        </Col>
+      </Row>
+    );
 
-  const renderTeamPerformance = () => (
-    <Card title="团队绩效" className="mb-6">
-      <div className="mb-4">
-        <Space>
-          <Text>筛选团队:</Text>
-          <Select
-            value={selectedTeam}
-            onChange={setSelectedTeam}
-            style={{ width: 120 }}
-          >
-            <Option value="all">全部团队</Option>
-            <Option value="support">技术支持</Option>
-            <Option value="engineering">工程团队</Option>
-            <Option value="management">管理团队</Option>
-          </Select>
-          <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
-            刷新
-          </Button>
-        </Space>
-      </div>
-
-      <Table
-        dataSource={mockData.teamPerformance}
-        columns={[
-          {
-            title: "团队成员",
-            key: "member",
-            render: (_, record) => (
-              <div className="flex items-center">
-                <Avatar size="small" className="mr-2">
-                  {record.avatar}
-                </Avatar>
-                <div>
-                  <div className="font-medium">{record.name}</div>
-                  <div className="text-xs text-gray-500">{record.role}</div>
-                </div>
+    const renderSLAMetrics = () => (
+      <Row gutter={16} className="mb-6">
+        <Col span={8}>
+          <Card title="SLA Overview" className="h-full">
+            <div className="text-center mb-4">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {mockData.slaMetrics.withinSLA}
               </div>
-            ),
-          },
-          {
-            title: "工单分配",
-            dataIndex: "ticketsAssigned",
-            key: "ticketsAssigned",
-            render: (value) => <Badge count={value} showZero />,
-          },
-          {
-            title: "工单解决",
-            dataIndex: "ticketsResolved",
-            key: "ticketsResolved",
-            render: (value) => <Badge count={value} showZero />,
-          },
-          {
-            title: "平均解决时间",
-            dataIndex: "avgResolutionTime",
-            key: "avgResolutionTime",
-            render: (value) => <Text>{value}</Text>,
-          },
-          {
-            title: "SLA合规率",
-            dataIndex: "slaCompliance",
-            key: "slaCompliance",
-            render: (value) => (
-              <div>
-                <Text>{value}%</Text>
-                <Progress
-                  percent={value}
-                  strokeColor="#52c41a"
-                  showInfo={false}
-                  size="small"
-                />
-              </div>
-            ),
-          },
-          {
-            title: "客户评分",
-            dataIndex: "customerRating",
-            key: "customerRating",
-            render: (value) => (
-              <Rate disabled defaultValue={value} size="small" />
-            ),
-          },
-          {
-            title: "效率指数",
-            dataIndex: "efficiency",
-            key: "efficiency",
-            render: (value) => (
-              <div>
-                <Text>{value}%</Text>
-                <Progress
-                  percent={value}
-                  strokeColor="#1890ff"
-                  showInfo={false}
-                  size="small"
-                />
-              </div>
-            ),
-          },
-          {
-            title: "操作",
-            key: "actions",
-            render: () => (
-              <Space>
-                <Button type="text" size="small" icon={<Eye size={14} />}>
-                  查看详情
-                </Button>
-                <Button type="text" size="small" icon={<Edit size={14} />}>
-                  编辑
-                </Button>
-              </Space>
-            ),
-          },
-        ]}
-        pagination={false}
-        size="small"
-      />
-    </Card>
-  );
-
-  const renderRecentActivities = () => (
-    <Card title="最近活动" className="mb-6">
-      <Timeline>
-        {mockData.recentActivities.map((activity) => (
-          <Timeline.Item
-            key={activity.id}
-            color={
-              activity.action.includes("解决")
-                ? "green"
-                : activity.action.includes("分配")
-                ? "blue"
-                : activity.action.includes("预警")
-                ? "red"
-                : "gray"
-            }
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <Text strong>{activity.action}</Text>
-                <div className="text-sm text-gray-500">
-                  {activity.ticketNumber}
-                </div>
-                <div className="text-sm">{activity.details}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500">{activity.user}</div>
-                <div className="text-xs text-gray-400">
-                  {activity.timestamp}
-                </div>
-              </div>
+              <Text type="secondary">SLA Compliant</Text>
             </div>
-          </Timeline.Item>
-        ))}
-      </Timeline>
-    </Card>
-  );
-
-  const renderTrends = () => (
-    <Card title="趋势分析" className="mb-6">
-      <div className="mb-4">
-        <Space>
-          <Text>时间范围:</Text>
-          <Radio.Group
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-          >
-            <Radio.Button value="7d">7天</Radio.Button>
-            <Radio.Button value="30d">30天</Radio.Button>
-            <Radio.Button value="90d">90天</Radio.Button>
-          </Radio.Group>
-        </Space>
-      </div>
-
-      <Row gutter={16}>
-        <Col span={12}>
-          <Card title="工单数量趋势" size="small">
-            <div className="h-32 flex items-center justify-center text-gray-400">
-              图表区域 - 工单数量趋势
+            <Progress
+              percent={
+                (mockData.slaMetrics.withinSLA / mockData.slaMetrics.totalSLA) *
+                100
+              }
+              strokeColor="#52c41a"
+              showInfo={false}
+            />
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Total Tickets: {mockData.slaMetrics.totalSLA}</span>
+                <span>Breached: {mockData.slaMetrics.breachedSLA}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Avg Response: {mockData.slaMetrics.avgResponseTime}</span>
+                <span>Avg Resolution: {mockData.slaMetrics.avgResolutionTime}</span>
+              </div>
             </div>
           </Card>
         </Col>
-        <Col span={12}>
-          <Card title="解决时间趋势" size="small">
-            <div className="h-32 flex items-center justify-center text-gray-400">
-              图表区域 - 解决时间趋势
+        <Col span={8}>
+          <Card title="Priority Distribution" className="h-full">
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <Text>Critical</Text>
+                  <Text strong>{mockData.slaMetrics.criticalSLA}</Text>
+                </div>
+                <Progress
+                  percent={
+                    (mockData.slaMetrics.criticalSLA /
+                      mockData.slaMetrics.totalSLA) *
+                    100
+                  }
+                  strokeColor="#ff4d4f"
+                  showInfo={false}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <Text>High</Text>
+                  <Text strong>{mockData.slaMetrics.highPrioritySLA}</Text>
+                </div>
+                <Progress
+                  percent={
+                    (mockData.slaMetrics.highPrioritySLA /
+                      mockData.slaMetrics.totalSLA) *
+                    100
+                  }
+                  strokeColor="#faad14"
+                  showInfo={false}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <Text>Medium</Text>
+                  <Text strong>{mockData.slaMetrics.mediumPrioritySLA}</Text>
+                </div>
+                <Progress
+                  percent={
+                    (mockData.slaMetrics.mediumPrioritySLA /
+                      mockData.slaMetrics.totalSLA) *
+                    100
+                  }
+                  strokeColor="#1890ff"
+                  showInfo={false}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <Text>Low</Text>
+                  <Text strong>{mockData.slaMetrics.lowPrioritySLA}</Text>
+                </div>
+                <Progress
+                  percent={
+                    (mockData.slaMetrics.lowPrioritySLA /
+                      mockData.slaMetrics.totalSLA) *
+                    100
+                  }
+                  strokeColor="#52c41a"
+                  showInfo={false}
+                />
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card title="SLA Alerts" className="h-full">
+            <div className="space-y-3">
+              <Alert
+                message="Critical ticket about to timeout"
+                description="TICKET-003 will timeout in 30 minutes"
+                type="error"
+                showIcon
+                icon={<AlertTriangle size={16} />}
+              />
+              <Alert
+                message="High priority ticket alert"
+                description="2 high priority tickets will timeout in 2 hours"
+                type="warning"
+                showIcon
+                icon={<Clock size={16} />}
+              />
+              <Alert
+                message="SLA compliance is good"
+                description="Current SLA compliance rate is 94.2%, above target"
+                type="success"
+                showIcon
+                icon={<CheckCircle size={16} />}
+              />
             </div>
           </Card>
         </Col>
       </Row>
-    </Card>
-  );
+    );
 
-  const renderAdvancedMetrics = () => (
-    <Card title="高级指标" className="mb-6">
-      <Row gutter={16}>
-        <Col span={8}>
-          <Card title="客户满意度分析" size="small">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-2">
-                {mockData.overview.customerSatisfaction}
+    const renderTeamPerformance = () => (
+      <Card title="Team Performance" className="mb-6">
+        <div className="mb-4">
+          <Space>
+            <Text>Filter Team:</Text>
+            <Select
+              value={selectedTeam}
+              onChange={setSelectedTeam}
+              style={{ width: 120 }}
+            >
+              <Option value="all">All Teams</Option>
+              <Option value="support">Technical Support</Option>
+              <Option value="engineering">Engineering Team</Option>
+              <Option value="management">Management Team</Option>
+            </Select>
+            <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
+              Refresh
+            </Button>
+          </Space>
+        </div>
+
+        <Table
+          dataSource={mockData.teamPerformance}
+          columns={[
+            {
+              title: "Team Member",
+              key: "member",
+              render: (_, record) => (
+                <div className="flex items-center">
+                  <Avatar size="small" className="mr-2">
+                    {record.avatar}
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{record.name}</div>
+                    <div className="text-xs text-gray-500">{record.role}</div>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              title: "Ticket Assignment",
+              dataIndex: "ticketsAssigned",
+              key: "ticketsAssigned",
+              render: (value) => <Badge count={value} showZero />,
+            },
+            {
+              title: "Ticket Resolution",
+              dataIndex: "ticketsResolved",
+              key: "ticketsResolved",
+              render: (value) => <Badge count={value} showZero />,
+            },
+            {
+              title: "Avg Resolution Time",
+              dataIndex: "avgResolutionTime",
+              key: "avgResolutionTime",
+              render: (value) => <Text>{value}</Text>,
+            },
+            {
+              title: "SLA Compliance",
+              dataIndex: "slaCompliance",
+              key: "slaCompliance",
+              render: (value) => (
+                <div>
+                  <Text>{value}%</Text>
+                  <Progress
+                    percent={value}
+                    strokeColor="#52c41a"
+                    showInfo={false}
+                    size="small"
+                  />
+                </div>
+              ),
+            },
+            {
+              title: "Customer Rating",
+              dataIndex: "customerRating",
+              key: "customerRating",
+              render: (value) => (
+                <Rate disabled defaultValue={value} size="small" />
+              ),
+            },
+            {
+              title: "Efficiency Index",
+              dataIndex: "efficiency",
+              key: "efficiency",
+              render: (value) => (
+                <div>
+                  <Text>{value}%</Text>
+                  <Progress
+                    percent={value}
+                    strokeColor="#1890ff"
+                    showInfo={false}
+                    size="small"
+                  />
+                </div>
+              ),
+            },
+            {
+              title: "Actions",
+              key: "actions",
+              render: () => (
+                <Space>
+                  <Button type="text" size="small" icon={<Eye size={14} />}>
+                    View Details
+                  </Button>
+                  <Button type="text" size="small" icon={<Edit size={14} />}>
+                    Edit
+                  </Button>
+                </Space>
+              ),
+            },
+          ]}
+          pagination={false}
+          size="small"
+        />
+      </Card>
+    );
+
+    const renderRecentActivities = () => (
+      <Card title="Recent Activities" className="mb-6">
+        <Timeline>
+          {mockData.recentActivities.map((activity) => (
+            <Timeline.Item
+              key={activity.id}
+              color={
+                activity.action.includes("resolved")
+                  ? "green"
+                  : activity.action.includes("assigned")
+                  ? "blue"
+                  : activity.action.includes("alert")
+                  ? "red"
+                  : "gray"
+              }
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <Text strong>{activity.action}</Text>
+                  <div className="text-sm text-gray-500">
+                    {activity.ticketNumber}
+                  </div>
+                  <div className="text-sm">{activity.details}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-500">{activity.user}</div>
+                  <div className="text-xs text-gray-400">
+                    {activity.timestamp}
+                  </div>
+                </div>
               </div>
-              <Text type="secondary">平均评分</Text>
-              <Rate
-                disabled
-                defaultValue={mockData.overview.customerSatisfaction}
-                className="mt-2"
-              />
-            </div>
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card title="团队效率" size="small">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600 mb-2">
-                {mockData.overview.teamPerformance}%
+            </Timeline.Item>
+          ))}
+        </Timeline>
+      </Card>
+    );
+
+    const renderTrends = () => (
+      <Card title="Trend Analysis" className="mb-6">
+        <div className="mb-4">
+          <Space>
+            <Text>Time Range:</Text>
+            <Radio.Group
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+            >
+              <Radio.Button value="7d">7 Days</Radio.Button>
+              <Radio.Button value="30d">30 Days</Radio.Button>
+              <Radio.Button value="90d">90 Days</Radio.Button>
+            </Radio.Group>
+          </Space>
+        </div>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Card title="Ticket Volume Trend" size="small">
+              <div className="h-32 flex items-center justify-center text-gray-500">
+                Chart Area - Ticket Volume Trend
               </div>
-              <Text type="secondary">整体效率</Text>
-              <Progress
-                percent={mockData.overview.teamPerformance}
-                strokeColor="#52c41a"
-                showInfo={false}
-              />
-            </div>
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card title="SLA阈值设置" size="small">
-            <div className="space-y-3">
-              <div>
-                <Text>SLA合规率阈值: {slaThreshold}%</Text>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="Resolution Time Trend" size="small">
+              <div className="h-32 flex items-center justify-center text-gray-500">
+                Chart Area - Resolution Time Trend
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </Card>
+    );
+
+    const renderAdvancedMetrics = () => (
+      <Card title="Advanced Metrics" className="mb-6">
+        <Row gutter={16}>
+          <Col span={8}>
+            <Card title="Customer Satisfaction Analysis" size="small">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  {mockData.overview.customerSatisfaction}
+                </div>
+                <Text type="secondary">Average Rating</Text>
+                <Rate
+                  disabled
+                  defaultValue={mockData.overview.customerSatisfaction}
+                  className="mt-2"
+                />
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card title="Team Efficiency" size="small">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600 mb-2">92.1%</div>
+                <Text type="secondary">Overall Efficiency</Text>
+                <Progress
+                  percent={mockData.overview.teamPerformance}
+                  strokeColor="#52c41a"
+                  showInfo={false}
+                />
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card title="SLA Threshold Settings" size="small">
+              <div className="p-4">
+                <Text>SLA Compliance Threshold: {slaThreshold}%</Text>
                 <Slider
                   value={slaThreshold}
                   onChange={setSlaThreshold}
@@ -722,76 +709,69 @@ const TicketDashboardPage = () => {
                   }}
                 />
               </div>
-              <Switch
-                checked={showAdvancedMetrics}
-                onChange={setShowAdvancedMetrics}
-                checkedChildren="显示高级指标"
-                unCheckedChildren="隐藏高级指标"
-              />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </Card>
-  );
+            </Card>
+          </Col>
+        </Row>
+      </Card>
+    );
 
-  return (
-    <>
-      {/* 页面头部操作 */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">工单仪表板</h1>
-          <p className="text-gray-600 mt-1">实时监控工单处理状态、SLA合规率和团队绩效</p>
+    return (
+      <>
+        {/* Page header actions */}
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Ticket Dashboard</h1>
+            <p className="text-gray-600 mt-1">Real-time monitoring of ticket processing status, SLA compliance and team performance</p>
+          </div>
+          <Space>
+            <Select
+              value={timeRange}
+              onChange={setTimeRange}
+              style={{ width: 120 }}
+            >
+              <Option value="7d">Last 7 Days</Option>
+              <Option value="30d">Last 30 Days</Option>
+              <Option value="90d">Last 90 Days</Option>
+            </Select>
+            <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
+              Refresh
+            </Button>
+            <Button icon={<Download size={16} />}>Export Report</Button>
+          </Space>
         </div>
-        <Space>
-          <Select
-            value={timeRange}
-            onChange={setTimeRange}
-            style={{ width: 120 }}
-          >
-            <Option value="7d">最近7天</Option>
-            <Option value="30d">最近30天</Option>
-            <Option value="90d">最近90天</Option>
-          </Select>
-          <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
-            刷新
-          </Button>
-          <Button icon={<Download size={16} />}>导出报告</Button>
-        </Space>
-      </div>
-      {loading ? (
-        <div className="text-center py-16">
-          <Spin size="large" />
-          <div className="mt-4 text-gray-500">正在加载仪表板数据...</div>
-        </div>
-      ) : (
-        <div>
-          <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
-            <TabPane tab="概览" key="overview">
-              {renderOverviewCards()}
-              {renderSLAMetrics()}
-              {renderRecentActivities()}
-            </TabPane>
+        {loading ? (
+          <div className="text-center py-16">
+            <Spin size="large" />
+            <div className="mt-4 text-gray-500">Loading dashboard data...</div>
+          </div>
+        ) : (
+          <div>
+            <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-6">
+              <TabPane tab="Overview" key="overview">
+                {renderOverviewCards()}
+                {renderSLAMetrics()}
+                {renderRecentActivities()}
+              </TabPane>
 
-            <TabPane tab="团队绩效" key="performance">
-              {renderTeamPerformance()}
-              {renderTrends()}
-            </TabPane>
+              <TabPane tab="Team Performance" key="performance">
+                {renderTeamPerformance()}
+                {renderTrends()}
+              </TabPane>
 
-            <TabPane tab="SLA监控" key="sla">
-              {renderSLAMetrics()}
-              {renderAdvancedMetrics()}
-            </TabPane>
+              <TabPane tab="SLA Monitoring" key="sla">
+                {renderSLAMetrics()}
+                {renderAdvancedMetrics()}
+              </TabPane>
 
-            <TabPane tab="趋势分析" key="trends">
-              {renderTrends()}
-              {renderAdvancedMetrics()}
-            </TabPane>
-          </Tabs>
-        </div>
-      )}
-    </>
-  );
+              <TabPane tab="Trend Analysis" key="trends">
+                {renderTrends()}
+                {renderAdvancedMetrics()}
+              </TabPane>
+            </Tabs>
+          </div>
+        )}
+      </>
+    );
 };
 
 export default TicketDashboardPage;

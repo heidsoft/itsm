@@ -109,6 +109,14 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsRequest, tenantID int) (*dto.ListTicketsResponse, error) {
 	s.logger.Infow("Listing tickets", "tenant_id", tenantID, "filters", req)
 
+	// 设置默认分页参数
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 20
+	}
+
 	query := s.client.Ticket.Query().
 		Where(ticket.TenantID(tenantID))
 
@@ -126,6 +134,43 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		query.Where(ticket.RequesterID(req.RequesterID))
 	}
 
+	// 关键词搜索
+	if req.Keyword != "" {
+		query.Where(ticket.Or(
+			ticket.TitleContains(req.Keyword),
+			ticket.DescriptionContains(req.Keyword),
+		))
+	}
+
+	// 日期范围筛选
+	if req.DateFrom != nil {
+		query.Where(ticket.CreatedAtGTE(*req.DateFrom))
+	}
+	if req.DateTo != nil {
+		query.Where(ticket.CreatedAtLTE(*req.DateTo))
+	}
+
+	// 排序
+	sortField := ticket.FieldCreatedAt
+	if req.SortBy != "" {
+		switch req.SortBy {
+		case "title":
+			sortField = ticket.FieldTitle
+		case "priority":
+			sortField = ticket.FieldPriority
+		case "status":
+			sortField = ticket.FieldStatus
+		case "updated_at":
+			sortField = ticket.FieldUpdatedAt
+		}
+	}
+
+	if req.SortOrder == "asc" {
+		query.Order(ent.Asc(sortField))
+	} else {
+		query.Order(ent.Desc(sortField))
+	}
+
 	// 获取总数
 	total, err := query.Count(ctx)
 	if err != nil {
@@ -137,7 +182,6 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	tickets, err := query.
 		Offset((req.Page - 1) * req.PageSize).
 		Limit(req.PageSize).
-		Order(ent.Desc(ticket.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list tickets", "error", err)

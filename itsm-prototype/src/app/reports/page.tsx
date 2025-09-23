@@ -23,9 +23,7 @@ import {
   TrendingDown,
   Download,
   Eye,
-  Filter,
   Calendar,
-  Users,
   Clock,
   CheckCircle,
   AlertTriangle,
@@ -58,7 +56,7 @@ interface ReportMetrics {
 
 export default function ReportsPage() {
   const [metrics, setMetrics] = useState<ReportMetrics | null>(null);
-  const [timeRange, setTimeRange] = useState<[any, any]>([null, null]);
+  const [timeRange, setTimeRange] = useState<[string, string] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -81,7 +79,7 @@ export default function ReportsPage() {
 
       setMetrics(mockMetrics);
     } catch (error) {
-      console.error("加载报表数据失败:", error);
+      console.error("Failed to load report data:", error);
     } finally {
       setLoading(false);
     }
@@ -94,10 +92,10 @@ export default function ReportsPage() {
   };
 
   const getSLAStatus = (compliance: number) => {
-    if (compliance >= 95) return { color: "success", text: "优秀" };
-    if (compliance >= 85) return { color: "normal", text: "良好" };
-    if (compliance >= 75) return { color: "exception", text: "需改进" };
-    return { color: "exception", text: "严重" };
+    if (compliance >= 95) return { color: "success", text: "Excellent" };
+    if (compliance >= 85) return { color: "normal", text: "Good" };
+    if (compliance >= 75) return { color: "exception", text: "Needs Improvement" };
+    return { color: "exception", text: "Critical" };
   };
 
   const getSatisfactionColor = (score: number) => {
@@ -124,23 +122,23 @@ export default function ReportsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      {/* 页面标题 */}
+      {/* Page Title */}
       <div className="mb-6">
         <Title level={2}>
           <BarChart3 className="mr-3 text-blue-600" />
-          智能报表中心
+          Intelligent Report Center
         </Title>
         <Text type="secondary">
-          全面的ITSM数据分析和智能洞察，帮助您优化服务质量和运营效率
+          Comprehensive ITSM data analysis and intelligent insights to help you optimize service quality and operational efficiency
         </Text>
       </div>
 
-      {/* 时间范围选择器 */}
+      {/* Time Range Selector */}
       <Card className="mb-6">
         <div className="flex items-center justify-between">
           <Space>
             <Calendar className="text-gray-500" />
-            <Text strong>报表时间范围</Text>
+            <Text strong>Report Time Range</Text>
           </Space>
           <Space>
             <RangePicker
@@ -157,32 +155,32 @@ export default function ReportsPage() {
             <Select
               defaultValue="30d"
               style={{ width: 120 }}
-              onChange={(value) => console.log("快速选择:", value)}
+              onChange={(value) => console.log("Quick select:", value)}
             >
-              <Option value="7d">最近7天</Option>
-              <Option value="30d">最近30天</Option>
-              <Option value="90d">最近90天</Option>
-              <Option value="1y">最近1年</Option>
+              <Option value="7d">Last 7 Days</Option>
+              <Option value="30d">Last 30 Days</Option>
+              <Option value="90d">Last 90 Days</Option>
+              <Option value="1y">Last Year</Option>
             </Select>
             <Button icon={<Download />} type="primary">
-              导出报表
+              Export Report
             </Button>
           </Space>
         </div>
       </Card>
 
-      {/* 关键指标概览 */}
+      {/* Key Metrics Overview */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="总工单数"
+              title="Total Tickets"
               value={metrics?.totalTickets}
               prefix={<FileText className="text-blue-500" />}
               suffix={
                 <div className="text-xs text-gray-500">
-                  <div>已解决: {metrics?.resolvedTickets}</div>
-                  <div>待处理: {metrics?.pendingTickets}</div>
+                  <div>Resolved: {metrics?.resolvedTickets}</div>
+                  <div>Pending: {metrics?.pendingTickets}</div>
                 </div>
               }
             />
@@ -191,10 +189,10 @@ export default function ReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="平均解决时间"
+              title="Average Resolution Time"
               value={metrics?.avgResolutionTime}
               prefix={<Clock className="text-green-500" />}
-              suffix="小时"
+              suffix="hours"
             />
             <div className="mt-2">
               <Progress
@@ -215,7 +213,7 @@ export default function ReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="SLA合规率"
+              title="SLA Compliance Rate"
               value={metrics?.slaCompliance}
               prefix={<CheckCircle className="text-blue-500" />}
               suffix="%"
@@ -229,7 +227,7 @@ export default function ReportsPage() {
             <div className="mt-2">
               <Progress
                 percent={metrics?.slaCompliance || 0}
-                status={getSLAStatus(metrics?.slaCompliance || 0).color as any}
+                status={getSLAStatus(metrics?.slaCompliance || 0).color as "success" | "normal" | "exception"}
                 size="small"
               />
             </div>
@@ -238,7 +236,7 @@ export default function ReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="满意度评分"
+              title="Satisfaction Score"
               value={metrics?.satisfactionScore}
               precision={1}
               prefix={
@@ -266,24 +264,24 @@ export default function ReportsPage() {
         </Col>
       </Row>
 
-      {/* 紧急工单提醒 */}
+      {/* Urgent Ticket Alert */}
       {metrics && metrics.urgentTickets > 0 && (
         <Alert
-          message={`有 ${metrics.urgentTickets} 个紧急工单需要立即处理`}
-          description="请优先处理高优先级工单，确保SLA合规"
+          message={`There are ${metrics.urgentTickets} urgent tickets that need immediate attention`}
+          description="Please prioritize high-priority tickets to ensure SLA compliance"
           type="warning"
           showIcon
           icon={<AlertTriangle />}
           className="mb-6"
           action={
             <Button size="small" type="link">
-              查看详情
+              View Details
             </Button>
           }
         />
       )}
 
-      {/* 主要报表内容 */}
+      {/* Main Report Content */}
       <Tabs
         defaultActiveKey="overview"
         size="large"
@@ -294,17 +292,17 @@ export default function ReportsPage() {
             label: (
               <Space>
                 <BarChart3 size={16} />
-                综合概览
+                Overview
               </Space>
             ),
             children: (
               <div className="space-y-6">
                 <Row gutter={[16, 16]}>
                   <Col xs={24} lg={12}>
-                    <Card title="工单状态分布">
+                    <Card title="Ticket Status Distribution">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <Text>已解决</Text>
+                          <Text>Resolved</Text>
                           <div className="flex items-center">
                             <Progress
                               percent={Math.round(
@@ -321,7 +319,7 @@ export default function ReportsPage() {
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <Text>待处理</Text>
+                          <Text>Pending</Text>
                           <div className="flex items-center">
                             <Progress
                               percent={Math.round(
@@ -338,7 +336,7 @@ export default function ReportsPage() {
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <Text>紧急工单</Text>
+                          <Text>Urgent Tickets</Text>
                           <div className="flex items-center">
                             <Progress
                               percent={Math.round(
@@ -360,10 +358,10 @@ export default function ReportsPage() {
                     </Card>
                   </Col>
                   <Col xs={24} lg={12}>
-                    <Card title="服务质量指标">
+                    <Card title="Service Quality Metrics">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <Text>SLA合规率</Text>
+                          <Text>SLA Compliance Rate</Text>
                           <div className="flex items-center">
                             <Tag
                               color={
@@ -381,7 +379,7 @@ export default function ReportsPage() {
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <Text>平均解决时间</Text>
+                          <Text>Average Resolution Time</Text>
                           <div className="flex items-center">
                             <Tag
                               color={
@@ -391,16 +389,16 @@ export default function ReportsPage() {
                               }
                             >
                               {metrics && metrics.avgResolutionTime <= 12
-                                ? "优秀"
-                                : "需改进"}
+                                ? "Excellent"
+                                : "Needs Improvement"}
                             </Tag>
                             <Text strong className="ml-2">
-                              {metrics?.avgResolutionTime}小时
+                              {metrics?.avgResolutionTime}hours
                             </Text>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <Text>满意度评分</Text>
+                          <Text>Satisfaction Score</Text>
                           <div className="flex items-center">
                             <Tag
                               color={
@@ -410,8 +408,8 @@ export default function ReportsPage() {
                               }
                             >
                               {metrics && metrics.satisfactionScore >= 4.0
-                                ? "满意"
-                                : "需改进"}
+                                ? "Satisfied"
+                                : "Needs Improvement"}
                             </Tag>
                             <Text strong className="ml-2">
                               {metrics?.satisfactionScore}/5.0
@@ -430,7 +428,7 @@ export default function ReportsPage() {
             label: (
               <Space>
                 <Clock size={16} />
-                SLA监控
+                SLA Monitoring
                 <Badge count={metrics?.urgentTickets} />
               </Space>
             ),
@@ -441,7 +439,7 @@ export default function ReportsPage() {
             label: (
               <Space>
                 <Heart size={16} />
-                满意度分析
+                Satisfaction Analysis
               </Space>
             ),
             children: <SatisfactionDashboard />,
@@ -451,7 +449,7 @@ export default function ReportsPage() {
             label: (
               <Space>
                 <TrendingUp size={16} />
-                智能预测
+                Intelligent Prediction
               </Space>
             ),
             children: <PredictiveAnalytics />,
@@ -461,7 +459,7 @@ export default function ReportsPage() {
             label: (
               <Space>
                 <Workflow size={16} />
-                工单关联
+                Ticket Association
               </Space>
             ),
             children: <TicketAssociation />,
@@ -469,19 +467,19 @@ export default function ReportsPage() {
         ]}
       />
 
-      {/* 快速操作 */}
+      {/* Quick Actions */}
       <Card className="mt-6">
         <div className="flex items-center justify-between">
           <div>
-            <Title level={5}>快速操作</Title>
-            <Text type="secondary">常用报表功能快速访问</Text>
+            <Title level={5}>Quick Actions</Title>
+            <Text type="secondary">Quick access to common report functions</Text>
           </div>
           <Space>
-            <Button icon={<Download />}>导出综合报表</Button>
+            <Button icon={<Download />}>Export Comprehensive Report</Button>
             <Button icon={<Eye />} type="primary">
-              查看详细数据
+              View Detailed Data
             </Button>
-            <Button icon={<Zap />}>生成分析报告</Button>
+            <Button icon={<Zap />}>Generate Analysis Report</Button>
           </Space>
         </div>
       </Card>

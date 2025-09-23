@@ -190,6 +190,36 @@ class ProblemService {
         return priority;
     }
   }
+
+  getStatusText(status: ProblemStatus): string {
+    switch (status) {
+      case ProblemStatus.OPEN:
+        return 'Open';
+      case ProblemStatus.IN_PROGRESS:
+        return 'In Progress';
+      case ProblemStatus.RESOLVED:
+        return 'Resolved';
+      case ProblemStatus.CLOSED:
+        return 'Closed';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getPriorityText(priority: ProblemPriority): string {
+    switch (priority) {
+      case ProblemPriority.LOW:
+        return 'Low';
+      case ProblemPriority.MEDIUM:
+        return 'Medium';
+      case ProblemPriority.HIGH:
+        return 'High';
+      case ProblemPriority.CRITICAL:
+        return 'Critical';
+      default:
+        return 'Unknown';
+    }
+  }
 }
 
 export const problemService = new ProblemService();

@@ -2,12 +2,11 @@
 
 import React from "react";
 import { ChartPlaceholder } from "../../components/ChartPlaceholder";
-import { mockRequestsData } from "../../lib/mock-data";
 
 const ServiceCatalogUsagePage = () => {
-  // 数据聚合逻辑已简化，使用占位符组件
+  // Data aggregation logic simplified, using placeholder components
 
-  // 颜色配置已移除，使用占位符组件
+  // Color configuration removed, using placeholder components
 
   return (
     <div className="p-10 bg-gray-50 min-h-full">
@@ -27,8 +26,8 @@ const ServiceCatalogUsagePage = () => {
           </h3>
           <ChartPlaceholder
             type="pie"
-            title="按服务类型统计请求"
-            description="显示不同服务类型的请求数量分布"
+            title="Requests by Service Type Statistics"
+            description="Shows the distribution of request counts by different service types"
             height={300}
           />
         </div>
@@ -39,8 +38,8 @@ const ServiceCatalogUsagePage = () => {
           </h3>
           <ChartPlaceholder
             type="bar"
-            title="按状态统计请求"
-            description="显示不同状态的请求数量分布"
+            title="Requests by Status Statistics"
+            description="Shows the distribution of request counts by different statuses"
             height={300}
           />
         </div>

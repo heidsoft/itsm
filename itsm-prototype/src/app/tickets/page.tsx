@@ -83,89 +83,75 @@ interface TicketTemplate {
   icon: React.ReactNode;
 }
 
-// 工单模板数据
-const ticketTemplates: TicketTemplate[] = [
+// Ticket template data
+const ticketTemplates = [
   {
     id: 1,
-    name: "系统登录问题",
+    name: "System Login Issue",
     type: TicketType.INCIDENT,
-    category: "系统访问",
+    category: "System Access",
     priority: TicketPriority.MEDIUM,
-    description: "用户无法登录系统，需要技术支持",
-    estimatedTime: "2小时",
-    sla: "4小时",
+    description: "User unable to login to system, technical support needed",
+    estimatedTime: "2 hours",
+    sla: "4 hours",
     icon: <Shield size={20} />,
   },
   {
     id: 2,
-    name: "打印机故障",
+    name: "Printer Malfunction",
     type: TicketType.INCIDENT,
-    category: "硬件设备",
+    category: "Hardware Equipment",
     priority: TicketPriority.HIGH,
-    description: "办公室打印机无法正常工作",
-    estimatedTime: "1小时",
-    sla: "2小时",
+    description: "Office printer not working properly",
+    estimatedTime: "1 hour",
+    sla: "2 hours",
     icon: <Settings size={20} />,
   },
   {
     id: 3,
-    name: "软件安装请求",
+    name: "Software Installation Request",
     type: TicketType.SERVICE_REQUEST,
-    category: "软件服务",
+    category: "Software Services",
     priority: TicketPriority.LOW,
-    description: "需要安装新的办公软件",
-    estimatedTime: "30分钟",
-    sla: "4小时",
+    description: "Need to install new office software",
+    estimatedTime: "30 minutes",
+    sla: "4 hours",
     icon: <Zap size={20} />,
   },
   {
     id: 4,
-    name: "网络连接问题",
+    name: "Network Connection Issue",
     type: TicketType.INCIDENT,
-    category: "网络服务",
+    category: "Network Services",
     priority: TicketPriority.HIGH,
-    description: "网络连接不稳定，影响工作",
-    estimatedTime: "3小时",
-    sla: "4小时",
+    description: "Network connection unstable, affecting work",
+    estimatedTime: "3 hours",
+    sla: "4 hours",
     icon: <Workflow size={20} />,
   },
 ];
 
-// 优化后的Tickets页面组件
-const TicketsPageComponent: React.FC = React.memo(() => {
-  const { modal } = App.useApp();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [templateModalVisible, setTemplateModalVisible] = useState(false);
-  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  // 筛选和分页状态
-  const [filters, setFilters] = useState<TicketFilters>({});
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  });
-
-  // 统计数据
+// Optimized Tickets page component
+export default function TicketsPage() {
+  // Filter and pagination state
+  const [filter, setFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [showMajorIncidents, setShowMajorIncidents] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  
+  // Statistics data
   const [stats, setStats] = useState({
     total: 0,
-    open: 0,
+    pending: 0,
+    inProgress: 0,
     resolved: 0,
-    highPriority: 0,
+    closed: 0,
+    majorIncidents: 0,
   });
 
-  const [userList] = useState([
-    { id: 1, name: "张三", role: "技术支持", avatar: "张" },
-    { id: 2, name: "李四", role: "高级工程师", avatar: "李" },
-    { id: 3, name: "王五", role: "项目经理", avatar: "王" },
-  ]);
-
-  // 使用useCallback优化函数，避免不必要的重新创建
-  const loadTickets = useCallback(async () => {
+  // Use useCallback to optimize functions, avoiding unnecessary recreation
+  const fetchTickets = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -182,8 +168,8 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       setTickets(response.tickets);
       setPagination((prev) => ({ ...prev, total: response.total }));
     } catch (error) {
-      console.error("加载工单失败:", error);
-      setError(error instanceof Error ? error.message : "加载工单失败");
+      console.error("Failed to load tickets:", error);
+      setError(error instanceof Error ? error.message : "Failed to load tickets");
     } finally {
       setLoading(false);
     }
@@ -199,7 +185,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
         highPriority: response.high_priority,
       });
     } catch (error) {
-      console.error("加载统计数据失败:", error);
+      console.error("Failed to load statistics:", error);
     }
   }, []);
 
@@ -208,7 +194,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
     loadStats();
   }, [loadTickets, loadStats]);
 
-  // 使用useCallback优化事件处理函数
+  // Use useCallback to optimize event handling functions
   const handleCreateTicket = useCallback(() => {
     setEditingTicket(null);
     setModalVisible(true);
@@ -221,34 +207,34 @@ const TicketsPageComponent: React.FC = React.memo(() => {
 
   const handleBatchDelete = useCallback(async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning("请选择要删除的工单");
+      message.warning("Please select tickets to delete");
       return;
     }
 
     modal.confirm({
-      title: "确认删除",
-      content: `确定要删除选中的 ${selectedRowKeys.length} 个工单吗？此操作不可撤销。`,
-      okText: "确认删除",
+      title: "Confirm Delete",
+      content: `Are you sure you want to delete the selected ${selectedRowKeys.length} tickets? This action cannot be undone.`,
+      okText: "Confirm Delete",
       okType: "danger",
-      cancelText: "取消",
+      cancelText: "Cancel",
       onOk: async () => {
         try {
           await Promise.all(
             selectedRowKeys.map((id) => ticketService.deleteTicket(Number(id)))
           );
-          message.success("删除成功");
+          message.success("Deleted successfully");
           setSelectedRowKeys([]);
           loadTickets();
         } catch (error) {
-          console.error("删除失败:", error);
-          message.error("删除失败，请重试");
+          console.error("Delete failed:", error);
+          message.error("Delete failed, please try again");
         }
       },
     });
   }, [selectedRowKeys, modal, loadTickets]);
 
   const handleViewActivity = useCallback((ticket: Ticket) => {
-     console.log("查看活动日志:", ticket);
+     console.log("View activity log:", ticket);
    }, []);
 
   const handleSearch = useCallback((value: string) => {
@@ -271,7 +257,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
 
 
 
-  // 使用useMemo优化统计卡片渲染
+  // Use useMemo to optimize statistics card rendering
   const renderStatsCards = useMemo(() => (
     <div className="mb-6">
       <Row gutter={[16, 16]}>
@@ -279,7 +265,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-100">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-600 mb-1">总工单数</div>
+                <div className="text-sm text-gray-600 mb-1">Total Tickets</div>
                 <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
               </div>
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -292,7 +278,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-orange-50 to-orange-100">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-600 mb-1">待处理</div>
+                <div className="text-sm text-gray-600 mb-1">Open</div>
                 <div className="text-2xl font-bold text-orange-600">{stats.open}</div>
               </div>
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
@@ -305,7 +291,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-green-50 to-green-100">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-600 mb-1">已解决</div>
+                <div className="text-sm text-gray-600 mb-1">Resolved</div>
                 <div className="text-2xl font-bold text-green-600">{stats.resolved}</div>
               </div>
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
@@ -318,7 +304,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br from-red-50 to-red-100">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-600 mb-1">高优先级</div>
+                <div className="text-sm text-gray-600 mb-1">High Priority</div>
                 <div className="text-2xl font-bold text-red-600">{stats.highPriority}</div>
               </div>
               <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
@@ -331,7 +317,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
     </div>
   ), [stats]);
 
-  // 使用useMemo优化筛选器渲染
+  // Use useMemo to optimize filter rendering
   const renderFilters = useMemo(() => (
     <Card className="mb-6 border-0 shadow-sm bg-gradient-to-r from-gray-50 to-white">
       <div className="p-2">
@@ -339,7 +325,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Col xs={24} sm={12} lg={8}>
             <div className="relative">
               <Input.Search
-                placeholder="搜索工单标题、ID或描述..."
+                placeholder="Search ticket title, ID or description..."
                 allowClear
                 onSearch={handleSearch}
                 size="large"
@@ -349,7 +335,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           </Col>
           <Col xs={24} sm={12} lg={4}>
             <Select
-              placeholder="状态筛选"
+              placeholder="Status Filter"
               size="large"
               allowClear
               value={filters.status}
@@ -360,32 +346,32 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               <Option value={TicketStatus.OPEN}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                  待处理
+                  Open
                 </div>
               </Option>
               <Option value={TicketStatus.IN_PROGRESS}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  处理中
+                  In Progress
                 </div>
               </Option>
               <Option value={TicketStatus.RESOLVED}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  已解决
+                  Resolved
                 </div>
               </Option>
               <Option value={TicketStatus.CLOSED}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                  已关闭
+                  Closed
                 </div>
               </Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} lg={4}>
             <Select
-              placeholder="优先级"
+              placeholder="Priority"
               size="large"
               allowClear
               value={filters.priority}
@@ -396,32 +382,32 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               <Option value={TicketPriority.LOW}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  低
+                  Low
                 </div>
               </Option>
               <Option value={TicketPriority.MEDIUM}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  中
+                  Medium
                 </div>
               </Option>
               <Option value={TicketPriority.HIGH}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                  高
+                  High
                 </div>
               </Option>
               <Option value={TicketPriority.URGENT}>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                  紧急
+                  Urgent
                 </div>
               </Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} lg={4}>
             <Select
-              placeholder="类型"
+              placeholder="Type"
               size="large"
               allowClear
               value={filters.type}
@@ -432,25 +418,25 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               <Option value={TicketType.INCIDENT}>
                 <div className="flex items-center">
                   <AlertTriangle size={14} className="text-red-500 mr-2" />
-                  事件
+                  Incident
                 </div>
               </Option>
               <Option value={TicketType.SERVICE_REQUEST}>
                 <div className="flex items-center">
                   <Settings size={14} className="text-blue-500 mr-2" />
-                  服务请求
+                  Service Request
                 </div>
               </Option>
               <Option value={TicketType.PROBLEM}>
                 <div className="flex items-center">
                   <Zap size={14} className="text-orange-500 mr-2" />
-                  问题
+                  Problem
                 </div>
               </Option>
               <Option value={TicketType.CHANGE}>
                 <div className="flex items-center">
                   <Workflow size={14} className="text-purple-500 mr-2" />
-                  变更
+                  Change
                 </div>
               </Option>
             </Select>
@@ -463,7 +449,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               size="large"
               className="w-full rounded-lg border-gray-200 hover:border-blue-400 hover:text-blue-600 transition-all duration-200"
             >
-              刷新
+              Refresh
             </Button>
           </Col>
         </Row>
@@ -471,7 +457,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
     </Card>
   ), [filters.status, filters.priority, filters.type, handleSearch, handleFilterChange, handleRefresh, loading]);
 
-  // 使用useMemo优化工单列表渲染
+  // Use useMemo to optimize ticket list rendering
   const renderTicketList = useMemo(() => (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
@@ -484,7 +470,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                 className="bg-blue-500"
               />
               <span className="text-sm text-gray-600">
-                已选择 {selectedRowKeys.length} 个工单
+                Selected {selectedRowKeys.length} tickets
               </span>
             </div>
           )}
@@ -498,7 +484,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               className="rounded-lg hover:shadow-md transition-all duration-200"
               icon={<AlertTriangle size={16} />}
             >
-              批量删除 ({selectedRowKeys.length})
+              Batch Delete ({selectedRowKeys.length})
             </Button>
           )}
           <Button 
@@ -506,7 +492,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
             size="large"
             className="rounded-lg border-gray-200 hover:border-blue-400 hover:text-blue-600 transition-all duration-200"
           >
-            导出数据
+            Export Data
           </Button>
           <Button
             type="primary"
@@ -515,7 +501,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
             onClick={handleCreateTicket}
             className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-md hover:shadow-lg transition-all duration-200"
           >
-            创建工单
+            Create Ticket
           </Button>
         </div>
       </div>
@@ -537,7 +523,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              `${range[0]}-${range[1]} of ${total} items`,
             onChange: (page, size) => {
               setPagination((prev) => ({
                 ...prev,
@@ -554,10 +540,10 @@ const TicketsPageComponent: React.FC = React.memo(() => {
     </div>
   ), [selectedRowKeys, handleBatchDelete, handleCreateTicket, columns, tickets, loading, pagination]);
 
-  // 使用useMemo优化表格列定义
+  // Use useMemo to optimize table column definition
   const columns = useMemo(() => [
     {
-      title: "工单信息",
+      title: "Ticket Information",
       key: "ticket_info",
       width: 300,
       render: (_: unknown, record: Ticket) => (
@@ -590,7 +576,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       ),
     },
     {
-      title: "状态",
+      title: "Status",
       key: "status",
       width: 120,
       render: (_: unknown, record: Ticket) => {
@@ -600,32 +586,32 @@ const TicketsPageComponent: React.FC = React.memo(() => {
         > = {
           [TicketStatus.OPEN]: {
             color: "#fa8c16",
-            text: "待处理",
+            text: "Open",
             backgroundColor: "#fff7e6",
           },
           [TicketStatus.IN_PROGRESS]: {
             color: "#1890ff",
-            text: "处理中",
+            text: "In Progress",
             backgroundColor: "#e6f7ff",
           },
           [TicketStatus.PENDING]: {
             color: "#faad14",
-            text: "等待中",
+            text: "Pending",
             backgroundColor: "#fffbe6",
           },
           [TicketStatus.RESOLVED]: {
             color: "#52c41a",
-            text: "已解决",
+            text: "Resolved",
             backgroundColor: "#f6ffed",
           },
           [TicketStatus.CLOSED]: {
             color: "#00000073",
-            text: "已关闭",
+            text: "Closed",
             backgroundColor: "#fafafa",
           },
           [TicketStatus.CANCELLED]: {
             color: "#00000073",
-            text: "已取消",
+            text: "Cancelled",
             backgroundColor: "#fafafa",
           },
         };
@@ -647,7 +633,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       },
     },
     {
-      title: "优先级",
+      title: "Priority",
       key: "priority",
       width: 100,
       render: (_: unknown, record: Ticket) => {
@@ -657,22 +643,22 @@ const TicketsPageComponent: React.FC = React.memo(() => {
         > = {
           [TicketPriority.LOW]: {
             color: "#52c41a",
-            text: "低",
+            text: "Low",
             backgroundColor: "#f6ffed",
           },
           [TicketPriority.MEDIUM]: {
             color: "#1890ff",
-            text: "中",
+            text: "Medium",
             backgroundColor: "#e6f7ff",
           },
           [TicketPriority.HIGH]: {
             color: "#fa8c16",
-            text: "高",
+            text: "High",
             backgroundColor: "#fff7e6",
           },
           [TicketPriority.URGENT]: {
             color: "#ff4d4f",
-            text: "紧急",
+            text: "Urgent",
             backgroundColor: "#fff2f0",
           },
         };
@@ -694,7 +680,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       },
     },
     {
-      title: "类型",
+      title: "Type",
       key: "type",
       width: 120,
       render: (_: unknown, record: Ticket) => {
@@ -704,22 +690,22 @@ const TicketsPageComponent: React.FC = React.memo(() => {
         > = {
           [TicketType.INCIDENT]: {
             color: "#ff4d4f",
-            text: "事件",
+            text: "Incident",
             backgroundColor: "#fff2f0",
           },
           [TicketType.SERVICE_REQUEST]: {
             color: "#1890ff",
-            text: "服务请求",
+            text: "Service Request",
             backgroundColor: "#e6f7ff",
           },
           [TicketType.PROBLEM]: {
             color: "#fa8c16",
-            text: "问题",
+            text: "Problem",
             backgroundColor: "#fff7e6",
           },
           [TicketType.CHANGE]: {
             color: "#722ed1",
-            text: "变更",
+            text: "Change",
             backgroundColor: "#f9f0ff",
           },
         };
@@ -741,7 +727,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       },
     },
     {
-      title: "处理人",
+      title: "Assignee",
       key: "assignee",
       width: 120,
       render: (_: unknown, record: Ticket) => (
@@ -753,13 +739,13 @@ const TicketsPageComponent: React.FC = React.memo(() => {
             {record.assignee?.name?.[0] || "U"}
           </Avatar>
           <span style={{ fontSize: "small" }}>
-            {record.assignee?.name || "未分配"}
+            {record.assignee?.name || "Unassigned"}
           </span>
         </div>
       ),
     },
     {
-      title: "创建时间",
+      title: "Created Time",
       key: "created_at",
       width: 150,
       render: (_: unknown, record: Ticket) => (
@@ -769,12 +755,12 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       ),
     },
     {
-      title: "操作",
+      title: "Actions",
       key: "actions",
       width: 200,
       render: (_: unknown, record: Ticket) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title="View Details">
             <Button
               type="text"
               size="small"
@@ -782,7 +768,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               onClick={() => window.open(`/tickets/${record.id}`)}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="Edit">
             <Button
               type="text"
               size="small"
@@ -790,7 +776,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               onClick={() => handleEditTicket(record)}
             />
           </Tooltip>
-          <Tooltip title="查看活动日志">
+          <Tooltip title="View Activity Log">
             <Button
               type="text"
               size="small"
@@ -803,12 +789,12 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               items: [
                 {
                   key: "assign",
-                  label: "分配处理人",
+                  label: "Assign Handler",
                   icon: <Users size={16} />,
                 },
                 {
                   key: "escalate",
-                  label: "升级工单",
+                  label: "Escalate Ticket",
                   icon: <TrendingUp size={16} />,
                 },
                 {
@@ -816,7 +802,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                 },
                 {
                   key: "delete",
-                  label: "删除工单",
+                  label: "Delete Ticket",
                   icon: <AlertTriangle size={16} />,
                   danger: true,
                 },
@@ -835,15 +821,15 @@ const TicketsPageComponent: React.FC = React.memo(() => {
     },
   ], [handleEditTicket, handleViewActivity]);
 
-  // 使用LoadingEmptyError组件处理加载、空状态和错误状态
+  // UseLoadingEmptyError component handles loading, empty state and error state
   if (error) {
     return (
       <LoadingEmptyError
         state="error"
         error={{
-          title: "加载失败",
+          title: "Loading Failed",
           description: error,
-          actionText: "重试",
+          actionText: "Retry",
           onAction: loadTickets,
         }}
       />
@@ -856,17 +842,17 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       {renderFilters}
       {renderTicketList}
 
-      {/* 工单关联与合并 */}
+      {/* Ticket association and merge */}
       <div className="mt-8">
         <TicketAssociation />
       </div>
 
-      {/* 满意度分析看板 */}
+      {/* Satisfaction analysis dashboard */}
       <div className="mt-8">
         <SatisfactionDashboard />
       </div>
 
-      {/* 创建/编辑工单模态框 */}
+      {/* Create/Edit ticket modal */}
       <Modal
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
@@ -875,10 +861,10 @@ const TicketsPageComponent: React.FC = React.memo(() => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {editingTicket ? "编辑工单" : "创建工单"}
+                {editingTicket ? "Edit Ticket" : "Create Ticket"}
               </h3>
               <p className="text-sm text-gray-500">
-                {editingTicket ? "修改工单信息" : "填写工单详细信息"}
+                {editingTicket ? "Modify ticket information" : "Fill in ticket details"}
               </p>
             </div>
           </div>
@@ -893,24 +879,24 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item
-                label="标题"
+                label="Title"
                 name="title"
-                rules={[{ required: true, message: "请输入工单标题" }]}
+                rules={[{ required: true, message: "Please enter ticket title" }]}
               >
-                <Input placeholder="请输入工单标题" size="large" />
+                <Input placeholder="Please enter ticket title" size="large" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="类型"
+                label="Type"
                 name="type"
-                rules={[{ required: true, message: "请选择工单类型" }]}
+                rules={[{ required: true, message: "Please select ticket type" }]}
               >
-                <Select placeholder="请选择工单类型" size="large">
-                  <Option value={TicketType.INCIDENT}>事件</Option>
-                  <Option value={TicketType.SERVICE_REQUEST}>服务请求</Option>
-                  <Option value={TicketType.PROBLEM}>问题</Option>
-                  <Option value={TicketType.CHANGE}>变更</Option>
+                <Select placeholder="Please select ticket type" size="large">
+                  <Option value={TicketType.INCIDENT}>Incident</Option>
+                  <Option value={TicketType.SERVICE_REQUEST}>Service Request</Option>
+                  <Option value={TicketType.PROBLEM}>Problem</Option>
+                  <Option value={TicketType.CHANGE}>Change</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -919,29 +905,29 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item
-                label="分类"
+                label="Category"
                 name="category"
-                rules={[{ required: true, message: "请选择工单分类" }]}
+                rules={[{ required: true, message: "Please select ticket category" }]}
               >
-                <Select placeholder="请选择工单分类" size="large">
-                  <Option value="系统访问">系统访问</Option>
-                  <Option value="硬件设备">硬件设备</Option>
-                  <Option value="软件服务">软件服务</Option>
-                  <Option value="网络服务">网络服务</Option>
+                <Select placeholder="Please select ticket category" size="large">
+                  <Option value="System Access">System Access</Option>
+                  <Option value="Hardware Equipment">Hardware Equipment</Option>
+                  <Option value="Software Services">Software Services</Option>
+                  <Option value="Network Services">Network Services</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="优先级"
+                label="Priority"
                 name="priority"
-                rules={[{ required: true, message: "请选择优先级" }]}
+                rules={[{ required: true, message: "Please select priority" }]}
               >
-                <Select placeholder="请选择优先级" size="large">
-                  <Option value={TicketPriority.LOW}>低</Option>
-                  <Option value={TicketPriority.MEDIUM}>中</Option>
-                  <Option value={TicketPriority.HIGH}>高</Option>
-                  <Option value={TicketPriority.URGENT}>紧急</Option>
+                <Select placeholder="Please select priority" size="large">
+                  <Option value={TicketPriority.LOW}>Low</Option>
+                  <Option value={TicketPriority.MEDIUM}>Medium</Option>
+                  <Option value={TicketPriority.HIGH}>High</Option>
+                  <Option value={TicketPriority.URGENT}>Urgent</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -949,8 +935,8 @@ const TicketsPageComponent: React.FC = React.memo(() => {
 
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item label="处理人" name="assignee_id">
-                <Select placeholder="请选择处理人" allowClear size="large">
+              <Form.Item label="Assignee" name="assignee_id">
+                <Select placeholder="Please select assignee" allowClear size="large">
                   {userList.map((user) => (
                     <Option key={user.id} value={user.id}>
                       <div style={{ display: "flex", alignItems: "center" }}>
@@ -971,10 +957,10 @@ const TicketsPageComponent: React.FC = React.memo(() => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="预计完成时间" name="estimated_time">
+              <Form.Item label="Estimated Time" name="estimated_time">
                 <DatePicker
                   showTime
-                  placeholder="请选择预计完成时间"
+                  placeholder="Please select estimated time"
                   size="large"
                   style={{ width: "100%" }}
                 />
@@ -983,13 +969,13 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           </Row>
 
           <Form.Item
-            label="描述"
+            label="Description"
             name="description"
-            rules={[{ required: true, message: "请输入工单描述" }]}
+            rules={[{ required: true, message: "Please input ticket description" }]}
           >
             <Input.TextArea
               rows={6}
-              placeholder="请详细描述工单内容、问题现象、期望结果等..."
+              placeholder="Please detailedly describe the content of the ticket, the problem, the expected result, etc..."
             />
           </Form.Item>
 
@@ -1000,7 +986,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                 size="large"
                 className="rounded-lg border-gray-200 hover:border-gray-300 transition-colors duration-200"
               >
-                取消
+                Cancel
               </Button>
               <Button 
                 type="primary" 
@@ -1009,14 +995,14 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                 className="rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-md hover:shadow-lg transition-all duration-200"
                 icon={editingTicket ? <Edit size={16} /> : <Plus size={16} />}
               >
-                {editingTicket ? "更新工单" : "创建工单"}
+                {editingTicket ? "Update Ticket" : "Create Ticket"}
               </Button>
             </div>
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* 工单模板管理模态框 */}
+      {/* Ticket template management modal */}
       <Modal
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
@@ -1025,10 +1011,10 @@ const TicketsPageComponent: React.FC = React.memo(() => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                工单模板管理
+                Ticket Template Management
               </h3>
               <p className="text-sm text-gray-500">
-                管理和配置工单模板，提升工作效率
+                Manage and configure ticket templates to improve work efficiency
               </p>
             </div>
           </div>
@@ -1050,18 +1036,18 @@ const TicketsPageComponent: React.FC = React.memo(() => {
           >
             <div>
               <Text style={{ color: "#666" }}>
-                管理所有可用的工单模板，提升工单创建效率
+                Manage all available ticket templates to improve ticket creation efficiency
               </Text>
             </div>
             <Button type="primary" icon={<Plus size={16} />}>
-              新建模板
+              New Template
             </Button>
           </div>
 
           <Table
             columns={[
               {
-                title: "模板名称",
+                title: "Template Name",
                 dataIndex: "name",
                 key: "name",
                 render: (name: string) => (
@@ -1071,7 +1057,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                 ),
               },
               {
-                title: "类型",
+                title: "Type",
                 dataIndex: "type",
                 key: "type",
                 render: (type: TicketType) => {
@@ -1079,20 +1065,20 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                     string,
                     { color: string; text: string }
                   > = {
-                    [TicketType.INCIDENT]: { color: "red", text: "事件" },
+                    [TicketType.INCIDENT]: { color: "red", text: "Incident" },
                     [TicketType.SERVICE_REQUEST]: {
                       color: "blue",
-                      text: "服务请求",
+                      text: "Service Request",
                     },
-                    [TicketType.PROBLEM]: { color: "orange", text: "问题" },
-                    [TicketType.CHANGE]: { color: "purple", text: "变更" },
+                    [TicketType.PROBLEM]: { color: "orange", text: "Problem" },
+                    [TicketType.CHANGE]: { color: "purple", text: "Change" },
                   };
                   const config = typeConfig[type];
                   return <AntdTag color={config.color}>{config.text}</AntdTag>;
                 },
               },
               {
-                title: "分类",
+                title: "Category",
                 dataIndex: "category",
                 key: "category",
                 render: (category: string) => (
@@ -1100,7 +1086,7 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                 ),
               },
               {
-                title: "优先级",
+                title: "Priority",
                 dataIndex: "priority",
                 key: "priority",
                 render: (priority: TicketPriority) => {
@@ -1108,25 +1094,25 @@ const TicketsPageComponent: React.FC = React.memo(() => {
                     string,
                     { color: string; text: string }
                   > = {
-                    [TicketPriority.LOW]: { color: "green", text: "低" },
-                    [TicketPriority.MEDIUM]: { color: "blue", text: "中" },
-                    [TicketPriority.HIGH]: { color: "orange", text: "高" },
-                    [TicketPriority.URGENT]: { color: "red", text: "紧急" },
+                    [TicketPriority.LOW]: { color: "green", text: "Low" },
+                    [TicketPriority.MEDIUM]: { color: "blue", text: "Medium" },
+                    [TicketPriority.HIGH]: { color: "orange", text: "High" },
+                    [TicketPriority.URGENT]: { color: "red", text: "Urgent" },
                   };
                   const config = priorityConfig[priority];
                   return <AntdTag color={config.color}>{config.text}</AntdTag>;
                 },
               },
               {
-                title: "操作",
+                title: "Actions",
                 key: "actions",
                 render: () => (
                   <Space>
                     <Button size="small" icon={<Edit size={14} />}>
-                      编辑
+                      Edit
                     </Button>
                     <Button size="small" danger>
-                      删除
+                      Delete
                     </Button>
                   </Space>
                 ),
@@ -1141,10 +1127,4 @@ const TicketsPageComponent: React.FC = React.memo(() => {
       </Modal>
     </div>
   );
-});
-
-// 设置组件显示名称
-TicketsPageComponent.displayName = 'TicketsPageComponent';
-
-// 导出组件
-export default TicketsPageComponent;
+}

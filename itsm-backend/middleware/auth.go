@@ -17,6 +17,24 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// ValidateRefreshToken 验证refresh token
+func ValidateRefreshToken(tokenString, jwtSecret string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || claims.TokenType != "refresh" {
+		return nil, jwt.ErrInvalidKey
+	}
+
+	return claims, nil
+}
+
 // 生成Access Token
 func GenerateAccessToken(userID int, username, role string, tenantID int, jwtSecret string, expireTime time.Duration) (string, error) {
 	claims := Claims{

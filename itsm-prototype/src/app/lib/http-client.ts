@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './api-config';
 import { security } from './security';
 
-// 请求配置接口
+// Request configuration interface
 interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   headers?: Record<string, string>;
@@ -9,7 +9,7 @@ interface RequestConfig {
   timeout?: number;
 }
 
-// API响应接口
+// API response interface
 interface ApiResponse<T> {
   code: number;
   message: string;
@@ -26,9 +26,9 @@ class HttpClient {
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || baseURL;
     this.timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
-    // 从localStorage获取token和租户ID
+    // Get token and tenant ID from localStorage
     if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('access_token'); // 改为 access_token
+      this.token = localStorage.getItem('access_token'); // Changed to access_token
       const storedTenantId = localStorage.getItem('current_tenant_id');
       this.tenantId = storedTenantId ? parseInt(storedTenantId) : null;
       this.tenantCode = localStorage.getItem('current_tenant_code') || null;
@@ -38,14 +38,14 @@ class HttpClient {
   setToken(token: string) {
     this.token = token;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', token); // 改为 access_token
+      localStorage.setItem('access_token', token); // Changed to access_token
     }
   }
 
   clearToken() {
     this.token = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token'); // 改为 access_token
+      localStorage.removeItem('access_token'); // Changed to access_token
     }
   }
 
@@ -72,7 +72,7 @@ class HttpClient {
     }
   }
 
-  // 获取租户代码
+  // Get tenant code
   getTenantCode(): string | null {
     return this.tenantCode;
   }
@@ -82,13 +82,13 @@ class HttpClient {
   }
 
   private getHeaders(): Record<string, string> {
-    // 设置安全请求头
+    // Set secure request headers
     const csrfToken = security.csrf.getTokenFromMeta();
     const headers: Record<string, string> = {
       ...security.network.getSecureHeaders(csrfToken || undefined),
     };
 
-    // 动态获取最新的token和tenantId
+    // Dynamically get the latest token and tenantId
     const currentToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : this.token;
     const currentTenantId = typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
 
@@ -107,7 +107,7 @@ class HttpClient {
     return headers;
   }
 
-  // 刷新token的独立方法，避免循环依赖
+  // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
     const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
     if (!refreshToken) {
@@ -128,9 +128,9 @@ class HttpClient {
       if (response.ok) {
         const data = await response.json();
         if (data.code === 0) {
-          // 更新access token
+          // Update access token
           this.setToken(data.data.access_token);
-          // 同时更新实例变量
+          // Also update instance variable
           this.token = data.data.access_token;
           return true;
         }
@@ -142,7 +142,7 @@ class HttpClient {
     }
   }
 
-  // 使用 fetch API 的 request 方法
+  // Request method using fetch API
   private async request<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = this.getHeaders();
@@ -179,11 +179,11 @@ class HttpClient {
         headers: Object.fromEntries(response.headers.entries())
       });
       
-      // 如果是401错误，尝试刷新token
+      // If 401 error, try to refresh token
       if (response.status === 401) {
         const refreshSuccess = await this.refreshTokenInternal();
         if (refreshSuccess) {
-          // 重试原请求
+          // Retry original request
           const retryConfig: RequestInit = {
             ...requestConfig,
             headers: {
@@ -200,16 +200,16 @@ class HttpClient {
           const retryData = await retryResponse.json() as ApiResponse<T>;
           console.log('HTTP Client Retry Response Data:', retryData);
           
-          // 检查响应码
+          // Check response code
           if (retryData.code !== 0) {
             const rid = retryResponse.headers.get('X-Request-Id') || '';
             const suffix = rid ? ` [RID: ${rid}]` : '';
-            throw new Error((retryData.message || '请求失败') + suffix);
+            throw new Error((retryData.message || 'Request failed') + suffix);
           }
           
           return retryData.data;
         } else {
-          // 刷新失败，清除token并跳转到登录页
+          // Refresh failed, clear token and redirect to login
           this.clearToken();
           if (typeof window !== 'undefined') {
             localStorage.removeItem('refresh_token');
@@ -228,18 +228,18 @@ class HttpClient {
       const responseData = await response.json() as ApiResponse<T>;
       console.log('HTTP Client Raw Response Data:', responseData);
       
-      // 检查响应码
+      // Check response code
       if (responseData.code !== 0) {
         const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
-        throw new Error((responseData.message || '请求失败') + suffix);
+        throw new Error((responseData.message || 'Request failed') + suffix);
       }
       
       return responseData.data;
     } catch (error: unknown) {
       console.error('Request failed:', error);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('请求超时，请稍后重试');
+        throw new Error('Request timeout, please try again later');
       }
       throw error;
     }

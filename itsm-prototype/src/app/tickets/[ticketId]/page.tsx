@@ -1,57 +1,50 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ticketService, Ticket } from "../../lib/services/ticket-service";
+import { useParams } from "next/navigation";
+import { TicketApi } from "../../lib/ticket-api";
+import { Ticket, ApiResponse } from "../../lib/api-config";
 import { TicketDetail } from "../../components/TicketDetail";
 import {
   ArrowLeft,
-  CheckCircle,
   XCircle,
-  User,
-  Clock,
   AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import {
   Button,
   Card,
-  Space,
   Typography,
-  message,
   App,
   Badge,
   Tag,
-  Divider,
 } from "antd";
 
 const { Title, Text } = Typography;
 
 const TicketDetailPage: React.FC = () => {
-  const { message: antMessage } = App.useApp();
   const params = useParams();
-  const router = useRouter();
-  const ticketId = parseInt(params.ticketId as string);
-
+  const { message: antMessage } = App.useApp();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 获取工单详情
+  const ticketId = parseInt(params.ticketId as string);
+
+  // Get ticket details
   const fetchTicket = async () => {
     try {
       setLoading(true);
       setError(null);
+      const response = await TicketApi.getTicket(ticketId) as unknown as ApiResponse<Ticket>;
 
-      const response = await TicketApi.getTicket(ticketId);
-
-      if (response) {
-        setTicket(response);
+      if (response.code === 0) {
+        setTicket(response.data);
       } else {
-        setError("获取工单详情失败");
+        setError(response.message || "Failed to load ticket");
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "网络错误");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Network error");
     } finally {
       setLoading(false);
     }
@@ -63,77 +56,73 @@ const TicketDetailPage: React.FC = () => {
     }
   }, [ticketId]);
 
-  // 处理审批
+  // Handle approval
   const handleApprove = async () => {
     try {
-      const response = await TicketApi.approveTicket(ticketId, {
-        action: "approve",
-        comment: "审批通过",
-        step_name: "审批",
-      });
+      const response = await TicketApi.updateTicket(ticketId, {
+        status: "approved",
+      }) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success("审批成功");
-        fetchTicket(); // 刷新数据
+        antMessage.success("Approved successfully");
+        fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || "审批失败");
+        antMessage.error(response.message || "Approval failed");
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : "网络错误");
+      antMessage.error(error instanceof Error ? error.message : "Network error");
     }
   };
 
-  // 处理拒绝
+  // Handle rejection
   const handleReject = async () => {
     try {
-      const response = await TicketApi.approveTicket(ticketId, {
-        action: "reject",
-        comment: "审批拒绝",
-        step_name: "审批",
-      });
+      const response = await TicketApi.updateTicket(ticketId, {
+        status: "rejected",
+      }) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success("已拒绝");
-        fetchTicket(); // 刷新数据
+        antMessage.success("Rejected successfully");
+        fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || "操作失败");
+        antMessage.error(response.message || "Rejection failed");
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : "网络错误");
+      antMessage.error(error instanceof Error ? error.message : "Network error");
     }
   };
 
-  // 处理分配
+  // Handle assignment
   const handleAssign = async (assignee: string) => {
     try {
       const response = await TicketApi.updateTicket(ticketId, {
-        assignee_id: parseInt(assignee), // 这里需要根据实际情况处理
-      });
+        assignee_id: parseInt(assignee), // This needs to be handled according to actual situation
+      }) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success("分配成功");
-        fetchTicket(); // 刷新数据
+        antMessage.success("Assigned successfully");
+        fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || "分配失败");
+        antMessage.error(response.message || "Assignment failed");
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : "网络错误");
+      antMessage.error(error instanceof Error ? error.message : "Network error");
     }
   };
 
-  // 处理更新
+  // Handle update
   const handleUpdate = async (updates: unknown) => {
     try {
-      const response = await TicketApi.updateTicket(ticketId, updates);
+      const response = await TicketApi.updateTicket(ticketId, updates as Partial<Ticket>) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success("更新成功");
-        fetchTicket(); // 刷新数据
+        antMessage.success("Updated successfully");
+        fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || "更新失败");
+        antMessage.error(response.message || "Update failed");
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : "网络错误");
+      antMessage.error(error instanceof Error ? error.message : "Network error");
     }
   };
 
@@ -143,7 +132,7 @@ const TicketDetailPage: React.FC = () => {
         <Card>
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <Text className="mt-4 block">加载中...</Text>
+            <Text className="mt-4 block">Loading...</Text>
           </div>
         </Card>
       </div>
@@ -157,12 +146,12 @@ const TicketDetailPage: React.FC = () => {
           <div className="text-center py-8">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <Title level={4} className="text-red-600 mb-2">
-              加载失败
+              Load Failed
             </Title>
             <Text type="secondary">{error}</Text>
             <div className="mt-4">
               <Button type="primary" onClick={fetchTicket}>
-                重试
+                Retry
               </Button>
             </div>
           </div>
@@ -178,12 +167,12 @@ const TicketDetailPage: React.FC = () => {
           <div className="text-center py-8">
             <XCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <Title level={4} className="text-gray-600 mb-2">
-              工单不存在
+              Ticket Not Found
             </Title>
-            <Text type="secondary">未找到指定的工单</Text>
+            <Text type="secondary">The specified ticket was not found</Text>
             <div className="mt-4">
               <Link href="/tickets">
-                <Button type="primary">返回工单列表</Button>
+                <Button type="primary">Back to Ticket List</Button>
               </Link>
             </div>
           </div>
@@ -194,18 +183,18 @@ const TicketDetailPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      {/* 页面头部 */}
+      {/* Page header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             <Link href="/tickets">
               <Button icon={<ArrowLeft />} type="text">
-                返回列表
+                Back to List
               </Button>
             </Link>
             <div>
               <Title level={2} className="mb-1">
-                工单详情 #{ticket.id}
+                Ticket Details #{ticket.id}
               </Title>
               <Text type="secondary">{ticket.title}</Text>
             </div>
@@ -221,10 +210,10 @@ const TicketDetailPage: React.FC = () => {
               }
               text={
                 ticket.status === "open"
-                  ? "进行中"
+                  ? "In Progress"
                   : ticket.status === "closed"
-                  ? "已关闭"
-                  : "待处理"
+                  ? "Closed"
+                  : "Pending"
               }
             />
             <Tag
@@ -237,16 +226,16 @@ const TicketDetailPage: React.FC = () => {
               }
             >
               {ticket.priority === "high"
-                ? "高优先级"
+                ? "High Priority"
                 : ticket.priority === "medium"
-                ? "中优先级"
-                : "低优先级"}
+                ? "Medium Priority"
+                : "Low Priority"}
             </Tag>
           </div>
         </div>
       </div>
 
-      {/* 工单详情组件 */}
+      {/* Ticket detail component */}
       <Card>
         <TicketDetail
           ticket={ticket}
