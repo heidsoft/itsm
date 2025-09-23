@@ -65,26 +65,26 @@ export default function CreateTicketPage() {
 
   const steps = [
     {
-      title: "基本信息",
+      title: "Basic Information",
       icon: <FileText />,
-      content: "填写工单基本信息和描述",
+      content: "Fill in basic ticket information and description",
     },
     {
-      title: "AI智能分析",
+      title: "AI Analysis",
       icon: <Bot />,
-      content: "AI分析工单内容并提供建议",
+      content: "AI analyzes ticket content and provides suggestions",
     },
     {
-      title: "确认创建",
+      title: "Confirm Creation",
       icon: <CheckCircle />,
-      content: "确认工单信息并创建",
+      content: "Confirm ticket information and create",
     },
   ];
 
   const handleAISuggestion = (suggestion: any) => {
     setAiSuggestion(suggestion);
 
-    // 自动填充表单
+    // Auto-fill form
     form.setFieldsValue({
       priority: suggestion.priority,
       category: suggestion.category,
@@ -98,7 +98,7 @@ export default function CreateTicketPage() {
       tags: [suggestion.category, suggestion.priority],
     }));
 
-    message.success("AI建议已应用，请检查并确认");
+    message.success("AI suggestions applied, please review and confirm");
   };
 
   const handleFormChange = (changedValues: any, allValues: any) => {
@@ -118,11 +118,11 @@ export default function CreateTicketPage() {
         tags: values.tags,
       });
 
-      message.success(`工单创建成功！工单号: ${response.ticket_id}`);
+      message.success(`Ticket created successfully! Ticket ID: ${response.ticket_id}`);
       router.push(`/tickets/${response.ticket_id}`);
     } catch (error) {
-      console.error("创建工单失败:", error);
-      message.error("创建工单失败，请稍后重试");
+      console.error("Failed to create ticket:", error);
+      message.error("Failed to create ticket, please try again later");
     } finally {
       setLoading(false);
     }
@@ -146,8 +146,8 @@ export default function CreateTicketPage() {
         return (
           <div className="space-y-6">
             <Alert
-              message="智能工单创建"
-              description="填写工单信息，AI将帮助您优化分类、优先级和工作流程"
+              message="Smart Ticket Creation"
+              description="Fill in ticket information, AI will help optimize classification, priority and workflow"
               type="info"
               showIcon
               icon={<Lightbulb />}
@@ -167,11 +167,11 @@ export default function CreateTicketPage() {
                 <Col span={24}>
                   <Form.Item
                     name="title"
-                    label="工单标题"
-                    rules={[{ required: true, message: "请输入工单标题" }]}
+                    label="Ticket Title"
+                    rules={[{ required: true, message: "Please enter ticket title" }]}
                   >
                     <Input
-                      placeholder="请简要描述问题..."
+                      placeholder="Please briefly describe the issue..."
                       size="large"
                       prefix={<FileText />}
                     />
@@ -183,11 +183,11 @@ export default function CreateTicketPage() {
                 <Col span={24}>
                   <Form.Item
                     name="description"
-                    label="详细描述"
-                    rules={[{ required: true, message: "请输入详细描述" }]}
+                    label="Detailed Description"
+                    rules={[{ required: true, message: "Please enter detailed description" }]}
                   >
                     <TextArea
-                      placeholder="请详细描述问题现象、影响范围、复现步骤等..."
+                      placeholder="Please describe the issue symptoms, impact scope, reproduction steps, etc..."
                       rows={6}
                       showCount
                       maxLength={1000}
@@ -200,30 +200,30 @@ export default function CreateTicketPage() {
                 <Col span={12}>
                   <Form.Item
                     name="type"
-                    label="工单类型"
-                    rules={[{ required: true, message: "请选择工单类型" }]}
+                    label="Ticket Type"
+                    rules={[{ required: true, message: "Please select ticket type" }]}
                   >
                     <Select size="large">
-                      <Option value={TicketType.INCIDENT}>事件</Option>
+                      <Option value={TicketType.INCIDENT}>Incident</Option>
                       <Option value={TicketType.SERVICE_REQUEST}>
-                        服务请求
+                        Service Request
                       </Option>
-                      <Option value={TicketType.PROBLEM}>问题</Option>
-                      <Option value={TicketType.CHANGE}>变更</Option>
+                      <Option value={TicketType.PROBLEM}>Problem</Option>
+                      <Option value={TicketType.CHANGE}>Change</Option>
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item
                     name="priority"
-                    label="优先级"
-                    rules={[{ required: true, message: "请选择优先级" }]}
+                    label="Priority"
+                    rules={[{ required: true, message: "Please select priority" }]}
                   >
                     <Select size="large">
-                      <Option value={TicketPriority.LOW}>低</Option>
-                      <Option value={TicketPriority.MEDIUM}>中</Option>
-                      <Option value={TicketPriority.HIGH}>高</Option>
-                      <Option value={TicketPriority.URGENT}>紧急</Option>
+                      <Option value={TicketPriority.LOW}>Low</Option>
+                      <Option value={TicketPriority.MEDIUM}>Medium</Option>
+                      <Option value={TicketPriority.HIGH}>High</Option>
+                      <Option value={TicketPriority.URGENT}>Urgent</Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -233,27 +233,27 @@ export default function CreateTicketPage() {
                 <Col span={12}>
                   <Form.Item
                     name="category"
-                    label="分类"
-                    rules={[{ required: true, message: "请选择分类" }]}
+                    label="Category"
+                    rules={[{ required: true, message: "Please select category" }]}
                   >
-                    <Select size="large" placeholder="选择问题分类">
-                      <Option value="system">系统问题</Option>
-                      <Option value="network">网络问题</Option>
-                      <Option value="database">数据库问题</Option>
-                      <Option value="hardware">硬件问题</Option>
-                      <Option value="software">软件问题</Option>
-                      <Option value="access">访问权限</Option>
-                      <Option value="other">其他</Option>
+                    <Select size="large" placeholder="Select issue category">
+                      <Option value="system">System Issue</Option>
+                      <Option value="network">Network Issue</Option>
+                      <Option value="database">Database Issue</Option>
+                      <Option value="hardware">Hardware Issue</Option>
+                      <Option value="software">Software Issue</Option>
+                      <Option value="access">Access Permission</Option>
+                      <Option value="other">Other</Option>
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="subcategory" label="子分类">
-                    <Select size="large" placeholder="选择子分类（可选）">
-                      <Option value="login">登录问题</Option>
-                      <Option value="performance">性能问题</Option>
-                      <Option value="error">错误信息</Option>
-                      <Option value="configuration">配置问题</Option>
+                  <Form.Item name="subcategory" label="Subcategory">
+                    <Select size="large" placeholder="Select subcategory (optional)">
+                      <Option value="login">Login Issue</Option>
+                      <Option value="performance">Performance Issue</Option>
+                      <Option value="error">Error Message</Option>
+                      <Option value="configuration">Configuration Issue</Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -261,11 +261,11 @@ export default function CreateTicketPage() {
 
               <Row gutter={16}>
                 <Col span={24}>
-                  <Form.Item name="tags" label="标签">
+                  <Form.Item name="tags" label="Tags">
                     <Select
                       mode="tags"
                       size="large"
-                      placeholder="添加相关标签"
+                      placeholder="Add relevant tags"
                       prefix={<TagIcon />}
                     />
                   </Form.Item>
@@ -279,8 +279,8 @@ export default function CreateTicketPage() {
         return (
           <div className="space-y-6">
             <Alert
-              message="AI智能分析"
-              description="AI将分析您的工单内容，提供分类建议、优先级推荐和最佳工作流程"
+              message="AI Smart Analysis"
+              description="AI will analyze your ticket content and provide classification suggestions, priority recommendations and optimal workflow"
               type="success"
               showIcon
               icon={<Bot />}
@@ -293,18 +293,18 @@ export default function CreateTicketPage() {
                 title={
                   <Space>
                     <CheckCircle className="text-green-600" />
-                    <span>AI建议已应用</span>
+                    <span>AI Suggestions Applied</span>
                   </Space>
                 }
                 className="border-green-200 bg-green-50"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Text>推荐分类:</Text>
+                    <Text>Recommended Category:</Text>
                     <Tag color="blue">{aiSuggestion.category}</Tag>
                   </div>
                   <div className="flex items-center justify-between">
-                    <Text>推荐优先级:</Text>
+                    <Text>Recommended Priority:</Text>
                     <Tag
                       color={
                         aiSuggestion.priority === "urgent" ? "red" : "orange"
@@ -314,11 +314,11 @@ export default function CreateTicketPage() {
                     </Tag>
                   </div>
                   <div className="flex items-center justify-between">
-                    <Text>预计处理时间:</Text>
+                    <Text>Estimated Processing Time:</Text>
                     <Text strong>{aiSuggestion.estimatedTime}</Text>
                   </div>
                   <div className="flex items-center justify-between">
-                    <Text>置信度:</Text>
+                    <Text>Confidence:</Text>
                     <Text strong>
                       {Math.round(aiSuggestion.confidence * 100)}%
                     </Text>
@@ -333,28 +333,28 @@ export default function CreateTicketPage() {
         return (
           <div className="space-y-6">
             <Alert
-              message="确认工单信息"
-              description="请确认工单信息无误后点击创建"
+              message="Confirm Ticket Information"
+              description="Please confirm the ticket information is correct before creating"
               type="warning"
               showIcon
               icon={<CheckCircle />}
             />
 
-            <Card title="工单信息预览">
+            <Card title="Ticket Information Preview">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Text type="secondary">标题</Text>
+                    <Text type="secondary">Title</Text>
                     <div className="mt-1 font-medium">{formData.title}</div>
                   </div>
                   <div>
-                    <Text type="secondary">类型</Text>
+                    <Text type="secondary">Type</Text>
                     <div className="mt-1">
                       <Tag color="blue">{formData.type}</Tag>
                     </div>
                   </div>
                   <div>
-                    <Text type="secondary">优先级</Text>
+                    <Text type="secondary">Priority</Text>
                     <div className="mt-1">
                       <Tag
                         color={
@@ -372,13 +372,13 @@ export default function CreateTicketPage() {
                     </div>
                   </div>
                   <div>
-                    <Text type="secondary">分类</Text>
+                    <Text type="secondary">Category</Text>
                     <div className="mt-1 font-medium">{formData.category}</div>
                   </div>
                 </div>
 
                 <div>
-                  <Text type="secondary">描述</Text>
+                  <Text type="secondary">Description</Text>
                   <div className="mt-1 p-3 bg-gray-50 rounded">
                     {formData.description}
                   </div>
@@ -386,7 +386,7 @@ export default function CreateTicketPage() {
 
                 {formData.tags && formData.tags.length > 0 && (
                   <div>
-                    <Text type="secondary">标签</Text>
+                    <Text type="secondary">Tags</Text>
                     <div className="mt-1">
                       {formData.tags.map((tag, index) => (
                         <Tag key={index} className="mb-1">
@@ -411,10 +411,10 @@ export default function CreateTicketPage() {
       <div className="mb-6">
         <Title level={2}>
           <FileText className="mr-3 text-blue-600" />
-          创建工单
+          Create Ticket
         </Title>
         <Text type="secondary">
-          智能工单创建系统，AI助手将帮助您优化工单分类和工作流程
+          Smart ticket creation system, AI assistant will help you optimize ticket classification and workflow
         </Text>
       </div>
 
@@ -440,13 +440,13 @@ export default function CreateTicketPage() {
             disabled={currentStep === 0}
             icon={<Calendar />}
           >
-            上一步
+            Previous
           </Button>
 
           <Space>
             {currentStep < steps.length - 1 ? (
               <Button type="primary" onClick={nextStep} icon={<Workflow />}>
-                下一步
+                Next
               </Button>
             ) : (
               <Button
@@ -456,7 +456,7 @@ export default function CreateTicketPage() {
                 icon={<Send />}
                 size="large"
               >
-                创建工单
+                Create Ticket
               </Button>
             )}
           </Space>

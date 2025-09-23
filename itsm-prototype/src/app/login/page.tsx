@@ -25,7 +25,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      console.log("开始登录...", {
+      console.log("Starting login...", {
         username: values.username,
         password: "***",
         tenantCode: values.tenantCode,
@@ -37,17 +37,17 @@ export default function LoginPage() {
         values.tenantCode || undefined
       );
 
-      console.log("登录结果:", success);
+      console.log("Login result:", success);
       if (success) {
-        console.log("登录成功，准备跳转到dashboard");
+        console.log("Login successful, redirecting to dashboard");
         router.push("/dashboard");
       } else {
-        console.log("登录失败");
-        setError("用户名或密码错误");
+        console.log("Login failed");
+        setError("Invalid username or password");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("登录失败，请稍后重试");
+      setError("Login failed, please try again later");
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +68,7 @@ export default function LoginPage() {
         overflow: "hidden",
       }}
     >
-      {/* 高级背景效果 */}
+      {/* Advanced background effects */}
       <div
         style={{
           position: "absolute",
@@ -84,7 +84,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* 动态粒子效果 */}
+      {/* Dynamic particle effects */}
       <div
         style={{
           position: "absolute",
@@ -125,7 +125,7 @@ export default function LoginPage() {
         }}
       />
 
-      {/* 主要内容容器 */}
+      {/* Main content container */}
       <div
         style={{
           width: "100%",
@@ -134,14 +134,14 @@ export default function LoginPage() {
           zIndex: 10,
         }}
       >
-        {/* 品牌区域 */}
+        {/* Brand area */}
         <div
           style={{
             textAlign: "center",
             marginBottom: "3rem",
           }}
         >
-          {/* 主 Logo */}
+          {/* Main Logo */}
           <div
             style={{
               display: "inline-flex",
@@ -203,7 +203,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* 品牌标题 */}
+          {/* Brand title */}
           <div style={{ marginBottom: "1rem" }}>
             <Title
               level={1}
@@ -230,11 +230,11 @@ export default function LoginPage() {
                 marginBottom: "1rem",
               }}
             >
-              智能服务管理平台
+              Intelligent Service Management Platform
             </Text>
           </div>
 
-          {/* 功能标签 */}
+          {/* Feature tags */}
           <Space size="middle" wrap>
             <div
               style={{
@@ -249,7 +249,7 @@ export default function LoginPage() {
             >
               <Sparkles size={12} style={{ color: "#3b82f6" }} />
               <Text style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                智能管理
+                Smart Management
               </Text>
             </div>
             <div
@@ -265,7 +265,7 @@ export default function LoginPage() {
             >
               <Zap size={12} style={{ color: "#10b981" }} />
               <Text style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                高效服务
+                Efficient Service
               </Text>
             </div>
             <div
@@ -281,13 +281,13 @@ export default function LoginPage() {
             >
               <Shield size={12} style={{ color: "#8b5cf6" }} />
               <Text style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                安全可靠
+                Secure & Reliable
               </Text>
             </div>
           </Space>
         </div>
 
-        {/* 登录表单 */}
+        {/* Login form */}
         <Card
           style={{
             background: "rgba(30, 41, 59, 0.9)",
@@ -304,7 +304,7 @@ export default function LoginPage() {
             },
           }}
         >
-          {/* 表单头部 */}
+          {/* Form header */}
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <Title
               level={3}
@@ -316,7 +316,7 @@ export default function LoginPage() {
                 margin: 0,
               }}
             >
-              系统登录
+              System Login
             </Title>
             <Text
               style={{
@@ -325,11 +325,11 @@ export default function LoginPage() {
                 fontWeight: "500",
               }}
             >
-              请输入您的账户信息
+              Please enter your account information
             </Text>
           </div>
 
-          {/* 错误提示 */}
+          {/* Error message */}
           {error && (
             <Alert
               message={error}
@@ -356,7 +356,7 @@ export default function LoginPage() {
               gap: "1.5rem",
             }}
           >
-            {/* 用户名输入框 */}
+            {/* Username input */}
             <Form.Item
               name="username"
               label={
@@ -367,10 +367,10 @@ export default function LoginPage() {
                     fontWeight: "600",
                   }}
                 >
-                  用户名
+                  Username
                 </Text>
               }
-              rules={[{ required: true, message: "请输入用户名" }]}
+              rules={[{ required: true, message: "Please enter username" }]}
               style={{ marginBottom: 0 }}
             >
               <Input
@@ -385,13 +385,13 @@ export default function LoginPage() {
                     }}
                   />
                 }
-                placeholder="请输入用户名"
+                placeholder="Please enter username"
                 autoComplete="username"
                 size="large"
               />
             </Form.Item>
 
-            {/* 密码输入框 */}
+            {/* Password input */}
             <Form.Item
               name="password"
               label={
@@ -402,10 +402,10 @@ export default function LoginPage() {
                     fontWeight: "600",
                   }}
                 >
-                  密码
+                  Password
                 </Text>
               }
-              rules={[{ required: true, message: "请输入密码" }]}
+              rules={[{ required: true, message: "Please enter password" }]}
               style={{ marginBottom: 0 }}
             >
               <Input.Password
@@ -420,13 +420,13 @@ export default function LoginPage() {
                     }}
                   />
                 }
-                placeholder="请输入密码"
+                placeholder="Please enter password"
                 autoComplete="current-password"
                 size="large"
               />
             </Form.Item>
 
-            {/* 租户代码输入框 */}
+            {/* Tenant code input */}
             {showTenantField && (
               <Form.Item
                 name="tenantCode"
@@ -438,7 +438,7 @@ export default function LoginPage() {
                       fontWeight: "600",
                     }}
                   >
-                    租户代码
+                    Tenant Code
                   </Text>
                 }
                 style={{ marginBottom: 0 }}
@@ -455,14 +455,14 @@ export default function LoginPage() {
                       }}
                     />
                   }
-                  placeholder="请输入租户代码（可选）"
+                  placeholder="Please enter tenant code (optional)"
                   autoComplete="organization"
                   size="large"
                 />
               </Form.Item>
             )}
 
-            {/* 登录按钮 */}
+            {/* Login button */}
             <Form.Item style={{ marginBottom: 0, marginTop: "2rem" }}>
               <Button
                 type="primary"
@@ -482,11 +482,11 @@ export default function LoginPage() {
                   boxShadow: "0 8px 24px rgba(59, 130, 246, 0.3)",
                 }}
               >
-                登录系统
+                Login to System
               </Button>
             </Form.Item>
 
-            {/* 租户切换 */}
+            {/* Tenant toggle */}
             <Form.Item style={{ marginBottom: 0, marginTop: "1.5rem" }}>
               <Button
                 type="link"
@@ -498,14 +498,14 @@ export default function LoginPage() {
                   height: "auto",
                 }}
               >
-                {showTenantField ? "隐藏租户设置" : "显示租户设置"}
+                {showTenantField ? "Hide Tenant Settings" : "Show Tenant Settings"}
               </Button>
             </Form.Item>
           </Form>
         </Card>
       </div>
 
-      {/* CSS 动画 */}
+      {/* CSS animations */}
       <style jsx>{`
         @keyframes float1 {
           0%,

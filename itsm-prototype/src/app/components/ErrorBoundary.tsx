@@ -4,11 +4,12 @@ import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button, Result, Typography } from "antd";
 import { RefreshCw, Home, Bug } from "lucide-react";
 
-const { Text, Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -24,21 +25,22 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    // 更新状态，下次渲染时显示错误UI
-    return { hasError: true, error };
+    return {
+      hasError: true,
+      error,
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // 记录错误信息
-    console.error("ErrorBoundary捕获到错误:", error, errorInfo);
-
+    console.error("ErrorBoundary caught error:", error, errorInfo);
     this.setState({
       error,
       errorInfo,
     });
 
-    // 这里可以发送错误到错误报告服务
-    // logErrorToService(error, errorInfo);
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
   handleReload = () => {
@@ -50,9 +52,8 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReportError = () => {
-    // 这里可以实现错误报告功能
     const errorReport = {
-      message: this.state.error?.message,
+      error: this.state.error?.message,
       stack: this.state.error?.stack,
       componentStack: this.state.errorInfo?.componentStack,
       timestamp: new Date().toISOString(),
@@ -60,20 +61,16 @@ class ErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     };
 
-    console.log("错误报告:", errorReport);
-
-    // 可以发送到后端API或错误报告服务
-    // sendErrorReport(errorReport);
+    console.log("Error report:", errorReport);
+    // Here you would typically send the error report to your error tracking service
   };
 
   render() {
     if (this.state.hasError) {
-      // 自定义错误UI
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // 默认错误UI
       return (
         <div
           style={{
@@ -85,39 +82,7 @@ class ErrorBoundary extends Component<Props, State> {
             padding: "20px",
           }}
         >
-          <Result
-            status="error"
-            title="系统遇到了一些问题"
-            subTitle="抱歉，页面加载时出现了错误。我们的技术团队已经收到通知，正在积极处理。"
-            extra={[
-              <Button
-                key="reload"
-                type="primary"
-                icon={<RefreshCw />}
-                onClick={this.handleReload}
-                size="large"
-                style={{ marginRight: 8 }}
-              >
-                重新加载
-              </Button>,
-              <Button
-                key="home"
-                icon={<Home />}
-                onClick={this.handleGoHome}
-                size="large"
-                style={{ marginRight: 8 }}
-              >
-                返回首页
-              </Button>,
-              <Button
-                key="report"
-                icon={<Bug />}
-                onClick={this.handleReportError}
-                size="large"
-              >
-                报告问题
-              </Button>,
-            ]}
+          <div
             style={{
               background: "white",
               borderRadius: "16px",
@@ -128,9 +93,42 @@ class ErrorBoundary extends Component<Props, State> {
               width: "100%",
             }}
           >
+            <Result
+              status="error"
+              title="System encountered some issues"
+              subTitle="Sorry, an error occurred while loading the page. Our technical team has been notified and is actively working on it."
+              extra={[
+                <Button
+                  key="reload"
+                  type="primary"
+                  icon={<RefreshCw />}
+                  onClick={this.handleReload}
+                  size="large"
+                >
+                  Reload Page
+                </Button>,
+                <Button
+                  key="home"
+                  icon={<Home />}
+                  onClick={this.handleGoHome}
+                  size="large"
+                >
+                  Back to Home
+                </Button>,
+                <Button
+                  key="report"
+                  icon={<Bug />}
+                  onClick={this.handleReportError}
+                  size="large"
+                >
+                  Report Issue
+                </Button>,
+              ]}
+            />
+
             <div style={{ marginTop: "24px", textAlign: "left" }}>
               <Paragraph style={{ marginBottom: "16px" }}>
-                <Text strong>错误详情：</Text>
+                <strong>Error Details:</strong>
               </Paragraph>
               <div
                 style={{
@@ -147,7 +145,7 @@ class ErrorBoundary extends Component<Props, State> {
                 {process.env.NODE_ENV === "development" && (
                   <details style={{ marginTop: "12px" }}>
                     <summary style={{ cursor: "pointer", color: "#1890ff" }}>
-                      查看技术详情
+                      Stack Trace
                     </summary>
                     <div style={{ marginTop: "8px" }}>
                       <Text type="secondary" style={{ whiteSpace: "pre-wrap" }}>
@@ -168,12 +166,11 @@ class ErrorBoundary extends Component<Props, State> {
                 }}
               >
                 <Text type="secondary" style={{ fontSize: "12px" }}>
-                  💡
-                  提示：如果问题持续存在，请尝试清除浏览器缓存或联系技术支持。
+                  If the problem persists, please contact technical support or try refreshing the page.
                 </Text>
               </div>
             </div>
-          </Result>
+          </div>
         </div>
       );
     }
@@ -182,24 +179,15 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundary;
-
-// 函数式组件的错误边界Hook
-export function useErrorBoundary() {
-  const [hasError, setHasError] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
-
+// Global error handler hook
+export const useErrorHandler = () => {
   React.useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      setHasError(true);
-      setError(event.error);
-      console.error("Hook捕获到错误:", event.error);
+      console.error("Hook caught error:", event.error);
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      setHasError(true);
-      setError(new Error(event.reason));
-      console.error("Hook捕获到未处理的Promise拒绝:", event.reason);
+      console.error("Hook caught unhandled Promise rejection:", event.reason);
     };
 
     window.addEventListener("error", handleError);
@@ -213,45 +201,39 @@ export function useErrorBoundary() {
       );
     };
   }, []);
+};
 
-  return { hasError, error };
-}
+// Simple error fallback component
+export const SimpleErrorFallback: React.FC<{
+  error?: Error;
+}> = ({ error }) => {
+  return (
+    <div
+      style={{
+        padding: "40px",
+        textAlign: "center",
+        background: "#fafafa",
+        minHeight: "400px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Bug
+        style={{ fontSize: "48px", color: "#ff4d4f", marginBottom: "16px" }}
+      />
+      <h2 style={{ color: "#ff4d4f", marginBottom: "8px" }}>
+        Something went wrong
+      </h2>
+      <p style={{ color: "#666", marginBottom: "24px" }}>
+        {error?.message || "Unknown error"}
+      </p>
+      <Button type="primary" onClick={() => window.location.reload()}>
+        Reload Page
+      </Button>
+    </div>
+  );
+};
 
-// 简化的错误边界组件
-export function SimpleErrorBoundary({ children, fallback }: Props) {
-  const { hasError, error } = useErrorBoundary();
-
-  if (hasError) {
-    return (
-      fallback || (
-        <div
-          style={{
-            padding: "40px",
-            textAlign: "center",
-            background: "#fafafa",
-            minHeight: "400px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Bug
-            style={{ fontSize: "48px", color: "#ff4d4f", marginBottom: "16px" }}
-          />
-          <h2 style={{ color: "#ff4d4f", marginBottom: "8px" }}>
-            页面出现错误
-          </h2>
-          <p style={{ color: "#666", marginBottom: "24px" }}>
-            {error?.message || "未知错误"}
-          </p>
-          <Button type="primary" onClick={() => window.location.reload()}>
-            重新加载
-          </Button>
-        </div>
-      )
-    );
-  }
-
-  return <>{children}</>;
-}
+export default ErrorBoundary;

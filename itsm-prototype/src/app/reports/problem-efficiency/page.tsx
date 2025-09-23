@@ -32,19 +32,19 @@ const ProblemEfficiencyPage = () => {
   );
 
   const totalProblems = mockProblemsData.length;
-  const resolvedProblems = problemsByStatus["已解决"] || 0;
-  const inProgressProblems = problemsByStatus["调查中"] || 0;
-  const highPriorityProblems = problemsByPriority["高"] || 0;
+  const resolvedProblems = problemsByStatus["Resolved"] || 0;
+  const inProgressProblems = problemsByStatus["Investigating"] || 0;
+  const highPriorityProblems = problemsByPriority["High"] || 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "已解决":
+      case "Resolved":
         return "success";
-      case "调查中":
+      case "Investigating":
         return "processing";
-      case "已知错误":
+      case "Known Error":
         return "warning";
-      case "已关闭":
+      case "Closed":
         return "default";
       default:
         return "default";
@@ -53,11 +53,11 @@ const ProblemEfficiencyPage = () => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "高":
+      case "High":
         return "error";
-      case "中":
+      case "Medium":
         return "warning";
-      case "低":
+      case "Low":
         return "default";
       default:
         return "default";
@@ -69,7 +69,7 @@ const ProblemEfficiencyPage = () => {
       <div className="p-10 bg-gray-50 min-h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">页面加载中...</p>
+          <p className="mt-4 text-gray-600">Page loading...</p>
         </div>
       </div>
     );
@@ -79,17 +79,17 @@ const ProblemEfficiencyPage = () => {
     <div className="p-10 bg-gray-50 min-h-full">
       <header className="mb-8">
         <Title level={2} className="mb-2">
-          问题管理效率报告
+          Problem Management Efficiency Report
         </Title>
-        <Text type="secondary">此报告显示问题管理流程的效率指标</Text>
+        <Text type="secondary">This report shows efficiency metrics for the problem management process</Text>
       </header>
 
-      {/* 统计卡片 */}
+      {/* Statistics Cards */}
       <Row gutter={16} className="mb-8">
         <Col span={6}>
           <Card>
             <Statistic
-              title="总问题数"
+              title="Total Problems"
               value={totalProblems}
               prefix={<AlertTriangle className="text-blue-500" />}
             />
@@ -98,7 +98,7 @@ const ProblemEfficiencyPage = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="已解决问题"
+              title="Resolved Problems"
               value={resolvedProblems}
               valueStyle={{ color: "#3f8600" }}
               prefix={<CheckCircle className="text-green-500" />}
@@ -108,7 +108,7 @@ const ProblemEfficiencyPage = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="处理中问题"
+              title="Problems in Progress"
               value={inProgressProblems}
               valueStyle={{ color: "#1890ff" }}
               prefix={<Clock className="text-blue-500" />}
@@ -118,7 +118,7 @@ const ProblemEfficiencyPage = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="高优先级问题"
+              title="High Priority Problems"
               value={highPriorityProblems}
               valueStyle={{ color: "#cf1322" }}
               prefix={<XCircle className="text-red-500" />}
@@ -127,10 +127,10 @@ const ProblemEfficiencyPage = () => {
         </Col>
       </Row>
 
-      {/* 问题状态分布 */}
+      {/* Problem Status Distribution */}
       <Row gutter={16} className="mb-8">
         <Col span={12}>
-          <Card title="问题状态分布" className="h-80">
+          <Card title="Problem Status Distribution" className="h-80">
             <div className="space-y-4">
               {Object.entries(problemsByStatus).map(([status, count]) => (
                 <div key={status} className="flex items-center justify-between">
@@ -149,7 +149,7 @@ const ProblemEfficiencyPage = () => {
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="问题优先级分布" className="h-80">
+          <Card title="Problem Priority Distribution" className="h-80">
             <div className="space-y-4">
               {Object.entries(problemsByPriority).map(([priority, count]) => (
                 <div
@@ -172,8 +172,8 @@ const ProblemEfficiencyPage = () => {
         </Col>
       </Row>
 
-      {/* 问题列表 */}
-      <Card title="问题详情列表" className="mb-8">
+      {/* Problem List */}
+      <Card title="Problem Details List" className="mb-8">
         <List
           dataSource={mockProblemsData}
           renderItem={(problem) => (
@@ -196,8 +196,8 @@ const ProblemEfficiencyPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>处理人: {problem.assignee}</span>
-                  <span>创建时间: {problem.createdAt}</span>
+                  <span>Assignee: {problem.assignee}</span>
+                  <span>Created: {problem.createdAt}</span>
                 </div>
               </div>
             </List.Item>
@@ -205,8 +205,8 @@ const ProblemEfficiencyPage = () => {
         />
       </Card>
 
-      {/* 效率指标 */}
-      <Card title="效率指标" className="mb-8">
+      {/* Efficiency Metrics */}
+      <Card title="Efficiency Metrics" className="mb-8">
         <Row gutter={16}>
           <Col span={8}>
             <div className="text-center">
@@ -216,7 +216,7 @@ const ProblemEfficiencyPage = () => {
                   : 0}
                 %
               </div>
-              <div className="text-gray-500">问题解决率</div>
+              <div className="text-gray-500">Problem Resolution Rate</div>
             </div>
           </Col>
           <Col span={8}>
@@ -227,7 +227,7 @@ const ProblemEfficiencyPage = () => {
                   : 0}
                 %
               </div>
-              <div className="text-gray-500">处理中比例</div>
+              <div className="text-gray-500">In Progress Ratio</div>
             </div>
           </Col>
           <Col span={8}>
@@ -238,7 +238,7 @@ const ProblemEfficiencyPage = () => {
                   : 0}
                 %
               </div>
-              <div className="text-gray-500">高优先级比例</div>
+              <div className="text-gray-500">High Priority Ratio</div>
             </div>
           </Col>
         </Row>

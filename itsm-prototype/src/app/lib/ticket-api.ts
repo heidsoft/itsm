@@ -3,42 +3,41 @@ import {
   Ticket,
   TicketListResponse,
   CreateTicketRequest,
-  UpdateStatusRequest,
   GetTicketsParams
 } from './api-config';
 
 export class TicketApi {
-  // 获取工单列表
-  static async getTickets(params?: GetTicketsParams): Promise<TicketListResponse> {
+  // Get ticket list
+  static async getTickets(params?: GetTicketsParams & { [key: string]: unknown }): Promise<TicketListResponse> {
     return httpClient.get<TicketListResponse>('/api/v1/tickets', params);
   }
 
-  // 创建工单
+  // Create ticket
   static async createTicket(data: CreateTicketRequest): Promise<Ticket> {
     return httpClient.post<Ticket>('/api/v1/tickets', data);
   }
 
-  // 获取工单详情
+  // Get ticket details
   static async getTicket(id: number): Promise<Ticket> {
     return httpClient.get<Ticket>(`/api/v1/tickets/${id}`);
   }
 
-  // 更新工单状态
+  // Update ticket status
   static async updateTicketStatus(id: number, status: string): Promise<Ticket> {
     return httpClient.put<Ticket>(`/api/v1/tickets/${id}/status`, { status });
   }
 
-  // 更新工单信息
+  // Update ticket information
   static async updateTicket(id: number, data: Partial<Ticket>): Promise<Ticket> {
     return httpClient.patch<Ticket>(`/api/v1/tickets/${id}`, data);
   }
 
-  // 删除工单
+  // Delete ticket
   static async deleteTicket(id: number): Promise<void> {
     return httpClient.delete(`/api/v1/tickets/${id}`);
   }
 
-  // 审批工单
+  // Approve ticket
   static async approveTicket(id: number, data: {
     action: 'approve' | 'reject';
     comment: string;
@@ -47,47 +46,47 @@ export class TicketApi {
     return httpClient.post(`/api/v1/tickets/${id}/approve`, data);
   }
 
-  // 添加评论
+  // Add comment
   static async addComment(id: number, content: string): Promise<unknown> {
     return httpClient.post(`/api/v1/tickets/${id}/comment`, { content });
   }
 
-  // 分配工单
+  // Assign ticket
   static async assignTicket(id: number, assigneeId: number): Promise<Ticket> {
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, { assignee_id: assigneeId });
   }
 
-  // 升级工单
+  // Escalate ticket
   static async escalateTicket(id: number, reason: string): Promise<Ticket> {
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, { reason });
   }
 
-  // 解决工单
+  // Resolve ticket
   static async resolveTicket(id: number, resolution: string): Promise<Ticket> {
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, { resolution });
   }
 
-  // 关闭工单
+  // Close ticket
   static async closeTicket(id: number, feedback?: string): Promise<Ticket> {
     return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, { feedback });
   }
 
-  // 搜索工单
+  // Search tickets
   static async searchTickets(query: string): Promise<Ticket[]> {
     return httpClient.get<Ticket[]>('/api/v1/tickets/search', { q: query });
   }
 
-  // 获取逾期工单
+  // Get overdue tickets
   static async getOverdueTickets(): Promise<Ticket[]> {
     return httpClient.get<Ticket[]>('/api/v1/tickets/overdue');
   }
 
-  // 获取指定处理人的工单
+  // Get tickets by assignee
   static async getTicketsByAssignee(assigneeId: number): Promise<Ticket[]> {
     return httpClient.get<Ticket[]>(`/api/v1/tickets/assignee/${assigneeId}`);
   }
 
-  // 获取工单活动日志
+  // Get ticket activity log
   static async getTicketActivity(id: number): Promise<Array<{
     action: string;
     timestamp: string;
@@ -97,7 +96,7 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/activity`);
   }
 
-  // 获取工单评论
+  // Get ticket comments
   static async getTicketComments(id: number): Promise<Array<{
     id: number;
     content: string;
@@ -114,7 +113,7 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/comments`);
   }
 
-  // 添加工单评论
+  // Add ticket comment
   static async addTicketComment(id: number, data: {
     content: string;
     type: 'comment' | 'work_note';
@@ -123,7 +122,7 @@ export class TicketApi {
     return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
   }
 
-  // 获取工单附件
+  // Get ticket attachments
   static async getTicketAttachments(id: number): Promise<Array<{
     id: number;
     filename: string;
@@ -137,23 +136,20 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/attachments`);
   }
 
-  // 上传工单附件
+  // Upload ticket attachment
   static async uploadTicketAttachment(id: number, file: File): Promise<unknown> {
     const formData = new FormData();
     formData.append('file', file);
-    return httpClient.post(`/api/v1/tickets/${id}/attachments`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    
+    return httpClient.post(`/api/v1/tickets/${id}/attachments`, formData);
   }
 
-  // 删除工单附件
+  // Delete ticket attachment
   static async deleteTicketAttachment(ticketId: number, attachmentId: number): Promise<void> {
     return httpClient.delete(`/api/v1/tickets/${ticketId}/attachments/${attachmentId}`);
   }
 
-  // 获取工单工作流
+  // Get ticket workflow
   static async getTicketWorkflow(id: number): Promise<Array<{
     id: number;
     step_name: string;
@@ -174,16 +170,16 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/workflow`);
   }
 
-  // 更新工作流步骤状态
+  // Update workflow step
   static async updateWorkflowStep(ticketId: number, stepId: number, data: {
     status: string;
     comments?: string;
     assignee_id?: number;
   }): Promise<unknown> {
-    return httpClient.patch(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
+    return httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
   }
 
-  // 获取工单SLA信息
+  // Get ticket SLA
   static async getTicketSLA(id: number): Promise<{
     sla_id: number;
     sla_name: string;
@@ -197,17 +193,21 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/sla`);
   }
 
-  // 添加工单标签
+  // Add ticket tags
   static async addTicketTags(id: number, tags: string[]): Promise<unknown> {
     return httpClient.post(`/api/v1/tickets/${id}/tags`, { tags });
   }
 
-  // 移除工单标签
+  // Remove ticket tags
   static async removeTicketTags(id: number, tags: string[]): Promise<unknown> {
-    return httpClient.delete(`/api/v1/tickets/${id}/tags`, { data: { tags } });
+    return httpClient.request({
+      method: 'DELETE',
+      url: `/api/v1/tickets/${id}/tags`,
+      data: { tags }
+    });
   }
 
-  // 获取工单历史记录
+  // Get ticket history
   static async getTicketHistory(id: number): Promise<Array<{
     id: number;
     field_name: string;
@@ -224,12 +224,16 @@ export class TicketApi {
     return httpClient.get(`/api/v1/tickets/${id}/history`);
   }
 
-  // 批量删除工单
+  // Batch delete tickets
   static async batchDeleteTickets(ticketIds: number[]): Promise<void> {
-    return httpClient.post('/api/v1/tickets/batch-delete', { ticket_ids: ticketIds });
+    return httpClient.request({
+      method: 'DELETE',
+      url: '/api/v1/tickets/batch',
+      data: { ticket_ids: ticketIds }
+    });
   }
 
-  // 获取工单统计
+  // Get ticket statistics
   static async getTicketStats(): Promise<{
     total: number;
     open: number;
@@ -241,22 +245,26 @@ export class TicketApi {
     return httpClient.get('/api/v1/tickets/stats');
   }
 
-  // 导出工单
+  // Export tickets
   static async exportTickets(params: {
     format: 'excel' | 'csv' | 'pdf';
     filters?: Record<string, unknown>;
   }): Promise<Blob> {
-    return httpClient.post('/api/v1/tickets/export', params, {
+    const response = await httpClient.request({
+      method: 'GET',
+      url: '/api/v1/tickets/export',
+      params,
       responseType: 'blob'
     });
+    return response as Blob;
   }
 
-  // 批量操作工单
+  // Batch update tickets
   static async batchUpdateTickets(ticketIds: number[], action: string, data?: Record<string, unknown>): Promise<void> {
-    return httpClient.post('/api/v1/tickets/batch-update', {
+    return httpClient.put('/api/v1/tickets/batch', {
       ticket_ids: ticketIds,
       action,
-      ...data
+      data
     });
   }
 }

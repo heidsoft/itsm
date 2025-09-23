@@ -1,22 +1,22 @@
 export const INCIDENT_STATUS_LABEL: Record<string, string> = {
-  new: '待处理',
-  in_progress: '处理中',
-  waiting_customer: '等待用户',
-  resolved: '已解决',
-  closed: '已关闭',
+  new: 'Pending',
+  in_progress: 'In Progress',
+  waiting_customer: 'Waiting for Customer',
+  resolved: 'Resolved',
+  closed: 'Closed',
 };
 
 export const INCIDENT_PRIORITY_LABEL: Record<string, string> = {
-  urgent: '严重',
-  high: '高',
-  medium: '中',
-  low: '低',
+  urgent: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 export const TICKET_STATUS_LABEL: Record<string, string> = {
-  submitted: '已提交',
-  assigned: '已分配',
-  in_progress: '处理中',
-  resolved: '已解决',
-  closed: '已关闭',
+  submitted: 'Submitted',
+  assigned: 'Assigned',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
 };

@@ -75,3 +75,52 @@ func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 		Data:    data,
 	})
 }
+
+// SuccessWithMessage 带自定义消息的成功响应
+func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusOK, Response{
+		Code:    SuccessCode,
+		Message: message,
+		Data:    data,
+	})
+}
+
+// ParamError 参数错误响应
+func ParamError(c *gin.Context, message string) {
+	Fail(c, ParamErrorCode, message)
+}
+
+// ValidationErrorResponse 验证错误响应
+func ValidationErrorResponse(c *gin.Context, message string) {
+	Fail(c, ValidationError, message)
+}
+
+// AuthFailed 认证失败响应
+func AuthFailed(c *gin.Context, message string) {
+	Fail(c, AuthFailedCode, message)
+}
+
+// Forbidden 权限不足响应
+func Forbidden(c *gin.Context, message string) {
+	Fail(c, ForbiddenCode, message)
+}
+
+// NotFound 资源不存在响应
+func NotFound(c *gin.Context, message string) {
+	Fail(c, NotFoundCode, message)
+}
+
+// InternalError 内部错误响应
+func InternalError(c *gin.Context, message string) {
+	Fail(c, InternalErrorCode, message)
+}
+
+// SuccessWithList 返回列表数据的成功响应
+func SuccessWithList(c *gin.Context, data interface{}, total int, page int, pageSize int) {
+	listResponse := NewListResponse(data, NewPaginationResponse(total, page, int64(pageSize)))
+	c.JSON(http.StatusOK, Response{
+		Code:    SuccessCode,
+		Message: "success",
+		Data:    listResponse,
+	})
+}

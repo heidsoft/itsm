@@ -66,19 +66,19 @@ class ServiceRequestAPI {
 
       const data = await response.json();
       
-      // 检查后端返回的code字段
+      // Check backend response code field
       if (data.code !== 0) {
-        throw new Error(data.message || '请求失败');
+        throw new Error(data.message || 'Request failed');
       }
       
-      return data.data; // 后端返回格式为 { code, message, data }
+      return data.data; // Backend response format: { code, message, data }
     } catch (error) {
-      console.error('API请求失败:', error);
+      console.error('API request failed:', error);
       throw error;
     }
   }
 
-  // 获取当前用户的服务请求列表
+  // Get current user's service request list
   async getUserServiceRequests(params: {
     page?: number;
     size?: number;
@@ -95,12 +95,12 @@ class ServiceRequestAPI {
     );
   }
 
-  // 获取服务请求详情
-  async getServiceRequestById(id: number): Promise<ServiceRequest> {
+  // Get service request details
+  async getServiceRequestDetails(id: number): Promise<ServiceRequest> {
     return this.request<ServiceRequest>(`/api/service-requests/${id}`);
   }
 
-  // 创建服务请求
+  // Create service request
   async createServiceRequest(data: CreateServiceRequestRequest): Promise<ServiceRequest> {
     return this.request<ServiceRequest>('/api/service-requests', {
       method: 'POST',
@@ -108,25 +108,17 @@ class ServiceRequestAPI {
     });
   }
 
-  // 更新服务请求状态（管理员操作）
-  async updateServiceRequestStatus(
-    id: number, 
-    data: UpdateServiceRequestStatusRequest
-  ): Promise<ServiceRequest> {
+  // Update service request status (admin operation)
+  async updateServiceRequestStatus(id: number, status: string, comment?: string): Promise<ServiceRequest> {
     return this.request<ServiceRequest>(`/api/service-requests/${id}/status`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ status, comment }),
     });
   }
 
-  // 健康检查
-  async healthCheck(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.baseURL}/health`);
-      return response.ok;
-    } catch {
-      return false;
-    }
+  // Health check
+  async healthCheck(): Promise<{ status: string }> {
+    return this.request<{ status: string }>('/api/health');
   }
 }
 

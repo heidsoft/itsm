@@ -59,22 +59,22 @@ export default function IncidentsPage() {
   const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     open: {
       color: "#fa8c16",
-      text: "待处理",
+      text: "Open",
       backgroundColor: "#fff7e6",
     },
     "in-progress": {
       color: "#1890ff",
-      text: "处理中",
+      text: "In Progress",
       backgroundColor: "#e6f7ff",
     },
     resolved: {
       color: "#52c41a",
-      text: "已解决",
+      text: "Resolved",
       backgroundColor: "#f6ffed",
     },
     closed: {
       color: "#00000073",
-      text: "已关闭",
+      text: "Closed",
       backgroundColor: "#fafafa",
     },
   };
@@ -82,22 +82,22 @@ export default function IncidentsPage() {
   const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     low: {
       color: "#52c41a",
-      text: "低",
+      text: "Low",
       backgroundColor: "#f6ffed",
     },
     medium: {
       color: "#1890ff",
-      text: "中",
+      text: "Medium",
       backgroundColor: "#e6f7ff",
     },
     high: {
       color: "#fa8c16",
-      text: "高",
+      text: "High",
       backgroundColor: "#fff7e6",
     },
     critical: {
       color: "#ff4d4f",
-      text: "紧急",
+      text: "Critical",
       backgroundColor: "#fff2f0",
     },
   };
@@ -121,7 +121,7 @@ export default function IncidentsPage() {
       setIncidents(response.incidents);
       setTotal(response.total);
     } catch (error) {
-      console.error("加载事件失败:", error);
+      console.error("Failed to load incidents:", error);
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,7 @@ export default function IncidentsPage() {
       const response = await IncidentAPI.getIncidentMetrics();
       setMetrics(response);
     } catch (error) {
-      console.error("加载统计信息失败:", error);
+      console.error("Failed to load metrics:", error);
     }
   };
 
@@ -147,11 +147,11 @@ export default function IncidentsPage() {
   };
 
   const handleCreateIncident = () => {
-    // 跳转到创建事件页面
+    // Navigate to create incident page
     window.location.href = "/incidents/new";
   };
 
-  // 渲染统计卡片
+  // Render statistics cards
   const renderStatsCards = () => (
     <div className="mb-8">
       <Row gutter={[24, 24]}>
@@ -164,10 +164,10 @@ export default function IncidentsPage() {
                 <AlertTriangle className="w-6 h-6 text-white" />
               </div>
               <div className="text-3xl font-bold mb-2">{metrics.total_incidents}</div>
-              <div className="text-blue-100 font-medium text-sm">总事件数</div>
+              <div className="text-blue-100 font-medium text-sm">Total Incidents</div>
               <div className="mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1">
                 <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-blue-100">实时监控</span>
+                <span className="text-sm font-medium text-blue-100">Real-time Monitoring</span>
               </div>
             </div>
           </Card>
@@ -181,10 +181,10 @@ export default function IncidentsPage() {
                 <Clock className="w-6 h-6 text-white" />
               </div>
               <div className="text-3xl font-bold mb-2">{metrics.critical_incidents}</div>
-              <div className="text-orange-100 font-medium text-sm">待处理事件</div>
+              <div className="text-orange-100 font-medium text-sm">Pending Incidents</div>
               <div className="mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1">
                 <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-orange-100">需要关注</span>
+                <span className="text-sm font-medium text-orange-100">Needs Attention</span>
               </div>
             </div>
           </Card>
@@ -198,10 +198,10 @@ export default function IncidentsPage() {
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
               <div className="text-3xl font-bold mb-2">{metrics.major_incidents}</div>
-              <div className="text-green-100 font-medium text-sm">已解决事件</div>
+              <div className="text-green-100 font-medium text-sm">Resolved Incidents</div>
               <div className="mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1">
                 <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-green-100">处理完成</span>
+                <span className="text-sm font-medium text-green-100">Completed</span>
               </div>
             </div>
           </Card>
@@ -215,10 +215,10 @@ export default function IncidentsPage() {
                 <AlertCircle className="w-6 h-6 text-white" />
               </div>
               <div className="text-3xl font-bold mb-2">{metrics.avg_resolution_time}</div>
-              <div className="text-purple-100 font-medium text-sm">平均解决时间(小时)</div>
+              <div className="text-purple-100 font-medium text-sm">Avg Resolution Time (Hours)</div>
               <div className="mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1">
                 <div className="w-2 h-2 bg-blue-300 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-purple-100">效率指标</span>
+                <span className="text-sm font-medium text-purple-100">Efficiency Metric</span>
               </div>
             </div>
           </Card>
@@ -227,7 +227,7 @@ export default function IncidentsPage() {
     </div>
   );
 
-  // 渲染筛选器
+  // Render filters
   const renderFilters = () => (
     <Card className="mb-8 bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl overflow-hidden">
       <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 border-b border-gray-100">
@@ -235,14 +235,14 @@ export default function IncidentsPage() {
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
             <SearchOutlined className="text-white text-sm" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-800">事件筛选与搜索</h3>
+          <h3 className="text-lg font-semibold text-gray-800">Incident Filtering & Search</h3>
         </div>
         <Row gutter={[24, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">搜索事件</label>
+              <label className="text-sm font-medium text-gray-700">Search Incidents</label>
               <Search
-                placeholder="搜索事件标题、ID或描述..."
+                placeholder="Search incident title, ID or description..."
                 allowClear
                 onSearch={handleSearch}
                 size="large"
@@ -253,9 +253,9 @@ export default function IncidentsPage() {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">状态筛选</label>
+              <label className="text-sm font-medium text-gray-700">Status Filter</label>
               <Select
-                placeholder="选择状态"
+                placeholder="Select Status"
                 size="large"
                 allowClear
                 value={filters.status}
@@ -265,25 +265,25 @@ export default function IncidentsPage() {
                 <Option value="open">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span>待处理</span>
+                    <span>Open</span>
                   </div>
                 </Option>
                 <Option value="in-progress">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>处理中</span>
+                    <span>In Progress</span>
                   </div>
                 </Option>
                 <Option value="resolved">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>已解决</span>
+                    <span>Resolved</span>
                   </div>
                 </Option>
                 <Option value="closed">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                    <span>已关闭</span>
+                    <span>Closed</span>
                   </div>
                 </Option>
               </Select>
@@ -291,9 +291,9 @@ export default function IncidentsPage() {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">优先级</label>
+              <label className="text-sm font-medium text-gray-700">Priority</label>
               <Select
-                placeholder="选择优先级"
+                placeholder="Select Priority"
                 size="large"
                 allowClear
                 value={filters.priority}
@@ -303,25 +303,25 @@ export default function IncidentsPage() {
                 <Option value="low">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>低</span>
+                    <span>Low</span>
                   </div>
                 </Option>
                 <Option value="medium">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>中</span>
+                    <span>Medium</span>
                   </div>
                 </Option>
                 <Option value="high">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span>高</span>
+                    <span>High</span>
                   </div>
                 </Option>
                 <Option value="critical">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    <span>紧急</span>
+                    <span>Critical</span>
                   </div>
                 </Option>
               </Select>
@@ -329,9 +329,9 @@ export default function IncidentsPage() {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">来源</label>
+              <label className="text-sm font-medium text-gray-700">Source</label>
               <Select
-                placeholder="选择来源"
+                placeholder="Select Source"
                 size="large"
                 allowClear
                 value={filters.source}
@@ -347,7 +347,7 @@ export default function IncidentsPage() {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">操作</label>
+              <label className="text-sm font-medium text-gray-700">Actions</label>
               <Button
                 icon={<SearchOutlined />}
                 onClick={loadIncidents}
@@ -355,7 +355,7 @@ export default function IncidentsPage() {
                 size="large"
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 border-0 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg font-medium"
               >
-                刷新数据
+                Refresh Data
               </Button>
             </div>
           </Col>
@@ -423,7 +423,7 @@ export default function IncidentsPage() {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              `Items ${range[0]}-${range[1]} of ${total}`,
             onChange: (page, size) => {
               setCurrentPage(page);
               setPageSize(size);
@@ -457,7 +457,7 @@ export default function IncidentsPage() {
       ),
     },
     {
-      title: "状态",
+      title: "Status",
       dataIndex: "status",
       key: "status",
       width: 120,
@@ -509,9 +509,9 @@ export default function IncidentsPage() {
       width: 120,
       render: (impact: string) => {
         const impactConfig: Record<string, { color: string; text: string }> = {
-          low: { color: "green", text: "低" },
-          medium: { color: "orange", text: "中" },
-          high: { color: "red", text: "高" },
+          low: { color: "green", text: "Low" },
+          medium: { color: "orange", text: "Medium" },
+          high: { color: "red", text: "High" },
         };
         const config = impactConfig[impact] || { color: "default", text: impact };
         return <Tag color={config.color}>{config.text}</Tag>;
@@ -523,7 +523,7 @@ export default function IncidentsPage() {
       key: "reporter",
       width: 150,
       render: (reporter: { name: string }) => (
-        <div style={{ fontSize: "small" }}>{reporter?.name || "未知"}</div>
+        <div style={{ fontSize: "small" }}>{reporter?.name || "Unknown"}</div>
       ),
     },
     {
@@ -533,7 +533,7 @@ export default function IncidentsPage() {
       width: 150,
       render: (created_at: string) => (
         <div style={{ fontSize: "small", color: "#666" }}>
-          {new Date(created_at).toLocaleDateString("zh-CN")}
+          {new Date(created_at).toLocaleDateString("en-US")}
         </div>
       ),
     },
@@ -549,7 +549,7 @@ export default function IncidentsPage() {
             icon={<Eye size={16} />}
             onClick={() => window.open(`/incidents/${record.id}`)}
             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
-            title="查看详情"
+            title="View Details"
           />
           <Button
             type="text"
@@ -557,14 +557,14 @@ export default function IncidentsPage() {
             icon={<Edit size={16} />}
             onClick={() => window.open(`/incidents/${record.id}/edit`)}
             className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
-            title="编辑事件"
+            title="Edit Incident"
           />
           <Button
             type="text"
             size="small"
             icon={<MoreHorizontal size={16} />}
             className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2"
-            title="更多操作"
+            title="More Actions"
           />
         </Space>
       ),

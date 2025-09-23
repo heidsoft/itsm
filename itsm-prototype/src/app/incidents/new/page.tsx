@@ -5,206 +5,198 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { FormInput } from '../../components/FormInput';
 import { FormTextarea } from '../../components/FormTextarea';
-import { IncidentAPI } from '../../lib/incident-api';
 
-interface ConfigurationItem {
-  id: number;
+interface ConfigItem {
+  id: string;
   name: string;
   type: string;
-  status: string;
-  description?: string;
 }
 
-const CreateIncidentPage = () => {
-    const router = useRouter();
-    const [configurationItems, setConfigurationItems] = useState<ConfigurationItem[]>([]);
-    const [selectedCI, setSelectedCI] = useState<ConfigurationItem | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
-    const [showCISelector, setShowCISelector] = useState(false);
+export default function NewIncidentPage() {
+  const router = useRouter();
+  const [selectedCIs, setSelectedCIs] = useState<ConfigItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<ConfigItem[]>([]);
 
-    // 搜索配置项
-    const searchConfigurationItems = async (search: string) => {
-        if (!search.trim()) {
-            setConfigurationItems([]);
-            return;
-        }
-        
-        setIsSearching(true);
-        try {
-            const items = await IncidentAPI.getConfigurationItems(search);
-            setConfigurationItems(items);
-        } catch (error) {
-            console.error('搜索配置项失败:', error);
-            setConfigurationItems([]);
-        } finally {
-            setIsSearching(false);
-        }
+  // Mock data for configuration items
+  const mockCIs: ConfigItem[] = [
+    { id: '1', name: 'Web Server 01', type: 'Server' },
+    { id: '2', name: 'Database Server', type: 'Database' },
+    { id: '3', name: 'Load Balancer', type: 'Network' },
+    { id: '4', name: 'Application Server', type: 'Server' },
+  ];
+
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      // Simulate API call
+      setTimeout(() => {
+        const results = mockCIs.filter(ci => 
+          ci.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ci.type.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setSearchResults(results);
+      }, 300);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
+
+  const handleAddCI = (ci: ConfigItem) => {
+    if (!selectedCIs.find(item => item.id === ci.id)) {
+      setSelectedCIs([...selectedCIs, ci]);
+    }
+    setSearchTerm('');
+  };
+
+  const handleRemoveCI = (ciId: string) => {
+    setSelectedCIs(selectedCIs.filter(ci => ci.id !== ciId));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    const data = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      priority: formData.get('priority') as string,
+      type: formData.get('type') as string,
+      source: 'manual',
+      affected_cis: selectedCIs.map(ci => ci.id),
     };
 
-    // 选择配置项
-    const selectConfigurationItem = (ci: ConfigurationItem) => {
-        setSelectedCI(ci);
-        setShowCISelector(false);
-        setSearchTerm('');
-        setConfigurationItems([]);
-    };
+    try {
+      console.log('Creating new incident:', JSON.stringify(data, null, 2));
+      alert('Incident created successfully!');
+      router.push('/incidents'); // Redirect to incidents list after submission
+    } catch (error) {
+      console.error('Failed to create incident:', error);
+      alert('Failed to create incident. Please try again.');
+    }
+  };
 
-    // 移除已选择的配置项
-    const removeSelectedCI = () => {
-        setSelectedCI(null);
-    };
+  return (
+    <div className="p-10 bg-gray-50 min-h-full">
+      <header className="mb-8">
+        <button onClick={() => router.back()} className="flex items-center text-blue-600 hover:underline mb-4">
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back
+        </button>
+        <h2 className="text-4xl font-bold text-gray-800">Create New Incident</h2>
+        <p className="text-gray-500 mt-1">Manually record a new IT incident</p>
+      </header>
 
-    // 处理搜索输入变化
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            searchConfigurationItems(searchTerm);
-        }, 300);
-        
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
+      <div className="bg-white p-8 rounded-lg shadow-md">
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-6">
+            <FormInput label="Incident Title" id="title" name="title" type="text" required placeholder="Brief description of the incident" />
+            <FormTextarea label="Detailed Description" id="description" name="description" rows={6} required placeholder="Please provide detailed information about the incident, including impact scope, occurrence time, etc..." />
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData.entries());
-        
-        // 添加配置项ID
-        if (selectedCI) {
-            data.configuration_item_id = selectedCI.id.toString();
-        }
-        
-        console.log('新建事件数据:', JSON.stringify(data, null, 2));
-        alert('事件已成功创建！');
-        router.push('/incidents'); // 提交后返回事件列表
-    };
+            {/* Configuration Items Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Affected Configuration Items
+              </label>
+              
+              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <Search className="w-4 h-4 text-blue-600" />
+                  <input
+                    type="text"
+                    placeholder="Search configuration items..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-transparent border-none outline-none flex-1 text-sm"
+                  />
+                </div>
+              </div>
 
-    return (
-        <div className="p-10 bg-gray-50 min-h-full">
-            <header className="mb-8">
-                <button onClick={() => router.back()} className="flex items-center text-blue-600 hover:underline mb-4">
-                    <ArrowLeft className="w-5 h-5 mr-2" />
-                    返回事件列表
-                </button>
-                <h2 className="text-4xl font-bold text-gray-800">新建事件</h2>
-                <p className="text-gray-500 mt-1">手动记录新的IT事件</p>
-            </header>
-
-            <div className="bg-white p-8 rounded-lg shadow-md">
-                <form onSubmit={handleSubmit}>
-                    <div className="space-y-6">
-                        <FormInput label="事件标题" id="title" name="title" type="text" required placeholder="简要描述事件内容" />
-                        <FormTextarea label="详细描述" id="description" name="description" rows={6} required placeholder="请提供事件的详细信息，包括影响范围、发生时间等..." />
-                        
-                        {/* 配置项关联 */}
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-sm max-h-40 overflow-y-auto">
+                  {searchResults.map((ci) => (
+                    <div
+                      key={ci.id}
+                      onClick={() => handleAddCI(ci)}
+                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-center justify-between">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                关联配置项
-                            </label>
-                            {selectedCI ? (
-                                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <div>
-                                        <div className="font-medium text-blue-900">{selectedCI.name}</div>
-                                        <div className="text-sm text-blue-700">
-                                            {selectedCI.type} • {selectedCI.status}
-                                        </div>
-                                        {selectedCI.description && (
-                                            <div className="text-xs text-blue-600 mt-1">{selectedCI.description}</div>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={removeSelectedCI}
-                                        className="text-blue-500 hover:text-blue-700"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="relative">
-                                    <div className="flex">
-                                        <input
-                                            type="text"
-                                            placeholder="搜索配置项..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            onFocus={() => setShowCISelector(true)}
-                                            className="flex-1 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowCISelector(!showCISelector)}
-                                            className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-200"
-                                        >
-                                            <Search className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    
-                                    {/* 配置项选择器 */}
-                                    {showCISelector && (searchTerm || configurationItems.length > 0) && (
-                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                                            {isSearching ? (
-                                                <div className="p-3 text-center text-gray-500">搜索中...</div>
-                                            ) : configurationItems.length > 0 ? (
-                                                <div>
-                                                    {configurationItems.map((ci) => (
-                                                        <button
-                                                            key={ci.id}
-                                                            type="button"
-                                                            onClick={() => selectConfigurationItem(ci)}
-                                                            className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                                                        >
-                                                            <div className="font-medium text-gray-900">{ci.name}</div>
-                                                            <div className="text-sm text-gray-600">
-                                                                {ci.type} • {ci.status}
-                                                            </div>
-                                                            {ci.description && (
-                                                                <div className="text-xs text-gray-500 mt-1 truncate">
-                                                                    {ci.description}
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            ) : searchTerm && !isSearching ? (
-                                                <div className="p-3 text-center text-gray-500">未找到匹配的配置项</div>
-                                            ) : null}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                          <div className="font-medium text-sm">{ci.name}</div>
+                          <div className="text-xs text-gray-500">{ci.type}</div>
                         </div>
-
-                        <div>
-                            <label htmlFor="priority" className="block text-sm font-medium text-gray-700">优先级</label>
-                            <select id="priority" name="priority" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" defaultValue="中">
-                                <option>高</option>
-                                <option>中</option>
-                                <option>低</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label htmlFor="source" className="block text-sm font-medium text-gray-700">事件来源</label>
-                            <select id="source" name="source" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" defaultValue="服务台">
-                                <option>服务台</option>
-                                <option>监控系统</option>
-                                <option>安全中心</option>
-                                <option>用户报告</option>
-                            </select>
-                        </div>
+                      </div>
                     </div>
-                    <div className="mt-8 flex justify-end">
-                        <button type="button" onClick={() => router.back()} className="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 mr-4">
-                            取消
+                  ))}
+                </div>
+              )}
+
+              {/* Selected CIs */}
+              {selectedCIs.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-sm font-medium text-gray-700 mb-2">Selected Items:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCIs.map((ci) => (
+                      <div key={ci.id} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                        <span>{ci.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCI(ci.id)}
+                          className="ml-2 text-blue-600 hover:text-blue-800"
+                        >
+                          <X className="w-3 h-3" />
                         </button>
-                        <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">
-                            创建事件
-                        </button>
-                    </div>
-                </form>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-        </div>
-    );
-};
 
-export default CreateIncidentPage;
+            {/* Priority Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <select name="priority" required className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">Select Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+
+            {/* Type Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Incident Type</label>
+              <select name="type" required className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">Select Type</option>
+                <option value="hardware">Hardware</option>
+                <option value="software">Software</option>
+                <option value="network">Network</option>
+                <option value="security">Security</option>
+                <option value="performance">Performance</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-8 flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Create Incident
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

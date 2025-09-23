@@ -128,7 +128,7 @@ const { Panel } = Collapse;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
-// 工单模板类型定义
+// Ticket template type definition
 interface TicketTemplate {
   id: number;
   name: string;
@@ -176,23 +176,23 @@ interface CustomField {
   order: number;
 }
 
-// 模板分类数据
+// Template category data
 const templateCategories = [
   {
     key: 'incident',
-    label: '事件管理',
+    label: 'Incident Management',
     icon: <AlertTriangle size={16} />,
     color: 'red',
     templates: [
       {
         id: 1,
-        name: "系统登录问题",
-        description: "用户无法登录系统，需要技术支持",
+        name: "System Login Issue",
+        description: "User cannot login to system, technical support needed",
         type: "incident",
-        category: "系统访问",
-        priority: "medium",
-        estimatedTime: "2小时",
-        sla: "4小时",
+        category: "System Access",
+        priority: "high",
+        estimatedTime: "2 hours",
+        sla: "4 hours",
         slaType: "hours",
         impact: "individual",
         urgency: "medium",
@@ -206,27 +206,27 @@ const templateCategories = [
             id: "cf1",
             name: "error_message",
             type: "textarea",
-            label: "错误信息",
+            label: "Error Message",
             required: true,
-            placeholder: "请描述具体的错误信息",
-            helpText: "请提供完整的错误信息，包括错误代码和截图",
+            placeholder: "Please describe the specific error message",
+            helpText: "Please provide complete error information, including error codes and screenshots",
             order: 1
           },
           {
             id: "cf2",
             name: "browser_info",
             type: "text",
-            label: "浏览器信息",
+            label: "Browser Information",
             required: false,
             placeholder: "Chrome 120.0.0.0",
-            helpText: "使用的浏览器版本和操作系统",
+            helpText: "Browser version and operating system used",
             order: 2
           }
         ],
-        tags: ["登录", "认证", "系统访问"],
+        tags: ["login", "authentication", "system access"],
         isActive: true,
         isPublic: true,
-        createdBy: "系统管理员",
+        createdBy: "System Administrator",
         createdAt: "2024-01-01",
         updatedAt: "2024-01-15",
         usageCount: 156,
@@ -237,13 +237,13 @@ const templateCategories = [
       },
       {
         id: 2,
-        name: "打印机故障",
-        description: "办公室打印机无法正常工作",
+        name: "Printer Malfunction",
+        description: "Office printer not working properly",
         type: "incident",
-        category: "硬件设备",
-        priority: "high",
-        estimatedTime: "1小时",
-        sla: "2小时",
+        category: "Hardware Equipment",
+        priority: "medium",
+        estimatedTime: "1 hour",
+        sla: "2 hours",
         slaType: "hours",
         impact: "department",
         urgency: "high",
@@ -257,27 +257,27 @@ const templateCategories = [
             id: "cf3",
             name: "printer_model",
             type: "text",
-            label: "打印机型号",
+            label: "Printer Model",
             required: true,
             placeholder: "HP LaserJet Pro M404n",
-            helpText: "打印机品牌和型号",
+            helpText: "Printer brand and model",
             order: 1
           },
           {
             id: "cf4",
             name: "error_code",
             type: "text",
-            label: "错误代码",
+            label: "Error Code",
             required: false,
             placeholder: "E-01",
-            helpText: "打印机显示的错误代码",
+            helpText: "Error code displayed by printer",
             order: 2
           }
         ],
-        tags: ["打印机", "硬件", "设备故障"],
+        tags: ["printer", "hardware", "equipment failure"],
         isActive: true,
         isPublic: true,
-        createdBy: "系统管理员",
+        createdBy: "System Administrator",
         createdAt: "2024-01-01",
         updatedAt: "2024-01-10",
         usageCount: 89,
@@ -290,19 +290,19 @@ const templateCategories = [
   },
   {
     key: 'service_request',
-    label: '服务请求',
+    label: 'Service Request',
     icon: <FileText size={16} />,
     color: 'blue',
     templates: [
       {
         id: 3,
-        name: "软件安装请求",
-        description: "需要安装新的办公软件",
+        name: "Software Installation Request",
+        description: "Need to install new office software",
         type: "service_request",
-        category: "软件服务",
+        category: "Software Service",
         priority: "low",
-        estimatedTime: "30分钟",
-        sla: "24小时",
+        estimatedTime: "30 minutes",
+        sla: "24 hours",
         slaType: "business_hours",
         impact: "individual",
         urgency: "low",
@@ -316,31 +316,31 @@ const templateCategories = [
             id: "cf5",
             name: "software_name",
             type: "text",
-            label: "软件名称",
+            label: "Software Name",
             required: true,
             placeholder: "Adobe Photoshop",
-            helpText: "需要安装的软件名称和版本",
+            helpText: "Name and version of software to be installed",
             order: 1
           },
           {
             id: "cf6",
             name: "license_type",
             type: "select",
-            label: "许可证类型",
+            label: "License Type",
             required: true,
-            options: ["免费版", "标准版", "专业版", "企业版"],
-            helpText: "软件许可证类型",
+            options: ["Free Version", "Standard Version", "Professional Version", "Enterprise Version"],
+            helpText: "Software license type",
             order: 2
           }
         ],
-        tags: ["软件安装", "许可证", "办公软件"],
+        tags: ["software installation", "license", "office software"],
         isActive: true,
         isPublic: true,
-        createdBy: "系统管理员",
+        createdBy: "System Administrator",
         createdAt: "2024-01-01",
         updatedAt: "2024-01-20",
         usageCount: 234,
-        rating: 4.7,
+        rating: 4.6,
         version: "1.3",
         icon: <Zap size={20} />,
         color: "blue"
@@ -349,14 +349,14 @@ const templateCategories = [
   },
   {
     key: 'problem',
-    label: '问题管理',
+    label: 'Problem Management',
     icon: <BookOpen size={16} />,
     color: 'orange',
     templates: []
   },
   {
     key: 'change',
-    label: '变更管理',
+    label: 'Change Management',
     icon: <Workflow size={16} />,
     color: 'purple',
     templates: []
@@ -380,12 +380,12 @@ const TicketTemplatesPage = () => {
   const loadTemplates = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
+      // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       const allTemplates = templateCategories.flatMap(cat => cat.templates);
       setTemplates(allTemplates);
     } catch (error) {
-      message.error('加载模板失败');
+      message.error('Failed to load templates');
     } finally {
       setLoading(false);
     }
@@ -404,9 +404,9 @@ const TicketTemplatesPage = () => {
   const handleDeleteTemplate = async (id: number) => {
     try {
       setTemplates(prev => prev.filter(t => t.id !== id));
-      message.success('模板删除成功');
+      message.success('Template deleted successfully');
     } catch (error) {
-      message.error('删除失败');
+      message.error('Delete failed');
     }
   };
 
@@ -414,11 +414,11 @@ const TicketTemplatesPage = () => {
     const newTemplate = {
       ...template,
       id: Date.now(),
-      name: `${template.name} - 副本`,
+      name: `${template.name} - Copy`,
       version: "1.0"
     };
     setTemplates(prev => [...prev, newTemplate]);
-    message.success('模板复制成功');
+    message.success('Template copied successfully');
   };
 
   const filteredTemplates = templates.filter(template => {
@@ -438,18 +438,18 @@ const TicketTemplatesPage = () => {
       hoverable
       className="h-full"
       actions={[
-        <Tooltip title="编辑模板" key="edit">
+        <Tooltip title="Edit template" key="edit">
           <Button type="text" icon={<Edit size={16} />} onClick={() => handleEditTemplate(template)} />
         </Tooltip>,
-        <Tooltip title="复制模板" key="copy">
+        <Tooltip title="Copy template" key="copy">
           <Button type="text" icon={<Copy size={16} />} onClick={() => handleCopyTemplate(template)} />
         </Tooltip>,
-        <Tooltip title="删除模板" key="delete">
+        <Tooltip title="Delete template" key="delete">
           <Popconfirm
-            title="确定要删除这个模板吗？"
+            title="Are you sure you want to delete this template?"
             onConfirm={() => handleDeleteTemplate(template.id)}
-            okText="确定"
-            cancelText="取消"
+            okText="Confirm"
+            cancelText="Cancel"
           >
             <Button type="text" danger icon={<Delete size={16} />} />
           </Popconfirm>
@@ -468,11 +468,11 @@ const TicketTemplatesPage = () => {
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between">
-          <Text type="secondary" className="text-xs">类型</Text>
+          <Text type="secondary" className="text-xs">Type</Text>
           <Tag color={template.color}>{template.category}</Tag>
         </div>
         <div className="flex items-center justify-between">
-          <Text type="secondary" className="text-xs">优先级</Text>
+          <Text type="secondary" className="text-xs">Priority</Text>
           <Tag color={template.priority === 'high' ? 'red' : template.priority === 'medium' ? 'orange' : 'green'}>
             {template.priority}
           </Tag>
@@ -484,18 +484,18 @@ const TicketTemplatesPage = () => {
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-        <span>使用次数: {template.usageCount}</span>
-        <span>评分: {template.rating}/5</span>
+        <span>Usage Count: {template.usageCount}</span>
+        <span>Rating: {template.rating}/5</span>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Switch checked={template.isActive} size="small" />
-          <Text className="text-xs">{template.isActive ? '启用' : '禁用'}</Text>
+          <Text className="text-xs">{template.isActive ? 'Active' : 'Inactive'}</Text>
         </div>
         <div className="flex items-center space-x-2">
           <Switch checked={template.isPublic} size="small" />
-          <Text className="text-xs">{template.isPublic ? '公开' : '私有'}</Text>
+          <Text className="text-xs">{template.isPublic ? 'Public' : 'Private'}</Text>
         </div>
       </div>
     </Card>
@@ -516,11 +516,11 @@ const TicketTemplatesPage = () => {
         
         <div className="flex items-center space-x-4">
           <div className="text-center">
-            <Text className="text-xs text-gray-500">使用次数</Text>
+            <Text className="text-xs text-gray-500">Usage Count</Text>
             <div className="font-semibold">{template.usageCount}</div>
           </div>
           <div className="text-center">
-            <Text className="text-xs text-gray-500">评分</Text>
+            <Text className="text-xs text-gray-500">Rating</Text>
             <div className="flex items-center">
               <Rate disabled defaultValue={template.rating} size="small" />
             </div>
@@ -535,10 +535,10 @@ const TicketTemplatesPage = () => {
             <Button type="text" icon={<Edit size={16} />} onClick={() => handleEditTemplate(template)} />
             <Button type="text" icon={<Copy size={16} />} onClick={() => handleCopyTemplate(template)} />
             <Popconfirm
-              title="确定要删除这个模板吗？"
+              title="Are you sure you want to delete this template?"
               onConfirm={() => handleDeleteTemplate(template.id)}
-              okText="确定"
-              cancelText="取消"
+              okText="Confirm"
+              cancelText="Cancel"
             >
               <Button type="text" danger icon={<Delete size={16} />} />
             </Popconfirm>
@@ -550,31 +550,31 @@ const TicketTemplatesPage = () => {
 
   return (
     <>
-      {/* 页面头部操作 */}
+      {/* Page header actions */}
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">工单模板管理</h1>
-          <p className="text-gray-600 mt-1">管理和配置工单模板，提高工单创建效率</p>
+          <h1 className="text-2xl font-bold text-gray-900">Ticket Template Management</h1>
+          <p className="text-gray-600 mt-1">Manage and configure ticket templates to improve ticket creation efficiency</p>
         </div>
         <Space>
           <Button icon={<RefreshCw size={16} />} onClick={loadTemplates}>
-            刷新
+            Refresh
           </Button>
           <Button
             type="primary"
             icon={<Plus size={16} />}
             onClick={handleCreateTemplate}
           >
-            新建模板
+            New Template
           </Button>
         </Space>
       </div>
-      {/* 统计信息 */}
+      {/* Statistics */}
       <Row gutter={16} className="mb-6">
         <Col span={6}>
           <Card>
             <Statistic
-              title="总模板数"
+              title="Total Templates"
               value={templates.length}
               prefix={<FileText size={16} style={{ color: "#3b82f6" }} />}
             />
@@ -583,7 +583,7 @@ const TicketTemplatesPage = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="活跃模板"
+              title="Active Templates"
               value={templates.filter(t => t.isActive).length}
               valueStyle={{ color: "#52c41a" }}
               prefix={<CheckCircle size={16} />}
@@ -593,7 +593,7 @@ const TicketTemplatesPage = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="总使用次数"
+              title="Total Usage"
               value={templates.reduce((sum, t) => sum + t.usageCount, 0)}
               prefix={<BarChart3 size={16} style={{ color: "#faad14" }} />}
             />
@@ -602,7 +602,7 @@ const TicketTemplatesPage = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="平均评分"
+              title="Average Rating"
               value={templates.length > 0 ? 
                 (templates.reduce((sum, t) => sum + t.rating, 0) / templates.length).toFixed(1) : 0}
               prefix={<Star size={16} style={{ color: "#ff4d4f" }} />}
@@ -612,14 +612,14 @@ const TicketTemplatesPage = () => {
         </Col>
       </Row>
 
-      {/* 筛选和搜索 */}
-      <Card className="mb-6">
+      {/* Filter and search */}
+      <Card title="Template Management" className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <Title level={5} className="mb-0">筛选条件</Title>
+          <Title level={5} className="mb-0">Filter Conditions</Title>
           <Space>
             <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
-              <Radio.Button value="grid">网格视图</Radio.Button>
-              <Radio.Button value="list">列表视图</Radio.Button>
+              <Radio.Button value="grid">Grid View</Radio.Button>
+              <Radio.Button value="list">List View</Radio.Button>
             </Radio.Group>
           </Space>
         </div>
@@ -627,7 +627,7 @@ const TicketTemplatesPage = () => {
         <Row gutter={16} align="middle">
           <Col span={8}>
             <Input.Search
-              placeholder="搜索模板名称或描述"
+              placeholder="Search templates..."
               allowClear
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
@@ -639,9 +639,9 @@ const TicketTemplatesPage = () => {
               value={selectedCategory}
               onChange={setSelectedCategory}
               style={{ width: "100%" }}
-              placeholder="选择分类"
+              placeholder="Select category"
             >
-              <Option value="all">全部分类</Option>
+              <Option value="all">All Categories</Option>
               {templateCategories.map(cat => (
                 <Option key={cat.key} value={cat.key}>
                   <div className="flex items-center">
@@ -657,29 +657,29 @@ const TicketTemplatesPage = () => {
               value={filterStatus}
               onChange={setFilterStatus}
               style={{ width: "100%" }}
-              placeholder="状态筛选"
+              placeholder="Status filter"
             >
-              <Option value="all">全部状态</Option>
-              <Option value="active">启用</Option>
-              <Option value="inactive">禁用</Option>
+              <Option value="all">All Status</Option>
+              <Option value="active">Active</Option>
+              <Option value="inactive">Inactive</Option>
             </Select>
           </Col>
           <Col span={4}>
             <Button type="primary" onClick={loadTemplates} block>
-              应用筛选
+              Apply Filter
             </Button>
           </Col>
         </Row>
       </Card>
 
-      {/* 模板列表 */}
+      {/* Template list */}
       {loading ? (
         <Card>
           <div className="text-center py-16">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4">
               <RefreshCw size={32} className="text-blue-500 animate-spin" />
             </div>
-            <Text className="text-gray-500">正在加载模板...</Text>
+            <Text className="text-gray-500">Loading templates...</Text>
           </div>
         </Card>
       ) : filteredTemplates.length === 0 ? (
@@ -688,12 +688,12 @@ const TicketTemplatesPage = () => {
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-50 rounded-full mb-4">
               <FileText size={48} className="text-gray-400" />
             </div>
-            <Title level={4} className="text-gray-600 mb-2">暂无模板</Title>
-            <Text type="secondary" className="text-base mb-6">
-              当前没有找到匹配的工单模板
-            </Text>
-            <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateTemplate}>
-              创建第一个模板
+            <Title level={4} className="text-gray-600 mb-2">No Templates</Title>
+            <p className="text-gray-500 mb-4">
+              No matching ticket templates found
+            </p>
+            <Button type="primary" onClick={() => setIsModalVisible(true)}>
+              Create First Template
             </Button>
           </div>
         </Card>
@@ -711,9 +711,9 @@ const TicketTemplatesPage = () => {
         </div>
       )}
 
-      {/* 创建/编辑模板模态框 */}
+      {/* Create/Edit template modal */}
       <Modal
-        title={editingTemplate ? "编辑工单模板" : "新建工单模板"}
+        title={editingTemplate ? "Edit Ticket Template" : "New Ticket Template"}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -723,24 +723,24 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="模板名称"
+                label="Template Name"
                 name="name"
-                rules={[{ required: true, message: "请输入模板名称" }]}
+                rules={[{ required: true, message: "Please enter template name" }]}
               >
-                <Input placeholder="请输入模板名称" />
+                <Input placeholder="Please enter template name" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="模板类型"
+                label="Template Type"
                 name="type"
-                rules={[{ required: true, message: "请选择模板类型" }]}
+                rules={[{ required: true, message: "Please select template type" }]}
               >
-                <Select placeholder="请选择模板类型">
-                  <Option value="incident">事件</Option>
-                  <Option value="service_request">服务请求</Option>
-                  <Option value="problem">问题</Option>
-                  <Option value="change">变更</Option>
+                <Select placeholder="Please select template type">
+                  <Option value="incident">Incident</Option>
+                  <Option value="service_request">Service Request</Option>
+                  <Option value="problem">Problem</Option>
+                  <Option value="change">Change</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -749,62 +749,62 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="分类"
+                label="Category"
                 name="category"
-                rules={[{ required: true, message: "请输入分类" }]}
+                rules={[{ required: true, message: "Please select category" }]}
               >
-                <Input placeholder="请输入分类" />
+                <Input placeholder="Please enter category" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="子分类"
+                label="Subcategory"
                 name="subcategory"
               >
-                <Input placeholder="请输入子分类（可选）" />
+                <Input placeholder="Please enter subcategory (optional)" />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            label="描述"
+            label="Description"
             name="description"
-            rules={[{ required: true, message: "请输入模板描述" }]}
+            rules={[{ required: true, message: "Please enter template description" }]}
           >
-            <TextArea rows={3} placeholder="请详细描述模板用途和适用场景" />
+            <TextArea rows={3} placeholder="Please describe template purpose and applicable scenarios in detail" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="优先级"
+                label="Priority"
                 name="priority"
-                rules={[{ required: true, message: "请选择优先级" }]}
+                rules={[{ required: true, message: "Please select priority" }]}
               >
-                <Select placeholder="请选择优先级">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="urgent">紧急</Option>
+                <Select placeholder="Please select priority">
+                  <Option value="low">Low</Option>
+                  <Option value="medium">Medium</Option>
+                  <Option value="high">High</Option>
+                  <Option value="urgent">Urgent</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="预计处理时间"
+                label="Estimated Processing Time"
                 name="estimatedTime"
-                rules={[{ required: true, message: "请输入预计处理时间" }]}
+                rules={[{ required: true, message: "Please enter estimated processing time" }]}
               >
-                <Input placeholder="如：2小时" />
+                <Input placeholder="e.g.: 2 hours" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
                 label="SLA"
                 name="sla"
-                rules={[{ required: true, message: "请输入SLA" }]}
+                rules={[{ required: true, message: "Please enter SLA" }]}
               >
-                <Input placeholder="如：4小时" />
+                <Input placeholder="e.g.: 4 hours" />
               </Form.Item>
             </Col>
           </Row>
@@ -812,43 +812,43 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="影响范围"
+                label="Impact Scope"
                 name="impact"
-                rules={[{ required: true, message: "请选择影响范围" }]}
+                rules={[{ required: true, message: "Please select impact scope" }]}
               >
-                <Select placeholder="请选择影响范围">
-                  <Option value="individual">个人</Option>
-                  <Option value="department">部门</Option>
-                  <Option value="organization">组织</Option>
-                  <Option value="customer">客户</Option>
+                <Select placeholder="Please select impact scope">
+                  <Option value="individual">Individual</Option>
+                  <Option value="department">Department</Option>
+                  <Option value="organization">Organization</Option>
+                  <Option value="customer">Customer</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="紧急程度"
+                label="Urgency Level"
                 name="urgency"
-                rules={[{ required: true, message: "请选择紧急程度" }]}
+                rules={[{ required: true, message: "Please select urgency level" }]}
               >
-                <Select placeholder="请选择紧急程度">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">严重</Option>
+                <Select placeholder="Please select urgency level">
+                  <Option value="low">Low</Option>
+                  <Option value="medium">Medium</Option>
+                  <Option value="high">High</Option>
+                  <Option value="critical">Critical</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="业务价值"
+                label="Business Value"
                 name="businessValue"
-                rules={[{ required: true, message: "请选择业务价值" }]}
+                rules={[{ required: true, message: "Please select business value" }]}
               >
-                <Select placeholder="请选择业务价值">
-                  <Option value="low">低</Option>
-                  <Option value="medium">中</Option>
-                  <Option value="high">高</Option>
-                  <Option value="critical">关键</Option>
+                <Select placeholder="Please select business value">
+                  <Option value="low">Low</Option>
+                  <Option value="medium">Medium</Option>
+                  <Option value="high">High</Option>
+                  <Option value="critical">Critical</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -857,38 +857,38 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="来源"
+                label="Source"
                 name="source"
-                rules={[{ required: true, message: "请选择来源" }]}
+                rules={[{ required: true, message: "Please select source" }]}
               >
-                <Select placeholder="请选择来源">
-                  <Option value="web">Web门户</Option>
-                  <Option value="email">邮件</Option>
-                  <Option value="phone">电话</Option>
-                  <Option value="chat">在线聊天</Option>
+                <Select placeholder="Please select source">
+                  <Option value="web">Web Portal</Option>
+                  <Option value="email">Email</Option>
+                  <Option value="phone">Phone</Option>
+                  <Option value="chat">Online Chat</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="标签"
+                label="Tags"
                 name="tags"
               >
                 <Select
                   mode="tags"
-                  placeholder="请输入标签，按回车确认"
+                  placeholder="Add tags..."
                   style={{ width: '100%' }}
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          <Divider>高级设置</Divider>
+          <Divider>Advanced Settings</Divider>
 
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="自动分配"
+                label="Auto Assignment"
                 name="autoAssign"
                 valuePropName="checked"
               >
@@ -897,7 +897,7 @@ const TicketTemplatesPage = () => {
             </Col>
             <Col span={8}>
               <Form.Item
-                label="需要审批"
+                label="Requires Approval"
                 name="requiresApproval"
                 valuePropName="checked"
               >
@@ -906,7 +906,7 @@ const TicketTemplatesPage = () => {
             </Col>
             <Col span={8}>
               <Form.Item
-                label="模板状态"
+                label="Template Status"
                 name="isActive"
                 valuePropName="checked"
               >
@@ -918,7 +918,7 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="公开模板"
+                label="Public Template"
                 name="isPublic"
                 valuePropName="checked"
               >
@@ -927,27 +927,27 @@ const TicketTemplatesPage = () => {
             </Col>
             <Col span={8}>
               <Form.Item
-                label="SLA类型"
+                label="SLA Type"
                 name="slaType"
-                rules={[{ required: true, message: "请选择SLA类型" }]}
+                rules={[{ required: true, message: "Please select SLA type" }]}
               >
-                <Select placeholder="请选择SLA类型">
-                  <Option value="hours">小时</Option>
-                  <Option value="days">天</Option>
-                  <Option value="business_hours">工作时间</Option>
+                <Select placeholder="Please select SLA type">
+                  <Option value="hours">Hours</Option>
+                  <Option value="days">Days</Option>
+                  <Option value="business_hours">Business Hours</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="审批级别"
+                label="Approval Level"
                 name="approvalLevel"
               >
-                <Select placeholder="请选择审批级别">
-                  <Option value="none">无需审批</Option>
-                  <Option value="manager">经理审批</Option>
-                  <Option value="director">总监审批</Option>
-                  <Option value="executive">高管审批</Option>
+                <Select placeholder="Please select approval level">
+                  <Option value="none">No Approval Required</Option>
+                  <Option value="manager">Manager Approval</Option>
+                  <Option value="director">Director Approval</Option>
+                  <Option value="executive">Executive Approval</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -956,9 +956,9 @@ const TicketTemplatesPage = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {editingTemplate ? "更新模板" : "创建模板"}
+                {editingTemplate ? "Update Template" : "Create Template"}
               </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
+              <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>

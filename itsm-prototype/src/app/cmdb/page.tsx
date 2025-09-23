@@ -42,13 +42,13 @@ const { Option } = Select;
 
 const getCiTypeIcon = (type: string) => {
   switch (type) {
-    case "云服务器":
+    case "Cloud Server":
       return <Cloud size={16} />;
-    case "物理服务器":
+    case "Physical Server":
       return <Server size={16} />;
-    case "关系型数据库":
+    case "Relational Database":
       return <Database size={16} />;
-    case "存储设备":
+    case "Storage Device":
       return <HardDrive size={16} />;
     default:
       return <Network size={16} />;
@@ -57,13 +57,13 @@ const getCiTypeIcon = (type: string) => {
 
 const getCiTypeColor = (type: string) => {
   switch (type) {
-    case "云服务器":
+    case "Cloud Server":
       return "blue";
-    case "物理服务器":
+    case "Physical Server":
       return "purple";
-    case "关系型数据库":
+    case "Relational Database":
       return "green";
-    case "存储设备":
+    case "Storage Device":
       return "orange";
     default:
       return "default";
@@ -72,22 +72,22 @@ const getCiTypeColor = (type: string) => {
 
 const getStatusConfig = (status: string) => {
   switch (status) {
-    case "运行中":
+    case "Running":
       return {
         color: "#52c41a",
-        text: "运行中",
+        text: "Running",
         backgroundColor: "#f6ffed",
       };
-    case "维护中":
+    case "Maintenance":
       return {
         color: "#fa8c16",
-        text: "维护中",
+        text: "Maintenance",
         backgroundColor: "#fff7e6",
       };
-    case "已停用":
+    case "Disabled":
       return {
         color: "#00000073",
-        text: "已停用",
+        text: "Disabled",
         backgroundColor: "#fafafa",
       };
     default:
@@ -116,33 +116,33 @@ const CMDBPage = () => {
   // 树形数据
   const treeData = useMemo(() => [
     {
-      title: "基础设施",
+      title: "Infrastructure",
       key: "infrastructure",
       children: [
         {
-          title: "云资源",
+          title: "Cloud Resources",
           key: "cloud",
           children: [
-            { title: "阿里云", key: "aliyun" },
-            { title: "腾讯云", key: "tencent" },
+            { title: "Alibaba Cloud", key: "aliyun" },
+            { title: "Tencent Cloud", key: "tencent" },
           ],
         },
         {
-          title: "物理设备",
+          title: "Physical Devices",
           key: "physical",
           children: [
-            { title: "服务器", key: "servers" },
-            { title: "网络设备", key: "network" },
+            { title: "Servers", key: "servers" },
+            { title: "Network Devices", key: "network" },
           ],
         },
       ],
     },
     {
-      title: "应用系统",
+      title: "Application Systems",
       key: "applications",
       children: [
-        { title: "电商平台", key: "ecommerce" },
-        { title: "客户关系管理", key: "crm" },
+        { title: "E-commerce Platform", key: "ecommerce" },
+        { title: "Customer Relationship Management", key: "crm" },
       ],
     },
   ], []);
@@ -158,12 +158,12 @@ const CMDBPage = () => {
       const newCI = {
         id: `CI-${Math.floor(Math.random() * 10000)}`,
         ...values,
-        status: "运行中",
-        business: "新业务系统",
-        owner: "运维部",
-        location: "数据中心",
+        status: "Running",
+        business: "New Business System",
+        owner: "Operations Team",
+        location: "Data Center",
         ip: "192.168.1.102",
-        cpu: `${values.cpu || 4}核`,
+        cpu: `${values.cpu || 4} Cores`,
         memory: `${values.memory || 8}GB`,
         disk: `${values.disk || 100}GB SSD`,
       };
@@ -171,7 +171,7 @@ const CMDBPage = () => {
       setCreateModalVisible(false);
       createForm.resetFields();
     } catch (error) {
-      console.error("创建CI失败:", error);
+      console.error("Failed to create CI:", error);
     }
   };
 
@@ -206,7 +206,7 @@ const CMDBPage = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>总配置项</div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>Total CIs</div>
                 <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.length}</div>
               </div>
               <div style={{ 
@@ -245,8 +245,8 @@ const CMDBPage = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>云服务器</div>
-                <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.filter(ci => ci.type === "云服务器").length}</div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>Cloud Servers</div>
+                <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.filter(ci => ci.type === "Cloud Server").length}</div>
               </div>
               <div style={{ 
                 width: 56, 
@@ -284,8 +284,8 @@ const CMDBPage = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>运行中</div>
-                <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.filter(ci => ci.status === "运行中").length}</div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>Running</div>
+                <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.filter(ci => ci.status === "Running").length}</div>
               </div>
               <div style={{ 
                 width: 56, 
@@ -323,8 +323,8 @@ const CMDBPage = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>维护中</div>
-                <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.filter(ci => ci.status === "维护中").length}</div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14, marginBottom: 8 }}>Maintenance</div>
+                <div style={{ color: '#fff', fontSize: 32, fontWeight: 'bold', lineHeight: 1 }}>{cis.filter(ci => ci.status === "Maintenance").length}</div>
               </div>
               <div style={{ 
                 width: 56, 
@@ -487,7 +487,7 @@ const CMDBPage = () => {
     >
       <div style={{ padding: '24px 24px 0 24px', display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>配置项列表</h3>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Configuration Items List</h3>
           {selectedRowKeys.length > 0 && (
             <Badge 
               count={selectedRowKeys.length} 
@@ -785,7 +785,7 @@ const CMDBPage = () => {
                   }}>
                     {getCiTypeIcon(ci.type)}
                   </div>
-                  <div style={{ marginTop: 8, fontSize: 12 }}>{ci.name}</div>
+                  <div style={{ marginTop: 8, fontSize: 12, width: 80, overflow: "hidden", textOverflow: "ellipsis" }}>{ci.name}</div>
                 </div>
               ))}
             </div>

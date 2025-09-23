@@ -378,6 +378,56 @@ class TicketService {
     }
   }
 
+  // 获取状态标签中文
+  getStatusText(status: TicketStatus): string {
+    switch (status) {
+      case TicketStatus.OPEN:
+        return 'Open';
+      case TicketStatus.IN_PROGRESS:
+        return 'In Progress';
+      case TicketStatus.PENDING:
+        return 'Pending';
+      case TicketStatus.RESOLVED:
+        return 'Resolved';
+      case TicketStatus.CLOSED:
+        return 'Closed';
+      case TicketStatus.CANCELLED:
+        return 'Cancelled';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getPriorityText(priority: TicketPriority): string {
+    switch (priority) {
+      case TicketPriority.LOW:
+        return 'Low';
+      case TicketPriority.MEDIUM:
+        return 'Medium';
+      case TicketPriority.HIGH:
+        return 'High';
+      case TicketPriority.URGENT:
+        return 'Urgent';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getTypeText(type: TicketType): string {
+    switch (type) {
+      case TicketType.INCIDENT:
+        return 'Incident';
+      case TicketType.SERVICE_REQUEST:
+        return 'Service Request';
+      case TicketType.PROBLEM:
+        return 'Problem';
+      case TicketType.CHANGE:
+        return 'Change';
+      default:
+        return 'Unknown';
+    }
+  }
+
   // 健康检查
   async healthCheck(): Promise<boolean> {
     try {
