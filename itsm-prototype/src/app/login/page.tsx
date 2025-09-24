@@ -1,53 +1,87 @@
-"use client";
+'use client';
 
-import { Lock, User, Shield, Zap, AlertCircle, ArrowRight, Globe, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { 
+  Shield, 
+  Sparkles, 
+  Zap, 
+  User, 
+  Lock, 
+  Globe, 
+  ArrowRight, 
+  AlertCircle 
+} from 'lucide-react';
+import { 
+  Card, 
+  Form, 
+  Input, 
+  Button, 
+  Typography, 
+  Space, 
+  Alert 
+} from 'antd';
+import { AuthService } from '@/lib/auth/auth-service';
+import { useNotifications } from '@/lib/store/ui-store';
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { AuthService } from "../lib/auth-service";
-import { Form, Input, Button, Card, Typography, Space, Alert } from "antd";
 const { Title, Text } = Typography;
 
-interface LoginFormValues {
-  username: string;
-  password: string;
-  tenantCode?: string;
-}
-
+/**
+ * 登录页面组件
+ */
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showTenantField, setShowTenantField] = useState(false);
   const router = useRouter();
+  const { success, error: showError } = useNotifications();
+  
+  // 状态管理
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTenantField, setShowTenantField] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    tenantCode: ''
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (values: LoginFormValues) => {
+  // 表单验证
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = '请输入用户名';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = '请输入密码';
+    } else if (formData.password.length < 6) {
+      newErrors.password = '密码长度至少6位';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 处理登录提交
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
-    setError("");
-
+    setErrorMessage(''); // 清除之前的错误信息
+    
     try {
-      console.log("Starting login...", {
-        username: values.username,
-        password: "***",
-        tenantCode: values.tenantCode,
-      });
-
-      const success = await AuthService.login(
-        values.username,
-        values.password,
-        values.tenantCode || undefined
-      );
-
-      console.log("Login result:", success);
-      if (success) {
-        console.log("Login successful, redirecting to dashboard");
-        router.push("/dashboard");
-      } else {
-        console.log("Login failed");
-        setError("Invalid username or password");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setError("Login failed, please try again later");
+      await AuthService.login(formData);
+      success('登录成功', '欢迎回来！');
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('Login failed:', err);
+      const errorMsg = err instanceof Error ? err.message : '用户名或密码错误';
+      setErrorMessage(errorMsg);
+      showError('登录失败', errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -330,9 +364,9 @@ export default function LoginPage() {
           </div>
 
           {/* Error message */}
-          {error && (
+          {errorMessage && (
             <Alert
-              message={error}
+              message={errorMessage}
               type="error"
               showIcon
               icon={<AlertCircle size={16} />}
@@ -388,6 +422,8 @@ export default function LoginPage() {
                 placeholder="Please enter username"
                 autoComplete="username"
                 size="large"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               />
             </Form.Item>
 
@@ -423,44 +459,48 @@ export default function LoginPage() {
                 placeholder="Please enter password"
                 autoComplete="current-password"
                 size="large"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </Form.Item>
 
             {/* Tenant code input */}
             {showTenantField && (
-              <Form.Item
-                name="tenantCode"
-                label={
-                  <Text
-                    style={{
-                      color: "#cbd5e1",
-                      fontSize: "0.9rem",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Tenant Code
-                  </Text>
-                }
-                style={{ marginBottom: 0 }}
-              >
-                <Input
-                  prefix={
-                    <Globe
-                      size={18}
+                <Form.Item
+                  name="tenantCode"
+                  label={
+                    <Text
                       style={{
-                        color: "#64748b",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        color: "#cbd5e1",
+                        fontSize: "0.9rem",
+                        fontWeight: "600",
                       }}
-                    />
+                    >
+                      Tenant Code
+                    </Text>
                   }
-                  placeholder="Please enter tenant code (optional)"
-                  autoComplete="organization"
-                  size="large"
-                />
-              </Form.Item>
-            )}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Input
+                    prefix={
+                      <Globe
+                        size={18}
+                        style={{
+                          color: "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
+                    }
+                    placeholder="Please enter tenant code (optional)"
+                    autoComplete="organization"
+                    size="large"
+                    value={formData.tenantCode}
+                    onChange={(e) => setFormData({ ...formData, tenantCode: e.target.value })}
+                  />
+                </Form.Item>
+              )}
 
             {/* Login button */}
             <Form.Item style={{ marginBottom: 0, marginTop: "2rem" }}>
