@@ -633,8 +633,11 @@ export class NavigationBuilder {
 }
 
 // 默认导出
-export default {
+// 导出配置对象
+export const routeConfig = {
   routes,
   RoutePermissionChecker,
   NavigationBuilder,
 };
+
+export default routeConfig;

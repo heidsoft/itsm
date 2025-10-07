@@ -11,20 +11,24 @@ package main
 // main包是Go程序的入口点，包含main函数
 
 import (
-	"context"                 // Go标准库，用于处理上下文（超时、取消等）
-	"fmt"                     // Go标准库，用于格式化输出
-	"itsm-backend/config"     // 自定义配置包
-	"itsm-backend/controller" // 自定义控制器包
-	"itsm-backend/database"   // 自定义数据库包
-	"itsm-backend/middleware" // 注入全局日志器
-	"itsm-backend/router"     // 自定义路由包
-	"itsm-backend/service"    // 自定义服务包
-	"log"                     // Go标准库，用于日志记录
-	"time"
+    "context"                 // Go标准库，用于处理上下文（超时、取消等）
+    "fmt"                     // Go标准库，用于格式化输出
+    "itsm-backend/config"     // 自定义配置包
+    "itsm-backend/controller" // 自定义控制器包
+    "itsm-backend/database"   // 自定义数据库包
+    "itsm-backend/ent/user"    // Ent 用户schema枚举与查询
+    "itsm-backend/ent/tenant"  // 租户查询
+    "itsm-backend/middleware" // 注入全局日志器
+    "itsm-backend/router"     // 自定义路由包
+    "itsm-backend/service"    // 自定义服务包
+    "log"                     // Go标准库，用于日志记录
+    "time"
 
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.uber.org/zap" // 第三方日志库，高性能的结构化日志
+    "github.com/gin-gonic/gin"
+    swaggerFiles "github.com/swaggo/files"
+    ginSwagger "github.com/swaggo/gin-swagger"
+    "go.uber.org/zap" // 第三方日志库，高性能的结构化日志
+    "golang.org/x/crypto/bcrypt"
 )
 
 // main函数：Go程序的入口点
@@ -62,33 +66,87 @@ func main() {
 	// Ent ORM会自动创建数据库表结构
 	// 根据Go结构体定义生成对应的数据库表
 	// context.Background() 创建根上下文
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("Failed to create schema resources: %v", err)
-	}
+    if err := client.Schema.Create(context.Background()); err != nil {
+        log.Fatalf("Failed to create schema resources: %v", err)
+    }
+
+    // 一次性数据修复：确保默认admin账号的角色为admin
+    // 仅在存在该用户时执行，忽略错误
+    func() {
+        ctx := context.Background()
+        if _, err := client.User.Update().
+            Where(user.UsernameEQ("admin")).
+            SetRole("admin").
+            Save(ctx); err != nil {
+            // 记录但不阻塞启动
+            sugar.Warnw("admin role backfill failed (non-fatal)", "error", err)
+        } else {
+            sugar.Infow("admin role backfilled to admin")
+        }
+    }()
+
+    // 测试种子数据：如不存在则创建一个默认普通用户 user1（角色=user）
+    func() {
+        ctx := context.Background()
+        // 查找默认租户
+        t, err := client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+        if err != nil {
+            sugar.Warnw("default tenant not found; skip user1 seed", "error", err)
+            return
+        }
+        // 是否已存在 user1
+        _, err = client.User.Query().Where(user.UsernameEQ("user1"), user.TenantIDEQ(t.ID)).First(ctx)
+        if err == nil {
+            sugar.Infow("seed user1 already exists")
+            return
+        }
+        // 创建 user1，密码: user123
+        passHash, err := bcrypt.GenerateFromPassword([]byte("user123"), bcrypt.DefaultCost)
+        if err != nil {
+            sugar.Warnw("generate bcrypt for user1 failed", "error", err)
+            return
+        }
+        if _, err := client.User.Create().
+            SetUsername("user1").
+            SetRole("end_user").
+            SetPasswordHash(string(passHash)).
+            SetEmail("user1@example.com").
+            SetName("普通用户").
+            SetDepartment("IT部门").
+            SetActive(true).
+            SetTenantID(t.ID).
+            Save(ctx); err != nil {
+            sugar.Warnw("seed user1 failed", "error", err)
+        } else {
+            sugar.Infow("seed user1 created", "username", "user1")
+        }
+    }()
+
+    // 数据修复：将旧角色名"user"迁移为新角色名"end_user"
+    func() {
+        ctx := context.Background()
+        n, err := client.User.Update().
+            Where(user.RoleEQ("user")).
+            SetRole("end_user").
+            Save(ctx)
+        if err != nil {
+            sugar.Warnw("backfill role user->end_user failed", "error", err)
+        } else if n > 0 {
+            sugar.Infow("backfilled roles", "updated", n)
+        }
+    }()
 
 	// 5. 初始化业务服务层
 	// 服务层包含业务逻辑，是控制器和数据层之间的桥梁
-	// NewNotificationService 创建通知服务实例
-	notificationService := service.NewNotificationService(client)
 	// NewIncidentService 创建事件服务实例，传入数据库客户端和日志器
 	incidentService := service.NewIncidentService(client, sugar)
 	// NewUserService 创建用户服务实例，传入数据库客户端和日志器
 	userService := service.NewUserService(client, sugar)
-	// 其他服务
+	// 其他核心服务
 	ticketService := service.NewTicketService(client, sugar)
-	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
-	serviceRequestService := service.NewServiceRequestService(client, sugar)
-	cmdbService := service.NewCMDBService(client, sugar)
-	dashboardService := service.NewDashboardService(client, sugar)
-	knowledgeService := service.NewKnowledgeService(client, sugar)
-	knowledgeIntegrationService := service.NewKnowledgeIntegrationService(client)
-	// 新增服务
-	workflowService := service.NewWorkflowService(client)
-	ticketTagService := service.NewTicketTagService(client)
-	ticketAssignmentService := service.NewTicketAssignmentService(client)
-	ticketCategoryService := service.NewTicketCategoryService(client)
-	problemService := service.NewProblemService(client, sugar)
-	changeService := service.NewChangeService(client, sugar)
+	// 审计日志服务
+	auditService := service.NewAuditLogService(client, sugar)
+	
 	// 5.1 初始化 LLM/Embedding/VectorStore
 	// LLM/Embedding Provider: use cfg.LLM
 	var embedder service.Embedder
@@ -103,87 +161,38 @@ func main() {
 
 	// 6. 初始化控制器层
 	// 控制器层处理HTTP请求，调用服务层执行业务逻辑
-	// NewNotificationController 创建通知控制器
-	notificationController := controller.NewNotificationController(notificationService)
-	// NewIncidentController 创建事件控制器
-	incidentController := controller.NewIncidentController(incidentService, sugar)
-	// NewUserController 创建用户控制器
-	userController := controller.NewUserController(userService, sugar)
-	// 其他控制器
+	
+	// 初始化认证服务
+	authService := service.NewAuthService(client, cfg.JWT.Secret, sugar)
+	
+	// 核心控制器
 	ticketController := controller.NewTicketController(ticketService, sugar)
-	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
-	cmdbController := controller.NewCMDBController(cmdbService)
-	dashboardController := controller.NewDashboardController(dashboardService, sugar)
-	knowledgeController := controller.NewKnowledgeController(knowledgeService, sugar)
-	knowledgeIntegrationController := controller.NewKnowledgeIntegrationController(knowledgeIntegrationService, sugar)
+	incidentController := controller.NewIncidentController(incidentService, sugar)
+	userController := controller.NewUserController(userService, sugar)
+	authController := controller.NewAuthController(authService)
 	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
-	// 初始化工作流引擎和相关服务
-	workflowEngine := service.NewWorkflowEngine(client)
-	workflowApprovalService := service.NewWorkflowApprovalService(client, workflowEngine)
-	workflowTaskService := service.NewWorkflowTaskService(client, workflowEngine)
-	workflowMonitorService := service.NewWorkflowMonitorService(client, workflowEngine)
-	
-	// 初始化BPMN工作流引擎
-	bpmnProcessEngine := service.NewBPMNProcessEngine(client)
-
-	// 新增控制器
-	workflowController := controller.NewWorkflowController(
-		workflowService,
-		workflowEngine,
-		workflowApprovalService,
-		workflowTaskService,
-		workflowMonitorService,
-		logger,
-	)
-	
-	// 初始化BPMN工作流控制器
-	bpmnWorkflowController := controller.NewBPMNWorkflowController(bpmnProcessEngine)
-	
-	// 初始化BPMN监控控制器
-	bpmnMonitoringService := service.NewBPMNMonitoringService(client)
-	bpmnMonitoringController := controller.NewBPMNMonitoringController(bpmnMonitoringService)
-	ticketTagController := controller.NewTicketTagController(ticketTagService, logger)
-	ticketAssignmentController := controller.NewTicketAssignmentController(ticketAssignmentService, logger)
-	ticketCategoryController := controller.NewTicketCategoryController(ticketCategoryService, sugar)
-	problemController := controller.NewProblemController(sugar, problemService)
-	changeController := controller.NewChangeController(sugar, changeService)
-	// 初始化 ToolRegistry（含只读与危险工具）
-	toolRegistry := service.NewToolRegistry(ragService, incidentService, cmdbService, client)
-	aiController.SetToolRegistry(toolRegistry)
-	// 初始化内存队列用于后台执行危险工具
-	toolQueue := service.NewToolQueue(client, toolRegistry, 100)
-	aiController.SetToolQueue(toolQueue)
-	aiController.SetEmbeddingResources(embedder, vectorStore)
-	// 认证控制器
-	authController := controller.NewAuthController(cfg.JWT.Secret, client)
+	// 审计日志控制器
+	auditLogController := controller.NewAuditLogController(auditService, sugar)
 
 	// 7. 设置路由
-	// SetupRouter函数配置Gin路由，定义API端点
+	// 配置路由结构
+	r := gin.Default()
+	routerConfig := &router.RouterConfig{
+		JWTSecret:          cfg.JWT.Secret,
+		Logger:             sugar,
+		Client:             client,
+		TicketController:   ticketController,
+		IncidentController: incidentController,
+		AuthController:     authController,
+		UserController:     userController,
+		AIController:       aiController,
+		AuditLogController: auditLogController,
+	}
+	
+	// SetupRoutes函数配置Gin路由，定义API端点
 	// 参数说明：
 	// - 装配所有控制器，启用真实登录与受保护路由
-	r := router.SetupRouter(
-		authController,
-		ticketController,
-		serviceController,
-		dashboardController,
-		cmdbController,
-		incidentController,
-		notificationController,
-		userController,
-		knowledgeController,
-		aiController,
-		workflowController,
-		bpmnWorkflowController,
-		bpmnMonitoringController,
-		ticketTagController,
-		ticketAssignmentController,
-		ticketCategoryController,
-		problemController,
-		changeController,
-		knowledgeIntegrationController,
-		client,
-		cfg.JWT.Secret,
-	)
+	router.SetupRoutes(r, routerConfig)
 
 	// Swagger 文档（仅在开发/测试环境开启）
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

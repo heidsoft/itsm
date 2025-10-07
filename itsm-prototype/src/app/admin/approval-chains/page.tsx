@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Users, Search, Settings, Trash2, XCircle, Edit, Eye, AlertTriangle, Tag, FileText, Pause, Play, Copy, UserCheck, GitBranch, ArrowRight } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Users, Search, Settings, Trash2, XCircle, Edit, Eye, AlertTriangle, Tag, FileText, Pause, Play, Copy, UserCheck, GitBranch, ArrowRight, Activity, Workflow, Timer } from 'lucide-react';
 
 import React, { useState } from "react";
 import {

@@ -24,7 +24,7 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
     const containerRef = useRef<HTMLDivElement>(null);
 
     // 格式化日期
-    const formatDate = (date: Date): string => {
+    const formatDate = React.useCallback((date: Date): string => {
       if (showTime) {
         return date.toLocaleString('zh-CN', {
           year: 'numeric',
@@ -35,22 +35,22 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
         });
       }
       return date.toLocaleDateString('zh-CN');
-    };
+    }, [showTime]);
 
     // 解析输入值
-    const parseValue = (val: string | Date | undefined): Date | null => {
+    const parseValue = React.useCallback((val: string | Date | undefined): Date | null => {
       if (!val) return null;
       if (val instanceof Date) return val;
       const parsed = new Date(val);
       return isNaN(parsed.getTime()) ? null : parsed;
-    };
+    }, []);
 
     // 初始化值
     useEffect(() => {
       const parsed = parseValue(value);
       setSelectedDate(parsed);
       setInputValue(parsed ? formatDate(parsed) : '');
-    }, [value]);
+    }, [value, formatDate, parseValue]);
 
     // 点击外部关闭
     useEffect(() => {

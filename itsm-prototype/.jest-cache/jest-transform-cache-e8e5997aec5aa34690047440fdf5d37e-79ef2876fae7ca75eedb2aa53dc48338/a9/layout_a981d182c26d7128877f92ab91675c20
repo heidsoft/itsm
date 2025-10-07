@@ -1,0 +1,327 @@
+23bbe5dc1c69e10e21adbf3616066adf
+"use strict";
+
+/* istanbul ignore next */
+function cov_1zs440e7mh() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/problems/layout.tsx";
+  var hash = "47f1aa1ad32772c309714a0d59373857ed028cca";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/problems/layout.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 8,
+          column: 30
+        }
+      },
+      "3": {
+        start: {
+          line: 11,
+          column: 20
+        },
+        end: {
+          line: 11,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 12,
+          column: 29
+        },
+        end: {
+          line: 12,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 13,
+          column: 33
+        },
+        end: {
+          line: 13,
+          column: 93
+        }
+      },
+      "6": {
+        start: {
+          line: 15,
+          column: 4
+        },
+        end: {
+          line: 17,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 4
+        },
+        end: {
+          line: 22,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 20
+          },
+          end: {
+            line: 9,
+            column: 5
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 14,
+            column: 9
+          },
+          end: {
+            line: 14,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 39
+          },
+          end: {
+            line: 18,
+            column: 1
+          }
+        },
+        line: 14
+      },
+      "2": {
+        name: "ProblemsLayout",
+        decl: {
+          start: {
+            line: 19,
+            column: 9
+          },
+          end: {
+            line: 19,
+            column: 23
+          }
+        },
+        loc: {
+          start: {
+            line: 19,
+            column: 38
+          },
+          end: {
+            line: 23,
+            column: 1
+          }
+        },
+        line: 19
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 15,
+            column: 35
+          },
+          end: {
+            line: 15,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 15,
+            column: 41
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        }],
+        line: 15
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 15,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 15,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 15,
+            column: 18
+          },
+          end: {
+            line: 15,
+            column: 32
+          }
+        }],
+        line: 15
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/problems/layout.tsx"],
+      sourcesContent: ["import React from \"react\";\nimport AppLayout from \"../components/AppLayout\";\n\nexport default function ProblemsLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return (\n    <AppLayout>\n      {children}\n    </AppLayout>\n  );\n}"],
+      names: ["ProblemsLayout", "children", "AppLayout"],
+      mappings: ";;;;+BAGA;;;eAAwBA;;;;8DAHN;kEACI;;;;;;AAEP,SAASA,eAAe,EACrCC,QAAQ,EAGT;IACC,qBACE,qBAACC,kBAAS;kBACPD;;AAGP"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "47f1aa1ad32772c309714a0d59373857ed028cca"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1zs440e7mh = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1zs440e7mh();
+cov_1zs440e7mh().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1zs440e7mh().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_1zs440e7mh().f[0]++;
+    cov_1zs440e7mh().s[2]++;
+    return ProblemsLayout;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_1zs440e7mh().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_1zs440e7mh().s[4]++, _interop_require_default(require("react")));
+const _AppLayout =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_1zs440e7mh().s[5]++, _interop_require_default(require("../components/AppLayout")));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_1zs440e7mh().f[1]++;
+  cov_1zs440e7mh().s[6]++;
+  return /* istanbul ignore next */(cov_1zs440e7mh().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_1zs440e7mh().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_1zs440e7mh().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_1zs440e7mh().b[0][1]++, {
+    default: obj
+  });
+}
+function ProblemsLayout({
+  children
+}) {
+  /* istanbul ignore next */
+  cov_1zs440e7mh().f[2]++;
+  cov_1zs440e7mh().s[7]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)(_AppLayout.default, {
+    children: children
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJQcm9ibGVtc0xheW91dCIsImNoaWxkcmVuIiwiY292XzF6czQ0MGU3bWgiLCJmIiwicyIsIl9qc3hydW50aW1lIiwianN4IiwiX0FwcExheW91dCIsImRlZmF1bHQiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1wcm90b3R5cGUvc3JjL2FwcC9wcm9ibGVtcy9sYXlvdXQudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBSZWFjdCBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCBBcHBMYXlvdXQgZnJvbSBcIi4uL2NvbXBvbmVudHMvQXBwTGF5b3V0XCI7XG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFByb2JsZW1zTGF5b3V0KHtcbiAgY2hpbGRyZW4sXG59OiB7XG4gIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7XG59KSB7XG4gIHJldHVybiAoXG4gICAgPEFwcExheW91dD5cbiAgICAgIHtjaGlsZHJlbn1cbiAgICA8L0FwcExheW91dD5cbiAgKTtcbn0iXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7K0JBR0E7Ozs7OztXQUF3QkEsY0FBQTs7Ozs7Ozs7d0VBSE47Ozt3RUFDSTs7Ozs7Ozs7Ozs7Ozs7O0FBRVAsU0FBU0EsZUFBZTtFQUNyQ0M7QUFBUSxDQUdUO0VBQUE7RUFBQUMsY0FBQSxHQUFBQyxDQUFBO0VBQUFELGNBQUEsR0FBQUUsQ0FBQTtFQUNDLG9CQUNFLElBQUFDLFdBQUEsQ0FBQUMsR0FBQSxFQUFDQyxVQUFBLENBQUFDLE9BQVM7Y0FDUFA7O0FBR1AiLCJpZ25vcmVMaXN0IjpbXX0=

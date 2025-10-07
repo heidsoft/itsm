@@ -58,6 +58,7 @@ func main() {
 	// Create test user
 	testUser, err := client.User.Create().
 		SetUsername("admin").
+		SetRole("admin").
 		SetPasswordHash(string(passwordHash)).
 		SetEmail("admin@example.com").
 		SetName("管理员").

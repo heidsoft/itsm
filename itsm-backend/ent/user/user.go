@@ -3,6 +3,7 @@
 package user
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -19,6 +20,8 @@ const (
 	FieldEmail = "email"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
 	// FieldDepartment holds the string denoting the department field in the database.
 	FieldDepartment = "department"
 	// FieldPhone holds the string denoting the phone field in the database.
@@ -43,6 +46,7 @@ var Columns = []string{
 	FieldUsername,
 	FieldEmail,
 	FieldName,
+	FieldRole,
 	FieldDepartment,
 	FieldPhone,
 	FieldPasswordHash,
@@ -83,6 +87,36 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 )
 
+// Role defines the type for the "role" enum field.
+type Role string
+
+// RoleEndUser is the default value of the Role enum.
+const DefaultRole = RoleEndUser
+
+// Role values.
+const (
+	RoleSuperAdmin Role = "super_admin"
+	RoleAdmin      Role = "admin"
+	RoleManager    Role = "manager"
+	RoleAgent      Role = "agent"
+	RoleTechnician Role = "technician"
+	RoleEndUser    Role = "end_user"
+)
+
+func (r Role) String() string {
+	return string(r)
+}
+
+// RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
+func RoleValidator(r Role) error {
+	switch r {
+	case RoleSuperAdmin, RoleAdmin, RoleManager, RoleAgent, RoleTechnician, RoleEndUser:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for role field: %q", r)
+	}
+}
+
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
 
@@ -104,6 +138,11 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByRole orders the results by the role field.
+func ByRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRole, opts...).ToFunc()
 }
 
 // ByDepartment orders the results by the department field.

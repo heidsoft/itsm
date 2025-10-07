@@ -1,0 +1,163 @@
+95291433795e8f2a34ac70abbf6ccf01
+"use strict";
+
+/* istanbul ignore next */
+function cov_1sai2lsy15() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/workflow/ticket-approval/layout.tsx";
+  var hash = "7a475bff728d1f678d9491420f66531bdd416845";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/workflow/ticket-approval/layout.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 8,
+          column: 44
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 20
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 20
+          },
+          end: {
+            line: 9,
+            column: 5
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "TicketApprovalWorkflowLayout",
+        decl: {
+          start: {
+            line: 11,
+            column: 9
+          },
+          end: {
+            line: 11,
+            column: 37
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 52
+          },
+          end: {
+            line: 13,
+            column: 1
+          }
+        },
+        line: 11
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/workflow/ticket-approval/layout.tsx"],
+      sourcesContent: ["export default function TicketApprovalWorkflowLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return children;\n}\n"],
+      names: ["TicketApprovalWorkflowLayout", "children"],
+      mappings: ";;;;+BAAA;;;eAAwBA;;;AAAT,SAASA,6BAA6B,EACnDC,QAAQ,EAGT;IACC,OAAOA;AACT"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "7a475bff728d1f678d9491420f66531bdd416845"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1sai2lsy15 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1sai2lsy15();
+cov_1sai2lsy15().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1sai2lsy15().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_1sai2lsy15().f[0]++;
+    cov_1sai2lsy15().s[2]++;
+    return TicketApprovalWorkflowLayout;
+  }
+});
+function TicketApprovalWorkflowLayout({
+  children
+}) {
+  /* istanbul ignore next */
+  cov_1sai2lsy15().f[1]++;
+  cov_1sai2lsy15().s[3]++;
+  return children;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJUaWNrZXRBcHByb3ZhbFdvcmtmbG93TGF5b3V0IiwiY2hpbGRyZW4iLCJjb3ZfMXNhaTJsc3kxNSIsImYiLCJzIl0sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tcHJvdG90eXBlL3NyYy9hcHAvd29ya2Zsb3cvdGlja2V0LWFwcHJvdmFsL2xheW91dC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gVGlja2V0QXBwcm92YWxXb3JrZmxvd0xheW91dCh7XG4gIGNoaWxkcmVuLFxufToge1xuICBjaGlsZHJlbjogUmVhY3QuUmVhY3ROb2RlO1xufSkge1xuICByZXR1cm4gY2hpbGRyZW47XG59XG4iXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OzsrQkFBQTs7Ozs7O1dBQXdCQSw0QkFBQTs7O0FBQVQsU0FBU0EsNkJBQTZCO0VBQ25EQztBQUFRLENBR1Q7RUFBQTtFQUFBQyxjQUFBLEdBQUFDLENBQUE7RUFBQUQsY0FBQSxHQUFBRSxDQUFBO0VBQ0MsT0FBT0gsUUFBQTtBQUNUIiwiaWdub3JlTGlzdCI6W119

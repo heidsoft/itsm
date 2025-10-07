@@ -1,0 +1,625 @@
+043500c8b08b19a7e5634a4a72bb2b3c
+"use client";
+"use strict";
+
+/* istanbul ignore next */
+function cov_9ds58w4rb() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/components/EnhancedBPMNDesigner.tsx";
+  var hash = "0962d1648b31c5543a2b8bbd93bac74480a369cb";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/components/EnhancedBPMNDesigner.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 24
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 14
+        },
+        end: {
+          line: 14,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 29
+        },
+        end: {
+          line: 97,
+          column: 1
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 23
+        },
+        end: {
+          line: 31,
+          column: 5
+        }
+      },
+      "9": {
+        start: {
+          line: 24,
+          column: 24
+        },
+        end: {
+          line: 29,
+          column: 20
+        }
+      },
+      "10": {
+        start: {
+          line: 30,
+          column: 8
+        },
+        end: {
+          line: 30,
+          column: 24
+        }
+      },
+      "11": {
+        start: {
+          line: 32,
+          column: 25
+        },
+        end: {
+          line: 43,
+          column: 5
+        }
+      },
+      "12": {
+        start: {
+          line: 33,
+          column: 8
+        },
+        end: {
+          line: 42,
+          column: 9
+        }
+      },
+      "13": {
+        start: {
+          line: 35,
+          column: 28
+        },
+        end: {
+          line: 40,
+          column: 20
+        }
+      },
+      "14": {
+        start: {
+          line: 41,
+          column: 12
+        },
+        end: {
+          line: 41,
+          column: 30
+        }
+      },
+      "15": {
+        start: {
+          line: 44,
+          column: 4
+        },
+        end: {
+          line: 96,
+          column: 7
+        }
+      },
+      "16": {
+        start: {
+          line: 98,
+          column: 17
+        },
+        end: {
+          line: 98,
+          column: 37
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 20,
+            column: 29
+          },
+          end: {
+            line: 20,
+            column: 30
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 72
+          },
+          end: {
+            line: 97,
+            column: 1
+          }
+        },
+        line: 20
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 21,
+            column: 23
+          },
+          end: {
+            line: 21,
+            column: 24
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 31
+          },
+          end: {
+            line: 31,
+            column: 5
+          }
+        },
+        line: 21
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 32,
+            column: 25
+          },
+          end: {
+            line: 32,
+            column: 26
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 33
+          },
+          end: {
+            line: 43,
+            column: 5
+          }
+        },
+        line: 32
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 20,
+            column: 55
+          },
+          end: {
+            line: 20,
+            column: 67
+          }
+        },
+        type: "default-arg",
+        locations: [{
+          start: {
+            line: 20,
+            column: 64
+          },
+          end: {
+            line: 20,
+            column: 67
+          }
+        }],
+        line: 20
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 33,
+            column: 8
+          },
+          end: {
+            line: 42,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 33,
+            column: 8
+          },
+          end: {
+            line: 42,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 33
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0],
+      "3": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/components/EnhancedBPMNDesigner.tsx"],
+      sourcesContent: ["\"use client\";\n\nimport React from \"react\";\nimport { Button } from \"antd\";\n\ninterface EnhancedBPMNDesignerProps {\n  xml: string;\n  onSave: (xml: string) => void;\n  onChange?: (xml: string) => void;\n  height?: number;\n}\n\nconst EnhancedBPMNDesigner: React.FC<EnhancedBPMNDesignerProps> = ({\n  xml,\n  onSave,\n  onChange,\n  height = 600,\n}) => {\n  const handleSave = (data: any) => {\n    // \u5C06 WorkflowDesigner \u7684\u6570\u636E\u8F6C\u6362\u4E3A BPMN XML \u683C\u5F0F\n    // \u8FD9\u91CC\u7B80\u5316\u5904\u7406\uFF0C\u5B9E\u9645\u5E94\u8BE5\u6839\u636E elements  and connections \u751F\u6210 XML\n    const mockXML = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">\n  <bpmn:process id=\"Process_1\" name=\"\u5DE5\u4F5C\u6D41\">\n    <!-- \u8FD9\u91CC\u5E94\u8BE5\u6839\u636E\u5B9E\u9645\u6570\u636E\u751F\u6210 -->\n  </bpmn:process>\n</bpmn:definitions>`;\n\n    onSave(mockXML);\n  };\n\n  const handleChange = (data: any) => {\n    if (onChange) {\n      // \u6A21\u62DFXML\u53D8\u5316\n      const mockXML = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">\n  <bpmn:process id=\"Process_1\" name=\"\u5DE5\u4F5C\u6D41\">\n    <!-- \u8FD9\u91CC\u5E94\u8BE5\u6839\u636E\u5B9E\u9645\u6570\u636E\u751F\u6210 -->\n  </bpmn:process>\n</bpmn:definitions>`;\n\n      onChange(mockXML);\n    }\n  };\n\n  return (\n    <div\n      style={{\n        height,\n        border: \"1px solid #d9d9d9\",\n        borderRadius: \"6px\",\n        padding: \"16px\",\n      }}\n    >\n      <div className=\"text-center text-gray-500\">\n        <div className=\"mb-4\">\n          <h3>BPMN\u6D41\u7A0B\u8BBE\u8BA1\u5668</h3>\n          <p>\u5F53\u524DXML\u5185\u5BB9\u957F\u5EA6: {xml.length} \u5B57\u7B26</p>\n        </div>\n        <div className=\"space-y-2\">\n          <Button type=\"primary\" onClick={handleSave}>\n            \u4FDD\u5B58\u6D41\u7A0B\n          </Button>\n          <Button onClick={handleChange}>\u6A21\u62DF\u53D8\u66F4</Button>\n        </div>\n        <div className=\"mt-4 text-xs text-gray-400\">\n          <p>\u8FD9\u662F\u4E00\u4E2A\u7B80\u5316\u7684BPMN\u8BBE\u8BA1\u5668\u6F14\u793A</p>\n          <p>\u5B9E\u9645\u9879\u76EE\u4E2D\u5E94\u8BE5\u96C6\u6210\u4E13\u4E1A\u7684BPMN\u8BBE\u8BA1\u5668\u7EC4\u4EF6</p>\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default EnhancedBPMNDesigner;\n"],
+      names: ["EnhancedBPMNDesigner", "xml", "onSave", "onChange", "height", "handleSave", "data", "mockXML", "handleChange", "div", "style", "border", "borderRadius", "padding", "className", "h3", "p", "length", "Button", "type", "onClick"],
+      mappings: "AAAA;;;;;+BA0EA;;;eAAA;;;;8DAxEkB;sBACK;;;;;;AASvB,MAAMA,uBAA4D,CAAC,EACjEC,GAAG,EACHC,MAAM,EACNC,QAAQ,EACRC,SAAS,GAAG,EACb;IACC,MAAMC,aAAa,CAACC;QAClB,wCAAwC;QACxC,iDAAiD;QACjD,MAAMC,UAAU,CAAC;;;;;mBAKF,CAAC;QAEhBL,OAAOK;IACT;IAEA,MAAMC,eAAe,CAACF;QACpB,IAAIH,UAAU;YACZ,UAAU;YACV,MAAMI,UAAU,CAAC;;;;;mBAKJ,CAAC;YAEdJ,SAASI;QACX;IACF;IAEA,qBACE,qBAACE;QACCC,OAAO;YACLN;YACAO,QAAQ;YACRC,cAAc;YACdC,SAAS;QACX;kBAEA,cAAA,sBAACJ;YAAIK,WAAU;;8BACb,sBAACL;oBAAIK,WAAU;;sCACb,qBAACC;sCAAG;;sCACJ,sBAACC;;gCAAE;gCAAYf,IAAIgB,MAAM;gCAAC;;;;;8BAE5B,sBAACR;oBAAIK,WAAU;;sCACb,qBAACI,YAAM;4BAACC,MAAK;4BAAUC,SAASf;sCAAY;;sCAG5C,qBAACa,YAAM;4BAACE,SAASZ;sCAAc;;;;8BAEjC,sBAACC;oBAAIK,WAAU;;sCACb,qBAACE;sCAAE;;sCACH,qBAACA;sCAAE;;;;;;;AAKb;MAEA,WAAehB"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "0962d1648b31c5543a2b8bbd93bac74480a369cb"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_9ds58w4rb = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_9ds58w4rb();
+cov_9ds58w4rb().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_9ds58w4rb().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_9ds58w4rb().f[0]++;
+    cov_9ds58w4rb().s[2]++;
+    return _default;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_9ds58w4rb().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_9ds58w4rb().s[4]++, _interop_require_default(require("react")));
+const _antd =
+/* istanbul ignore next */
+(cov_9ds58w4rb().s[5]++, require("antd"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_9ds58w4rb().f[1]++;
+  cov_9ds58w4rb().s[6]++;
+  return /* istanbul ignore next */(cov_9ds58w4rb().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_9ds58w4rb().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_9ds58w4rb().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_9ds58w4rb().b[0][1]++, {
+    default: obj
+  });
+}
+/* istanbul ignore next */
+cov_9ds58w4rb().s[7]++;
+const EnhancedBPMNDesigner = ({
+  xml,
+  onSave,
+  onChange,
+  height =
+  /* istanbul ignore next */
+  (cov_9ds58w4rb().b[2][0]++, 600)
+}) => {
+  /* istanbul ignore next */
+  cov_9ds58w4rb().f[2]++;
+  cov_9ds58w4rb().s[8]++;
+  const handleSave = data => {
+    /* istanbul ignore next */
+    cov_9ds58w4rb().f[3]++;
+    // 将 WorkflowDesigner 的数据转换为 BPMN XML 格式
+    // 这里简化处理，实际应该根据 elements  and connections 生成 XML
+    const mockXML =
+    /* istanbul ignore next */
+    (cov_9ds58w4rb().s[9]++, `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">
+  <bpmn:process id="Process_1" name="工作流">
+    <!-- 这里应该根据实际数据生成 -->
+  </bpmn:process>
+</bpmn:definitions>`);
+    /* istanbul ignore next */
+    cov_9ds58w4rb().s[10]++;
+    onSave(mockXML);
+  };
+  /* istanbul ignore next */
+  cov_9ds58w4rb().s[11]++;
+  const handleChange = data => {
+    /* istanbul ignore next */
+    cov_9ds58w4rb().f[4]++;
+    cov_9ds58w4rb().s[12]++;
+    if (onChange) {
+      /* istanbul ignore next */
+      cov_9ds58w4rb().b[3][0]++;
+      // 模拟XML变化
+      const mockXML =
+      /* istanbul ignore next */
+      (cov_9ds58w4rb().s[13]++, `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">
+  <bpmn:process id="Process_1" name="工作流">
+    <!-- 这里应该根据实际数据生成 -->
+  </bpmn:process>
+</bpmn:definitions>`);
+      /* istanbul ignore next */
+      cov_9ds58w4rb().s[14]++;
+      onChange(mockXML);
+    } else
+    /* istanbul ignore next */
+    {
+      cov_9ds58w4rb().b[3][1]++;
+    }
+  };
+  /* istanbul ignore next */
+  cov_9ds58w4rb().s[15]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+    style: {
+      height,
+      border: "1px solid #d9d9d9",
+      borderRadius: "6px",
+      padding: "16px"
+    },
+    children: /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+      className: "text-center text-gray-500",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+        className: "mb-4",
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h3", {
+          children: "BPMN流程设计器"
+        }), /*#__PURE__*/(0, _jsxruntime.jsxs)("p", {
+          children: ["当前XML内容长度: ", xml.length, " 字符"]
+        })]
+      }), /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+        className: "space-y-2",
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Button, {
+          type: "primary",
+          onClick: handleSave,
+          children: "保存流程"
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Button, {
+          onClick: handleChange,
+          children: "模拟变更"
+        })]
+      }), /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+        className: "mt-4 text-xs text-gray-400",
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)("p", {
+          children: "这是一个简化的BPMN设计器演示"
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)("p", {
+          children: "实际项目中应该集成专业的BPMN设计器组件"
+        })]
+      })]
+    })
+  });
+};
+const _default =
+/* istanbul ignore next */
+(cov_9ds58w4rb().s[16]++, EnhancedBPMNDesigner);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJfZGVmYXVsdCIsIkVuaGFuY2VkQlBNTkRlc2lnbmVyIiwieG1sIiwib25TYXZlIiwib25DaGFuZ2UiLCJoZWlnaHQiLCJjb3ZfOWRzNTh3NHJiIiwiYiIsImYiLCJzIiwiaGFuZGxlU2F2ZSIsImRhdGEiLCJtb2NrWE1MIiwiaGFuZGxlQ2hhbmdlIiwiX2pzeHJ1bnRpbWUiLCJqc3giLCJzdHlsZSIsImJvcmRlciIsImJvcmRlclJhZGl1cyIsInBhZGRpbmciLCJqc3hzIiwiY2xhc3NOYW1lIiwibGVuZ3RoIiwiX2FudGQiLCJCdXR0b24iLCJ0eXBlIiwib25DbGljayJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwL2NvbXBvbmVudHMvRW5oYW5jZWRCUE1ORGVzaWduZXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIlwidXNlIGNsaWVudFwiO1xuXG5pbXBvcnQgUmVhY3QgZnJvbSBcInJlYWN0XCI7XG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiYW50ZFwiO1xuXG5pbnRlcmZhY2UgRW5oYW5jZWRCUE1ORGVzaWduZXJQcm9wcyB7XG4gIHhtbDogc3RyaW5nO1xuICBvblNhdmU6ICh4bWw6IHN0cmluZykgPT4gdm9pZDtcbiAgb25DaGFuZ2U/OiAoeG1sOiBzdHJpbmcpID0+IHZvaWQ7XG4gIGhlaWdodD86IG51bWJlcjtcbn1cblxuY29uc3QgRW5oYW5jZWRCUE1ORGVzaWduZXI6IFJlYWN0LkZDPEVuaGFuY2VkQlBNTkRlc2lnbmVyUHJvcHM+ID0gKHtcbiAgeG1sLFxuICBvblNhdmUsXG4gIG9uQ2hhbmdlLFxuICBoZWlnaHQgPSA2MDAsXG59KSA9PiB7XG4gIGNvbnN0IGhhbmRsZVNhdmUgPSAoZGF0YTogYW55KSA9PiB7XG4gICAgLy8g5bCGIFdvcmtmbG93RGVzaWduZXIg55qE5pWw5o2u6L2s5o2i5Li6IEJQTU4gWE1MIOagvOW8j1xuICAgIC8vIOi/memHjOeugOWMluWkhOeQhu+8jOWunumZheW6lOivpeagueaNriBlbGVtZW50cyAgYW5kIGNvbm5lY3Rpb25zIOeUn+aIkCBYTUxcbiAgICBjb25zdCBtb2NrWE1MID0gYDw/eG1sIHZlcnNpb249XCIxLjBcIiBlbmNvZGluZz1cIlVURi04XCI/PlxuPGJwbW46ZGVmaW5pdGlvbnMgeG1sbnM6YnBtbj1cImh0dHA6Ly93d3cub21nLm9yZy9zcGVjL0JQTU4vMjAxMDA1MjQvTU9ERUxcIj5cbiAgPGJwbW46cHJvY2VzcyBpZD1cIlByb2Nlc3NfMVwiIG5hbWU9XCLlt6XkvZzmtYFcIj5cbiAgICA8IS0tIOi/memHjOW6lOivpeagueaNruWunumZheaVsOaNrueUn+aIkCAtLT5cbiAgPC9icG1uOnByb2Nlc3M+XG48L2JwbW46ZGVmaW5pdGlvbnM+YDtcblxuICAgIG9uU2F2ZShtb2NrWE1MKTtcbiAgfTtcblxuICBjb25zdCBoYW5kbGVDaGFuZ2UgPSAoZGF0YTogYW55KSA9PiB7XG4gICAgaWYgKG9uQ2hhbmdlKSB7XG4gICAgICAvLyDmqKHmi59YTUzlj5jljJZcbiAgICAgIGNvbnN0IG1vY2tYTUwgPSBgPD94bWwgdmVyc2lvbj1cIjEuMFwiIGVuY29kaW5nPVwiVVRGLThcIj8+XG48YnBtbjpkZWZpbml0aW9ucyB4bWxuczpicG1uPVwiaHR0cDovL3d3dy5vbWcub3JnL3NwZWMvQlBNTi8yMDEwMDUyNC9NT0RFTFwiPlxuICA8YnBtbjpwcm9jZXNzIGlkPVwiUHJvY2Vzc18xXCIgbmFtZT1cIuW3peS9nOa1gVwiPlxuICAgIDwhLS0g6L+Z6YeM5bqU6K+l5qC55o2u5a6e6ZmF5pWw5o2u55Sf5oiQIC0tPlxuICA8L2JwbW46cHJvY2Vzcz5cbjwvYnBtbjpkZWZpbml0aW9ucz5gO1xuXG4gICAgICBvbkNoYW5nZShtb2NrWE1MKTtcbiAgICB9XG4gIH07XG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2XG4gICAgICBzdHlsZT17e1xuICAgICAgICBoZWlnaHQsXG4gICAgICAgIGJvcmRlcjogXCIxcHggc29saWQgI2Q5ZDlkOVwiLFxuICAgICAgICBib3JkZXJSYWRpdXM6IFwiNnB4XCIsXG4gICAgICAgIHBhZGRpbmc6IFwiMTZweFwiLFxuICAgICAgfX1cbiAgICA+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHRleHQtZ3JheS01MDBcIj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtYi00XCI+XG4gICAgICAgICAgPGgzPkJQTU7mtYHnqIvorr7orqHlmag8L2gzPlxuICAgICAgICAgIDxwPuW9k+WJjVhNTOWGheWuuemVv+W6pjoge3htbC5sZW5ndGh9IOWtl+espjwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XG4gICAgICAgICAgPEJ1dHRvbiB0eXBlPVwicHJpbWFyeVwiIG9uQ2xpY2s9e2hhbmRsZVNhdmV9PlxuICAgICAgICAgICAg5L+d5a2Y5rWB56iLXG4gICAgICAgICAgPC9CdXR0b24+XG4gICAgICAgICAgPEJ1dHRvbiBvbkNsaWNrPXtoYW5kbGVDaGFuZ2V9PuaooeaLn+WPmOabtDwvQnV0dG9uPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC00IHRleHQteHMgdGV4dC1ncmF5LTQwMFwiPlxuICAgICAgICAgIDxwPui/meaYr+S4gOS4queugOWMlueahEJQTU7orr7orqHlmajmvJTnpLo8L3A+XG4gICAgICAgICAgPHA+5a6e6ZmF6aG555uu5Lit5bqU6K+l6ZuG5oiQ5LiT5Lia55qEQlBNTuiuvuiuoeWZqOe7hOS7tjwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cbiAgICA8L2Rpdj5cbiAgKTtcbn07XG5cbmV4cG9ydCBkZWZhdWx0IEVuaGFuY2VkQlBNTkRlc2lnbmVyO1xuIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7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

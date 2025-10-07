@@ -56,17 +56,21 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		return nil, fmt.Errorf("密码加密失败: %w", err)
 	}
 
-	// 创建用户
-	userEntity, err := s.client.User.Create().
-		SetUsername(req.Username).
-		SetEmail(req.Email).
-		SetName(req.Name).
-		SetDepartment(req.Department).
-		SetPhone(req.Phone).
-		SetPasswordHash(string(hashedPassword)).
-		SetActive(true).
-		SetTenantID(req.TenantID).
-		Save(ctx)
+    // 创建用户
+    uc := s.client.User.Create().
+        SetUsername(req.Username).
+        SetEmail(req.Email).
+        SetName(req.Name).
+        SetDepartment(req.Department).
+        SetPhone(req.Phone).
+        SetPasswordHash(string(hashedPassword)).
+        SetActive(true).
+        SetTenantID(req.TenantID)
+    // 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
+    if strings.TrimSpace(req.Role) != "" {
+        uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
+    }
+    userEntity, err := uc.Save(ctx)
 
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败: %w", err)
@@ -138,10 +142,11 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest) 
 			Department: u.Department,
 			Phone:      u.Phone,
 			Active:     u.Active,
-			TenantID:   u.TenantID,
-			CreatedAt:  u.CreatedAt,
-			UpdatedAt:  u.UpdatedAt,
-		})
+            TenantID:   u.TenantID,
+            Role:       string(u.Role),
+            CreatedAt:  u.CreatedAt,
+            UpdatedAt:  u.UpdatedAt,
+        })
 	}
 
 	response := &dto.PagedUsersResponse{
@@ -233,6 +238,10 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 	if req.Phone != "" {
 		update = update.SetPhone(req.Phone)
 	}
+	// 角色更新（仅在提供时设置），管理员权限由RBAC控制
+    if strings.TrimSpace(req.Role) != "" {
+        update = update.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))) )
+    }
 
 	userEntity, err := update.Save(ctx)
 	if err != nil {
@@ -429,10 +438,11 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 			Department: u.Department,
 			Phone:      u.Phone,
 			Active:     u.Active,
-			TenantID:   u.TenantID,
-			CreatedAt:  u.CreatedAt,
-			UpdatedAt:  u.UpdatedAt,
-		})
+            TenantID:   u.TenantID,
+            Role:       string(u.Role),
+            CreatedAt:  u.CreatedAt,
+            UpdatedAt:  u.UpdatedAt,
+        })
 	}
 
 	s.logger.Infof("用户搜索成功: found=%d", len(users))

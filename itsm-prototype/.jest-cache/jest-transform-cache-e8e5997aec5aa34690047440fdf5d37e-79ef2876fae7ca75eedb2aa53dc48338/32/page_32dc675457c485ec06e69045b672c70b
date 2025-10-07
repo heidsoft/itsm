@@ -1,0 +1,389 @@
+834b936de162909da5ef1bc29dee7537
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_2c4xdsx3l0() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/reports/cmdb-quality/page.tsx";
+  var hash = "45b358175fa6c4e1453d70187856d4d716ccaed8";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/reports/cmdb-quality/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 33
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 18
+        },
+        end: {
+          line: 14,
+          column: 37
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 13
+        },
+        end: {
+          line: 41,
+          column: 1
+        }
+      },
+      "8": {
+        start: {
+          line: 43,
+          column: 4
+        },
+        end: {
+          line: 95,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "CMDBQualityReport",
+        decl: {
+          start: {
+            line: 42,
+            column: 9
+          },
+          end: {
+            line: 42,
+            column: 26
+          }
+        },
+        loc: {
+          start: {
+            line: 42,
+            column: 29
+          },
+          end: {
+            line: 96,
+            column: 1
+          }
+        },
+        line: 42
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/reports/cmdb-quality/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';\n\nconst data = [\n  { name: 'Servers', completeness: 95, accuracy: 90 },\n  { name: 'Applications', completeness: 80, accuracy: 85 },\n  { name: 'Databases', completeness: 90, accuracy: 92 },\n  { name: 'Network Devices', completeness: 85, accuracy: 88 },\n];\n\nexport default function CMDBQualityReport() {\n  return (\n    <div className=\"p-10 bg-gray-50 min-h-full\">\n      <header className=\"mb-8\">\n        <h2 className=\"text-4xl font-bold text-gray-800\">CMDB Data Quality Report</h2>\n        <p className=\"text-gray-500 mt-1\">This report shows the data quality of the Configuration Management Database (CMDB).</p>\n      </header>\n      <div className=\"bg-white p-6 rounded-lg shadow-md\">\n        <h3 className=\"text-xl font-semibold text-gray-800 mb-4\">CMDB Data Quality</h3>\n        <ResponsiveContainer width=\"100%\" height={300}>\n          <BarChart data={data}>\n            <CartesianGrid strokeDasharray=\"3 3\" />\n            <XAxis dataKey=\"name\" />\n            <YAxis />\n            <Tooltip />\n            <Legend />\n            <Bar dataKey=\"completeness\" fill=\"#8884d8\" />\n            <Bar dataKey=\"accuracy\" fill=\"#82ca9d\" />\n          </BarChart>\n        </ResponsiveContainer>\n      </div>\n    </div>\n  );\n}"],
+      names: ["CMDBQualityReport", "data", "name", "completeness", "accuracy", "div", "className", "header", "h2", "p", "h3", "ResponsiveContainer", "width", "height", "BarChart", "CartesianGrid", "strokeDasharray", "XAxis", "dataKey", "YAxis", "Tooltip", "Legend", "Bar", "fill"],
+      mappings: "AAAA;;;;;+BAYA;;;eAAwBA;;;;8DAVN;0BAC+E;;;;;;AAEjG,MAAMC,OAAO;IACX;QAAEC,MAAM;QAAWC,cAAc;QAAIC,UAAU;IAAG;IAClD;QAAEF,MAAM;QAAgBC,cAAc;QAAIC,UAAU;IAAG;IACvD;QAAEF,MAAM;QAAaC,cAAc;QAAIC,UAAU;IAAG;IACpD;QAAEF,MAAM;QAAmBC,cAAc;QAAIC,UAAU;IAAG;CAC3D;AAEc,SAASJ;IACtB,qBACE,sBAACK;QAAIC,WAAU;;0BACb,sBAACC;gBAAOD,WAAU;;kCAChB,qBAACE;wBAAGF,WAAU;kCAAmC;;kCACjD,qBAACG;wBAAEH,WAAU;kCAAqB;;;;0BAEpC,sBAACD;gBAAIC,WAAU;;kCACb,qBAACI;wBAAGJ,WAAU;kCAA2C;;kCACzD,qBAACK,6BAAmB;wBAACC,OAAM;wBAAOC,QAAQ;kCACxC,cAAA,sBAACC,kBAAQ;4BAACb,MAAMA;;8CACd,qBAACc,uBAAa;oCAACC,iBAAgB;;8CAC/B,qBAACC,eAAK;oCAACC,SAAQ;;8CACf,qBAACC,eAAK;8CACN,qBAACC,iBAAO;8CACR,qBAACC,gBAAM;8CACP,qBAACC,aAAG;oCAACJ,SAAQ;oCAAeK,MAAK;;8CACjC,qBAACD,aAAG;oCAACJ,SAAQ;oCAAWK,MAAK;;;;;;;;;AAMzC"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "45b358175fa6c4e1453d70187856d4d716ccaed8"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2c4xdsx3l0 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2c4xdsx3l0();
+cov_2c4xdsx3l0().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2c4xdsx3l0().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_2c4xdsx3l0().f[0]++;
+    cov_2c4xdsx3l0().s[2]++;
+    return CMDBQualityReport;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_2c4xdsx3l0().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_2c4xdsx3l0().s[4]++, _interop_require_default(require("react")));
+const _recharts =
+/* istanbul ignore next */
+(cov_2c4xdsx3l0().s[5]++, require("recharts"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_2c4xdsx3l0().f[1]++;
+  cov_2c4xdsx3l0().s[6]++;
+  return /* istanbul ignore next */(cov_2c4xdsx3l0().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_2c4xdsx3l0().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_2c4xdsx3l0().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_2c4xdsx3l0().b[0][1]++, {
+    default: obj
+  });
+}
+const data =
+/* istanbul ignore next */
+(cov_2c4xdsx3l0().s[7]++, [{
+  name: 'Servers',
+  completeness: 95,
+  accuracy: 90
+}, {
+  name: 'Applications',
+  completeness: 80,
+  accuracy: 85
+}, {
+  name: 'Databases',
+  completeness: 90,
+  accuracy: 92
+}, {
+  name: 'Network Devices',
+  completeness: 85,
+  accuracy: 88
+}]);
+function CMDBQualityReport() {
+  /* istanbul ignore next */
+  cov_2c4xdsx3l0().f[2]++;
+  cov_2c4xdsx3l0().s[8]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+    className: "p-10 bg-gray-50 min-h-full",
+    children: [/*#__PURE__*/(0, _jsxruntime.jsxs)("header", {
+      className: "mb-8",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h2", {
+        className: "text-4xl font-bold text-gray-800",
+        children: "CMDB Data Quality Report"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)("p", {
+        className: "text-gray-500 mt-1",
+        children: "This report shows the data quality of the Configuration Management Database (CMDB)."
+      })]
+    }), /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+      className: "bg-white p-6 rounded-lg shadow-md",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h3", {
+        className: "text-xl font-semibold text-gray-800 mb-4",
+        children: "CMDB Data Quality"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.ResponsiveContainer, {
+        width: "100%",
+        height: 300,
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_recharts.BarChart, {
+          data: data,
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.CartesianGrid, {
+            strokeDasharray: "3 3"
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.XAxis, {
+            dataKey: "name"
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.YAxis, {}), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Tooltip, {}), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Legend, {}), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Bar, {
+            dataKey: "completeness",
+            fill: "#8884d8"
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Bar, {
+            dataKey: "accuracy",
+            fill: "#82ca9d"
+          })]
+        })
+      })]
+    })]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJDTURCUXVhbGl0eVJlcG9ydCIsImRhdGEiLCJjb3ZfMmM0eGRzeDNsMCIsInMiLCJuYW1lIiwiY29tcGxldGVuZXNzIiwiYWNjdXJhY3kiLCJmIiwiX2pzeHJ1bnRpbWUiLCJqc3hzIiwiY2xhc3NOYW1lIiwianN4IiwiX3JlY2hhcnRzIiwiUmVzcG9uc2l2ZUNvbnRhaW5lciIsIndpZHRoIiwiaGVpZ2h0IiwiQmFyQ2hhcnQiLCJDYXJ0ZXNpYW5HcmlkIiwic3Ryb2tlRGFzaGFycmF5IiwiWEF4aXMiLCJkYXRhS2V5IiwiWUF4aXMiLCJUb29sdGlwIiwiTGVnZW5kIiwiQmFyIiwiZmlsbCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwL3JlcG9ydHMvY21kYi1xdWFsaXR5L3BhZ2UudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50JztcblxuaW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IEJhckNoYXJ0LCBCYXIsIFhBeGlzLCBZQXhpcywgQ2FydGVzaWFuR3JpZCwgVG9vbHRpcCwgTGVnZW5kLCBSZXNwb25zaXZlQ29udGFpbmVyIH0gZnJvbSAncmVjaGFydHMnO1xuXG5jb25zdCBkYXRhID0gW1xuICB7IG5hbWU6ICdTZXJ2ZXJzJywgY29tcGxldGVuZXNzOiA5NSwgYWNjdXJhY3k6IDkwIH0sXG4gIHsgbmFtZTogJ0FwcGxpY2F0aW9ucycsIGNvbXBsZXRlbmVzczogODAsIGFjY3VyYWN5OiA4NSB9LFxuICB7IG5hbWU6ICdEYXRhYmFzZXMnLCBjb21wbGV0ZW5lc3M6IDkwLCBhY2N1cmFjeTogOTIgfSxcbiAgeyBuYW1lOiAnTmV0d29yayBEZXZpY2VzJywgY29tcGxldGVuZXNzOiA4NSwgYWNjdXJhY3k6IDg4IH0sXG5dO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBDTURCUXVhbGl0eVJlcG9ydCgpIHtcbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInAtMTAgYmctZ3JheS01MCBtaW4taC1mdWxsXCI+XG4gICAgICA8aGVhZGVyIGNsYXNzTmFtZT1cIm1iLThcIj5cbiAgICAgICAgPGgyIGNsYXNzTmFtZT1cInRleHQtNHhsIGZvbnQtYm9sZCB0ZXh0LWdyYXktODAwXCI+Q01EQiBEYXRhIFF1YWxpdHkgUmVwb3J0PC9oMj5cbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1ncmF5LTUwMCBtdC0xXCI+VGhpcyByZXBvcnQgc2hvd3MgdGhlIGRhdGEgcXVhbGl0eSBvZiB0aGUgQ29uZmlndXJhdGlvbiBNYW5hZ2VtZW50IERhdGFiYXNlIChDTURCKS48L3A+XG4gICAgICA8L2hlYWRlcj5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctd2hpdGUgcC02IHJvdW5kZWQtbGcgc2hhZG93LW1kXCI+XG4gICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXhsIGZvbnQtc2VtaWJvbGQgdGV4dC1ncmF5LTgwMCBtYi00XCI+Q01EQiBEYXRhIFF1YWxpdHk8L2gzPlxuICAgICAgICA8UmVzcG9uc2l2ZUNvbnRhaW5lciB3aWR0aD1cIjEwMCVcIiBoZWlnaHQ9ezMwMH0+XG4gICAgICAgICAgPEJhckNoYXJ0IGRhdGE9e2RhdGF9PlxuICAgICAgICAgICAgPENhcnRlc2lhbkdyaWQgc3Ryb2tlRGFzaGFycmF5PVwiMyAzXCIgLz5cbiAgICAgICAgICAgIDxYQXhpcyBkYXRhS2V5PVwibmFtZVwiIC8+XG4gICAgICAgICAgICA8WUF4aXMgLz5cbiAgICAgICAgICAgIDxUb29sdGlwIC8+XG4gICAgICAgICAgICA8TGVnZW5kIC8+XG4gICAgICAgICAgICA8QmFyIGRhdGFLZXk9XCJjb21wbGV0ZW5lc3NcIiBmaWxsPVwiIzg4ODRkOFwiIC8+XG4gICAgICAgICAgICA8QmFyIGRhdGFLZXk9XCJhY2N1cmFjeVwiIGZpbGw9XCIjODJjYTlkXCIgLz5cbiAgICAgICAgICA8L0JhckNoYXJ0PlxuICAgICAgICA8L1Jlc3BvbnNpdmVDb250YWluZXI+XG4gICAgICA8L2Rpdj5cbiAgICA8L2Rpdj5cbiAgKTtcbn0iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OytCQVlBOzs7Ozs7V0FBd0JBLGlCQUFBOzs7Ozs7Ozt3RUFWTjs7O2tDQUMrRTs7Ozs7Ozs7Ozs7Ozs7O0FBRWpHLE1BQU1DLElBQUE7QUFBQTtBQUFBLENBQUFDLGNBQUEsR0FBQUMsQ0FBQSxPQUFPLENBQ1g7RUFBRUMsSUFBQSxFQUFNO0VBQVdDLFlBQUEsRUFBYztFQUFJQyxRQUFBLEVBQVU7QUFBRyxHQUNsRDtFQUFFRixJQUFBLEVBQU07RUFBZ0JDLFlBQUEsRUFBYztFQUFJQyxRQUFBLEVBQVU7QUFBRyxHQUN2RDtFQUFFRixJQUFBLEVBQU07RUFBYUMsWUFBQSxFQUFjO0VBQUlDLFFBQUEsRUFBVTtBQUFHLEdBQ3BEO0VBQUVGLElBQUEsRUFBTTtFQUFtQkMsWUFBQSxFQUFjO0VBQUlDLFFBQUEsRUFBVTtBQUFHLEVBQzNEO0FBRWMsU0FBU04sa0JBQUE7RUFBQTtFQUFBRSxjQUFBLEdBQUFLLENBQUE7RUFBQUwsY0FBQSxHQUFBQyxDQUFBO0VBQ3RCLG9CQUNFLElBQUFLLFdBQUEsQ0FBQUMsSUFBQSxFQUFDO0lBQUlDLFNBQUEsRUFBVTs0QkFDYixJQUFBRixXQUFBLENBQUFDLElBQUEsRUFBQztNQUFPQyxTQUFBLEVBQVU7OEJBQ2hCLElBQUFGLFdBQUEsQ0FBQUcsR0FBQSxFQUFDO1FBQUdELFNBQUEsRUFBVTtrQkFBbUM7dUJBQ2pELElBQUFGLFdBQUEsQ0FBQUcsR0FBQSxFQUFDO1FBQUVELFNBQUEsRUFBVTtrQkFBcUI7O3FCQUVwQyxJQUFBRixXQUFBLENBQUFDLElBQUEsRUFBQztNQUFJQyxTQUFBLEVBQVU7OEJBQ2IsSUFBQUYsV0FBQSxDQUFBRyxHQUFBLEVBQUM7UUFBR0QsU0FBQSxFQUFVO2tCQUEyQzt1QkFDekQsSUFBQUYsV0FBQSxDQUFBRyxHQUFBLEVBQUNDLFNBQUEsQ0FBQUMsbUJBQW1CO1FBQUNDLEtBQUEsRUFBTTtRQUFPQyxNQUFBLEVBQVE7a0JBQ3hDLGlCQUFBUCxXQUFBLENBQUFDLElBQUEsRUFBQ0csU0FBQSxDQUFBSSxRQUFRO1VBQUNmLElBQUEsRUFBTUEsSUFBQTtrQ0FDZCxJQUFBTyxXQUFBLENBQUFHLEdBQUEsRUFBQ0MsU0FBQSxDQUFBSyxhQUFhO1lBQUNDLGVBQUEsRUFBZ0I7MkJBQy9CLElBQUFWLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxTQUFBLENBQUFPLEtBQUs7WUFBQ0MsT0FBQSxFQUFROzJCQUNmLElBQUFaLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxTQUFBLENBQUFTLEtBQUssTyxhQUNOLElBQUFiLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxTQUFBLENBQUFVLE9BQU8sTyxhQUNSLElBQUFkLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxTQUFBLENBQUFXLE1BQU0sTyxhQUNQLElBQUFmLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxTQUFBLENBQUFZLEdBQUc7WUFBQ0osT0FBQSxFQUFRO1lBQWVLLElBQUEsRUFBSzsyQkFDakMsSUFBQWpCLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxTQUFBLENBQUFZLEdBQUc7WUFBQ0osT0FBQSxFQUFRO1lBQVdLLElBQUEsRUFBSzs7Ozs7O0FBTXpDIiwiaWdub3JlTGlzdCI6W119

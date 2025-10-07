@@ -1,17 +1,17 @@
 package service
 
 import (
-	"context"
-	"fmt"
-	"itsm-backend/dto"
-	"itsm-backend/ent"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/user"
-	"itsm-backend/middleware"
-	"time"
+    "context"
+    "fmt"
+    "itsm-backend/dto"
+    "itsm-backend/ent"
+    "itsm-backend/ent/tenant"
+    "itsm-backend/ent/user"
+    "itsm-backend/middleware"
+    "time"
 
-	"golang.org/x/crypto/bcrypt"
-	"go.uber.org/zap"
+    "golang.org/x/crypto/bcrypt"
+    "go.uber.org/zap"
 )
 
 type AuthService struct {
@@ -76,15 +76,18 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 		return nil, fmt.Errorf("租户已被暂停或过期")
 	}
 
-	// 生成access token（15分钟）
-	accessToken, err := middleware.GenerateAccessToken(
-		userEntity.ID,
-		userEntity.Username,
-		"user", // 暂时硬编码，因为User实体没有Role字段
-		userEntity.TenantID,
-		s.jwtSecret,
-		time.Duration(15)*time.Minute,
-	)
+    // 使用数据库中的角色字段，确保JWT与RBAC一致
+    role := userEntity.Role
+
+    // 生成access token（15分钟）
+    accessToken, err := middleware.GenerateAccessToken(
+        userEntity.ID,
+        userEntity.Username,
+        string(role),
+        userEntity.TenantID,
+        s.jwtSecret,
+        time.Duration(15)*time.Minute,
+    )
 	if err != nil {
 		s.logger.Errorw("Failed to generate access token", "user_id", userEntity.ID, "error", err)
 		return nil, fmt.Errorf("生成访问令牌失败")
@@ -133,15 +136,15 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 		return nil, fmt.Errorf("用户账号已被禁用")
 	}
 
-	// 生成新的access token
-	newAccessToken, err := middleware.GenerateAccessToken(
-		userEntity.ID,
-		userEntity.Username,
-		"user", // 暂时硬编码
-		userEntity.TenantID,
-		s.jwtSecret,
-		time.Duration(15)*time.Minute,
-	)
+    // 生成新的access token（使用数据库角色）
+    newAccessToken, err := middleware.GenerateAccessToken(
+        userEntity.ID,
+        userEntity.Username,
+        string(userEntity.Role),
+        userEntity.TenantID,
+        s.jwtSecret,
+        time.Duration(15)*time.Minute,
+    )
 	if err != nil {
 		s.logger.Errorw("Failed to generate new access token", "user_id", userEntity.ID, "error", err)
 		return nil, fmt.Errorf("生成新令牌失败")
@@ -209,15 +212,15 @@ func (s *AuthService) SwitchTenant(ctx context.Context, userID, tenantID int) (*
 		return nil, fmt.Errorf("租户不存在")
 	}
 
-	// 生成新的access token
-	accessToken, err := middleware.GenerateAccessToken(
-		userEntity.ID,
-		userEntity.Username,
-		"user",
-		tenantID,
-		s.jwtSecret,
-		time.Duration(15)*time.Minute,
-	)
+    // 生成新的access token（使用数据库角色）
+    accessToken, err := middleware.GenerateAccessToken(
+        userEntity.ID,
+        userEntity.Username,
+        string(userEntity.Role),
+        tenantID,
+        s.jwtSecret,
+        time.Duration(15)*time.Minute,
+    )
 	if err != nil {
 		s.logger.Errorw("Failed to generate access token for tenant switch", "user_id", userEntity.ID, "tenant_id", tenantID, "error", err)
 		return nil, fmt.Errorf("生成token失败")
@@ -262,18 +265,21 @@ func (s *AuthService) ValidateUser(ctx context.Context, userID int) (*ent.User, 
 
 // GetUserInfo 获取用户信息
 func (s *AuthService) GetUserInfo(ctx context.Context, userID int) (*dto.UserInfo, error) {
-	userEntity, err := s.ValidateUser(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
+    userEntity, err := s.ValidateUser(ctx, userID)
+    if err != nil {
+        return nil, err
+    }
 
-	return &dto.UserInfo{
-		ID:         userEntity.ID,
-		Username:   userEntity.Username,
-		Role:       "user", // 暂时硬编码
-		Email:      userEntity.Email,
-		Name:       userEntity.Name,
-		Department: userEntity.Department,
-		TenantID:   userEntity.TenantID,
-	}, nil
+    // 使用数据库中的角色
+    role := userEntity.Role
+
+    return &dto.UserInfo{
+        ID:         userEntity.ID,
+        Username:   userEntity.Username,
+        Role:       string(role),
+        Email:      userEntity.Email,
+        Name:       userEntity.Name,
+        Department: userEntity.Department,
+        TenantID:   userEntity.TenantID,
+    }, nil
 }

@@ -337,6 +337,16 @@ definitions:
         type: string
       phone:
         type: string
+      role:
+        description: 用户角色（可选，默认为 end_user）
+        enum:
+        - super_admin
+        - admin
+        - manager
+        - agent
+        - technician
+        - end_user
+        type: string
       tenant_id:
         minimum: 1
         type: integer
@@ -651,6 +661,16 @@ definitions:
         type: string
       phone:
         type: string
+      role:
+        description: 仅管理员可更新此字段
+        enum:
+        - super_admin
+        - admin
+        - manager
+        - agent
+        - technician
+        - end_user
+        type: string
       username:
         maxLength: 50
         minLength: 3
@@ -669,6 +689,8 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+      role:
         type: string
       phone:
         type: string

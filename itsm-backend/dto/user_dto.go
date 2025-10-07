@@ -6,22 +6,26 @@ import (
 
 // CreateUserRequest 创建用户请求
 type CreateUserRequest struct {
-	Username   string `json:"username" binding:"required,min=3,max=50"`
-	Email      string `json:"email" binding:"required,email"`
-	Name       string `json:"name" binding:"required,min=1,max=100"`
-	Department string `json:"department"`
-	Phone      string `json:"phone"`
-	Password   string `json:"password" binding:"required,min=6"`
-	TenantID   int    `json:"tenant_id" binding:"required,min=1"`
+    Username   string `json:"username" binding:"required,min=3,max=50"`
+    Email      string `json:"email" binding:"required,email"`
+    Name       string `json:"name" binding:"required,min=1,max=100"`
+    Department string `json:"department"`
+    Phone      string `json:"phone"`
+    Password   string `json:"password" binding:"required,min=6"`
+    TenantID   int    `json:"tenant_id" binding:"required,min=1"`
+    // 角色，可选；不提供时使用后端默认值（end_user）
+    Role       string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician end_user"`
 }
 
 // UpdateUserRequest 更新用户请求
 type UpdateUserRequest struct {
-	Username   string `json:"username,omitempty" binding:"omitempty,min=3,max=50"`
-	Email      string `json:"email,omitempty" binding:"omitempty,email"`
-	Name       string `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
-	Department string `json:"department,omitempty"`
-	Phone      string `json:"phone,omitempty"`
+    Username   string `json:"username,omitempty" binding:"omitempty,min=3,max=50"`
+    Email      string `json:"email,omitempty" binding:"omitempty,email"`
+    Name       string `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
+    Department string `json:"department,omitempty"`
+    Phone      string `json:"phone,omitempty"`
+    // 角色更新，仅管理员有权限更新
+    Role       string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician end_user"`
 }
 
 // ListUsersRequest 获取用户列表请求
@@ -36,16 +40,17 @@ type ListUsersRequest struct {
 
 // UserDetailResponse 用户详细响应
 type UserDetailResponse struct {
-	ID         int       `json:"id"`
-	Username   string    `json:"username"`
-	Email      string    `json:"email"`
-	Name       string    `json:"name"`
-	Department string    `json:"department"`
-	Phone      string    `json:"phone"`
-	Active     bool      `json:"active"`
-	TenantID   int       `json:"tenant_id"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+    ID         int       `json:"id"`
+    Username   string    `json:"username"`
+    Email      string    `json:"email"`
+    Name       string    `json:"name"`
+    Department string    `json:"department"`
+    Phone      string    `json:"phone"`
+    Active     bool      `json:"active"`
+    TenantID   int       `json:"tenant_id"`
+    Role       string    `json:"role"`
+    CreatedAt  time.Time `json:"created_at"`
+    UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // PagedUsersResponse 分页用户响应
@@ -95,8 +100,8 @@ type SearchUsersRequest struct {
 
 // ImportUsersRequest 批量导入用户请求
 type ImportUsersRequest struct {
-	Users    []CreateUserRequest `json:"users" binding:"required,min=1,max=100"`
-	TenantID int                 `json:"tenant_id" binding:"required,min=1"`
+    Users    []CreateUserRequest `json:"users" binding:"required,min=1,max=100"`
+    TenantID int                 `json:"tenant_id" binding:"required,min=1"`
 }
 
 // ImportUsersResponse 批量导入用户响应

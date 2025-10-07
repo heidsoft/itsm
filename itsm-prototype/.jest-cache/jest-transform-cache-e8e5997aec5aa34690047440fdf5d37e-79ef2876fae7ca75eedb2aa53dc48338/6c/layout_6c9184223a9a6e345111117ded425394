@@ -1,0 +1,359 @@
+d74c80e3443803b7842de1863deb53c5
+"use client";
+"use strict";
+
+/* istanbul ignore next */
+function cov_2ptyxvhiz5() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/admin/layout.tsx";
+  var hash = "3373559be8dc7bd18d4b83ef888b8a7a08857176";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/admin/layout.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 24
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 33
+        },
+        end: {
+          line: 14,
+          column: 93
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 20
+        },
+        end: {
+          line: 30,
+          column: 1
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 4
+        },
+        end: {
+          line: 29,
+          column: 7
+        }
+      },
+      "9": {
+        start: {
+          line: 31,
+          column: 17
+        },
+        end: {
+          line: 31,
+          column: 28
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 20,
+            column: 20
+          },
+          end: {
+            line: 20,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 36
+          },
+          end: {
+            line: 30,
+            column: 1
+          }
+        },
+        line: 20
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/admin/layout.tsx"],
+      sourcesContent: ["\"use client\";\n\nimport React from \"react\";\nimport AppLayout from \"../components/AppLayout\";\n\ninterface AdminLayoutProps {\n  children: React.ReactNode;\n}\n\nconst AdminLayout = ({ children }: AdminLayoutProps) => {\n  return (\n    <AppLayout title=\"\u7CFB\u7EDF\u7BA1\u7406\" breadcrumb={[{ title: \"\u7CFB\u7EDF\u7BA1\u7406\" }]}>\n      {children}\n    </AppLayout>\n  );\n};\n\nexport default AdminLayout;\n"],
+      names: ["AdminLayout", "children", "AppLayout", "title", "breadcrumb"],
+      mappings: "AAAA;;;;;+BAiBA;;;eAAA;;;;8DAfkB;kEACI;;;;;;AAMtB,MAAMA,cAAc,CAAC,EAAEC,QAAQ,EAAoB;IACjD,qBACE,qBAACC,kBAAS;QAACC,OAAM;QAAOC,YAAY;YAAC;gBAAED,OAAO;YAAO;SAAE;kBACpDF;;AAGP;MAEA,WAAeD"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "3373559be8dc7bd18d4b83ef888b8a7a08857176"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2ptyxvhiz5 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2ptyxvhiz5();
+cov_2ptyxvhiz5().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2ptyxvhiz5().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_2ptyxvhiz5().f[0]++;
+    cov_2ptyxvhiz5().s[2]++;
+    return _default;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_2ptyxvhiz5().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_2ptyxvhiz5().s[4]++, _interop_require_default(require("react")));
+const _AppLayout =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_2ptyxvhiz5().s[5]++, _interop_require_default(require("../components/AppLayout")));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_2ptyxvhiz5().f[1]++;
+  cov_2ptyxvhiz5().s[6]++;
+  return /* istanbul ignore next */(cov_2ptyxvhiz5().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_2ptyxvhiz5().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_2ptyxvhiz5().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_2ptyxvhiz5().b[0][1]++, {
+    default: obj
+  });
+}
+/* istanbul ignore next */
+cov_2ptyxvhiz5().s[7]++;
+const AdminLayout = ({
+  children
+}) => {
+  /* istanbul ignore next */
+  cov_2ptyxvhiz5().f[2]++;
+  cov_2ptyxvhiz5().s[8]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)(_AppLayout.default, {
+    title: "系统管理",
+    breadcrumb: [{
+      title: "系统管理"
+    }],
+    children: children
+  });
+};
+const _default =
+/* istanbul ignore next */
+(cov_2ptyxvhiz5().s[9]++, AdminLayout);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJfZGVmYXVsdCIsIkFkbWluTGF5b3V0IiwiY2hpbGRyZW4iLCJjb3ZfMnB0eXh2aGl6NSIsImYiLCJzIiwiX2pzeHJ1bnRpbWUiLCJqc3giLCJfQXBwTGF5b3V0IiwiZGVmYXVsdCIsInRpdGxlIiwiYnJlYWRjcnVtYiJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwL2FkbWluL2xheW91dC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiXCJ1c2UgY2xpZW50XCI7XG5cbmltcG9ydCBSZWFjdCBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCBBcHBMYXlvdXQgZnJvbSBcIi4uL2NvbXBvbmVudHMvQXBwTGF5b3V0XCI7XG5cbmludGVyZmFjZSBBZG1pbkxheW91dFByb3BzIHtcbiAgY2hpbGRyZW46IFJlYWN0LlJlYWN0Tm9kZTtcbn1cblxuY29uc3QgQWRtaW5MYXlvdXQgPSAoeyBjaGlsZHJlbiB9OiBBZG1pbkxheW91dFByb3BzKSA9PiB7XG4gIHJldHVybiAoXG4gICAgPEFwcExheW91dCB0aXRsZT1cIuezu+e7n+euoeeQhlwiIGJyZWFkY3J1bWI9e1t7IHRpdGxlOiBcIuezu+e7n+euoeeQhlwiIH1dfT5cbiAgICAgIHtjaGlsZHJlbn1cbiAgICA8L0FwcExheW91dD5cbiAgKTtcbn07XG5cbmV4cG9ydCBkZWZhdWx0IEFkbWluTGF5b3V0O1xuIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OytCQWlCQTs7Ozs7O1dBQUFBLFFBQUE7Ozs7Ozs7O3dFQWZrQjs7O3dFQUNJOzs7Ozs7Ozs7Ozs7Ozs7OztBQU10QixNQUFNQyxXQUFBLEdBQWNBLENBQUM7RUFBRUM7QUFBUSxDQUFvQjtFQUFBO0VBQUFDLGNBQUEsR0FBQUMsQ0FBQTtFQUFBRCxjQUFBLEdBQUFFLENBQUE7RUFDakQsb0JBQ0UsSUFBQUMsV0FBQSxDQUFBQyxHQUFBLEVBQUNDLFVBQUEsQ0FBQUMsT0FBUztJQUFDQyxLQUFBLEVBQU07SUFBT0MsVUFBQSxFQUFZLENBQUM7TUFBRUQsS0FBQSxFQUFPO0lBQU8sRUFBRTtjQUNwRFI7O0FBR1A7TUFFQUYsUUFBQTtBQUFBO0FBQUEsQ0FBQUcsY0FBQSxHQUFBRSxDQUFBLE9BQWVKLFdBQUEiLCJpZ25vcmVMaXN0IjpbXX0=

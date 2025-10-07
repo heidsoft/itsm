@@ -56,6 +56,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		Phone:      user.Phone,
 		Active:     user.Active,
 		TenantID:   user.TenantID,
+    	Role:       string(user.Role),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
@@ -139,6 +140,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 		Phone:      user.Phone,
 		Active:     user.Active,
 		TenantID:   user.TenantID,
+    	Role:       string(user.Role),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
@@ -189,6 +191,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		Phone:      user.Phone,
 		Active:     user.Active,
 		TenantID:   user.TenantID,
+    	Role:       string(user.Role),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
