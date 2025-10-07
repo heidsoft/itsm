@@ -5,14 +5,11 @@ import {
   Card,
   Table,
   Button,
-  Input,
   Select,
   Modal,
-  Form,
   Tag,
   Space,
   Tooltip,
-  Timeline,
   Row,
   Col,
   Typography,
@@ -20,20 +17,15 @@ import {
   Descriptions,
   Divider,
   Badge,
-  Progress,
   Statistic,
   App,
 } from "antd";
 import {
   Plus,
-  Edit,
   Trash2,
-  Copy,
   PlayCircle,
   RotateCcw,
   GitBranch,
-  GitCommit,
-  GitMerge,
   Eye,
   Download,
   Upload,
@@ -42,12 +34,11 @@ import {
   AlertCircle,
   Clock,
   User,
-  Code,
   Diff,
 } from "lucide-react";
 // AppLayout is handled by parent layout
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
 interface WorkflowVersion {
@@ -55,13 +46,13 @@ interface WorkflowVersion {
   workflow_id: number;
   version: string;
   bpmn_xml: string;
-  process_variables: Record<string, any>;
+  process_variables: Record<string, unknown>;
   status: "draft" | "active" | "archived";
   created_by: string;
   created_at: string;
   change_log: string;
   is_current: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 interface VersionComparison {
@@ -82,83 +73,63 @@ const WorkflowVersionsPage = () => {
   const { message } = App.useApp();
   const [versions, setVersions] = useState<WorkflowVersion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
   const [compareModalVisible, setCompareModalVisible] = useState(false);
   const [selectedVersion, setSelectedVersion] =
     useState<WorkflowVersion | null>(null);
   const [comparison, setComparison] = useState<VersionComparison | null>(null);
   const [workflowId, setWorkflowId] = useState<number>(1);
 
-  // 模拟数据
-  const mockVersions: WorkflowVersion[] = [
-    {
-      id: 1,
-      workflow_id: 1,
-      version: "1.0.0",
-      bpmn_xml:
-        '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions>...</bpmn:definitions>',
-      process_variables: { priority: "string", category: "string" },
-      status: "active",
-      created_by: "张三",
-      created_at: "2024-01-15T10:30:00Z",
-      change_log: "初始版本，包含基本的工单审批流程",
-      is_current: true,
-      metadata: { elements_count: 5, connections_count: 4 },
-    },
-    {
-      id: 2,
-      workflow_id: 1,
-      version: "1.1.0",
-      bpmn_xml:
-        '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions>...</bpmn:definitions>',
-      process_variables: {
-        priority: "string",
-        category: "string",
-        department: "string",
-      },
-      status: "draft",
-      created_by: "李四",
-      created_at: "2024-01-16T14:20:00Z",
-      change_log: "添加部门审批环节，优化流程逻辑",
-      is_current: false,
-      metadata: { elements_count: 7, connections_count: 6 },
-    },
-    {
-      id: 3,
-      workflow_id: 1,
-      version: "1.0.1",
-      bpmn_xml:
-        '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions>...</bpmn:definitions>',
-      process_variables: { priority: "string", category: "string" },
-      status: "archived",
-      created_by: "王五",
-      created_at: "2024-01-15T16:45:00Z",
-      change_log: "修复审批流程中的bug",
-      is_current: false,
-      metadata: { elements_count: 5, connections_count: 4 },
-    },
-  ];
-
-  useEffect(() => {
-    loadVersions();
-  }, [workflowId]);
-
-  const loadVersions = async () => {
+  const loadVersions = React.useCallback(async () => {
     setLoading(true);
     try {
       // 模拟API调用
       await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // 模拟版本数据
+      const mockVersions: WorkflowVersion[] = [
+        {
+          id: 1,
+          workflow_id: workflowId,
+          version: "1.0.0",
+          bpmn_xml: "<bpmn:definitions>...</bpmn:definitions>",
+          process_variables: { maxApprovers: 3, timeout: 24 },
+          status: "active",
+          created_by: "张三",
+          created_at: "2024-01-15 10:30:00",
+          change_log: "初始版本",
+          is_current: true,
+          metadata: { description: "工单审批流程初始版本" }
+        },
+        {
+          id: 2,
+          workflow_id: workflowId,
+          version: "0.9.0",
+          bpmn_xml: "<bpmn:definitions>...</bpmn:definitions>",
+          process_variables: { maxApprovers: 2, timeout: 48 },
+          status: "archived",
+          created_by: "李四",
+          created_at: "2024-01-10 14:20:00",
+          change_log: "测试版本",
+          is_current: false,
+          metadata: { description: "测试版本，已归档" }
+        }
+      ];
+      
       setVersions(mockVersions);
     } catch (error) {
-      message.error("加载版本列表失败");
+      console.error('Failed to load versions:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [workflowId]);
+
+  useEffect(() => {
+    loadVersions();
+  }, [loadVersions]);
 
   const handleCreateVersion = () => {
     setSelectedVersion(null);
-    setModalVisible(true);
+    // setModalVisible(true); // 暂时注释掉，因为没有对应的Modal组件
   };
 
   const handleDeployVersion = async (version: WorkflowVersion) => {
@@ -166,7 +137,7 @@ const WorkflowVersionsPage = () => {
       // 模拟部署
       message.success(`版本 ${version.version} 部署成功`);
       loadVersions();
-    } catch (error) {
+    } catch {
       message.error("部署失败");
     }
   };
@@ -176,7 +147,7 @@ const WorkflowVersionsPage = () => {
       // 模拟回滚
       message.success(`回滚到版本 ${version.version} 成功`);
       loadVersions();
-    } catch (error) {
+    } catch {
       message.error("回滚失败");
     }
   };
@@ -203,12 +174,12 @@ const WorkflowVersionsPage = () => {
     setCompareModalVisible(true);
   };
 
-  const handleDeleteVersion = async (id: number) => {
+  const handleDeleteVersion = async () => {
     try {
       // 模拟删除
       message.success("版本删除成功");
       loadVersions();
-    } catch (error) {
+    } catch {
       message.error("删除失败");
     }
   };

@@ -176,7 +176,7 @@ class HttpClient {
       console.log('HTTP Client Response:', {
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+        headers: response.headers ? Object.fromEntries(response.headers.entries()) : {}
       });
       
       // If 401 error, try to refresh token

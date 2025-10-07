@@ -195,8 +195,32 @@ export class TicketAPI {
 
   // 导出工单
   static async exportTickets(params: ListTicketsRequest = {}): Promise<Blob> {
-    // 使用get方法获取导出数据，然后转换为Blob
-    const response = await httpClient.get<ArrayBuffer>('/api/v1/tickets/export', params as Record<string, unknown>);
-    return new Blob([response], { type: 'application/octet-stream' });
+    try {
+      // 构建查询参数
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+
+      // 直接使用 fetch 获取二进制数据
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/tickets/export?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'X-Tenant-ID': localStorage.getItem('current_tenant_id') || '',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`导出失败: ${response.statusText}`);
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error('Export tickets error:', error);
+      throw error;
+    }
   }
 }

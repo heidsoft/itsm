@@ -3,14 +3,12 @@ import {
   DashboardWidget,
   Dashboard,
   DashboardLayout,
-  DashboardFilter,
   TicketStats,
   UserStats,
   SystemStats,
   ChartData,
   RealtimeData,
   Report,
-  ExportDashboardRequest,
   DashboardTemplate
 } from '../../types/dashboard';
 
@@ -62,7 +60,7 @@ export class DashboardAPI {
    * @param filters 过滤条件
    * @returns 工单统计数据
    */
-  static async getTicketStats(filters?: Record<string, unknown>): Promise<TicketStats> {
+  static async getTicketStats(filters?: Record<string, string | number | boolean>): Promise<TicketStats> {
     return httpClient.get<TicketStats>('/api/v1/dashboard/stats/tickets', filters);
   }
 
@@ -71,7 +69,7 @@ export class DashboardAPI {
    * @param filters 过滤条件
    * @returns 用户统计数据
    */
-  static async getUserStats(filters?: Record<string, unknown>): Promise<UserStats> {
+  static async getUserStats(filters?: Record<string, string | number | boolean>): Promise<UserStats> {
     return httpClient.get<UserStats>('/api/v1/dashboard/stats/users', filters);
   }
 
@@ -80,7 +78,7 @@ export class DashboardAPI {
    * @param filters 过滤条件
    * @returns 系统统计数据
    */
-  static async getSystemStats(filters?: Record<string, unknown>): Promise<SystemStats> {
+  static async getSystemStats(filters?: Record<string, string | number | boolean>): Promise<SystemStats> {
     return httpClient.get<SystemStats>('/api/v1/dashboard/stats/system', filters);
   }
 
@@ -90,7 +88,7 @@ export class DashboardAPI {
    * @param filters 过滤条件
    * @returns 图表数据
    */
-  static async getChartData(chartType: string, filters?: Record<string, unknown>): Promise<ChartData> {
+  static async getChartData(chartType: string, filters?: Record<string, string | number | boolean>): Promise<ChartData> {
     return httpClient.get<ChartData>(`/api/v1/dashboard/charts/${chartType}`, filters);
   }
 
@@ -104,22 +102,22 @@ export class DashboardAPI {
   }
 
   /**
-   * 获取部件数据
-   * @param widgetId 部件ID
+   * 获取小组件数据
+   * @param widgetId 小组件ID
    * @param filters 过滤条件
-   * @returns 部件数据
+   * @returns 小组件数据
    */
-  static async getWidgetData(widgetId: string, filters?: Record<string, unknown>): Promise<DashboardWidget> {
-    return httpClient.get<DashboardWidget>(`/api/v1/dashboard/widgets/${widgetId}`, filters);
+  static async getWidgetData(widgetId: string, filters?: Record<string, string | number | boolean>): Promise<DashboardWidget> {
+    return httpClient.get<DashboardWidget>(`/api/v1/dashboard/widgets/${widgetId}/data`, filters);
   }
 
   /**
-   * 刷新部件数据
-   * @param widgetId 部件ID
+   * 刷新小组件数据
+   * @param widgetId 小组件ID
    * @param filters 过滤条件
-   * @returns 部件数据
+   * @returns 刷新后的小组件数据
    */
-  static async refreshWidgetData(widgetId: string, filters?: Record<string, unknown>): Promise<DashboardWidget> {
+  static async refreshWidgetData(widgetId: string, filters?: Record<string, string | number | boolean>): Promise<DashboardWidget> {
     return httpClient.post<DashboardWidget>(`/api/v1/dashboard/widgets/${widgetId}/refresh`, filters);
   }
 
@@ -176,7 +174,7 @@ export class DashboardAPI {
    * @returns 报告列表
    */
   static async getReports(page: number = 1, pageSize: number = 20): Promise<{
-    reports: DashboardReport[];
+    reports: Report[];
     total: number;
     page: number;
     pageSize: number;
@@ -216,8 +214,8 @@ export class DashboardAPI {
    * @param templateId 模板ID
    * @returns 应用结果
    */
-  static async applyTemplate(templateId: string): Promise<{ success: boolean; config: DashboardConfig }> {
-    return httpClient.post<{ success: boolean; config: DashboardConfig }>(`/api/v1/dashboard/templates/${templateId}/apply`);
+  static async applyTemplate(templateId: string): Promise<{ success: boolean; config: Dashboard }> {
+    return httpClient.post<{ success: boolean; config: Dashboard }>(`/api/v1/dashboard/templates/${templateId}/apply`);
   }
 
   /**
@@ -227,7 +225,7 @@ export class DashboardAPI {
    * @param config 仪表盘配置
    * @returns 保存结果
    */
-  static async saveAsTemplate(name: string, description: string, config: DashboardConfig): Promise<{ template: DashboardTemplate }> {
+  static async saveAsTemplate(name: string, description: string, config: Dashboard): Promise<{ template: DashboardTemplate }> {
     return httpClient.post<{ template: DashboardTemplate }>('/api/v1/dashboard/templates', {
       name,
       description,

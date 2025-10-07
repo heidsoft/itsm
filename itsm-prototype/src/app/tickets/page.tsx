@@ -34,7 +34,6 @@ import {
   Space,
   Row,
   Col,
-  App,
   Tooltip,
   Badge,
   Typography,
@@ -53,11 +52,12 @@ import {
 import { LoadingEmptyError } from "../components/ui/LoadingEmptyError";
 import { TicketAssociation } from "../components/TicketAssociation";
 import { SatisfactionDashboard } from "../components/SatisfactionDashboard";
+import TicketFilters, { TicketFilterState } from "../components/TicketFilters";
 
 const { Option } = Select;
 const { Text } = Typography;
 
-interface TicketFilters {
+interface TicketQueryFilters {
   status?: TicketStatus;
   priority?: TicketPriority;
   type?: TicketType;
@@ -71,17 +71,7 @@ interface TicketFilters {
   urgency?: string;
 }
 
-interface TicketTemplate {
-  id: number;
-  name: string;
-  type: TicketType;
-  category: string;
-  priority: TicketPriority;
-  description: string;
-  estimatedTime: string;
-  sla: string;
-  icon: React.ReactNode;
-}
+// Removed unused TicketTemplate interface to fix lint errors
 
 // Ticket template data
 const ticketTemplates = [
@@ -133,21 +123,86 @@ const ticketTemplates = [
 
 // Optimized Tickets page component
 export default function TicketsPage() {
-  // Filter and pagination state
-  const [filter, setFilter] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [showMajorIncidents, setShowMajorIncidents] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  // Core page state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
+  const [filters, setFilters] = useState<Partial<TicketQueryFilters>>({});
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  const userList = [
+    { id: 1, name: "Alice", role: "IT Support", avatar: "A" },
+    { id: 2, name: "Bob", role: "Network Admin", avatar: "B" },
+    { id: 3, name: "Charlie", role: "Service Desk", avatar: "C" },
+  ];
+
+  // New TDD filter UI state (keeps component and domain filters in sync)
+  const [componentFilters, setComponentFilters] = useState<TicketFilterState>({
+    status: "all",
+    priority: "all",
+    keyword: "",
+    dateStart: "",
+    dateEnd: "",
+    sortBy: "createdAt_desc",
+  });
+
+  // Map TicketFilters UI state to domain filters used by services
+  const mapComponentToDomain = useCallback((cf: TicketFilterState): Partial<TicketQueryFilters> => {
+    const statusMap: Record<TicketFilterState["status"], TicketStatus | undefined> = {
+      all: undefined,
+      open: TicketStatus.OPEN,
+      in_progress: TicketStatus.IN_PROGRESS,
+      resolved: TicketStatus.RESOLVED,
+      closed: TicketStatus.CLOSED,
+    };
+    const priorityMap: Record<TicketFilterState["priority"], TicketPriority | undefined> = {
+      all: undefined,
+      p1: TicketPriority.URGENT,
+      p2: TicketPriority.HIGH,
+      p3: TicketPriority.MEDIUM,
+      p4: TicketPriority.LOW,
+    };
+    const dateRange = cf.dateStart && cf.dateEnd ? [cf.dateStart, cf.dateEnd] as [string, string] : undefined;
+    return {
+      status: statusMap[cf.status],
+      priority: priorityMap[cf.priority],
+      keyword: cf.keyword || undefined,
+      dateRange,
+    };
+  }, []);
+
+  const mapDomainToComponent = useCallback((df: Partial<TicketQueryFilters>): TicketFilterState => {
+    const statusReverseMap: Record<string, TicketFilterState["status"]> = {
+      [TicketStatus.OPEN]: "open",
+      [TicketStatus.IN_PROGRESS]: "in_progress",
+      [TicketStatus.RESOLVED]: "resolved",
+      [TicketStatus.CLOSED]: "closed",
+    };
+    const priorityReverseMap: Record<string, TicketFilterState["priority"]> = {
+      [TicketPriority.URGENT]: "p1",
+      [TicketPriority.HIGH]: "p2",
+      [TicketPriority.MEDIUM]: "p3",
+      [TicketPriority.LOW]: "p4",
+    };
+    return {
+      status: df.status ? statusReverseMap[df.status] : "all",
+      priority: df.priority ? priorityReverseMap[df.priority] : "all",
+      keyword: df.keyword || "",
+      dateStart: df.dateRange?.[0] || "",
+      dateEnd: df.dateRange?.[1] || "",
+      sortBy: "createdAt_desc",
+    };
+  }, []);
   
-  // Statistics data
+  // Statistics data aligned to usage in UI
   const [stats, setStats] = useState({
     total: 0,
-    pending: 0,
-    inProgress: 0,
+    open: 0,
     resolved: 0,
-    closed: 0,
-    majorIncidents: 0,
+    highPriority: 0,
   });
 
   // Use useCallback to optimize functions, avoiding unnecessary recreation
@@ -174,6 +229,11 @@ export default function TicketsPage() {
       setLoading(false);
     }
   }, [pagination.current, pagination.pageSize, filters]);
+
+  // Public wrapper for fetching tickets
+  const loadTickets = useCallback(async () => {
+    await fetchTickets();
+  }, [fetchTickets]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -211,7 +271,7 @@ export default function TicketsPage() {
       return;
     }
 
-    modal.confirm({
+    Modal.confirm({
       title: "Confirm Delete",
       content: `Are you sure you want to delete the selected ${selectedRowKeys.length} tickets? This action cannot be undone.`,
       okText: "Confirm Delete",
@@ -220,7 +280,7 @@ export default function TicketsPage() {
       onOk: async () => {
         try {
           await Promise.all(
-            selectedRowKeys.map((id) => ticketService.deleteTicket(Number(id)))
+            selectedRowKeys.map((id: React.Key) => ticketService.deleteTicket(Number(id)))
           );
           message.success("Deleted successfully");
           setSelectedRowKeys([]);
@@ -231,7 +291,7 @@ export default function TicketsPage() {
         }
       },
     });
-  }, [selectedRowKeys, modal, loadTickets]);
+  }, [selectedRowKeys, loadTickets]);
 
   const handleViewActivity = useCallback((ticket: Ticket) => {
      console.log("View activity log:", ticket);
@@ -240,15 +300,25 @@ export default function TicketsPage() {
   const handleSearch = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, keyword: value }));
     setPagination((prev) => ({ ...prev, current: 1 }));
+    setComponentFilters((prev) => ({ ...prev, keyword: value }));
   }, []);
 
   const handleFilterChange = useCallback((
-    key: keyof TicketFilters,
+    key: keyof TicketQueryFilters,
     value: string | number | string[] | undefined
   ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setPagination((prev) => ({ ...prev, current: 1 }));
-  }, []);
+    // Sync TDD UI component state for status/priority
+    if (key === "status" && typeof value === "string") {
+      const next = mapDomainToComponent({ status: value as TicketStatus });
+      setComponentFilters((prev) => ({ ...prev, status: next.status }));
+    }
+    if (key === "priority" && typeof value === "string") {
+      const next = mapDomainToComponent({ priority: value as TicketPriority });
+      setComponentFilters((prev) => ({ ...prev, priority: next.priority }));
+    }
+  }, [mapDomainToComponent]);
 
   const handleRefresh = useCallback(() => {
     loadTickets();
@@ -322,6 +392,20 @@ export default function TicketsPage() {
     <Card className="mb-6 border-0 shadow-sm bg-gradient-to-r from-gray-50 to-white">
       <div className="p-2">
         <Row gutter={[16, 16]} align="middle">
+          {/* 新增：TDD筛选组件，逐步替换AntD筛选区域 */}
+          <Col span={24}>
+            <div className="mb-3">
+              <TicketFilters
+                value={componentFilters}
+                onChange={(next) => {
+                  setComponentFilters(next);
+                  const domain = mapComponentToDomain(next);
+                  setFilters((prev) => ({ ...prev, ...domain }));
+                  setPagination((prev) => ({ ...prev, current: 1 }));
+                }}
+              />
+            </div>
+          </Col>
           <Col xs={24} sm={12} lg={8}>
             <div className="relative">
               <Input.Search
@@ -330,6 +414,7 @@ export default function TicketsPage() {
                 onSearch={handleSearch}
                 size="large"
                 className="rounded-lg border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-colors"
+                data-testid="input-搜索工单"
               />
             </div>
           </Col>
@@ -342,6 +427,7 @@ export default function TicketsPage() {
               onChange={(value) => handleFilterChange("status", value)}
               className="w-full rounded-lg"
               style={{ borderRadius: '8px' }}
+              data-testid="select-状态筛选"
             >
               <Option value={TicketStatus.OPEN}>
                 <div className="flex items-center">
@@ -378,6 +464,7 @@ export default function TicketsPage() {
               onChange={(value) => handleFilterChange("priority", value)}
               className="w-full rounded-lg"
               style={{ borderRadius: '8px' }}
+              data-testid="select-优先级筛选"
             >
               <Option value={TicketPriority.LOW}>
                 <div className="flex items-center">
@@ -456,6 +543,158 @@ export default function TicketsPage() {
       </div>
     </Card>
   ), [filters.status, filters.priority, filters.type, handleSearch, handleFilterChange, handleRefresh, loading]);
+
+  // Define table columns before usage
+  const columns = useMemo(() => [
+    {
+      title: "Ticket Information",
+      key: "ticket_info",
+      width: 300,
+      render: (_: unknown, record: Ticket) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: "#e6f7ff",
+              borderRadius: 8,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <FileText size={20} style={{ color: "#1890ff" }} />
+          </div>
+          <div>
+            <div
+              style={{ fontWeight: "medium", color: "#000", marginBottom: 4 }}
+            >
+              {record.title}
+            </div>
+            <div style={{ fontSize: "small", color: "#666" }}>
+              #{record.id} • {record.category}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Status",
+      key: "status",
+      width: 120,
+      render: (_: unknown, record: Ticket) => {
+        const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
+          [TicketStatus.OPEN]: { color: "#fa8c16", text: "Open", backgroundColor: "#fff7e6" },
+          [TicketStatus.IN_PROGRESS]: { color: "#1890ff", text: "In Progress", backgroundColor: "#e6f7ff" },
+          [TicketStatus.PENDING]: { color: "#faad14", text: "Pending", backgroundColor: "#fffbe6" },
+          [TicketStatus.RESOLVED]: { color: "#52c41a", text: "Resolved", backgroundColor: "#f6ffed" },
+          [TicketStatus.CLOSED]: { color: "#00000073", text: "Closed", backgroundColor: "#fafafa" },
+          [TicketStatus.CANCELLED]: { color: "#00000073", text: "Cancelled", backgroundColor: "#fafafa" },
+        };
+        const config = statusConfig[record.status];
+        return (
+          <span style={{ padding: "4px 12px", borderRadius: 16, fontSize: "small", fontWeight: 500, color: config.color, backgroundColor: config.backgroundColor }}>
+            {config.text}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Priority",
+      key: "priority",
+      width: 100,
+      render: (_: unknown, record: Ticket) => {
+        const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
+          [TicketPriority.LOW]: { color: "#52c41a", text: "Low", backgroundColor: "#f6ffed" },
+          [TicketPriority.MEDIUM]: { color: "#1890ff", text: "Medium", backgroundColor: "#e6f7ff" },
+          [TicketPriority.HIGH]: { color: "#fa8c16", text: "High", backgroundColor: "#fff7e6" },
+          [TicketPriority.URGENT]: { color: "#ff4d4f", text: "Urgent", backgroundColor: "#fff2f0" },
+        };
+        const config = priorityConfig[record.priority];
+        return (
+          <span style={{ padding: "4px 12px", borderRadius: 16, fontSize: "small", fontWeight: 500, color: config.color, backgroundColor: config.backgroundColor }}>
+            {config.text}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Type",
+      key: "type",
+      width: 120,
+      render: (_: unknown, record: Ticket) => {
+        const typeConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
+          [TicketType.INCIDENT]: { color: "#ff4d4f", text: "Incident", backgroundColor: "#fff2f0" },
+          [TicketType.SERVICE_REQUEST]: { color: "#1890ff", text: "Service Request", backgroundColor: "#e6f7ff" },
+          [TicketType.PROBLEM]: { color: "#fa8c16", text: "Problem", backgroundColor: "#fff7e6" },
+          [TicketType.CHANGE]: { color: "#722ed1", text: "Change", backgroundColor: "#f9f0ff" },
+        };
+        const config = typeConfig[record.type];
+        return (
+          <span style={{ padding: "4px 12px", borderRadius: 16, fontSize: "small", fontWeight: 500, color: config.color, backgroundColor: config.backgroundColor }}>
+            {config.text}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Assignee",
+      key: "assignee",
+      width: 120,
+      render: (_: unknown, record: Ticket) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Avatar size="small" style={{ backgroundColor: "#1890ff", marginRight: 8 }}>
+            {record.assignee?.name?.[0] || "U"}
+          </Avatar>
+          <span style={{ fontSize: "small" }}>
+            {record.assignee?.name || "Unassigned"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "Created Time",
+      key: "created_at",
+      width: 150,
+      render: (_: unknown, record: Ticket) => (
+        <div style={{ fontSize: "small", color: "#666" }}>
+          {new Date(record.created_at).toLocaleDateString("zh-CN")}
+        </div>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 200,
+      render: (_: unknown, record: Ticket) => (
+        <Space size="small">
+          <Tooltip title="View Details">
+            <Button type="text" size="small" icon={<Eye size={16} />} onClick={() => window.open(`/tickets/${record.id}`)} />
+          </Tooltip>
+          <Tooltip title="Edit">
+            <Button type="text" size="small" icon={<Edit size={16} />} onClick={() => handleEditTicket(record)} />
+          </Tooltip>
+          <Tooltip title="View Activity Log">
+            <Button type="text" size="small" icon={<Activity size={16} />} onClick={() => handleViewActivity(record)} />
+          </Tooltip>
+          <Dropdown
+            menu={{
+              items: [
+                { key: "assign", label: "Assign Handler", icon: <Users size={16} /> },
+                { key: "escalate", label: "Escalate Ticket", icon: <TrendingUp size={16} /> },
+                { type: "divider" },
+                { key: "delete", label: "Delete Ticket", icon: <AlertTriangle size={16} />, danger: true },
+              ],
+            }}
+            trigger={["click"]}
+          >
+            <Button type="text" size="small" icon={<MoreHorizontal size={16} />} />
+          </Dropdown>
+        </Space>
+      ),
+    },
+  ], [handleEditTicket, handleViewActivity]);
 
   // Use useMemo to optimize ticket list rendering
   const renderTicketList = useMemo(() => (
@@ -540,6 +779,7 @@ export default function TicketsPage() {
     </div>
   ), [selectedRowKeys, handleBatchDelete, handleCreateTicket, columns, tickets, loading, pagination]);
 
+  /* Duplicate columns definition start
   // Use useMemo to optimize table column definition
   const columns = useMemo(() => [
     {
@@ -819,7 +1059,7 @@ export default function TicketsPage() {
         </Space>
       ),
     },
-  ], [handleEditTicket, handleViewActivity]);
+  ], [handleEditTicket, handleViewActivity]); */
 
   // UseLoadingEmptyError component handles loading, empty state and error state
   if (error) {

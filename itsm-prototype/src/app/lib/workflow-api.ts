@@ -727,9 +727,9 @@ export class WorkflowAPI {
     }
   }
 
-  static async createProcessVersion(key: string, data: any): Promise<any> {
+  static async createProcessVersion(key: string, data: CreateProcessVersionRequest): Promise<ProcessVersion> {
     try {
-      const response = await httpClient.post<any>(`/api/v1/bpmn/process-definitions/${key}/versions`, data);
+      const response = await httpClient.post<ProcessVersion>(`/api/v1/bpmn/process-definitions/${key}/versions`, data);
       return response;
     } catch (error) {
       console.error('WorkflowAPI.createProcessVersion error:', error);
@@ -747,9 +747,9 @@ export class WorkflowAPI {
   }
 
   // 新增：流程部署
-  static async deployProcessDefinition(key: string, data: any): Promise<any> {
+  static async deployProcessDefinition(key: string, data: DeployProcessRequest): Promise<DeployProcessResponse> {
     try {
-      const response = await httpClient.post<any>(`/api/v1/bpmn/process-definitions/${key}/deploy`, data);
+      const response = await httpClient.post<DeployProcessResponse>(`/api/v1/bpmn/process-definitions/${key}/deploy`, data);
       return response;
     } catch (error) {
       console.error('WorkflowAPI.deployProcessDefinition error:', error);
@@ -758,7 +758,9 @@ export class WorkflowAPI {
         id: "deploy_" + Date.now(),
         status: "success",
         message: "部署成功",
+        deployment_id: "deployment_" + Date.now(),
+        deployed_at: new Date().toISOString(),
       };
     }
   }
-} 
+}

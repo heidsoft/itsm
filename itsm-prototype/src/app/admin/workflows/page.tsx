@@ -15,6 +15,7 @@ import {
   AlertCircle,
   GitBranch,
   BarChart3,
+  Activity,
 } from "lucide-react";
 import React, { useState } from "react";
 import {

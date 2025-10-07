@@ -42,24 +42,23 @@ export default function LoginPage() {
     password: '',
     tenantCode: ''
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // 表单验证
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
     if (!formData.username.trim()) {
-      newErrors.username = '请输入用户名';
+      showError('验证失败', '请输入用户名');
+      return false;
     }
     
     if (!formData.password) {
-      newErrors.password = '请输入密码';
+      showError('验证失败', '请输入密码');
+      return false;
     } else if (formData.password.length < 6) {
-      newErrors.password = '密码长度至少6位';
+      showError('验证失败', '密码长度至少6位');
+      return false;
     }
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   // 处理登录提交
@@ -74,7 +73,14 @@ export default function LoginPage() {
     setErrorMessage(''); // 清除之前的错误信息
     
     try {
-      await AuthService.login(formData);
+      // 构造符合 LoginRequest 接口的参数
+      const loginRequest = {
+        username: formData.username,
+        password: formData.password,
+        remember_me: false // 可以根据需要添加记住我功能
+      };
+      
+      await AuthService.login(loginRequest);
       success('登录成功', '欢迎回来！');
       router.push('/dashboard');
     } catch (err) {

@@ -1,15 +1,16 @@
 package middleware
 
 import (
-	"context"
-	"itsm-backend/common"
-	"itsm-backend/ent"
-	"itsm-backend/ent/user"
-	"net/http"
-	"strconv"
-	"strings"
+    "context"
+    "itsm-backend/common"
+    "itsm-backend/ent"
+    "itsm-backend/ent/ticket"
+    "itsm-backend/ent/user"
+    "net/http"
+    "strconv"
+    "strings"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 )
 
 // Permission 权限结构
@@ -20,50 +21,69 @@ type Permission struct {
 
 // RolePermissions 角色权限映射
 var RolePermissions = map[string][]Permission{
-	"super_admin": {
-		{Resource: "*", Action: "*"}, // 超级管理员拥有所有权限
-	},
-	"admin": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		{Resource: "ticket", Action: "delete"},
-		{Resource: "ticket", Action: "admin"},
-		{Resource: "user", Action: "read"},
-		{Resource: "user", Action: "write"},
-		{Resource: "user", Action: "delete"},
-		{Resource: "dashboard", Action: "read"},
-		{Resource: "dashboard", Action: "admin"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "knowledge", Action: "write"},
-		{Resource: "knowledge", Action: "admin"},
-		{Resource: "cmdb", Action: "read"},
-		{Resource: "cmdb", Action: "write"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "write"},
-		{Resource: "incident", Action: "admin"},
-	},
-	"agent": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		{Resource: "user", Action: "read"},
-		{Resource: "dashboard", Action: "read"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "knowledge", Action: "write"},
-		{Resource: "cmdb", Action: "read"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "write"},
-	},
-	"user": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"}, // 用户可以创建和更新自己的工单
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "dashboard", Action: "read"},
-	},
+    "super_admin": {
+        {Resource: "*", Action: "*"}, // 超级管理员拥有所有权限
+    },
+    "admin": {
+        {Resource: "ticket", Action: "read"},
+        {Resource: "ticket", Action: "write"},
+        {Resource: "ticket", Action: "delete"},
+        {Resource: "ticket", Action: "admin"},
+        {Resource: "user", Action: "read"},
+        {Resource: "user", Action: "write"},
+        {Resource: "user", Action: "delete"},
+        {Resource: "dashboard", Action: "read"},
+        {Resource: "dashboard", Action: "admin"},
+        {Resource: "knowledge", Action: "read"},
+        {Resource: "knowledge", Action: "write"},
+        {Resource: "knowledge", Action: "admin"},
+        {Resource: "cmdb", Action: "read"},
+        {Resource: "cmdb", Action: "write"},
+        {Resource: "incident", Action: "read"},
+        {Resource: "incident", Action: "write"},
+        {Resource: "incident", Action: "admin"},
+        // 审计日志权限：仅管理员及以上可读
+        {Resource: "audit_logs", Action: "read"},
+    },
+    "manager": {
+        {Resource: "ticket", Action: "read"},
+        {Resource: "ticket", Action: "write"},
+        {Resource: "incident", Action: "read"},
+        {Resource: "incident", Action: "write"},
+        {Resource: "dashboard", Action: "read"},
+        {Resource: "knowledge", Action: "read"},
+        {Resource: "cmdb", Action: "read"},
+        {Resource: "user", Action: "read"}, // 经理可查看用户基本信息
+    },
+    "agent": {
+        {Resource: "ticket", Action: "read"},
+        {Resource: "ticket", Action: "write"},
+        {Resource: "dashboard", Action: "read"},
+        {Resource: "knowledge", Action: "read"},
+        {Resource: "knowledge", Action: "write"},
+        {Resource: "cmdb", Action: "read"},
+        {Resource: "incident", Action: "read"},
+        {Resource: "incident", Action: "write"},
+    },
+    "technician": {
+        {Resource: "ticket", Action: "read"},
+        {Resource: "ticket", Action: "write"},
+        {Resource: "knowledge", Action: "read"},
+        {Resource: "cmdb", Action: "read"},
+        {Resource: "incident", Action: "read"},
+        {Resource: "incident", Action: "write"},
+    },
+    "end_user": {
+        {Resource: "ticket", Action: "read"},
+        {Resource: "ticket", Action: "write"}, // 最终用户可以创建和更新自己的工单
+        {Resource: "knowledge", Action: "read"},
+        {Resource: "dashboard", Action: "read"},
+    },
 }
 
 // ResourceActionMap 路径到资源和操作的映射
 var ResourceActionMap = map[string]map[string]Permission{
-	"GET": {
+    "GET": {
 		"/api/v1/tickets":           {Resource: "ticket", Action: "read"},
 		"/api/v1/tickets/*":         {Resource: "ticket", Action: "read"},
 		"/api/v1/users":             {Resource: "user", Action: "read"},
@@ -76,6 +96,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/cmdb/*":            {Resource: "cmdb", Action: "read"},
 		"/api/v1/incidents":         {Resource: "incident", Action: "read"},
 		"/api/v1/incidents/*":       {Resource: "incident", Action: "read"},
+		"/api/v1/audit-logs":        {Resource: "audit_logs", Action: "read"},
 	},
 	"POST": {
 		"/api/v1/tickets":           {Resource: "ticket", Action: "write"},
@@ -103,12 +124,16 @@ var ResourceActionMap = map[string]map[string]Permission{
 
 // RBACMiddleware RBAC权限控制中间件
 func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// 获取用户信息
-		userIDInterface, exists := c.Get("user_id")
-		if !exists {
-			common.Fail(c, common.AuthFailedCode, "用户未认证")
-			c.Abort()
+    return func(c *gin.Context) {
+        // 将 Ent 客户端放入上下文，供资源级别检查使用（例如工单所有权校验）
+        if client != nil {
+            c.Set("client", client)
+        }
+        // 获取用户信息
+        userIDInterface, exists := c.Get("user_id")
+        if !exists {
+            common.Fail(c, common.AuthFailedCode, "用户未认证")
+            c.Abort()
 			return
 		}
 
@@ -301,58 +326,78 @@ func checkResourceLevelPermission(role, resource, action string, userID int, c *
 
 // checkTicketPermission 检查工单权限
 func checkTicketPermission(role, action string, userID int, c *gin.Context) bool {
-	// 管理员和客服可以访问所有工单
-	if role == "admin" || role == "agent" {
-		return true
-	}
+    // 具备全局工单访问权限的角色
+    if role == "admin" || role == "agent" || role == "manager" || role == "technician" {
+        return true
+    }
 
-	// 普通用户只能访问自己创建的工单
-	if role == "user" {
-		// 对于创建操作，允许
-		if c.Request.Method == "POST" && !strings.Contains(c.Request.URL.Path, "/") {
-			return true
-		}
+    // 最终用户（end_user）只能访问自己创建的工单
+    if role == "end_user" {
+        // 创建自己的工单：允许 POST /api/v1/tickets
+        if c.Request.Method == "POST" && strings.HasPrefix(c.Request.URL.Path, "/api/v1/tickets") {
+            return true
+        }
+        // 其他操作需要检查工单的请求人是否为当前用户
+        ticketIDStr := c.Param("id")
+        if ticketIDStr != "" {
+            ticketID, err := strconv.Atoi(ticketIDStr)
+            if err != nil {
+                return false
+            }
+            return checkTicketOwnership(ticketID, userID, c)
+        }
+        // 当未提供具体工单ID时，默认拒绝（例如尝试访问他人列表）
+        return false
+    }
 
-		// 对于其他操作，需要检查工单所有者
-		ticketIDStr := c.Param("id")
-		if ticketIDStr != "" {
-			ticketID, err := strconv.Atoi(ticketIDStr)
-			if err != nil {
-				return false
-			}
-			return checkTicketOwnership(ticketID, userID, c)
-		}
-	}
-
-	return true
+    // 其他角色默认允许（已通过资源操作权限检查）
+    return true
 }
 
 // checkUserPermission 检查用户权限
 func checkUserPermission(role, action string, userID int, c *gin.Context) bool {
-	// 管理员可以访问所有用户
-	if role == "admin" {
-		return true
-	}
+    // 管理员可以访问所有用户
+    if role == "admin" {
+        return true
+    }
+    // 经理可读取所有用户基本信息（仅限 read 操作）
+    if role == "manager" && action == "read" {
+        return true
+    }
 
-	// 其他角色只能访问自己的用户信息
-	targetUserIDStr := c.Param("id")
-	if targetUserIDStr != "" {
-		targetUserID, err := strconv.Atoi(targetUserIDStr)
-		if err != nil {
-			return false
-		}
-		return targetUserID == userID
-	}
+    // 其他角色只能访问自己的用户信息
+    targetUserIDStr := c.Param("id")
+    if targetUserIDStr != "" {
+        targetUserID, err := strconv.Atoi(targetUserIDStr)
+        if err != nil {
+            return false
+        }
+        return targetUserID == userID
+    }
 
-	return true
+    // 对 /api/v1/users 列表等未指定ID的访问，非管理员/经理默认拒绝
+    return false
 }
 
 // checkTicketOwnership 检查工单所有权
 func checkTicketOwnership(ticketID, userID int, c *gin.Context) bool {
-	// 这里应该查询数据库检查工单所有者
-	// 为了简化，这里返回true，实际应用中需要实现数据库查询
-	// TODO: 实现数据库查询逻辑
-	return true
+    // 从上下文中获取Ent客户端
+    clientAny, exists := c.Get("client")
+    if !exists {
+        return false
+    }
+    client, ok := clientAny.(*ent.Client)
+    if !ok || client == nil {
+        return false
+    }
+    // 查询工单并校验请求人
+    t, err := client.Ticket.Query().
+        Where(ticket.ID(ticketID)).
+        Only(context.Background())
+    if err != nil {
+        return false
+    }
+    return t.RequesterID == userID
 }
 
 // matchPath 匹配路径（支持通配符）
