@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Settings, HardDrive, Shield, Bell, RefreshCw, Save, Mail, Network, Globe, Database, Cpu, MemoryStick } from 'lucide-react';
+import {RefreshCw, Save, Mail, Network, Globe, Database, MemoryStick } from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {
@@ -37,7 +37,7 @@ import { SystemConfigAPI } from "../../lib/system-config-api";
 export default function SystemConfiguration() {
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState("general");
-  const [config, setConfig] = useState<Record<string, any>>({});
+  const [config, setConfig] = useState<Record<string, unknown>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [systemStats, setSystemStats] = useState({
@@ -46,13 +46,13 @@ export default function SystemConfiguration() {
     diskUsage: 65,
     memoryUsage: 42,
   });
-  const [initialConfig, setInitialConfig] = useState<Record<string, any>>({});
+  const [initialConfig, setInitialConfig] = useState<Record<string, unknown>>({});
 
   // 加载系统配置
   const loadConfig = async () => {
     try {
       const response = await SystemConfigAPI.getConfigs();
-      const configMap: Record<string, any> = {};
+      const configMap: Record<string, unknown> = {};
       
       response.configs.forEach(item => {
         configMap[item.key] = item.value;

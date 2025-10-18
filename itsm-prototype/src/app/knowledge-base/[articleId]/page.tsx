@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Eye, User, ArrowLeft, CalendarDays } from 'lucide-react';
+import {ArrowLeft, CalendarDays } from 'lucide-react';
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';

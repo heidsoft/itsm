@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -18,6 +19,8 @@ func (SLADefinition) Fields() []ent.Field {
 		field.Int("response_time").Comment("响应时间(分钟)").Positive().Default(30),
 		field.Int("resolution_time").Comment("解决时间(分钟)").Positive().Default(240),
 		field.JSON("business_hours", map[string]interface{}{}).Comment("营业时间配置").Optional(),
+		field.JSON("escalation_rules", map[string]interface{}{}).Comment("升级规则").Optional(),
+		field.JSON("conditions", map[string]interface{}{}).Comment("适用条件").Optional(),
 		field.Bool("is_active").Comment("是否激活").Default(true),
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
@@ -25,4 +28,10 @@ func (SLADefinition) Fields() []ent.Field {
 	}
 }
 
-func (SLADefinition) Edges() []ent.Edge { return nil }
+func (SLADefinition) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("violations", SLAViolation.Type).Comment("SLA违规记录"),
+		edge.To("metrics", SLAMetric.Type).Comment("SLA指标"),
+		edge.To("tickets", Ticket.Type).Comment("关联工单"),
+	}
+}

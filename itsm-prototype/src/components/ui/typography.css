@@ -1,0 +1,400 @@
+/* 字体排版系统 - Typography System */
+
+/* 字体族定义 */
+.font-primary {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.font-mono {
+  font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+}
+
+/* 标题层级系统 */
+.heading-1 {
+  @apply text-4xl md:text-5xl font-bold leading-tight tracking-tight;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.heading-2 {
+  @apply text-3xl md:text-4xl font-bold leading-tight tracking-tight;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.heading-3 {
+  @apply text-2xl md:text-3xl font-semibold leading-snug;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.heading-4 {
+  @apply text-xl md:text-2xl font-semibold leading-snug;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.heading-5 {
+  @apply text-lg md:text-xl font-medium leading-normal;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.heading-6 {
+  @apply text-base md:text-lg font-medium leading-normal;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* 正文文本系统 */
+.body-large {
+  @apply text-lg leading-relaxed;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.body-medium {
+  @apply text-base leading-relaxed;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.body-small {
+  @apply text-sm leading-normal;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.body-xs {
+  @apply text-xs leading-normal;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* 特殊文本样式 */
+.text-caption {
+  @apply text-xs text-gray-600 leading-tight;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+.text-overline {
+  @apply text-xs uppercase tracking-wider font-medium;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+.text-subtitle {
+  @apply text-sm text-gray-700 leading-normal;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* 链接样式 */
+.link {
+  @apply text-blue-600 hover:text-blue-700 transition-colors duration-200;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.link-subtle {
+  @apply text-gray-600 hover:text-gray-900 transition-colors duration-200;
+  text-decoration: none;
+}
+
+.link-subtle:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+/* 代码文本 */
+.code-inline {
+  @apply font-mono text-sm bg-gray-100 px-1.5 py-0.5 rounded;
+  font-weight: 500;
+}
+
+.code-block {
+  @apply font-mono text-sm bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
+  line-height: 1.5;
+}
+
+/* 引用文本 */
+.blockquote {
+  @apply border-l-4 border-blue-500 pl-4 italic text-gray-700;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* 列表样式 */
+.list-styled {
+  @apply space-y-2;
+}
+
+.list-styled li {
+  @apply relative pl-6;
+}
+
+.list-styled li::before {
+  content: '•';
+  @apply absolute left-0 text-blue-500 font-bold;
+}
+
+.list-numbered {
+  @apply space-y-2;
+  counter-reset: list-counter;
+}
+
+.list-numbered li {
+  @apply relative pl-8;
+  counter-increment: list-counter;
+}
+
+.list-numbered li::before {
+  content: counter(list-counter) '.';
+  @apply absolute left-0 text-blue-500 font-semibold;
+}
+
+/* 文本颜色系统 */
+.text-primary {
+  @apply text-gray-900;
+}
+
+.text-secondary {
+  @apply text-gray-700;
+}
+
+.text-tertiary {
+  @apply text-gray-600;
+}
+
+.text-muted {
+  @apply text-gray-500;
+}
+
+.text-disabled {
+  @apply text-gray-400;
+}
+
+.text-success {
+  @apply text-green-600;
+}
+
+.text-warning {
+  @apply text-yellow-600;
+}
+
+.text-error {
+  @apply text-red-600;
+}
+
+.text-info {
+  @apply text-blue-600;
+}
+
+/* 文本对齐 */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* 响应式字体大小 */
+@media (max-width: 640px) {
+  .heading-1 {
+    @apply text-3xl;
+  }
+  
+  .heading-2 {
+    @apply text-2xl;
+  }
+  
+  .heading-3 {
+    @apply text-xl;
+  }
+  
+  .heading-4 {
+    @apply text-lg;
+  }
+  
+  .body-large {
+    @apply text-base;
+  }
+}
+
+/* 可读性增强 */
+.readable {
+  max-width: 65ch;
+  line-height: 1.7;
+}
+
+.readable-narrow {
+  max-width: 45ch;
+  line-height: 1.6;
+}
+
+.readable-wide {
+  max-width: 80ch;
+  line-height: 1.8;
+}
+
+/* 文本截断 */
+.text-truncate {
+  @apply truncate;
+}
+
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 文本选择样式 */
+.text-select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.text-select-all {
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+/* 文本阴影效果 */
+.text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 渐变文字效果 */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 打字机效果 */
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid #3b82f6;
+  white-space: nowrap;
+  animation: typewriter 3s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #3b82f6;
+  }
+}
+
+/* 文本高亮效果 */
+.text-highlight {
+  background: linear-gradient(120deg, #fbbf24 0%, #fbbf24 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 0.2em;
+  background-position: 0 88%;
+  transition: background-size 0.25s ease-in;
+}
+
+.text-highlight:hover {
+  background-size: 100% 88%;
+}
+
+/* 无障碍优化 */
+@media (prefers-reduced-motion: reduce) {
+  .typewriter {
+    animation: none;
+    border-right: none;
+  }
+  
+  .text-highlight {
+    transition: none;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .text-primary {
+    @apply text-gray-100;
+  }
+  
+  .text-secondary {
+    @apply text-gray-300;
+  }
+  
+  .text-tertiary {
+    @apply text-gray-400;
+  }
+  
+  .text-muted {
+    @apply text-gray-500;
+  }
+  
+  .code-inline {
+    @apply bg-gray-800 text-gray-200;
+  }
+  
+  .blockquote {
+    @apply text-gray-300;
+  }
+}

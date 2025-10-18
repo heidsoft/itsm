@@ -20,17 +20,12 @@ import {
   Collapse,
 } from "antd";
 import {
-  FileText,
-  User,
-  Calendar,
-  Tag as TagIcon,
+  FileTextasIcon,
   Paperclip,
   Send,
   Bot,
   Lightbulb,
-  Workflow,
-  CheckCircle,
-} from "lucide-react";
+  Workflow} from 'lucide-react';
 import { AIWorkflowAssistant } from "../../components/AIWorkflowAssistant";
 import {
   ticketService,
@@ -81,7 +76,7 @@ export default function CreateTicketPage() {
     },
   ];
 
-  const handleAISuggestion = (suggestion: any) => {
+  const handleAISuggestion = (suggestion: unknown) => {
     setAiSuggestion(suggestion);
 
     // Auto-fill form
@@ -101,7 +96,7 @@ export default function CreateTicketPage() {
     message.success("AI suggestions applied, please review and confirm");
   };
 
-  const handleFormChange = (changedValues: any, allValues: any) => {
+  const handleFormChange = (changedValues: unknown, allValues: unknown) => {
     setFormData(allValues);
   };
 

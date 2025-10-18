@@ -7,9 +7,7 @@ import { Ticket, ApiResponse } from "../../lib/api-config";
 import { TicketDetail } from "../../components/TicketDetail";
 import {
   ArrowLeft,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle} from 'lucide-react';
 import Link from "next/link";
 import {
   Button,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Users, Search, Settings, Trash2, XCircle, Edit, Eye, Lock, Unlock, Key, Tag, Shield } from 'lucide-react';
+import  from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {
@@ -77,7 +77,7 @@ const PERMISSIONS = [
 ];
 
 export default function RoleManagement() {
-  const [roles, setRoles] = useState<any[]>([]);
+  const [roles, setRoles] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<any>(null);
@@ -215,7 +215,7 @@ export default function RoleManagement() {
     {
       title: "角色信息",
       key: "info",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div>
           <div className="font-medium text-gray-900">{record.name}</div>
           <div className="text-sm text-gray-500">{record.description}</div>
@@ -225,7 +225,7 @@ export default function RoleManagement() {
     {
       title: "状态",
       key: "status",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <Badge 
           status={record.status === "active" ? "success" : "default"} 
           text={record.status === "active" ? "启用" : "禁用"} 
@@ -252,7 +252,7 @@ export default function RoleManagement() {
       title: "操作",
       key: "actions",
       width: 150,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <Space size="small">
           <Tooltip title="编辑">
             <Button
@@ -261,7 +261,7 @@ export default function RoleManagement() {
               onClick={() => {
                 setSelectedRole(record);
                 // 设置表单值
-                const formValues: Record<string, any> = {
+                const formValues: Record<string, unknown> = {
                   name: record.name,
                   description: record.description,
                   status: record.status === "active",

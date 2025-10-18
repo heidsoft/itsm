@@ -7,12 +7,13 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/citype"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
-	"itsm-backend/ent/user"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentmetric"
+	"itsm-backend/ent/incidentrule"
+	"itsm-backend/ent/incidentruleexecution"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
@@ -29,495 +30,824 @@ func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *Incident
 }
 
 // CreateIncident 创建事件
-func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateIncidentRequest, reporterID, tenantID int) (*dto.Incident, error) {
-	// 开始事务
-	tx, err := s.client.Tx(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("开始事务失败: %w", err)
-	}
-
-	// 确保事务回滚
-	defer func() {
-		if v := recover(); v != nil {
-			tx.Rollback()
-			panic(v)
-		}
-	}()
-
-	// 验证报告人是否存在
-	_, err = tx.User.Query().Where(user.ID(reporterID)).Only(ctx)
-	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("报告人不存在: %w", err)
-	}
-
-	// 验证处理人是否存在（如果指定）
-	if req.AssigneeID != nil {
-		_, err = tx.User.Query().Where(user.ID(*req.AssigneeID)).Only(ctx)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("处理人不存在: %w", err)
-		}
-	}
-
-	// 验证配置项是否存在（如果指定）
-	if req.ConfigurationItemID != nil {
-		_, err = tx.ConfigurationItem.Query().Where(configurationitem.ID(*req.ConfigurationItemID)).Only(ctx)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("配置项不存在: %w", err)
-		}
-	}
+func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID int) (*dto.IncidentResponse, error) {
+	s.logger.Infow("Creating incident", "title", req.Title, "tenant_id", tenantID)
 
 	// 生成事件编号
-	incidentNumber, err := s.generateIncidentNumber(ctx, tx, tenantID)
+	incidentNumber, err := s.generateIncidentNumber(ctx, tenantID)
 	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("生成事件编号失败: %w", err)
+		return nil, fmt.Errorf("failed to generate incident number: %w", err)
 	}
 
-	// 创建事件
-	incident, err := tx.Incident.Create().
-		SetIncidentNumber(incidentNumber).
+	// 设置检测时间
+	detectedAt := time.Now()
+	if req.DetectedAt != nil {
+		detectedAt = *req.DetectedAt
+	}
+
+	incidentEntity, err := s.client.Incident.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
-		SetStatus(dto.IncidentStatusNew).
+		SetStatus("new").
 		SetPriority(req.Priority).
-		SetReporterID(reporterID).
-		SetNillableAssigneeID(req.AssigneeID).
-		SetNillableConfigurationItemID(req.ConfigurationItemID).
+		SetSeverity(req.Severity).
+		SetIncidentNumber(incidentNumber).
+		SetReporterID(1). // 假设当前用户ID为1
+		SetCategory(req.Category).
+		SetSubcategory(req.Subcategory).
+		SetImpactAnalysis(req.ImpactAnalysis).
+		SetSource(req.Source).
+		SetMetadata(req.Metadata).
+		SetDetectedAt(detectedAt).
+		SetIsAutomated(false).
 		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("创建事件失败: %w", err)
+		s.logger.Errorw("Failed to create incident", "error", err)
+		return nil, fmt.Errorf("failed to create incident: %w", err)
 	}
 
-	// 提交事务
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+	// 设置可选的字段
+	if req.ConfigurationItemID != nil {
+		incidentEntity, err = s.client.Incident.UpdateOneID(incidentEntity.ID).
+			SetConfigurationItemID(*req.ConfigurationItemID).
+			Save(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to update incident configuration item", "error", err)
+		}
 	}
 
-	// 异步发送通知
-	go s.sendIncidentNotification(incident, "created")
+	if req.AssigneeID != nil {
+		incidentEntity, err = s.client.Incident.UpdateOneID(incidentEntity.ID).
+			SetAssigneeID(*req.AssigneeID).
+			Save(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to update incident assignee", "error", err)
+		}
+	}
 
-	s.logger.Infof("事件创建成功: %s, 报告人: %d, 租户: %d", incidentNumber, reporterID, tenantID)
+	// 记录事件创建活动
+	_, err = s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID:  incidentEntity.ID,
+		EventType:   "creation",
+		EventName:   "事件创建",
+		Description: fmt.Sprintf("事件 %s 已创建", incidentNumber),
+		Status:      "active",
+		Severity:    "info",
+		Source:      "system",
+	}, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to create incident event", "error", err)
+	}
 
-	return dto.ToIncidentResponse(incident), nil
+	// 执行事件规则
+	go s.executeIncidentRules(context.Background(), incidentEntity.ID, tenantID)
+
+	s.logger.Infow("Incident created successfully", "id", incidentEntity.ID, "number", incidentNumber)
+	return s.toIncidentResponse(incidentEntity), nil
 }
 
-// GetIncidents 获取事件列表
-func (s *IncidentService) GetIncidents(ctx context.Context, req *dto.GetIncidentsRequest) (*dto.IncidentListResponse, error) {
-	query := s.client.Incident.Query().
-		Where(incident.TenantID(req.TenantID))
+// GetIncident 获取事件
+func (s *IncidentService) GetIncident(ctx context.Context, id int, tenantID int) (*dto.IncidentResponse, error) {
+	incidentEntity, err := s.client.Incident.Query().
+		Where(
+			incident.IDEQ(id),
+			incident.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
+		}
+		s.logger.Errorw("Failed to get incident", "error", err, "id", id)
+		return nil, fmt.Errorf("failed to get incident: %w", err)
+	}
 
-	// 添加过滤条件
-	if req.Status != "" {
-		query = query.Where(incident.Status(req.Status))
+	return s.toIncidentResponse(incidentEntity), nil
+}
+
+// ListIncidents 获取事件列表
+func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*dto.IncidentResponse, int, error) {
+	query := s.client.Incident.Query().
+		Where(incident.TenantIDEQ(tenantID))
+
+	// 应用过滤器
+	if status, ok := filters["status"].(string); ok && status != "" {
+		query = query.Where(incident.StatusEQ(status))
 	}
-	if req.Priority != "" {
-		query = query.Where(incident.Priority(req.Priority))
+	if priority, ok := filters["priority"].(string); ok && priority != "" {
+		query = query.Where(incident.PriorityEQ(priority))
 	}
-	if req.ReporterID > 0 {
-		query = query.Where(incident.ReporterID(req.ReporterID))
+	if severity, ok := filters["severity"].(string); ok && severity != "" {
+		query = query.Where(incident.SeverityEQ(severity))
 	}
-	if req.AssigneeID > 0 {
-		query = query.Where(incident.AssigneeID(req.AssigneeID))
+	if category, ok := filters["category"].(string); ok && category != "" {
+		query = query.Where(incident.CategoryEQ(category))
 	}
-	if req.ConfigurationItemID > 0 {
-		query = query.Where(incident.ConfigurationItemID(req.ConfigurationItemID))
+	if assigneeID, ok := filters["assignee_id"].(int); ok && assigneeID > 0 {
+		query = query.Where(incident.AssigneeIDEQ(assigneeID))
 	}
 
 	// 获取总数
-	total, err := query.Clone().Count(ctx)
+	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取事件总数失败: %w", err)
+		s.logger.Errorw("Failed to count incidents", "error", err)
+		return nil, 0, fmt.Errorf("failed to count incidents: %w", err)
 	}
 
 	// 分页查询
 	incidents, err := query.
+		Offset((page - 1) * size).
+		Limit(size).
 		Order(ent.Desc(incident.FieldCreatedAt)).
-		Offset((req.Page - 1) * req.Size).
-		Limit(req.Size).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取事件列表失败: %w", err)
+		s.logger.Errorw("Failed to list incidents", "error", err)
+		return nil, 0, fmt.Errorf("failed to list incidents: %w", err)
 	}
 
-	// 转换为DTO
-	incidentDTOs := make([]dto.Incident, len(incidents))
-	for i, incident := range incidents {
-		incidentDTO := *dto.ToIncidentResponse(incident)
-
-		// 如果有关联的配置项，获取配置项详细信息
-		if incident.ConfigurationItemID > 0 {
-			ci, err := s.client.ConfigurationItem.Query().
-				Where(configurationitem.ID(incident.ConfigurationItemID)).
-				Where(configurationitem.TenantID(req.TenantID)).
-				Only(ctx)
-			if err == nil {
-				// 获取配置项类型信息
-				ciType, err := s.client.CIType.Query().
-					Where(citype.ID(ci.CiTypeID)).
-					Only(ctx)
-				if err == nil {
-					incidentDTO.ConfigurationItem = &dto.ConfigurationItemInfo{
-						ID:          ci.ID,
-						Name:        ci.Name,
-						Type:        ciType.Name,
-						Status:      ci.Status,
-						Description: ci.Description,
-					}
-				}
-			}
-		}
-
-		incidentDTOs[i] = incidentDTO
+	responses := make([]*dto.IncidentResponse, len(incidents))
+	for i, incidentEntity := range incidents {
+		responses[i] = s.toIncidentResponse(incidentEntity)
 	}
 
-	return &dto.IncidentListResponse{
-		Incidents: incidentDTOs,
-		Total:     total,
-		Page:      req.Page,
-		Size:      req.Size,
-	}, nil
-}
-
-// GetIncident 获取单个事件
-func (s *IncidentService) GetIncident(ctx context.Context, incidentID, tenantID int) (*dto.Incident, error) {
-	incident, err := s.client.Incident.Query().
-		Where(incident.ID(incidentID)).
-		Where(incident.TenantID(tenantID)).
-		Only(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("事件不存在或无权限: %w", err)
-	}
-
-	// 转换为DTO
-	incidentDTO := dto.ToIncidentResponse(incident)
-
-	// 如果有关联的配置项，获取配置项详细信息
-	if incident.ConfigurationItemID > 0 {
-		ci, err := s.client.ConfigurationItem.Query().
-			Where(configurationitem.ID(incident.ConfigurationItemID)).
-			Where(configurationitem.TenantID(tenantID)).
-			Only(ctx)
-		if err == nil {
-			// 获取配置项类型信息
-			ciType, err := s.client.CIType.Query().
-				Where(citype.ID(ci.CiTypeID)).
-				Only(ctx)
-			if err == nil {
-				incidentDTO.ConfigurationItem = &dto.ConfigurationItemInfo{
-					ID:          ci.ID,
-					Name:        ci.Name,
-					Type:        ciType.Name,
-					Status:      ci.Status,
-					Description: ci.Description,
-				}
-			}
-		}
-	}
-
-	return incidentDTO, nil
+	return responses, total, nil
 }
 
 // UpdateIncident 更新事件
-func (s *IncidentService) UpdateIncident(ctx context.Context, incidentID int, req *dto.UpdateIncidentRequest, tenantID int) (*dto.Incident, error) {
-	// 开始事务
-	tx, err := s.client.Tx(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("开始事务失败: %w", err)
-	}
+func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.UpdateIncidentRequest, tenantID int) (*dto.IncidentResponse, error) {
+	s.logger.Infow("Updating incident", "id", id, "tenant_id", tenantID)
 
-	defer func() {
-		if v := recover(); v != nil {
-			tx.Rollback()
-			panic(v)
-		}
-	}()
-
-	// 验证事件是否存在
-	_, err = tx.Incident.Query().
-		Where(incident.ID(incidentID)).
-		Where(incident.TenantID(tenantID)).
-		Only(ctx)
-	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("事件不存在或无权限: %w", err)
-	}
-
-	// 验证处理人是否存在（如果指定）
-	if req.AssigneeID != nil {
-		_, err = tx.User.Query().Where(user.ID(*req.AssigneeID)).Only(ctx)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("处理人不存在: %w", err)
-		}
-	}
-
-	// 验证配置项是否存在（如果指定）
-	if req.ConfigurationItemID != nil {
-		_, err = tx.ConfigurationItem.Query().Where(configurationitem.ID(*req.ConfigurationItemID)).Only(ctx)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("配置项不存在: %w", err)
-		}
-	}
-
-	// 构建更新操作
-	update := tx.Incident.UpdateOneID(incidentID)
+	updateQuery := s.client.Incident.UpdateOneID(id).
+		Where(incident.TenantIDEQ(tenantID)).
+		SetUpdatedAt(time.Now())
 
 	if req.Title != nil {
-		update.SetTitle(*req.Title)
+		updateQuery.SetTitle(*req.Title)
 	}
 	if req.Description != nil {
-		update.SetDescription(*req.Description)
+		updateQuery.SetDescription(*req.Description)
 	}
 	if req.Status != nil {
-		update.SetStatus(*req.Status)
-		// 如果状态变为已解决，设置解决时间
-		if *req.Status == dto.IncidentStatusResolved {
+		updateQuery.SetStatus(*req.Status)
+		// 如果状态变更为resolved，设置解决时间
+		if *req.Status == "resolved" {
 			now := time.Now()
-			update.SetResolvedAt(now)
+			updateQuery.SetResolvedAt(now)
 		}
-		// 如果状态变为已关闭，设置关闭时间
-		if *req.Status == dto.IncidentStatusClosed {
+		// 如果状态变更为closed，设置关闭时间
+		if *req.Status == "closed" {
 			now := time.Now()
-			update.SetClosedAt(now)
+			updateQuery.SetClosedAt(now)
 		}
 	}
 	if req.Priority != nil {
-		update.SetPriority(*req.Priority)
+		updateQuery.SetPriority(*req.Priority)
+	}
+	if req.Severity != nil {
+		updateQuery.SetSeverity(*req.Severity)
+	}
+	if req.Category != nil {
+		updateQuery.SetCategory(*req.Category)
+	}
+	if req.Subcategory != nil {
+		updateQuery.SetSubcategory(*req.Subcategory)
 	}
 	if req.AssigneeID != nil {
-		update.SetAssigneeID(*req.AssigneeID)
+		updateQuery.SetAssigneeID(*req.AssigneeID)
 	}
-	if req.ConfigurationItemID != nil {
-		update.SetConfigurationItemID(*req.ConfigurationItemID)
+	if req.ImpactAnalysis != nil {
+		updateQuery.SetImpactAnalysis(req.ImpactAnalysis)
+	}
+	if req.RootCause != nil {
+		updateQuery.SetRootCause(req.RootCause)
+	}
+	if req.ResolutionSteps != nil {
+		updateQuery.SetResolutionSteps(req.ResolutionSteps)
+	}
+	if req.Metadata != nil {
+		updateQuery.SetMetadata(req.Metadata)
 	}
 
-	// 执行更新
-	updatedIncident, err := update.Save(ctx)
+	incidentEntity, err := updateQuery.Save(ctx)
 	if err != nil {
-		tx.Rollback()
-		return nil, fmt.Errorf("更新事件失败: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
+		}
+		s.logger.Errorw("Failed to update incident", "error", err)
+		return nil, fmt.Errorf("failed to update incident: %w", err)
 	}
 
-	// 提交事务
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+	// 记录事件更新活动
+	_, err = s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID:  id,
+		EventType:   "update",
+		EventName:   "事件更新",
+		Description: "事件信息已更新",
+		Status:      "active",
+		Severity:    "info",
+		Source:      "system",
+	}, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to create incident event", "error", err)
 	}
 
-	// 异步发送通知
-	go s.sendIncidentNotification(updatedIncident, "updated")
-
-	s.logger.Infof("事件更新成功: %d, 租户: %d", incidentID, tenantID)
-
-	return dto.ToIncidentResponse(updatedIncident), nil
+	s.logger.Infow("Incident updated successfully", "id", id)
+	return s.toIncidentResponse(incidentEntity), nil
 }
 
-// CloseIncident 关闭事件
-func (s *IncidentService) CloseIncident(ctx context.Context, incidentID, tenantID int) error {
-	// 开始事务
-	tx, err := s.client.Tx(ctx)
-	if err != nil {
-		return fmt.Errorf("开始事务失败: %w", err)
-	}
+// DeleteIncident 删除事件
+func (s *IncidentService) DeleteIncident(ctx context.Context, id int, tenantID int) error {
+	s.logger.Infow("Deleting incident", "id", id, "tenant_id", tenantID)
 
-	defer func() {
-		if v := recover(); v != nil {
-			tx.Rollback()
-			panic(v)
+	err := s.client.Incident.DeleteOneID(id).
+		Where(incident.TenantIDEQ(tenantID)).
+		Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("incident not found")
 		}
-	}()
-
-	// 验证事件是否存在
-	incident, err := tx.Incident.Query().
-		Where(incident.ID(incidentID)).
-		Where(incident.TenantID(tenantID)).
-		Only(ctx)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("事件不存在或无权限: %w", err)
+		s.logger.Errorw("Failed to delete incident", "error", err)
+		return fmt.Errorf("failed to delete incident: %w", err)
 	}
 
-	// 检查事件状态
-	if incident.Status == dto.IncidentStatusClosed {
-		tx.Rollback()
-		return fmt.Errorf("事件已经关闭")
-	}
-
-	now := time.Now()
-	_, err = tx.Incident.UpdateOneID(incidentID).
-		SetStatus(dto.IncidentStatusClosed).
-		SetClosedAt(now).
-		Save(ctx)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("关闭事件失败: %w", err)
-	}
-
-	// 提交事务
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交事务失败: %w", err)
-	}
-
-	// 异步发送通知
-	go s.sendIncidentNotification(incident, "closed")
-
-	s.logger.Infof("事件关闭成功: %d, 租户: %d", incidentID, tenantID)
-
+	s.logger.Infow("Incident deleted successfully", "id", id)
 	return nil
 }
 
-// GetIncidentStats 获取事件统计
-func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*dto.IncidentStatsResponse, error) {
-	// 获取各种状态的事件数量
-	total, err := s.client.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取总事件数失败: %w", err)
+// CreateIncidentEvent 创建事件活动记录
+func (s *IncidentService) CreateIncidentEvent(ctx context.Context, req *dto.CreateIncidentEventRequest, tenantID int) (*dto.IncidentEventResponse, error) {
+	s.logger.Infow("Creating incident event", "incident_id", req.IncidentID, "type", req.EventType)
+
+	occurredAt := time.Now()
+	if req.OccurredAt != nil {
+		occurredAt = *req.OccurredAt
 	}
 
-	open, err := s.client.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Where(incident.StatusIn(dto.IncidentStatusNew, dto.IncidentStatusInProgress, dto.IncidentStatusWaitingCustomer)).
-		Count(ctx)
+	event, err := s.client.IncidentEvent.Create().
+		SetIncidentID(req.IncidentID).
+		SetEventType(req.EventType).
+		SetEventName(req.EventName).
+		SetDescription(req.Description).
+		SetStatus(req.Status).
+		SetSeverity(req.Severity).
+		SetData(req.Data).
+		SetOccurredAt(occurredAt).
+		SetUserID(req.UserID).
+		SetSource(req.Source).
+		SetMetadata(req.Metadata).
+		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取开放事件数失败: %w", err)
+		s.logger.Errorw("Failed to create incident event", "error", err)
+		return nil, fmt.Errorf("failed to create incident event: %w", err)
 	}
 
-	resolved, err := s.client.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Where(incident.Status(dto.IncidentStatusResolved)).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取已解决事件数失败: %w", err)
-	}
-
-	closed, err := s.client.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Where(incident.Status(dto.IncidentStatusClosed)).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取已关闭事件数失败: %w", err)
-	}
-
-	urgent, err := s.client.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Where(incident.Priority(dto.IncidentPriorityUrgent)).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取紧急事件数失败: %w", err)
-	}
-
-	high, err := s.client.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Where(incident.Priority(dto.IncidentPriorityHigh)).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取高优先级事件数失败: %w", err)
-	}
-
-	return &dto.IncidentStatsResponse{
-		TotalIncidents:        total,
-		OpenIncidents:         open,
-		ResolvedIncidents:     resolved,
-		ClosedIncidents:       closed,
-		UrgentIncidents:       urgent,
-		HighPriorityIncidents: high,
-	}, nil
+	s.logger.Infow("Incident event created successfully", "id", event.ID)
+	return s.toIncidentEventResponse(event), nil
 }
 
-// generateIncidentNumber 生成事件编号
-func (s *IncidentService) generateIncidentNumber(ctx context.Context, tx *ent.Tx, tenantID int) (string, error) {
-	// 获取当前年份
-	year := time.Now().Year()
+// CreateIncidentAlert 创建事件告警
+func (s *IncidentService) CreateIncidentAlert(ctx context.Context, req *dto.CreateIncidentAlertRequest, tenantID int) (*dto.IncidentAlertResponse, error) {
+	s.logger.Infow("Creating incident alert", "incident_id", req.IncidentID, "type", req.AlertType)
 
-	// 获取该租户今年的事件数量
-	count, err := tx.Incident.Query().
-		Where(incident.TenantID(tenantID)).
-		Where(incident.CreatedAtGTE(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC))).
-		Count(ctx)
+	triggeredAt := time.Now()
+	if req.TriggeredAt != nil {
+		triggeredAt = *req.TriggeredAt
+	}
+
+	alert, err := s.client.IncidentAlert.Create().
+		SetIncidentID(req.IncidentID).
+		SetAlertType(req.AlertType).
+		SetAlertName(req.AlertName).
+		SetMessage(req.Message).
+		SetSeverity(req.Severity).
+		SetStatus("active").
+		SetChannels(req.Channels).
+		SetRecipients(req.Recipients).
+		SetTriggeredAt(triggeredAt).
+		SetMetadata(req.Metadata).
+		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
-		return "", err
+		s.logger.Errorw("Failed to create incident alert", "error", err)
+		return nil, fmt.Errorf("failed to create incident alert: %w", err)
 	}
 
-	// 生成编号格式：INC-YYYY-XXXXX
-	incidentNumber := fmt.Sprintf("INC-%d-%05d", year, count+1)
-	return incidentNumber, nil
+	s.logger.Infow("Incident alert created successfully", "id", alert.ID)
+	return s.toIncidentAlertResponse(alert), nil
 }
 
-// sendIncidentNotification 发送事件通知（模拟）
-func (s *IncidentService) sendIncidentNotification(incident *ent.Incident, action string) {
-	// 这里应该实现真正的通知逻辑
-	// 例如：发送邮件、推送消息、WebSocket通知等
-	s.logger.Infof("发送事件通知: 事件ID=%d, 动作=%s, 处理人ID=%v",
-		incident.ID, action, incident.AssigneeID)
-}
+// CreateIncidentMetric 创建事件指标
+func (s *IncidentService) CreateIncidentMetric(ctx context.Context, req *dto.CreateIncidentMetricRequest, tenantID int) (*dto.IncidentMetricResponse, error) {
+	s.logger.Infow("Creating incident metric", "incident_id", req.IncidentID, "type", req.MetricType)
 
-// GetCurrentUserID 从上下文获取当前用户ID
-func (s *IncidentService) GetCurrentUserID(c *gin.Context) (int, error) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return 0, fmt.Errorf("用户ID不存在")
-	}
-	return userID.(int), nil
-}
-
-// GetCurrentTenantID 从上下文获取当前租户ID
-func (s *IncidentService) GetCurrentTenantID(c *gin.Context) (int, error) {
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		return 0, fmt.Errorf("租户ID不存在")
-	}
-	return tenantID.(int), nil
-}
-
-// GetConfigurationItemsForIncident 获取可关联的配置项列表
-func (s *IncidentService) GetConfigurationItemsForIncident(ctx context.Context, tenantID int, search, ciType, status string) ([]dto.ConfigurationItemInfo, error) {
-	// 构建查询条件
-	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantID(tenantID))
-
-	// 添加搜索条件
-	if search != "" {
-		query = query.Where(configurationitem.NameContains(search))
+	measuredAt := time.Now()
+	if req.MeasuredAt != nil {
+		measuredAt = *req.MeasuredAt
 	}
 
-	// 添加状态过滤
-	if status != "" {
-		query = query.Where(configurationitem.Status(status))
-	}
-
-	// 限制返回数量，避免数据过多
-	query = query.Limit(50)
-
-	// 执行查询
-	cis, err := query.All(ctx)
+	metric, err := s.client.IncidentMetric.Create().
+		SetIncidentID(req.IncidentID).
+		SetMetricType(req.MetricType).
+		SetMetricName(req.MetricName).
+		SetMetricValue(req.MetricValue).
+		SetUnit(req.Unit).
+		SetMeasuredAt(measuredAt).
+		SetTags(req.Tags).
+		SetMetadata(req.Metadata).
+		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询配置项失败: %w", err)
+		s.logger.Errorw("Failed to create incident metric", "error", err)
+		return nil, fmt.Errorf("failed to create incident metric: %w", err)
 	}
 
-	// 转换为响应格式
-	var ciInfos []dto.ConfigurationItemInfo
-	for _, ci := range cis {
-		// 获取配置项类型信息
-		ciType, err := s.client.CIType.Query().
-			Where(citype.ID(ci.CiTypeID)).
-			Only(ctx)
-		if err == nil {
-			ciInfos = append(ciInfos, dto.ConfigurationItemInfo{
-				ID:          ci.ID,
-				Name:        ci.Name,
-				Type:        ciType.Name,
-				Status:      ci.Status,
-				Description: ci.Description,
-			})
+	s.logger.Infow("Incident metric created successfully", "id", metric.ID)
+	return s.toIncidentMetricResponse(metric), nil
+}
+
+// GetIncidentMonitoring 获取事件监控数据
+func (s *IncidentService) GetIncidentMonitoring(ctx context.Context, req *dto.IncidentMonitoringRequest, tenantID int) (*dto.IncidentMonitoringResponse, error) {
+	s.logger.Infow("Getting incident monitoring data", "tenant_id", tenantID)
+
+	// 解析时间范围
+	startTime, err := time.Parse(time.RFC3339, req.StartTime)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start_time format: %w", err)
+	}
+	endTime, err := time.Parse(time.RFC3339, req.EndTime)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end_time format: %w", err)
+	}
+
+	query := s.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.CreatedAtGTE(startTime),
+			incident.CreatedAtLTE(endTime),
+		)
+
+	// 应用过滤器
+	if req.IncidentID != nil {
+		query = query.Where(incident.IDEQ(*req.IncidentID))
+	}
+	if req.Category != nil {
+		query = query.Where(incident.CategoryEQ(*req.Category))
+	}
+	if req.Priority != nil {
+		query = query.Where(incident.PriorityEQ(*req.Priority))
+	}
+	if req.Status != nil {
+		query = query.Where(incident.StatusEQ(*req.Status))
+	}
+
+	// 获取事件列表
+	incidents, err := query.All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get incidents", "error", err)
+		return nil, fmt.Errorf("failed to get incidents: %w", err)
+	}
+
+	// 计算统计数据
+	totalIncidents := len(incidents)
+	var openIncidents, resolvedIncidents, closedIncidents, criticalIncidents, highPriorityIncidents int
+	var totalResolutionTime float64
+	var resolvedCount int
+
+	for _, incidentEntity := range incidents {
+		switch incidentEntity.Status {
+		case "new", "in_progress":
+			openIncidents++
+		case "resolved":
+			resolvedIncidents++
+			if incidentEntity.ResolvedAt != nil {
+				resolutionTime := incidentEntity.ResolvedAt.Sub(incidentEntity.CreatedAt).Hours()
+				totalResolutionTime += resolutionTime
+				resolvedCount++
+			}
+		case "closed":
+			closedIncidents++
+		}
+
+		if incidentEntity.Severity == "critical" {
+			criticalIncidents++
+		}
+		if incidentEntity.Priority == "high" || incidentEntity.Priority == "urgent" {
+			highPriorityIncidents++
 		}
 	}
 
-	return ciInfos, nil
+	// 计算平均解决时间
+	var averageResolutionTime float64
+	if resolvedCount > 0 {
+		averageResolutionTime = totalResolutionTime / float64(resolvedCount)
+	}
+
+	// 计算解决率
+	var resolutionRate float64
+	if totalIncidents > 0 {
+		resolutionRate = float64(resolvedIncidents+closedIncidents) / float64(totalIncidents) * 100
+	}
+
+	// 计算升级率
+	var escalationRate float64
+	if totalIncidents > 0 {
+		var escalatedCount int
+		for _, incidentEntity := range incidents {
+			if incidentEntity.EscalationLevel > 0 {
+				escalatedCount++
+			}
+		}
+		escalationRate = float64(escalatedCount) / float64(totalIncidents) * 100
+	}
+
+	// 构建响应
+	response := &dto.IncidentMonitoringResponse{
+		TotalIncidents:        totalIncidents,
+		OpenIncidents:         openIncidents,
+		ResolvedIncidents:     resolvedIncidents,
+		ClosedIncidents:       closedIncidents,
+		CriticalIncidents:     criticalIncidents,
+		HighPriorityIncidents: highPriorityIncidents,
+		AverageResolutionTime: averageResolutionTime,
+		ResolutionRate:        resolutionRate,
+		EscalationRate:        escalationRate,
+	}
+
+	// 转换事件列表
+	response.Incidents = make([]dto.IncidentResponse, len(incidents))
+	for i, incidentEntity := range incidents {
+		response.Incidents[i] = *s.toIncidentResponse(incidentEntity)
+	}
+
+	return response, nil
+}
+
+// EscalateIncident 升级事件
+func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.IncidentEscalationRequest, tenantID int) (*dto.IncidentEscalationResponse, error) {
+	s.logger.Infow("Escalating incident", "incident_id", req.IncidentID, "level", req.EscalationLevel)
+
+	// 获取事件
+	incidentEntity, err := s.client.Incident.Query().
+		Where(
+			incident.IDEQ(req.IncidentID),
+			incident.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found")
+		}
+		return nil, fmt.Errorf("failed to get incident: %w", err)
+	}
+
+	// 更新事件升级信息
+	now := time.Now()
+	incidentEntity, err = s.client.Incident.UpdateOneID(req.IncidentID).
+		SetEscalationLevel(req.EscalationLevel).
+		SetEscalatedAt(now).
+		SetUpdatedAt(now).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to escalate incident", "error", err)
+		return nil, fmt.Errorf("failed to escalate incident: %w", err)
+	}
+
+	// 记录升级活动
+	_, err = s.CreateIncidentEvent(ctx, &dto.CreateIncidentEventRequest{
+		IncidentID:  req.IncidentID,
+		EventType:   "escalation",
+		EventName:   "事件升级",
+		Description: fmt.Sprintf("事件升级到级别 %d: %s", req.EscalationLevel, req.Reason),
+		Status:      "active",
+		Severity:    "high",
+		Data: map[string]interface{}{
+			"escalation_level": req.EscalationLevel,
+			"reason":          req.Reason,
+		},
+		Source: "system",
+	}, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to create escalation event", "error", err)
+	}
+
+	// 创建升级告警
+	_, err = s.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
+		IncidentID: req.IncidentID,
+		AlertType:  "escalation",
+		AlertName:  "事件升级告警",
+		Message:    fmt.Sprintf("事件 %s 已升级到级别 %d", incidentEntity.IncidentNumber, req.EscalationLevel),
+		Severity:   "high",
+		Channels:   []string{"email", "sms"},
+		Recipients: []string{"manager@company.com"},
+		Metadata: map[string]interface{}{
+			"escalation_level": req.EscalationLevel,
+			"reason":          req.Reason,
+		},
+	}, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to create escalation alert", "error", err)
+	}
+
+	// 构建响应
+	response := &dto.IncidentEscalationResponse{
+		ID:              incidentEntity.ID,
+		IncidentID:      req.IncidentID,
+		EscalationLevel: req.EscalationLevel,
+		Reason:          req.Reason,
+		Status:          "active",
+		NotifiedUsers:   req.NotifyUsers,
+		AutoAssigned:    req.AutoAssign,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	s.logger.Infow("Incident escalated successfully", "incident_id", req.IncidentID, "level", req.EscalationLevel)
+	return response, nil
+}
+
+// 辅助方法
+func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID int) (string, error) {
+	// 获取当前年份和月份
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
+	// 查询当月的事件数量
+	count, err := s.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.CreatedAtGTE(time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)),
+			incident.CreatedAtLT(time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC)),
+		).
+		Count(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to count incidents: %w", err)
+	}
+
+	// 生成事件编号
+	incidentNumber := fmt.Sprintf("INC-%04d%02d-%06d", year, month, count+1)
+	return incidentNumber, nil
+}
+
+func (s *IncidentService) executeIncidentRules(ctx context.Context, incidentID int, tenantID int) {
+	s.logger.Infow("Executing incident rules", "incident_id", incidentID)
+
+	// 获取激活的事件规则
+	rules, err := s.client.IncidentRule.Query().
+		Where(
+			incidentrule.TenantIDEQ(tenantID),
+			incidentrule.IsActiveEQ(true),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get incident rules", "error", err)
+		return
+	}
+
+	// 获取事件信息
+	incidentEntity, err := s.client.Incident.Query().
+		Where(incident.IDEQ(incidentID)).
+		Only(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get incident", "error", err)
+		return
+	}
+
+	// 执行每个规则
+	for _, rule := range rules {
+		if s.evaluateRuleConditions(rule.Conditions, incidentEntity) {
+			s.executeRuleActions(ctx, rule, incidentEntity, tenantID)
+		}
+	}
+}
+
+func (s *IncidentService) evaluateRuleConditions(conditions map[string]interface{}, incident *ent.Incident) bool {
+	// 简化的条件评估逻辑
+	if priority, ok := conditions["priority"].([]string); ok {
+		for _, p := range priority {
+			if incident.Priority == p {
+				return true
+			}
+		}
+	}
+	if severity, ok := conditions["severity"].([]string); ok {
+		for _, s := range severity {
+			if incident.Severity == s {
+				return true
+			}
+		}
+	}
+	if status, ok := conditions["status"].(string); ok {
+		return incident.Status == status
+	}
+	return false
+}
+
+func (s *IncidentService) executeRuleActions(ctx context.Context, rule *ent.IncidentRule, incident *ent.Incident, tenantID int) {
+	s.logger.Infow("Executing rule actions", "rule_id", rule.ID, "incident_id", incident.ID)
+
+	// 记录规则执行
+	execution, err := s.client.IncidentRuleExecution.Create().
+		SetRuleID(rule.ID).
+		SetIncidentID(incident.ID).
+		SetStatus("running").
+		SetStartedAt(time.Now()).
+		SetTenantID(tenantID).
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to create rule execution", "error", err)
+		return
+	}
+
+	// 执行动作
+	for _, action := range rule.Actions {
+		if actionType, ok := action["type"].(string); ok {
+			switch actionType {
+			case "escalate":
+				s.executeEscalationAction(ctx, action, incident, tenantID)
+			case "notify":
+				s.executeNotificationAction(ctx, action, incident, tenantID)
+			case "assign":
+				s.executeAssignmentAction(ctx, action, incident, tenantID)
+			}
+		}
+	}
+
+	// 更新规则执行状态
+	_, err = s.client.IncidentRuleExecution.UpdateOneID(execution.ID).
+		SetStatus("completed").
+		SetCompletedAt(time.Now()).
+		SetResult("Rule executed successfully").
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to update rule execution", "error", err)
+	}
+
+	// 更新规则执行次数
+	_, err = s.client.IncidentRule.UpdateOneID(rule.ID).
+		SetExecutionCount(rule.ExecutionCount + 1).
+		SetLastExecutedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to update rule execution count", "error", err)
+	}
+}
+
+func (s *IncidentService) executeEscalationAction(ctx context.Context, action map[string]interface{}, incident *ent.Incident, tenantID int) {
+	if level, ok := action["level"].(int); ok {
+		_, err := s.EscalateIncident(ctx, &dto.IncidentEscalationRequest{
+			IncidentID:      incident.ID,
+			EscalationLevel: level,
+			Reason:          "自动升级",
+			NotifyUsers:     []int{},
+			AutoAssign:      false,
+		}, tenantID)
+		if err != nil {
+			s.logger.Errorw("Failed to execute escalation action", "error", err)
+		}
+	}
+}
+
+func (s *IncidentService) executeNotificationAction(ctx context.Context, action map[string]interface{}, incident *ent.Incident, tenantID int) {
+	channels := []string{"email"}
+	if ch, ok := action["channels"].([]string); ok {
+		channels = ch
+	}
+
+	recipients := []string{"admin@company.com"}
+	if rec, ok := action["recipients"].([]string); ok {
+		recipients = rec
+	}
+
+	message := "事件需要关注"
+	if msg, ok := action["message"].(string); ok {
+		message = msg
+	}
+
+	_, err := s.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
+		IncidentID: incident.ID,
+		AlertType:  "notification",
+		AlertName:  "规则触发通知",
+		Message:    message,
+		Severity:   "medium",
+		Channels:   channels,
+		Recipients: recipients,
+	}, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to execute notification action", "error", err)
+	}
+}
+
+func (s *IncidentService) executeAssignmentAction(ctx context.Context, action map[string]interface{}, incident *ent.Incident, tenantID int) {
+	if assigneeID, ok := action["assignee_id"].(int); ok {
+		_, err := s.UpdateIncident(ctx, incident.ID, &dto.UpdateIncidentRequest{
+			AssigneeID: &assigneeID,
+		}, tenantID)
+		if err != nil {
+			s.logger.Errorw("Failed to execute assignment action", "error", err)
+		}
+	}
+}
+
+// 转换为响应DTO
+func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.IncidentResponse {
+	return &dto.IncidentResponse{
+		ID:                  incident.ID,
+		Title:               incident.Title,
+		Description:        incident.Description,
+		Status:              incident.Status,
+		Priority:            incident.Priority,
+		Severity:            incident.Severity,
+		IncidentNumber:      incident.IncidentNumber,
+		ReporterID:          incident.ReporterID,
+		AssigneeID:          incident.AssigneeID,
+		ConfigurationItemID: incident.ConfigurationItemID,
+		Category:            incident.Category,
+		Subcategory:         incident.Subcategory,
+		ImpactAnalysis:      incident.ImpactAnalysis,
+		RootCause:           incident.RootCause,
+		ResolutionSteps:     incident.ResolutionSteps,
+		DetectedAt:          incident.DetectedAt,
+		ResolvedAt:          incident.ResolvedAt,
+		ClosedAt:            incident.ClosedAt,
+		EscalatedAt:         incident.EscalatedAt,
+		EscalationLevel:     incident.EscalationLevel,
+		IsAutomated:         incident.IsAutomated,
+		Source:              incident.Source,
+		Metadata:            incident.Metadata,
+		TenantID:            incident.TenantID,
+		CreatedAt:           incident.CreatedAt,
+		UpdatedAt:           incident.UpdatedAt,
+	}
+}
+
+func (s *IncidentService) toIncidentEventResponse(event *ent.IncidentEvent) *dto.IncidentEventResponse {
+	return &dto.IncidentEventResponse{
+		ID:          event.ID,
+		IncidentID:  event.IncidentID,
+		EventType:   event.EventType,
+		EventName:   event.EventName,
+		Description: event.Description,
+		Status:      event.Status,
+		Severity:    event.Severity,
+		Data:        event.Data,
+		OccurredAt:  event.OccurredAt,
+		UserID:      event.UserID,
+		Source:      event.Source,
+		Metadata:    event.Metadata,
+		TenantID:    event.TenantID,
+		CreatedAt:   event.CreatedAt,
+		UpdatedAt:   event.UpdatedAt,
+	}
+}
+
+func (s *IncidentService) toIncidentAlertResponse(alert *ent.IncidentAlert) *dto.IncidentAlertResponse {
+	return &dto.IncidentAlertResponse{
+		ID:             alert.ID,
+		IncidentID:     alert.IncidentID,
+		AlertType:      alert.AlertType,
+		AlertName:      alert.AlertName,
+		Message:        alert.Message,
+		Severity:       alert.Severity,
+		Status:         alert.Status,
+		Channels:       alert.Channels,
+		Recipients:     alert.Recipients,
+		TriggeredAt:    alert.TriggeredAt,
+		AcknowledgedAt: alert.AcknowledgedAt,
+		ResolvedAt:     alert.ResolvedAt,
+		AcknowledgedBy: alert.AcknowledgedBy,
+		Metadata:       alert.Metadata,
+		TenantID:       alert.TenantID,
+		CreatedAt:     alert.CreatedAt,
+		UpdatedAt:     alert.UpdatedAt,
+	}
+}
+
+func (s *IncidentService) toIncidentMetricResponse(metric *ent.IncidentMetric) *dto.IncidentMetricResponse {
+	return &dto.IncidentMetricResponse{
+		ID:          metric.ID,
+		IncidentID:  metric.IncidentID,
+		MetricType:  metric.MetricType,
+		MetricName:  metric.MetricName,
+		MetricValue: metric.MetricValue,
+		Unit:        metric.Unit,
+		MeasuredAt:  metric.MeasuredAt,
+		Tags:        metric.Tags,
+		Metadata:    metric.Metadata,
+		TenantID:    metric.TenantID,
+		CreatedAt:   metric.CreatedAt,
+		UpdatedAt:   metric.UpdatedAt,
+	}
 }

@@ -1,4 +1,4 @@
-import { Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import {Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Pagination } from 'antd';
 
 import React, { useMemo, useState, useCallback } from "react";

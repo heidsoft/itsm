@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, PlusCircle } from 'lucide-react';
+import  from 'lucide-react';
 
 import React, { useState } from "react";
 import Link from "next/link";

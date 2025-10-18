@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  GitMerge,
-  BookOpen,
-  AlertTriangle,
-  MessageSquare,
-  Tag as TagIcon,
-  ArrowLeft,
-} from "lucide-react";
+import {as TagIcon,
+  ArrowLeft} from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";

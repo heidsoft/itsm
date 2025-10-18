@@ -1,26 +1,13 @@
 "use client";
 
-import {
-  Plus,
-  CheckCircle,
-  Clock,
-  Search,
-  Trash2,
-  Edit,
-  Eye,
-  Target,
-  MessageSquare,
-  Tag,
-  Bell,
-  Copy,
+import {Copy,
   Zap,
   ArrowUp,
   Mail,
   Phone,
   Megaphone,
   Activity,
-  Timer,
-} from "lucide-react";
+  Timer} from 'lucide-react';
 
 import React, { useState } from "react";
 import {
@@ -392,7 +379,7 @@ const EscalationRuleManagement = () => {
       title: "规则信息",
       dataIndex: "name",
       key: "name",
-      render: (_: any, record: EscalationRule) => (
+      render: (_: unknown, record: EscalationRule) => (
         <div>
           <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
@@ -420,7 +407,7 @@ const EscalationRuleManagement = () => {
       dataIndex: "usageCount",
       key: "usageCount",
       align: "center" as const,
-      render: (_: any, record: EscalationRule) => (
+      render: (_: unknown, record: EscalationRule) => (
         <div className="text-center">
           <div className="text-lg font-bold text-orange-600">
             {record.usageCount}
@@ -449,7 +436,7 @@ const EscalationRuleManagement = () => {
       dataIndex: "updatedAt",
       key: "updatedAt",
       align: "center" as const,
-      render: (_: any, record: EscalationRule) => (
+      render: (_: unknown, record: EscalationRule) => (
         <div className="text-center">
           <div className="text-sm">{record.updatedAt}</div>
           <div className="text-xs text-gray-500">由 {record.createdBy}</div>
@@ -460,7 +447,7 @@ const EscalationRuleManagement = () => {
       title: "操作",
       key: "actions",
       align: "center" as const,
-      render: (_: any, record: EscalationRule) => (
+      render: (_: unknown, record: EscalationRule) => (
         <Space>
           <Tooltip title="查看详情">
             <Button

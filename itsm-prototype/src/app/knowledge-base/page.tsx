@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Edit, Eye, BookOpen, PlusCircle, MoreHorizontal } from "lucide-react";
+import  from 'lucide-react';
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -28,7 +28,7 @@ const { Option } = Select;
 const { Text } = Typography;
 
 // 模拟知识文章数据
-// const mockArticles = [] as any[];
+// const mockArticles = [] as unknown[];
 
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {

@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  AlertTriangle,
-  RefreshCw,
-  GitBranch,
-  Plus,
-  Eye,
-  Edit,
-  MoreHorizontal
-} from "lucide-react";
+import {RefreshCw,
+  GitBranch} from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {
