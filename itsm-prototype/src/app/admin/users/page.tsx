@@ -1,18 +1,7 @@
 "use client";
 
-import {
-  Plus,
-  Users,
-  Trash2,
-  Edit,
-  Key,
-  User,
-  Tag,
-  MoreHorizontal,
-  Download,
-  UserCheck,
-  UserX,
-} from "lucide-react";
+import {DownloadCheck,
+  UserX} from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {
@@ -124,7 +113,7 @@ const UserManagement: React.FC = () => {
   const [passwordForm] = Form.useForm();
 
   // 模拟API调用 - 后续替换为真实API
-  const handleCreateUser = async (values: any) => {
+  const handleCreateUser = async (values: unknown) => {
     setLoading(true);
     try {
       // 模拟API延迟
@@ -159,7 +148,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = async (values: any) => {
+  const handleUpdateUser = async (values: unknown) => {
     if (!selectedUser) return;
 
     setLoading(true);

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Edit,
-  Eye,
-  AlertTriangle,
-  PlusCircle,
-  RefreshCw,
-  MoreHorizontal
-} from "lucide-react";
+import {RefreshCw} from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {

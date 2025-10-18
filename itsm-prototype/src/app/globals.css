@@ -2,703 +2,406 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Animation Definitions ===== */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* ===== Base Style Reset ===== */
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  margin: 0;
-  padding: 0;
-}
-
-/* ===== Browser Style Reset ===== */
-html, body {
-  height: 100%;
-  overflow-x: hidden;
-}
-
-/* Remove default list styles */
-ul, ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-/* Remove default link styles */
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* Remove default button styles */
-button {
-  border: none;
-  background: none;
-  cursor: pointer;
-}
-
-/* Remove default input styles */
-input, textarea, select {
-  border: none;
-  outline: none;
-  background: none;
-}
-
-/* ===== Utility Classes ===== */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-/* 1. Login page special styles - Force override Ant Design default styles */
-.ant-form-item {
-  margin-bottom: 24px !important;
-}
-
-.ant-input,
-.ant-input-password,
-.ant-input-affix-wrapper {
-  border: none !important;
-  border-bottom: 2px solid #e5e7eb !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 12px 0 !important;
-  font-size: 16px !important;
-  transition: all 0.3s ease !important;
-}
-
-/* Remove all internal borders */
-.ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
-.ant-input-affix-wrapper:focus,
-.ant-input-affix-wrapper-focused {
-  border: none !important;
-  border-bottom: 2px solid #3b82f6 !important;
-  box-shadow: none !important;
-}
-
-/* Internal input element inside input box */
-.ant-input-affix-wrapper > input.ant-input {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-
-.ant-input:hover,
-.ant-input:focus {
-  border: none !important;
-  border-bottom: 2px solid #3b82f6 !important;
-  box-shadow: none !important;
-}
-
-.ant-input-password:hover .ant-input,
-.ant-input-password:focus .ant-input,
-.ant-input-password-focused .ant-input {
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Special handling for ant-input-lg class */
-.ant-input-lg,
-.ant-input-password-lg,
-.ant-input-affix-wrapper-lg {
-  border: none !important;
-  border-bottom: 2px solid #e5e7eb !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 16px 0 !important;
-  font-size: 18px !important;
-}
-
-/* Special handling for password box */
-.ant-input-password .ant-input {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-
-.ant-input-password:hover,
-.ant-input-password:focus,
-.ant-input-password-focused {
-  border: none !important;
-  border-bottom: 2px solid #3b82f6 !important;
-  box-shadow: none !important;
-}
-
-/* Input box prefix and suffix container */
-.ant-input-prefix,
-.ant-input-suffix {
-  color: #9ca3af !important;
-}
-
-.ant-input-affix-wrapper:hover .ant-input-prefix,
-.ant-input-affix-wrapper:hover .ant-input-suffix,
-.ant-input-affix-wrapper:focus .ant-input-prefix,
-.ant-input-affix-wrapper:focus .ant-input-suffix,
-.ant-input-affix-wrapper-focused .ant-input-prefix,
-.ant-input-affix-wrapper-focused .ant-input-suffix {
-  color: #3b82f6 !important;
-}
-
-/* Password box eye icon */
-.ant-input-password-icon {
-  color: #9ca3af !important;
-  cursor: pointer !important;
-}
-
-.ant-input-password-icon:hover {
-  color: #3b82f6 !important;
-}
-
-/* Hover state */
-.ant-input:hover,
-.ant-input-affix-wrapper:hover {
-  border-bottom-color: #3b82f6 !important;
-}
-
-/* Focus state */
-.ant-input:focus,
-.ant-input-affix-wrapper:focus,
-.ant-input-affix-wrapper-focused {
-  border-bottom-color: #3b82f6 !important;
-}
-
-/* Input state */
-.ant-input-affix-wrapper-focused .ant-input-prefix,
-.ant-input-affix-wrapper-focused .ant-input-suffix {
-  color: #3b82f6 !important;
-}
-
-/* Form item label */
-.ant-form-item-label > label {
-  color: #374151 !important;
-  font-weight: 500 !important;
-  font-size: 14px !important;
-}
-
-/* Form error message */
-.ant-form-item-explain-error {
-  color: #ef4444 !important;
-  font-size: 12px !important;
-}
-
-/* Button styles */
-.ant-btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  border: none !important;
-  border-radius: 8px !important;
-  height: 48px !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-  transition: all 0.3s ease !important;
-}
-
-.ant-btn-primary:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
-}
-
-.ant-btn-default {
-  border: 2px solid #e5e7eb !important;
-  border-radius: 8px !important;
-  height: 48px !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  color: #6b7280 !important;
-  background: transparent !important;
-  transition: all 0.3s ease !important;
-}
-
-.ant-btn-default:hover {
-  border-color: #3b82f6 !important;
-  color: #3b82f6 !important;
-}
-
-/* Card styles */
-.ant-card {
-  border-radius: 16px !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-  border: none !important;
-}
-
-/* Alert styles */
-.ant-alert {
-  border-radius: 8px !important;
-  border: none !important;
-}
-
-.ant-alert-error {
-  background: #fef2f2 !important;
-  color: #dc2626 !important;
-}
-
-.ant-alert-success {
-  background: #f0fdf4 !important;
-  color: #16a34a !important;
-}
-
-/* Force override Ant Design default styles */
-.ant-input-affix-wrapper,
-.ant-input-affix-wrapper:hover,
-.ant-input-affix-wrapper:focus,
-.ant-input-affix-wrapper-focused,
-.ant-input-affix-wrapper-lg,
-.ant-input-affix-wrapper-lg:hover,
-.ant-input-affix-wrapper-lg:focus,
-.ant-input-affix-wrapper-lg.ant-input-affix-wrapper-focused {
-  border: none !important;
-  border-bottom: 2px solid #e5e7eb !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-/* Special handling for Input.Password component */
-.ant-input-password,
-.ant-input-password:hover,
-.ant-input-password:focus,
-.ant-input-password.ant-input-password-focused {
-  border: none !important;
-  border-bottom: 2px solid #e5e7eb !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-/* Remove all possible internal borders and shadows */
-.ant-input-affix-wrapper .ant-input,
-.ant-input-password .ant-input {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-/* Ensure password box bottom border is not covered */
-.ant-input-password:hover,
-.ant-input-password:focus,
-.ant-input-password.ant-input-password-focused {
-  border-bottom: 2px solid #3b82f6 !important;
-}
-
-/* Ensure input content is vertically centered */
-.ant-input-affix-wrapper,
-.ant-input-password {
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* Ensure input content is aligned in input state */
-.ant-input-affix-wrapper .ant-input,
-.ant-input-password .ant-input {
-  flex: 1 !important;
-}
-
-/* Ensure icons and text are on the same horizontal line */
-.ant-input-prefix,
-.ant-input-suffix {
-  display: flex !important;
-  align-items: center !important;
-}
-
-.ant-input-prefix .anticon,
-.ant-input-suffix .anticon {
-  font-size: 16px !important;
-}
-
-/* Special handling for Ant Design outline styles */
-.ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
-.ant-input-affix-wrapper:focus,
-.ant-input-affix-wrapper-focused,
-.ant-input:hover,
-.ant-input:focus,
-.ant-input-password:hover,
-.ant-input-password:focus,
-.ant-input-password-focused {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Ensure SVG icons are correctly aligned */
-.ant-input-prefix svg,
-.ant-input-suffix svg {
-  vertical-align: middle !important;
-}
-
-/* Ensure password box icons display correctly */
-.ant-input-password-icon svg {
-  vertical-align: middle !important;
-}
-
-/* 2. Layout component special optimization */
-.ant-layout {
-  background: #f8fafc !important;
-}
-
-.ant-layout-sider {
-  background: #ffffff !important;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-.ant-layout-content {
-  background: #f8fafc !important;
-  padding: 24px !important;
-}
-
-/* 3. Menu component special optimization */
-.ant-menu {
-  background: transparent !important;
-  border: none !important;
-}
-
-.ant-menu-item {
-  border-radius: 8px !important;
-  margin: 4px 0 !important;
-}
-
-.ant-menu-item-selected {
-  background: #eff6ff !important;
-  color: #3b82f6 !important;
-}
-
-.ant-menu-item:hover {
-  background: #f1f5f9 !important;
-}
-
-/* 4. Card component special optimization */
-.ant-card-head {
-  border-bottom: 1px solid #f1f5f9 !important;
-}
-
-.ant-card-body {
-  padding: 24px !important;
-}
-
-.ant-card-meta-title {
-  color: #1f2937 !important;
-  font-weight: 600 !important;
-}
-
-/* 5. Button component special optimization */
-.ant-btn {
-  border-radius: 6px !important;
-  font-weight: 500 !important;
-}
-
-.ant-btn-sm {
-  height: 32px !important;
-  padding: 0 12px !important;
-  font-size: 14px !important;
-}
-
-/* 6. Table component special optimization */
-.ant-table {
-  background: #ffffff !important;
-  border-radius: 8px !important;
-}
-
-.ant-table-thead > tr > th {
-  background: #f8fafc !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  color: #374151 !important;
-  font-weight: 600 !important;
-}
-
-.ant-table-tbody > tr:hover > td {
-  background: #f8fafc !important;
-}
-
-/* 7. Form component special optimization */
-.ant-form-item {
-  margin-bottom: 20px !important;
-}
-
-.ant-form-item-label {
-  padding-bottom: 4px !important;
-}
-
-.ant-form-item-label > label {
-  color: #374151 !important;
-  font-weight: 500 !important;
-}
-
-.ant-form-item-explain {
-  margin-top: 4px !important;
-}
-
-/* 8. Tag component special optimization */
-.ant-tag {
-  border-radius: 4px !important;
-}
-
-/* 9. Statistics component special optimization */
-.ant-statistic-title {
-  color: #6b7280 !important;
-  font-size: 14px !important;
-}
-
-.ant-statistic-content {
-  color: #1f2937 !important;
-  font-weight: 600 !important;
-}
-
-/* 10. Avatar component special optimization */
-.ant-avatar {
-  background: #3b82f6 !important;
-}
-
-/* 11. Badge component special optimization */
-.ant-badge-count {
-  background: #ef4444 !important;
-}
-
-/* 12. Dropdown special optimization */
-.ant-dropdown {
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-.ant-dropdown-menu {
-  border-radius: 8px !important;
-  padding: 8px !important;
-}
-
-.ant-dropdown-menu-item {
-  border-radius: 4px !important;
-}
-
-/* 13. Modal special optimization */
-.ant-modal {
-  border-radius: 12px !important;
-}
-
-.ant-modal-header {
-  border-bottom: 1px solid #f1f5f9 !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-.ant-modal-body {
-  padding: 24px !important;
-}
-
-.ant-modal-footer {
-  border-top: 1px solid #f1f5f9 !important;
-  border-radius: 0 0 12px 12px !important;
-}
-
-.ant-modal-close {
-  color: #6b7280 !important;
-}
-
-.ant-modal-close:hover {
-  color: #374151 !important;
-}
-
-/* 14. Pagination component special optimization */
-.ant-pagination {
-  text-align: center !important;
-}
-
-.ant-pagination-item {
-  border-radius: 4px !important;
-}
-
-.ant-pagination-item-active {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-.ant-pagination-item-active a {
-  color: #ffffff !important;
-}
-
-/* 15. Progress bar special optimization */
-.ant-progress-bg {
-  background: #3b82f6 !important;
-}
-
-/* 16. Timeline special optimization */
-.ant-timeline-item-head {
-  background: #3b82f6 !important;
-}
-
-/* 17. Alert component special optimization */
-.ant-alert {
-  border-radius: 6px !important;
-}
-
-/* 18. Message component special optimization */
-.ant-message {
-  top: 24px !important;
-}
-
-/* 19. Notification component special optimization */
-.ant-notification {
-  border-radius: 8px !important;
-}
-
-/* 20. Tooltip special optimization */
-.ant-tooltip {
-  border-radius: 4px !important;
-}
-
-/* 21. Selector special optimization */
-.ant-select {
-  border-radius: 6px !important;
-}
-
-.ant-select-selector {
-  border: 1px solid #d1d5db !important;
-  border-radius: 6px !important;
-}
-
-.ant-select-focused .ant-select-selector {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-}
-
-/* 22. Date picker special optimization */
-.ant-picker {
-  border: 1px solid #d1d5db !important;
-  border-radius: 6px !important;
-}
-
-.ant-picker:hover,
-.ant-picker-focused {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-}
-
-/* 23. Tree component special optimization */
-.ant-tree {
-  background: transparent !important;
-}
-
-.ant-tree-node-content-wrapper {
-  border-radius: 4px !important;
-}
-
-.ant-tree-node-content-wrapper:hover {
-  background: #f1f5f9 !important;
-}
-
-.ant-tree-node-selected .ant-tree-node-content-wrapper {
-  background: #eff6ff !important;
-}
-
-/* 24. Steps special optimization */
-.ant-steps-item-process .ant-steps-item-icon {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
-}
-
-.ant-steps-item-finish .ant-steps-item-icon {
-  background: #10b981 !important;
-  border-color: #10b981 !important;
-}
-
-/* 25. Rating component special optimization */
-.ant-rate-star {
-  color: #fbbf24 !important;
-}
-
-/* 26. Slider component special optimization */
-.ant-slider-rail {
-  background: #e5e7eb !important;
-}
-
-.ant-slider-track {
-  background: #3b82f6 !important;
-}
-
-.ant-slider-handle {
-  border: 2px solid #3b82f6 !important;
-}
-
-.ant-slider-handle:hover,
-.ant-slider-handle:focus {
-  border-color: #1d4ed8 !important;
-  box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.1) !important;
-}
-
-/* 27. Switch component special optimization */
-.ant-switch {
-  background: #d1d5db !important;
-}
-
-.ant-switch-checked {
-  background: #3b82f6 !important;
-}
-
-/* ===== Responsive Design ===== */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 12px;
+/* 导入设计系统样式 */
+@import '../components/ui/animations.css';
+@import '../components/ui/typography.css';
+
+/* 设计系统 - 全局CSS变量 */
+:root {
+  /* 主色调 */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* 中性色 */
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+
+  /* 语义色 */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* 字体 */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+
+  /* 间距 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+
+  /* 圆角 */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* 动画 */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --easing-ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --easing-ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --easing-ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* 基础样式重置 */
+@layer base {
+  * {
+    @apply border-border;
   }
   
-  .ant-layout-content {
-    padding: 16px !important;
+  html {
+    @apply scroll-smooth;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
   
-  .ant-card-body {
-    padding: 16px !important;
-  }
-}
-
-/* ===== Dark Mode Support ===== */
-@media (prefers-color-scheme: dark) {
   body {
-    background: #1f2937;
-    color: #f9fafb;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+
+  /* 标题层次 */
+  h1 {
+    @apply text-4xl font-bold tracking-tight text-neutral-900;
+    line-height: 1.2;
   }
   
-  .ant-layout {
-    background: #1f2937 !important;
+  h2 {
+    @apply text-3xl font-bold tracking-tight text-neutral-900;
+    line-height: 1.3;
   }
   
-  .ant-layout-sider {
-    background: #374151 !important;
+  h3 {
+    @apply text-2xl font-semibold tracking-tight text-neutral-900;
+    line-height: 1.4;
   }
   
-  .ant-card {
-    background: #374151 !important;
-    color: #f9fafb !important;
+  h4 {
+    @apply text-xl font-semibold text-neutral-900;
+    line-height: 1.5;
+  }
+  
+  h5 {
+    @apply text-lg font-medium text-neutral-900;
+    line-height: 1.5;
+  }
+  
+  h6 {
+    @apply text-base font-medium text-neutral-900;
+    line-height: 1.5;
+  }
+
+  /* 段落和文本 */
+  p {
+    @apply text-neutral-700 leading-relaxed;
+  }
+  
+  .text-muted {
+    @apply text-neutral-500;
+  }
+  
+  .text-subtle {
+    @apply text-neutral-400;
+  }
+
+  /* 链接样式 */
+  a {
+    @apply text-primary-600 hover:text-primary-700 transition-colors duration-200;
+  }
+  
+  a:focus {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 rounded-sm;
+  }
+
+  /* 表单元素 */
+  input, textarea, select {
+    @apply transition-colors duration-200;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    @apply outline-none ring-2 ring-primary-500 border-primary-500;
+  }
+
+  /* 按钮基础样式 */
+  button {
+    @apply transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
 }
 
-/* ===== Animation Effects ===== */
-.fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+/* 组件样式 */
+@layer components {
+  /* 卡片组件 */
+  .card {
+    @apply bg-white rounded-lg border border-neutral-200 shadow-sm;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-md hover:border-neutral-300 transition-all duration-200;
+  }
+
+  /* 按钮变体 */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus:ring-neutral-500;
+  }
+  
+  .btn-outline {
+    @apply border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 focus:ring-neutral-500;
+  }
+  
+  .btn-ghost {
+    @apply text-neutral-700 hover:bg-neutral-100 focus:ring-neutral-500;
+  }
+  
+  .btn-sm {
+    @apply h-8 px-3 text-xs;
+  }
+  
+  .btn-md {
+    @apply h-10 px-4 py-2;
+  }
+  
+  .btn-lg {
+    @apply h-12 px-6 text-base;
+  }
+
+  /* 输入框样式 */
+  .input {
+    @apply flex h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .input-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+  }
+  
+  .input-success {
+    @apply border-green-500 focus:border-green-500 focus:ring-green-500;
+  }
+
+  /* 徽章样式 */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-primary-100 text-primary-800;
+  }
+  
+  .badge-secondary {
+    @apply bg-neutral-100 text-neutral-800;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .badge-error {
+    @apply bg-red-100 text-red-800;
+  }
+
+  /* 状态指示器 */
+  .status-dot {
+    @apply inline-block w-2 h-2 rounded-full;
+  }
+  
+  .status-online {
+    @apply bg-green-500;
+  }
+  
+  .status-offline {
+    @apply bg-neutral-400;
+  }
+  
+  .status-busy {
+    @apply bg-red-500;
+  }
+  
+  .status-away {
+    @apply bg-yellow-500;
+  }
+
+  /* 加载动画 */
+  .spinner {
+    @apply animate-spin rounded-full border-2 border-neutral-200 border-t-primary-600;
+  }
+
+  /* 渐变背景 */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary-600 to-primary-700;
+  }
+  
+  .gradient-secondary {
+    @apply bg-gradient-to-r from-neutral-600 to-neutral-700;
+  }
+
+  /* 毛玻璃效果 */
+  .glass {
+    @apply backdrop-blur-sm bg-white/80 border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply backdrop-blur-sm bg-neutral-900/80 border border-white/10;
+  }
+
+  /* 分隔线 */
+  .divider {
+    @apply border-t border-neutral-200;
+  }
+  
+  .divider-vertical {
+    @apply border-l border-neutral-200;
+  }
+
+  /* 滚动条样式 */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(156 163 175) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128);
+  }
 }
 
+/* 工具类 */
+@layer utilities {
+  /* 文本截断 */
+  .text-truncate {
+    @apply truncate;
+  }
+  
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* 居中布局 */
+  .center {
+    @apply flex items-center justify-center;
+  }
+  
+  .center-x {
+    @apply flex justify-center;
+  }
+  
+  .center-y {
+    @apply flex items-center;
+  }
+
+  /* 响应式隐藏 */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 动画工具类 */
+  .animate-fade-in {
+    animation: fadeIn var(--duration-normal) var(--easing-ease-out);
+  }
+  
+  .animate-slide-up {
+    animation: slideUp var(--duration-normal) var(--easing-ease-out);
+  }
+  
+  .animate-slide-down {
+    animation: slideDown var(--duration-normal) var(--easing-ease-out);
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn var(--duration-fast) var(--easing-ease-out);
+  }
+
+  /* 交互状态 */
+  .interactive {
+    @apply transition-all duration-200 hover:scale-105 active:scale-95;
+  }
+  
+  .interactive-subtle {
+    @apply transition-all duration-200 hover:bg-neutral-50 active:bg-neutral-100;
+  }
+}
+
+/* 动画关键帧 */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -706,81 +409,84 @@ input, textarea, select {
   }
 }
 
-/* ===== Scrollbar Optimization ===== */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* ===== Special System Optimization ===== */
-
-/* 1. Print style optimization */
+/* 打印样式 */
 @media print {
-  .ant-layout-sider,
-  .ant-menu,
-  .ant-btn,
   .no-print {
     display: none !important;
   }
   
-  .ant-layout-content {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-}
-
-/* 2. High contrast mode support */
-@media (prefers-contrast: high) {
-  .ant-btn-primary {
-    background: #000000 !important;
-    color: #ffffff !important;
+  .print-only {
+    display: block !important;
   }
   
-  .ant-input,
-  .ant-select-selector {
-    border: 2px solid #000000 !important;
+  * {
+    color-adjust: exact;
   }
 }
 
-/* 3. Reduced animation mode support */
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-neutral-50: #111827;
+    --color-neutral-100: #1f2937;
+    --color-neutral-200: #374151;
+    --color-neutral-300: #4b5563;
+    --color-neutral-400: #6b7280;
+    --color-neutral-500: #9ca3af;
+    --color-neutral-600: #d1d5db;
+    --color-neutral-700: #e5e7eb;
+    --color-neutral-800: #f3f4f6;
+    --color-neutral-900: #f9fafb;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary-600: #1d4ed8;
+    --color-primary-700: #1e3a8a;
+  }
+  
+  .btn-primary {
+    @apply border-2 border-primary-800;
+  }
+  
+  .input {
+    @apply border-2;
+  }
+}
+
+/* 减少动画模式支持 */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-/* 4. Focus visibility optimization */
-.ant-btn:focus,
-.ant-input:focus,
-.ant-select:focus {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-}
-
-/* 5. Touch device optimization */
-@media (hover: none) and (pointer: coarse) {
-  .ant-btn {
-    min-height: 44px !important;
-  }
-  
-  .ant-menu-item {
-    min-height: 44px !important;
+    scroll-behavior: auto !important;
   }
 }
 

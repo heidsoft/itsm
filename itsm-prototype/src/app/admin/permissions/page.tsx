@@ -1,17 +1,9 @@
 "use client";
 
-import {
-  CheckCircle,
-  Search,
-  Settings,
-  Key,
-  Tag,
-  Shield,
-  RefreshCw,
+import {RefreshCw,
   Save,
   Globe,
-  BarChart3,
-} from "lucide-react";
+  BarChart3} from 'lucide-react';
 
 import React, { useState } from "react";
 import {
@@ -253,7 +245,7 @@ const PermissionConfiguration = () => {
   });
 
   // 按分类分组模块
-  const modulesByCategory = filteredModules.reduce((acc: any, module) => {
+  const modulesByCategory = filteredModules.reduce((acc: unknown, module) => {
     if (!acc[module.category]) {
       acc[module.category] = [];
     }
@@ -371,7 +363,7 @@ const PermissionConfiguration = () => {
       ),
       key: category.id,
       children:
-        modulesByCategory[category.id]?.map((module: any) => ({
+        modulesByCategory[category.id]?.map((module: unknown) => ({
           title: (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -386,7 +378,7 @@ const PermissionConfiguration = () => {
             </div>
           ),
           key: module.id,
-          children: module.actions.map((action: any) => ({
+          children: module.actions.map((action: unknown) => ({
             title: (
               <div className="flex items-center justify-between w-full">
                 <Tag color={action.color}>{action.name}</Tag>
@@ -441,7 +433,7 @@ const PermissionConfiguration = () => {
             className="enterprise-card"
           >
             <Row gutter={[16, 16]}>
-              {categoryModules.map((module: any) => (
+              {categoryModules.map((module: unknown) => (
                 <Col xs={24} md={12} lg={8} key={module.id}>
                   <Card
                     size="small"
@@ -464,7 +456,7 @@ const PermissionConfiguration = () => {
                       {module.description}
                     </Text>
                     <div className="space-y-2">
-                      {module.actions.map((action: any) => (
+                      {module.actions.map((action: unknown) => (
                         <div
                           key={action.id}
                           className="flex items-center justify-between"

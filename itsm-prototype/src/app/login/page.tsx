@@ -1,594 +1,341 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Shield, 
-  Sparkles, 
-  Zap, 
-  User, 
-  Lock, 
-  Globe, 
-  ArrowRight, 
-  AlertCircle 
-} from 'lucide-react';
-import { 
-  Card, 
-  Form, 
-  Input, 
-  Button, 
-  Typography, 
-  Space, 
-  Alert 
-} from 'antd';
-import { AuthService } from '@/lib/auth/auth-service';
-import { useNotifications } from '@/lib/store/ui-store';
-
-const { Title, Text } = Typography;
+import {Off, ArrowRight, Zap, BarChart3, Globe, Server, Sparkles, AlertCircle } from 'lucide-react';
+import { Icon, commonIcons } from '@/components/ui';
 
 /**
  * 登录页面组件
+ * 提供用户身份验证功能，包含现代化的UI设计和用户体验优化
  */
 export default function LoginPage() {
   const router = useRouter();
-  const { success, error: showError } = useNotifications();
   
-  // 状态管理
-  const [isLoading, setIsLoading] = useState(false);
-  const [showTenantField, setShowTenantField] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    tenantCode: ''
-  });
+  // 表单状态管理
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isFormValid, setIsFormValid] = useState(false);
 
-  // 表单验证
-  const validateForm = () => {
-    if (!formData.username.trim()) {
-      showError('验证失败', '请输入用户名');
-      return false;
+  // 实时表单验证
+  useEffect(() => {
+    setIsFormValid(username.trim().length > 0 && password.length >= 6);
+  }, [username, password]);
+
+  // 密码强度计算
+  const getPasswordStrength = (pwd: string) => {
+    if (pwd.length === 0) return { level: 0, text: '', color: '' };
+    if (pwd.length < 6) return { level: 1, text: '弱', color: 'bg-red-500' };
+    if (pwd.length < 10) return { level: 2, text: '中', color: 'bg-yellow-500' };
+    return { level: 3, text: '强', color: 'bg-green-500' };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+
+  // 模拟认证服务
+  const mockAuthService = {
+    async login(username: string, password: string) {
+      // 模拟网络延迟
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // 模拟认证逻辑
+      if (username === 'admin' && password === 'admin123') {
+        return {
+          success: true,
+          user: { id: 1, username: 'admin', name: '系统管理员' },
+          token: 'mock-jwt-token'
+        };
+      }
+      
+      throw new Error('用户名或密码错误');
     }
-    
-    if (!formData.password) {
-      showError('验证失败', '请输入密码');
-      return false;
-    } else if (formData.password.length < 6) {
-      showError('验证失败', '密码长度至少6位');
-      return false;
-    }
-    
-    return true;
   };
 
   // 处理登录提交
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!username.trim() || !password) {
+      setError('请输入用户名和密码');
       return;
     }
-    
-    setIsLoading(true);
-    setErrorMessage(''); // 清除之前的错误信息
-    
+
+    setLoading(true);
+    setError('');
+
     try {
-      // 构造符合 LoginRequest 接口的参数
-      const loginRequest = {
-        username: formData.username,
-        password: formData.password,
-        remember_me: false // 可以根据需要添加记住我功能
-      };
+      const result = await mockAuthService.login(username, password);
       
-      await AuthService.login(loginRequest);
-      success('登录成功', '欢迎回来！');
-      router.push('/dashboard');
+      if (result.success) {
+        // 存储认证信息
+        localStorage.setItem('auth_token', result.token);
+        localStorage.setItem('user_info', JSON.stringify(result.user));
+        
+        // 跳转到仪表板
+        router.push('/dashboard');
+      }
     } catch (err) {
-      console.error('Login failed:', err);
-      const errorMsg = err instanceof Error ? err.message : '用户名或密码错误';
-      setErrorMessage(errorMsg);
-      showError('登录失败', errorMsg);
+      setError(err instanceof Error ? err.message : '登录失败，请重试');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  // 密码可见性通过按钮内联处理，无需单独函数
+
   return (
-    <div
-      className="login-page"
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #0a0f1c 0%, #1a1f2e 50%, #2d3748 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Advanced background effects */}
-      <div
-        style={{
-          position: "absolute",
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-          background: `
-            radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)
-          `,
-        }}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-slate-100 flex">
+      {/* 左侧品牌区域 */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* 背景装饰 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800"></div>
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* 装饰性几何图形 */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-40 right-20 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-yellow-400/20 rounded-full blur-lg"></div>
+        
+        {/* 主要内容 */}
+        <div className="relative z-10 flex flex-col justify-center px-16 py-12 text-white">
+          {/* Logo和标题 */}
+          <div className="mb-12">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <Server className="w-7 h-7 text-white" />
+              </div>
+              <div className="ml-4">
+                <h1 className="heading-3 text-white">ITSM Pro</h1>
+                  <p className="text-caption text-blue-100">智能IT服务管理平台</p>
+              </div>
+            </div>
+            
+            <h2 className="heading-2 text-white mb-4">
+              现代化的
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                IT服务管理
+              </span>
+            </h2>
+            
+            <p className="body-large text-blue-100 readable-narrow">
+              集成事件管理、问题管理、变更管理和资产管理于一体，
+              <br />
+              为您的企业提供全方位的IT服务支持解决方案。
+            </p>
+          </div>
 
-      {/* Dynamic particle effects */}
-      <div
-        style={{
-          position: "absolute",
-          top: "20%",
-          left: "10%",
-          width: "2px",
-          height: "2px",
-          background: "#3b82f6",
-          borderRadius: "50%",
-          boxShadow: "0 0 10px #3b82f6",
-          animation: "float1 8s ease-in-out infinite",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: "60%",
-          right: "15%",
-          width: "3px",
-          height: "3px",
-          background: "#10b981",
-          borderRadius: "50%",
-          boxShadow: "0 0 15px #10b981",
-          animation: "float2 10s ease-in-out infinite",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: "30%",
-          right: "30%",
-          width: "1px",
-          height: "1px",
-          background: "#8b5cf6",
-          borderRadius: "50%",
-          boxShadow: "0 0 8px #8b5cf6",
-          animation: "float3 12s ease-in-out infinite",
-        }}
-      />
+          {/* 特性标签 */}
+          <div className="flex flex-wrap gap-3 mb-12">
+            {[
+              { icon: Zap, text: '快速响应', desc: '秒级事件处理' },
+              { icon: Shield, text: '安全可靠', desc: '企业级安全' },
+              { icon: BarChart3, text: '数据洞察', desc: '智能分析报告' },
+              { icon: Globe, text: '全球部署', desc: '多地域支持' }
+            ].map((feature, index) => (
+              <div 
+                key={index}
+                className="group bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 hover:bg-white/20 transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <feature.icon className="w-5 h-5 text-yellow-400 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <span className="font-medium text-sm">{feature.text}</span>
+                    <p className="text-xs text-blue-100 opacity-80">{feature.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
 
-      {/* Main content container */}
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "480px",
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
-        {/* Brand area */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "3rem",
-          }}
-        >
-          {/* Main Logo */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "80px",
-              height: "80px",
-              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-              borderRadius: "20px",
-              boxShadow:
-                "0 20px 40px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.1)",
-              marginBottom: "1.5rem",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: "0",
-                left: "0",
-                width: "100%",
-                height: "100%",
-                background:
-                  "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
-                animation: "shimmer 3s ease-in-out infinite",
-              }}
-            />
-            <Shield
-              style={{
-                width: "40px",
-                height: "40px",
-                color: "white",
-                zIndex: 1,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                top: "-3px",
-                right: "-3px",
-                width: "24px",
-                height: "24px",
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 8px rgba(16, 185, 129, 0.3)",
-              }}
-            >
-              <Sparkles
-                style={{
-                  width: "12px",
-                  height: "12px",
-                  color: "white",
-                }}
-              />
+          {/* 统计数据 */}
+          <div className="grid grid-cols-3 gap-8 mb-12">
+            <div className="text-center">
+              <div className="text-3xl font-bold mb-1">99.9%</div>
+              <div className="text-sm text-blue-200">系统可用性</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold mb-1">10k+</div>
+              <div className="text-sm text-blue-200">企业用户</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold mb-1">24/7</div>
+              <div className="text-sm text-blue-200">技术支持</div>
             </div>
           </div>
 
-          {/* Brand title */}
-          <div style={{ marginBottom: "1rem" }}>
-            <Title
-              level={1}
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: "800",
-                color: "#f1f5f9",
-                marginBottom: "0.75rem",
-                margin: 0,
-                background: "linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              ITSM
-            </Title>
-            <Text
-              style={{
-                fontSize: "1.1rem",
-                color: "#94a3b8",
-                fontWeight: "500",
-                display: "block",
-                marginBottom: "1rem",
-              }}
-            >
-              Intelligent Service Management Platform
-            </Text>
+          {/* 底部信息 */}
+          <div className="flex items-center justify-between text-sm text-blue-200">
+            <div className="flex items-center space-x-4">
+              <span>© 2024 ITSM Pro</span>
+              <span>•</span>
+              <span>企业级服务</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-4 h-4" />
+              <span>持续创新</span>
+            </div>
           </div>
-
-          {/* Feature tags */}
-          <Space size="middle" wrap>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "6px 12px",
-                background: "rgba(59, 130, 246, 0.1)",
-                borderRadius: "20px",
-                border: "1px solid rgba(59, 130, 246, 0.2)",
-              }}
-            >
-              <Sparkles size={12} style={{ color: "#3b82f6" }} />
-              <Text style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                Smart Management
-              </Text>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "6px 12px",
-                background: "rgba(16, 185, 129, 0.1)",
-                borderRadius: "20px",
-                border: "1px solid rgba(16, 185, 129, 0.2)",
-              }}
-            >
-              <Zap size={12} style={{ color: "#10b981" }} />
-              <Text style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                Efficient Service
-              </Text>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "6px 12px",
-                background: "rgba(139, 92, 246, 0.1)",
-                borderRadius: "20px",
-                border: "1px solid rgba(139, 92, 246, 0.2)",
-              }}
-            >
-              <Shield size={12} style={{ color: "#8b5cf6" }} />
-              <Text style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                Secure & Reliable
-              </Text>
-            </div>
-          </Space>
         </div>
-
-        {/* Login form */}
-        <Card
-          style={{
-            background: "rgba(30, 41, 59, 0.9)",
-            borderRadius: "24px",
-            boxShadow:
-              "0 32px 64px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.1)",
-            border: "1px solid rgba(59, 130, 246, 0.2)",
-            backdropFilter: "blur(24px)",
-            position: "relative",
-          }}
-          styles={{
-            body: {
-              padding: "2rem",
-            },
-          }}
-        >
-          {/* Form header */}
-          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <Title
-              level={3}
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: "700",
-                color: "#f1f5f9",
-                marginBottom: "0.5rem",
-                margin: 0,
-              }}
-            >
-              System Login
-            </Title>
-            <Text
-              style={{
-                fontSize: "0.9rem",
-                color: "#94a3b8",
-                fontWeight: "500",
-              }}
-            >
-              Please enter your account information
-            </Text>
-          </div>
-
-          {/* Error message */}
-          {errorMessage && (
-            <Alert
-              message={errorMessage}
-              type="error"
-              showIcon
-              icon={<AlertCircle size={16} />}
-              style={{
-                marginBottom: "1.5rem",
-                background: "rgba(239, 68, 68, 0.1)",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
-                borderRadius: "12px",
-              }}
-            />
-          )}
-
-          <Form
-            name="login"
-            onFinish={handleSubmit}
-            layout="vertical"
-            size="large"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "1.5rem",
-            }}
-          >
-            {/* Username input */}
-            <Form.Item
-              name="username"
-              label={
-                <Text
-                  style={{
-                    color: "#cbd5e1",
-                    fontSize: "0.9rem",
-                    fontWeight: "600",
-                  }}
-                >
-                  Username
-                </Text>
-              }
-              rules={[{ required: true, message: "Please enter username" }]}
-              style={{ marginBottom: 0 }}
-            >
-              <Input
-                prefix={
-                  <User
-                    size={18}
-                    style={{
-                      color: "#64748b",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  />
-                }
-                placeholder="Please enter username"
-                autoComplete="username"
-                size="large"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
-            </Form.Item>
-
-            {/* Password input */}
-            <Form.Item
-              name="password"
-              label={
-                <Text
-                  style={{
-                    color: "#cbd5e1",
-                    fontSize: "0.9rem",
-                    fontWeight: "600",
-                  }}
-                >
-                  Password
-                </Text>
-              }
-              rules={[{ required: true, message: "Please enter password" }]}
-              style={{ marginBottom: 0 }}
-            >
-              <Input.Password
-                prefix={
-                  <Lock
-                    size={18}
-                    style={{
-                      color: "#64748b",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  />
-                }
-                placeholder="Please enter password"
-                autoComplete="current-password"
-                size="large"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </Form.Item>
-
-            {/* Tenant code input */}
-            {showTenantField && (
-                <Form.Item
-                  name="tenantCode"
-                  label={
-                    <Text
-                      style={{
-                        color: "#cbd5e1",
-                        fontSize: "0.9rem",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Tenant Code
-                    </Text>
-                  }
-                  style={{ marginBottom: 0 }}
-                >
-                  <Input
-                    prefix={
-                      <Globe
-                        size={18}
-                        style={{
-                          color: "#64748b",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    }
-                    placeholder="Please enter tenant code (optional)"
-                    autoComplete="organization"
-                    size="large"
-                    value={formData.tenantCode}
-                    onChange={(e) => setFormData({ ...formData, tenantCode: e.target.value })}
-                  />
-                </Form.Item>
-              )}
-
-            {/* Login button */}
-            <Form.Item style={{ marginBottom: 0, marginTop: "2rem" }}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                block
-                size="large"
-                icon={<ArrowRight size={20} />}
-                style={{
-                  background:
-                    "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-                  border: "none",
-                  borderRadius: "12px",
-                  height: "52px",
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  boxShadow: "0 8px 24px rgba(59, 130, 246, 0.3)",
-                }}
-              >
-                Login to System
-              </Button>
-            </Form.Item>
-
-            {/* Tenant toggle */}
-            <Form.Item style={{ marginBottom: 0, marginTop: "1.5rem" }}>
-              <Button
-                type="link"
-                onClick={() => setShowTenantField(!showTenantField)}
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "0.9rem",
-                  padding: "6px 12px",
-                  height: "auto",
-                }}
-              >
-                {showTenantField ? "Hide Tenant Settings" : "Show Tenant Settings"}
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
       </div>
 
-      {/* CSS animations */}
-      <style jsx>{`
-        @keyframes float1 {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(180deg);
-          }
-        }
-        @keyframes float2 {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-15px) rotate(-180deg);
-          }
-        }
-        @keyframes float3 {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-25px) rotate(90deg);
-          }
-        }
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
+      {/* 右侧登录表单区域 */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-8">
+        <div className="w-full max-w-md bg-white/80 backdrop-blur-sm border border-gray-200 shadow-xl rounded-2xl p-8">
+          {/* 移动端Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4">
+              <Server className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="heading-4 text-gray-900">ITSM Pro</h1>
+            <p className="text-subtitle text-gray-600">智能IT服务管理平台</p>
+          </div>
+
+          {/* 表单标题 */}
+          <div className="text-center mb-8">
+            <h2 className="heading-3 text-gray-900 mb-2">欢迎回来</h2>
+            <p className="body-medium text-gray-600">请登录您的账户以继续使用服务</p>
+          </div>
+
+          {/* 错误提示 */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <span className="text-red-700 text-sm">{error}</span>
+            </div>
+          )}
+
+          {/* 登录表单 */}
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* 用户名输入 */}
+            <div className="fade-in-up delay-100">
+              <label htmlFor="username" className="block body-small font-medium text-gray-700 mb-2">
+                用户名
+              </label>
+              <div className="relative">
+                    <Icon 
+                      icon={User} 
+                      size="sm" 
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                    />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 animate-fade-in"
+                      placeholder="请输入用户名"
+                      required
+                    />
+                  </div>
+            </div>
+
+            {/* 密码输入 */}
+            <div className="fade-in-up delay-200">
+              <label htmlFor="password" className="block body-small font-medium text-gray-700 mb-2">
+                密码
+              </label>
+              <div className="relative">
+                    <Icon 
+                      icon={Lock} 
+                      size="sm" 
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+                    />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 animate-fade-in"
+                      placeholder="请输入密码"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 animate-icon-hover"
+                    >
+                      <Icon 
+                        icon={showPassword ? EyeOff : Eye} 
+                        size="sm" 
+                      />
+                    </button>
+                  </div>
+              
+              {/* 密码强度指示器 */}
+              {password && (
+                <div className="mt-2 fade-in-up">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-1 progress-animated">
+                      <div 
+                        className={`h-1 rounded-full transition-all duration-500 ${passwordStrength.color}`}
+                        style={{ width: `${(passwordStrength.level / 3) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-muted">
+                      密码强度: {passwordStrength.text}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 登录按钮 */}
+            <div className="fade-in-up delay-300">
+              <button
+                type="submit"
+                disabled={loading || !isFormValid}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 animate-button-hover animate-fade-in flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      登录中...
+                    </>
+                  ) : (
+                    <>
+                      登录
+                      <Icon 
+                        icon={ArrowRight} 
+                        size="sm" 
+                        className="animate-icon-hover" 
+                      />
+                    </>
+                  )}
+                </button>
+            </div>
+          </form>
+
+          {/* 安全提示 */}
+          <div className="mt-6">
+            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg animate-fade-in">
+              <Icon 
+                icon={commonIcons.security} 
+                size="sm" 
+                color="primary" 
+              />
+              <div>
+                <p className="body-small font-medium text-blue-900">安全提示</p>
+                <p className="body-xs text-blue-700">请确保在安全的网络环境下登录，保护您的账户安全。</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 底部链接 */}
+          <div className="mt-8 text-center">
+            <div className="text-sm text-gray-500">
+              遇到问题？
+              <a href="#" className="font-medium text-blue-600 hover:text-blue-500 ml-1">
+                联系技术支持
+              </a>
+            </div>
+            <div className="mt-4 text-xs text-gray-400">
+              © 2024 ITSM Pro. 保留所有权利。
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

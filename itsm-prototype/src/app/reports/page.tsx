@@ -19,20 +19,13 @@ import {
 } from "antd";
 import {
   BarChart3,
-  TrendingUp,
   TrendingDown,
   Download,
-  Eye,
-  Calendar,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
   Heart,
   Star,
   FileText,
   Workflow,
-  Zap,
-} from "lucide-react";
+  Zap} from 'lucide-react';
 import { SmartSLAMonitor } from "../components/SmartSLAMonitor";
 import { PredictiveAnalytics } from "../components/PredictiveAnalytics";
 import { SatisfactionDashboard } from "../components/SatisfactionDashboard";

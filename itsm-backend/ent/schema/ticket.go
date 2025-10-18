@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"entgo.io/ent"
-	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 )
 
 // Ticket holds the schema definition for the Ticket entity.
@@ -50,6 +50,21 @@ func (Ticket) Fields() []ent.Field {
 		field.Int("parent_ticket_id").
 			Comment("父工单ID").
 			Optional(),
+		field.Int("sla_definition_id").
+			Comment("SLA定义ID").
+			Optional(),
+		field.Time("sla_response_deadline").
+			Comment("SLA响应截止时间").
+			Optional(),
+		field.Time("sla_resolution_deadline").
+			Comment("SLA解决截止时间").
+			Optional(),
+		field.Time("first_response_at").
+			Comment("首次响应时间").
+			Optional(),
+		field.Time("resolved_at").
+			Comment("解决时间").
+			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
@@ -84,5 +99,12 @@ func (Ticket) Edges() []ent.Edge {
 			Comment("父工单"),
 		edge.To("workflow_instances", WorkflowInstance.Type).
 			Comment("工作流实例"),
+		edge.From("sla_definition", SLADefinition.Type).
+			Ref("tickets").
+			Field("sla_definition_id").
+			Unique().
+			Comment("SLA定义"),
+		edge.To("sla_violations", SLAViolation.Type).
+			Comment("SLA违规记录"),
 	}
 }

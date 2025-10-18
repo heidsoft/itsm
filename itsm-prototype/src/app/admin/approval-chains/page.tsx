@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Users, Search, Settings, Trash2, XCircle, Edit, Eye, AlertTriangle, Tag, FileText, Pause, Play, Copy, UserCheck, GitBranch, ArrowRight, Activity, Workflow, Timer } from 'lucide-react';
+import {FileText, Pause, Play, Copy, UserCheck, GitBranch, ArrowRight, Activity, Workflow, Timer } from 'lucide-react';
 
 import React, { useState } from "react";
 import {
@@ -317,7 +317,7 @@ const ApprovalChainManagement = () => {
   };
 
   // 处理复制
-  const handleDuplicate = (chain: any) => {
+  const handleDuplicate = (chain: unknown) => {
     const newChain = {
       ...chain,
       id: Math.max(...approvalChains.map((c) => c.id)) + 1,
@@ -338,7 +338,7 @@ const ApprovalChainManagement = () => {
   };
 
   // 查看详情
-  const handleViewDetail = (chain: any) => {
+  const handleViewDetail = (chain: unknown) => {
     setSelectedChain(chain);
     setShowDetailDrawer(true);
   };
@@ -394,7 +394,7 @@ const ApprovalChainManagement = () => {
   };
 
   // 渲染审批节点流程
-  const renderApprovalFlow = (nodes: any[], type: string) => {
+  const renderApprovalFlow = (nodes: unknown[], type: string) => {
     if (!nodes || nodes.length === 0) {
       return <Text type="secondary">暂无审批节点</Text>;
     }
@@ -480,7 +480,7 @@ const ApprovalChainManagement = () => {
       title: "审批链信息",
       dataIndex: "name",
       key: "name",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div>
           <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
@@ -522,7 +522,7 @@ const ApprovalChainManagement = () => {
       dataIndex: "usageCount",
       key: "usageCount",
       align: "center" as const,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div className="text-center">
           <div className="text-lg font-bold text-blue-600">
             {record.usageCount}
@@ -553,7 +553,7 @@ const ApprovalChainManagement = () => {
       dataIndex: "lastModified",
       key: "lastModified",
       align: "center" as const,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div className="text-center">
           <div className="text-sm">{record.lastModified}</div>
           <div className="text-xs text-gray-500">由 {record.createdBy}</div>
@@ -564,7 +564,7 @@ const ApprovalChainManagement = () => {
       title: "操作",
       key: "actions",
       align: "center" as const,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <Space>
           <Tooltip title="查看详情">
             <Button

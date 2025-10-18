@@ -19,15 +19,7 @@ import {
   PlusOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
-import { 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle,
-  Eye,
-  Edit,
-  MoreHorizontal
-} from "lucide-react";
+import {AlertCircle} from 'lucide-react';
 import { IncidentAPI, Incident } from "../lib/incident-api";
 // AppLayout is handled by layout.tsx
 

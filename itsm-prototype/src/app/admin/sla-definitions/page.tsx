@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Search, Trash2, Edit, Eye, TrendingUp, Target, Tag, Timer } from 'lucide-react';
+import {Timer } from 'lucide-react';
 
 import React, { useState } from "react";
 import {
@@ -274,7 +274,7 @@ const SLADefinitionManagement = () => {
       title: "SLA定义",
       dataIndex: "name",
       key: "name",
-      render: (_: any, record: SLADefinition) => (
+      render: (_: unknown, record: SLADefinition) => (
         <div>
           <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
@@ -297,7 +297,7 @@ const SLADefinitionManagement = () => {
     {
       title: "服务指标",
       key: "metrics",
-      render: (_: any, record: SLADefinition) => (
+      render: (_: unknown, record: SLADefinition) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Timer className="w-3 h-3 text-blue-500" />
@@ -355,7 +355,7 @@ const SLADefinitionManagement = () => {
       title: "更新信息",
       key: "updateInfo",
       align: "center" as const,
-      render: (_: any, record: SLADefinition) => (
+      render: (_: unknown, record: SLADefinition) => (
         <div className="text-center">
           <div className="text-sm">{record.updatedAt}</div>
           <div className="text-xs text-gray-500">由 {record.createdBy}</div>
@@ -366,7 +366,7 @@ const SLADefinitionManagement = () => {
       title: "操作",
       key: "actions",
       align: "center" as const,
-      render: (_: any, record: SLADefinition) => (
+      render: (_: unknown, record: SLADefinition) => (
         <Space>
           <Tooltip title="查看详情">
             <Button

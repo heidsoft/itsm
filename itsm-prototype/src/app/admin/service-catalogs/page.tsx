@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Search, Trash2, Edit, Filter, Eye, BookOpen, Tag, MoreHorizontal, RefreshCw, AlertCircle, Download, Upload } from 'lucide-react';
+import {RefreshCw, AlertCircle, Download, Upload } from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {

@@ -1,22 +1,12 @@
 "use client";
 
-import {
-  Plus,
-  CheckCircle,
-  Users,
-  Search,
-  Settings,
-  Trash2,
-  Edit,
-  Eye,
-  Pause,
+import {Pause,
   Play,
   Copy,
   AlertCircle,
   GitBranch,
   BarChart3,
-  Activity,
-} from "lucide-react";
+  Activity} from 'lucide-react';
 import React, { useState } from "react";
 import {
   Card,
@@ -362,7 +352,7 @@ const WorkflowManagement = () => {
       title: "工作流信息",
       dataIndex: "name",
       key: "name",
-      render: (_: any, record: Workflow) => (
+      render: (_: unknown, record: Workflow) => (
         <div>
           <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
@@ -423,7 +413,7 @@ const WorkflowManagement = () => {
       title: "实例统计",
       key: "instances",
       align: "center" as const,
-      render: (_: any, record: Workflow) => (
+      render: (_: unknown, record: Workflow) => (
         <div className="text-center">
           <div className="text-lg font-bold text-blue-600">
             {record.activeInstances}
@@ -439,7 +429,7 @@ const WorkflowManagement = () => {
       title: "效率指标",
       key: "efficiency",
       align: "center" as const,
-      render: (_: any, record: Workflow) => {
+      render: (_: unknown, record: Workflow) => {
         const completionRate =
           record.completedInstances > 0
             ? Math.round(
@@ -477,7 +467,7 @@ const WorkflowManagement = () => {
       title: "操作",
       key: "actions",
       align: "center" as const,
-      render: (_: any, record: Workflow) => (
+      render: (_: unknown, record: Workflow) => (
         <Space>
           <Tooltip title="查看详情">
             <Button

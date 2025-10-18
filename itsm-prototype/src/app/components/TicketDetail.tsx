@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Clock, Trash2, XCircle, Edit, Calendar, User, MessageSquare, FileText, Save, Download, Upload, X, AlertTriangle, Send, History } from "lucide-react";
+import {FileText, Save, Download, Upload, X, Send, History } from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {
@@ -144,7 +144,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   const [comments, setComments] = useState<Comment[]>([]);
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
   const [slaInfo, setSlaInfo] = useState<SLAInfo | null>(null);
-  const [ticketHistory, setTicketHistory] = useState<any[]>([]);
+  const [ticketHistory, setTicketHistory] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 获取工单相关数据

@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp, AlertTriangle, ArrowLeft } from 'lucide-react';
+import {ArrowLeft } from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";

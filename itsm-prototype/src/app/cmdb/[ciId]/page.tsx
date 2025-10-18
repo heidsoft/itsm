@@ -1,7 +1,7 @@
 
 'use client';
 
-import { AlertTriangle, Zap, ArrowLeft, Network, Server, Database, Cloud } from 'lucide-react';
+import {Zap, ArrowLeft, Network, Server, Database, Cloud } from 'lucide-react';
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';

@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  Plus,
-  CheckCircle,
-  Search,
-  XCircle,
-  AlertCircle,
-  BarChart3,
-  MoreHorizontal
-} from "lucide-react";
+import {AlertCircle,
+  BarChart3} from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -282,7 +275,7 @@ export default function SLAPage() {
       title: "SLA信息",
       key: "sla_info",
       width: 300,
-      render: (_: unknown, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div style={{ display: "flex", alignItems: "center" }}>
           <div style={{ width: 40, height: 40, backgroundColor: "#e6f7ff", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
             <BarChart3 size={20} style={{ color: "#1890ff" }} />
@@ -341,7 +334,7 @@ export default function SLAPage() {
       title: "达成率",
       key: "achievement",
       width: 150,
-      render: (_: unknown, record: any) => {
+      render: (_: unknown, record: unknown) => {
         // 简单计算达成率，实际应根据具体数据计算
         const rate = record.status === "优秀" ? 95 : 
                     record.status === "达标" ? 85 : 
@@ -366,7 +359,7 @@ export default function SLAPage() {
       title: "操作",
       key: "actions",
       width: 150,
-      render: (_: unknown, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <Space size="small">
           <Button
             type="text"

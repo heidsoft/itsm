@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, CheckCircle, Clock, Users, Search, Settings, Calendar, MoreHorizontal, Building2, AlertCircle, Edit, Eye, Trash2 } from 'lucide-react';
+import {Building2, AlertCircle} from 'lucide-react';
 
 import React, { useState, useEffect } from "react";
 import {
@@ -54,7 +54,7 @@ const TENANT_TYPES = {
 import { TenantAPI } from "../../lib/tenant-api";
 
 export default function TenantManagement() {
-  const [tenants, setTenants] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
@@ -148,7 +148,7 @@ export default function TenantManagement() {
     {
       title: "租户信息",
       key: "info",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
             <Building2 className="h-5 w-5 text-blue-600" />
@@ -163,7 +163,7 @@ export default function TenantManagement() {
     {
       title: "类型/状态",
       key: "type-status",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div className="space-y-1">
           <Tag color={TENANT_TYPES[record.type]?.color || "default"}>
             {TENANT_TYPES[record.type]?.label || record.type}
@@ -179,7 +179,7 @@ export default function TenantManagement() {
     {
       title: "资源使用",
       key: "usage",
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <div className="space-y-1">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1 text-gray-400" />
@@ -208,7 +208,7 @@ export default function TenantManagement() {
       title: "操作",
       key: "actions",
       width: 120,
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: unknown) => (
         <Space size="small">
           <Tooltip title="编辑">
             <Button
