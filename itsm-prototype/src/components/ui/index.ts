@@ -7,6 +7,7 @@ export { Toast, ToastContainer, ToastProvider, useToast } from './Toast';
 export { LoadingSpinner } from './LoadingSpinner';
 export { Select } from './Select';
 export { Table } from './Table';
+export { Input, PasswordInput, SearchInput, Textarea } from './Input';
 
 // 图标系统
 export { 

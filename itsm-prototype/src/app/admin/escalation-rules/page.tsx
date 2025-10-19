@@ -7,7 +7,8 @@ import {Copy,
   Phone,
   Megaphone,
   Activity,
-  Timer} from 'lucide-react';
+  Timer,
+  CheckCircle} from 'lucide-react';
 
 import React, { useState } from "react";
 import {

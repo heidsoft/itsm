@@ -1,14 +1,27 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { User, AlertCircle, Shield, ArrowRight } from "lucide-react";
-import { Typography, Space, Alert, Divider } from "antd";
-import { Button, Input, PasswordInput } from "@/components/ui";
-import { AuthLayout, AuthCard } from "@/components/auth/AuthLayout";
-import { theme } from "antd";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { User, Lock, Shield, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import {
+  Typography,
+  Space,
+  Alert,
+  Divider,
+  ConfigProvider,
+  Form,
+  Input,
+  Button,
+  Checkbox,
+  Card,
+  Row,
+  Col,
+  Flex,
+} from 'antd';
+import { antdTheme } from '@/app/lib/antd-theme';
+import { colors } from '@/lib/design-system/colors';
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 /**
  * 登录页面组件
@@ -16,198 +29,360 @@ const { Text } = Typography;
  */
 export default function LoginPage() {
   const router = useRouter();
-  const { token } = theme.useToken();
+  const [form] = Form.useForm();
 
-  // 表单状态管理
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  // 状态管理
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [isFormValid, setIsFormValid] = useState(false);
+  const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // 实时表单验证
-  useEffect(() => {
-    setIsFormValid(
-      formData.username.trim().length > 0 && formData.password.length >= 6
-    );
-  }, [formData]);
-
-  // 模拟认证服务
-  const mockAuthService = {
+  // 真实的后端认证服务
+  const authService = {
     async login(username: string, password: string) {
-      // 模拟网络延迟
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      try {
+        const response = await fetch('http://localhost:8090/api/v1/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            password,
+            tenant_code: '', // 可选，暂时为空
+          }),
+        });
 
-      // 模拟认证逻辑
-      if (username === "admin" && password === "admin123") {
-        return {
-          success: true,
-          user: { id: 1, username: "admin", name: "系统管理员" },
-          token: "mock-jwt-token",
-        };
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || '登录失败');
+        }
+
+        const data = await response.json();
+        console.log('后端响应:', data);
+
+        if (data.code === 0 && data.data) {
+          return {
+            success: true,
+            user: data.data.user,
+            token: data.data.access_token,
+            refreshToken: data.data.refresh_token,
+            tenant: data.data.tenant,
+          };
+        } else {
+          throw new Error(data.message || '登录失败');
+        }
+      } catch (error) {
+        console.error('登录请求失败:', error);
+        throw error;
       }
-
-      throw new Error("用户名或密码错误");
     },
   };
 
-  // 处理输入变化
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (error) setError(""); // 清除错误信息
-  };
-
   // 处理登录提交
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.username.trim() || !formData.password) {
-      setError("请输入用户名和密码");
-      return;
-    }
-
+  const handleLogin = async (values: { username: string; password: string }) => {
+    console.log('开始登录:', values);
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      const result = await mockAuthService.login(
-        formData.username,
-        formData.password
-      );
+      const result = await authService.login(values.username, values.password);
+      console.log('登录结果:', result);
 
       if (result.success) {
-        // 存储认证信息
-        localStorage.setItem("auth_token", result.token);
-        localStorage.setItem("user_info", JSON.stringify(result.user));
+        // 存储认证信息到localStorage
+        localStorage.setItem('auth_token', result.token);
+        localStorage.setItem('refresh_token', result.refreshToken);
+        localStorage.setItem('user_info', JSON.stringify(result.user));
+        localStorage.setItem('tenant_info', JSON.stringify(result.tenant));
+
+        // 设置认证cookie（中间件需要）
+        document.cookie = `auth-token=${result.token}; path=/; max-age=900; SameSite=Lax`; // 15分钟
+        document.cookie = `refresh-token=${result.refreshToken}; path=/; max-age=604800; SameSite=Lax`; // 7天
+        console.log('认证信息已存储，准备跳转');
 
         // 跳转到仪表板
-        router.push("/dashboard");
+        router.push('/dashboard');
+        console.log('已执行跳转命令');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败，请重试");
+      console.error('登录错误:', err);
+      setError(err instanceof Error ? err.message : '登录失败，请重试');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthLayout>
-      <AuthCard title="欢迎回来" subtitle="请登录您的账户以继续使用服务">
-        {/* 错误提示 */}
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            icon={<AlertCircle />}
-            style={{ marginBottom: token.marginLG }}
-            showIcon
-          />
-        )}
-
-        {/* 登录表单 */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          {/* 用户名输入 */}
-          <Input
-            label="用户名"
-            placeholder="请输入用户名"
-            prefix={<User size={16} />}
-            value={formData.username}
-            onChange={(e) => handleInputChange("username", e.target.value)}
-            disabled={loading}
-            required
-            size="lg"
-          />
-
-          {/* 密码输入 */}
-          <PasswordInput
-            label="密码"
-            placeholder="请输入密码"
-            value={formData.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            disabled={loading}
-            required
-            size="lg"
-            showStrength={false}
-          />
-
-          {/* 记住我和忘记密码 */}
-          <div className="flex items-center justify-between">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                disabled={loading}
-              />
-              <span
-                className="ml-2 text-sm"
-                style={{ color: token.colorTextSecondary }}
+    <ConfigProvider theme={antdTheme}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: `linear-gradient(135deg, ${colors.functional.background.secondary} 0%, ${colors.primary[50]} 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: '1000px' }}>
+          <Row gutter={[32, 0]} align='middle'>
+            {/* 左侧品牌区域 - 紧凑版 */}
+            <Col xs={0} lg={10}>
+              <div
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primary[600]} 0%, ${colors.primary[700]} 100%)`,
+                  padding: '40px 32px',
+                  borderRadius: '12px',
+                  height: '480px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
               >
-                记住我
-              </span>
-            </label>
-            <button
-              type="button"
-              className="text-sm font-medium hover:underline"
-              style={{ color: token.colorPrimary }}
-              disabled={loading}
-            >
-              忘记密码？
-            </button>
-          </div>
+                {/* 简化的装饰元素 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-30px',
+                    right: '-30px',
+                    width: '120px',
+                    height: '120px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '50%',
+                    filter: 'blur(20px)',
+                  }}
+                />
 
-          {/* 登录按钮 */}
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            disabled={!isFormValid}
-            icon={<ArrowRight size={16} />}
-            iconPosition="right"
-            style={{
-              marginTop: token.marginLG,
-              height: token.controlHeightLG,
-            }}
-          >
-            {loading ? "登录中..." : "登录"}
-          </Button>
-        </form>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <Title
+                    level={1}
+                    style={{
+                      color: 'white',
+                      marginBottom: '12px',
+                      fontSize: '28px',
+                      fontWeight: '700',
+                    }}
+                  >
+                    ITSM Pro
+                  </Title>
+                  <Text
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontSize: '14px',
+                      display: 'block',
+                      marginBottom: '32px',
+                    }}
+                  >
+                    智能IT服务管理平台
+                  </Text>
 
-        {/* 其他登录方式 */}
-        <Divider style={{ margin: `${token.marginLG}px 0` }}>
-          <Text style={{ color: token.colorTextTertiary }}>或</Text>
-        </Divider>
+                  {/* 简化的特性列表 */}
+                  <Space direction='vertical' size='middle' style={{ width: '100%' }}>
+                    <Flex align='center' gap={10}>
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Shield size={16} color='white' />
+                      </div>
+                      <div>
+                        <Text
+                          style={{
+                            color: 'white',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            display: 'block',
+                          }}
+                        >
+                          企业级安全
+                        </Text>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '12px' }}>
+                          多层安全防护
+                        </Text>
+                      </div>
+                    </Flex>
 
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-          <Button
-            variant="outline"
-            size="lg"
-            fullWidth
-            disabled={loading}
-            style={{ height: token.controlHeightLG }}
-          >
-            <Shield size={16} className="mr-2" />
-            SSO 单点登录
-          </Button>
-        </Space>
+                    <Flex align='center' gap={10}>
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <ArrowRight size={16} color='white' />
+                      </div>
+                      <div>
+                        <Text
+                          style={{
+                            color: 'white',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            display: 'block',
+                          }}
+                        >
+                          智能自动化
+                        </Text>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '12px' }}>
+                          AI驱动流程
+                        </Text>
+                      </div>
+                    </Flex>
+                  </Space>
+                </div>
+              </div>
+            </Col>
 
-        {/* 底部链接 */}
-        <div className="text-center mt-6">
-          <Text style={{ color: token.colorTextTertiary }}>
-            还没有账户？{" "}
-            <button
-              type="button"
-              className="font-medium hover:underline"
-              style={{ color: token.colorPrimary }}
-            >
-              立即注册
-            </button>
-          </Text>
+            {/* 右侧登录表单 - 紧凑版 */}
+            <Col xs={24} lg={14}>
+              <Card
+                style={{
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                  border: 'none',
+                }}
+                styles={{ body: { padding: '40px' } }}
+              >
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <Title
+                    level={2}
+                    style={{
+                      marginBottom: '8px',
+                      color: colors.functional.text.primary,
+                      fontSize: '24px',
+                    }}
+                  >
+                    欢迎回来
+                  </Title>
+                  <Text style={{ color: colors.functional.text.secondary, fontSize: '14px' }}>
+                    请登录您的账户以继续使用服务
+                  </Text>
+                </div>
+
+                {/* 错误提示 */}
+                {error && (
+                  <Alert message={error} type='error' style={{ marginBottom: '20px' }} showIcon />
+                )}
+
+                {/* 登录表单 */}
+                <Form form={form} onFinish={handleLogin} layout='vertical' size='middle'>
+                  <Form.Item
+                    name='username'
+                    label='用户名'
+                    rules={[
+                      { required: true, message: '请输入用户名' },
+                      { min: 3, message: '用户名至少3个字符' },
+                    ]}
+                  >
+                    <Input
+                      prefix={<User size={14} style={{ color: colors.functional.text.tertiary }} />}
+                      placeholder='请输入用户名'
+                      disabled={loading}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name='password'
+                    label='密码'
+                    rules={[
+                      { required: true, message: '请输入密码' },
+                      { min: 6, message: '密码至少6个字符' },
+                    ]}
+                  >
+                    <Input.Password
+                      prefix={<Lock size={14} style={{ color: colors.functional.text.tertiary }} />}
+                      placeholder='请输入密码'
+                      disabled={loading}
+                    />
+                  </Form.Item>
+
+                  <Form.Item style={{ marginBottom: '20px' }}>
+                    <Flex justify='space-between' align='center'>
+                      <Checkbox
+                        checked={rememberMe}
+                        onChange={e => setRememberMe(e.target.checked)}
+                        disabled={loading}
+                      >
+                        记住我
+                      </Checkbox>
+                      <Button
+                        type='link'
+                        style={{ padding: 0, height: 'auto', fontSize: '12px' }}
+                        disabled={loading}
+                      >
+                        忘记密码？
+                      </Button>
+                    </Flex>
+                  </Form.Item>
+
+                  <Form.Item>
+                    <Button
+                      type='primary'
+                      htmlType='submit'
+                      loading={loading}
+                      size='large'
+                      style={{
+                        width: '100%',
+                        height: '40px',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                      }}
+                      icon={<ArrowRight size={14} />}
+                    >
+                      {loading ? '登录中...' : '登录'}
+                    </Button>
+                  </Form.Item>
+                </Form>
+
+                {/* 其他登录方式 */}
+                <Divider style={{ margin: '20px 0' }}>
+                  <Text style={{ color: colors.functional.text.tertiary, fontSize: '12px' }}>
+                    或
+                  </Text>
+                </Divider>
+
+                <Button
+                  size='middle'
+                  style={{
+                    width: '100%',
+                    height: '40px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                  }}
+                  disabled={loading}
+                  icon={<Shield size={14} />}
+                >
+                  SSO 单点登录
+                </Button>
+
+                {/* 底部链接 */}
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                  <Text style={{ color: colors.functional.text.tertiary, fontSize: '12px' }}>
+                    还没有账户？{' '}
+                    <Button type='link' style={{ padding: 0, height: 'auto', fontSize: '12px' }}>
+                      立即注册
+                    </Button>
+                  </Text>
+                </div>
+              </Card>
+            </Col>
+          </Row>
         </div>
-      </AuthCard>
-    </AuthLayout>
+      </div>
+    </ConfigProvider>
   );
 }
