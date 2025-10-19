@@ -9,7 +9,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
-	"itsm-backend/ent/notification"
 
 	"go.uber.org/zap"
 )
@@ -40,15 +39,16 @@ type EmailChannel struct {
 	smtpUsername string
 	smtpPassword string
 	fromEmail    string
+	logger       *zap.SugaredLogger
 }
 
 func (c *EmailChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending email alert", "alert_id", alert.ID, "recipients", alert.Recipients)
-	
+
 	// 这里应该实现真实的邮件发送逻辑
 	// 模拟邮件发送
 	time.Sleep(100 * time.Millisecond)
-	
+
 	c.logger.Infow("Email alert sent successfully", "alert_id", alert.ID)
 	return nil
 }
@@ -66,15 +66,16 @@ type SMSChannel struct {
 	apiKey    string
 	apiSecret string
 	signName  string
+	logger    *zap.SugaredLogger
 }
 
 func (c *SMSChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending SMS alert", "alert_id", alert.ID, "recipients", alert.Recipients)
-	
+
 	// 这里应该实现真实的短信发送逻辑
 	// 模拟短信发送
 	time.Sleep(200 * time.Millisecond)
-	
+
 	c.logger.Infow("SMS alert sent successfully", "alert_id", alert.ID)
 	return nil
 }
@@ -91,15 +92,16 @@ func (c *SMSChannel) IsEnabled() bool {
 type SlackChannel struct {
 	webhookURL string
 	channel    string
+	logger     *zap.SugaredLogger
 }
 
 func (c *SlackChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending Slack alert", "alert_id", alert.ID, "channel", c.channel)
-	
+
 	// 这里应该实现真实的Slack发送逻辑
 	// 模拟Slack发送
 	time.Sleep(150 * time.Millisecond)
-	
+
 	c.logger.Infow("Slack alert sent successfully", "alert_id", alert.ID)
 	return nil
 }
@@ -114,18 +116,19 @@ func (c *SlackChannel) IsEnabled() bool {
 
 // WebhookChannel Webhook告警渠道
 type WebhookChannel struct {
-	url    string
-	method string
+	url     string
+	method  string
 	headers map[string]string
+	logger  *zap.SugaredLogger
 }
 
 func (c *WebhookChannel) Send(ctx context.Context, alert *dto.IncidentAlertResponse) error {
 	c.logger.Infow("Sending webhook alert", "alert_id", alert.ID, "url", c.url)
-	
+
 	// 这里应该实现真实的Webhook发送逻辑
 	// 模拟Webhook发送
 	time.Sleep(100 * time.Millisecond)
-	
+
 	c.logger.Infow("Webhook alert sent successfully", "alert_id", alert.ID)
 	return nil
 }
@@ -176,7 +179,7 @@ func (s *IncidentAlertingService) sendAlertNotifications(ctx context.Context, al
 
 	// 获取告警渠道
 	channels := s.getAlertChannels(alert.Channels)
-	
+
 	// 转换为响应格式
 	alertResponse := s.toIncidentAlertResponse(alert)
 
@@ -189,8 +192,8 @@ func (s *IncidentAlertingService) sendAlertNotifications(ctx context.Context, al
 
 		err := channel.Send(ctx, alertResponse)
 		if err != nil {
-			s.logger.Errorw("Failed to send alert notification", 
-				"error", err, 
+			s.logger.Errorw("Failed to send alert notification",
+				"error", err,
 				"channel", channel.GetName(),
 				"alert_id", alert.ID)
 		}
@@ -230,7 +233,7 @@ func (s *IncidentAlertingService) getAlertChannels(channelNames []string) []Aler
 				url:    "https://monitoring.company.com/webhook",
 				method: "POST",
 				headers: map[string]string{
-					"Content-Type": "application/json",
+					"Content-Type":  "application/json",
 					"Authorization": "Bearer webhook_token",
 				},
 			})
@@ -246,15 +249,7 @@ func (s *IncidentAlertingService) createSystemNotification(ctx context.Context, 
 		SetTitle(alert.AlertName).
 		SetMessage(alert.Message).
 		SetType("incident_alert").
-		SetPriority(alert.Severity).
-		SetStatus("sent").
-		SetRecipients(alert.Recipients).
-		SetChannels(alert.Channels).
-		SetMetadata(map[string]interface{}{
-			"incident_id": alert.IncidentID,
-			"alert_id":    alert.ID,
-			"alert_type":  alert.AlertType,
-		}).
+		SetUserID(1). // 默认用户ID，实际应该从上下文获取
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
@@ -320,9 +315,9 @@ func (s *IncidentAlertingService) ResolveAlert(ctx context.Context, alertID int,
 // createAlertEvent 创建告警活动记录
 func (s *IncidentAlertingService) createAlertEvent(ctx context.Context, alert *ent.IncidentAlert, eventType, description string, tenantID int) {
 	// 这里应该创建告警事件记录，简化实现
-	s.logger.Infow("Alert event created", 
-		"alert_id", alert.ID, 
-		"event_type", eventType, 
+	s.logger.Infow("Alert event created",
+		"alert_id", alert.ID,
+		"event_type", eventType,
 		"description", description)
 }
 
@@ -501,8 +496,8 @@ func (s *IncidentAlertingService) ProcessEscalationAlerts(ctx context.Context, i
 		Channels:   channels,
 		Recipients: recipients,
 		Metadata: map[string]interface{}{
-			"escalation_level": escalationLevel,
-			"incident_title":   incidentEntity.Title,
+			"escalation_level":  escalationLevel,
+			"incident_title":    incidentEntity.Title,
 			"incident_severity": incidentEntity.Severity,
 		},
 	}, tenantID)
@@ -526,7 +521,7 @@ func (s *IncidentAlertingService) ProcessThresholdAlerts(ctx context.Context, me
 
 	// 创建阈值告警
 	alertMessage := fmt.Sprintf("指标 %s 当前值 %.2f 超过阈值 %.2f", metricType, metricValue, threshold)
-	
+
 	_, err := s.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
 		IncidentID: 0, // 阈值告警可能不关联特定事件
 		AlertType:  "threshold",
@@ -536,7 +531,7 @@ func (s *IncidentAlertingService) ProcessThresholdAlerts(ctx context.Context, me
 		Channels:   []string{"email", "slack"},
 		Recipients: []string{"monitoring@company.com", "team@company.com"},
 		Metadata: map[string]interface{}{
-			"metric_type": metricType,
+			"metric_type":  metricType,
 			"metric_value": metricValue,
 			"threshold":    threshold,
 			"exceeded_by":  metricValue - threshold,
@@ -603,8 +598,8 @@ func (s *IncidentAlertingService) ProcessSLAViolationAlerts(ctx context.Context,
 		Channels:   channels,
 		Recipients: recipients,
 		Metadata: map[string]interface{}{
-			"violation_type": violationType,
-			"incident_title": incidentEntity.Title,
+			"violation_type":    violationType,
+			"incident_title":    incidentEntity.Title,
 			"incident_priority": incidentEntity.Priority,
 		},
 	}, tenantID)
@@ -630,12 +625,12 @@ func (s *IncidentAlertingService) toIncidentAlertResponse(alert *ent.IncidentAle
 		Channels:       alert.Channels,
 		Recipients:     alert.Recipients,
 		TriggeredAt:    alert.TriggeredAt,
-		AcknowledgedAt: alert.AcknowledgedAt,
-		ResolvedAt:     alert.ResolvedAt,
-		AcknowledgedBy: alert.AcknowledgedBy,
+		AcknowledgedAt: &alert.AcknowledgedAt,
+		ResolvedAt:     &alert.ResolvedAt,
+		AcknowledgedBy: &alert.AcknowledgedBy,
 		Metadata:       alert.Metadata,
 		TenantID:       alert.TenantID,
-		CreatedAt:     alert.CreatedAt,
-		UpdatedAt:     alert.UpdatedAt,
+		CreatedAt:      alert.CreatedAt,
+		UpdatedAt:      alert.UpdatedAt,
 	}
 }

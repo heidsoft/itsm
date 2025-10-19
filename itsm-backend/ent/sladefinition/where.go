@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -484,6 +485,26 @@ func BusinessHoursNotNil() predicate.SLADefinition {
 	return predicate.SLADefinition(sql.FieldNotNull(FieldBusinessHours))
 }
 
+// EscalationRulesIsNil applies the IsNil predicate on the "escalation_rules" field.
+func EscalationRulesIsNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIsNull(FieldEscalationRules))
+}
+
+// EscalationRulesNotNil applies the NotNil predicate on the "escalation_rules" field.
+func EscalationRulesNotNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotNull(FieldEscalationRules))
+}
+
+// ConditionsIsNil applies the IsNil predicate on the "conditions" field.
+func ConditionsIsNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldIsNull(FieldConditions))
+}
+
+// ConditionsNotNil applies the NotNil predicate on the "conditions" field.
+func ConditionsNotNil() predicate.SLADefinition {
+	return predicate.SLADefinition(sql.FieldNotNull(FieldConditions))
+}
+
 // IsActiveEQ applies the EQ predicate on the "is_active" field.
 func IsActiveEQ(v bool) predicate.SLADefinition {
 	return predicate.SLADefinition(sql.FieldEQ(FieldIsActive, v))
@@ -612,6 +633,75 @@ func UpdatedAtLT(v time.Time) predicate.SLADefinition {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.SLADefinition {
 	return predicate.SLADefinition(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasViolations applies the HasEdge predicate on the "violations" edge.
+func HasViolations() predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ViolationsTable, ViolationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasViolationsWith applies the HasEdge predicate on the "violations" edge with a given conditions (other predicates).
+func HasViolationsWith(preds ...predicate.SLAViolation) predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := newViolationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMetrics applies the HasEdge predicate on the "metrics" edge.
+func HasMetrics() predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MetricsTable, MetricsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMetricsWith applies the HasEdge predicate on the "metrics" edge with a given conditions (other predicates).
+func HasMetricsWith(preds ...predicate.SLAMetric) predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := newMetricsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTickets applies the HasEdge predicate on the "tickets" edge.
+func HasTickets() predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketsWith applies the HasEdge predicate on the "tickets" edge with a given conditions (other predicates).
+func HasTicketsWith(preds ...predicate.Ticket) predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := newTicketsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

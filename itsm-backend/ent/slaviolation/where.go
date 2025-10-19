@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -79,6 +80,26 @@ func Description(v string) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldDescription, v))
 }
 
+// Severity applies equality check predicate on the "severity" field. It's identical to SeverityEQ.
+func Severity(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldSeverity, v))
+}
+
+// IsResolved applies equality check predicate on the "is_resolved" field. It's identical to IsResolvedEQ.
+func IsResolved(v bool) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldIsResolved, v))
+}
+
+// ResolvedAt applies equality check predicate on the "resolved_at" field. It's identical to ResolvedAtEQ.
+func ResolvedAt(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldResolvedAt, v))
+}
+
+// ResolutionNotes applies equality check predicate on the "resolution_notes" field. It's identical to ResolutionNotesEQ.
+func ResolutionNotes(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldResolutionNotes, v))
+}
+
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldTenantID, v))
@@ -114,26 +135,6 @@ func SLADefinitionIDNotIn(vs ...int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldNotIn(FieldSLADefinitionID, vs...))
 }
 
-// SLADefinitionIDGT applies the GT predicate on the "sla_definition_id" field.
-func SLADefinitionIDGT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldSLADefinitionID, v))
-}
-
-// SLADefinitionIDGTE applies the GTE predicate on the "sla_definition_id" field.
-func SLADefinitionIDGTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldSLADefinitionID, v))
-}
-
-// SLADefinitionIDLT applies the LT predicate on the "sla_definition_id" field.
-func SLADefinitionIDLT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldSLADefinitionID, v))
-}
-
-// SLADefinitionIDLTE applies the LTE predicate on the "sla_definition_id" field.
-func SLADefinitionIDLTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldSLADefinitionID, v))
-}
-
 // TicketIDEQ applies the EQ predicate on the "ticket_id" field.
 func TicketIDEQ(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldTicketID, v))
@@ -152,26 +153,6 @@ func TicketIDIn(vs ...int) predicate.SLAViolation {
 // TicketIDNotIn applies the NotIn predicate on the "ticket_id" field.
 func TicketIDNotIn(vs ...int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldNotIn(FieldTicketID, vs...))
-}
-
-// TicketIDGT applies the GT predicate on the "ticket_id" field.
-func TicketIDGT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGT(FieldTicketID, v))
-}
-
-// TicketIDGTE applies the GTE predicate on the "ticket_id" field.
-func TicketIDGTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldGTE(FieldTicketID, v))
-}
-
-// TicketIDLT applies the LT predicate on the "ticket_id" field.
-func TicketIDLT(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLT(FieldTicketID, v))
-}
-
-// TicketIDLTE applies the LTE predicate on the "ticket_id" field.
-func TicketIDLTE(v int) predicate.SLAViolation {
-	return predicate.SLAViolation(sql.FieldLTE(FieldTicketID, v))
 }
 
 // ViolationTypeEQ applies the EQ predicate on the "violation_type" field.
@@ -354,6 +335,206 @@ func DescriptionContainsFold(v string) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldContainsFold(FieldDescription, v))
 }
 
+// SeverityEQ applies the EQ predicate on the "severity" field.
+func SeverityEQ(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldSeverity, v))
+}
+
+// SeverityNEQ applies the NEQ predicate on the "severity" field.
+func SeverityNEQ(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldSeverity, v))
+}
+
+// SeverityIn applies the In predicate on the "severity" field.
+func SeverityIn(vs ...string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldSeverity, vs...))
+}
+
+// SeverityNotIn applies the NotIn predicate on the "severity" field.
+func SeverityNotIn(vs ...string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldSeverity, vs...))
+}
+
+// SeverityGT applies the GT predicate on the "severity" field.
+func SeverityGT(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldSeverity, v))
+}
+
+// SeverityGTE applies the GTE predicate on the "severity" field.
+func SeverityGTE(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldSeverity, v))
+}
+
+// SeverityLT applies the LT predicate on the "severity" field.
+func SeverityLT(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldSeverity, v))
+}
+
+// SeverityLTE applies the LTE predicate on the "severity" field.
+func SeverityLTE(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldSeverity, v))
+}
+
+// SeverityContains applies the Contains predicate on the "severity" field.
+func SeverityContains(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldContains(FieldSeverity, v))
+}
+
+// SeverityHasPrefix applies the HasPrefix predicate on the "severity" field.
+func SeverityHasPrefix(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldHasPrefix(FieldSeverity, v))
+}
+
+// SeverityHasSuffix applies the HasSuffix predicate on the "severity" field.
+func SeverityHasSuffix(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldHasSuffix(FieldSeverity, v))
+}
+
+// SeverityEqualFold applies the EqualFold predicate on the "severity" field.
+func SeverityEqualFold(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEqualFold(FieldSeverity, v))
+}
+
+// SeverityContainsFold applies the ContainsFold predicate on the "severity" field.
+func SeverityContainsFold(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldContainsFold(FieldSeverity, v))
+}
+
+// IsResolvedEQ applies the EQ predicate on the "is_resolved" field.
+func IsResolvedEQ(v bool) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldIsResolved, v))
+}
+
+// IsResolvedNEQ applies the NEQ predicate on the "is_resolved" field.
+func IsResolvedNEQ(v bool) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldIsResolved, v))
+}
+
+// ResolvedAtEQ applies the EQ predicate on the "resolved_at" field.
+func ResolvedAtEQ(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldResolvedAt, v))
+}
+
+// ResolvedAtNEQ applies the NEQ predicate on the "resolved_at" field.
+func ResolvedAtNEQ(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldResolvedAt, v))
+}
+
+// ResolvedAtIn applies the In predicate on the "resolved_at" field.
+func ResolvedAtIn(vs ...time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldResolvedAt, vs...))
+}
+
+// ResolvedAtNotIn applies the NotIn predicate on the "resolved_at" field.
+func ResolvedAtNotIn(vs ...time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldResolvedAt, vs...))
+}
+
+// ResolvedAtGT applies the GT predicate on the "resolved_at" field.
+func ResolvedAtGT(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldResolvedAt, v))
+}
+
+// ResolvedAtGTE applies the GTE predicate on the "resolved_at" field.
+func ResolvedAtGTE(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldResolvedAt, v))
+}
+
+// ResolvedAtLT applies the LT predicate on the "resolved_at" field.
+func ResolvedAtLT(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldResolvedAt, v))
+}
+
+// ResolvedAtLTE applies the LTE predicate on the "resolved_at" field.
+func ResolvedAtLTE(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldResolvedAt, v))
+}
+
+// ResolvedAtIsNil applies the IsNil predicate on the "resolved_at" field.
+func ResolvedAtIsNil() predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIsNull(FieldResolvedAt))
+}
+
+// ResolvedAtNotNil applies the NotNil predicate on the "resolved_at" field.
+func ResolvedAtNotNil() predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotNull(FieldResolvedAt))
+}
+
+// ResolutionNotesEQ applies the EQ predicate on the "resolution_notes" field.
+func ResolutionNotesEQ(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesNEQ applies the NEQ predicate on the "resolution_notes" field.
+func ResolutionNotesNEQ(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesIn applies the In predicate on the "resolution_notes" field.
+func ResolutionNotesIn(vs ...string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldResolutionNotes, vs...))
+}
+
+// ResolutionNotesNotIn applies the NotIn predicate on the "resolution_notes" field.
+func ResolutionNotesNotIn(vs ...string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldResolutionNotes, vs...))
+}
+
+// ResolutionNotesGT applies the GT predicate on the "resolution_notes" field.
+func ResolutionNotesGT(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesGTE applies the GTE predicate on the "resolution_notes" field.
+func ResolutionNotesGTE(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesLT applies the LT predicate on the "resolution_notes" field.
+func ResolutionNotesLT(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesLTE applies the LTE predicate on the "resolution_notes" field.
+func ResolutionNotesLTE(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesContains applies the Contains predicate on the "resolution_notes" field.
+func ResolutionNotesContains(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldContains(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesHasPrefix applies the HasPrefix predicate on the "resolution_notes" field.
+func ResolutionNotesHasPrefix(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldHasPrefix(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesHasSuffix applies the HasSuffix predicate on the "resolution_notes" field.
+func ResolutionNotesHasSuffix(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldHasSuffix(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesIsNil applies the IsNil predicate on the "resolution_notes" field.
+func ResolutionNotesIsNil() predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIsNull(FieldResolutionNotes))
+}
+
+// ResolutionNotesNotNil applies the NotNil predicate on the "resolution_notes" field.
+func ResolutionNotesNotNil() predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotNull(FieldResolutionNotes))
+}
+
+// ResolutionNotesEqualFold applies the EqualFold predicate on the "resolution_notes" field.
+func ResolutionNotesEqualFold(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEqualFold(FieldResolutionNotes, v))
+}
+
+// ResolutionNotesContainsFold applies the ContainsFold predicate on the "resolution_notes" field.
+func ResolutionNotesContainsFold(v string) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldContainsFold(FieldResolutionNotes, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldTenantID, v))
@@ -472,6 +653,52 @@ func UpdatedAtLT(v time.Time) predicate.SLAViolation {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasSLADefinition applies the HasEdge predicate on the "sla_definition" edge.
+func HasSLADefinition() predicate.SLAViolation {
+	return predicate.SLAViolation(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SLADefinitionTable, SLADefinitionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLADefinitionWith applies the HasEdge predicate on the "sla_definition" edge with a given conditions (other predicates).
+func HasSLADefinitionWith(preds ...predicate.SLADefinition) predicate.SLAViolation {
+	return predicate.SLAViolation(func(s *sql.Selector) {
+		step := newSLADefinitionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTicket applies the HasEdge predicate on the "ticket" edge.
+func HasTicket() predicate.SLAViolation {
+	return predicate.SLAViolation(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, TicketTable, TicketColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketWith applies the HasEdge predicate on the "ticket" edge with a given conditions (other predicates).
+func HasTicketWith(preds ...predicate.Ticket) predicate.SLAViolation {
+	return predicate.SLAViolation(func(s *sql.Selector) {
+		step := newTicketStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

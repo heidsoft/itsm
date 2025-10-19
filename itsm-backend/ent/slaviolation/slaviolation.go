@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -23,14 +24,40 @@ const (
 	FieldViolationTime = "violation_time"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldSeverity holds the string denoting the severity field in the database.
+	FieldSeverity = "severity"
+	// FieldIsResolved holds the string denoting the is_resolved field in the database.
+	FieldIsResolved = "is_resolved"
+	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
+	FieldResolvedAt = "resolved_at"
+	// FieldResolutionNotes holds the string denoting the resolution_notes field in the database.
+	FieldResolutionNotes = "resolution_notes"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeSLADefinition holds the string denoting the sla_definition edge name in mutations.
+	EdgeSLADefinition = "sla_definition"
+	// EdgeTicket holds the string denoting the ticket edge name in mutations.
+	EdgeTicket = "ticket"
 	// Table holds the table name of the slaviolation in the database.
 	Table = "sla_violations"
+	// SLADefinitionTable is the table that holds the sla_definition relation/edge.
+	SLADefinitionTable = "sla_violations"
+	// SLADefinitionInverseTable is the table name for the SLADefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "sladefinition" package.
+	SLADefinitionInverseTable = "sla_definitions"
+	// SLADefinitionColumn is the table column denoting the sla_definition relation/edge.
+	SLADefinitionColumn = "sla_definition_id"
+	// TicketTable is the table that holds the ticket relation/edge.
+	TicketTable = "sla_violations"
+	// TicketInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketInverseTable = "tickets"
+	// TicketColumn is the table column denoting the ticket relation/edge.
+	TicketColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for slaviolation fields.
@@ -41,6 +68,10 @@ var Columns = []string{
 	FieldViolationType,
 	FieldViolationTime,
 	FieldDescription,
+	FieldSeverity,
+	FieldIsResolved,
+	FieldResolvedAt,
+	FieldResolutionNotes,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -65,6 +96,10 @@ var (
 	ViolationTypeValidator func(string) error
 	// DefaultViolationTime holds the default value on creation for the "violation_time" field.
 	DefaultViolationTime func() time.Time
+	// DefaultSeverity holds the default value on creation for the "severity" field.
+	DefaultSeverity string
+	// DefaultIsResolved holds the default value on creation for the "is_resolved" field.
+	DefaultIsResolved bool
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -108,6 +143,26 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
+// BySeverity orders the results by the severity field.
+func BySeverity(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSeverity, opts...).ToFunc()
+}
+
+// ByIsResolved orders the results by the is_resolved field.
+func ByIsResolved(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsResolved, opts...).ToFunc()
+}
+
+// ByResolvedAt orders the results by the resolved_at field.
+func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
+}
+
+// ByResolutionNotes orders the results by the resolution_notes field.
+func ByResolutionNotes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolutionNotes, opts...).ToFunc()
+}
+
 // ByTenantID orders the results by the tenant_id field.
 func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
@@ -121,4 +176,32 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// BySLADefinitionField orders the results by sla_definition field.
+func BySLADefinitionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLADefinitionStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByTicketField orders the results by ticket field.
+func ByTicketField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newSLADefinitionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLADefinitionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SLADefinitionTable, SLADefinitionColumn),
+	)
+}
+func newTicketStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TicketTable, TicketColumn),
+	)
 }

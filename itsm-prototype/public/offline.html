@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离线模式 - ITSM系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .offline-container {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 32px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #999;
+        }
+
+        .offline-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .offline-message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .offline-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #d9d9d9;
+        }
+
+        .btn-secondary:hover {
+            background: #e6f7ff;
+            border-color: #1890ff;
+            transform: translateY(-2px);
+        }
+
+        .offline-features {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .offline-features h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #666;
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #52c41a;
+            font-weight: bold;
+        }
+
+        .network-status {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            border-radius: 8px;
+            color: #d46b08;
+        }
+
+        .network-status.online {
+            background: #f6ffed;
+            border-color: #b7eb8f;
+            color: #389e0d;
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 32px 24px;
+            }
+
+            .offline-title {
+                font-size: 24px;
+            }
+
+            .offline-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            📡
+        </div>
+        
+        <h1 class="offline-title">网络连接不可用</h1>
+        
+        <p class="offline-message">
+            您当前处于离线状态，无法连接到服务器。请检查您的网络连接后重试。
+        </p>
+        
+        <div class="offline-actions">
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                重新加载
+            </button>
+            <a href="/" class="btn btn-secondary">
+                返回首页
+            </a>
+        </div>
+        
+        <div class="offline-features">
+            <h3>离线功能</h3>
+            <ul class="feature-list">
+                <li>查看已缓存的工单数据</li>
+                <li>查看已缓存的事件信息</li>
+                <li>查看已缓存的问题记录</li>
+                <li>查看已缓存的变更信息</li>
+                <li>查看已缓存的用户信息</li>
+                <li>查看已缓存的配置数据</li>
+            </ul>
+        </div>
+        
+        <div id="network-status" class="network-status">
+            <strong>网络状态：</strong>离线
+        </div>
+    </div>
+
+    <script>
+        // 网络状态检测
+        function updateNetworkStatus() {
+            const statusElement = document.getElementById('network-status');
+            const isOnline = navigator.onLine;
+            
+            if (isOnline) {
+                statusElement.innerHTML = '<strong>网络状态：</strong>已连接';
+                statusElement.className = 'network-status online';
+                
+                // 网络恢复后自动重定向到首页
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                statusElement.innerHTML = '<strong>网络状态：</strong>离线';
+                statusElement.className = 'network-status';
+            }
+        }
+
+        // 监听网络状态变化
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+
+        // 初始化网络状态
+        updateNetworkStatus();
+
+        // 定期检查网络状态
+        setInterval(updateNetworkStatus, 5000);
+
+        // 添加键盘快捷键支持
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+                event.preventDefault();
+                window.location.reload();
+            }
+            
+            if (event.key === 'Escape') {
+                window.location.href = '/';
+            }
+        });
+
+        // 添加触摸手势支持
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', (event) => {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (event) => {
+            const touchEndX = event.changedTouches[0].clientX;
+            const touchEndY = event.changedTouches[0].clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            // 检测下拉刷新手势
+            if (deltaY > 100 && Math.abs(deltaX) < 50) {
+                window.location.reload();
+            }
+        });
+
+        // 添加PWA安装提示
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredPrompt = event;
+            
+            // 显示安装提示
+            const installButton = document.createElement('button');
+            installButton.className = 'btn btn-primary';
+            installButton.textContent = '安装应用';
+            installButton.style.marginTop = '16px';
+            installButton.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response to the install prompt: ${outcome}`);
+                    deferredPrompt = null;
+                }
+            };
+            
+            document.querySelector('.offline-actions').appendChild(installButton);
+        });
+    </script>
+</body>
+</html>

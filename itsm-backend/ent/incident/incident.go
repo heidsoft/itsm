@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 	FieldStatus = "status"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
+	// FieldSeverity holds the string denoting the severity field in the database.
+	FieldSeverity = "severity"
 	// FieldIncidentNumber holds the string denoting the incident_number field in the database.
 	FieldIncidentNumber = "incident_number"
 	// FieldReporterID holds the string denoting the reporter_id field in the database.
@@ -29,18 +32,75 @@ const (
 	FieldAssigneeID = "assignee_id"
 	// FieldConfigurationItemID holds the string denoting the configuration_item_id field in the database.
 	FieldConfigurationItemID = "configuration_item_id"
+	// FieldCategory holds the string denoting the category field in the database.
+	FieldCategory = "category"
+	// FieldSubcategory holds the string denoting the subcategory field in the database.
+	FieldSubcategory = "subcategory"
+	// FieldImpactAnalysis holds the string denoting the impact_analysis field in the database.
+	FieldImpactAnalysis = "impact_analysis"
+	// FieldRootCause holds the string denoting the root_cause field in the database.
+	FieldRootCause = "root_cause"
+	// FieldResolutionSteps holds the string denoting the resolution_steps field in the database.
+	FieldResolutionSteps = "resolution_steps"
+	// FieldDetectedAt holds the string denoting the detected_at field in the database.
+	FieldDetectedAt = "detected_at"
 	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
 	FieldResolvedAt = "resolved_at"
 	// FieldClosedAt holds the string denoting the closed_at field in the database.
 	FieldClosedAt = "closed_at"
+	// FieldEscalatedAt holds the string denoting the escalated_at field in the database.
+	FieldEscalatedAt = "escalated_at"
+	// FieldEscalationLevel holds the string denoting the escalation_level field in the database.
+	FieldEscalationLevel = "escalation_level"
+	// FieldIsAutomated holds the string denoting the is_automated field in the database.
+	FieldIsAutomated = "is_automated"
+	// FieldSource holds the string denoting the source field in the database.
+	FieldSource = "source"
+	// FieldMetadata holds the string denoting the metadata field in the database.
+	FieldMetadata = "metadata"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeRelatedIncidents holds the string denoting the related_incidents edge name in mutations.
+	EdgeRelatedIncidents = "related_incidents"
+	// EdgeIncidentEvents holds the string denoting the incident_events edge name in mutations.
+	EdgeIncidentEvents = "incident_events"
+	// EdgeIncidentAlerts holds the string denoting the incident_alerts edge name in mutations.
+	EdgeIncidentAlerts = "incident_alerts"
+	// EdgeIncidentMetrics holds the string denoting the incident_metrics edge name in mutations.
+	EdgeIncidentMetrics = "incident_metrics"
+	// EdgeParentIncident holds the string denoting the parent_incident edge name in mutations.
+	EdgeParentIncident = "parent_incident"
 	// Table holds the table name of the incident in the database.
 	Table = "incidents"
+	// RelatedIncidentsTable is the table that holds the related_incidents relation/edge. The primary key declared below.
+	RelatedIncidentsTable = "incident_related_incidents"
+	// IncidentEventsTable is the table that holds the incident_events relation/edge.
+	IncidentEventsTable = "incident_events"
+	// IncidentEventsInverseTable is the table name for the IncidentEvent entity.
+	// It exists in this package in order to avoid circular dependency with the "incidentevent" package.
+	IncidentEventsInverseTable = "incident_events"
+	// IncidentEventsColumn is the table column denoting the incident_events relation/edge.
+	IncidentEventsColumn = "incident_id"
+	// IncidentAlertsTable is the table that holds the incident_alerts relation/edge.
+	IncidentAlertsTable = "incident_alerts"
+	// IncidentAlertsInverseTable is the table name for the IncidentAlert entity.
+	// It exists in this package in order to avoid circular dependency with the "incidentalert" package.
+	IncidentAlertsInverseTable = "incident_alerts"
+	// IncidentAlertsColumn is the table column denoting the incident_alerts relation/edge.
+	IncidentAlertsColumn = "incident_id"
+	// IncidentMetricsTable is the table that holds the incident_metrics relation/edge.
+	IncidentMetricsTable = "incident_metrics"
+	// IncidentMetricsInverseTable is the table name for the IncidentMetric entity.
+	// It exists in this package in order to avoid circular dependency with the "incidentmetric" package.
+	IncidentMetricsInverseTable = "incident_metrics"
+	// IncidentMetricsColumn is the table column denoting the incident_metrics relation/edge.
+	IncidentMetricsColumn = "incident_id"
+	// ParentIncidentTable is the table that holds the parent_incident relation/edge. The primary key declared below.
+	ParentIncidentTable = "incident_related_incidents"
 )
 
 // Columns holds all SQL columns for incident fields.
@@ -50,16 +110,37 @@ var Columns = []string{
 	FieldDescription,
 	FieldStatus,
 	FieldPriority,
+	FieldSeverity,
 	FieldIncidentNumber,
 	FieldReporterID,
 	FieldAssigneeID,
 	FieldConfigurationItemID,
+	FieldCategory,
+	FieldSubcategory,
+	FieldImpactAnalysis,
+	FieldRootCause,
+	FieldResolutionSteps,
+	FieldDetectedAt,
 	FieldResolvedAt,
 	FieldClosedAt,
+	FieldEscalatedAt,
+	FieldEscalationLevel,
+	FieldIsAutomated,
+	FieldSource,
+	FieldMetadata,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
+
+var (
+	// RelatedIncidentsPrimaryKey and RelatedIncidentsColumn2 are the table columns denoting the
+	// primary key for the related_incidents relation (M2M).
+	RelatedIncidentsPrimaryKey = []string{"incident_id", "parent_incident_id"}
+	// ParentIncidentPrimaryKey and ParentIncidentColumn2 are the table columns denoting the
+	// primary key for the parent_incident relation (M2M).
+	ParentIncidentPrimaryKey = []string{"incident_id", "parent_incident_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -78,10 +159,20 @@ var (
 	DefaultStatus string
 	// DefaultPriority holds the default value on creation for the "priority" field.
 	DefaultPriority string
+	// DefaultSeverity holds the default value on creation for the "severity" field.
+	DefaultSeverity string
 	// IncidentNumberValidator is a validator for the "incident_number" field. It is called by the builders before save.
 	IncidentNumberValidator func(string) error
 	// ReporterIDValidator is a validator for the "reporter_id" field. It is called by the builders before save.
 	ReporterIDValidator func(int) error
+	// DefaultDetectedAt holds the default value on creation for the "detected_at" field.
+	DefaultDetectedAt func() time.Time
+	// DefaultEscalationLevel holds the default value on creation for the "escalation_level" field.
+	DefaultEscalationLevel int
+	// DefaultIsAutomated holds the default value on creation for the "is_automated" field.
+	DefaultIsAutomated bool
+	// DefaultSource holds the default value on creation for the "source" field.
+	DefaultSource string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -120,6 +211,11 @@ func ByPriority(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPriority, opts...).ToFunc()
 }
 
+// BySeverity orders the results by the severity field.
+func BySeverity(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSeverity, opts...).ToFunc()
+}
+
 // ByIncidentNumber orders the results by the incident_number field.
 func ByIncidentNumber(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIncidentNumber, opts...).ToFunc()
@@ -140,6 +236,21 @@ func ByConfigurationItemID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConfigurationItemID, opts...).ToFunc()
 }
 
+// ByCategory orders the results by the category field.
+func ByCategory(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCategory, opts...).ToFunc()
+}
+
+// BySubcategory orders the results by the subcategory field.
+func BySubcategory(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubcategory, opts...).ToFunc()
+}
+
+// ByDetectedAt orders the results by the detected_at field.
+func ByDetectedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDetectedAt, opts...).ToFunc()
+}
+
 // ByResolvedAt orders the results by the resolved_at field.
 func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
@@ -148,6 +259,26 @@ func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByClosedAt orders the results by the closed_at field.
 func ByClosedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldClosedAt, opts...).ToFunc()
+}
+
+// ByEscalatedAt orders the results by the escalated_at field.
+func ByEscalatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEscalatedAt, opts...).ToFunc()
+}
+
+// ByEscalationLevel orders the results by the escalation_level field.
+func ByEscalationLevel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEscalationLevel, opts...).ToFunc()
+}
+
+// ByIsAutomated orders the results by the is_automated field.
+func ByIsAutomated(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsAutomated, opts...).ToFunc()
+}
+
+// BySource orders the results by the source field.
+func BySource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSource, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
@@ -163,4 +294,109 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByRelatedIncidentsCount orders the results by related_incidents count.
+func ByRelatedIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRelatedIncidentsStep(), opts...)
+	}
+}
+
+// ByRelatedIncidents orders the results by related_incidents terms.
+func ByRelatedIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRelatedIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByIncidentEventsCount orders the results by incident_events count.
+func ByIncidentEventsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIncidentEventsStep(), opts...)
+	}
+}
+
+// ByIncidentEvents orders the results by incident_events terms.
+func ByIncidentEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIncidentEventsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByIncidentAlertsCount orders the results by incident_alerts count.
+func ByIncidentAlertsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIncidentAlertsStep(), opts...)
+	}
+}
+
+// ByIncidentAlerts orders the results by incident_alerts terms.
+func ByIncidentAlerts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIncidentAlertsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByIncidentMetricsCount orders the results by incident_metrics count.
+func ByIncidentMetricsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIncidentMetricsStep(), opts...)
+	}
+}
+
+// ByIncidentMetrics orders the results by incident_metrics terms.
+func ByIncidentMetrics(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIncidentMetricsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByParentIncidentCount orders the results by parent_incident count.
+func ByParentIncidentCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParentIncidentStep(), opts...)
+	}
+}
+
+// ByParentIncident orders the results by parent_incident terms.
+func ByParentIncident(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentIncidentStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newRelatedIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, RelatedIncidentsTable, RelatedIncidentsPrimaryKey...),
+	)
+}
+func newIncidentEventsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IncidentEventsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IncidentEventsTable, IncidentEventsColumn),
+	)
+}
+func newIncidentAlertsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IncidentAlertsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IncidentAlertsTable, IncidentAlertsColumn),
+	)
+}
+func newIncidentMetricsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IncidentMetricsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IncidentMetricsTable, IncidentMetricsColumn),
+	)
+}
+func newParentIncidentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ParentIncidentTable, ParentIncidentPrimaryKey...),
+	)
 }

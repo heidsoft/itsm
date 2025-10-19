@@ -4,9 +4,13 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"math"
 
 	"entgo.io/ent"
@@ -18,10 +22,13 @@ import (
 // SLADefinitionQuery is the builder for querying SLADefinition entities.
 type SLADefinitionQuery struct {
 	config
-	ctx        *QueryContext
-	order      []sladefinition.OrderOption
-	inters     []Interceptor
-	predicates []predicate.SLADefinition
+	ctx            *QueryContext
+	order          []sladefinition.OrderOption
+	inters         []Interceptor
+	predicates     []predicate.SLADefinition
+	withViolations *SLAViolationQuery
+	withMetrics    *SLAMetricQuery
+	withTickets    *TicketQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +63,72 @@ func (sdq *SLADefinitionQuery) Unique(unique bool) *SLADefinitionQuery {
 func (sdq *SLADefinitionQuery) Order(o ...sladefinition.OrderOption) *SLADefinitionQuery {
 	sdq.order = append(sdq.order, o...)
 	return sdq
+}
+
+// QueryViolations chains the current query on the "violations" edge.
+func (sdq *SLADefinitionQuery) QueryViolations() *SLAViolationQuery {
+	query := (&SLAViolationClient{config: sdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.ViolationsTable, sladefinition.ViolationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMetrics chains the current query on the "metrics" edge.
+func (sdq *SLADefinitionQuery) QueryMetrics() *SLAMetricQuery {
+	query := (&SLAMetricClient{config: sdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
+			sqlgraph.To(slametric.Table, slametric.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.MetricsTable, sladefinition.MetricsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTickets chains the current query on the "tickets" edge.
+func (sdq *SLADefinitionQuery) QueryTickets() *TicketQuery {
+	query := (&TicketClient{config: sdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.TicketsTable, sladefinition.TicketsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first SLADefinition entity from the query.
@@ -245,15 +318,51 @@ func (sdq *SLADefinitionQuery) Clone() *SLADefinitionQuery {
 		return nil
 	}
 	return &SLADefinitionQuery{
-		config:     sdq.config,
-		ctx:        sdq.ctx.Clone(),
-		order:      append([]sladefinition.OrderOption{}, sdq.order...),
-		inters:     append([]Interceptor{}, sdq.inters...),
-		predicates: append([]predicate.SLADefinition{}, sdq.predicates...),
+		config:         sdq.config,
+		ctx:            sdq.ctx.Clone(),
+		order:          append([]sladefinition.OrderOption{}, sdq.order...),
+		inters:         append([]Interceptor{}, sdq.inters...),
+		predicates:     append([]predicate.SLADefinition{}, sdq.predicates...),
+		withViolations: sdq.withViolations.Clone(),
+		withMetrics:    sdq.withMetrics.Clone(),
+		withTickets:    sdq.withTickets.Clone(),
 		// clone intermediate query.
 		sql:  sdq.sql.Clone(),
 		path: sdq.path,
 	}
+}
+
+// WithViolations tells the query-builder to eager-load the nodes that are connected to
+// the "violations" edge. The optional arguments are used to configure the query builder of the edge.
+func (sdq *SLADefinitionQuery) WithViolations(opts ...func(*SLAViolationQuery)) *SLADefinitionQuery {
+	query := (&SLAViolationClient{config: sdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sdq.withViolations = query
+	return sdq
+}
+
+// WithMetrics tells the query-builder to eager-load the nodes that are connected to
+// the "metrics" edge. The optional arguments are used to configure the query builder of the edge.
+func (sdq *SLADefinitionQuery) WithMetrics(opts ...func(*SLAMetricQuery)) *SLADefinitionQuery {
+	query := (&SLAMetricClient{config: sdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sdq.withMetrics = query
+	return sdq
+}
+
+// WithTickets tells the query-builder to eager-load the nodes that are connected to
+// the "tickets" edge. The optional arguments are used to configure the query builder of the edge.
+func (sdq *SLADefinitionQuery) WithTickets(opts ...func(*TicketQuery)) *SLADefinitionQuery {
+	query := (&TicketClient{config: sdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sdq.withTickets = query
+	return sdq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +441,13 @@ func (sdq *SLADefinitionQuery) prepareQuery(ctx context.Context) error {
 
 func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLADefinition, error) {
 	var (
-		nodes = []*SLADefinition{}
-		_spec = sdq.querySpec()
+		nodes       = []*SLADefinition{}
+		_spec       = sdq.querySpec()
+		loadedTypes = [3]bool{
+			sdq.withViolations != nil,
+			sdq.withMetrics != nil,
+			sdq.withTickets != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLADefinition).scanValues(nil, columns)
@@ -341,6 +455,7 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &SLADefinition{config: sdq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +467,120 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := sdq.withViolations; query != nil {
+		if err := sdq.loadViolations(ctx, query, nodes,
+			func(n *SLADefinition) { n.Edges.Violations = []*SLAViolation{} },
+			func(n *SLADefinition, e *SLAViolation) { n.Edges.Violations = append(n.Edges.Violations, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := sdq.withMetrics; query != nil {
+		if err := sdq.loadMetrics(ctx, query, nodes,
+			func(n *SLADefinition) { n.Edges.Metrics = []*SLAMetric{} },
+			func(n *SLADefinition, e *SLAMetric) { n.Edges.Metrics = append(n.Edges.Metrics, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := sdq.withTickets; query != nil {
+		if err := sdq.loadTickets(ctx, query, nodes,
+			func(n *SLADefinition) { n.Edges.Tickets = []*Ticket{} },
+			func(n *SLADefinition, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (sdq *SLADefinitionQuery) loadViolations(ctx context.Context, query *SLAViolationQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAViolation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*SLADefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slaviolation.FieldSLADefinitionID)
+	}
+	query.Where(predicate.SLAViolation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sladefinition.ViolationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SLADefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (sdq *SLADefinitionQuery) loadMetrics(ctx context.Context, query *SLAMetricQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAMetric)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*SLADefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slametric.FieldSLADefinitionID)
+	}
+	query.Where(predicate.SLAMetric(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sladefinition.MetricsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SLADefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (sdq *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *Ticket)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*SLADefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticket.FieldSLADefinitionID)
+	}
+	query.Where(predicate.Ticket(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sladefinition.TicketsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SLADefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (sdq *SLADefinitionQuery) sqlCount(ctx context.Context) (int, error) {

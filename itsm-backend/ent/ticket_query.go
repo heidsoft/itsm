@@ -7,6 +7,8 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/tickettag"
@@ -33,6 +35,8 @@ type TicketQuery struct {
 	withRelatedTickets    *TicketQuery
 	withParentTicket      *TicketQuery
 	withWorkflowInstances *WorkflowInstanceQuery
+	withSLADefinition     *SLADefinitionQuery
+	withSLAViolations     *SLAViolationQuery
 	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -195,6 +199,50 @@ func (tq *TicketQuery) QueryWorkflowInstances() *WorkflowInstanceQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.WorkflowInstancesTable, ticket.WorkflowInstancesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySLADefinition chains the current query on the "sla_definition" edge.
+func (tq *TicketQuery) QuerySLADefinition() *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.SLADefinitionTable, ticket.SLADefinitionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QuerySLAViolations chains the current query on the "sla_violations" edge.
+func (tq *TicketQuery) QuerySLAViolations() *SLAViolationQuery {
+	query := (&SLAViolationClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAViolationsTable, ticket.SLAViolationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -400,6 +448,8 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		withRelatedTickets:    tq.withRelatedTickets.Clone(),
 		withParentTicket:      tq.withParentTicket.Clone(),
 		withWorkflowInstances: tq.withWorkflowInstances.Clone(),
+		withSLADefinition:     tq.withSLADefinition.Clone(),
+		withSLAViolations:     tq.withSLAViolations.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -469,6 +519,28 @@ func (tq *TicketQuery) WithWorkflowInstances(opts ...func(*WorkflowInstanceQuery
 		opt(query)
 	}
 	tq.withWorkflowInstances = query
+	return tq
+}
+
+// WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
+// the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *TicketQuery {
+	query := (&SLADefinitionClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withSLADefinition = query
+	return tq
+}
+
+// WithSLAViolations tells the query-builder to eager-load the nodes that are connected to
+// the "sla_violations" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithSLAViolations(opts ...func(*SLAViolationQuery)) *TicketQuery {
+	query := (&SLAViolationClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withSLAViolations = query
 	return tq
 }
 
@@ -551,13 +623,15 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [8]bool{
 			tq.withTemplate != nil,
 			tq.withCategory != nil,
 			tq.withTags != nil,
 			tq.withRelatedTickets != nil,
 			tq.withParentTicket != nil,
 			tq.withWorkflowInstances != nil,
+			tq.withSLADefinition != nil,
+			tq.withSLAViolations != nil,
 		}
 	)
 	if withFKs {
@@ -617,6 +691,19 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		if err := tq.loadWorkflowInstances(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.WorkflowInstances = []*WorkflowInstance{} },
 			func(n *Ticket, e *WorkflowInstance) { n.Edges.WorkflowInstances = append(n.Edges.WorkflowInstances, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withSLADefinition; query != nil {
+		if err := tq.loadSLADefinition(ctx, query, nodes, nil,
+			func(n *Ticket, e *SLADefinition) { n.Edges.SLADefinition = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withSLAViolations; query != nil {
+		if err := tq.loadSLAViolations(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.SLAViolations = []*SLAViolation{} },
+			func(n *Ticket, e *SLAViolation) { n.Edges.SLAViolations = append(n.Edges.SLAViolations, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -803,6 +890,65 @@ func (tq *TicketQuery) loadWorkflowInstances(ctx context.Context, query *Workflo
 	}
 	return nil
 }
+func (tq *TicketQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLADefinition)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].SLADefinitionID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(sladefinition.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "sla_definition_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (tq *TicketQuery) loadSLAViolations(ctx context.Context, query *SLAViolationQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLAViolation)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slaviolation.FieldTicketID)
+	}
+	query.Where(predicate.SLAViolation(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.SLAViolationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 
 func (tq *TicketQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := tq.querySpec()
@@ -837,6 +983,9 @@ func (tq *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if tq.withParentTicket != nil {
 			_spec.Node.AddColumnOnce(ticket.FieldParentTicketID)
+		}
+		if tq.withSLADefinition != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldSLADefinitionID)
 		}
 	}
 	if ps := tq.predicates; len(ps) > 0 {

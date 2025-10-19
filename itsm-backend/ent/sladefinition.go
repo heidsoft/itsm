@@ -32,6 +32,10 @@ type SLADefinition struct {
 	ResolutionTime int `json:"resolution_time,omitempty"`
 	// 营业时间配置
 	BusinessHours map[string]interface{} `json:"business_hours,omitempty"`
+	// 升级规则
+	EscalationRules map[string]interface{} `json:"escalation_rules,omitempty"`
+	// 适用条件
+	Conditions map[string]interface{} `json:"conditions,omitempty"`
 	// 是否激活
 	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
@@ -39,8 +43,51 @@ type SLADefinition struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the SLADefinitionQuery when eager-loading is set.
+	Edges        SLADefinitionEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// SLADefinitionEdges holds the relations/edges for other nodes in the graph.
+type SLADefinitionEdges struct {
+	// SLA违规记录
+	Violations []*SLAViolation `json:"violations,omitempty"`
+	// SLA指标
+	Metrics []*SLAMetric `json:"metrics,omitempty"`
+	// 关联工单
+	Tickets []*Ticket `json:"tickets,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// ViolationsOrErr returns the Violations value or an error if the edge
+// was not loaded in eager-loading.
+func (e SLADefinitionEdges) ViolationsOrErr() ([]*SLAViolation, error) {
+	if e.loadedTypes[0] {
+		return e.Violations, nil
+	}
+	return nil, &NotLoadedError{edge: "violations"}
+}
+
+// MetricsOrErr returns the Metrics value or an error if the edge
+// was not loaded in eager-loading.
+func (e SLADefinitionEdges) MetricsOrErr() ([]*SLAMetric, error) {
+	if e.loadedTypes[1] {
+		return e.Metrics, nil
+	}
+	return nil, &NotLoadedError{edge: "metrics"}
+}
+
+// TicketsOrErr returns the Tickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e SLADefinitionEdges) TicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[2] {
+		return e.Tickets, nil
+	}
+	return nil, &NotLoadedError{edge: "tickets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -48,7 +95,7 @@ func (*SLADefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sladefinition.FieldBusinessHours:
+		case sladefinition.FieldBusinessHours, sladefinition.FieldEscalationRules, sladefinition.FieldConditions:
 			values[i] = new([]byte)
 		case sladefinition.FieldIsActive:
 			values[i] = new(sql.NullBool)
@@ -123,6 +170,22 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field business_hours: %w", err)
 				}
 			}
+		case sladefinition.FieldEscalationRules:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field escalation_rules", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sd.EscalationRules); err != nil {
+					return fmt.Errorf("unmarshal field escalation_rules: %w", err)
+				}
+			}
+		case sladefinition.FieldConditions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field conditions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sd.Conditions); err != nil {
+					return fmt.Errorf("unmarshal field conditions: %w", err)
+				}
+			}
 		case sladefinition.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
@@ -158,6 +221,21 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (sd *SLADefinition) Value(name string) (ent.Value, error) {
 	return sd.selectValues.Get(name)
+}
+
+// QueryViolations queries the "violations" edge of the SLADefinition entity.
+func (sd *SLADefinition) QueryViolations() *SLAViolationQuery {
+	return NewSLADefinitionClient(sd.config).QueryViolations(sd)
+}
+
+// QueryMetrics queries the "metrics" edge of the SLADefinition entity.
+func (sd *SLADefinition) QueryMetrics() *SLAMetricQuery {
+	return NewSLADefinitionClient(sd.config).QueryMetrics(sd)
+}
+
+// QueryTickets queries the "tickets" edge of the SLADefinition entity.
+func (sd *SLADefinition) QueryTickets() *TicketQuery {
+	return NewSLADefinitionClient(sd.config).QueryTickets(sd)
 }
 
 // Update returns a builder for updating this SLADefinition.
@@ -203,6 +281,12 @@ func (sd *SLADefinition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("business_hours=")
 	builder.WriteString(fmt.Sprintf("%v", sd.BusinessHours))
+	builder.WriteString(", ")
+	builder.WriteString("escalation_rules=")
+	builder.WriteString(fmt.Sprintf("%v", sd.EscalationRules))
+	builder.WriteString(", ")
+	builder.WriteString("conditions=")
+	builder.WriteString(fmt.Sprintf("%v", sd.Conditions))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", sd.IsActive))

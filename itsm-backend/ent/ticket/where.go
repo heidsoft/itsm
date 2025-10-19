@@ -110,6 +110,31 @@ func ParentTicketID(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldParentTicketID, v))
 }
 
+// SLADefinitionID applies equality check predicate on the "sla_definition_id" field. It's identical to SLADefinitionIDEQ.
+func SLADefinitionID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLADefinitionID, v))
+}
+
+// SLAResponseDeadline applies equality check predicate on the "sla_response_deadline" field. It's identical to SLAResponseDeadlineEQ.
+func SLAResponseDeadline(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAResponseDeadline, v))
+}
+
+// SLAResolutionDeadline applies equality check predicate on the "sla_resolution_deadline" field. It's identical to SLAResolutionDeadlineEQ.
+func SLAResolutionDeadline(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAResolutionDeadline, v))
+}
+
+// FirstResponseAt applies equality check predicate on the "first_response_at" field. It's identical to FirstResponseAtEQ.
+func FirstResponseAt(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldFirstResponseAt, v))
+}
+
+// ResolvedAt applies equality check predicate on the "resolved_at" field. It's identical to ResolvedAtEQ.
+func ResolvedAt(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldResolvedAt, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -675,6 +700,236 @@ func ParentTicketIDNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldParentTicketID))
 }
 
+// SLADefinitionIDEQ applies the EQ predicate on the "sla_definition_id" field.
+func SLADefinitionIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDNEQ applies the NEQ predicate on the "sla_definition_id" field.
+func SLADefinitionIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSLADefinitionID, v))
+}
+
+// SLADefinitionIDIn applies the In predicate on the "sla_definition_id" field.
+func SLADefinitionIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSLADefinitionID, vs...))
+}
+
+// SLADefinitionIDNotIn applies the NotIn predicate on the "sla_definition_id" field.
+func SLADefinitionIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSLADefinitionID, vs...))
+}
+
+// SLADefinitionIDIsNil applies the IsNil predicate on the "sla_definition_id" field.
+func SLADefinitionIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldSLADefinitionID))
+}
+
+// SLADefinitionIDNotNil applies the NotNil predicate on the "sla_definition_id" field.
+func SLADefinitionIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldSLADefinitionID))
+}
+
+// SLAResponseDeadlineEQ applies the EQ predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineNEQ applies the NEQ predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineIn applies the In predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSLAResponseDeadline, vs...))
+}
+
+// SLAResponseDeadlineNotIn applies the NotIn predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSLAResponseDeadline, vs...))
+}
+
+// SLAResponseDeadlineGT applies the GT predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineGTE applies the GTE predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineLT applies the LT predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineLTE applies the LTE predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSLAResponseDeadline, v))
+}
+
+// SLAResponseDeadlineIsNil applies the IsNil predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldSLAResponseDeadline))
+}
+
+// SLAResponseDeadlineNotNil applies the NotNil predicate on the "sla_response_deadline" field.
+func SLAResponseDeadlineNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldSLAResponseDeadline))
+}
+
+// SLAResolutionDeadlineEQ applies the EQ predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineNEQ applies the NEQ predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineIn applies the In predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldSLAResolutionDeadline, vs...))
+}
+
+// SLAResolutionDeadlineNotIn applies the NotIn predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldSLAResolutionDeadline, vs...))
+}
+
+// SLAResolutionDeadlineGT applies the GT predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineGTE applies the GTE predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineLT applies the LT predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineLTE applies the LTE predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldSLAResolutionDeadline, v))
+}
+
+// SLAResolutionDeadlineIsNil applies the IsNil predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldSLAResolutionDeadline))
+}
+
+// SLAResolutionDeadlineNotNil applies the NotNil predicate on the "sla_resolution_deadline" field.
+func SLAResolutionDeadlineNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldSLAResolutionDeadline))
+}
+
+// FirstResponseAtEQ applies the EQ predicate on the "first_response_at" field.
+func FirstResponseAtEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldFirstResponseAt, v))
+}
+
+// FirstResponseAtNEQ applies the NEQ predicate on the "first_response_at" field.
+func FirstResponseAtNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldFirstResponseAt, v))
+}
+
+// FirstResponseAtIn applies the In predicate on the "first_response_at" field.
+func FirstResponseAtIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldFirstResponseAt, vs...))
+}
+
+// FirstResponseAtNotIn applies the NotIn predicate on the "first_response_at" field.
+func FirstResponseAtNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldFirstResponseAt, vs...))
+}
+
+// FirstResponseAtGT applies the GT predicate on the "first_response_at" field.
+func FirstResponseAtGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldFirstResponseAt, v))
+}
+
+// FirstResponseAtGTE applies the GTE predicate on the "first_response_at" field.
+func FirstResponseAtGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldFirstResponseAt, v))
+}
+
+// FirstResponseAtLT applies the LT predicate on the "first_response_at" field.
+func FirstResponseAtLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldFirstResponseAt, v))
+}
+
+// FirstResponseAtLTE applies the LTE predicate on the "first_response_at" field.
+func FirstResponseAtLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldFirstResponseAt, v))
+}
+
+// FirstResponseAtIsNil applies the IsNil predicate on the "first_response_at" field.
+func FirstResponseAtIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldFirstResponseAt))
+}
+
+// FirstResponseAtNotNil applies the NotNil predicate on the "first_response_at" field.
+func FirstResponseAtNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldFirstResponseAt))
+}
+
+// ResolvedAtEQ applies the EQ predicate on the "resolved_at" field.
+func ResolvedAtEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldResolvedAt, v))
+}
+
+// ResolvedAtNEQ applies the NEQ predicate on the "resolved_at" field.
+func ResolvedAtNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldResolvedAt, v))
+}
+
+// ResolvedAtIn applies the In predicate on the "resolved_at" field.
+func ResolvedAtIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldResolvedAt, vs...))
+}
+
+// ResolvedAtNotIn applies the NotIn predicate on the "resolved_at" field.
+func ResolvedAtNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldResolvedAt, vs...))
+}
+
+// ResolvedAtGT applies the GT predicate on the "resolved_at" field.
+func ResolvedAtGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldResolvedAt, v))
+}
+
+// ResolvedAtGTE applies the GTE predicate on the "resolved_at" field.
+func ResolvedAtGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldResolvedAt, v))
+}
+
+// ResolvedAtLT applies the LT predicate on the "resolved_at" field.
+func ResolvedAtLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldResolvedAt, v))
+}
+
+// ResolvedAtLTE applies the LTE predicate on the "resolved_at" field.
+func ResolvedAtLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldResolvedAt, v))
+}
+
+// ResolvedAtIsNil applies the IsNil predicate on the "resolved_at" field.
+func ResolvedAtIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldResolvedAt))
+}
+
+// ResolvedAtNotNil applies the NotNil predicate on the "resolved_at" field.
+func ResolvedAtNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldResolvedAt))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -885,6 +1140,52 @@ func HasWorkflowInstances() predicate.Ticket {
 func HasWorkflowInstancesWith(preds ...predicate.WorkflowInstance) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newWorkflowInstancesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSLADefinition applies the HasEdge predicate on the "sla_definition" edge.
+func HasSLADefinition() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, SLADefinitionTable, SLADefinitionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLADefinitionWith applies the HasEdge predicate on the "sla_definition" edge with a given conditions (other predicates).
+func HasSLADefinitionWith(preds ...predicate.SLADefinition) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newSLADefinitionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSLAViolations applies the HasEdge predicate on the "sla_violations" edge.
+func HasSLAViolations() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLAViolationsWith applies the HasEdge predicate on the "sla_violations" edge with a given conditions (other predicates).
+func HasSLAViolationsWith(preds ...predicate.SLAViolation) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newSLAViolationsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

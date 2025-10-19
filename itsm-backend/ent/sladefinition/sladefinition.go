@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -27,6 +28,10 @@ const (
 	FieldResolutionTime = "resolution_time"
 	// FieldBusinessHours holds the string denoting the business_hours field in the database.
 	FieldBusinessHours = "business_hours"
+	// FieldEscalationRules holds the string denoting the escalation_rules field in the database.
+	FieldEscalationRules = "escalation_rules"
+	// FieldConditions holds the string denoting the conditions field in the database.
+	FieldConditions = "conditions"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
@@ -35,8 +40,35 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeViolations holds the string denoting the violations edge name in mutations.
+	EdgeViolations = "violations"
+	// EdgeMetrics holds the string denoting the metrics edge name in mutations.
+	EdgeMetrics = "metrics"
+	// EdgeTickets holds the string denoting the tickets edge name in mutations.
+	EdgeTickets = "tickets"
 	// Table holds the table name of the sladefinition in the database.
 	Table = "sla_definitions"
+	// ViolationsTable is the table that holds the violations relation/edge.
+	ViolationsTable = "sla_violations"
+	// ViolationsInverseTable is the table name for the SLAViolation entity.
+	// It exists in this package in order to avoid circular dependency with the "slaviolation" package.
+	ViolationsInverseTable = "sla_violations"
+	// ViolationsColumn is the table column denoting the violations relation/edge.
+	ViolationsColumn = "sla_definition_id"
+	// MetricsTable is the table that holds the metrics relation/edge.
+	MetricsTable = "sla_metrics"
+	// MetricsInverseTable is the table name for the SLAMetric entity.
+	// It exists in this package in order to avoid circular dependency with the "slametric" package.
+	MetricsInverseTable = "sla_metrics"
+	// MetricsColumn is the table column denoting the metrics relation/edge.
+	MetricsColumn = "sla_definition_id"
+	// TicketsTable is the table that holds the tickets relation/edge.
+	TicketsTable = "tickets"
+	// TicketsInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketsInverseTable = "tickets"
+	// TicketsColumn is the table column denoting the tickets relation/edge.
+	TicketsColumn = "sla_definition_id"
 )
 
 // Columns holds all SQL columns for sladefinition fields.
@@ -49,6 +81,8 @@ var Columns = []string{
 	FieldResponseTime,
 	FieldResolutionTime,
 	FieldBusinessHours,
+	FieldEscalationRules,
+	FieldConditions,
 	FieldIsActive,
 	FieldTenantID,
 	FieldCreatedAt,
@@ -144,4 +178,67 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByViolationsCount orders the results by violations count.
+func ByViolationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newViolationsStep(), opts...)
+	}
+}
+
+// ByViolations orders the results by violations terms.
+func ByViolations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newViolationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMetricsCount orders the results by metrics count.
+func ByMetricsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMetricsStep(), opts...)
+	}
+}
+
+// ByMetrics orders the results by metrics terms.
+func ByMetrics(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMetricsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTicketsCount orders the results by tickets count.
+func ByTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketsStep(), opts...)
+	}
+}
+
+// ByTickets orders the results by tickets terms.
+func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newViolationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ViolationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ViolationsTable, ViolationsColumn),
+	)
+}
+func newMetricsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MetricsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MetricsTable, MetricsColumn),
+	)
+}
+func newTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+	)
 }

@@ -4,7 +4,9 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"strings"
 	"time"
 
@@ -27,13 +29,57 @@ type SLAViolation struct {
 	ViolationTime time.Time `json:"violation_time,omitempty"`
 	// 违规描述
 	Description string `json:"description,omitempty"`
+	// 严重程度
+	Severity string `json:"severity,omitempty"`
+	// 是否已解决
+	IsResolved bool `json:"is_resolved,omitempty"`
+	// 解决时间
+	ResolvedAt time.Time `json:"resolved_at,omitempty"`
+	// 解决说明
+	ResolutionNotes string `json:"resolution_notes,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the SLAViolationQuery when eager-loading is set.
+	Edges        SLAViolationEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// SLAViolationEdges holds the relations/edges for other nodes in the graph.
+type SLAViolationEdges struct {
+	// SLA定义
+	SLADefinition *SLADefinition `json:"sla_definition,omitempty"`
+	// 工单
+	Ticket *Ticket `json:"ticket,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// SLADefinitionOrErr returns the SLADefinition value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e SLAViolationEdges) SLADefinitionOrErr() (*SLADefinition, error) {
+	if e.SLADefinition != nil {
+		return e.SLADefinition, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: sladefinition.Label}
+	}
+	return nil, &NotLoadedError{edge: "sla_definition"}
+}
+
+// TicketOrErr returns the Ticket value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e SLAViolationEdges) TicketOrErr() (*Ticket, error) {
+	if e.Ticket != nil {
+		return e.Ticket, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: ticket.Label}
+	}
+	return nil, &NotLoadedError{edge: "ticket"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -41,11 +87,13 @@ func (*SLAViolation) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case slaviolation.FieldIsResolved:
+			values[i] = new(sql.NullBool)
 		case slaviolation.FieldID, slaviolation.FieldSLADefinitionID, slaviolation.FieldTicketID, slaviolation.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case slaviolation.FieldViolationType, slaviolation.FieldDescription:
+		case slaviolation.FieldViolationType, slaviolation.FieldDescription, slaviolation.FieldSeverity, slaviolation.FieldResolutionNotes:
 			values[i] = new(sql.NullString)
-		case slaviolation.FieldViolationTime, slaviolation.FieldCreatedAt, slaviolation.FieldUpdatedAt:
+		case slaviolation.FieldViolationTime, slaviolation.FieldResolvedAt, slaviolation.FieldCreatedAt, slaviolation.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -98,6 +146,30 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sv.Description = value.String
 			}
+		case slaviolation.FieldSeverity:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field severity", values[i])
+			} else if value.Valid {
+				sv.Severity = value.String
+			}
+		case slaviolation.FieldIsResolved:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_resolved", values[i])
+			} else if value.Valid {
+				sv.IsResolved = value.Bool
+			}
+		case slaviolation.FieldResolvedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
+			} else if value.Valid {
+				sv.ResolvedAt = value.Time
+			}
+		case slaviolation.FieldResolutionNotes:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution_notes", values[i])
+			} else if value.Valid {
+				sv.ResolutionNotes = value.String
+			}
 		case slaviolation.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
@@ -127,6 +199,16 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (sv *SLAViolation) Value(name string) (ent.Value, error) {
 	return sv.selectValues.Get(name)
+}
+
+// QuerySLADefinition queries the "sla_definition" edge of the SLAViolation entity.
+func (sv *SLAViolation) QuerySLADefinition() *SLADefinitionQuery {
+	return NewSLAViolationClient(sv.config).QuerySLADefinition(sv)
+}
+
+// QueryTicket queries the "ticket" edge of the SLAViolation entity.
+func (sv *SLAViolation) QueryTicket() *TicketQuery {
+	return NewSLAViolationClient(sv.config).QueryTicket(sv)
 }
 
 // Update returns a builder for updating this SLAViolation.
@@ -166,6 +248,18 @@ func (sv *SLAViolation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(sv.Description)
+	builder.WriteString(", ")
+	builder.WriteString("severity=")
+	builder.WriteString(sv.Severity)
+	builder.WriteString(", ")
+	builder.WriteString("is_resolved=")
+	builder.WriteString(fmt.Sprintf("%v", sv.IsResolved))
+	builder.WriteString(", ")
+	builder.WriteString("resolved_at=")
+	builder.WriteString(sv.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("resolution_notes=")
+	builder.WriteString(sv.ResolutionNotes)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", sv.TenantID))

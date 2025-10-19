@@ -36,6 +36,16 @@ const (
 	FieldCategoryID = "category_id"
 	// FieldParentTicketID holds the string denoting the parent_ticket_id field in the database.
 	FieldParentTicketID = "parent_ticket_id"
+	// FieldSLADefinitionID holds the string denoting the sla_definition_id field in the database.
+	FieldSLADefinitionID = "sla_definition_id"
+	// FieldSLAResponseDeadline holds the string denoting the sla_response_deadline field in the database.
+	FieldSLAResponseDeadline = "sla_response_deadline"
+	// FieldSLAResolutionDeadline holds the string denoting the sla_resolution_deadline field in the database.
+	FieldSLAResolutionDeadline = "sla_resolution_deadline"
+	// FieldFirstResponseAt holds the string denoting the first_response_at field in the database.
+	FieldFirstResponseAt = "first_response_at"
+	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
+	FieldResolvedAt = "resolved_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -52,6 +62,10 @@ const (
 	EdgeParentTicket = "parent_ticket"
 	// EdgeWorkflowInstances holds the string denoting the workflow_instances edge name in mutations.
 	EdgeWorkflowInstances = "workflow_instances"
+	// EdgeSLADefinition holds the string denoting the sla_definition edge name in mutations.
+	EdgeSLADefinition = "sla_definition"
+	// EdgeSLAViolations holds the string denoting the sla_violations edge name in mutations.
+	EdgeSLAViolations = "sla_violations"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -90,6 +104,20 @@ const (
 	WorkflowInstancesInverseTable = "workflow_instances"
 	// WorkflowInstancesColumn is the table column denoting the workflow_instances relation/edge.
 	WorkflowInstancesColumn = "ticket_workflow_instances"
+	// SLADefinitionTable is the table that holds the sla_definition relation/edge.
+	SLADefinitionTable = "tickets"
+	// SLADefinitionInverseTable is the table name for the SLADefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "sladefinition" package.
+	SLADefinitionInverseTable = "sla_definitions"
+	// SLADefinitionColumn is the table column denoting the sla_definition relation/edge.
+	SLADefinitionColumn = "sla_definition_id"
+	// SLAViolationsTable is the table that holds the sla_violations relation/edge.
+	SLAViolationsTable = "sla_violations"
+	// SLAViolationsInverseTable is the table name for the SLAViolation entity.
+	// It exists in this package in order to avoid circular dependency with the "slaviolation" package.
+	SLAViolationsInverseTable = "sla_violations"
+	// SLAViolationsColumn is the table column denoting the sla_violations relation/edge.
+	SLAViolationsColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -106,6 +134,11 @@ var Columns = []string{
 	FieldTemplateID,
 	FieldCategoryID,
 	FieldParentTicketID,
+	FieldSLADefinitionID,
+	FieldSLAResponseDeadline,
+	FieldSLAResolutionDeadline,
+	FieldFirstResponseAt,
+	FieldResolvedAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -215,6 +248,31 @@ func ByParentTicketID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldParentTicketID, opts...).ToFunc()
 }
 
+// BySLADefinitionID orders the results by the sla_definition_id field.
+func BySLADefinitionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLADefinitionID, opts...).ToFunc()
+}
+
+// BySLAResponseDeadline orders the results by the sla_response_deadline field.
+func BySLAResponseDeadline(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResponseDeadline, opts...).ToFunc()
+}
+
+// BySLAResolutionDeadline orders the results by the sla_resolution_deadline field.
+func BySLAResolutionDeadline(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResolutionDeadline, opts...).ToFunc()
+}
+
+// ByFirstResponseAt orders the results by the first_response_at field.
+func ByFirstResponseAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFirstResponseAt, opts...).ToFunc()
+}
+
+// ByResolvedAt orders the results by the resolved_at field.
+func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -287,6 +345,27 @@ func ByWorkflowInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newWorkflowInstancesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// BySLADefinitionField orders the results by sla_definition field.
+func BySLADefinitionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLADefinitionStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// BySLAViolationsCount orders the results by sla_violations count.
+func BySLAViolationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSLAViolationsStep(), opts...)
+	}
+}
+
+// BySLAViolations orders the results by sla_violations terms.
+func BySLAViolations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLAViolationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -327,5 +406,19 @@ func newWorkflowInstancesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(WorkflowInstancesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
+	)
+}
+func newSLADefinitionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLADefinitionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SLADefinitionTable, SLADefinitionColumn),
+	)
+}
+func newSLAViolationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLAViolationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
 	)
 }

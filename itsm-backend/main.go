@@ -11,24 +11,24 @@ package main
 // main包是Go程序的入口点，包含main函数
 
 import (
-    "context"                 // Go标准库，用于处理上下文（超时、取消等）
-    "fmt"                     // Go标准库，用于格式化输出
-    "itsm-backend/config"     // 自定义配置包
-    "itsm-backend/controller" // 自定义控制器包
-    "itsm-backend/database"   // 自定义数据库包
-    "itsm-backend/ent/user"    // Ent 用户schema枚举与查询
-    "itsm-backend/ent/tenant"  // 租户查询
-    "itsm-backend/middleware" // 注入全局日志器
-    "itsm-backend/router"     // 自定义路由包
-    "itsm-backend/service"    // 自定义服务包
-    "log"                     // Go标准库，用于日志记录
-    "time"
+	"context"                 // Go标准库，用于处理上下文（超时、取消等）
+	"fmt"                     // Go标准库，用于格式化输出
+	"itsm-backend/config"     // 自定义配置包
+	"itsm-backend/controller" // 自定义控制器包
+	"itsm-backend/database"   // 自定义数据库包
+	"itsm-backend/ent/tenant" // 租户查询
+	"itsm-backend/ent/user"   // Ent 用户schema枚举与查询
+	"itsm-backend/middleware" // 注入全局日志器
+	"itsm-backend/router"     // 自定义路由包
+	"itsm-backend/service"    // 自定义服务包
+	"log"                     // Go标准库，用于日志记录
+	"time"
 
-    "github.com/gin-gonic/gin"
-    swaggerFiles "github.com/swaggo/files"
-    ginSwagger "github.com/swaggo/gin-swagger"
-    "go.uber.org/zap" // 第三方日志库，高性能的结构化日志
-    "golang.org/x/crypto/bcrypt"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap" // 第三方日志库，高性能的结构化日志
+	"golang.org/x/crypto/bcrypt"
 )
 
 // main函数：Go程序的入口点
@@ -66,75 +66,75 @@ func main() {
 	// Ent ORM会自动创建数据库表结构
 	// 根据Go结构体定义生成对应的数据库表
 	// context.Background() 创建根上下文
-    if err := client.Schema.Create(context.Background()); err != nil {
-        log.Fatalf("Failed to create schema resources: %v", err)
-    }
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("Failed to create schema resources: %v", err)
+	}
 
-    // 一次性数据修复：确保默认admin账号的角色为admin
-    // 仅在存在该用户时执行，忽略错误
-    func() {
-        ctx := context.Background()
-        if _, err := client.User.Update().
-            Where(user.UsernameEQ("admin")).
-            SetRole("admin").
-            Save(ctx); err != nil {
-            // 记录但不阻塞启动
-            sugar.Warnw("admin role backfill failed (non-fatal)", "error", err)
-        } else {
-            sugar.Infow("admin role backfilled to admin")
-        }
-    }()
+	// 一次性数据修复：确保默认admin账号的角色为admin
+	// 仅在存在该用户时执行，忽略错误
+	func() {
+		ctx := context.Background()
+		if _, err := client.User.Update().
+			Where(user.UsernameEQ("admin")).
+			SetRole("admin").
+			Save(ctx); err != nil {
+			// 记录但不阻塞启动
+			sugar.Warnw("admin role backfill failed (non-fatal)", "error", err)
+		} else {
+			sugar.Infow("admin role backfilled to admin")
+		}
+	}()
 
-    // 测试种子数据：如不存在则创建一个默认普通用户 user1（角色=user）
-    func() {
-        ctx := context.Background()
-        // 查找默认租户
-        t, err := client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
-        if err != nil {
-            sugar.Warnw("default tenant not found; skip user1 seed", "error", err)
-            return
-        }
-        // 是否已存在 user1
-        _, err = client.User.Query().Where(user.UsernameEQ("user1"), user.TenantIDEQ(t.ID)).First(ctx)
-        if err == nil {
-            sugar.Infow("seed user1 already exists")
-            return
-        }
-        // 创建 user1，密码: user123
-        passHash, err := bcrypt.GenerateFromPassword([]byte("user123"), bcrypt.DefaultCost)
-        if err != nil {
-            sugar.Warnw("generate bcrypt for user1 failed", "error", err)
-            return
-        }
-        if _, err := client.User.Create().
-            SetUsername("user1").
-            SetRole("end_user").
-            SetPasswordHash(string(passHash)).
-            SetEmail("user1@example.com").
-            SetName("普通用户").
-            SetDepartment("IT部门").
-            SetActive(true).
-            SetTenantID(t.ID).
-            Save(ctx); err != nil {
-            sugar.Warnw("seed user1 failed", "error", err)
-        } else {
-            sugar.Infow("seed user1 created", "username", "user1")
-        }
-    }()
+	// 测试种子数据：如不存在则创建一个默认普通用户 user1（角色=user）
+	func() {
+		ctx := context.Background()
+		// 查找默认租户
+		t, err := client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+		if err != nil {
+			sugar.Warnw("default tenant not found; skip user1 seed", "error", err)
+			return
+		}
+		// 是否已存在 user1
+		_, err = client.User.Query().Where(user.UsernameEQ("user1"), user.TenantIDEQ(t.ID)).First(ctx)
+		if err == nil {
+			sugar.Infow("seed user1 already exists")
+			return
+		}
+		// 创建 user1，密码: user123
+		passHash, err := bcrypt.GenerateFromPassword([]byte("user123"), bcrypt.DefaultCost)
+		if err != nil {
+			sugar.Warnw("generate bcrypt for user1 failed", "error", err)
+			return
+		}
+		if _, err := client.User.Create().
+			SetUsername("user1").
+			SetRole("end_user").
+			SetPasswordHash(string(passHash)).
+			SetEmail("user1@example.com").
+			SetName("普通用户").
+			SetDepartment("IT部门").
+			SetActive(true).
+			SetTenantID(t.ID).
+			Save(ctx); err != nil {
+			sugar.Warnw("seed user1 failed", "error", err)
+		} else {
+			sugar.Infow("seed user1 created", "username", "user1")
+		}
+	}()
 
-    // 数据修复：将旧角色名"user"迁移为新角色名"end_user"
-    func() {
-        ctx := context.Background()
-        n, err := client.User.Update().
-            Where(user.RoleEQ("user")).
-            SetRole("end_user").
-            Save(ctx)
-        if err != nil {
-            sugar.Warnw("backfill role user->end_user failed", "error", err)
-        } else if n > 0 {
-            sugar.Infow("backfilled roles", "updated", n)
-        }
-    }()
+	// 数据修复：将旧角色名"user"迁移为新角色名"end_user"
+	func() {
+		ctx := context.Background()
+		n, err := client.User.Update().
+			Where(user.RoleEQ("user")).
+			SetRole("end_user").
+			Save(ctx)
+		if err != nil {
+			sugar.Warnw("backfill role user->end_user failed", "error", err)
+		} else if n > 0 {
+			sugar.Infow("backfilled roles", "updated", n)
+		}
+	}()
 
 	// 5. 初始化业务服务层
 	// 服务层包含业务逻辑，是控制器和数据层之间的桥梁
@@ -146,7 +146,7 @@ func main() {
 	ticketService := service.NewTicketService(client, sugar)
 	// 审计日志服务
 	auditService := service.NewAuditLogService(client, sugar)
-	
+
 	// 5.1 初始化 LLM/Embedding/VectorStore
 	// LLM/Embedding Provider: use cfg.LLM
 	var embedder service.Embedder
@@ -161,13 +161,22 @@ func main() {
 
 	// 6. 初始化控制器层
 	// 控制器层处理HTTP请求，调用服务层执行业务逻辑
-	
+
+	// 初始化事件管理服务
+	incidentRuleEngine := service.NewIncidentRuleEngine(client, sugar)
+	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
+	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
+
+	// 初始化SLA服务
+	slaService := service.NewSLAService(client, sugar)
+
 	// 初始化认证服务
 	authService := service.NewAuthService(client, cfg.JWT.Secret, sugar)
-	
+
 	// 核心控制器
 	ticketController := controller.NewTicketController(ticketService, sugar)
-	incidentController := controller.NewIncidentController(incidentService, sugar)
+	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, sugar)
+	slaController := controller.NewSLAController(slaService)
 	userController := controller.NewUserController(userService, sugar)
 	authController := controller.NewAuthController(authService)
 	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
@@ -183,12 +192,13 @@ func main() {
 		Client:             client,
 		TicketController:   ticketController,
 		IncidentController: incidentController,
+		SLAController:      slaController,
 		AuthController:     authController,
 		UserController:     userController,
 		AIController:       aiController,
 		AuditLogController: auditLogController,
 	}
-	
+
 	// SetupRoutes函数配置Gin路由，定义API端点
 	// 参数说明：
 	// - 装配所有控制器，启用真实登录与受保护路由

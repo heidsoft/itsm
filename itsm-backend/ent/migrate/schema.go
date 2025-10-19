@@ -161,12 +161,24 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "status", Type: field.TypeString, Default: "new"},
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "severity", Type: field.TypeString, Default: "medium"},
 		{Name: "incident_number", Type: field.TypeString, Unique: true},
 		{Name: "reporter_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
 		{Name: "configuration_item_id", Type: field.TypeInt, Nullable: true},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "subcategory", Type: field.TypeString, Nullable: true},
+		{Name: "impact_analysis", Type: field.TypeJSON, Nullable: true},
+		{Name: "root_cause", Type: field.TypeJSON, Nullable: true},
+		{Name: "resolution_steps", Type: field.TypeJSON, Nullable: true},
+		{Name: "detected_at", Type: field.TypeTime},
 		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "escalated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "escalation_level", Type: field.TypeInt, Default: 0},
+		{Name: "is_automated", Type: field.TypeBool, Default: false},
+		{Name: "source", Type: field.TypeString, Default: "manual"},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -176,6 +188,155 @@ var (
 		Name:       "incidents",
 		Columns:    IncidentsColumns,
 		PrimaryKey: []*schema.Column{IncidentsColumns[0]},
+	}
+	// IncidentAlertsColumns holds the columns for the "incident_alerts" table.
+	IncidentAlertsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "alert_type", Type: field.TypeString},
+		{Name: "alert_name", Type: field.TypeString},
+		{Name: "message", Type: field.TypeString, Size: 2147483647},
+		{Name: "severity", Type: field.TypeString, Default: "medium"},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "channels", Type: field.TypeJSON, Nullable: true},
+		{Name: "recipients", Type: field.TypeJSON, Nullable: true},
+		{Name: "triggered_at", Type: field.TypeTime},
+		{Name: "acknowledged_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "acknowledged_by", Type: field.TypeInt, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "incident_id", Type: field.TypeInt},
+	}
+	// IncidentAlertsTable holds the schema information for the "incident_alerts" table.
+	IncidentAlertsTable = &schema.Table{
+		Name:       "incident_alerts",
+		Columns:    IncidentAlertsColumns,
+		PrimaryKey: []*schema.Column{IncidentAlertsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incident_alerts_incidents_incident_alerts",
+				Columns:    []*schema.Column{IncidentAlertsColumns[16]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// IncidentEventsColumns holds the columns for the "incident_events" table.
+	IncidentEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "event_name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "severity", Type: field.TypeString, Default: "medium"},
+		{Name: "data", Type: field.TypeJSON, Nullable: true},
+		{Name: "occurred_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "source", Type: field.TypeString, Default: "system"},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "incident_id", Type: field.TypeInt},
+	}
+	// IncidentEventsTable holds the schema information for the "incident_events" table.
+	IncidentEventsTable = &schema.Table{
+		Name:       "incident_events",
+		Columns:    IncidentEventsColumns,
+		PrimaryKey: []*schema.Column{IncidentEventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incident_events_incidents_incident_events",
+				Columns:    []*schema.Column{IncidentEventsColumns[14]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// IncidentMetricsColumns holds the columns for the "incident_metrics" table.
+	IncidentMetricsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "metric_type", Type: field.TypeString},
+		{Name: "metric_name", Type: field.TypeString},
+		{Name: "metric_value", Type: field.TypeFloat64},
+		{Name: "unit", Type: field.TypeString, Nullable: true},
+		{Name: "measured_at", Type: field.TypeTime},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "incident_id", Type: field.TypeInt},
+	}
+	// IncidentMetricsTable holds the schema information for the "incident_metrics" table.
+	IncidentMetricsTable = &schema.Table{
+		Name:       "incident_metrics",
+		Columns:    IncidentMetricsColumns,
+		PrimaryKey: []*schema.Column{IncidentMetricsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incident_metrics_incidents_incident_metrics",
+				Columns:    []*schema.Column{IncidentMetricsColumns[11]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// IncidentRulesColumns holds the columns for the "incident_rules" table.
+	IncidentRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "rule_type", Type: field.TypeString},
+		{Name: "conditions", Type: field.TypeJSON, Nullable: true},
+		{Name: "actions", Type: field.TypeJSON, Nullable: true},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "execution_count", Type: field.TypeInt, Default: 0},
+		{Name: "last_executed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// IncidentRulesTable holds the schema information for the "incident_rules" table.
+	IncidentRulesTable = &schema.Table{
+		Name:       "incident_rules",
+		Columns:    IncidentRulesColumns,
+		PrimaryKey: []*schema.Column{IncidentRulesColumns[0]},
+	}
+	// IncidentRuleExecutionsColumns holds the columns for the "incident_rule_executions" table.
+	IncidentRuleExecutionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "incident_id", Type: field.TypeInt, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "result", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "execution_time_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "input_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "output_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "rule_id", Type: field.TypeInt},
+	}
+	// IncidentRuleExecutionsTable holds the schema information for the "incident_rule_executions" table.
+	IncidentRuleExecutionsTable = &schema.Table{
+		Name:       "incident_rule_executions",
+		Columns:    IncidentRuleExecutionsColumns,
+		PrimaryKey: []*schema.Column{IncidentRuleExecutionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incident_rule_executions_incident_rules_rule_executions",
+				Columns:    []*schema.Column{IncidentRuleExecutionsColumns[13]},
+				RefColumns: []*schema.Column{IncidentRulesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// KnowledgeArticlesColumns holds the columns for the "knowledge_articles" table.
 	KnowledgeArticlesColumns = []*schema.Column{
@@ -718,6 +879,8 @@ var (
 		{Name: "response_time", Type: field.TypeInt, Default: 30},
 		{Name: "resolution_time", Type: field.TypeInt, Default: 240},
 		{Name: "business_hours", Type: field.TypeJSON, Nullable: true},
+		{Name: "escalation_rules", Type: field.TypeJSON, Nullable: true},
+		{Name: "conditions", Type: field.TypeJSON, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
@@ -729,23 +892,69 @@ var (
 		Columns:    SLADefinitionsColumns,
 		PrimaryKey: []*schema.Column{SLADefinitionsColumns[0]},
 	}
-	// SLAViolationsColumns holds the columns for the "sla_violations" table.
-	SLAViolationsColumns = []*schema.Column{
+	// SLAMetricsColumns holds the columns for the "sla_metrics" table.
+	SLAMetricsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "sla_definition_id", Type: field.TypeInt},
-		{Name: "ticket_id", Type: field.TypeInt},
-		{Name: "violation_type", Type: field.TypeString},
-		{Name: "violation_time", Type: field.TypeTime},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "metric_type", Type: field.TypeString},
+		{Name: "metric_name", Type: field.TypeString},
+		{Name: "metric_value", Type: field.TypeFloat64},
+		{Name: "unit", Type: field.TypeString, Nullable: true},
+		{Name: "measurement_time", Type: field.TypeTime},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "sla_definition_id", Type: field.TypeInt},
+	}
+	// SLAMetricsTable holds the schema information for the "sla_metrics" table.
+	SLAMetricsTable = &schema.Table{
+		Name:       "sla_metrics",
+		Columns:    SLAMetricsColumns,
+		PrimaryKey: []*schema.Column{SLAMetricsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sla_metrics_sla_definitions_metrics",
+				Columns:    []*schema.Column{SLAMetricsColumns[10]},
+				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// SLAViolationsColumns holds the columns for the "sla_violations" table.
+	SLAViolationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "violation_type", Type: field.TypeString},
+		{Name: "violation_time", Type: field.TypeTime},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "severity", Type: field.TypeString, Default: "medium"},
+		{Name: "is_resolved", Type: field.TypeBool, Default: false},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolution_notes", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "sla_definition_id", Type: field.TypeInt},
+		{Name: "ticket_id", Type: field.TypeInt},
 	}
 	// SLAViolationsTable holds the schema information for the "sla_violations" table.
 	SLAViolationsTable = &schema.Table{
 		Name:       "sla_violations",
 		Columns:    SLAViolationsColumns,
 		PrimaryKey: []*schema.Column{SLAViolationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sla_violations_sla_definitions_violations",
+				Columns:    []*schema.Column{SLAViolationsColumns[11]},
+				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "sla_violations_tickets_sla_violations",
+				Columns:    []*schema.Column{SLAViolationsColumns[12]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// ServiceCatalogsColumns holds the columns for the "service_catalogs" table.
 	ServiceCatalogsColumns = []*schema.Column{
@@ -812,8 +1021,13 @@ var (
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "sla_response_deadline", Type: field.TypeTime, Nullable: true},
+		{Name: "sla_resolution_deadline", Type: field.TypeTime, Nullable: true},
+		{Name: "first_response_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "sla_definition_id", Type: field.TypeInt, Nullable: true},
 		{Name: "parent_ticket_id", Type: field.TypeInt, Nullable: true},
 		{Name: "category_id", Type: field.TypeInt, Nullable: true},
 		{Name: "ticket_tag_tickets", Type: field.TypeInt, Nullable: true},
@@ -826,26 +1040,32 @@ var (
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
+				Symbol:     "tickets_sla_definitions_tickets",
+				Columns:    []*schema.Column{TicketsColumns[15]},
+				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
 				Symbol:     "tickets_tickets_related_tickets",
-				Columns:    []*schema.Column{TicketsColumns[11]},
+				Columns:    []*schema.Column{TicketsColumns[16]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_categories_tickets",
-				Columns:    []*schema.Column{TicketsColumns[12]},
+				Columns:    []*schema.Column{TicketsColumns[17]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[13]},
+				Columns:    []*schema.Column{TicketsColumns[18]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[14]},
+				Columns:    []*schema.Column{TicketsColumns[19]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1033,6 +1253,31 @@ var (
 			},
 		},
 	}
+	// IncidentRelatedIncidentsColumns holds the columns for the "incident_related_incidents" table.
+	IncidentRelatedIncidentsColumns = []*schema.Column{
+		{Name: "incident_id", Type: field.TypeInt},
+		{Name: "parent_incident_id", Type: field.TypeInt},
+	}
+	// IncidentRelatedIncidentsTable holds the schema information for the "incident_related_incidents" table.
+	IncidentRelatedIncidentsTable = &schema.Table{
+		Name:       "incident_related_incidents",
+		Columns:    IncidentRelatedIncidentsColumns,
+		PrimaryKey: []*schema.Column{IncidentRelatedIncidentsColumns[0], IncidentRelatedIncidentsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "incident_related_incidents_incident_id",
+				Columns:    []*schema.Column{IncidentRelatedIncidentsColumns[0]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "incident_related_incidents_parent_incident_id",
+				Columns:    []*schema.Column{IncidentRelatedIncidentsColumns[1]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AuditLogsTable,
@@ -1043,6 +1288,11 @@ var (
 		ConfigurationItemsTable,
 		ConversationsTable,
 		IncidentsTable,
+		IncidentAlertsTable,
+		IncidentEventsTable,
+		IncidentMetricsTable,
+		IncidentRulesTable,
+		IncidentRuleExecutionsTable,
 		KnowledgeArticlesTable,
 		MessagesTable,
 		NotificationsTable,
@@ -1055,6 +1305,7 @@ var (
 		ProcessVariablesTable,
 		PromptTemplatesTable,
 		SLADefinitionsTable,
+		SLAMetricsTable,
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
@@ -1067,18 +1318,29 @@ var (
 		UsersTable,
 		WorkflowsTable,
 		WorkflowInstancesTable,
+		IncidentRelatedIncidentsTable,
 	}
 )
 
 func init() {
+	IncidentAlertsTable.ForeignKeys[0].RefTable = IncidentsTable
+	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
+	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
+	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
-	TicketsTable.ForeignKeys[0].RefTable = TicketsTable
-	TicketsTable.ForeignKeys[1].RefTable = TicketCategoriesTable
-	TicketsTable.ForeignKeys[2].RefTable = TicketTagsTable
-	TicketsTable.ForeignKeys[3].RefTable = TicketTemplatesTable
+	SLAMetricsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
+	SLAViolationsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
+	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
+	TicketsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
+	TicketsTable.ForeignKeys[1].RefTable = TicketsTable
+	TicketsTable.ForeignKeys[2].RefTable = TicketCategoriesTable
+	TicketsTable.ForeignKeys[3].RefTable = TicketTagsTable
+	TicketsTable.ForeignKeys[4].RefTable = TicketTemplatesTable
 	TicketCategoriesTable.ForeignKeys[0].RefTable = TicketCategoriesTable
 	TicketTagsTable.ForeignKeys[0].RefTable = TicketsTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
 	WorkflowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
 	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
+	IncidentRelatedIncidentsTable.ForeignKeys[0].RefTable = IncidentsTable
+	IncidentRelatedIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
 }

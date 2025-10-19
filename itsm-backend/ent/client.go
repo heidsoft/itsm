@@ -19,6 +19,11 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentmetric"
+	"itsm-backend/ent/incidentrule"
+	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/notification"
@@ -33,6 +38,7 @@ import (
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
@@ -71,6 +77,16 @@ type Client struct {
 	Conversation *ConversationClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
+	// IncidentAlert is the client for interacting with the IncidentAlert builders.
+	IncidentAlert *IncidentAlertClient
+	// IncidentEvent is the client for interacting with the IncidentEvent builders.
+	IncidentEvent *IncidentEventClient
+	// IncidentMetric is the client for interacting with the IncidentMetric builders.
+	IncidentMetric *IncidentMetricClient
+	// IncidentRule is the client for interacting with the IncidentRule builders.
+	IncidentRule *IncidentRuleClient
+	// IncidentRuleExecution is the client for interacting with the IncidentRuleExecution builders.
+	IncidentRuleExecution *IncidentRuleExecutionClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
 	// Message is the client for interacting with the Message builders.
@@ -95,6 +111,8 @@ type Client struct {
 	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
 	SLADefinition *SLADefinitionClient
+	// SLAMetric is the client for interacting with the SLAMetric builders.
+	SLAMetric *SLAMetricClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -138,6 +156,11 @@ func (c *Client) init() {
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
 	c.Conversation = NewConversationClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
+	c.IncidentAlert = NewIncidentAlertClient(c.config)
+	c.IncidentEvent = NewIncidentEventClient(c.config)
+	c.IncidentMetric = NewIncidentMetricClient(c.config)
+	c.IncidentRule = NewIncidentRuleClient(c.config)
+	c.IncidentRuleExecution = NewIncidentRuleExecutionClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
@@ -150,6 +173,7 @@ func (c *Client) init() {
 	c.ProcessVariable = NewProcessVariableClient(c.config)
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
 	c.SLADefinition = NewSLADefinitionClient(c.config)
+	c.SLAMetric = NewSLAMetricClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
@@ -262,6 +286,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ConfigurationItem:       NewConfigurationItemClient(cfg),
 		Conversation:            NewConversationClient(cfg),
 		Incident:                NewIncidentClient(cfg),
+		IncidentAlert:           NewIncidentAlertClient(cfg),
+		IncidentEvent:           NewIncidentEventClient(cfg),
+		IncidentMetric:          NewIncidentMetricClient(cfg),
+		IncidentRule:            NewIncidentRuleClient(cfg),
+		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
 		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Notification:            NewNotificationClient(cfg),
@@ -274,6 +303,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProcessVariable:         NewProcessVariableClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		SLADefinition:           NewSLADefinitionClient(cfg),
+		SLAMetric:               NewSLAMetricClient(cfg),
 		SLAViolation:            NewSLAViolationClient(cfg),
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
@@ -313,6 +343,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ConfigurationItem:       NewConfigurationItemClient(cfg),
 		Conversation:            NewConversationClient(cfg),
 		Incident:                NewIncidentClient(cfg),
+		IncidentAlert:           NewIncidentAlertClient(cfg),
+		IncidentEvent:           NewIncidentEventClient(cfg),
+		IncidentMetric:          NewIncidentMetricClient(cfg),
+		IncidentRule:            NewIncidentRuleClient(cfg),
+		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
 		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Notification:            NewNotificationClient(cfg),
@@ -325,6 +360,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProcessVariable:         NewProcessVariableClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		SLADefinition:           NewSLADefinitionClient(cfg),
+		SLAMetric:               NewSLAMetricClient(cfg),
 		SLAViolation:            NewSLAViolationClient(cfg),
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
@@ -367,12 +403,14 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
-		c.ConfigurationItem, c.Conversation, c.Incident, c.KnowledgeArticle, c.Message,
-		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.PromptTemplate, c.SLADefinition, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.Tenant, c.Ticket, c.TicketCategory, c.TicketTag,
-		c.TicketTemplate, c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
+		c.ConfigurationItem, c.Conversation, c.Incident, c.IncidentAlert,
+		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
+		c.KnowledgeArticle, c.Message, c.Notification, c.Problem, c.ProcessDefinition,
+		c.ProcessDeployment, c.ProcessExecutionHistory, c.ProcessInstance,
+		c.ProcessTask, c.ProcessVariable, c.PromptTemplate, c.SLADefinition,
+		c.SLAMetric, c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.Tenant,
+		c.Ticket, c.TicketCategory, c.TicketTag, c.TicketTemplate, c.ToolInvocation,
+		c.User, c.Workflow, c.WorkflowInstance,
 	} {
 		n.Use(hooks...)
 	}
@@ -383,12 +421,14 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
-		c.ConfigurationItem, c.Conversation, c.Incident, c.KnowledgeArticle, c.Message,
-		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.PromptTemplate, c.SLADefinition, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.Tenant, c.Ticket, c.TicketCategory, c.TicketTag,
-		c.TicketTemplate, c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
+		c.ConfigurationItem, c.Conversation, c.Incident, c.IncidentAlert,
+		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
+		c.KnowledgeArticle, c.Message, c.Notification, c.Problem, c.ProcessDefinition,
+		c.ProcessDeployment, c.ProcessExecutionHistory, c.ProcessInstance,
+		c.ProcessTask, c.ProcessVariable, c.PromptTemplate, c.SLADefinition,
+		c.SLAMetric, c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.Tenant,
+		c.Ticket, c.TicketCategory, c.TicketTag, c.TicketTemplate, c.ToolInvocation,
+		c.User, c.Workflow, c.WorkflowInstance,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -413,6 +453,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Conversation.mutate(ctx, m)
 	case *IncidentMutation:
 		return c.Incident.mutate(ctx, m)
+	case *IncidentAlertMutation:
+		return c.IncidentAlert.mutate(ctx, m)
+	case *IncidentEventMutation:
+		return c.IncidentEvent.mutate(ctx, m)
+	case *IncidentMetricMutation:
+		return c.IncidentMetric.mutate(ctx, m)
+	case *IncidentRuleMutation:
+		return c.IncidentRule.mutate(ctx, m)
+	case *IncidentRuleExecutionMutation:
+		return c.IncidentRuleExecution.mutate(ctx, m)
 	case *KnowledgeArticleMutation:
 		return c.KnowledgeArticle.mutate(ctx, m)
 	case *MessageMutation:
@@ -437,6 +487,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PromptTemplate.mutate(ctx, m)
 	case *SLADefinitionMutation:
 		return c.SLADefinition.mutate(ctx, m)
+	case *SLAMetricMutation:
+		return c.SLAMetric.mutate(ctx, m)
 	case *SLAViolationMutation:
 		return c.SLAViolation.mutate(ctx, m)
 	case *ServiceCatalogMutation:
@@ -1537,6 +1589,86 @@ func (c *IncidentClient) GetX(ctx context.Context, id int) *Incident {
 	return obj
 }
 
+// QueryRelatedIncidents queries the related_incidents edge of a Incident.
+func (c *IncidentClient) QueryRelatedIncidents(i *Incident) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, incident.RelatedIncidentsTable, incident.RelatedIncidentsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIncidentEvents queries the incident_events edge of a Incident.
+func (c *IncidentClient) QueryIncidentEvents(i *Incident) *IncidentEventQuery {
+	query := (&IncidentEventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(incidentevent.Table, incidentevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentEventsTable, incident.IncidentEventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIncidentAlerts queries the incident_alerts edge of a Incident.
+func (c *IncidentClient) QueryIncidentAlerts(i *Incident) *IncidentAlertQuery {
+	query := (&IncidentAlertClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(incidentalert.Table, incidentalert.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentAlertsTable, incident.IncidentAlertsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIncidentMetrics queries the incident_metrics edge of a Incident.
+func (c *IncidentClient) QueryIncidentMetrics(i *Incident) *IncidentMetricQuery {
+	query := (&IncidentMetricClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(incidentmetric.Table, incidentmetric.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentMetricsTable, incident.IncidentMetricsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParentIncident queries the parent_incident edge of a Incident.
+func (c *IncidentClient) QueryParentIncident(i *Incident) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, incident.ParentIncidentTable, incident.ParentIncidentPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *IncidentClient) Hooks() []Hook {
 	return c.hooks.Incident
@@ -1559,6 +1691,751 @@ func (c *IncidentClient) mutate(ctx context.Context, m *IncidentMutation) (Value
 		return (&IncidentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Incident mutation op: %q", m.Op())
+	}
+}
+
+// IncidentAlertClient is a client for the IncidentAlert schema.
+type IncidentAlertClient struct {
+	config
+}
+
+// NewIncidentAlertClient returns a client for the IncidentAlert from the given config.
+func NewIncidentAlertClient(c config) *IncidentAlertClient {
+	return &IncidentAlertClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incidentalert.Hooks(f(g(h())))`.
+func (c *IncidentAlertClient) Use(hooks ...Hook) {
+	c.hooks.IncidentAlert = append(c.hooks.IncidentAlert, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incidentalert.Intercept(f(g(h())))`.
+func (c *IncidentAlertClient) Intercept(interceptors ...Interceptor) {
+	c.inters.IncidentAlert = append(c.inters.IncidentAlert, interceptors...)
+}
+
+// Create returns a builder for creating a IncidentAlert entity.
+func (c *IncidentAlertClient) Create() *IncidentAlertCreate {
+	mutation := newIncidentAlertMutation(c.config, OpCreate)
+	return &IncidentAlertCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of IncidentAlert entities.
+func (c *IncidentAlertClient) CreateBulk(builders ...*IncidentAlertCreate) *IncidentAlertCreateBulk {
+	return &IncidentAlertCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentAlertClient) MapCreateBulk(slice any, setFunc func(*IncidentAlertCreate, int)) *IncidentAlertCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentAlertCreateBulk{err: fmt.Errorf("calling to IncidentAlertClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentAlertCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentAlertCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for IncidentAlert.
+func (c *IncidentAlertClient) Update() *IncidentAlertUpdate {
+	mutation := newIncidentAlertMutation(c.config, OpUpdate)
+	return &IncidentAlertUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentAlertClient) UpdateOne(ia *IncidentAlert) *IncidentAlertUpdateOne {
+	mutation := newIncidentAlertMutation(c.config, OpUpdateOne, withIncidentAlert(ia))
+	return &IncidentAlertUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentAlertClient) UpdateOneID(id int) *IncidentAlertUpdateOne {
+	mutation := newIncidentAlertMutation(c.config, OpUpdateOne, withIncidentAlertID(id))
+	return &IncidentAlertUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for IncidentAlert.
+func (c *IncidentAlertClient) Delete() *IncidentAlertDelete {
+	mutation := newIncidentAlertMutation(c.config, OpDelete)
+	return &IncidentAlertDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentAlertClient) DeleteOne(ia *IncidentAlert) *IncidentAlertDeleteOne {
+	return c.DeleteOneID(ia.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentAlertClient) DeleteOneID(id int) *IncidentAlertDeleteOne {
+	builder := c.Delete().Where(incidentalert.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentAlertDeleteOne{builder}
+}
+
+// Query returns a query builder for IncidentAlert.
+func (c *IncidentAlertClient) Query() *IncidentAlertQuery {
+	return &IncidentAlertQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncidentAlert},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a IncidentAlert entity by its id.
+func (c *IncidentAlertClient) Get(ctx context.Context, id int) (*IncidentAlert, error) {
+	return c.Query().Where(incidentalert.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentAlertClient) GetX(ctx context.Context, id int) *IncidentAlert {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryIncident queries the incident edge of a IncidentAlert.
+func (c *IncidentAlertClient) QueryIncident(ia *IncidentAlert) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ia.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incidentalert.Table, incidentalert.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incidentalert.IncidentTable, incidentalert.IncidentColumn),
+		)
+		fromV = sqlgraph.Neighbors(ia.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentAlertClient) Hooks() []Hook {
+	return c.hooks.IncidentAlert
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentAlertClient) Interceptors() []Interceptor {
+	return c.inters.IncidentAlert
+}
+
+func (c *IncidentAlertClient) mutate(ctx context.Context, m *IncidentAlertMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentAlertCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentAlertUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentAlertUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentAlertDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown IncidentAlert mutation op: %q", m.Op())
+	}
+}
+
+// IncidentEventClient is a client for the IncidentEvent schema.
+type IncidentEventClient struct {
+	config
+}
+
+// NewIncidentEventClient returns a client for the IncidentEvent from the given config.
+func NewIncidentEventClient(c config) *IncidentEventClient {
+	return &IncidentEventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incidentevent.Hooks(f(g(h())))`.
+func (c *IncidentEventClient) Use(hooks ...Hook) {
+	c.hooks.IncidentEvent = append(c.hooks.IncidentEvent, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incidentevent.Intercept(f(g(h())))`.
+func (c *IncidentEventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.IncidentEvent = append(c.inters.IncidentEvent, interceptors...)
+}
+
+// Create returns a builder for creating a IncidentEvent entity.
+func (c *IncidentEventClient) Create() *IncidentEventCreate {
+	mutation := newIncidentEventMutation(c.config, OpCreate)
+	return &IncidentEventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of IncidentEvent entities.
+func (c *IncidentEventClient) CreateBulk(builders ...*IncidentEventCreate) *IncidentEventCreateBulk {
+	return &IncidentEventCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentEventClient) MapCreateBulk(slice any, setFunc func(*IncidentEventCreate, int)) *IncidentEventCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentEventCreateBulk{err: fmt.Errorf("calling to IncidentEventClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentEventCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentEventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for IncidentEvent.
+func (c *IncidentEventClient) Update() *IncidentEventUpdate {
+	mutation := newIncidentEventMutation(c.config, OpUpdate)
+	return &IncidentEventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentEventClient) UpdateOne(ie *IncidentEvent) *IncidentEventUpdateOne {
+	mutation := newIncidentEventMutation(c.config, OpUpdateOne, withIncidentEvent(ie))
+	return &IncidentEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentEventClient) UpdateOneID(id int) *IncidentEventUpdateOne {
+	mutation := newIncidentEventMutation(c.config, OpUpdateOne, withIncidentEventID(id))
+	return &IncidentEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for IncidentEvent.
+func (c *IncidentEventClient) Delete() *IncidentEventDelete {
+	mutation := newIncidentEventMutation(c.config, OpDelete)
+	return &IncidentEventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentEventClient) DeleteOne(ie *IncidentEvent) *IncidentEventDeleteOne {
+	return c.DeleteOneID(ie.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentEventClient) DeleteOneID(id int) *IncidentEventDeleteOne {
+	builder := c.Delete().Where(incidentevent.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentEventDeleteOne{builder}
+}
+
+// Query returns a query builder for IncidentEvent.
+func (c *IncidentEventClient) Query() *IncidentEventQuery {
+	return &IncidentEventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncidentEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a IncidentEvent entity by its id.
+func (c *IncidentEventClient) Get(ctx context.Context, id int) (*IncidentEvent, error) {
+	return c.Query().Where(incidentevent.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentEventClient) GetX(ctx context.Context, id int) *IncidentEvent {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryIncident queries the incident edge of a IncidentEvent.
+func (c *IncidentEventClient) QueryIncident(ie *IncidentEvent) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ie.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incidentevent.Table, incidentevent.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incidentevent.IncidentTable, incidentevent.IncidentColumn),
+		)
+		fromV = sqlgraph.Neighbors(ie.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentEventClient) Hooks() []Hook {
+	return c.hooks.IncidentEvent
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentEventClient) Interceptors() []Interceptor {
+	return c.inters.IncidentEvent
+}
+
+func (c *IncidentEventClient) mutate(ctx context.Context, m *IncidentEventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentEventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentEventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentEventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentEventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown IncidentEvent mutation op: %q", m.Op())
+	}
+}
+
+// IncidentMetricClient is a client for the IncidentMetric schema.
+type IncidentMetricClient struct {
+	config
+}
+
+// NewIncidentMetricClient returns a client for the IncidentMetric from the given config.
+func NewIncidentMetricClient(c config) *IncidentMetricClient {
+	return &IncidentMetricClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incidentmetric.Hooks(f(g(h())))`.
+func (c *IncidentMetricClient) Use(hooks ...Hook) {
+	c.hooks.IncidentMetric = append(c.hooks.IncidentMetric, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incidentmetric.Intercept(f(g(h())))`.
+func (c *IncidentMetricClient) Intercept(interceptors ...Interceptor) {
+	c.inters.IncidentMetric = append(c.inters.IncidentMetric, interceptors...)
+}
+
+// Create returns a builder for creating a IncidentMetric entity.
+func (c *IncidentMetricClient) Create() *IncidentMetricCreate {
+	mutation := newIncidentMetricMutation(c.config, OpCreate)
+	return &IncidentMetricCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of IncidentMetric entities.
+func (c *IncidentMetricClient) CreateBulk(builders ...*IncidentMetricCreate) *IncidentMetricCreateBulk {
+	return &IncidentMetricCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentMetricClient) MapCreateBulk(slice any, setFunc func(*IncidentMetricCreate, int)) *IncidentMetricCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentMetricCreateBulk{err: fmt.Errorf("calling to IncidentMetricClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentMetricCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentMetricCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for IncidentMetric.
+func (c *IncidentMetricClient) Update() *IncidentMetricUpdate {
+	mutation := newIncidentMetricMutation(c.config, OpUpdate)
+	return &IncidentMetricUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentMetricClient) UpdateOne(im *IncidentMetric) *IncidentMetricUpdateOne {
+	mutation := newIncidentMetricMutation(c.config, OpUpdateOne, withIncidentMetric(im))
+	return &IncidentMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentMetricClient) UpdateOneID(id int) *IncidentMetricUpdateOne {
+	mutation := newIncidentMetricMutation(c.config, OpUpdateOne, withIncidentMetricID(id))
+	return &IncidentMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for IncidentMetric.
+func (c *IncidentMetricClient) Delete() *IncidentMetricDelete {
+	mutation := newIncidentMetricMutation(c.config, OpDelete)
+	return &IncidentMetricDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentMetricClient) DeleteOne(im *IncidentMetric) *IncidentMetricDeleteOne {
+	return c.DeleteOneID(im.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentMetricClient) DeleteOneID(id int) *IncidentMetricDeleteOne {
+	builder := c.Delete().Where(incidentmetric.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentMetricDeleteOne{builder}
+}
+
+// Query returns a query builder for IncidentMetric.
+func (c *IncidentMetricClient) Query() *IncidentMetricQuery {
+	return &IncidentMetricQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncidentMetric},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a IncidentMetric entity by its id.
+func (c *IncidentMetricClient) Get(ctx context.Context, id int) (*IncidentMetric, error) {
+	return c.Query().Where(incidentmetric.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentMetricClient) GetX(ctx context.Context, id int) *IncidentMetric {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryIncident queries the incident edge of a IncidentMetric.
+func (c *IncidentMetricClient) QueryIncident(im *IncidentMetric) *IncidentQuery {
+	query := (&IncidentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := im.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incidentmetric.Table, incidentmetric.FieldID, id),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incidentmetric.IncidentTable, incidentmetric.IncidentColumn),
+		)
+		fromV = sqlgraph.Neighbors(im.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentMetricClient) Hooks() []Hook {
+	return c.hooks.IncidentMetric
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentMetricClient) Interceptors() []Interceptor {
+	return c.inters.IncidentMetric
+}
+
+func (c *IncidentMetricClient) mutate(ctx context.Context, m *IncidentMetricMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentMetricCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentMetricUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentMetricDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown IncidentMetric mutation op: %q", m.Op())
+	}
+}
+
+// IncidentRuleClient is a client for the IncidentRule schema.
+type IncidentRuleClient struct {
+	config
+}
+
+// NewIncidentRuleClient returns a client for the IncidentRule from the given config.
+func NewIncidentRuleClient(c config) *IncidentRuleClient {
+	return &IncidentRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incidentrule.Hooks(f(g(h())))`.
+func (c *IncidentRuleClient) Use(hooks ...Hook) {
+	c.hooks.IncidentRule = append(c.hooks.IncidentRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incidentrule.Intercept(f(g(h())))`.
+func (c *IncidentRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.IncidentRule = append(c.inters.IncidentRule, interceptors...)
+}
+
+// Create returns a builder for creating a IncidentRule entity.
+func (c *IncidentRuleClient) Create() *IncidentRuleCreate {
+	mutation := newIncidentRuleMutation(c.config, OpCreate)
+	return &IncidentRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of IncidentRule entities.
+func (c *IncidentRuleClient) CreateBulk(builders ...*IncidentRuleCreate) *IncidentRuleCreateBulk {
+	return &IncidentRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentRuleClient) MapCreateBulk(slice any, setFunc func(*IncidentRuleCreate, int)) *IncidentRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentRuleCreateBulk{err: fmt.Errorf("calling to IncidentRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for IncidentRule.
+func (c *IncidentRuleClient) Update() *IncidentRuleUpdate {
+	mutation := newIncidentRuleMutation(c.config, OpUpdate)
+	return &IncidentRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentRuleClient) UpdateOne(ir *IncidentRule) *IncidentRuleUpdateOne {
+	mutation := newIncidentRuleMutation(c.config, OpUpdateOne, withIncidentRule(ir))
+	return &IncidentRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentRuleClient) UpdateOneID(id int) *IncidentRuleUpdateOne {
+	mutation := newIncidentRuleMutation(c.config, OpUpdateOne, withIncidentRuleID(id))
+	return &IncidentRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for IncidentRule.
+func (c *IncidentRuleClient) Delete() *IncidentRuleDelete {
+	mutation := newIncidentRuleMutation(c.config, OpDelete)
+	return &IncidentRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentRuleClient) DeleteOne(ir *IncidentRule) *IncidentRuleDeleteOne {
+	return c.DeleteOneID(ir.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentRuleClient) DeleteOneID(id int) *IncidentRuleDeleteOne {
+	builder := c.Delete().Where(incidentrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for IncidentRule.
+func (c *IncidentRuleClient) Query() *IncidentRuleQuery {
+	return &IncidentRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncidentRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a IncidentRule entity by its id.
+func (c *IncidentRuleClient) Get(ctx context.Context, id int) (*IncidentRule, error) {
+	return c.Query().Where(incidentrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentRuleClient) GetX(ctx context.Context, id int) *IncidentRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRuleExecutions queries the rule_executions edge of a IncidentRule.
+func (c *IncidentRuleClient) QueryRuleExecutions(ir *IncidentRule) *IncidentRuleExecutionQuery {
+	query := (&IncidentRuleExecutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ir.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incidentrule.Table, incidentrule.FieldID, id),
+			sqlgraph.To(incidentruleexecution.Table, incidentruleexecution.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incidentrule.RuleExecutionsTable, incidentrule.RuleExecutionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(ir.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentRuleClient) Hooks() []Hook {
+	return c.hooks.IncidentRule
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentRuleClient) Interceptors() []Interceptor {
+	return c.inters.IncidentRule
+}
+
+func (c *IncidentRuleClient) mutate(ctx context.Context, m *IncidentRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown IncidentRule mutation op: %q", m.Op())
+	}
+}
+
+// IncidentRuleExecutionClient is a client for the IncidentRuleExecution schema.
+type IncidentRuleExecutionClient struct {
+	config
+}
+
+// NewIncidentRuleExecutionClient returns a client for the IncidentRuleExecution from the given config.
+func NewIncidentRuleExecutionClient(c config) *IncidentRuleExecutionClient {
+	return &IncidentRuleExecutionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incidentruleexecution.Hooks(f(g(h())))`.
+func (c *IncidentRuleExecutionClient) Use(hooks ...Hook) {
+	c.hooks.IncidentRuleExecution = append(c.hooks.IncidentRuleExecution, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incidentruleexecution.Intercept(f(g(h())))`.
+func (c *IncidentRuleExecutionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.IncidentRuleExecution = append(c.inters.IncidentRuleExecution, interceptors...)
+}
+
+// Create returns a builder for creating a IncidentRuleExecution entity.
+func (c *IncidentRuleExecutionClient) Create() *IncidentRuleExecutionCreate {
+	mutation := newIncidentRuleExecutionMutation(c.config, OpCreate)
+	return &IncidentRuleExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of IncidentRuleExecution entities.
+func (c *IncidentRuleExecutionClient) CreateBulk(builders ...*IncidentRuleExecutionCreate) *IncidentRuleExecutionCreateBulk {
+	return &IncidentRuleExecutionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentRuleExecutionClient) MapCreateBulk(slice any, setFunc func(*IncidentRuleExecutionCreate, int)) *IncidentRuleExecutionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentRuleExecutionCreateBulk{err: fmt.Errorf("calling to IncidentRuleExecutionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentRuleExecutionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentRuleExecutionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for IncidentRuleExecution.
+func (c *IncidentRuleExecutionClient) Update() *IncidentRuleExecutionUpdate {
+	mutation := newIncidentRuleExecutionMutation(c.config, OpUpdate)
+	return &IncidentRuleExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentRuleExecutionClient) UpdateOne(ire *IncidentRuleExecution) *IncidentRuleExecutionUpdateOne {
+	mutation := newIncidentRuleExecutionMutation(c.config, OpUpdateOne, withIncidentRuleExecution(ire))
+	return &IncidentRuleExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentRuleExecutionClient) UpdateOneID(id int) *IncidentRuleExecutionUpdateOne {
+	mutation := newIncidentRuleExecutionMutation(c.config, OpUpdateOne, withIncidentRuleExecutionID(id))
+	return &IncidentRuleExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for IncidentRuleExecution.
+func (c *IncidentRuleExecutionClient) Delete() *IncidentRuleExecutionDelete {
+	mutation := newIncidentRuleExecutionMutation(c.config, OpDelete)
+	return &IncidentRuleExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentRuleExecutionClient) DeleteOne(ire *IncidentRuleExecution) *IncidentRuleExecutionDeleteOne {
+	return c.DeleteOneID(ire.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentRuleExecutionClient) DeleteOneID(id int) *IncidentRuleExecutionDeleteOne {
+	builder := c.Delete().Where(incidentruleexecution.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentRuleExecutionDeleteOne{builder}
+}
+
+// Query returns a query builder for IncidentRuleExecution.
+func (c *IncidentRuleExecutionClient) Query() *IncidentRuleExecutionQuery {
+	return &IncidentRuleExecutionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncidentRuleExecution},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a IncidentRuleExecution entity by its id.
+func (c *IncidentRuleExecutionClient) Get(ctx context.Context, id int) (*IncidentRuleExecution, error) {
+	return c.Query().Where(incidentruleexecution.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentRuleExecutionClient) GetX(ctx context.Context, id int) *IncidentRuleExecution {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRule queries the rule edge of a IncidentRuleExecution.
+func (c *IncidentRuleExecutionClient) QueryRule(ire *IncidentRuleExecution) *IncidentRuleQuery {
+	query := (&IncidentRuleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ire.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incidentruleexecution.Table, incidentruleexecution.FieldID, id),
+			sqlgraph.To(incidentrule.Table, incidentrule.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, incidentruleexecution.RuleTable, incidentruleexecution.RuleColumn),
+		)
+		fromV = sqlgraph.Neighbors(ire.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentRuleExecutionClient) Hooks() []Hook {
+	return c.hooks.IncidentRuleExecution
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentRuleExecutionClient) Interceptors() []Interceptor {
+	return c.inters.IncidentRuleExecution
+}
+
+func (c *IncidentRuleExecutionClient) mutate(ctx context.Context, m *IncidentRuleExecutionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentRuleExecutionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentRuleExecutionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentRuleExecutionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentRuleExecutionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown IncidentRuleExecution mutation op: %q", m.Op())
 	}
 }
 
@@ -3149,6 +4026,54 @@ func (c *SLADefinitionClient) GetX(ctx context.Context, id int) *SLADefinition {
 	return obj
 }
 
+// QueryViolations queries the violations edge of a SLADefinition.
+func (c *SLADefinitionClient) QueryViolations(sd *SLADefinition) *SLAViolationQuery {
+	query := (&SLAViolationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, id),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.ViolationsTable, sladefinition.ViolationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(sd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMetrics queries the metrics edge of a SLADefinition.
+func (c *SLADefinitionClient) QueryMetrics(sd *SLADefinition) *SLAMetricQuery {
+	query := (&SLAMetricClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, id),
+			sqlgraph.To(slametric.Table, slametric.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.MetricsTable, sladefinition.MetricsColumn),
+		)
+		fromV = sqlgraph.Neighbors(sd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTickets queries the tickets edge of a SLADefinition.
+func (c *SLADefinitionClient) QueryTickets(sd *SLADefinition) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.TicketsTable, sladefinition.TicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(sd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *SLADefinitionClient) Hooks() []Hook {
 	return c.hooks.SLADefinition
@@ -3171,6 +4096,155 @@ func (c *SLADefinitionClient) mutate(ctx context.Context, m *SLADefinitionMutati
 		return (&SLADefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown SLADefinition mutation op: %q", m.Op())
+	}
+}
+
+// SLAMetricClient is a client for the SLAMetric schema.
+type SLAMetricClient struct {
+	config
+}
+
+// NewSLAMetricClient returns a client for the SLAMetric from the given config.
+func NewSLAMetricClient(c config) *SLAMetricClient {
+	return &SLAMetricClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slametric.Hooks(f(g(h())))`.
+func (c *SLAMetricClient) Use(hooks ...Hook) {
+	c.hooks.SLAMetric = append(c.hooks.SLAMetric, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slametric.Intercept(f(g(h())))`.
+func (c *SLAMetricClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAMetric = append(c.inters.SLAMetric, interceptors...)
+}
+
+// Create returns a builder for creating a SLAMetric entity.
+func (c *SLAMetricClient) Create() *SLAMetricCreate {
+	mutation := newSLAMetricMutation(c.config, OpCreate)
+	return &SLAMetricCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAMetric entities.
+func (c *SLAMetricClient) CreateBulk(builders ...*SLAMetricCreate) *SLAMetricCreateBulk {
+	return &SLAMetricCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAMetricClient) MapCreateBulk(slice any, setFunc func(*SLAMetricCreate, int)) *SLAMetricCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAMetricCreateBulk{err: fmt.Errorf("calling to SLAMetricClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAMetricCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAMetricCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAMetric.
+func (c *SLAMetricClient) Update() *SLAMetricUpdate {
+	mutation := newSLAMetricMutation(c.config, OpUpdate)
+	return &SLAMetricUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAMetricClient) UpdateOne(sm *SLAMetric) *SLAMetricUpdateOne {
+	mutation := newSLAMetricMutation(c.config, OpUpdateOne, withSLAMetric(sm))
+	return &SLAMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAMetricClient) UpdateOneID(id int) *SLAMetricUpdateOne {
+	mutation := newSLAMetricMutation(c.config, OpUpdateOne, withSLAMetricID(id))
+	return &SLAMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAMetric.
+func (c *SLAMetricClient) Delete() *SLAMetricDelete {
+	mutation := newSLAMetricMutation(c.config, OpDelete)
+	return &SLAMetricDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAMetricClient) DeleteOne(sm *SLAMetric) *SLAMetricDeleteOne {
+	return c.DeleteOneID(sm.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAMetricClient) DeleteOneID(id int) *SLAMetricDeleteOne {
+	builder := c.Delete().Where(slametric.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAMetricDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAMetric.
+func (c *SLAMetricClient) Query() *SLAMetricQuery {
+	return &SLAMetricQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAMetric},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAMetric entity by its id.
+func (c *SLAMetricClient) Get(ctx context.Context, id int) (*SLAMetric, error) {
+	return c.Query().Where(slametric.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAMetricClient) GetX(ctx context.Context, id int) *SLAMetric {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySLADefinition queries the sla_definition edge of a SLAMetric.
+func (c *SLAMetricClient) QuerySLADefinition(sm *SLAMetric) *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sm.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slametric.Table, slametric.FieldID, id),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slametric.SLADefinitionTable, slametric.SLADefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(sm.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SLAMetricClient) Hooks() []Hook {
+	return c.hooks.SLAMetric
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAMetricClient) Interceptors() []Interceptor {
+	return c.inters.SLAMetric
+}
+
+func (c *SLAMetricClient) mutate(ctx context.Context, m *SLAMetricMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAMetricCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAMetricUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAMetricUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAMetricDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAMetric mutation op: %q", m.Op())
 	}
 }
 
@@ -3280,6 +4354,38 @@ func (c *SLAViolationClient) GetX(ctx context.Context, id int) *SLAViolation {
 		panic(err)
 	}
 	return obj
+}
+
+// QuerySLADefinition queries the sla_definition edge of a SLAViolation.
+func (c *SLAViolationClient) QuerySLADefinition(sv *SLAViolation) *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sv.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaviolation.Table, slaviolation.FieldID, id),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaviolation.SLADefinitionTable, slaviolation.SLADefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(sv.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTicket queries the ticket edge of a SLAViolation.
+func (c *SLAViolationClient) QueryTicket(sv *SLAViolation) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sv.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaviolation.Table, slaviolation.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaviolation.TicketTable, slaviolation.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(sv.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -3903,6 +5009,38 @@ func (c *TicketClient) QueryWorkflowInstances(t *Ticket) *WorkflowInstanceQuery 
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
 			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.WorkflowInstancesTable, ticket.WorkflowInstancesColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySLADefinition queries the sla_definition edge of a Ticket.
+func (c *TicketClient) QuerySLADefinition(t *Ticket) *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.SLADefinitionTable, ticket.SLADefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySLAViolations queries the sla_violations edge of a Ticket.
+func (c *TicketClient) QuerySLAViolations(t *Ticket) *SLAViolationQuery {
+	query := (&SLAViolationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAViolationsTable, ticket.SLAViolationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -4998,20 +6136,22 @@ func (c *WorkflowInstanceClient) mutate(ctx context.Context, m *WorkflowInstance
 type (
 	hooks struct {
 		AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
-		ConfigurationItem, Conversation, Incident, KnowledgeArticle, Message,
+		ConfigurationItem, Conversation, Incident, IncidentAlert, IncidentEvent,
+		IncidentMetric, IncidentRule, IncidentRuleExecution, KnowledgeArticle, Message,
 		Notification, Problem, ProcessDefinition, ProcessDeployment,
 		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		PromptTemplate, SLADefinition, SLAViolation, ServiceCatalog, ServiceRequest,
-		Tenant, Ticket, TicketCategory, TicketTag, TicketTemplate, ToolInvocation,
-		User, Workflow, WorkflowInstance []ent.Hook
+		PromptTemplate, SLADefinition, SLAMetric, SLAViolation, ServiceCatalog,
+		ServiceRequest, Tenant, Ticket, TicketCategory, TicketTag, TicketTemplate,
+		ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
 	}
 	inters struct {
 		AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
-		ConfigurationItem, Conversation, Incident, KnowledgeArticle, Message,
+		ConfigurationItem, Conversation, Incident, IncidentAlert, IncidentEvent,
+		IncidentMetric, IncidentRule, IncidentRuleExecution, KnowledgeArticle, Message,
 		Notification, Problem, ProcessDefinition, ProcessDeployment,
 		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		PromptTemplate, SLADefinition, SLAViolation, ServiceCatalog, ServiceRequest,
-		Tenant, Ticket, TicketCategory, TicketTag, TicketTemplate, ToolInvocation,
-		User, Workflow, WorkflowInstance []ent.Interceptor
+		PromptTemplate, SLADefinition, SLAMetric, SLAViolation, ServiceCatalog,
+		ServiceRequest, Tenant, Ticket, TicketCategory, TicketTag, TicketTemplate,
+		ToolInvocation, User, Workflow, WorkflowInstance []ent.Interceptor
 	}
 )

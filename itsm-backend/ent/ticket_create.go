@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/tickettag"
@@ -146,6 +148,76 @@ func (tc *TicketCreate) SetNillableParentTicketID(i *int) *TicketCreate {
 	return tc
 }
 
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (tc *TicketCreate) SetSLADefinitionID(i int) *TicketCreate {
+	tc.mutation.SetSLADefinitionID(i)
+	return tc
+}
+
+// SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableSLADefinitionID(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetSLADefinitionID(*i)
+	}
+	return tc
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (tc *TicketCreate) SetSLAResponseDeadline(t time.Time) *TicketCreate {
+	tc.mutation.SetSLAResponseDeadline(t)
+	return tc
+}
+
+// SetNillableSLAResponseDeadline sets the "sla_response_deadline" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableSLAResponseDeadline(t *time.Time) *TicketCreate {
+	if t != nil {
+		tc.SetSLAResponseDeadline(*t)
+	}
+	return tc
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (tc *TicketCreate) SetSLAResolutionDeadline(t time.Time) *TicketCreate {
+	tc.mutation.SetSLAResolutionDeadline(t)
+	return tc
+}
+
+// SetNillableSLAResolutionDeadline sets the "sla_resolution_deadline" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableSLAResolutionDeadline(t *time.Time) *TicketCreate {
+	if t != nil {
+		tc.SetSLAResolutionDeadline(*t)
+	}
+	return tc
+}
+
+// SetFirstResponseAt sets the "first_response_at" field.
+func (tc *TicketCreate) SetFirstResponseAt(t time.Time) *TicketCreate {
+	tc.mutation.SetFirstResponseAt(t)
+	return tc
+}
+
+// SetNillableFirstResponseAt sets the "first_response_at" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableFirstResponseAt(t *time.Time) *TicketCreate {
+	if t != nil {
+		tc.SetFirstResponseAt(*t)
+	}
+	return tc
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (tc *TicketCreate) SetResolvedAt(t time.Time) *TicketCreate {
+	tc.mutation.SetResolvedAt(t)
+	return tc
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableResolvedAt(t *time.Time) *TicketCreate {
+	if t != nil {
+		tc.SetResolvedAt(*t)
+	}
+	return tc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tc *TicketCreate) SetCreatedAt(t time.Time) *TicketCreate {
 	tc.mutation.SetCreatedAt(t)
@@ -232,6 +304,26 @@ func (tc *TicketCreate) AddWorkflowInstances(w ...*WorkflowInstance) *TicketCrea
 		ids[i] = w[i].ID
 	}
 	return tc.AddWorkflowInstanceIDs(ids...)
+}
+
+// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
+func (tc *TicketCreate) SetSLADefinition(s *SLADefinition) *TicketCreate {
+	return tc.SetSLADefinitionID(s.ID)
+}
+
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (tc *TicketCreate) AddSLAViolationIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddSLAViolationIDs(ids...)
+	return tc
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (tc *TicketCreate) AddSLAViolations(s ...*SLAViolation) *TicketCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tc.AddSLAViolationIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -391,6 +483,22 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_spec.SetField(ticket.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
+	if value, ok := tc.mutation.SLAResponseDeadline(); ok {
+		_spec.SetField(ticket.FieldSLAResponseDeadline, field.TypeTime, value)
+		_node.SLAResponseDeadline = value
+	}
+	if value, ok := tc.mutation.SLAResolutionDeadline(); ok {
+		_spec.SetField(ticket.FieldSLAResolutionDeadline, field.TypeTime, value)
+		_node.SLAResolutionDeadline = value
+	}
+	if value, ok := tc.mutation.FirstResponseAt(); ok {
+		_spec.SetField(ticket.FieldFirstResponseAt, field.TypeTime, value)
+		_node.FirstResponseAt = value
+	}
+	if value, ok := tc.mutation.ResolvedAt(); ok {
+		_spec.SetField(ticket.FieldResolvedAt, field.TypeTime, value)
+		_node.ResolvedAt = value
+	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -491,6 +599,39 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.SLADefinitionTable,
+			Columns: []string{ticket.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.SLADefinitionID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
