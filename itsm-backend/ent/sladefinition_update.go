@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -156,6 +159,30 @@ func (sdu *SLADefinitionUpdate) ClearBusinessHours() *SLADefinitionUpdate {
 	return sdu
 }
 
+// SetEscalationRules sets the "escalation_rules" field.
+func (sdu *SLADefinitionUpdate) SetEscalationRules(m map[string]interface{}) *SLADefinitionUpdate {
+	sdu.mutation.SetEscalationRules(m)
+	return sdu
+}
+
+// ClearEscalationRules clears the value of the "escalation_rules" field.
+func (sdu *SLADefinitionUpdate) ClearEscalationRules() *SLADefinitionUpdate {
+	sdu.mutation.ClearEscalationRules()
+	return sdu
+}
+
+// SetConditions sets the "conditions" field.
+func (sdu *SLADefinitionUpdate) SetConditions(m map[string]interface{}) *SLADefinitionUpdate {
+	sdu.mutation.SetConditions(m)
+	return sdu
+}
+
+// ClearConditions clears the value of the "conditions" field.
+func (sdu *SLADefinitionUpdate) ClearConditions() *SLADefinitionUpdate {
+	sdu.mutation.ClearConditions()
+	return sdu
+}
+
 // SetIsActive sets the "is_active" field.
 func (sdu *SLADefinitionUpdate) SetIsActive(b bool) *SLADefinitionUpdate {
 	sdu.mutation.SetIsActive(b)
@@ -211,9 +238,117 @@ func (sdu *SLADefinitionUpdate) SetUpdatedAt(t time.Time) *SLADefinitionUpdate {
 	return sdu
 }
 
+// AddViolationIDs adds the "violations" edge to the SLAViolation entity by IDs.
+func (sdu *SLADefinitionUpdate) AddViolationIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.AddViolationIDs(ids...)
+	return sdu
+}
+
+// AddViolations adds the "violations" edges to the SLAViolation entity.
+func (sdu *SLADefinitionUpdate) AddViolations(s ...*SLAViolation) *SLADefinitionUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdu.AddViolationIDs(ids...)
+}
+
+// AddMetricIDs adds the "metrics" edge to the SLAMetric entity by IDs.
+func (sdu *SLADefinitionUpdate) AddMetricIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.AddMetricIDs(ids...)
+	return sdu
+}
+
+// AddMetrics adds the "metrics" edges to the SLAMetric entity.
+func (sdu *SLADefinitionUpdate) AddMetrics(s ...*SLAMetric) *SLADefinitionUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdu.AddMetricIDs(ids...)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (sdu *SLADefinitionUpdate) AddTicketIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.AddTicketIDs(ids...)
+	return sdu
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (sdu *SLADefinitionUpdate) AddTickets(t ...*Ticket) *SLADefinitionUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return sdu.AddTicketIDs(ids...)
+}
+
 // Mutation returns the SLADefinitionMutation object of the builder.
 func (sdu *SLADefinitionUpdate) Mutation() *SLADefinitionMutation {
 	return sdu.mutation
+}
+
+// ClearViolations clears all "violations" edges to the SLAViolation entity.
+func (sdu *SLADefinitionUpdate) ClearViolations() *SLADefinitionUpdate {
+	sdu.mutation.ClearViolations()
+	return sdu
+}
+
+// RemoveViolationIDs removes the "violations" edge to SLAViolation entities by IDs.
+func (sdu *SLADefinitionUpdate) RemoveViolationIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.RemoveViolationIDs(ids...)
+	return sdu
+}
+
+// RemoveViolations removes "violations" edges to SLAViolation entities.
+func (sdu *SLADefinitionUpdate) RemoveViolations(s ...*SLAViolation) *SLADefinitionUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdu.RemoveViolationIDs(ids...)
+}
+
+// ClearMetrics clears all "metrics" edges to the SLAMetric entity.
+func (sdu *SLADefinitionUpdate) ClearMetrics() *SLADefinitionUpdate {
+	sdu.mutation.ClearMetrics()
+	return sdu
+}
+
+// RemoveMetricIDs removes the "metrics" edge to SLAMetric entities by IDs.
+func (sdu *SLADefinitionUpdate) RemoveMetricIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.RemoveMetricIDs(ids...)
+	return sdu
+}
+
+// RemoveMetrics removes "metrics" edges to SLAMetric entities.
+func (sdu *SLADefinitionUpdate) RemoveMetrics(s ...*SLAMetric) *SLADefinitionUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdu.RemoveMetricIDs(ids...)
+}
+
+// ClearTickets clears all "tickets" edges to the Ticket entity.
+func (sdu *SLADefinitionUpdate) ClearTickets() *SLADefinitionUpdate {
+	sdu.mutation.ClearTickets()
+	return sdu
+}
+
+// RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
+func (sdu *SLADefinitionUpdate) RemoveTicketIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.RemoveTicketIDs(ids...)
+	return sdu
+}
+
+// RemoveTickets removes "tickets" edges to Ticket entities.
+func (sdu *SLADefinitionUpdate) RemoveTickets(t ...*Ticket) *SLADefinitionUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return sdu.RemoveTicketIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -328,6 +463,18 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if sdu.mutation.BusinessHoursCleared() {
 		_spec.ClearField(sladefinition.FieldBusinessHours, field.TypeJSON)
 	}
+	if value, ok := sdu.mutation.EscalationRules(); ok {
+		_spec.SetField(sladefinition.FieldEscalationRules, field.TypeJSON, value)
+	}
+	if sdu.mutation.EscalationRulesCleared() {
+		_spec.ClearField(sladefinition.FieldEscalationRules, field.TypeJSON)
+	}
+	if value, ok := sdu.mutation.Conditions(); ok {
+		_spec.SetField(sladefinition.FieldConditions, field.TypeJSON, value)
+	}
+	if sdu.mutation.ConditionsCleared() {
+		_spec.ClearField(sladefinition.FieldConditions, field.TypeJSON)
+	}
 	if value, ok := sdu.mutation.IsActive(); ok {
 		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
 	}
@@ -342,6 +489,141 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	}
 	if value, ok := sdu.mutation.UpdatedAt(); ok {
 		_spec.SetField(sladefinition.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if sdu.mutation.ViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.RemovedViolationsIDs(); len(nodes) > 0 && !sdu.mutation.ViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.ViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if sdu.mutation.MetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.RemovedMetricsIDs(); len(nodes) > 0 && !sdu.mutation.MetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.MetricsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if sdu.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !sdu.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, sdu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -491,6 +773,30 @@ func (sduo *SLADefinitionUpdateOne) ClearBusinessHours() *SLADefinitionUpdateOne
 	return sduo
 }
 
+// SetEscalationRules sets the "escalation_rules" field.
+func (sduo *SLADefinitionUpdateOne) SetEscalationRules(m map[string]interface{}) *SLADefinitionUpdateOne {
+	sduo.mutation.SetEscalationRules(m)
+	return sduo
+}
+
+// ClearEscalationRules clears the value of the "escalation_rules" field.
+func (sduo *SLADefinitionUpdateOne) ClearEscalationRules() *SLADefinitionUpdateOne {
+	sduo.mutation.ClearEscalationRules()
+	return sduo
+}
+
+// SetConditions sets the "conditions" field.
+func (sduo *SLADefinitionUpdateOne) SetConditions(m map[string]interface{}) *SLADefinitionUpdateOne {
+	sduo.mutation.SetConditions(m)
+	return sduo
+}
+
+// ClearConditions clears the value of the "conditions" field.
+func (sduo *SLADefinitionUpdateOne) ClearConditions() *SLADefinitionUpdateOne {
+	sduo.mutation.ClearConditions()
+	return sduo
+}
+
 // SetIsActive sets the "is_active" field.
 func (sduo *SLADefinitionUpdateOne) SetIsActive(b bool) *SLADefinitionUpdateOne {
 	sduo.mutation.SetIsActive(b)
@@ -546,9 +852,117 @@ func (sduo *SLADefinitionUpdateOne) SetUpdatedAt(t time.Time) *SLADefinitionUpda
 	return sduo
 }
 
+// AddViolationIDs adds the "violations" edge to the SLAViolation entity by IDs.
+func (sduo *SLADefinitionUpdateOne) AddViolationIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.AddViolationIDs(ids...)
+	return sduo
+}
+
+// AddViolations adds the "violations" edges to the SLAViolation entity.
+func (sduo *SLADefinitionUpdateOne) AddViolations(s ...*SLAViolation) *SLADefinitionUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sduo.AddViolationIDs(ids...)
+}
+
+// AddMetricIDs adds the "metrics" edge to the SLAMetric entity by IDs.
+func (sduo *SLADefinitionUpdateOne) AddMetricIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.AddMetricIDs(ids...)
+	return sduo
+}
+
+// AddMetrics adds the "metrics" edges to the SLAMetric entity.
+func (sduo *SLADefinitionUpdateOne) AddMetrics(s ...*SLAMetric) *SLADefinitionUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sduo.AddMetricIDs(ids...)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (sduo *SLADefinitionUpdateOne) AddTicketIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.AddTicketIDs(ids...)
+	return sduo
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (sduo *SLADefinitionUpdateOne) AddTickets(t ...*Ticket) *SLADefinitionUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return sduo.AddTicketIDs(ids...)
+}
+
 // Mutation returns the SLADefinitionMutation object of the builder.
 func (sduo *SLADefinitionUpdateOne) Mutation() *SLADefinitionMutation {
 	return sduo.mutation
+}
+
+// ClearViolations clears all "violations" edges to the SLAViolation entity.
+func (sduo *SLADefinitionUpdateOne) ClearViolations() *SLADefinitionUpdateOne {
+	sduo.mutation.ClearViolations()
+	return sduo
+}
+
+// RemoveViolationIDs removes the "violations" edge to SLAViolation entities by IDs.
+func (sduo *SLADefinitionUpdateOne) RemoveViolationIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.RemoveViolationIDs(ids...)
+	return sduo
+}
+
+// RemoveViolations removes "violations" edges to SLAViolation entities.
+func (sduo *SLADefinitionUpdateOne) RemoveViolations(s ...*SLAViolation) *SLADefinitionUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sduo.RemoveViolationIDs(ids...)
+}
+
+// ClearMetrics clears all "metrics" edges to the SLAMetric entity.
+func (sduo *SLADefinitionUpdateOne) ClearMetrics() *SLADefinitionUpdateOne {
+	sduo.mutation.ClearMetrics()
+	return sduo
+}
+
+// RemoveMetricIDs removes the "metrics" edge to SLAMetric entities by IDs.
+func (sduo *SLADefinitionUpdateOne) RemoveMetricIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.RemoveMetricIDs(ids...)
+	return sduo
+}
+
+// RemoveMetrics removes "metrics" edges to SLAMetric entities.
+func (sduo *SLADefinitionUpdateOne) RemoveMetrics(s ...*SLAMetric) *SLADefinitionUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sduo.RemoveMetricIDs(ids...)
+}
+
+// ClearTickets clears all "tickets" edges to the Ticket entity.
+func (sduo *SLADefinitionUpdateOne) ClearTickets() *SLADefinitionUpdateOne {
+	sduo.mutation.ClearTickets()
+	return sduo
+}
+
+// RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
+func (sduo *SLADefinitionUpdateOne) RemoveTicketIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.RemoveTicketIDs(ids...)
+	return sduo
+}
+
+// RemoveTickets removes "tickets" edges to Ticket entities.
+func (sduo *SLADefinitionUpdateOne) RemoveTickets(t ...*Ticket) *SLADefinitionUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return sduo.RemoveTicketIDs(ids...)
 }
 
 // Where appends a list predicates to the SLADefinitionUpdate builder.
@@ -693,6 +1107,18 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 	if sduo.mutation.BusinessHoursCleared() {
 		_spec.ClearField(sladefinition.FieldBusinessHours, field.TypeJSON)
 	}
+	if value, ok := sduo.mutation.EscalationRules(); ok {
+		_spec.SetField(sladefinition.FieldEscalationRules, field.TypeJSON, value)
+	}
+	if sduo.mutation.EscalationRulesCleared() {
+		_spec.ClearField(sladefinition.FieldEscalationRules, field.TypeJSON)
+	}
+	if value, ok := sduo.mutation.Conditions(); ok {
+		_spec.SetField(sladefinition.FieldConditions, field.TypeJSON, value)
+	}
+	if sduo.mutation.ConditionsCleared() {
+		_spec.ClearField(sladefinition.FieldConditions, field.TypeJSON)
+	}
 	if value, ok := sduo.mutation.IsActive(); ok {
 		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
 	}
@@ -707,6 +1133,141 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 	}
 	if value, ok := sduo.mutation.UpdatedAt(); ok {
 		_spec.SetField(sladefinition.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if sduo.mutation.ViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.RemovedViolationsIDs(); len(nodes) > 0 && !sduo.mutation.ViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.ViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if sduo.mutation.MetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.RemovedMetricsIDs(); len(nodes) > 0 && !sduo.mutation.MetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.MetricsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if sduo.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !sduo.mutation.TicketsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &SLADefinition{config: sduo.config}
 	_spec.Assign = _node.assignValues

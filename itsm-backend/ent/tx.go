@@ -28,6 +28,16 @@ type Tx struct {
 	Conversation *ConversationClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
+	// IncidentAlert is the client for interacting with the IncidentAlert builders.
+	IncidentAlert *IncidentAlertClient
+	// IncidentEvent is the client for interacting with the IncidentEvent builders.
+	IncidentEvent *IncidentEventClient
+	// IncidentMetric is the client for interacting with the IncidentMetric builders.
+	IncidentMetric *IncidentMetricClient
+	// IncidentRule is the client for interacting with the IncidentRule builders.
+	IncidentRule *IncidentRuleClient
+	// IncidentRuleExecution is the client for interacting with the IncidentRuleExecution builders.
+	IncidentRuleExecution *IncidentRuleExecutionClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
 	// Message is the client for interacting with the Message builders.
@@ -52,6 +62,8 @@ type Tx struct {
 	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
 	SLADefinition *SLADefinitionClient
+	// SLAMetric is the client for interacting with the SLAMetric builders.
+	SLAMetric *SLAMetricClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -215,6 +227,11 @@ func (tx *Tx) init() {
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
+	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
+	tx.IncidentEvent = NewIncidentEventClient(tx.config)
+	tx.IncidentMetric = NewIncidentMetricClient(tx.config)
+	tx.IncidentRule = NewIncidentRuleClient(tx.config)
+	tx.IncidentRuleExecution = NewIncidentRuleExecutionClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
@@ -227,6 +244,7 @@ func (tx *Tx) init() {
 	tx.ProcessVariable = NewProcessVariableClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
+	tx.SLAMetric = NewSLAMetricClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)

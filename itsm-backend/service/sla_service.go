@@ -454,7 +454,7 @@ func (s *SLAService) CheckSLACompliance(ctx context.Context, ticketID int, tenan
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	if ticketEntity.SLADefinitionID == nil {
+	if ticketEntity.SLADefinitionID == 0 {
 		s.logger.Infow("Ticket has no SLA definition", "ticket_id", ticketID)
 		return nil
 	}
@@ -462,7 +462,7 @@ func (s *SLAService) CheckSLACompliance(ctx context.Context, ticketID int, tenan
 	// 获取SLA定义
 	slaDefinition, err := s.client.SLADefinition.Query().
 		Where(
-			sladefinition.IDEQ(*ticketEntity.SLADefinitionID),
+			sladefinition.IDEQ(ticketEntity.SLADefinitionID),
 			sladefinition.TenantIDEQ(tenantID),
 		).
 		Only(ctx)
@@ -473,8 +473,8 @@ func (s *SLAService) CheckSLACompliance(ctx context.Context, ticketID int, tenan
 	now := time.Now()
 
 	// 检查响应时间合规性
-	if ticketEntity.SLAResponseDeadline != nil && now.After(*ticketEntity.SLAResponseDeadline) {
-		if ticketEntity.FirstResponseAt == nil {
+	if !ticketEntity.SLAResponseDeadline.IsZero() && now.After(ticketEntity.SLAResponseDeadline) {
+		if ticketEntity.FirstResponseAt.IsZero() {
 			// 创建响应时间违规记录
 			_, err = s.CreateSLAViolation(ctx, &dto.CreateSLAViolationRequest{
 				SLADefinitionID: slaDefinition.ID,
@@ -490,8 +490,8 @@ func (s *SLAService) CheckSLACompliance(ctx context.Context, ticketID int, tenan
 	}
 
 	// 检查解决时间合规性
-	if ticketEntity.SLAResolutionDeadline != nil && now.After(*ticketEntity.SLAResolutionDeadline) {
-		if ticketEntity.ResolvedAt == nil {
+	if !ticketEntity.SLAResolutionDeadline.IsZero() && now.After(ticketEntity.SLAResolutionDeadline) {
+		if ticketEntity.ResolvedAt.IsZero() {
 			// 创建解决时间违规记录
 			_, err = s.CreateSLAViolation(ctx, &dto.CreateSLAViolationRequest{
 				SLADefinitionID: slaDefinition.ID,
@@ -539,7 +539,7 @@ func (s *SLAService) toSLAViolationResponse(violation *ent.SLAViolation) *dto.SL
 		Description:     violation.Description,
 		Severity:        violation.Severity,
 		IsResolved:      violation.IsResolved,
-		ResolvedAt:      violation.ResolvedAt,
+		ResolvedAt:      &violation.ResolvedAt,
 		ResolutionNotes: violation.ResolutionNotes,
 		TenantID:        violation.TenantID,
 		CreatedAt:       violation.CreatedAt,

@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentmetric"
 
 	"go.uber.org/zap"
@@ -41,10 +41,10 @@ type PrometheusMetrics struct {
 // GrafanaDashboard 模拟Grafana仪表板结构
 type GrafanaDashboard struct {
 	Dashboard struct {
-		Title string `json:"title"`
+		Title  string `json:"title"`
 		Panels []struct {
-			Title string `json:"title"`
-			Type  string `json:"type"`
+			Title   string `json:"title"`
+			Type    string `json:"type"`
 			Targets []struct {
 				Expr string `json:"expr"`
 			} `json:"targets"`
@@ -179,10 +179,10 @@ func (s *IncidentMonitoringService) CreateGrafanaDashboard(ctx context.Context, 
 
 	dashboard := &GrafanaDashboard{
 		Dashboard: struct {
-			Title string `json:"title"`
+			Title  string `json:"title"`
 			Panels []struct {
-				Title string `json:"title"`
-				Type  string `json:"type"`
+				Title   string `json:"title"`
+				Type    string `json:"type"`
 				Targets []struct {
 					Expr string `json:"expr"`
 				} `json:"targets"`
@@ -190,8 +190,8 @@ func (s *IncidentMonitoringService) CreateGrafanaDashboard(ctx context.Context, 
 		}{
 			Title: "ITSM Incident Monitoring Dashboard",
 			Panels: []struct {
-				Title string `json:"title"`
-				Type  string `json:"type"`
+				Title   string `json:"title"`
+				Type    string `json:"type"`
 				Targets []struct {
 					Expr string `json:"expr"`
 				} `json:"targets"`
@@ -306,7 +306,7 @@ func (s *IncidentMonitoringService) AnalyzeIncidentImpact(ctx context.Context, i
 	}
 
 	impactAnalysis["metrics"] = map[string]interface{}{
-		"total_count": totalMetrics,
+		"total_count":   totalMetrics,
 		"average_value": avgValue,
 		"max_value":     maxValue,
 		"min_value":     minValue,
@@ -340,20 +340,20 @@ func (s *IncidentMonitoringService) calculateTimeImpact(incident *ent.Incident) 
 	timeImpact := map[string]interface{}{
 		"hours_since_creation": now.Sub(createdAt).Hours(),
 		"days_since_creation":  now.Sub(createdAt).Hours() / 24,
-		"is_overdue":          false,
-		"overdue_hours":       0,
+		"is_overdue":           false,
+		"overdue_hours":        0,
 	}
 
 	// 检查是否超时
 	if incident.Severity == "critical" && now.Sub(createdAt) > 4*time.Hour {
 		timeImpact["is_overdue"] = true
-		timeImpact["overdue_hours"] = now.Sub(createdAt.Add(4*time.Hour)).Hours()
+		timeImpact["overdue_hours"] = now.Sub(createdAt.Add(4 * time.Hour)).Hours()
 	} else if incident.Severity == "high" && now.Sub(createdAt) > 8*time.Hour {
 		timeImpact["is_overdue"] = true
-		timeImpact["overdue_hours"] = now.Sub(createdAt.Add(8*time.Hour)).Hours()
+		timeImpact["overdue_hours"] = now.Sub(createdAt.Add(8 * time.Hour)).Hours()
 	} else if incident.Severity == "medium" && now.Sub(createdAt) > 24*time.Hour {
 		timeImpact["is_overdue"] = true
-		timeImpact["overdue_hours"] = now.Sub(createdAt.Add(24*time.Hour)).Hours()
+		timeImpact["overdue_hours"] = now.Sub(createdAt.Add(24 * time.Hour)).Hours()
 	}
 
 	return timeImpact
@@ -362,8 +362,8 @@ func (s *IncidentMonitoringService) calculateTimeImpact(incident *ent.Incident) 
 // calculateBusinessImpact 计算业务影响
 func (s *IncidentMonitoringService) calculateBusinessImpact(incident *ent.Incident, metrics []*ent.IncidentMetric) map[string]interface{} {
 	businessImpact := map[string]interface{}{
-		"affected_users":     0,
-		"revenue_impact":     0,
+		"affected_users":       0,
+		"revenue_impact":       0,
 		"service_availability": 100.0,
 		"performance_impact":   0,
 	}
@@ -506,7 +506,7 @@ func (s *IncidentMonitoringService) calculateIncidentStats(incidents []*ent.Inci
 			stats.OpenIncidents++
 		case "resolved":
 			stats.ResolvedIncidents++
-			if incident.ResolvedAt != nil {
+			if !incident.ResolvedAt.IsZero() {
 				resolutionTime := incident.ResolvedAt.Sub(incident.CreatedAt).Hours()
 				totalResolutionTime += resolutionTime
 				resolvedCount++
@@ -616,13 +616,13 @@ func (s *IncidentMonitoringService) getIncidentAlerts(ctx context.Context, incid
 			Channels:       alert.Channels,
 			Recipients:     alert.Recipients,
 			TriggeredAt:    alert.TriggeredAt,
-			AcknowledgedAt: alert.AcknowledgedAt,
-			ResolvedAt:     alert.ResolvedAt,
-			AcknowledgedBy: alert.AcknowledgedBy,
+			AcknowledgedAt: &alert.AcknowledgedAt,
+			ResolvedAt:     &alert.ResolvedAt,
+			AcknowledgedBy: &alert.AcknowledgedBy,
 			Metadata:       alert.Metadata,
 			TenantID:       alert.TenantID,
-			CreatedAt:     alert.CreatedAt,
-			UpdatedAt:     alert.UpdatedAt,
+			CreatedAt:      alert.CreatedAt,
+			UpdatedAt:      alert.UpdatedAt,
 		}
 	}
 
@@ -636,23 +636,23 @@ func (s *IncidentMonitoringService) convertIncidentsToResponse(incidents []*ent.
 		responses[i] = dto.IncidentResponse{
 			ID:                  incident.ID,
 			Title:               incident.Title,
-			Description:        incident.Description,
+			Description:         incident.Description,
 			Status:              incident.Status,
 			Priority:            incident.Priority,
 			Severity:            incident.Severity,
 			IncidentNumber:      incident.IncidentNumber,
 			ReporterID:          incident.ReporterID,
-			AssigneeID:          incident.AssigneeID,
-			ConfigurationItemID: incident.ConfigurationItemID,
+			AssigneeID:          &incident.AssigneeID,
+			ConfigurationItemID: &incident.ConfigurationItemID,
 			Category:            incident.Category,
 			Subcategory:         incident.Subcategory,
 			ImpactAnalysis:      incident.ImpactAnalysis,
 			RootCause:           incident.RootCause,
 			ResolutionSteps:     incident.ResolutionSteps,
 			DetectedAt:          incident.DetectedAt,
-			ResolvedAt:          incident.ResolvedAt,
-			ClosedAt:            incident.ClosedAt,
-			EscalatedAt:         incident.EscalatedAt,
+			ResolvedAt:          &incident.ResolvedAt,
+			ClosedAt:            &incident.ClosedAt,
+			EscalatedAt:         &incident.EscalatedAt,
 			EscalationLevel:     incident.EscalationLevel,
 			IsAutomated:         incident.IsAutomated,
 			Source:              incident.Source,

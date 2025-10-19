@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentmetric"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -68,6 +71,20 @@ func (ic *IncidentCreate) SetNillablePriority(s *string) *IncidentCreate {
 	return ic
 }
 
+// SetSeverity sets the "severity" field.
+func (ic *IncidentCreate) SetSeverity(s string) *IncidentCreate {
+	ic.mutation.SetSeverity(s)
+	return ic
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableSeverity(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetSeverity(*s)
+	}
+	return ic
+}
+
 // SetIncidentNumber sets the "incident_number" field.
 func (ic *IncidentCreate) SetIncidentNumber(s string) *IncidentCreate {
 	ic.mutation.SetIncidentNumber(s)
@@ -108,6 +125,66 @@ func (ic *IncidentCreate) SetNillableConfigurationItemID(i *int) *IncidentCreate
 	return ic
 }
 
+// SetCategory sets the "category" field.
+func (ic *IncidentCreate) SetCategory(s string) *IncidentCreate {
+	ic.mutation.SetCategory(s)
+	return ic
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableCategory(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetCategory(*s)
+	}
+	return ic
+}
+
+// SetSubcategory sets the "subcategory" field.
+func (ic *IncidentCreate) SetSubcategory(s string) *IncidentCreate {
+	ic.mutation.SetSubcategory(s)
+	return ic
+}
+
+// SetNillableSubcategory sets the "subcategory" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableSubcategory(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetSubcategory(*s)
+	}
+	return ic
+}
+
+// SetImpactAnalysis sets the "impact_analysis" field.
+func (ic *IncidentCreate) SetImpactAnalysis(m map[string]interface{}) *IncidentCreate {
+	ic.mutation.SetImpactAnalysis(m)
+	return ic
+}
+
+// SetRootCause sets the "root_cause" field.
+func (ic *IncidentCreate) SetRootCause(m map[string]interface{}) *IncidentCreate {
+	ic.mutation.SetRootCause(m)
+	return ic
+}
+
+// SetResolutionSteps sets the "resolution_steps" field.
+func (ic *IncidentCreate) SetResolutionSteps(m []map[string]interface{}) *IncidentCreate {
+	ic.mutation.SetResolutionSteps(m)
+	return ic
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (ic *IncidentCreate) SetDetectedAt(t time.Time) *IncidentCreate {
+	ic.mutation.SetDetectedAt(t)
+	return ic
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableDetectedAt(t *time.Time) *IncidentCreate {
+	if t != nil {
+		ic.SetDetectedAt(*t)
+	}
+	return ic
+}
+
 // SetResolvedAt sets the "resolved_at" field.
 func (ic *IncidentCreate) SetResolvedAt(t time.Time) *IncidentCreate {
 	ic.mutation.SetResolvedAt(t)
@@ -133,6 +210,68 @@ func (ic *IncidentCreate) SetNillableClosedAt(t *time.Time) *IncidentCreate {
 	if t != nil {
 		ic.SetClosedAt(*t)
 	}
+	return ic
+}
+
+// SetEscalatedAt sets the "escalated_at" field.
+func (ic *IncidentCreate) SetEscalatedAt(t time.Time) *IncidentCreate {
+	ic.mutation.SetEscalatedAt(t)
+	return ic
+}
+
+// SetNillableEscalatedAt sets the "escalated_at" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableEscalatedAt(t *time.Time) *IncidentCreate {
+	if t != nil {
+		ic.SetEscalatedAt(*t)
+	}
+	return ic
+}
+
+// SetEscalationLevel sets the "escalation_level" field.
+func (ic *IncidentCreate) SetEscalationLevel(i int) *IncidentCreate {
+	ic.mutation.SetEscalationLevel(i)
+	return ic
+}
+
+// SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableEscalationLevel(i *int) *IncidentCreate {
+	if i != nil {
+		ic.SetEscalationLevel(*i)
+	}
+	return ic
+}
+
+// SetIsAutomated sets the "is_automated" field.
+func (ic *IncidentCreate) SetIsAutomated(b bool) *IncidentCreate {
+	ic.mutation.SetIsAutomated(b)
+	return ic
+}
+
+// SetNillableIsAutomated sets the "is_automated" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableIsAutomated(b *bool) *IncidentCreate {
+	if b != nil {
+		ic.SetIsAutomated(*b)
+	}
+	return ic
+}
+
+// SetSource sets the "source" field.
+func (ic *IncidentCreate) SetSource(s string) *IncidentCreate {
+	ic.mutation.SetSource(s)
+	return ic
+}
+
+// SetNillableSource sets the "source" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableSource(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetSource(*s)
+	}
+	return ic
+}
+
+// SetMetadata sets the "metadata" field.
+func (ic *IncidentCreate) SetMetadata(m map[string]interface{}) *IncidentCreate {
+	ic.mutation.SetMetadata(m)
 	return ic
 }
 
@@ -168,6 +307,81 @@ func (ic *IncidentCreate) SetNillableUpdatedAt(t *time.Time) *IncidentCreate {
 		ic.SetUpdatedAt(*t)
 	}
 	return ic
+}
+
+// AddRelatedIncidentIDs adds the "related_incidents" edge to the Incident entity by IDs.
+func (ic *IncidentCreate) AddRelatedIncidentIDs(ids ...int) *IncidentCreate {
+	ic.mutation.AddRelatedIncidentIDs(ids...)
+	return ic
+}
+
+// AddRelatedIncidents adds the "related_incidents" edges to the Incident entity.
+func (ic *IncidentCreate) AddRelatedIncidents(i ...*Incident) *IncidentCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return ic.AddRelatedIncidentIDs(ids...)
+}
+
+// AddIncidentEventIDs adds the "incident_events" edge to the IncidentEvent entity by IDs.
+func (ic *IncidentCreate) AddIncidentEventIDs(ids ...int) *IncidentCreate {
+	ic.mutation.AddIncidentEventIDs(ids...)
+	return ic
+}
+
+// AddIncidentEvents adds the "incident_events" edges to the IncidentEvent entity.
+func (ic *IncidentCreate) AddIncidentEvents(i ...*IncidentEvent) *IncidentCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return ic.AddIncidentEventIDs(ids...)
+}
+
+// AddIncidentAlertIDs adds the "incident_alerts" edge to the IncidentAlert entity by IDs.
+func (ic *IncidentCreate) AddIncidentAlertIDs(ids ...int) *IncidentCreate {
+	ic.mutation.AddIncidentAlertIDs(ids...)
+	return ic
+}
+
+// AddIncidentAlerts adds the "incident_alerts" edges to the IncidentAlert entity.
+func (ic *IncidentCreate) AddIncidentAlerts(i ...*IncidentAlert) *IncidentCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return ic.AddIncidentAlertIDs(ids...)
+}
+
+// AddIncidentMetricIDs adds the "incident_metrics" edge to the IncidentMetric entity by IDs.
+func (ic *IncidentCreate) AddIncidentMetricIDs(ids ...int) *IncidentCreate {
+	ic.mutation.AddIncidentMetricIDs(ids...)
+	return ic
+}
+
+// AddIncidentMetrics adds the "incident_metrics" edges to the IncidentMetric entity.
+func (ic *IncidentCreate) AddIncidentMetrics(i ...*IncidentMetric) *IncidentCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return ic.AddIncidentMetricIDs(ids...)
+}
+
+// AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
+func (ic *IncidentCreate) AddParentIncidentIDs(ids ...int) *IncidentCreate {
+	ic.mutation.AddParentIncidentIDs(ids...)
+	return ic
+}
+
+// AddParentIncident adds the "parent_incident" edges to the Incident entity.
+func (ic *IncidentCreate) AddParentIncident(i ...*Incident) *IncidentCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return ic.AddParentIncidentIDs(ids...)
 }
 
 // Mutation returns the IncidentMutation object of the builder.
@@ -213,6 +427,26 @@ func (ic *IncidentCreate) defaults() {
 		v := incident.DefaultPriority
 		ic.mutation.SetPriority(v)
 	}
+	if _, ok := ic.mutation.Severity(); !ok {
+		v := incident.DefaultSeverity
+		ic.mutation.SetSeverity(v)
+	}
+	if _, ok := ic.mutation.DetectedAt(); !ok {
+		v := incident.DefaultDetectedAt()
+		ic.mutation.SetDetectedAt(v)
+	}
+	if _, ok := ic.mutation.EscalationLevel(); !ok {
+		v := incident.DefaultEscalationLevel
+		ic.mutation.SetEscalationLevel(v)
+	}
+	if _, ok := ic.mutation.IsAutomated(); !ok {
+		v := incident.DefaultIsAutomated
+		ic.mutation.SetIsAutomated(v)
+	}
+	if _, ok := ic.mutation.Source(); !ok {
+		v := incident.DefaultSource
+		ic.mutation.SetSource(v)
+	}
 	if _, ok := ic.mutation.CreatedAt(); !ok {
 		v := incident.DefaultCreatedAt()
 		ic.mutation.SetCreatedAt(v)
@@ -239,6 +473,9 @@ func (ic *IncidentCreate) check() error {
 	if _, ok := ic.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Incident.priority"`)}
 	}
+	if _, ok := ic.mutation.Severity(); !ok {
+		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "Incident.severity"`)}
+	}
 	if _, ok := ic.mutation.IncidentNumber(); !ok {
 		return &ValidationError{Name: "incident_number", err: errors.New(`ent: missing required field "Incident.incident_number"`)}
 	}
@@ -254,6 +491,18 @@ func (ic *IncidentCreate) check() error {
 		if err := incident.ReporterIDValidator(v); err != nil {
 			return &ValidationError{Name: "reporter_id", err: fmt.Errorf(`ent: validator failed for field "Incident.reporter_id": %w`, err)}
 		}
+	}
+	if _, ok := ic.mutation.DetectedAt(); !ok {
+		return &ValidationError{Name: "detected_at", err: errors.New(`ent: missing required field "Incident.detected_at"`)}
+	}
+	if _, ok := ic.mutation.EscalationLevel(); !ok {
+		return &ValidationError{Name: "escalation_level", err: errors.New(`ent: missing required field "Incident.escalation_level"`)}
+	}
+	if _, ok := ic.mutation.IsAutomated(); !ok {
+		return &ValidationError{Name: "is_automated", err: errors.New(`ent: missing required field "Incident.is_automated"`)}
+	}
+	if _, ok := ic.mutation.Source(); !ok {
+		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "Incident.source"`)}
 	}
 	if _, ok := ic.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Incident.tenant_id"`)}
@@ -311,6 +560,10 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
+	if value, ok := ic.mutation.Severity(); ok {
+		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
+		_node.Severity = value
+	}
 	if value, ok := ic.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 		_node.IncidentNumber = value
@@ -327,6 +580,30 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 		_spec.SetField(incident.FieldConfigurationItemID, field.TypeInt, value)
 		_node.ConfigurationItemID = value
 	}
+	if value, ok := ic.mutation.Category(); ok {
+		_spec.SetField(incident.FieldCategory, field.TypeString, value)
+		_node.Category = value
+	}
+	if value, ok := ic.mutation.Subcategory(); ok {
+		_spec.SetField(incident.FieldSubcategory, field.TypeString, value)
+		_node.Subcategory = value
+	}
+	if value, ok := ic.mutation.ImpactAnalysis(); ok {
+		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)
+		_node.ImpactAnalysis = value
+	}
+	if value, ok := ic.mutation.RootCause(); ok {
+		_spec.SetField(incident.FieldRootCause, field.TypeJSON, value)
+		_node.RootCause = value
+	}
+	if value, ok := ic.mutation.ResolutionSteps(); ok {
+		_spec.SetField(incident.FieldResolutionSteps, field.TypeJSON, value)
+		_node.ResolutionSteps = value
+	}
+	if value, ok := ic.mutation.DetectedAt(); ok {
+		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
+		_node.DetectedAt = value
+	}
 	if value, ok := ic.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
@@ -334,6 +611,26 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.ClosedAt(); ok {
 		_spec.SetField(incident.FieldClosedAt, field.TypeTime, value)
 		_node.ClosedAt = value
+	}
+	if value, ok := ic.mutation.EscalatedAt(); ok {
+		_spec.SetField(incident.FieldEscalatedAt, field.TypeTime, value)
+		_node.EscalatedAt = value
+	}
+	if value, ok := ic.mutation.EscalationLevel(); ok {
+		_spec.SetField(incident.FieldEscalationLevel, field.TypeInt, value)
+		_node.EscalationLevel = value
+	}
+	if value, ok := ic.mutation.IsAutomated(); ok {
+		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
+		_node.IsAutomated = value
+	}
+	if value, ok := ic.mutation.Source(); ok {
+		_spec.SetField(incident.FieldSource, field.TypeString, value)
+		_node.Source = value
+	}
+	if value, ok := ic.mutation.Metadata(); ok {
+		_spec.SetField(incident.FieldMetadata, field.TypeJSON, value)
+		_node.Metadata = value
 	}
 	if value, ok := ic.mutation.TenantID(); ok {
 		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
@@ -346,6 +643,86 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := ic.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.IncidentEventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.ParentIncidentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentrule"
-	"itsm-backend/ent/incidentruleexecution"
 
 	"go.uber.org/zap"
 )
@@ -95,10 +94,10 @@ func (c *TimeCondition) Evaluate(ctx context.Context, incident *ent.Incident) (b
 	case "detected_at":
 		targetTime = incident.DetectedAt
 	case "resolved_at":
-		if incident.ResolvedAt == nil {
+		if incident.ResolvedAt.IsZero() {
 			return false, nil
 		}
-		targetTime = *incident.ResolvedAt
+		targetTime = incident.ResolvedAt
 	default:
 		return false, fmt.Errorf("unknown time field: %s", c.Field)
 	}
@@ -141,11 +140,13 @@ type EscalationAction struct {
 	Reason      string
 	NotifyUsers []int
 	AutoAssign  bool
+	client      *ent.Client
+	logger      *zap.SugaredLogger
 }
 
 func (a *EscalationAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
 	incidentService := NewIncidentService(a.client, a.logger)
-	
+
 	_, err := incidentService.EscalateIncident(ctx, &dto.IncidentEscalationRequest{
 		IncidentID:      incident.ID,
 		EscalationLevel: a.Level,
@@ -153,7 +154,7 @@ func (a *EscalationAction) Execute(ctx context.Context, incident *ent.Incident, 
 		NotifyUsers:     a.NotifyUsers,
 		AutoAssign:      a.AutoAssign,
 	}, tenantID)
-	
+
 	return err
 }
 
@@ -163,11 +164,13 @@ type NotificationAction struct {
 	Recipients []string
 	Message    string
 	Severity   string
+	client     *ent.Client
+	logger     *zap.SugaredLogger
 }
 
 func (a *NotificationAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
 	incidentService := NewIncidentService(a.client, a.logger)
-	
+
 	_, err := incidentService.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
 		IncidentID: incident.ID,
 		AlertType:  "notification",
@@ -177,7 +180,7 @@ func (a *NotificationAction) Execute(ctx context.Context, incident *ent.Incident
 		Channels:   a.Channels,
 		Recipients: a.Recipients,
 	}, tenantID)
-	
+
 	return err
 }
 
@@ -185,15 +188,17 @@ func (a *NotificationAction) Execute(ctx context.Context, incident *ent.Incident
 type AssignmentAction struct {
 	AssigneeID int
 	Reason     string
+	client     *ent.Client
+	logger     *zap.SugaredLogger
 }
 
 func (a *AssignmentAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
 	incidentService := NewIncidentService(a.client, a.logger)
-	
+
 	_, err := incidentService.UpdateIncident(ctx, incident.ID, &dto.UpdateIncidentRequest{
 		AssigneeID: &a.AssigneeID,
 	}, tenantID)
-	
+
 	return err
 }
 
@@ -201,15 +206,17 @@ func (a *AssignmentAction) Execute(ctx context.Context, incident *ent.Incident, 
 type StatusChangeAction struct {
 	Status string
 	Reason string
+	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 func (a *StatusChangeAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
 	incidentService := NewIncidentService(a.client, a.logger)
-	
+
 	_, err := incidentService.UpdateIncident(ctx, incident.ID, &dto.UpdateIncidentRequest{
 		Status: &a.Status,
 	}, tenantID)
-	
+
 	return err
 }
 
@@ -220,11 +227,13 @@ type MetricCollectionAction struct {
 	MetricValue float64
 	Unit        string
 	Tags        map[string]string
+	client      *ent.Client
+	logger      *zap.SugaredLogger
 }
 
 func (a *MetricCollectionAction) Execute(ctx context.Context, incident *ent.Incident, tenantID int) error {
 	incidentService := NewIncidentService(a.client, a.logger)
-	
+
 	_, err := incidentService.CreateIncidentMetric(ctx, &dto.CreateIncidentMetricRequest{
 		IncidentID:  incident.ID,
 		MetricType:  a.MetricType,
@@ -233,7 +242,7 @@ func (a *MetricCollectionAction) Execute(ctx context.Context, incident *ent.Inci
 		Unit:        a.Unit,
 		Tags:        a.Tags,
 	}, tenantID)
-	
+
 	return err
 }
 
@@ -300,27 +309,27 @@ func (e *IncidentRuleEngine) ExecuteRule(ctx context.Context, rule *ent.Incident
 	var executionResults []map[string]interface{}
 	for i, action := range actions {
 		e.logger.Infow("Executing action", "rule_id", rule.ID, "action_index", i)
-		
+
 		err := action.Execute(ctx, incident, tenantID)
 		result := map[string]interface{}{
 			"action_index": i,
 			"success":      err == nil,
 			"error":        nil,
 		}
-		
+
 		if err != nil {
 			e.logger.Errorw("Failed to execute action", "error", err, "action_index", i)
 			result["error"] = err.Error()
 		}
-		
+
 		executionResults = append(executionResults, result)
 	}
 
 	// 更新规则执行状态
 	outputData := map[string]interface{}{
-		"conditions_met": true,
+		"conditions_met":   true,
 		"actions_executed": len(actions),
-		"results": executionResults,
+		"results":          executionResults,
 	}
 
 	err = e.updateExecutionStatus(ctx, execution.ID, "completed", "Rule executed successfully", outputData)
@@ -418,7 +427,7 @@ func (e *IncidentRuleEngine) ExecuteRulesForAllIncidents(ctx context.Context, te
 		for _, rule := range rules {
 			err := e.ExecuteRule(ctx, rule, incidentEntity, tenantID)
 			if err != nil {
-				e.logger.Errorw("Failed to execute rule", "error", err, 
+				e.logger.Errorw("Failed to execute rule", "error", err,
 					"rule_id", rule.ID, "incident_id", incidentEntity.ID)
 				// 继续执行其他规则，不中断
 			}

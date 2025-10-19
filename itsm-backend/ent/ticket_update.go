@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/tickettag"
@@ -237,6 +239,106 @@ func (tu *TicketUpdate) ClearParentTicketID() *TicketUpdate {
 	return tu
 }
 
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (tu *TicketUpdate) SetSLADefinitionID(i int) *TicketUpdate {
+	tu.mutation.SetSLADefinitionID(i)
+	return tu
+}
+
+// SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableSLADefinitionID(i *int) *TicketUpdate {
+	if i != nil {
+		tu.SetSLADefinitionID(*i)
+	}
+	return tu
+}
+
+// ClearSLADefinitionID clears the value of the "sla_definition_id" field.
+func (tu *TicketUpdate) ClearSLADefinitionID() *TicketUpdate {
+	tu.mutation.ClearSLADefinitionID()
+	return tu
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (tu *TicketUpdate) SetSLAResponseDeadline(t time.Time) *TicketUpdate {
+	tu.mutation.SetSLAResponseDeadline(t)
+	return tu
+}
+
+// SetNillableSLAResponseDeadline sets the "sla_response_deadline" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableSLAResponseDeadline(t *time.Time) *TicketUpdate {
+	if t != nil {
+		tu.SetSLAResponseDeadline(*t)
+	}
+	return tu
+}
+
+// ClearSLAResponseDeadline clears the value of the "sla_response_deadline" field.
+func (tu *TicketUpdate) ClearSLAResponseDeadline() *TicketUpdate {
+	tu.mutation.ClearSLAResponseDeadline()
+	return tu
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (tu *TicketUpdate) SetSLAResolutionDeadline(t time.Time) *TicketUpdate {
+	tu.mutation.SetSLAResolutionDeadline(t)
+	return tu
+}
+
+// SetNillableSLAResolutionDeadline sets the "sla_resolution_deadline" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableSLAResolutionDeadline(t *time.Time) *TicketUpdate {
+	if t != nil {
+		tu.SetSLAResolutionDeadline(*t)
+	}
+	return tu
+}
+
+// ClearSLAResolutionDeadline clears the value of the "sla_resolution_deadline" field.
+func (tu *TicketUpdate) ClearSLAResolutionDeadline() *TicketUpdate {
+	tu.mutation.ClearSLAResolutionDeadline()
+	return tu
+}
+
+// SetFirstResponseAt sets the "first_response_at" field.
+func (tu *TicketUpdate) SetFirstResponseAt(t time.Time) *TicketUpdate {
+	tu.mutation.SetFirstResponseAt(t)
+	return tu
+}
+
+// SetNillableFirstResponseAt sets the "first_response_at" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableFirstResponseAt(t *time.Time) *TicketUpdate {
+	if t != nil {
+		tu.SetFirstResponseAt(*t)
+	}
+	return tu
+}
+
+// ClearFirstResponseAt clears the value of the "first_response_at" field.
+func (tu *TicketUpdate) ClearFirstResponseAt() *TicketUpdate {
+	tu.mutation.ClearFirstResponseAt()
+	return tu
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (tu *TicketUpdate) SetResolvedAt(t time.Time) *TicketUpdate {
+	tu.mutation.SetResolvedAt(t)
+	return tu
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableResolvedAt(t *time.Time) *TicketUpdate {
+	if t != nil {
+		tu.SetResolvedAt(*t)
+	}
+	return tu
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (tu *TicketUpdate) ClearResolvedAt() *TicketUpdate {
+	tu.mutation.ClearResolvedAt()
+	return tu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tu *TicketUpdate) SetCreatedAt(t time.Time) *TicketUpdate {
 	tu.mutation.SetCreatedAt(t)
@@ -315,6 +417,26 @@ func (tu *TicketUpdate) AddWorkflowInstances(w ...*WorkflowInstance) *TicketUpda
 		ids[i] = w[i].ID
 	}
 	return tu.AddWorkflowInstanceIDs(ids...)
+}
+
+// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
+func (tu *TicketUpdate) SetSLADefinition(s *SLADefinition) *TicketUpdate {
+	return tu.SetSLADefinitionID(s.ID)
+}
+
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (tu *TicketUpdate) AddSLAViolationIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddSLAViolationIDs(ids...)
+	return tu
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (tu *TicketUpdate) AddSLAViolations(s ...*SLAViolation) *TicketUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tu.AddSLAViolationIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -401,6 +523,33 @@ func (tu *TicketUpdate) RemoveWorkflowInstances(w ...*WorkflowInstance) *TicketU
 		ids[i] = w[i].ID
 	}
 	return tu.RemoveWorkflowInstanceIDs(ids...)
+}
+
+// ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
+func (tu *TicketUpdate) ClearSLADefinition() *TicketUpdate {
+	tu.mutation.ClearSLADefinition()
+	return tu
+}
+
+// ClearSLAViolations clears all "sla_violations" edges to the SLAViolation entity.
+func (tu *TicketUpdate) ClearSLAViolations() *TicketUpdate {
+	tu.mutation.ClearSLAViolations()
+	return tu
+}
+
+// RemoveSLAViolationIDs removes the "sla_violations" edge to SLAViolation entities by IDs.
+func (tu *TicketUpdate) RemoveSLAViolationIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveSLAViolationIDs(ids...)
+	return tu
+}
+
+// RemoveSLAViolations removes "sla_violations" edges to SLAViolation entities.
+func (tu *TicketUpdate) RemoveSLAViolations(s ...*SLAViolation) *TicketUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tu.RemoveSLAViolationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -514,6 +663,30 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticket.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := tu.mutation.SLAResponseDeadline(); ok {
+		_spec.SetField(ticket.FieldSLAResponseDeadline, field.TypeTime, value)
+	}
+	if tu.mutation.SLAResponseDeadlineCleared() {
+		_spec.ClearField(ticket.FieldSLAResponseDeadline, field.TypeTime)
+	}
+	if value, ok := tu.mutation.SLAResolutionDeadline(); ok {
+		_spec.SetField(ticket.FieldSLAResolutionDeadline, field.TypeTime, value)
+	}
+	if tu.mutation.SLAResolutionDeadlineCleared() {
+		_spec.ClearField(ticket.FieldSLAResolutionDeadline, field.TypeTime)
+	}
+	if value, ok := tu.mutation.FirstResponseAt(); ok {
+		_spec.SetField(ticket.FieldFirstResponseAt, field.TypeTime, value)
+	}
+	if tu.mutation.FirstResponseAtCleared() {
+		_spec.ClearField(ticket.FieldFirstResponseAt, field.TypeTime)
+	}
+	if value, ok := tu.mutation.ResolvedAt(); ok {
+		_spec.SetField(ticket.FieldResolvedAt, field.TypeTime, value)
+	}
+	if tu.mutation.ResolvedAtCleared() {
+		_spec.ClearField(ticket.FieldResolvedAt, field.TypeTime)
 	}
 	if value, ok := tu.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -736,6 +909,80 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.SLADefinitionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.SLADefinitionTable,
+			Columns: []string{ticket.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.SLADefinitionTable,
+			Columns: []string{ticket.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedSLAViolationsIDs(); len(nodes) > 0 && !tu.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -968,6 +1215,106 @@ func (tuo *TicketUpdateOne) ClearParentTicketID() *TicketUpdateOne {
 	return tuo
 }
 
+// SetSLADefinitionID sets the "sla_definition_id" field.
+func (tuo *TicketUpdateOne) SetSLADefinitionID(i int) *TicketUpdateOne {
+	tuo.mutation.SetSLADefinitionID(i)
+	return tuo
+}
+
+// SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableSLADefinitionID(i *int) *TicketUpdateOne {
+	if i != nil {
+		tuo.SetSLADefinitionID(*i)
+	}
+	return tuo
+}
+
+// ClearSLADefinitionID clears the value of the "sla_definition_id" field.
+func (tuo *TicketUpdateOne) ClearSLADefinitionID() *TicketUpdateOne {
+	tuo.mutation.ClearSLADefinitionID()
+	return tuo
+}
+
+// SetSLAResponseDeadline sets the "sla_response_deadline" field.
+func (tuo *TicketUpdateOne) SetSLAResponseDeadline(t time.Time) *TicketUpdateOne {
+	tuo.mutation.SetSLAResponseDeadline(t)
+	return tuo
+}
+
+// SetNillableSLAResponseDeadline sets the "sla_response_deadline" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableSLAResponseDeadline(t *time.Time) *TicketUpdateOne {
+	if t != nil {
+		tuo.SetSLAResponseDeadline(*t)
+	}
+	return tuo
+}
+
+// ClearSLAResponseDeadline clears the value of the "sla_response_deadline" field.
+func (tuo *TicketUpdateOne) ClearSLAResponseDeadline() *TicketUpdateOne {
+	tuo.mutation.ClearSLAResponseDeadline()
+	return tuo
+}
+
+// SetSLAResolutionDeadline sets the "sla_resolution_deadline" field.
+func (tuo *TicketUpdateOne) SetSLAResolutionDeadline(t time.Time) *TicketUpdateOne {
+	tuo.mutation.SetSLAResolutionDeadline(t)
+	return tuo
+}
+
+// SetNillableSLAResolutionDeadline sets the "sla_resolution_deadline" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableSLAResolutionDeadline(t *time.Time) *TicketUpdateOne {
+	if t != nil {
+		tuo.SetSLAResolutionDeadline(*t)
+	}
+	return tuo
+}
+
+// ClearSLAResolutionDeadline clears the value of the "sla_resolution_deadline" field.
+func (tuo *TicketUpdateOne) ClearSLAResolutionDeadline() *TicketUpdateOne {
+	tuo.mutation.ClearSLAResolutionDeadline()
+	return tuo
+}
+
+// SetFirstResponseAt sets the "first_response_at" field.
+func (tuo *TicketUpdateOne) SetFirstResponseAt(t time.Time) *TicketUpdateOne {
+	tuo.mutation.SetFirstResponseAt(t)
+	return tuo
+}
+
+// SetNillableFirstResponseAt sets the "first_response_at" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableFirstResponseAt(t *time.Time) *TicketUpdateOne {
+	if t != nil {
+		tuo.SetFirstResponseAt(*t)
+	}
+	return tuo
+}
+
+// ClearFirstResponseAt clears the value of the "first_response_at" field.
+func (tuo *TicketUpdateOne) ClearFirstResponseAt() *TicketUpdateOne {
+	tuo.mutation.ClearFirstResponseAt()
+	return tuo
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (tuo *TicketUpdateOne) SetResolvedAt(t time.Time) *TicketUpdateOne {
+	tuo.mutation.SetResolvedAt(t)
+	return tuo
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableResolvedAt(t *time.Time) *TicketUpdateOne {
+	if t != nil {
+		tuo.SetResolvedAt(*t)
+	}
+	return tuo
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (tuo *TicketUpdateOne) ClearResolvedAt() *TicketUpdateOne {
+	tuo.mutation.ClearResolvedAt()
+	return tuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tuo *TicketUpdateOne) SetCreatedAt(t time.Time) *TicketUpdateOne {
 	tuo.mutation.SetCreatedAt(t)
@@ -1046,6 +1393,26 @@ func (tuo *TicketUpdateOne) AddWorkflowInstances(w ...*WorkflowInstance) *Ticket
 		ids[i] = w[i].ID
 	}
 	return tuo.AddWorkflowInstanceIDs(ids...)
+}
+
+// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
+func (tuo *TicketUpdateOne) SetSLADefinition(s *SLADefinition) *TicketUpdateOne {
+	return tuo.SetSLADefinitionID(s.ID)
+}
+
+// AddSLAViolationIDs adds the "sla_violations" edge to the SLAViolation entity by IDs.
+func (tuo *TicketUpdateOne) AddSLAViolationIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddSLAViolationIDs(ids...)
+	return tuo
+}
+
+// AddSLAViolations adds the "sla_violations" edges to the SLAViolation entity.
+func (tuo *TicketUpdateOne) AddSLAViolations(s ...*SLAViolation) *TicketUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tuo.AddSLAViolationIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -1132,6 +1499,33 @@ func (tuo *TicketUpdateOne) RemoveWorkflowInstances(w ...*WorkflowInstance) *Tic
 		ids[i] = w[i].ID
 	}
 	return tuo.RemoveWorkflowInstanceIDs(ids...)
+}
+
+// ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
+func (tuo *TicketUpdateOne) ClearSLADefinition() *TicketUpdateOne {
+	tuo.mutation.ClearSLADefinition()
+	return tuo
+}
+
+// ClearSLAViolations clears all "sla_violations" edges to the SLAViolation entity.
+func (tuo *TicketUpdateOne) ClearSLAViolations() *TicketUpdateOne {
+	tuo.mutation.ClearSLAViolations()
+	return tuo
+}
+
+// RemoveSLAViolationIDs removes the "sla_violations" edge to SLAViolation entities by IDs.
+func (tuo *TicketUpdateOne) RemoveSLAViolationIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveSLAViolationIDs(ids...)
+	return tuo
+}
+
+// RemoveSLAViolations removes "sla_violations" edges to SLAViolation entities.
+func (tuo *TicketUpdateOne) RemoveSLAViolations(s ...*SLAViolation) *TicketUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tuo.RemoveSLAViolationIDs(ids...)
 }
 
 // Where appends a list predicates to the TicketUpdate builder.
@@ -1275,6 +1669,30 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 	}
 	if value, ok := tuo.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticket.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := tuo.mutation.SLAResponseDeadline(); ok {
+		_spec.SetField(ticket.FieldSLAResponseDeadline, field.TypeTime, value)
+	}
+	if tuo.mutation.SLAResponseDeadlineCleared() {
+		_spec.ClearField(ticket.FieldSLAResponseDeadline, field.TypeTime)
+	}
+	if value, ok := tuo.mutation.SLAResolutionDeadline(); ok {
+		_spec.SetField(ticket.FieldSLAResolutionDeadline, field.TypeTime, value)
+	}
+	if tuo.mutation.SLAResolutionDeadlineCleared() {
+		_spec.ClearField(ticket.FieldSLAResolutionDeadline, field.TypeTime)
+	}
+	if value, ok := tuo.mutation.FirstResponseAt(); ok {
+		_spec.SetField(ticket.FieldFirstResponseAt, field.TypeTime, value)
+	}
+	if tuo.mutation.FirstResponseAtCleared() {
+		_spec.ClearField(ticket.FieldFirstResponseAt, field.TypeTime)
+	}
+	if value, ok := tuo.mutation.ResolvedAt(); ok {
+		_spec.SetField(ticket.FieldResolvedAt, field.TypeTime, value)
+	}
+	if tuo.mutation.ResolvedAtCleared() {
+		_spec.ClearField(ticket.FieldResolvedAt, field.TypeTime)
 	}
 	if value, ok := tuo.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -1497,6 +1915,80 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.SLADefinitionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.SLADefinitionTable,
+			Columns: []string{ticket.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.SLADefinitionTable,
+			Columns: []string{ticket.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedSLAViolationsIDs(); len(nodes) > 0 && !tuo.mutation.SLAViolationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.SLAViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAViolationsTable,
+			Columns: []string{ticket.SLAViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -30,6 +30,21 @@ type Conversation func(*sql.Selector)
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
 
+// IncidentAlert is the predicate function for incidentalert builders.
+type IncidentAlert func(*sql.Selector)
+
+// IncidentEvent is the predicate function for incidentevent builders.
+type IncidentEvent func(*sql.Selector)
+
+// IncidentMetric is the predicate function for incidentmetric builders.
+type IncidentMetric func(*sql.Selector)
+
+// IncidentRule is the predicate function for incidentrule builders.
+type IncidentRule func(*sql.Selector)
+
+// IncidentRuleExecution is the predicate function for incidentruleexecution builders.
+type IncidentRuleExecution func(*sql.Selector)
+
 // KnowledgeArticle is the predicate function for knowledgearticle builders.
 type KnowledgeArticle func(*sql.Selector)
 
@@ -65,6 +80,9 @@ type PromptTemplate func(*sql.Selector)
 
 // SLADefinition is the predicate function for sladefinition builders.
 type SLADefinition func(*sql.Selector)
+
+// SLAMetric is the predicate function for slametric builders.
+type SLAMetric func(*sql.Selector)
 
 // SLAViolation is the predicate function for slaviolation builders.
 type SLAViolation func(*sql.Selector)

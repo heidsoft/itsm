@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/incident"
 	"strings"
@@ -25,6 +26,8 @@ type Incident struct {
 	Status string `json:"status,omitempty"`
 	// 优先级
 	Priority string `json:"priority,omitempty"`
+	// 严重程度
+	Severity string `json:"severity,omitempty"`
 	// 事件编号
 	IncidentNumber string `json:"incident_number,omitempty"`
 	// 报告人ID
@@ -33,17 +36,104 @@ type Incident struct {
 	AssigneeID int `json:"assignee_id,omitempty"`
 	// 配置项ID
 	ConfigurationItemID int `json:"configuration_item_id,omitempty"`
+	// 事件分类
+	Category string `json:"category,omitempty"`
+	// 事件子分类
+	Subcategory string `json:"subcategory,omitempty"`
+	// 影响分析
+	ImpactAnalysis map[string]interface{} `json:"impact_analysis,omitempty"`
+	// 根本原因
+	RootCause map[string]interface{} `json:"root_cause,omitempty"`
+	// 解决步骤
+	ResolutionSteps []map[string]interface{} `json:"resolution_steps,omitempty"`
+	// 检测时间
+	DetectedAt time.Time `json:"detected_at,omitempty"`
 	// 解决时间
 	ResolvedAt time.Time `json:"resolved_at,omitempty"`
 	// 关闭时间
 	ClosedAt time.Time `json:"closed_at,omitempty"`
+	// 升级时间
+	EscalatedAt time.Time `json:"escalated_at,omitempty"`
+	// 升级级别
+	EscalationLevel int `json:"escalation_level,omitempty"`
+	// 是否自动化处理
+	IsAutomated bool `json:"is_automated,omitempty"`
+	// 事件来源
+	Source string `json:"source,omitempty"`
+	// 元数据
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the IncidentQuery when eager-loading is set.
+	Edges        IncidentEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// IncidentEdges holds the relations/edges for other nodes in the graph.
+type IncidentEdges struct {
+	// 关联事件
+	RelatedIncidents []*Incident `json:"related_incidents,omitempty"`
+	// 事件活动记录
+	IncidentEvents []*IncidentEvent `json:"incident_events,omitempty"`
+	// 事件告警
+	IncidentAlerts []*IncidentAlert `json:"incident_alerts,omitempty"`
+	// 事件指标
+	IncidentMetrics []*IncidentMetric `json:"incident_metrics,omitempty"`
+	// 父事件
+	ParentIncident []*Incident `json:"parent_incident,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [5]bool
+}
+
+// RelatedIncidentsOrErr returns the RelatedIncidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) RelatedIncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[0] {
+		return e.RelatedIncidents, nil
+	}
+	return nil, &NotLoadedError{edge: "related_incidents"}
+}
+
+// IncidentEventsOrErr returns the IncidentEvents value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) IncidentEventsOrErr() ([]*IncidentEvent, error) {
+	if e.loadedTypes[1] {
+		return e.IncidentEvents, nil
+	}
+	return nil, &NotLoadedError{edge: "incident_events"}
+}
+
+// IncidentAlertsOrErr returns the IncidentAlerts value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) IncidentAlertsOrErr() ([]*IncidentAlert, error) {
+	if e.loadedTypes[2] {
+		return e.IncidentAlerts, nil
+	}
+	return nil, &NotLoadedError{edge: "incident_alerts"}
+}
+
+// IncidentMetricsOrErr returns the IncidentMetrics value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) IncidentMetricsOrErr() ([]*IncidentMetric, error) {
+	if e.loadedTypes[3] {
+		return e.IncidentMetrics, nil
+	}
+	return nil, &NotLoadedError{edge: "incident_metrics"}
+}
+
+// ParentIncidentOrErr returns the ParentIncident value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) ParentIncidentOrErr() ([]*Incident, error) {
+	if e.loadedTypes[4] {
+		return e.ParentIncident, nil
+	}
+	return nil, &NotLoadedError{edge: "parent_incident"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -51,11 +141,15 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldTenantID:
+		case incident.FieldImpactAnalysis, incident.FieldRootCause, incident.FieldResolutionSteps, incident.FieldMetadata:
+			values[i] = new([]byte)
+		case incident.FieldIsAutomated:
+			values[i] = new(sql.NullBool)
+		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldPriority, incident.FieldIncidentNumber:
+		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldPriority, incident.FieldSeverity, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
 			values[i] = new(sql.NullString)
-		case incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt:
+		case incident.FieldDetectedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldEscalatedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -102,6 +196,12 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.Priority = value.String
 			}
+		case incident.FieldSeverity:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field severity", values[j])
+			} else if value.Valid {
+				i.Severity = value.String
+			}
 		case incident.FieldIncidentNumber:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field incident_number", values[j])
@@ -126,6 +226,48 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.ConfigurationItemID = int(value.Int64)
 			}
+		case incident.FieldCategory:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field category", values[j])
+			} else if value.Valid {
+				i.Category = value.String
+			}
+		case incident.FieldSubcategory:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field subcategory", values[j])
+			} else if value.Valid {
+				i.Subcategory = value.String
+			}
+		case incident.FieldImpactAnalysis:
+			if value, ok := values[j].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field impact_analysis", values[j])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &i.ImpactAnalysis); err != nil {
+					return fmt.Errorf("unmarshal field impact_analysis: %w", err)
+				}
+			}
+		case incident.FieldRootCause:
+			if value, ok := values[j].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field root_cause", values[j])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &i.RootCause); err != nil {
+					return fmt.Errorf("unmarshal field root_cause: %w", err)
+				}
+			}
+		case incident.FieldResolutionSteps:
+			if value, ok := values[j].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution_steps", values[j])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &i.ResolutionSteps); err != nil {
+					return fmt.Errorf("unmarshal field resolution_steps: %w", err)
+				}
+			}
+		case incident.FieldDetectedAt:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field detected_at", values[j])
+			} else if value.Valid {
+				i.DetectedAt = value.Time
+			}
 		case incident.FieldResolvedAt:
 			if value, ok := values[j].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[j])
@@ -137,6 +279,38 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field closed_at", values[j])
 			} else if value.Valid {
 				i.ClosedAt = value.Time
+			}
+		case incident.FieldEscalatedAt:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field escalated_at", values[j])
+			} else if value.Valid {
+				i.EscalatedAt = value.Time
+			}
+		case incident.FieldEscalationLevel:
+			if value, ok := values[j].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field escalation_level", values[j])
+			} else if value.Valid {
+				i.EscalationLevel = int(value.Int64)
+			}
+		case incident.FieldIsAutomated:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_automated", values[j])
+			} else if value.Valid {
+				i.IsAutomated = value.Bool
+			}
+		case incident.FieldSource:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source", values[j])
+			} else if value.Valid {
+				i.Source = value.String
+			}
+		case incident.FieldMetadata:
+			if value, ok := values[j].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field metadata", values[j])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &i.Metadata); err != nil {
+					return fmt.Errorf("unmarshal field metadata: %w", err)
+				}
 			}
 		case incident.FieldTenantID:
 			if value, ok := values[j].(*sql.NullInt64); !ok {
@@ -167,6 +341,31 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (i *Incident) Value(name string) (ent.Value, error) {
 	return i.selectValues.Get(name)
+}
+
+// QueryRelatedIncidents queries the "related_incidents" edge of the Incident entity.
+func (i *Incident) QueryRelatedIncidents() *IncidentQuery {
+	return NewIncidentClient(i.config).QueryRelatedIncidents(i)
+}
+
+// QueryIncidentEvents queries the "incident_events" edge of the Incident entity.
+func (i *Incident) QueryIncidentEvents() *IncidentEventQuery {
+	return NewIncidentClient(i.config).QueryIncidentEvents(i)
+}
+
+// QueryIncidentAlerts queries the "incident_alerts" edge of the Incident entity.
+func (i *Incident) QueryIncidentAlerts() *IncidentAlertQuery {
+	return NewIncidentClient(i.config).QueryIncidentAlerts(i)
+}
+
+// QueryIncidentMetrics queries the "incident_metrics" edge of the Incident entity.
+func (i *Incident) QueryIncidentMetrics() *IncidentMetricQuery {
+	return NewIncidentClient(i.config).QueryIncidentMetrics(i)
+}
+
+// QueryParentIncident queries the "parent_incident" edge of the Incident entity.
+func (i *Incident) QueryParentIncident() *IncidentQuery {
+	return NewIncidentClient(i.config).QueryParentIncident(i)
 }
 
 // Update returns a builder for updating this Incident.
@@ -204,6 +403,9 @@ func (i *Incident) String() string {
 	builder.WriteString("priority=")
 	builder.WriteString(i.Priority)
 	builder.WriteString(", ")
+	builder.WriteString("severity=")
+	builder.WriteString(i.Severity)
+	builder.WriteString(", ")
 	builder.WriteString("incident_number=")
 	builder.WriteString(i.IncidentNumber)
 	builder.WriteString(", ")
@@ -216,11 +418,44 @@ func (i *Incident) String() string {
 	builder.WriteString("configuration_item_id=")
 	builder.WriteString(fmt.Sprintf("%v", i.ConfigurationItemID))
 	builder.WriteString(", ")
+	builder.WriteString("category=")
+	builder.WriteString(i.Category)
+	builder.WriteString(", ")
+	builder.WriteString("subcategory=")
+	builder.WriteString(i.Subcategory)
+	builder.WriteString(", ")
+	builder.WriteString("impact_analysis=")
+	builder.WriteString(fmt.Sprintf("%v", i.ImpactAnalysis))
+	builder.WriteString(", ")
+	builder.WriteString("root_cause=")
+	builder.WriteString(fmt.Sprintf("%v", i.RootCause))
+	builder.WriteString(", ")
+	builder.WriteString("resolution_steps=")
+	builder.WriteString(fmt.Sprintf("%v", i.ResolutionSteps))
+	builder.WriteString(", ")
+	builder.WriteString("detected_at=")
+	builder.WriteString(i.DetectedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
 	builder.WriteString(i.ResolvedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("closed_at=")
 	builder.WriteString(i.ClosedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("escalated_at=")
+	builder.WriteString(i.EscalatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("escalation_level=")
+	builder.WriteString(fmt.Sprintf("%v", i.EscalationLevel))
+	builder.WriteString(", ")
+	builder.WriteString("is_automated=")
+	builder.WriteString(fmt.Sprintf("%v", i.IsAutomated))
+	builder.WriteString(", ")
+	builder.WriteString("source=")
+	builder.WriteString(i.Source)
+	builder.WriteString(", ")
+	builder.WriteString("metadata=")
+	builder.WriteString(fmt.Sprintf("%v", i.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", i.TenantID))

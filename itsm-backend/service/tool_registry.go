@@ -37,7 +37,28 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, args map[string]interface{}) (interface{}, error) {
 	switch name {
 	case "get_incident_stats":
-		return t.incident.GetIncidentStats(ctx, tenantID)
+		// 使用ListIncidents来获取统计信息
+		incidents, _, err := t.incident.ListIncidents(ctx, tenantID, 1, 1000, map[string]interface{}{})
+		if err != nil {
+			return nil, err
+		}
+
+		stats := map[string]interface{}{
+			"total_incidents":    len(incidents),
+			"open_incidents":     0,
+			"resolved_incidents": 0,
+		}
+
+		for _, incident := range incidents {
+			switch incident.Status {
+			case "new", "in_progress":
+				stats["open_incidents"] = stats["open_incidents"].(int) + 1
+			case "resolved", "closed":
+				stats["resolved_incidents"] = stats["resolved_incidents"].(int) + 1
+			}
+		}
+
+		return stats, nil
 	case "list_kb":
 		q := ""
 		if v, ok := args["q"].(string); ok {

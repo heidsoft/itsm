@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -102,6 +105,18 @@ func (sdc *SLADefinitionCreate) SetBusinessHours(m map[string]interface{}) *SLAD
 	return sdc
 }
 
+// SetEscalationRules sets the "escalation_rules" field.
+func (sdc *SLADefinitionCreate) SetEscalationRules(m map[string]interface{}) *SLADefinitionCreate {
+	sdc.mutation.SetEscalationRules(m)
+	return sdc
+}
+
+// SetConditions sets the "conditions" field.
+func (sdc *SLADefinitionCreate) SetConditions(m map[string]interface{}) *SLADefinitionCreate {
+	sdc.mutation.SetConditions(m)
+	return sdc
+}
+
 // SetIsActive sets the "is_active" field.
 func (sdc *SLADefinitionCreate) SetIsActive(b bool) *SLADefinitionCreate {
 	sdc.mutation.SetIsActive(b)
@@ -148,6 +163,51 @@ func (sdc *SLADefinitionCreate) SetNillableUpdatedAt(t *time.Time) *SLADefinitio
 		sdc.SetUpdatedAt(*t)
 	}
 	return sdc
+}
+
+// AddViolationIDs adds the "violations" edge to the SLAViolation entity by IDs.
+func (sdc *SLADefinitionCreate) AddViolationIDs(ids ...int) *SLADefinitionCreate {
+	sdc.mutation.AddViolationIDs(ids...)
+	return sdc
+}
+
+// AddViolations adds the "violations" edges to the SLAViolation entity.
+func (sdc *SLADefinitionCreate) AddViolations(s ...*SLAViolation) *SLADefinitionCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdc.AddViolationIDs(ids...)
+}
+
+// AddMetricIDs adds the "metrics" edge to the SLAMetric entity by IDs.
+func (sdc *SLADefinitionCreate) AddMetricIDs(ids ...int) *SLADefinitionCreate {
+	sdc.mutation.AddMetricIDs(ids...)
+	return sdc
+}
+
+// AddMetrics adds the "metrics" edges to the SLAMetric entity.
+func (sdc *SLADefinitionCreate) AddMetrics(s ...*SLAMetric) *SLADefinitionCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdc.AddMetricIDs(ids...)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (sdc *SLADefinitionCreate) AddTicketIDs(ids ...int) *SLADefinitionCreate {
+	sdc.mutation.AddTicketIDs(ids...)
+	return sdc
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (sdc *SLADefinitionCreate) AddTickets(t ...*Ticket) *SLADefinitionCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return sdc.AddTicketIDs(ids...)
 }
 
 // Mutation returns the SLADefinitionMutation object of the builder.
@@ -304,6 +364,14 @@ func (sdc *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSp
 		_spec.SetField(sladefinition.FieldBusinessHours, field.TypeJSON, value)
 		_node.BusinessHours = value
 	}
+	if value, ok := sdc.mutation.EscalationRules(); ok {
+		_spec.SetField(sladefinition.FieldEscalationRules, field.TypeJSON, value)
+		_node.EscalationRules = value
+	}
+	if value, ok := sdc.mutation.Conditions(); ok {
+		_spec.SetField(sladefinition.FieldConditions, field.TypeJSON, value)
+		_node.Conditions = value
+	}
 	if value, ok := sdc.mutation.IsActive(); ok {
 		_spec.SetField(sladefinition.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
@@ -319,6 +387,54 @@ func (sdc *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSp
 	if value, ok := sdc.mutation.UpdatedAt(); ok {
 		_spec.SetField(sladefinition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := sdc.mutation.ViolationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.ViolationsTable,
+			Columns: []string{sladefinition.ViolationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sdc.mutation.MetricsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.MetricsTable,
+			Columns: []string{sladefinition.MetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sdc.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.TicketsTable,
+			Columns: []string{sladefinition.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -6,7 +6,9 @@ import (
 	"context"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"math"
 
 	"entgo.io/ent"
@@ -18,10 +20,12 @@ import (
 // SLAViolationQuery is the builder for querying SLAViolation entities.
 type SLAViolationQuery struct {
 	config
-	ctx        *QueryContext
-	order      []slaviolation.OrderOption
-	inters     []Interceptor
-	predicates []predicate.SLAViolation
+	ctx               *QueryContext
+	order             []slaviolation.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.SLAViolation
+	withSLADefinition *SLADefinitionQuery
+	withTicket        *TicketQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +60,50 @@ func (svq *SLAViolationQuery) Unique(unique bool) *SLAViolationQuery {
 func (svq *SLAViolationQuery) Order(o ...slaviolation.OrderOption) *SLAViolationQuery {
 	svq.order = append(svq.order, o...)
 	return svq
+}
+
+// QuerySLADefinition chains the current query on the "sla_definition" edge.
+func (svq *SLAViolationQuery) QuerySLADefinition() *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: svq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := svq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := svq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaviolation.Table, slaviolation.FieldID, selector),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaviolation.SLADefinitionTable, slaviolation.SLADefinitionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(svq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTicket chains the current query on the "ticket" edge.
+func (svq *SLAViolationQuery) QueryTicket() *TicketQuery {
+	query := (&TicketClient{config: svq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := svq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := svq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaviolation.Table, slaviolation.FieldID, selector),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaviolation.TicketTable, slaviolation.TicketColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(svq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first SLAViolation entity from the query.
@@ -245,15 +293,39 @@ func (svq *SLAViolationQuery) Clone() *SLAViolationQuery {
 		return nil
 	}
 	return &SLAViolationQuery{
-		config:     svq.config,
-		ctx:        svq.ctx.Clone(),
-		order:      append([]slaviolation.OrderOption{}, svq.order...),
-		inters:     append([]Interceptor{}, svq.inters...),
-		predicates: append([]predicate.SLAViolation{}, svq.predicates...),
+		config:            svq.config,
+		ctx:               svq.ctx.Clone(),
+		order:             append([]slaviolation.OrderOption{}, svq.order...),
+		inters:            append([]Interceptor{}, svq.inters...),
+		predicates:        append([]predicate.SLAViolation{}, svq.predicates...),
+		withSLADefinition: svq.withSLADefinition.Clone(),
+		withTicket:        svq.withTicket.Clone(),
 		// clone intermediate query.
 		sql:  svq.sql.Clone(),
 		path: svq.path,
 	}
+}
+
+// WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
+// the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
+func (svq *SLAViolationQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAViolationQuery {
+	query := (&SLADefinitionClient{config: svq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	svq.withSLADefinition = query
+	return svq
+}
+
+// WithTicket tells the query-builder to eager-load the nodes that are connected to
+// the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
+func (svq *SLAViolationQuery) WithTicket(opts ...func(*TicketQuery)) *SLAViolationQuery {
+	query := (&TicketClient{config: svq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	svq.withTicket = query
+	return svq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +404,12 @@ func (svq *SLAViolationQuery) prepareQuery(ctx context.Context) error {
 
 func (svq *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAViolation, error) {
 	var (
-		nodes = []*SLAViolation{}
-		_spec = svq.querySpec()
+		nodes       = []*SLAViolation{}
+		_spec       = svq.querySpec()
+		loadedTypes = [2]bool{
+			svq.withSLADefinition != nil,
+			svq.withTicket != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAViolation).scanValues(nil, columns)
@@ -341,6 +417,7 @@ func (svq *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &SLAViolation{config: svq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +429,78 @@ func (svq *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := svq.withSLADefinition; query != nil {
+		if err := svq.loadSLADefinition(ctx, query, nodes, nil,
+			func(n *SLAViolation, e *SLADefinition) { n.Edges.SLADefinition = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := svq.withTicket; query != nil {
+		if err := svq.loadTicket(ctx, query, nodes, nil,
+			func(n *SLAViolation, e *Ticket) { n.Edges.Ticket = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (svq *SLAViolationQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAViolation, init func(*SLAViolation), assign func(*SLAViolation, *SLADefinition)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*SLAViolation)
+	for i := range nodes {
+		fk := nodes[i].SLADefinitionID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(sladefinition.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "sla_definition_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (svq *SLAViolationQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*SLAViolation, init func(*SLAViolation), assign func(*SLAViolation, *Ticket)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*SLAViolation)
+	for i := range nodes {
+		fk := nodes[i].TicketID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(ticket.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "ticket_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (svq *SLAViolationQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +527,12 @@ func (svq *SLAViolationQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != slaviolation.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if svq.withSLADefinition != nil {
+			_spec.Node.AddColumnOnce(slaviolation.FieldSLADefinitionID)
+		}
+		if svq.withTicket != nil {
+			_spec.Node.AddColumnOnce(slaviolation.FieldTicketID)
 		}
 	}
 	if ps := svq.predicates; len(ps) > 0 {

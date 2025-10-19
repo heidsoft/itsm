@@ -8,11 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
-	"itsm-backend/ent/incidentalert"
-	"itsm-backend/ent/incidentevent"
-	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
-	"itsm-backend/ent/incidentruleexecution"
 
 	"go.uber.org/zap"
 )
@@ -295,7 +291,7 @@ func (s *IncidentService) CreateIncidentEvent(ctx context.Context, req *dto.Crea
 		SetSeverity(req.Severity).
 		SetData(req.Data).
 		SetOccurredAt(occurredAt).
-		SetUserID(req.UserID).
+		SetUserID(*req.UserID).
 		SetSource(req.Source).
 		SetMetadata(req.Metadata).
 		SetTenantID(tenantID).
@@ -429,7 +425,7 @@ func (s *IncidentService) GetIncidentMonitoring(ctx context.Context, req *dto.In
 			openIncidents++
 		case "resolved":
 			resolvedIncidents++
-			if incidentEntity.ResolvedAt != nil {
+			if !incidentEntity.ResolvedAt.IsZero() {
 				resolutionTime := incidentEntity.ResolvedAt.Sub(incidentEntity.CreatedAt).Hours()
 				totalResolutionTime += resolutionTime
 				resolvedCount++
@@ -532,7 +528,7 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		Severity:    "high",
 		Data: map[string]interface{}{
 			"escalation_level": req.EscalationLevel,
-			"reason":          req.Reason,
+			"reason":           req.Reason,
 		},
 		Source: "system",
 	}, tenantID)
@@ -551,7 +547,7 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 		Recipients: []string{"manager@company.com"},
 		Metadata: map[string]interface{}{
 			"escalation_level": req.EscalationLevel,
-			"reason":          req.Reason,
+			"reason":           req.Reason,
 		},
 	}, tenantID)
 	if err != nil {
@@ -766,23 +762,23 @@ func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.Incide
 	return &dto.IncidentResponse{
 		ID:                  incident.ID,
 		Title:               incident.Title,
-		Description:        incident.Description,
+		Description:         incident.Description,
 		Status:              incident.Status,
 		Priority:            incident.Priority,
 		Severity:            incident.Severity,
 		IncidentNumber:      incident.IncidentNumber,
 		ReporterID:          incident.ReporterID,
-		AssigneeID:          incident.AssigneeID,
-		ConfigurationItemID: incident.ConfigurationItemID,
+		AssigneeID:          &incident.AssigneeID,
+		ConfigurationItemID: &incident.ConfigurationItemID,
 		Category:            incident.Category,
 		Subcategory:         incident.Subcategory,
 		ImpactAnalysis:      incident.ImpactAnalysis,
 		RootCause:           incident.RootCause,
 		ResolutionSteps:     incident.ResolutionSteps,
 		DetectedAt:          incident.DetectedAt,
-		ResolvedAt:          incident.ResolvedAt,
-		ClosedAt:            incident.ClosedAt,
-		EscalatedAt:         incident.EscalatedAt,
+		ResolvedAt:          &incident.ResolvedAt,
+		ClosedAt:            &incident.ClosedAt,
+		EscalatedAt:         &incident.EscalatedAt,
 		EscalationLevel:     incident.EscalationLevel,
 		IsAutomated:         incident.IsAutomated,
 		Source:              incident.Source,
@@ -804,7 +800,7 @@ func (s *IncidentService) toIncidentEventResponse(event *ent.IncidentEvent) *dto
 		Severity:    event.Severity,
 		Data:        event.Data,
 		OccurredAt:  event.OccurredAt,
-		UserID:      event.UserID,
+		UserID:      &event.UserID,
 		Source:      event.Source,
 		Metadata:    event.Metadata,
 		TenantID:    event.TenantID,
@@ -825,13 +821,13 @@ func (s *IncidentService) toIncidentAlertResponse(alert *ent.IncidentAlert) *dto
 		Channels:       alert.Channels,
 		Recipients:     alert.Recipients,
 		TriggeredAt:    alert.TriggeredAt,
-		AcknowledgedAt: alert.AcknowledgedAt,
-		ResolvedAt:     alert.ResolvedAt,
-		AcknowledgedBy: alert.AcknowledgedBy,
+		AcknowledgedAt: &alert.AcknowledgedAt,
+		ResolvedAt:     &alert.ResolvedAt,
+		AcknowledgedBy: &alert.AcknowledgedBy,
 		Metadata:       alert.Metadata,
 		TenantID:       alert.TenantID,
-		CreatedAt:     alert.CreatedAt,
-		UpdatedAt:     alert.UpdatedAt,
+		CreatedAt:      alert.CreatedAt,
+		UpdatedAt:      alert.UpdatedAt,
 	}
 }
 

@@ -4,8 +4,12 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/predicate"
 	"math"
 
@@ -18,10 +22,15 @@ import (
 // IncidentQuery is the builder for querying Incident entities.
 type IncidentQuery struct {
 	config
-	ctx        *QueryContext
-	order      []incident.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Incident
+	ctx                  *QueryContext
+	order                []incident.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.Incident
+	withRelatedIncidents *IncidentQuery
+	withIncidentEvents   *IncidentEventQuery
+	withIncidentAlerts   *IncidentAlertQuery
+	withIncidentMetrics  *IncidentMetricQuery
+	withParentIncident   *IncidentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +65,116 @@ func (iq *IncidentQuery) Unique(unique bool) *IncidentQuery {
 func (iq *IncidentQuery) Order(o ...incident.OrderOption) *IncidentQuery {
 	iq.order = append(iq.order, o...)
 	return iq
+}
+
+// QueryRelatedIncidents chains the current query on the "related_incidents" edge.
+func (iq *IncidentQuery) QueryRelatedIncidents() *IncidentQuery {
+	query := (&IncidentClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, incident.RelatedIncidentsTable, incident.RelatedIncidentsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryIncidentEvents chains the current query on the "incident_events" edge.
+func (iq *IncidentQuery) QueryIncidentEvents() *IncidentEventQuery {
+	query := (&IncidentEventClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(incidentevent.Table, incidentevent.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentEventsTable, incident.IncidentEventsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryIncidentAlerts chains the current query on the "incident_alerts" edge.
+func (iq *IncidentQuery) QueryIncidentAlerts() *IncidentAlertQuery {
+	query := (&IncidentAlertClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(incidentalert.Table, incidentalert.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentAlertsTable, incident.IncidentAlertsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryIncidentMetrics chains the current query on the "incident_metrics" edge.
+func (iq *IncidentQuery) QueryIncidentMetrics() *IncidentMetricQuery {
+	query := (&IncidentMetricClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(incidentmetric.Table, incidentmetric.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, incident.IncidentMetricsTable, incident.IncidentMetricsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParentIncident chains the current query on the "parent_incident" edge.
+func (iq *IncidentQuery) QueryParentIncident() *IncidentQuery {
+	query := (&IncidentClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(incident.Table, incident.FieldID, selector),
+			sqlgraph.To(incident.Table, incident.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, incident.ParentIncidentTable, incident.ParentIncidentPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Incident entity from the query.
@@ -245,15 +364,75 @@ func (iq *IncidentQuery) Clone() *IncidentQuery {
 		return nil
 	}
 	return &IncidentQuery{
-		config:     iq.config,
-		ctx:        iq.ctx.Clone(),
-		order:      append([]incident.OrderOption{}, iq.order...),
-		inters:     append([]Interceptor{}, iq.inters...),
-		predicates: append([]predicate.Incident{}, iq.predicates...),
+		config:               iq.config,
+		ctx:                  iq.ctx.Clone(),
+		order:                append([]incident.OrderOption{}, iq.order...),
+		inters:               append([]Interceptor{}, iq.inters...),
+		predicates:           append([]predicate.Incident{}, iq.predicates...),
+		withRelatedIncidents: iq.withRelatedIncidents.Clone(),
+		withIncidentEvents:   iq.withIncidentEvents.Clone(),
+		withIncidentAlerts:   iq.withIncidentAlerts.Clone(),
+		withIncidentMetrics:  iq.withIncidentMetrics.Clone(),
+		withParentIncident:   iq.withParentIncident.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
 		path: iq.path,
 	}
+}
+
+// WithRelatedIncidents tells the query-builder to eager-load the nodes that are connected to
+// the "related_incidents" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *IncidentQuery) WithRelatedIncidents(opts ...func(*IncidentQuery)) *IncidentQuery {
+	query := (&IncidentClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withRelatedIncidents = query
+	return iq
+}
+
+// WithIncidentEvents tells the query-builder to eager-load the nodes that are connected to
+// the "incident_events" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *IncidentQuery) WithIncidentEvents(opts ...func(*IncidentEventQuery)) *IncidentQuery {
+	query := (&IncidentEventClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withIncidentEvents = query
+	return iq
+}
+
+// WithIncidentAlerts tells the query-builder to eager-load the nodes that are connected to
+// the "incident_alerts" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *IncidentQuery) WithIncidentAlerts(opts ...func(*IncidentAlertQuery)) *IncidentQuery {
+	query := (&IncidentAlertClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withIncidentAlerts = query
+	return iq
+}
+
+// WithIncidentMetrics tells the query-builder to eager-load the nodes that are connected to
+// the "incident_metrics" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *IncidentQuery) WithIncidentMetrics(opts ...func(*IncidentMetricQuery)) *IncidentQuery {
+	query := (&IncidentMetricClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withIncidentMetrics = query
+	return iq
+}
+
+// WithParentIncident tells the query-builder to eager-load the nodes that are connected to
+// the "parent_incident" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *IncidentQuery) WithParentIncident(opts ...func(*IncidentQuery)) *IncidentQuery {
+	query := (&IncidentClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withParentIncident = query
+	return iq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +511,15 @@ func (iq *IncidentQuery) prepareQuery(ctx context.Context) error {
 
 func (iq *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Incident, error) {
 	var (
-		nodes = []*Incident{}
-		_spec = iq.querySpec()
+		nodes       = []*Incident{}
+		_spec       = iq.querySpec()
+		loadedTypes = [5]bool{
+			iq.withRelatedIncidents != nil,
+			iq.withIncidentEvents != nil,
+			iq.withIncidentAlerts != nil,
+			iq.withIncidentMetrics != nil,
+			iq.withParentIncident != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Incident).scanValues(nil, columns)
@@ -341,6 +527,7 @@ func (iq *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Incident{config: iq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +539,255 @@ func (iq *IncidentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Inc
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := iq.withRelatedIncidents; query != nil {
+		if err := iq.loadRelatedIncidents(ctx, query, nodes,
+			func(n *Incident) { n.Edges.RelatedIncidents = []*Incident{} },
+			func(n *Incident, e *Incident) { n.Edges.RelatedIncidents = append(n.Edges.RelatedIncidents, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withIncidentEvents; query != nil {
+		if err := iq.loadIncidentEvents(ctx, query, nodes,
+			func(n *Incident) { n.Edges.IncidentEvents = []*IncidentEvent{} },
+			func(n *Incident, e *IncidentEvent) { n.Edges.IncidentEvents = append(n.Edges.IncidentEvents, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withIncidentAlerts; query != nil {
+		if err := iq.loadIncidentAlerts(ctx, query, nodes,
+			func(n *Incident) { n.Edges.IncidentAlerts = []*IncidentAlert{} },
+			func(n *Incident, e *IncidentAlert) { n.Edges.IncidentAlerts = append(n.Edges.IncidentAlerts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withIncidentMetrics; query != nil {
+		if err := iq.loadIncidentMetrics(ctx, query, nodes,
+			func(n *Incident) { n.Edges.IncidentMetrics = []*IncidentMetric{} },
+			func(n *Incident, e *IncidentMetric) { n.Edges.IncidentMetrics = append(n.Edges.IncidentMetrics, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withParentIncident; query != nil {
+		if err := iq.loadParentIncident(ctx, query, nodes,
+			func(n *Incident) { n.Edges.ParentIncident = []*Incident{} },
+			func(n *Incident, e *Incident) { n.Edges.ParentIncident = append(n.Edges.ParentIncident, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (iq *IncidentQuery) loadRelatedIncidents(ctx context.Context, query *IncidentQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *Incident)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Incident)
+	nids := make(map[int]map[*Incident]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(incident.RelatedIncidentsTable)
+		s.Join(joinT).On(s.C(incident.FieldID), joinT.C(incident.RelatedIncidentsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(incident.RelatedIncidentsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(incident.RelatedIncidentsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Incident]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Incident](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "related_incidents" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (iq *IncidentQuery) loadIncidentEvents(ctx context.Context, query *IncidentEventQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *IncidentEvent)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Incident)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(incidentevent.FieldIncidentID)
+	}
+	query.Where(predicate.IncidentEvent(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(incident.IncidentEventsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.IncidentID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "incident_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *IncidentQuery) loadIncidentAlerts(ctx context.Context, query *IncidentAlertQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *IncidentAlert)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Incident)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(incidentalert.FieldIncidentID)
+	}
+	query.Where(predicate.IncidentAlert(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(incident.IncidentAlertsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.IncidentID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "incident_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *IncidentQuery) loadIncidentMetrics(ctx context.Context, query *IncidentMetricQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *IncidentMetric)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Incident)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(incidentmetric.FieldIncidentID)
+	}
+	query.Where(predicate.IncidentMetric(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(incident.IncidentMetricsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.IncidentID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "incident_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *IncidentQuery) loadParentIncident(ctx context.Context, query *IncidentQuery, nodes []*Incident, init func(*Incident), assign func(*Incident, *Incident)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Incident)
+	nids := make(map[int]map[*Incident]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(incident.ParentIncidentTable)
+		s.Join(joinT).On(s.C(incident.FieldID), joinT.C(incident.ParentIncidentPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(incident.ParentIncidentPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(incident.ParentIncidentPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Incident]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Incident](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "parent_incident" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
 }
 
 func (iq *IncidentQuery) sqlCount(ctx context.Context) (int, error) {

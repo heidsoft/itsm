@@ -14,6 +14,11 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentmetric"
+	"itsm-backend/ent/incidentrule"
+	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/notification"
@@ -28,6 +33,7 @@ import (
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
@@ -112,6 +118,11 @@ func checkColumn(table, column string) error {
 			configurationitem.Table:       configurationitem.ValidColumn,
 			conversation.Table:            conversation.ValidColumn,
 			incident.Table:                incident.ValidColumn,
+			incidentalert.Table:           incidentalert.ValidColumn,
+			incidentevent.Table:           incidentevent.ValidColumn,
+			incidentmetric.Table:          incidentmetric.ValidColumn,
+			incidentrule.Table:            incidentrule.ValidColumn,
+			incidentruleexecution.Table:   incidentruleexecution.ValidColumn,
 			knowledgearticle.Table:        knowledgearticle.ValidColumn,
 			message.Table:                 message.ValidColumn,
 			notification.Table:            notification.ValidColumn,
@@ -124,6 +135,7 @@ func checkColumn(table, column string) error {
 			processvariable.Table:         processvariable.ValidColumn,
 			prompttemplate.Table:          prompttemplate.ValidColumn,
 			sladefinition.Table:           sladefinition.ValidColumn,
+			slametric.Table:               slametric.ValidColumn,
 			slaviolation.Table:            slaviolation.ValidColumn,
 			servicecatalog.Table:          servicecatalog.ValidColumn,
 			servicerequest.Table:          servicerequest.ValidColumn,

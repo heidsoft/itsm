@@ -7,11 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/predicate"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -86,6 +90,20 @@ func (iu *IncidentUpdate) SetPriority(s string) *IncidentUpdate {
 func (iu *IncidentUpdate) SetNillablePriority(s *string) *IncidentUpdate {
 	if s != nil {
 		iu.SetPriority(*s)
+	}
+	return iu
+}
+
+// SetSeverity sets the "severity" field.
+func (iu *IncidentUpdate) SetSeverity(s string) *IncidentUpdate {
+	iu.mutation.SetSeverity(s)
+	return iu
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableSeverity(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetSeverity(*s)
 	}
 	return iu
 }
@@ -179,6 +197,102 @@ func (iu *IncidentUpdate) ClearConfigurationItemID() *IncidentUpdate {
 	return iu
 }
 
+// SetCategory sets the "category" field.
+func (iu *IncidentUpdate) SetCategory(s string) *IncidentUpdate {
+	iu.mutation.SetCategory(s)
+	return iu
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableCategory(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetCategory(*s)
+	}
+	return iu
+}
+
+// ClearCategory clears the value of the "category" field.
+func (iu *IncidentUpdate) ClearCategory() *IncidentUpdate {
+	iu.mutation.ClearCategory()
+	return iu
+}
+
+// SetSubcategory sets the "subcategory" field.
+func (iu *IncidentUpdate) SetSubcategory(s string) *IncidentUpdate {
+	iu.mutation.SetSubcategory(s)
+	return iu
+}
+
+// SetNillableSubcategory sets the "subcategory" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableSubcategory(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetSubcategory(*s)
+	}
+	return iu
+}
+
+// ClearSubcategory clears the value of the "subcategory" field.
+func (iu *IncidentUpdate) ClearSubcategory() *IncidentUpdate {
+	iu.mutation.ClearSubcategory()
+	return iu
+}
+
+// SetImpactAnalysis sets the "impact_analysis" field.
+func (iu *IncidentUpdate) SetImpactAnalysis(m map[string]interface{}) *IncidentUpdate {
+	iu.mutation.SetImpactAnalysis(m)
+	return iu
+}
+
+// ClearImpactAnalysis clears the value of the "impact_analysis" field.
+func (iu *IncidentUpdate) ClearImpactAnalysis() *IncidentUpdate {
+	iu.mutation.ClearImpactAnalysis()
+	return iu
+}
+
+// SetRootCause sets the "root_cause" field.
+func (iu *IncidentUpdate) SetRootCause(m map[string]interface{}) *IncidentUpdate {
+	iu.mutation.SetRootCause(m)
+	return iu
+}
+
+// ClearRootCause clears the value of the "root_cause" field.
+func (iu *IncidentUpdate) ClearRootCause() *IncidentUpdate {
+	iu.mutation.ClearRootCause()
+	return iu
+}
+
+// SetResolutionSteps sets the "resolution_steps" field.
+func (iu *IncidentUpdate) SetResolutionSteps(m []map[string]interface{}) *IncidentUpdate {
+	iu.mutation.SetResolutionSteps(m)
+	return iu
+}
+
+// AppendResolutionSteps appends m to the "resolution_steps" field.
+func (iu *IncidentUpdate) AppendResolutionSteps(m []map[string]interface{}) *IncidentUpdate {
+	iu.mutation.AppendResolutionSteps(m)
+	return iu
+}
+
+// ClearResolutionSteps clears the value of the "resolution_steps" field.
+func (iu *IncidentUpdate) ClearResolutionSteps() *IncidentUpdate {
+	iu.mutation.ClearResolutionSteps()
+	return iu
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (iu *IncidentUpdate) SetDetectedAt(t time.Time) *IncidentUpdate {
+	iu.mutation.SetDetectedAt(t)
+	return iu
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableDetectedAt(t *time.Time) *IncidentUpdate {
+	if t != nil {
+		iu.SetDetectedAt(*t)
+	}
+	return iu
+}
+
 // SetResolvedAt sets the "resolved_at" field.
 func (iu *IncidentUpdate) SetResolvedAt(t time.Time) *IncidentUpdate {
 	iu.mutation.SetResolvedAt(t)
@@ -216,6 +330,87 @@ func (iu *IncidentUpdate) SetNillableClosedAt(t *time.Time) *IncidentUpdate {
 // ClearClosedAt clears the value of the "closed_at" field.
 func (iu *IncidentUpdate) ClearClosedAt() *IncidentUpdate {
 	iu.mutation.ClearClosedAt()
+	return iu
+}
+
+// SetEscalatedAt sets the "escalated_at" field.
+func (iu *IncidentUpdate) SetEscalatedAt(t time.Time) *IncidentUpdate {
+	iu.mutation.SetEscalatedAt(t)
+	return iu
+}
+
+// SetNillableEscalatedAt sets the "escalated_at" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableEscalatedAt(t *time.Time) *IncidentUpdate {
+	if t != nil {
+		iu.SetEscalatedAt(*t)
+	}
+	return iu
+}
+
+// ClearEscalatedAt clears the value of the "escalated_at" field.
+func (iu *IncidentUpdate) ClearEscalatedAt() *IncidentUpdate {
+	iu.mutation.ClearEscalatedAt()
+	return iu
+}
+
+// SetEscalationLevel sets the "escalation_level" field.
+func (iu *IncidentUpdate) SetEscalationLevel(i int) *IncidentUpdate {
+	iu.mutation.ResetEscalationLevel()
+	iu.mutation.SetEscalationLevel(i)
+	return iu
+}
+
+// SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableEscalationLevel(i *int) *IncidentUpdate {
+	if i != nil {
+		iu.SetEscalationLevel(*i)
+	}
+	return iu
+}
+
+// AddEscalationLevel adds i to the "escalation_level" field.
+func (iu *IncidentUpdate) AddEscalationLevel(i int) *IncidentUpdate {
+	iu.mutation.AddEscalationLevel(i)
+	return iu
+}
+
+// SetIsAutomated sets the "is_automated" field.
+func (iu *IncidentUpdate) SetIsAutomated(b bool) *IncidentUpdate {
+	iu.mutation.SetIsAutomated(b)
+	return iu
+}
+
+// SetNillableIsAutomated sets the "is_automated" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableIsAutomated(b *bool) *IncidentUpdate {
+	if b != nil {
+		iu.SetIsAutomated(*b)
+	}
+	return iu
+}
+
+// SetSource sets the "source" field.
+func (iu *IncidentUpdate) SetSource(s string) *IncidentUpdate {
+	iu.mutation.SetSource(s)
+	return iu
+}
+
+// SetNillableSource sets the "source" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableSource(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetSource(*s)
+	}
+	return iu
+}
+
+// SetMetadata sets the "metadata" field.
+func (iu *IncidentUpdate) SetMetadata(m map[string]interface{}) *IncidentUpdate {
+	iu.mutation.SetMetadata(m)
+	return iu
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (iu *IncidentUpdate) ClearMetadata() *IncidentUpdate {
+	iu.mutation.ClearMetadata()
 	return iu
 }
 
@@ -260,9 +455,189 @@ func (iu *IncidentUpdate) SetUpdatedAt(t time.Time) *IncidentUpdate {
 	return iu
 }
 
+// AddRelatedIncidentIDs adds the "related_incidents" edge to the Incident entity by IDs.
+func (iu *IncidentUpdate) AddRelatedIncidentIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.AddRelatedIncidentIDs(ids...)
+	return iu
+}
+
+// AddRelatedIncidents adds the "related_incidents" edges to the Incident entity.
+func (iu *IncidentUpdate) AddRelatedIncidents(i ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.AddRelatedIncidentIDs(ids...)
+}
+
+// AddIncidentEventIDs adds the "incident_events" edge to the IncidentEvent entity by IDs.
+func (iu *IncidentUpdate) AddIncidentEventIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.AddIncidentEventIDs(ids...)
+	return iu
+}
+
+// AddIncidentEvents adds the "incident_events" edges to the IncidentEvent entity.
+func (iu *IncidentUpdate) AddIncidentEvents(i ...*IncidentEvent) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.AddIncidentEventIDs(ids...)
+}
+
+// AddIncidentAlertIDs adds the "incident_alerts" edge to the IncidentAlert entity by IDs.
+func (iu *IncidentUpdate) AddIncidentAlertIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.AddIncidentAlertIDs(ids...)
+	return iu
+}
+
+// AddIncidentAlerts adds the "incident_alerts" edges to the IncidentAlert entity.
+func (iu *IncidentUpdate) AddIncidentAlerts(i ...*IncidentAlert) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.AddIncidentAlertIDs(ids...)
+}
+
+// AddIncidentMetricIDs adds the "incident_metrics" edge to the IncidentMetric entity by IDs.
+func (iu *IncidentUpdate) AddIncidentMetricIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.AddIncidentMetricIDs(ids...)
+	return iu
+}
+
+// AddIncidentMetrics adds the "incident_metrics" edges to the IncidentMetric entity.
+func (iu *IncidentUpdate) AddIncidentMetrics(i ...*IncidentMetric) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.AddIncidentMetricIDs(ids...)
+}
+
+// AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
+func (iu *IncidentUpdate) AddParentIncidentIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.AddParentIncidentIDs(ids...)
+	return iu
+}
+
+// AddParentIncident adds the "parent_incident" edges to the Incident entity.
+func (iu *IncidentUpdate) AddParentIncident(i ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.AddParentIncidentIDs(ids...)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (iu *IncidentUpdate) Mutation() *IncidentMutation {
 	return iu.mutation
+}
+
+// ClearRelatedIncidents clears all "related_incidents" edges to the Incident entity.
+func (iu *IncidentUpdate) ClearRelatedIncidents() *IncidentUpdate {
+	iu.mutation.ClearRelatedIncidents()
+	return iu
+}
+
+// RemoveRelatedIncidentIDs removes the "related_incidents" edge to Incident entities by IDs.
+func (iu *IncidentUpdate) RemoveRelatedIncidentIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.RemoveRelatedIncidentIDs(ids...)
+	return iu
+}
+
+// RemoveRelatedIncidents removes "related_incidents" edges to Incident entities.
+func (iu *IncidentUpdate) RemoveRelatedIncidents(i ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.RemoveRelatedIncidentIDs(ids...)
+}
+
+// ClearIncidentEvents clears all "incident_events" edges to the IncidentEvent entity.
+func (iu *IncidentUpdate) ClearIncidentEvents() *IncidentUpdate {
+	iu.mutation.ClearIncidentEvents()
+	return iu
+}
+
+// RemoveIncidentEventIDs removes the "incident_events" edge to IncidentEvent entities by IDs.
+func (iu *IncidentUpdate) RemoveIncidentEventIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.RemoveIncidentEventIDs(ids...)
+	return iu
+}
+
+// RemoveIncidentEvents removes "incident_events" edges to IncidentEvent entities.
+func (iu *IncidentUpdate) RemoveIncidentEvents(i ...*IncidentEvent) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.RemoveIncidentEventIDs(ids...)
+}
+
+// ClearIncidentAlerts clears all "incident_alerts" edges to the IncidentAlert entity.
+func (iu *IncidentUpdate) ClearIncidentAlerts() *IncidentUpdate {
+	iu.mutation.ClearIncidentAlerts()
+	return iu
+}
+
+// RemoveIncidentAlertIDs removes the "incident_alerts" edge to IncidentAlert entities by IDs.
+func (iu *IncidentUpdate) RemoveIncidentAlertIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.RemoveIncidentAlertIDs(ids...)
+	return iu
+}
+
+// RemoveIncidentAlerts removes "incident_alerts" edges to IncidentAlert entities.
+func (iu *IncidentUpdate) RemoveIncidentAlerts(i ...*IncidentAlert) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.RemoveIncidentAlertIDs(ids...)
+}
+
+// ClearIncidentMetrics clears all "incident_metrics" edges to the IncidentMetric entity.
+func (iu *IncidentUpdate) ClearIncidentMetrics() *IncidentUpdate {
+	iu.mutation.ClearIncidentMetrics()
+	return iu
+}
+
+// RemoveIncidentMetricIDs removes the "incident_metrics" edge to IncidentMetric entities by IDs.
+func (iu *IncidentUpdate) RemoveIncidentMetricIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.RemoveIncidentMetricIDs(ids...)
+	return iu
+}
+
+// RemoveIncidentMetrics removes "incident_metrics" edges to IncidentMetric entities.
+func (iu *IncidentUpdate) RemoveIncidentMetrics(i ...*IncidentMetric) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.RemoveIncidentMetricIDs(ids...)
+}
+
+// ClearParentIncident clears all "parent_incident" edges to the Incident entity.
+func (iu *IncidentUpdate) ClearParentIncident() *IncidentUpdate {
+	iu.mutation.ClearParentIncident()
+	return iu
+}
+
+// RemoveParentIncidentIDs removes the "parent_incident" edge to Incident entities by IDs.
+func (iu *IncidentUpdate) RemoveParentIncidentIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.RemoveParentIncidentIDs(ids...)
+	return iu
+}
+
+// RemoveParentIncident removes "parent_incident" edges to Incident entities.
+func (iu *IncidentUpdate) RemoveParentIncident(i ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.RemoveParentIncidentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -353,6 +728,9 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
+	if value, ok := iu.mutation.Severity(); ok {
+		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
+	}
 	if value, ok := iu.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 	}
@@ -380,6 +758,44 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if iu.mutation.ConfigurationItemIDCleared() {
 		_spec.ClearField(incident.FieldConfigurationItemID, field.TypeInt)
 	}
+	if value, ok := iu.mutation.Category(); ok {
+		_spec.SetField(incident.FieldCategory, field.TypeString, value)
+	}
+	if iu.mutation.CategoryCleared() {
+		_spec.ClearField(incident.FieldCategory, field.TypeString)
+	}
+	if value, ok := iu.mutation.Subcategory(); ok {
+		_spec.SetField(incident.FieldSubcategory, field.TypeString, value)
+	}
+	if iu.mutation.SubcategoryCleared() {
+		_spec.ClearField(incident.FieldSubcategory, field.TypeString)
+	}
+	if value, ok := iu.mutation.ImpactAnalysis(); ok {
+		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)
+	}
+	if iu.mutation.ImpactAnalysisCleared() {
+		_spec.ClearField(incident.FieldImpactAnalysis, field.TypeJSON)
+	}
+	if value, ok := iu.mutation.RootCause(); ok {
+		_spec.SetField(incident.FieldRootCause, field.TypeJSON, value)
+	}
+	if iu.mutation.RootCauseCleared() {
+		_spec.ClearField(incident.FieldRootCause, field.TypeJSON)
+	}
+	if value, ok := iu.mutation.ResolutionSteps(); ok {
+		_spec.SetField(incident.FieldResolutionSteps, field.TypeJSON, value)
+	}
+	if value, ok := iu.mutation.AppendedResolutionSteps(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, incident.FieldResolutionSteps, value)
+		})
+	}
+	if iu.mutation.ResolutionStepsCleared() {
+		_spec.ClearField(incident.FieldResolutionSteps, field.TypeJSON)
+	}
+	if value, ok := iu.mutation.DetectedAt(); ok {
+		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
+	}
 	if value, ok := iu.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
 	}
@@ -392,6 +808,30 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if iu.mutation.ClosedAtCleared() {
 		_spec.ClearField(incident.FieldClosedAt, field.TypeTime)
 	}
+	if value, ok := iu.mutation.EscalatedAt(); ok {
+		_spec.SetField(incident.FieldEscalatedAt, field.TypeTime, value)
+	}
+	if iu.mutation.EscalatedAtCleared() {
+		_spec.ClearField(incident.FieldEscalatedAt, field.TypeTime)
+	}
+	if value, ok := iu.mutation.EscalationLevel(); ok {
+		_spec.SetField(incident.FieldEscalationLevel, field.TypeInt, value)
+	}
+	if value, ok := iu.mutation.AddedEscalationLevel(); ok {
+		_spec.AddField(incident.FieldEscalationLevel, field.TypeInt, value)
+	}
+	if value, ok := iu.mutation.IsAutomated(); ok {
+		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
+	}
+	if value, ok := iu.mutation.Source(); ok {
+		_spec.SetField(incident.FieldSource, field.TypeString, value)
+	}
+	if value, ok := iu.mutation.Metadata(); ok {
+		_spec.SetField(incident.FieldMetadata, field.TypeJSON, value)
+	}
+	if iu.mutation.MetadataCleared() {
+		_spec.ClearField(incident.FieldMetadata, field.TypeJSON)
+	}
 	if value, ok := iu.mutation.TenantID(); ok {
 		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
 	}
@@ -403,6 +843,231 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if iu.mutation.RelatedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedRelatedIncidentsIDs(); len(nodes) > 0 && !iu.mutation.RelatedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.IncidentEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedIncidentEventsIDs(); len(nodes) > 0 && !iu.mutation.IncidentEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.IncidentEventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.IncidentAlertsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedIncidentAlertsIDs(); len(nodes) > 0 && !iu.mutation.IncidentAlertsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.IncidentMetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedIncidentMetricsIDs(); len(nodes) > 0 && !iu.mutation.IncidentMetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.ParentIncidentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedParentIncidentIDs(); len(nodes) > 0 && !iu.mutation.ParentIncidentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.ParentIncidentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -482,6 +1147,20 @@ func (iuo *IncidentUpdateOne) SetPriority(s string) *IncidentUpdateOne {
 func (iuo *IncidentUpdateOne) SetNillablePriority(s *string) *IncidentUpdateOne {
 	if s != nil {
 		iuo.SetPriority(*s)
+	}
+	return iuo
+}
+
+// SetSeverity sets the "severity" field.
+func (iuo *IncidentUpdateOne) SetSeverity(s string) *IncidentUpdateOne {
+	iuo.mutation.SetSeverity(s)
+	return iuo
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableSeverity(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetSeverity(*s)
 	}
 	return iuo
 }
@@ -575,6 +1254,102 @@ func (iuo *IncidentUpdateOne) ClearConfigurationItemID() *IncidentUpdateOne {
 	return iuo
 }
 
+// SetCategory sets the "category" field.
+func (iuo *IncidentUpdateOne) SetCategory(s string) *IncidentUpdateOne {
+	iuo.mutation.SetCategory(s)
+	return iuo
+}
+
+// SetNillableCategory sets the "category" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableCategory(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetCategory(*s)
+	}
+	return iuo
+}
+
+// ClearCategory clears the value of the "category" field.
+func (iuo *IncidentUpdateOne) ClearCategory() *IncidentUpdateOne {
+	iuo.mutation.ClearCategory()
+	return iuo
+}
+
+// SetSubcategory sets the "subcategory" field.
+func (iuo *IncidentUpdateOne) SetSubcategory(s string) *IncidentUpdateOne {
+	iuo.mutation.SetSubcategory(s)
+	return iuo
+}
+
+// SetNillableSubcategory sets the "subcategory" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableSubcategory(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetSubcategory(*s)
+	}
+	return iuo
+}
+
+// ClearSubcategory clears the value of the "subcategory" field.
+func (iuo *IncidentUpdateOne) ClearSubcategory() *IncidentUpdateOne {
+	iuo.mutation.ClearSubcategory()
+	return iuo
+}
+
+// SetImpactAnalysis sets the "impact_analysis" field.
+func (iuo *IncidentUpdateOne) SetImpactAnalysis(m map[string]interface{}) *IncidentUpdateOne {
+	iuo.mutation.SetImpactAnalysis(m)
+	return iuo
+}
+
+// ClearImpactAnalysis clears the value of the "impact_analysis" field.
+func (iuo *IncidentUpdateOne) ClearImpactAnalysis() *IncidentUpdateOne {
+	iuo.mutation.ClearImpactAnalysis()
+	return iuo
+}
+
+// SetRootCause sets the "root_cause" field.
+func (iuo *IncidentUpdateOne) SetRootCause(m map[string]interface{}) *IncidentUpdateOne {
+	iuo.mutation.SetRootCause(m)
+	return iuo
+}
+
+// ClearRootCause clears the value of the "root_cause" field.
+func (iuo *IncidentUpdateOne) ClearRootCause() *IncidentUpdateOne {
+	iuo.mutation.ClearRootCause()
+	return iuo
+}
+
+// SetResolutionSteps sets the "resolution_steps" field.
+func (iuo *IncidentUpdateOne) SetResolutionSteps(m []map[string]interface{}) *IncidentUpdateOne {
+	iuo.mutation.SetResolutionSteps(m)
+	return iuo
+}
+
+// AppendResolutionSteps appends m to the "resolution_steps" field.
+func (iuo *IncidentUpdateOne) AppendResolutionSteps(m []map[string]interface{}) *IncidentUpdateOne {
+	iuo.mutation.AppendResolutionSteps(m)
+	return iuo
+}
+
+// ClearResolutionSteps clears the value of the "resolution_steps" field.
+func (iuo *IncidentUpdateOne) ClearResolutionSteps() *IncidentUpdateOne {
+	iuo.mutation.ClearResolutionSteps()
+	return iuo
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (iuo *IncidentUpdateOne) SetDetectedAt(t time.Time) *IncidentUpdateOne {
+	iuo.mutation.SetDetectedAt(t)
+	return iuo
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableDetectedAt(t *time.Time) *IncidentUpdateOne {
+	if t != nil {
+		iuo.SetDetectedAt(*t)
+	}
+	return iuo
+}
+
 // SetResolvedAt sets the "resolved_at" field.
 func (iuo *IncidentUpdateOne) SetResolvedAt(t time.Time) *IncidentUpdateOne {
 	iuo.mutation.SetResolvedAt(t)
@@ -612,6 +1387,87 @@ func (iuo *IncidentUpdateOne) SetNillableClosedAt(t *time.Time) *IncidentUpdateO
 // ClearClosedAt clears the value of the "closed_at" field.
 func (iuo *IncidentUpdateOne) ClearClosedAt() *IncidentUpdateOne {
 	iuo.mutation.ClearClosedAt()
+	return iuo
+}
+
+// SetEscalatedAt sets the "escalated_at" field.
+func (iuo *IncidentUpdateOne) SetEscalatedAt(t time.Time) *IncidentUpdateOne {
+	iuo.mutation.SetEscalatedAt(t)
+	return iuo
+}
+
+// SetNillableEscalatedAt sets the "escalated_at" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableEscalatedAt(t *time.Time) *IncidentUpdateOne {
+	if t != nil {
+		iuo.SetEscalatedAt(*t)
+	}
+	return iuo
+}
+
+// ClearEscalatedAt clears the value of the "escalated_at" field.
+func (iuo *IncidentUpdateOne) ClearEscalatedAt() *IncidentUpdateOne {
+	iuo.mutation.ClearEscalatedAt()
+	return iuo
+}
+
+// SetEscalationLevel sets the "escalation_level" field.
+func (iuo *IncidentUpdateOne) SetEscalationLevel(i int) *IncidentUpdateOne {
+	iuo.mutation.ResetEscalationLevel()
+	iuo.mutation.SetEscalationLevel(i)
+	return iuo
+}
+
+// SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableEscalationLevel(i *int) *IncidentUpdateOne {
+	if i != nil {
+		iuo.SetEscalationLevel(*i)
+	}
+	return iuo
+}
+
+// AddEscalationLevel adds i to the "escalation_level" field.
+func (iuo *IncidentUpdateOne) AddEscalationLevel(i int) *IncidentUpdateOne {
+	iuo.mutation.AddEscalationLevel(i)
+	return iuo
+}
+
+// SetIsAutomated sets the "is_automated" field.
+func (iuo *IncidentUpdateOne) SetIsAutomated(b bool) *IncidentUpdateOne {
+	iuo.mutation.SetIsAutomated(b)
+	return iuo
+}
+
+// SetNillableIsAutomated sets the "is_automated" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableIsAutomated(b *bool) *IncidentUpdateOne {
+	if b != nil {
+		iuo.SetIsAutomated(*b)
+	}
+	return iuo
+}
+
+// SetSource sets the "source" field.
+func (iuo *IncidentUpdateOne) SetSource(s string) *IncidentUpdateOne {
+	iuo.mutation.SetSource(s)
+	return iuo
+}
+
+// SetNillableSource sets the "source" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableSource(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetSource(*s)
+	}
+	return iuo
+}
+
+// SetMetadata sets the "metadata" field.
+func (iuo *IncidentUpdateOne) SetMetadata(m map[string]interface{}) *IncidentUpdateOne {
+	iuo.mutation.SetMetadata(m)
+	return iuo
+}
+
+// ClearMetadata clears the value of the "metadata" field.
+func (iuo *IncidentUpdateOne) ClearMetadata() *IncidentUpdateOne {
+	iuo.mutation.ClearMetadata()
 	return iuo
 }
 
@@ -656,9 +1512,189 @@ func (iuo *IncidentUpdateOne) SetUpdatedAt(t time.Time) *IncidentUpdateOne {
 	return iuo
 }
 
+// AddRelatedIncidentIDs adds the "related_incidents" edge to the Incident entity by IDs.
+func (iuo *IncidentUpdateOne) AddRelatedIncidentIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.AddRelatedIncidentIDs(ids...)
+	return iuo
+}
+
+// AddRelatedIncidents adds the "related_incidents" edges to the Incident entity.
+func (iuo *IncidentUpdateOne) AddRelatedIncidents(i ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.AddRelatedIncidentIDs(ids...)
+}
+
+// AddIncidentEventIDs adds the "incident_events" edge to the IncidentEvent entity by IDs.
+func (iuo *IncidentUpdateOne) AddIncidentEventIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.AddIncidentEventIDs(ids...)
+	return iuo
+}
+
+// AddIncidentEvents adds the "incident_events" edges to the IncidentEvent entity.
+func (iuo *IncidentUpdateOne) AddIncidentEvents(i ...*IncidentEvent) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.AddIncidentEventIDs(ids...)
+}
+
+// AddIncidentAlertIDs adds the "incident_alerts" edge to the IncidentAlert entity by IDs.
+func (iuo *IncidentUpdateOne) AddIncidentAlertIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.AddIncidentAlertIDs(ids...)
+	return iuo
+}
+
+// AddIncidentAlerts adds the "incident_alerts" edges to the IncidentAlert entity.
+func (iuo *IncidentUpdateOne) AddIncidentAlerts(i ...*IncidentAlert) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.AddIncidentAlertIDs(ids...)
+}
+
+// AddIncidentMetricIDs adds the "incident_metrics" edge to the IncidentMetric entity by IDs.
+func (iuo *IncidentUpdateOne) AddIncidentMetricIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.AddIncidentMetricIDs(ids...)
+	return iuo
+}
+
+// AddIncidentMetrics adds the "incident_metrics" edges to the IncidentMetric entity.
+func (iuo *IncidentUpdateOne) AddIncidentMetrics(i ...*IncidentMetric) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.AddIncidentMetricIDs(ids...)
+}
+
+// AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
+func (iuo *IncidentUpdateOne) AddParentIncidentIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.AddParentIncidentIDs(ids...)
+	return iuo
+}
+
+// AddParentIncident adds the "parent_incident" edges to the Incident entity.
+func (iuo *IncidentUpdateOne) AddParentIncident(i ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.AddParentIncidentIDs(ids...)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (iuo *IncidentUpdateOne) Mutation() *IncidentMutation {
 	return iuo.mutation
+}
+
+// ClearRelatedIncidents clears all "related_incidents" edges to the Incident entity.
+func (iuo *IncidentUpdateOne) ClearRelatedIncidents() *IncidentUpdateOne {
+	iuo.mutation.ClearRelatedIncidents()
+	return iuo
+}
+
+// RemoveRelatedIncidentIDs removes the "related_incidents" edge to Incident entities by IDs.
+func (iuo *IncidentUpdateOne) RemoveRelatedIncidentIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.RemoveRelatedIncidentIDs(ids...)
+	return iuo
+}
+
+// RemoveRelatedIncidents removes "related_incidents" edges to Incident entities.
+func (iuo *IncidentUpdateOne) RemoveRelatedIncidents(i ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.RemoveRelatedIncidentIDs(ids...)
+}
+
+// ClearIncidentEvents clears all "incident_events" edges to the IncidentEvent entity.
+func (iuo *IncidentUpdateOne) ClearIncidentEvents() *IncidentUpdateOne {
+	iuo.mutation.ClearIncidentEvents()
+	return iuo
+}
+
+// RemoveIncidentEventIDs removes the "incident_events" edge to IncidentEvent entities by IDs.
+func (iuo *IncidentUpdateOne) RemoveIncidentEventIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.RemoveIncidentEventIDs(ids...)
+	return iuo
+}
+
+// RemoveIncidentEvents removes "incident_events" edges to IncidentEvent entities.
+func (iuo *IncidentUpdateOne) RemoveIncidentEvents(i ...*IncidentEvent) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.RemoveIncidentEventIDs(ids...)
+}
+
+// ClearIncidentAlerts clears all "incident_alerts" edges to the IncidentAlert entity.
+func (iuo *IncidentUpdateOne) ClearIncidentAlerts() *IncidentUpdateOne {
+	iuo.mutation.ClearIncidentAlerts()
+	return iuo
+}
+
+// RemoveIncidentAlertIDs removes the "incident_alerts" edge to IncidentAlert entities by IDs.
+func (iuo *IncidentUpdateOne) RemoveIncidentAlertIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.RemoveIncidentAlertIDs(ids...)
+	return iuo
+}
+
+// RemoveIncidentAlerts removes "incident_alerts" edges to IncidentAlert entities.
+func (iuo *IncidentUpdateOne) RemoveIncidentAlerts(i ...*IncidentAlert) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.RemoveIncidentAlertIDs(ids...)
+}
+
+// ClearIncidentMetrics clears all "incident_metrics" edges to the IncidentMetric entity.
+func (iuo *IncidentUpdateOne) ClearIncidentMetrics() *IncidentUpdateOne {
+	iuo.mutation.ClearIncidentMetrics()
+	return iuo
+}
+
+// RemoveIncidentMetricIDs removes the "incident_metrics" edge to IncidentMetric entities by IDs.
+func (iuo *IncidentUpdateOne) RemoveIncidentMetricIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.RemoveIncidentMetricIDs(ids...)
+	return iuo
+}
+
+// RemoveIncidentMetrics removes "incident_metrics" edges to IncidentMetric entities.
+func (iuo *IncidentUpdateOne) RemoveIncidentMetrics(i ...*IncidentMetric) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.RemoveIncidentMetricIDs(ids...)
+}
+
+// ClearParentIncident clears all "parent_incident" edges to the Incident entity.
+func (iuo *IncidentUpdateOne) ClearParentIncident() *IncidentUpdateOne {
+	iuo.mutation.ClearParentIncident()
+	return iuo
+}
+
+// RemoveParentIncidentIDs removes the "parent_incident" edge to Incident entities by IDs.
+func (iuo *IncidentUpdateOne) RemoveParentIncidentIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.RemoveParentIncidentIDs(ids...)
+	return iuo
+}
+
+// RemoveParentIncident removes "parent_incident" edges to Incident entities.
+func (iuo *IncidentUpdateOne) RemoveParentIncident(i ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.RemoveParentIncidentIDs(ids...)
 }
 
 // Where appends a list predicates to the IncidentUpdate builder.
@@ -779,6 +1815,9 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 	if value, ok := iuo.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
+	if value, ok := iuo.mutation.Severity(); ok {
+		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
+	}
 	if value, ok := iuo.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 	}
@@ -806,6 +1845,44 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 	if iuo.mutation.ConfigurationItemIDCleared() {
 		_spec.ClearField(incident.FieldConfigurationItemID, field.TypeInt)
 	}
+	if value, ok := iuo.mutation.Category(); ok {
+		_spec.SetField(incident.FieldCategory, field.TypeString, value)
+	}
+	if iuo.mutation.CategoryCleared() {
+		_spec.ClearField(incident.FieldCategory, field.TypeString)
+	}
+	if value, ok := iuo.mutation.Subcategory(); ok {
+		_spec.SetField(incident.FieldSubcategory, field.TypeString, value)
+	}
+	if iuo.mutation.SubcategoryCleared() {
+		_spec.ClearField(incident.FieldSubcategory, field.TypeString)
+	}
+	if value, ok := iuo.mutation.ImpactAnalysis(); ok {
+		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)
+	}
+	if iuo.mutation.ImpactAnalysisCleared() {
+		_spec.ClearField(incident.FieldImpactAnalysis, field.TypeJSON)
+	}
+	if value, ok := iuo.mutation.RootCause(); ok {
+		_spec.SetField(incident.FieldRootCause, field.TypeJSON, value)
+	}
+	if iuo.mutation.RootCauseCleared() {
+		_spec.ClearField(incident.FieldRootCause, field.TypeJSON)
+	}
+	if value, ok := iuo.mutation.ResolutionSteps(); ok {
+		_spec.SetField(incident.FieldResolutionSteps, field.TypeJSON, value)
+	}
+	if value, ok := iuo.mutation.AppendedResolutionSteps(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, incident.FieldResolutionSteps, value)
+		})
+	}
+	if iuo.mutation.ResolutionStepsCleared() {
+		_spec.ClearField(incident.FieldResolutionSteps, field.TypeJSON)
+	}
+	if value, ok := iuo.mutation.DetectedAt(); ok {
+		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
+	}
 	if value, ok := iuo.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
 	}
@@ -818,6 +1895,30 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 	if iuo.mutation.ClosedAtCleared() {
 		_spec.ClearField(incident.FieldClosedAt, field.TypeTime)
 	}
+	if value, ok := iuo.mutation.EscalatedAt(); ok {
+		_spec.SetField(incident.FieldEscalatedAt, field.TypeTime, value)
+	}
+	if iuo.mutation.EscalatedAtCleared() {
+		_spec.ClearField(incident.FieldEscalatedAt, field.TypeTime)
+	}
+	if value, ok := iuo.mutation.EscalationLevel(); ok {
+		_spec.SetField(incident.FieldEscalationLevel, field.TypeInt, value)
+	}
+	if value, ok := iuo.mutation.AddedEscalationLevel(); ok {
+		_spec.AddField(incident.FieldEscalationLevel, field.TypeInt, value)
+	}
+	if value, ok := iuo.mutation.IsAutomated(); ok {
+		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
+	}
+	if value, ok := iuo.mutation.Source(); ok {
+		_spec.SetField(incident.FieldSource, field.TypeString, value)
+	}
+	if value, ok := iuo.mutation.Metadata(); ok {
+		_spec.SetField(incident.FieldMetadata, field.TypeJSON, value)
+	}
+	if iuo.mutation.MetadataCleared() {
+		_spec.ClearField(incident.FieldMetadata, field.TypeJSON)
+	}
 	if value, ok := iuo.mutation.TenantID(); ok {
 		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
 	}
@@ -829,6 +1930,231 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 	}
 	if value, ok := iuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if iuo.mutation.RelatedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedRelatedIncidentsIDs(); len(nodes) > 0 && !iuo.mutation.RelatedIncidentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.IncidentEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedIncidentEventsIDs(); len(nodes) > 0 && !iuo.mutation.IncidentEventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.IncidentEventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentEventsTable,
+			Columns: []string{incident.IncidentEventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentevent.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.IncidentAlertsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedIncidentAlertsIDs(); len(nodes) > 0 && !iuo.mutation.IncidentAlertsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.IncidentMetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedIncidentMetricsIDs(); len(nodes) > 0 && !iuo.mutation.IncidentMetricsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentMetricsTable,
+			Columns: []string{incident.IncidentMetricsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.ParentIncidentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedParentIncidentIDs(); len(nodes) > 0 && !iuo.mutation.ParentIncidentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.ParentIncidentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ParentIncidentTable,
+			Columns: incident.ParentIncidentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Incident{config: iuo.config}
 	_spec.Assign = _node.assignValues

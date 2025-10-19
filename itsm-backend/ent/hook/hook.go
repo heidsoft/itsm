@@ -104,6 +104,66 @@ func (f IncidentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentMutation", m)
 }
 
+// The IncidentAlertFunc type is an adapter to allow the use of ordinary
+// function as IncidentAlert mutator.
+type IncidentAlertFunc func(context.Context, *ent.IncidentAlertMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentAlertFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentAlertMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentAlertMutation", m)
+}
+
+// The IncidentEventFunc type is an adapter to allow the use of ordinary
+// function as IncidentEvent mutator.
+type IncidentEventFunc func(context.Context, *ent.IncidentEventMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentEventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentEventMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentEventMutation", m)
+}
+
+// The IncidentMetricFunc type is an adapter to allow the use of ordinary
+// function as IncidentMetric mutator.
+type IncidentMetricFunc func(context.Context, *ent.IncidentMetricMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentMetricFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentMetricMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentMetricMutation", m)
+}
+
+// The IncidentRuleFunc type is an adapter to allow the use of ordinary
+// function as IncidentRule mutator.
+type IncidentRuleFunc func(context.Context, *ent.IncidentRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentRuleMutation", m)
+}
+
+// The IncidentRuleExecutionFunc type is an adapter to allow the use of ordinary
+// function as IncidentRuleExecution mutator.
+type IncidentRuleExecutionFunc func(context.Context, *ent.IncidentRuleExecutionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentRuleExecutionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentRuleExecutionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentRuleExecutionMutation", m)
+}
+
 // The KnowledgeArticleFunc type is an adapter to allow the use of ordinary
 // function as KnowledgeArticle mutator.
 type KnowledgeArticleFunc func(context.Context, *ent.KnowledgeArticleMutation) (ent.Value, error)
@@ -246,6 +306,18 @@ func (f SLADefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLADefinitionMutation", m)
+}
+
+// The SLAMetricFunc type is an adapter to allow the use of ordinary
+// function as SLAMetric mutator.
+type SLAMetricFunc func(context.Context, *ent.SLAMetricMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAMetricFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAMetricMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAMetricMutation", m)
 }
 
 // The SLAViolationFunc type is an adapter to allow the use of ordinary

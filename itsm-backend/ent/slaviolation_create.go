@@ -6,7 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -66,6 +68,62 @@ func (svc *SLAViolationCreate) SetNillableDescription(s *string) *SLAViolationCr
 	return svc
 }
 
+// SetSeverity sets the "severity" field.
+func (svc *SLAViolationCreate) SetSeverity(s string) *SLAViolationCreate {
+	svc.mutation.SetSeverity(s)
+	return svc
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (svc *SLAViolationCreate) SetNillableSeverity(s *string) *SLAViolationCreate {
+	if s != nil {
+		svc.SetSeverity(*s)
+	}
+	return svc
+}
+
+// SetIsResolved sets the "is_resolved" field.
+func (svc *SLAViolationCreate) SetIsResolved(b bool) *SLAViolationCreate {
+	svc.mutation.SetIsResolved(b)
+	return svc
+}
+
+// SetNillableIsResolved sets the "is_resolved" field if the given value is not nil.
+func (svc *SLAViolationCreate) SetNillableIsResolved(b *bool) *SLAViolationCreate {
+	if b != nil {
+		svc.SetIsResolved(*b)
+	}
+	return svc
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (svc *SLAViolationCreate) SetResolvedAt(t time.Time) *SLAViolationCreate {
+	svc.mutation.SetResolvedAt(t)
+	return svc
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (svc *SLAViolationCreate) SetNillableResolvedAt(t *time.Time) *SLAViolationCreate {
+	if t != nil {
+		svc.SetResolvedAt(*t)
+	}
+	return svc
+}
+
+// SetResolutionNotes sets the "resolution_notes" field.
+func (svc *SLAViolationCreate) SetResolutionNotes(s string) *SLAViolationCreate {
+	svc.mutation.SetResolutionNotes(s)
+	return svc
+}
+
+// SetNillableResolutionNotes sets the "resolution_notes" field if the given value is not nil.
+func (svc *SLAViolationCreate) SetNillableResolutionNotes(s *string) *SLAViolationCreate {
+	if s != nil {
+		svc.SetResolutionNotes(*s)
+	}
+	return svc
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (svc *SLAViolationCreate) SetTenantID(i int) *SLAViolationCreate {
 	svc.mutation.SetTenantID(i)
@@ -98,6 +156,16 @@ func (svc *SLAViolationCreate) SetNillableUpdatedAt(t *time.Time) *SLAViolationC
 		svc.SetUpdatedAt(*t)
 	}
 	return svc
+}
+
+// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
+func (svc *SLAViolationCreate) SetSLADefinition(s *SLADefinition) *SLAViolationCreate {
+	return svc.SetSLADefinitionID(s.ID)
+}
+
+// SetTicket sets the "ticket" edge to the Ticket entity.
+func (svc *SLAViolationCreate) SetTicket(t *Ticket) *SLAViolationCreate {
+	return svc.SetTicketID(t.ID)
 }
 
 // Mutation returns the SLAViolationMutation object of the builder.
@@ -139,6 +207,14 @@ func (svc *SLAViolationCreate) defaults() {
 		v := slaviolation.DefaultViolationTime()
 		svc.mutation.SetViolationTime(v)
 	}
+	if _, ok := svc.mutation.Severity(); !ok {
+		v := slaviolation.DefaultSeverity
+		svc.mutation.SetSeverity(v)
+	}
+	if _, ok := svc.mutation.IsResolved(); !ok {
+		v := slaviolation.DefaultIsResolved
+		svc.mutation.SetIsResolved(v)
+	}
 	if _, ok := svc.mutation.CreatedAt(); !ok {
 		v := slaviolation.DefaultCreatedAt()
 		svc.mutation.SetCreatedAt(v)
@@ -178,6 +254,12 @@ func (svc *SLAViolationCreate) check() error {
 	if _, ok := svc.mutation.ViolationTime(); !ok {
 		return &ValidationError{Name: "violation_time", err: errors.New(`ent: missing required field "SLAViolation.violation_time"`)}
 	}
+	if _, ok := svc.mutation.Severity(); !ok {
+		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "SLAViolation.severity"`)}
+	}
+	if _, ok := svc.mutation.IsResolved(); !ok {
+		return &ValidationError{Name: "is_resolved", err: errors.New(`ent: missing required field "SLAViolation.is_resolved"`)}
+	}
 	if _, ok := svc.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "SLAViolation.tenant_id"`)}
 	}
@@ -191,6 +273,12 @@ func (svc *SLAViolationCreate) check() error {
 	}
 	if _, ok := svc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "SLAViolation.updated_at"`)}
+	}
+	if len(svc.mutation.SLADefinitionIDs()) == 0 {
+		return &ValidationError{Name: "sla_definition", err: errors.New(`ent: missing required edge "SLAViolation.sla_definition"`)}
+	}
+	if len(svc.mutation.TicketIDs()) == 0 {
+		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "SLAViolation.ticket"`)}
 	}
 	return nil
 }
@@ -218,14 +306,6 @@ func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec
 		_node = &SLAViolation{config: svc.config}
 		_spec = sqlgraph.NewCreateSpec(slaviolation.Table, sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt))
 	)
-	if value, ok := svc.mutation.SLADefinitionID(); ok {
-		_spec.SetField(slaviolation.FieldSLADefinitionID, field.TypeInt, value)
-		_node.SLADefinitionID = value
-	}
-	if value, ok := svc.mutation.TicketID(); ok {
-		_spec.SetField(slaviolation.FieldTicketID, field.TypeInt, value)
-		_node.TicketID = value
-	}
 	if value, ok := svc.mutation.ViolationType(); ok {
 		_spec.SetField(slaviolation.FieldViolationType, field.TypeString, value)
 		_node.ViolationType = value
@@ -238,6 +318,22 @@ func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec
 		_spec.SetField(slaviolation.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
+	if value, ok := svc.mutation.Severity(); ok {
+		_spec.SetField(slaviolation.FieldSeverity, field.TypeString, value)
+		_node.Severity = value
+	}
+	if value, ok := svc.mutation.IsResolved(); ok {
+		_spec.SetField(slaviolation.FieldIsResolved, field.TypeBool, value)
+		_node.IsResolved = value
+	}
+	if value, ok := svc.mutation.ResolvedAt(); ok {
+		_spec.SetField(slaviolation.FieldResolvedAt, field.TypeTime, value)
+		_node.ResolvedAt = value
+	}
+	if value, ok := svc.mutation.ResolutionNotes(); ok {
+		_spec.SetField(slaviolation.FieldResolutionNotes, field.TypeString, value)
+		_node.ResolutionNotes = value
+	}
 	if value, ok := svc.mutation.TenantID(); ok {
 		_spec.SetField(slaviolation.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
@@ -249,6 +345,40 @@ func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec
 	if value, ok := svc.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaviolation.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := svc.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.SLADefinitionTable,
+			Columns: []string{slaviolation.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.SLADefinitionID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := svc.mutation.TicketIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.TicketTable,
+			Columns: []string{slaviolation.TicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.TicketID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

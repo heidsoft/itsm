@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -30,7 +32,6 @@ func (svu *SLAViolationUpdate) Where(ps ...predicate.SLAViolation) *SLAViolation
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
 func (svu *SLAViolationUpdate) SetSLADefinitionID(i int) *SLAViolationUpdate {
-	svu.mutation.ResetSLADefinitionID()
 	svu.mutation.SetSLADefinitionID(i)
 	return svu
 }
@@ -43,15 +44,8 @@ func (svu *SLAViolationUpdate) SetNillableSLADefinitionID(i *int) *SLAViolationU
 	return svu
 }
 
-// AddSLADefinitionID adds i to the "sla_definition_id" field.
-func (svu *SLAViolationUpdate) AddSLADefinitionID(i int) *SLAViolationUpdate {
-	svu.mutation.AddSLADefinitionID(i)
-	return svu
-}
-
 // SetTicketID sets the "ticket_id" field.
 func (svu *SLAViolationUpdate) SetTicketID(i int) *SLAViolationUpdate {
-	svu.mutation.ResetTicketID()
 	svu.mutation.SetTicketID(i)
 	return svu
 }
@@ -61,12 +55,6 @@ func (svu *SLAViolationUpdate) SetNillableTicketID(i *int) *SLAViolationUpdate {
 	if i != nil {
 		svu.SetTicketID(*i)
 	}
-	return svu
-}
-
-// AddTicketID adds i to the "ticket_id" field.
-func (svu *SLAViolationUpdate) AddTicketID(i int) *SLAViolationUpdate {
-	svu.mutation.AddTicketID(i)
 	return svu
 }
 
@@ -118,6 +106,74 @@ func (svu *SLAViolationUpdate) ClearDescription() *SLAViolationUpdate {
 	return svu
 }
 
+// SetSeverity sets the "severity" field.
+func (svu *SLAViolationUpdate) SetSeverity(s string) *SLAViolationUpdate {
+	svu.mutation.SetSeverity(s)
+	return svu
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (svu *SLAViolationUpdate) SetNillableSeverity(s *string) *SLAViolationUpdate {
+	if s != nil {
+		svu.SetSeverity(*s)
+	}
+	return svu
+}
+
+// SetIsResolved sets the "is_resolved" field.
+func (svu *SLAViolationUpdate) SetIsResolved(b bool) *SLAViolationUpdate {
+	svu.mutation.SetIsResolved(b)
+	return svu
+}
+
+// SetNillableIsResolved sets the "is_resolved" field if the given value is not nil.
+func (svu *SLAViolationUpdate) SetNillableIsResolved(b *bool) *SLAViolationUpdate {
+	if b != nil {
+		svu.SetIsResolved(*b)
+	}
+	return svu
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (svu *SLAViolationUpdate) SetResolvedAt(t time.Time) *SLAViolationUpdate {
+	svu.mutation.SetResolvedAt(t)
+	return svu
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (svu *SLAViolationUpdate) SetNillableResolvedAt(t *time.Time) *SLAViolationUpdate {
+	if t != nil {
+		svu.SetResolvedAt(*t)
+	}
+	return svu
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (svu *SLAViolationUpdate) ClearResolvedAt() *SLAViolationUpdate {
+	svu.mutation.ClearResolvedAt()
+	return svu
+}
+
+// SetResolutionNotes sets the "resolution_notes" field.
+func (svu *SLAViolationUpdate) SetResolutionNotes(s string) *SLAViolationUpdate {
+	svu.mutation.SetResolutionNotes(s)
+	return svu
+}
+
+// SetNillableResolutionNotes sets the "resolution_notes" field if the given value is not nil.
+func (svu *SLAViolationUpdate) SetNillableResolutionNotes(s *string) *SLAViolationUpdate {
+	if s != nil {
+		svu.SetResolutionNotes(*s)
+	}
+	return svu
+}
+
+// ClearResolutionNotes clears the value of the "resolution_notes" field.
+func (svu *SLAViolationUpdate) ClearResolutionNotes() *SLAViolationUpdate {
+	svu.mutation.ClearResolutionNotes()
+	return svu
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (svu *SLAViolationUpdate) SetTenantID(i int) *SLAViolationUpdate {
 	svu.mutation.ResetTenantID()
@@ -159,9 +215,31 @@ func (svu *SLAViolationUpdate) SetUpdatedAt(t time.Time) *SLAViolationUpdate {
 	return svu
 }
 
+// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
+func (svu *SLAViolationUpdate) SetSLADefinition(s *SLADefinition) *SLAViolationUpdate {
+	return svu.SetSLADefinitionID(s.ID)
+}
+
+// SetTicket sets the "ticket" edge to the Ticket entity.
+func (svu *SLAViolationUpdate) SetTicket(t *Ticket) *SLAViolationUpdate {
+	return svu.SetTicketID(t.ID)
+}
+
 // Mutation returns the SLAViolationMutation object of the builder.
 func (svu *SLAViolationUpdate) Mutation() *SLAViolationMutation {
 	return svu.mutation
+}
+
+// ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
+func (svu *SLAViolationUpdate) ClearSLADefinition() *SLAViolationUpdate {
+	svu.mutation.ClearSLADefinition()
+	return svu
+}
+
+// ClearTicket clears the "ticket" edge to the Ticket entity.
+func (svu *SLAViolationUpdate) ClearTicket() *SLAViolationUpdate {
+	svu.mutation.ClearTicket()
+	return svu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -222,6 +300,12 @@ func (svu *SLAViolationUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.tenant_id": %w`, err)}
 		}
 	}
+	if svu.mutation.SLADefinitionCleared() && len(svu.mutation.SLADefinitionIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "SLAViolation.sla_definition"`)
+	}
+	if svu.mutation.TicketCleared() && len(svu.mutation.TicketIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "SLAViolation.ticket"`)
+	}
 	return nil
 }
 
@@ -237,18 +321,6 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := svu.mutation.SLADefinitionID(); ok {
-		_spec.SetField(slaviolation.FieldSLADefinitionID, field.TypeInt, value)
-	}
-	if value, ok := svu.mutation.AddedSLADefinitionID(); ok {
-		_spec.AddField(slaviolation.FieldSLADefinitionID, field.TypeInt, value)
-	}
-	if value, ok := svu.mutation.TicketID(); ok {
-		_spec.SetField(slaviolation.FieldTicketID, field.TypeInt, value)
-	}
-	if value, ok := svu.mutation.AddedTicketID(); ok {
-		_spec.AddField(slaviolation.FieldTicketID, field.TypeInt, value)
-	}
 	if value, ok := svu.mutation.ViolationType(); ok {
 		_spec.SetField(slaviolation.FieldViolationType, field.TypeString, value)
 	}
@@ -261,6 +333,24 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if svu.mutation.DescriptionCleared() {
 		_spec.ClearField(slaviolation.FieldDescription, field.TypeString)
 	}
+	if value, ok := svu.mutation.Severity(); ok {
+		_spec.SetField(slaviolation.FieldSeverity, field.TypeString, value)
+	}
+	if value, ok := svu.mutation.IsResolved(); ok {
+		_spec.SetField(slaviolation.FieldIsResolved, field.TypeBool, value)
+	}
+	if value, ok := svu.mutation.ResolvedAt(); ok {
+		_spec.SetField(slaviolation.FieldResolvedAt, field.TypeTime, value)
+	}
+	if svu.mutation.ResolvedAtCleared() {
+		_spec.ClearField(slaviolation.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := svu.mutation.ResolutionNotes(); ok {
+		_spec.SetField(slaviolation.FieldResolutionNotes, field.TypeString, value)
+	}
+	if svu.mutation.ResolutionNotesCleared() {
+		_spec.ClearField(slaviolation.FieldResolutionNotes, field.TypeString)
+	}
 	if value, ok := svu.mutation.TenantID(); ok {
 		_spec.SetField(slaviolation.FieldTenantID, field.TypeInt, value)
 	}
@@ -272,6 +362,64 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := svu.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaviolation.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if svu.mutation.SLADefinitionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.SLADefinitionTable,
+			Columns: []string{slaviolation.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := svu.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.SLADefinitionTable,
+			Columns: []string{slaviolation.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if svu.mutation.TicketCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.TicketTable,
+			Columns: []string{slaviolation.TicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := svu.mutation.TicketIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.TicketTable,
+			Columns: []string{slaviolation.TicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, svu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -295,7 +443,6 @@ type SLAViolationUpdateOne struct {
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
 func (svuo *SLAViolationUpdateOne) SetSLADefinitionID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetSLADefinitionID()
 	svuo.mutation.SetSLADefinitionID(i)
 	return svuo
 }
@@ -308,15 +455,8 @@ func (svuo *SLAViolationUpdateOne) SetNillableSLADefinitionID(i *int) *SLAViolat
 	return svuo
 }
 
-// AddSLADefinitionID adds i to the "sla_definition_id" field.
-func (svuo *SLAViolationUpdateOne) AddSLADefinitionID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddSLADefinitionID(i)
-	return svuo
-}
-
 // SetTicketID sets the "ticket_id" field.
 func (svuo *SLAViolationUpdateOne) SetTicketID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetTicketID()
 	svuo.mutation.SetTicketID(i)
 	return svuo
 }
@@ -326,12 +466,6 @@ func (svuo *SLAViolationUpdateOne) SetNillableTicketID(i *int) *SLAViolationUpda
 	if i != nil {
 		svuo.SetTicketID(*i)
 	}
-	return svuo
-}
-
-// AddTicketID adds i to the "ticket_id" field.
-func (svuo *SLAViolationUpdateOne) AddTicketID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddTicketID(i)
 	return svuo
 }
 
@@ -383,6 +517,74 @@ func (svuo *SLAViolationUpdateOne) ClearDescription() *SLAViolationUpdateOne {
 	return svuo
 }
 
+// SetSeverity sets the "severity" field.
+func (svuo *SLAViolationUpdateOne) SetSeverity(s string) *SLAViolationUpdateOne {
+	svuo.mutation.SetSeverity(s)
+	return svuo
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (svuo *SLAViolationUpdateOne) SetNillableSeverity(s *string) *SLAViolationUpdateOne {
+	if s != nil {
+		svuo.SetSeverity(*s)
+	}
+	return svuo
+}
+
+// SetIsResolved sets the "is_resolved" field.
+func (svuo *SLAViolationUpdateOne) SetIsResolved(b bool) *SLAViolationUpdateOne {
+	svuo.mutation.SetIsResolved(b)
+	return svuo
+}
+
+// SetNillableIsResolved sets the "is_resolved" field if the given value is not nil.
+func (svuo *SLAViolationUpdateOne) SetNillableIsResolved(b *bool) *SLAViolationUpdateOne {
+	if b != nil {
+		svuo.SetIsResolved(*b)
+	}
+	return svuo
+}
+
+// SetResolvedAt sets the "resolved_at" field.
+func (svuo *SLAViolationUpdateOne) SetResolvedAt(t time.Time) *SLAViolationUpdateOne {
+	svuo.mutation.SetResolvedAt(t)
+	return svuo
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (svuo *SLAViolationUpdateOne) SetNillableResolvedAt(t *time.Time) *SLAViolationUpdateOne {
+	if t != nil {
+		svuo.SetResolvedAt(*t)
+	}
+	return svuo
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (svuo *SLAViolationUpdateOne) ClearResolvedAt() *SLAViolationUpdateOne {
+	svuo.mutation.ClearResolvedAt()
+	return svuo
+}
+
+// SetResolutionNotes sets the "resolution_notes" field.
+func (svuo *SLAViolationUpdateOne) SetResolutionNotes(s string) *SLAViolationUpdateOne {
+	svuo.mutation.SetResolutionNotes(s)
+	return svuo
+}
+
+// SetNillableResolutionNotes sets the "resolution_notes" field if the given value is not nil.
+func (svuo *SLAViolationUpdateOne) SetNillableResolutionNotes(s *string) *SLAViolationUpdateOne {
+	if s != nil {
+		svuo.SetResolutionNotes(*s)
+	}
+	return svuo
+}
+
+// ClearResolutionNotes clears the value of the "resolution_notes" field.
+func (svuo *SLAViolationUpdateOne) ClearResolutionNotes() *SLAViolationUpdateOne {
+	svuo.mutation.ClearResolutionNotes()
+	return svuo
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (svuo *SLAViolationUpdateOne) SetTenantID(i int) *SLAViolationUpdateOne {
 	svuo.mutation.ResetTenantID()
@@ -424,9 +626,31 @@ func (svuo *SLAViolationUpdateOne) SetUpdatedAt(t time.Time) *SLAViolationUpdate
 	return svuo
 }
 
+// SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
+func (svuo *SLAViolationUpdateOne) SetSLADefinition(s *SLADefinition) *SLAViolationUpdateOne {
+	return svuo.SetSLADefinitionID(s.ID)
+}
+
+// SetTicket sets the "ticket" edge to the Ticket entity.
+func (svuo *SLAViolationUpdateOne) SetTicket(t *Ticket) *SLAViolationUpdateOne {
+	return svuo.SetTicketID(t.ID)
+}
+
 // Mutation returns the SLAViolationMutation object of the builder.
 func (svuo *SLAViolationUpdateOne) Mutation() *SLAViolationMutation {
 	return svuo.mutation
+}
+
+// ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
+func (svuo *SLAViolationUpdateOne) ClearSLADefinition() *SLAViolationUpdateOne {
+	svuo.mutation.ClearSLADefinition()
+	return svuo
+}
+
+// ClearTicket clears the "ticket" edge to the Ticket entity.
+func (svuo *SLAViolationUpdateOne) ClearTicket() *SLAViolationUpdateOne {
+	svuo.mutation.ClearTicket()
+	return svuo
 }
 
 // Where appends a list predicates to the SLAViolationUpdate builder.
@@ -500,6 +724,12 @@ func (svuo *SLAViolationUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.tenant_id": %w`, err)}
 		}
 	}
+	if svuo.mutation.SLADefinitionCleared() && len(svuo.mutation.SLADefinitionIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "SLAViolation.sla_definition"`)
+	}
+	if svuo.mutation.TicketCleared() && len(svuo.mutation.TicketIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "SLAViolation.ticket"`)
+	}
 	return nil
 }
 
@@ -532,18 +762,6 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 			}
 		}
 	}
-	if value, ok := svuo.mutation.SLADefinitionID(); ok {
-		_spec.SetField(slaviolation.FieldSLADefinitionID, field.TypeInt, value)
-	}
-	if value, ok := svuo.mutation.AddedSLADefinitionID(); ok {
-		_spec.AddField(slaviolation.FieldSLADefinitionID, field.TypeInt, value)
-	}
-	if value, ok := svuo.mutation.TicketID(); ok {
-		_spec.SetField(slaviolation.FieldTicketID, field.TypeInt, value)
-	}
-	if value, ok := svuo.mutation.AddedTicketID(); ok {
-		_spec.AddField(slaviolation.FieldTicketID, field.TypeInt, value)
-	}
 	if value, ok := svuo.mutation.ViolationType(); ok {
 		_spec.SetField(slaviolation.FieldViolationType, field.TypeString, value)
 	}
@@ -556,6 +774,24 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 	if svuo.mutation.DescriptionCleared() {
 		_spec.ClearField(slaviolation.FieldDescription, field.TypeString)
 	}
+	if value, ok := svuo.mutation.Severity(); ok {
+		_spec.SetField(slaviolation.FieldSeverity, field.TypeString, value)
+	}
+	if value, ok := svuo.mutation.IsResolved(); ok {
+		_spec.SetField(slaviolation.FieldIsResolved, field.TypeBool, value)
+	}
+	if value, ok := svuo.mutation.ResolvedAt(); ok {
+		_spec.SetField(slaviolation.FieldResolvedAt, field.TypeTime, value)
+	}
+	if svuo.mutation.ResolvedAtCleared() {
+		_spec.ClearField(slaviolation.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := svuo.mutation.ResolutionNotes(); ok {
+		_spec.SetField(slaviolation.FieldResolutionNotes, field.TypeString, value)
+	}
+	if svuo.mutation.ResolutionNotesCleared() {
+		_spec.ClearField(slaviolation.FieldResolutionNotes, field.TypeString)
+	}
 	if value, ok := svuo.mutation.TenantID(); ok {
 		_spec.SetField(slaviolation.FieldTenantID, field.TypeInt, value)
 	}
@@ -567,6 +803,64 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 	}
 	if value, ok := svuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaviolation.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if svuo.mutation.SLADefinitionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.SLADefinitionTable,
+			Columns: []string{slaviolation.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := svuo.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.SLADefinitionTable,
+			Columns: []string{slaviolation.SLADefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if svuo.mutation.TicketCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.TicketTable,
+			Columns: []string{slaviolation.TicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := svuo.mutation.TicketIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   slaviolation.TicketTable,
+			Columns: []string{slaviolation.TicketColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &SLAViolation{config: svuo.config}
 	_spec.Assign = _node.assignValues

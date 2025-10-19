@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/tickettemplate"
@@ -41,6 +42,16 @@ type Ticket struct {
 	CategoryID int `json:"category_id,omitempty"`
 	// 父工单ID
 	ParentTicketID int `json:"parent_ticket_id,omitempty"`
+	// SLA定义ID
+	SLADefinitionID int `json:"sla_definition_id,omitempty"`
+	// SLA响应截止时间
+	SLAResponseDeadline time.Time `json:"sla_response_deadline,omitempty"`
+	// SLA解决截止时间
+	SLAResolutionDeadline time.Time `json:"sla_resolution_deadline,omitempty"`
+	// 首次响应时间
+	FirstResponseAt time.Time `json:"first_response_at,omitempty"`
+	// 解决时间
+	ResolvedAt time.Time `json:"resolved_at,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -66,9 +77,13 @@ type TicketEdges struct {
 	ParentTicket *Ticket `json:"parent_ticket,omitempty"`
 	// 工作流实例
 	WorkflowInstances []*WorkflowInstance `json:"workflow_instances,omitempty"`
+	// SLA定义
+	SLADefinition *SLADefinition `json:"sla_definition,omitempty"`
+	// SLA违规记录
+	SLAViolations []*SLAViolation `json:"sla_violations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [8]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -131,16 +146,36 @@ func (e TicketEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
 	return nil, &NotLoadedError{edge: "workflow_instances"}
 }
 
+// SLADefinitionOrErr returns the SLADefinition value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) SLADefinitionOrErr() (*SLADefinition, error) {
+	if e.SLADefinition != nil {
+		return e.SLADefinition, nil
+	} else if e.loadedTypes[6] {
+		return nil, &NotFoundError{label: sladefinition.Label}
+	}
+	return nil, &NotLoadedError{edge: "sla_definition"}
+}
+
+// SLAViolationsOrErr returns the SLAViolations value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) SLAViolationsOrErr() ([]*SLAViolation, error) {
+	if e.loadedTypes[7] {
+		return e.SLAViolations, nil
+	}
+	return nil, &NotLoadedError{edge: "sla_violations"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldParentTicketID:
+		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID:
 			values[i] = new(sql.NullInt64)
 		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber:
 			values[i] = new(sql.NullString)
-		case ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
+		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case ticket.ForeignKeys[0]: // ticket_tag_tickets
 			values[i] = new(sql.NullInt64)
@@ -231,6 +266,36 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.ParentTicketID = int(value.Int64)
 			}
+		case ticket.FieldSLADefinitionID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
+			} else if value.Valid {
+				t.SLADefinitionID = int(value.Int64)
+			}
+		case ticket.FieldSLAResponseDeadline:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_response_deadline", values[i])
+			} else if value.Valid {
+				t.SLAResponseDeadline = value.Time
+			}
+		case ticket.FieldSLAResolutionDeadline:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_resolution_deadline", values[i])
+			} else if value.Valid {
+				t.SLAResolutionDeadline = value.Time
+			}
+		case ticket.FieldFirstResponseAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field first_response_at", values[i])
+			} else if value.Valid {
+				t.FirstResponseAt = value.Time
+			}
+		case ticket.FieldResolvedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
+			} else if value.Valid {
+				t.ResolvedAt = value.Time
+			}
 		case ticket.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -293,6 +358,16 @@ func (t *Ticket) QueryWorkflowInstances() *WorkflowInstanceQuery {
 	return NewTicketClient(t.config).QueryWorkflowInstances(t)
 }
 
+// QuerySLADefinition queries the "sla_definition" edge of the Ticket entity.
+func (t *Ticket) QuerySLADefinition() *SLADefinitionQuery {
+	return NewTicketClient(t.config).QuerySLADefinition(t)
+}
+
+// QuerySLAViolations queries the "sla_violations" edge of the Ticket entity.
+func (t *Ticket) QuerySLAViolations() *SLAViolationQuery {
+	return NewTicketClient(t.config).QuerySLAViolations(t)
+}
+
 // Update returns a builder for updating this Ticket.
 // Note that you need to call Ticket.Unwrap() before calling this method if this Ticket
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -348,6 +423,21 @@ func (t *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("parent_ticket_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.ParentTicketID))
+	builder.WriteString(", ")
+	builder.WriteString("sla_definition_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.SLADefinitionID))
+	builder.WriteString(", ")
+	builder.WriteString("sla_response_deadline=")
+	builder.WriteString(t.SLAResponseDeadline.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("sla_resolution_deadline=")
+	builder.WriteString(t.SLAResolutionDeadline.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("first_response_at=")
+	builder.WriteString(t.FirstResponseAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("resolved_at=")
+	builder.WriteString(t.ResolvedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(t.CreatedAt.Format(time.ANSIC))
