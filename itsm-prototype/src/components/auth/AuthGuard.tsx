@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { AuthService } from '@/lib/auth/auth-service';
+import { AuthService } from '@/lib/services/auth-service';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface AuthGuardProps {
@@ -34,17 +34,27 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // 如果已经认证，跳过初始化
-        if (isAuthenticated && user) {
-          setIsInitializing(false);
-          return;
+        // 检查localStorage中是否有认证信息
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+        if (token) {
+          // 如果有token，尝试恢复状态
+          const userInfo = typeof window !== 'undefined' ? localStorage.getItem('user_info') : null;
+          if (userInfo) {
+            try {
+              const user = JSON.parse(userInfo);
+              // 更新store状态
+              const { login } = useAuthStore.getState();
+              login(user, token, { id: 1, name: '默认租户', code: 'default' });
+            } catch (e) {
+              console.error('Failed to restore user info:', e);
+            }
+          }
         }
 
-        // 尝试从本地存储恢复认证状态
-        await AuthService.initialize();
+        setIsInitializing(false);
       } catch (error) {
         console.error('Auth initialization failed:', error);
-      } finally {
         setIsInitializing(false);
       }
     };
@@ -52,11 +62,18 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     initializeAuth();
   }, [isAuthenticated, user]);
 
+  // 处理未认证重定向
+  useEffect(() => {
+    if (requireAuth && !isAuthenticated && !fallback) {
+      router.push(redirectTo);
+    }
+  }, [requireAuth, isAuthenticated, fallback, router, redirectTo]);
+
   // 正在初始化或加载中
   if (isInitializing || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+      <div className='flex items-center justify-center min-h-screen'>
+        <LoadingSpinner size='lg' />
       </div>
     );
   }
@@ -66,17 +83,15 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     return <>{children}</>;
   }
 
-  // 需要认证但未登录
-  if (!isAuthenticated || !user) {
+  if (requireAuth && (!isAuthenticated || !user)) {
     if (fallback) {
       return <>{fallback}</>;
     }
-    
-    // 重定向到登录页
-    router.push(redirectTo);
+
+    // 重定向处理
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+      <div className='flex items-center justify-center min-h-screen'>
+        <LoadingSpinner size='lg' />
       </div>
     );
   }
@@ -84,13 +99,16 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   // 检查角色权限
   if (requiredRole && !hasRole(requiredRole)) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">访问被拒绝</h2>
-          <p className="text-gray-600 mb-6">您没有访问此页面的权限</p>
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <h2 className='text-2xl font-bold text-gray-900 mb-4'>访问被拒绝</h2>
+          <p className='text-gray-600 mb-6'>您没有访问此页面的权限</p>
           <button
-            onClick={() => router.back()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            onClick={e => {
+              e.preventDefault();
+              setTimeout(() => router.back(), 0);
+            }}
+            className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'
           >
             返回上一页
           </button>
@@ -101,19 +119,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // 检查具体权限
   if (requiredPermissions.length > 0) {
-    const hasAllPermissions = requiredPermissions.every((permission) =>
-      hasPermission(permission)
-    );
+    const hasAllPermissions = requiredPermissions.every(permission => hasPermission(permission));
 
     if (!hasAllPermissions) {
       return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">权限不足</h2>
-            <p className="text-gray-600 mb-6">您没有执行此操作的权限</p>
+        <div className='flex items-center justify-center min-h-screen'>
+          <div className='text-center'>
+            <h2 className='text-2xl font-bold text-gray-900 mb-4'>权限不足</h2>
+            <p className='text-gray-600 mb-6'>您没有执行此操作的权限</p>
             <button
-              onClick={() => router.back()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              onClick={e => {
+                e.preventDefault();
+                setTimeout(() => router.back(), 0);
+              }}
+              className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'
             >
               返回上一页
             </button>
@@ -156,8 +175,8 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // 检查权限
   if (permissions.length > 0) {
     const checkPermissions = requireAll
-      ? permissions.every((permission) => hasPermission(permission))
-      : permissions.some((permission) => hasPermission(permission));
+      ? permissions.every(permission => hasPermission(permission))
+      : permissions.some(permission => hasPermission(permission));
 
     if (!checkPermissions) {
       return <>{fallback}</>;
@@ -187,8 +206,8 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
   const { hasRole } = useAuthStore();
 
   const checkRoles = requireAll
-    ? roles.every((role) => hasRole(role))
-    : roles.some((role) => hasRole(role));
+    ? roles.every(role => hasRole(role))
+    : roles.some(role => hasRole(role));
 
   if (!checkRoles) {
     return <>{fallback}</>;
@@ -196,3 +215,31 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
 
   return <>{children}</>;
 };
+
+/**
+ * 高阶组件：为组件添加路由守卫
+ */
+export function withRouteGuard<P extends object>(
+  Component: React.ComponentType<P>,
+  options: {
+    requireAuth?: boolean;
+    requiredPermissions?: string[];
+    requiredRole?: string;
+  } = {}
+) {
+  const WrappedComponent = (props: P) => {
+    return (
+      <AuthGuard
+        requireAuth={options.requireAuth}
+        requiredPermissions={options.requiredPermissions}
+        requiredRole={options.requiredRole}
+      >
+        <Component {...props} />
+      </AuthGuard>
+    );
+  };
+
+  WrappedComponent.displayName = `withRouteGuard(${Component.displayName || Component.name})`;
+
+  return WrappedComponent;
+}

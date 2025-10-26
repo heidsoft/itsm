@@ -491,3 +491,27 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
     });
   },
 }));
+
+/**
+ * 主工单 Store - 组合工单列表和详情
+ * 为了向后兼容，提供一个统一的 useTicketStore
+ */
+export const useTicketStore = () => {
+  const listStore = useTicketListStore();
+  const detailStore = useTicketDetailStore();
+  
+  return {
+    // 列表相关
+    ...listStore,
+    // 详情相关
+    ticket: detailStore.ticket,
+    fetchTicket: detailStore.fetchTicket,
+    updateTicketDetail: detailStore.updateTicket,
+    assignTicket: detailStore.assignTicket,
+    escalateTicket: detailStore.escalateTicket,
+    resolveTicket: detailStore.resolveTicket,
+    closeTicket: detailStore.closeTicket,
+    reopenTicket: detailStore.reopenTicket,
+    setTicket: detailStore.setTicket,
+  };
+};

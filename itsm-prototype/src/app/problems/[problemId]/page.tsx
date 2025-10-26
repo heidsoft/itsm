@@ -1,6 +1,13 @@
 'use client';
 
-import { Tag as TagIcon, ArrowLeft } from 'lucide-react';
+import {
+  Tag as TagIcon,
+  ArrowLeft,
+  AlertTriangle,
+  GitMerge,
+  BookOpen,
+  MessageSquare,
+} from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -13,7 +20,7 @@ import {
   Problem,
   ProblemStatus,
   ProblemPriority,
-} from '../../lib/services/problem-service';
+} from '@/lib/services/problem-service';
 
 const ProblemDetailPage = () => {
   const params = useParams();

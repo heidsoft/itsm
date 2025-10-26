@@ -1,13 +1,9 @@
-import React from "react";
-import AppLayout from "../components/AppLayout";
+import React from 'react';
+import AppLayout from '@/components/layout/AppLayout';
 
-export default function MyRequestsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MyRequestsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppLayout title="我的请求" breadcrumb={[{ title: "我的请求" }]}>
+    <AppLayout title='我的请求' breadcrumb={[{ title: '我的请求' }]}>
       {children}
     </AppLayout>
   );

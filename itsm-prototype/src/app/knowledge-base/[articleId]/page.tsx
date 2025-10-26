@@ -1,19 +1,18 @@
-
 'use client';
 
-import {ArrowLeft, CalendarDays } from 'lucide-react';
+import { ArrowLeft, CalendarDays, User, Eye } from 'lucide-react';
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 // 模拟知识文章详情数据
 const mockArticleDetail = {
-    'KB-001': {
-        title: '如何重置您的域账户密码',
-        category: '账号管理',
-        author: 'IT服务台',
-        publishedDate: '2024-01-15',
-        views: 1250,
-        content: `
+  'KB-001': {
+    title: '如何重置您的域账户密码',
+    category: '账号管理',
+    author: 'IT服务台',
+    publishedDate: '2024-01-15',
+    views: 1250,
+    content: `
         <p>如果您忘记了域账户密码，可以按照以下步骤进行自助重置：</p>
         <ol class="list-decimal list-inside space-y-2">
             <li>访问公司密码重置门户：<a href="#" class="text-blue-600 hover:underline">https://password.yourcompany.com</a></li>
@@ -24,14 +23,14 @@ const mockArticleDetail = {
         </ol>
         <p class="mt-4">如果自助重置失败，请联系IT服务台寻求帮助。</p>
         `,
-    },
-    'KB-002': {
-        title: 'Web服务器CPU高占用率排查指南',
-        category: '故障排除',
-        author: '运维团队',
-        publishedDate: '2024-03-20',
-        views: 890,
-        content: `
+  },
+  'KB-002': {
+    title: 'Web服务器CPU高占用率排查指南',
+    category: '故障排除',
+    author: '运维团队',
+    publishedDate: '2024-03-20',
+    views: 890,
+    content: `
         <p>当Web服务器出现CPU高占用率时，可以按照以下步骤进行排查：</p>
         <ol class="list-decimal list-inside space-y-2">
             <li><strong>登录服务器：</strong> 使用SSH工具登录到目标Web服务器。</li>
@@ -44,47 +43,56 @@ const mockArticleDetail = {
         </ol>
         <p class="mt-4"><strong>常见原因：</strong> 恶意攻击（DDoS）、代码死循环、数据库慢查询、资源泄漏、配置错误等。</p>
         `,
-    },
+  },
 };
 
 const KnowledgeArticlePage = () => {
-    const params = useParams();
-    const router = useRouter();
-    const articleId = params.articleId as string;
-    const article = mockArticleDetail[articleId];
+  const params = useParams();
+  const router = useRouter();
+  const articleId = params.articleId as string;
+  const article = mockArticleDetail[articleId];
 
-    if (!article) {
-        return <div className="p-10">知识文章不存在或加载失败。</div>;
-    }
+  if (!article) {
+    return <div className='p-10'>知识文章不存在或加载失败。</div>;
+  }
 
-    return (
-        <div className="p-10 bg-gray-50 min-h-full">
-            <header className="mb-8">
-                <button onClick={() => router.back()} className="flex items-center text-blue-600 hover:underline mb-4">
-                    <ArrowLeft className="w-5 h-5 mr-2" />
-                    返回知识库
-                </button>
-                <h2 className="text-4xl font-bold text-gray-800">{article.title}</h2>
-                <div className="flex items-center text-gray-500 text-sm mt-2 space-x-4">
-                    <div className="flex items-center"><User className="w-4 h-4 mr-1" /> {article.author}</div>
-                    <div className="flex items-center"><CalendarDays className="w-4 h-4 mr-1" /> {article.publishedDate}</div>
-                    <div className="flex items-center"><Eye className="w-4 h-4 mr-1" /> {article.views} 浏览</div>
-                </div>
-            </header>
-
-            <div className="bg-white p-8 rounded-lg shadow-md">
-                <div 
-                    className="prose max-w-none text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: article.content }}
-                />
-                {/* 评论和评分区域 (模拟) */}
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                    <h3 className="text-xl font-semibold text-gray-700 mb-4">评论与反馈</h3>
-                    <p className="text-gray-500">这里将是用户评论和文章评分区域。</p>
-                </div>
-            </div>
+  return (
+    <div className='p-10 bg-gray-50 min-h-full'>
+      <header className='mb-8'>
+        <button
+          onClick={() => router.back()}
+          className='flex items-center text-blue-600 hover:underline mb-4'
+        >
+          <ArrowLeft className='w-5 h-5 mr-2' />
+          返回知识库
+        </button>
+        <h2 className='text-4xl font-bold text-gray-800'>{article.title}</h2>
+        <div className='flex items-center text-gray-500 text-sm mt-2 space-x-4'>
+          <div className='flex items-center'>
+            <User className='w-4 h-4 mr-1' /> {article.author}
+          </div>
+          <div className='flex items-center'>
+            <CalendarDays className='w-4 h-4 mr-1' /> {article.publishedDate}
+          </div>
+          <div className='flex items-center'>
+            <Eye className='w-4 h-4 mr-1' /> {article.views} 浏览
+          </div>
         </div>
-    );
+      </header>
+
+      <div className='bg-white p-8 rounded-lg shadow-md'>
+        <div
+          className='prose max-w-none text-gray-700 leading-relaxed'
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
+        {/* 评论和评分区域 (模拟) */}
+        <div className='mt-8 pt-8 border-t border-gray-200'>
+          <h3 className='text-xl font-semibold text-gray-700 mb-4'>评论与反馈</h3>
+          <p className='text-gray-500'>这里将是用户评论和文章评分区域。</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default KnowledgeArticlePage;

@@ -1,202 +1,235 @@
-// 通用类型定义，替换常用的any类型
+/**
+ * 通用业务类型定义
+ * 定义系统中通用的业务实体和枚举
+ */
 
-// 表格行数据类型
-export type TableRecord = Record<string, unknown>;
-
-// 表单值类型
-export type FormValues = Record<string, unknown>;
-
-// 配置项类型
-export type ConfigItem = {
-  key: string;
-  value: string | number | boolean;
-  type: 'string' | 'number' | 'boolean' | 'select';
-  label: string;
-  description?: string;
-  options?: Array<{ label: string; value: string | number }>;
-  required?: boolean;
-  validation?: {
-    min?: number;
-    max?: number;
-    pattern?: string;
-    message?: string;
-  };
-};
-
-// 用户信息类型
-export type UserInfo = {
+// 基础实体接口
+export interface BaseEntity {
   id: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: number;
+  updatedBy?: number;
+}
+
+// 软删除实体
+export interface SoftDeleteEntity extends BaseEntity {
+  deletedAt?: string;
+  deletedBy?: number;
+}
+
+// 租户相关
+export interface Tenant extends BaseEntity {
+  name: string;
+  code: string;
+  description?: string;
+  isActive: boolean;
+  settings?: Record<string, unknown>;
+}
+
+// 用户相关
+export interface User extends BaseEntity {
   username: string;
   email: string;
   fullName: string;
   avatar?: string;
-  role: string;
+  phone?: string;
   department?: string;
-  status: 'active' | 'inactive' | 'suspended';
-  lastLogin?: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// 分页参数类型
-export type PaginationParams = {
-  page: number;
-  pageSize: number;
-  total?: number;
-};
-
-// 筛选参数类型
-export type FilterParams = {
-  keyword?: string;
-  status?: string;
-  priority?: string;
-  category?: string;
-  assignee?: string;
-  dateRange?: [string, string];
-  tags?: string[];
-};
-
-// 排序参数类型
-export type SortParams = {
-  field: string;
-  order: 'ascend' | 'descend';
-};
-
-// 操作结果类型
-export type OperationResult<T = unknown> = {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  code?: number;
-};
-
-// 表格列配置类型
-export type TableColumnConfig<T = TableRecord> = {
-  title: string;
-  dataIndex: string;
-  key: string;
-  width?: number | string;
-  fixed?: 'left' | 'right';
-  sorter?: boolean | ((a: T, b: T) => number);
-  render?: (value: unknown, record: T, index: number) => React.ReactNode;
-  filters?: Array<{ text: string; value: string }>;
-  onFilter?: (value: string, record: T) => boolean;
-  ellipsis?: boolean;
-  copyable?: boolean;
-  editable?: boolean;
-};
-
-// 工作流节点类型
-export type WorkflowNode = {
-  id: string;
-  name: string;
-  type: 'start' | 'task' | 'gateway' | 'end';
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  properties: Record<string, unknown>;
-  connections: Array<{
-    id: string;
-    source: string;
-    target: string;
-    condition?: string;
-  }>;
-};
-
-// 通知模板类型
-export type NotificationTemplate = {
-  id: number;
-  name: string;
-  description: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  channels: Array<'email' | 'sms' | 'in_app' | 'webhook'>;
-  subject?: string;
-  content: string;
-  variables: string[];
+  position?: string;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+  lastLoginAt?: string;
+  tenantId: number;
+}
 
-// 报表参数类型
-export type ReportParameter = {
+// 角色权限
+export interface Role extends BaseEntity {
   name: string;
-  type: 'string' | 'number' | 'date' | 'select' | 'boolean';
+  code: string;
+  description?: string;
+  permissions: Permission[];
+  isSystem: boolean;
+}
+
+export interface Permission extends BaseEntity {
+  name: string;
+  code: string;
+  resource: string;
+  action: string;
+  description?: string;
+}
+
+// 状态枚举
+export type EntityStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+
+// 优先级枚举
+export type Priority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
+
+// 操作类型
+export type OperationType = 'create' | 'read' | 'update' | 'delete' | 'export' | 'import';
+
+// 审核状态
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+// 通知类型
+export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+
+// 文件类型
+export type FileType = 'image' | 'document' | 'video' | 'audio' | 'archive' | 'other';
+
+// 时间范围
+export interface DateRange {
+  start: string;
+  end: string;
+}
+
+// 选项类型
+export interface Option<T = string> {
   label: string;
-  required: boolean;
-  defaultValue?: unknown;
-  options?: Array<{ label: string; value: unknown }>;
+  value: T;
+  disabled?: boolean;
+  children?: Option<T>[];
+}
+
+// 表单字段类型
+export interface FormField {
+  name: string;
+  label: string;
+  type: 'text' | 'textarea' | 'select' | 'multiselect' | 'date' | 'datetime' | 'number' | 'boolean' | 'file';
+  required?: boolean;
+  placeholder?: string;
+  options?: Option[];
   validation?: {
     min?: number;
     max?: number;
     pattern?: string;
     message?: string;
   };
-};
+}
 
-// 通用状态类型
-export type StatusType = 'active' | 'inactive' | 'pending' | 'completed' | 'failed' | 'cancelled';
+// 表格列配置
+export interface TableColumn<T = unknown> {
+  key: string;
+  title: string;
+  dataIndex?: keyof T;
+  width?: number;
+  align?: 'left' | 'center' | 'right';
+  sortable?: boolean;
+  filterable?: boolean;
+  render?: (value: unknown, record: T, index: number) => React.ReactNode;
+}
 
-// 优先级类型
-export type PriorityType = 'low' | 'medium' | 'high' | 'critical';
+// 筛选器配置
+export interface FilterConfig {
+  key: string;
+  label: string;
+  type: 'text' | 'select' | 'multiselect' | 'date' | 'daterange' | 'number';
+  options?: Option[];
+  placeholder?: string;
+  defaultValue?: unknown;
+}
 
-// 影响范围类型
-export type ImpactType = 'low' | 'medium' | 'high' | 'critical';
+// 排序配置
+export interface SortConfig {
+  field: string;
+  order: 'asc' | 'desc';
+}
 
-// 紧急程度类型
-export type UrgencyType = 'low' | 'medium' | 'high' | 'critical';
+// 搜索配置
+export interface SearchConfig {
+  fields: string[];
+  placeholder?: string;
+  debounceMs?: number;
+}
 
-// 时间范围类型
-export type TimeRange = {
-  start: string;
-  end: string;
-  label?: string;
-};
+// 操作按钮配置
+export interface ActionButton {
+  key: string;
+  label: string;
+  icon?: React.ReactNode;
+  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  danger?: boolean;
+  disabled?: boolean;
+  onClick: (record: unknown) => void;
+}
 
-// 统计数据类型
-export type StatisticsData = {
-  total: number;
-  completed: number;
-  pending: number;
-  failed: number;
-  successRate: number;
-  averageTime: number;
-  trend: 'up' | 'down' | 'stable';
-};
+// 面包屑配置
+export interface BreadcrumbItem {
+  title: string;
+  href?: string;
+  icon?: React.ReactNode;
+}
 
-// 文件上传类型
-export type FileUpload = {
+// 菜单项配置
+export interface MenuItem {
+  key: string;
+  title: string;
+  icon?: React.ReactNode;
+  path?: string;
+  children?: MenuItem[];
+  permission?: string;
+  badge?: number;
+}
+
+// 标签配置
+export interface TagConfig {
+  color: string;
+  text: string;
+  icon?: React.ReactNode;
+}
+
+// 统计卡片配置
+export interface StatCardConfig {
+  title: string;
+  value: number | string;
+  icon?: React.ReactNode;
+  color?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+  suffix?: string;
+  prefix?: string;
+}
+
+// 图表配置
+export interface ChartConfig {
+  type: 'line' | 'bar' | 'pie' | 'area' | 'scatter';
+  title: string;
+  data: unknown[];
+  options?: Record<string, unknown>;
+  height?: number;
+}
+
+// 工作流状态
+export type WorkflowStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+
+// 工作流节点类型
+export type WorkflowNodeType = 'start' | 'end' | 'task' | 'gateway' | 'timer' | 'script';
+
+// 工作流节点
+export interface WorkflowNode {
   id: string;
+  type: WorkflowNodeType;
   name: string;
-  size: number;
-  type: string;
-  url: string;
-  status: 'uploading' | 'success' | 'error';
-  progress?: number;
-  error?: string;
-};
+  position: { x: number; y: number };
+  config?: Record<string, unknown>;
+}
 
-// 评论类型
-export type Comment = {
-  id: number;
-  content: string;
-  author: UserInfo;
-  createdAt: string;
-  updatedAt?: string;
-  attachments?: FileUpload[];
-  isPrivate?: boolean;
-};
-
-// 活动日志类型
-export type ActivityLog = {
-  id: number;
-  action: string;
-  description: string;
-  operator: UserInfo;
+// 工作流连接
+export interface WorkflowConnection {
+  id: string;
+  source: string;
   target: string;
-  targetId: string;
-  changes?: Record<string, { old: unknown; new: unknown }>;
-  timestamp: string;
-  ipAddress?: string;
-  userAgent?: string;
-};
+  condition?: string;
+}
+
+// 工作流定义
+export interface WorkflowDefinition extends BaseEntity {
+  name: string;
+  description?: string;
+  version: string;
+  status: WorkflowStatus;
+  nodes: WorkflowNode[];
+  connections: WorkflowConnection[];
+  variables?: Record<string, unknown>;
+}

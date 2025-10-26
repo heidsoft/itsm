@@ -57,7 +57,7 @@ const PERMISSION_ACTIONS = {
 } as const;
 
 // 引入角色API
-import { RoleAPI } from '../../lib/role-api';
+import { RoleAPI } from '@/lib/api/role-api';
 
 // 权限定义
 const PERMISSIONS = [
@@ -141,8 +141,8 @@ export default function RoleManagement() {
 
       // 计算统计数据
       const totalRoles = response.roles.length;
-      const activeRoles = response.roles.filter(r => r.status === 'active').length;
-      const inactiveRoles = response.roles.filter(r => r.status === 'inactive').length;
+      const activeRoles = response.roles.filter((r: any) => r.status === 'active').length;
+      const inactiveRoles = response.roles.filter((r: any) => r.status === 'inactive').length;
 
       setStats({
         totalRoles,
@@ -251,20 +251,20 @@ export default function RoleManagement() {
     {
       title: '角色信息',
       key: 'info',
-      render: (_: unknown, record: unknown) => (
+      render: (_: unknown, record: any) => (
         <div>
-          <div className='font-medium text-gray-900'>{record.name}</div>
-          <div className='text-sm text-gray-500'>{record.description}</div>
+          <div className='font-medium text-gray-900'>{(record as any).name}</div>
+          <div className='text-sm text-gray-500'>{(record as any).description}</div>
         </div>
       ),
     },
     {
       title: '状态',
       key: 'status',
-      render: (_: unknown, record: unknown) => (
+      render: (_: unknown, record: any) => (
         <Badge
-          status={record.status === 'active' ? 'success' : 'default'}
-          text={record.status === 'active' ? '启用' : '禁用'}
+          status={(record as any).status === 'active' ? 'success' : 'default'}
+          text={(record as any).status === 'active' ? '启用' : '禁用'}
         />
       ),
     },
@@ -294,9 +294,9 @@ export default function RoleManagement() {
                 setSelectedRole(record);
                 // 设置表单值
                 const formValues: Record<string, unknown> = {
-                  name: record.name,
-                  description: record.description,
-                  status: record.status === 'active',
+                  name: (record as any).name,
+                  description: (record as any).description,
+                  status: (record as any).status === 'active',
                 };
 
                 // 设置权限值

@@ -12,6 +12,8 @@ import {
   Trash2,
   Eye,
   Settings,
+  Users,
+  Calendar,
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
@@ -63,7 +65,7 @@ const TENANT_TYPES = {
 };
 
 // 引入租户API
-import { TenantAPI } from '../../lib/tenant-api';
+import { TenantAPI } from '@/lib/api/tenant-api';
 
 export default function TenantManagement() {
   const [tenants, setTenants] = useState<unknown[]>([]);

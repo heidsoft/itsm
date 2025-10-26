@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { withRouteGuard } from '../components/RouteGuard';
-import TestRunner from '../components/TestRunner';
+import { withRouteGuard } from '@/components/auth/AuthGuard';
+import TestRunner from '@/components/common/TestRunner';
 import { routes, type RouteConfig } from '../../lib/router/route-config';
 
 const TestingPage: React.FC = () => {

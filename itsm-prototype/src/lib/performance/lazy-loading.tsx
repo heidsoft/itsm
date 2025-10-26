@@ -6,7 +6,7 @@
 
 import React, { Suspense, lazy, ComponentType, ReactNode } from 'react';
 import { Spin, Skeleton } from 'antd';
-import { LoadingOutlined } from '@lucide-react';
+import { LoadingOutlined } from 'lucide-react';
 
 // ==================== 加载状态组件 ====================
 

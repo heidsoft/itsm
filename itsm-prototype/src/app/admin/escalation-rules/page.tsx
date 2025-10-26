@@ -356,7 +356,6 @@ const EscalationRuleManagement = () => {
                   {level.notificationMethod.map(method => (
                     <Tag
                       key={method}
-                      size='small'
                       color={NOTIFICATION_CONFIG[method as keyof typeof NOTIFICATION_CONFIG]?.color}
                       icon={NOTIFICATION_CONFIG[method as keyof typeof NOTIFICATION_CONFIG]?.icon}
                     >
@@ -698,7 +697,7 @@ const EscalationRuleManagement = () => {
                 name='serviceType'
                 rules={[{ required: true, message: '请输入服务类型' }]}
               >
-                <Select showSearch placeholder='选择或输入服务类型' mode='combobox'>
+                <Select showSearch placeholder='选择或输入服务类型'>
                   {serviceTypes.map(type => (
                     <Option key={type} value={type}>
                       {type}

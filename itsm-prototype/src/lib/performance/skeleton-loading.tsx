@@ -11,7 +11,7 @@ import {
   ReloadOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
-} from '@lucide-react';
+} from 'lucide-react';
 
 // ==================== 基础骨架屏组件 ====================
 

@@ -1,5 +1,5 @@
-import { httpClient } from '../http-client';
-import { ApiResponse, PaginationResponse } from '../api-config';
+import { httpClient } from '@/lib/api/http-client';
+import { ApiResponse, PaginationResponse } from '@/app/lib/api-config';
 
 /**
  * 基础API类，提供通用的CRUD操作
