@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TicketFilters, { TicketFilterState } from '@/components/TicketFilters';
+import TicketFilters, { TicketFilterState } from '../TicketFilters';
 
 describe('TicketFilters 组件', () => {
   const setup = (initial?: Partial<TicketFilterState>) => {
@@ -40,9 +40,7 @@ describe('TicketFilters 组件', () => {
     const { onChange } = setup();
 
     await user.selectOptions(screen.getByTestId('filter-status-select'), 'open');
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ status: 'open' })
-    );
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'open' }));
   });
 
   it('优先级过滤变化时应调用 onChange', async () => {
@@ -50,9 +48,7 @@ describe('TicketFilters 组件', () => {
     const { onChange } = setup();
 
     await user.selectOptions(screen.getByTestId('filter-priority-select'), 'p1');
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ priority: 'p1' })
-    );
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ priority: 'p1' }));
   });
 
   it('关键字输入后点击应用应调用 onChange，包含 keyword', async () => {
@@ -63,9 +59,7 @@ describe('TicketFilters 组件', () => {
     await user.type(input, '数据库');
     await user.click(screen.getByTestId('filter-apply-btn'));
 
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ keyword: '数据库' })
-    );
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ keyword: '数据库' }));
   });
 
   it('设置日期范围后点击应用应包含 dateStart 与 dateEnd', async () => {
@@ -86,9 +80,7 @@ describe('TicketFilters 组件', () => {
     const { onChange } = setup();
 
     await user.selectOptions(screen.getByTestId('filter-sort-select'), 'priority_desc');
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({ sortBy: 'priority_desc' })
-    );
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ sortBy: 'priority_desc' }));
   });
 
   it('重置按钮应将过滤条件恢复默认并调用 onChange', async () => {

@@ -665,4 +665,56 @@
   }
 }
 
+/* 自定义侧边栏菜单样式 */
+.custom-menu .ant-menu-item {
+  margin: 4px 8px !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-menu .ant-menu-item:hover {
+  background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%) !important;
+  color: #1d4ed8 !important;
+}
+
+.custom-menu .ant-menu-item-selected {
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: white !important;
+}
+
+.custom-menu .ant-menu-item-selected::after {
+  display: none !important;
+}
+
+/* 激活状态下的徽章样式 */
+.custom-menu .ant-menu-item-selected .ant-badge {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 侧边栏折叠时的样式优化 */
+.ant-layout-sider-collapsed .custom-menu .ant-menu-item {
+  margin: 4px 8px !important;
+  padding: 8px !important;
+  justify-content: center !important;
+}
+
+/* 滚动条美化 */
+.ant-layout-sider::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 

@@ -1,6 +1,15 @@
 'use client';
 
-import { TrendingUp, Target, CheckCircle, AlertCircle, Users, Clock } from 'lucide-react';
+import {
+  TrendingUp,
+  Target,
+  CheckCircle,
+  AlertCircle,
+  Users,
+  Clock,
+  PlusCircle,
+  Filter,
+} from 'lucide-react';
 
 import React, { useState } from 'react';
 import Link from 'next/link';

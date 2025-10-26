@@ -1,6 +1,18 @@
 'use client';
 
-import { Search, Plus, BookOpen, FileText, Tag as TagIcon, Calendar, User } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  BookOpen,
+  FileText,
+  Tag as TagIcon,
+  Calendar,
+  User,
+  PlusCircle,
+  Eye,
+  Edit,
+  MoreHorizontal,
+} from 'lucide-react';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';

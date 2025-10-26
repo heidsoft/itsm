@@ -1,6 +1,4 @@
-import { defineConfig } from 'eslint-define-config';
-
-export default defineConfig({
+export default {
   root: true,
   env: {
     browser: true,
@@ -19,7 +17,6 @@ export default defineConfig({
     ecmaVersion: 'latest',
     sourceType: 'module',
     project: ['./tsconfig.json', './tsconfig.strict.json'],
-    tsconfigRootDir: __dirname,
   },
   plugins: [
     '@typescript-eslint',
@@ -239,4 +236,4 @@ export default defineConfig({
     '*.config.js',
     '*.config.ts',
   ],
-});
+};

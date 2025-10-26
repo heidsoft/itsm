@@ -18,7 +18,7 @@ import {
   Col,
   Flex,
 } from 'antd';
-import { antdTheme } from '@/app/lib/antd-theme';
+import { antdTheme } from '@/lib/antd-theme';
 import { colors } from '@/lib/design-system/colors';
 
 const { Text, Title } = Typography;

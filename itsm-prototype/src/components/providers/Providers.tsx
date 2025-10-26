@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AuthService } from '@/lib/auth/auth-service';
+import { AuthService } from '@/lib/services/auth-service';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { NotificationContainer } from '@/components/ui/NotificationContainer';
 
@@ -16,16 +16,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       setLoading(true);
-      
+
       try {
         // 检查是否有有效的认证状态
         const isAuthenticated = AuthService.isAuthenticated();
-        
+
         if (isAuthenticated) {
           // 获取当前用户信息
           const user = await AuthService.getCurrentUser();
           const token = AuthService.getToken();
-          
+
           if (user && token) {
             login(user, token);
           }

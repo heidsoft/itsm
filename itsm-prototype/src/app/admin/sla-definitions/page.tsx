@@ -322,9 +322,7 @@ const SLADefinitionManagement = () => {
       render: (services: string[]) => (
         <div className='space-y-1'>
           {services.slice(0, 2).map(service => (
-            <Tag key={service} size='small'>
-              {service}
-            </Tag>
+            <Tag key={service}>{service}</Tag>
           ))}
           {services.length > 2 && (
             <Text type='secondary' className='text-xs'>

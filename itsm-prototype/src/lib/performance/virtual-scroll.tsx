@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { FixedSizeList as List, VariableSizeList } from 'react-window';
+import { List, VariableSizeList } from 'react-window';
 import { Table, Card, Button, Input, Space, Tag, Tooltip } from 'antd';
 import { Search, Edit, Eye, Trash2 } from 'lucide-react';
 
@@ -182,14 +182,10 @@ export const VirtualTable = memo<VirtualTableProps>(
                 </div>
               </div>
               <div style={{ width: 100, flexShrink: 0 }}>
-                <Tag color={statusColors[item.status]} size='small'>
-                  {item.status}
-                </Tag>
+                <Tag color={statusColors[item.status]}>{item.status}</Tag>
               </div>
               <div style={{ width: 100, flexShrink: 0 }}>
-                <Tag color={priorityColors[item.priority]} size='small'>
-                  {item.priority}
-                </Tag>
+                <Tag color={priorityColors[item.priority]}>{item.priority}</Tag>
               </div>
               <div style={{ width: 120, flexShrink: 0 }}>{item.assignee}</div>
               <div style={{ width: 150, flexShrink: 0 }}>

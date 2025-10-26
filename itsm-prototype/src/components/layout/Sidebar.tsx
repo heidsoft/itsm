@@ -1,154 +1,362 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import React from 'react';
+import { Layout, Menu, theme, Badge } from 'antd';
 import {
   LayoutDashboard,
-  Ticket,
+  FileText,
   AlertTriangle,
-  Wrench,
-  GitBranch,
-  HardDrive,
-  Users,
-  Settings,
+  BookOpen,
   BarChart3,
-  ChevronLeft,
-  ChevronRight,
+  Database,
+  HelpCircle,
+  Calendar,
+  Workflow,
+  Shield,
+  TrendingUp,
 } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/auth-store';
 
-/**
- * 导航菜单项配置
- */
-const navigationItems = [
-  {
-    name: '仪表盘',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    name: '工单管理',
-    href: '/tickets',
-    icon: Ticket,
-  },
-  {
-    name: '事件管理',
-    href: '/incidents',
-    icon: AlertTriangle,
-  },
-  {
-    name: '问题管理',
-    href: '/problems',
-    icon: Wrench,
-  },
-  {
-    name: '变更管理',
-    href: '/changes',
-    icon: GitBranch,
-  },
-  {
-    name: '资产管理',
-    href: '/assets',
-    icon: HardDrive,
-  },
-  {
-    name: '用户管理',
-    href: '/users',
-    icon: Users,
-  },
-  {
-    name: '报表分析',
-    href: '/reports',
-    icon: BarChart3,
-  },
-  {
-    name: '系统设置',
-    href: '/settings',
-    icon: Settings,
-  },
-];
+const { Sider } = Layout;
+
+// 菜单配置
+const MENU_CONFIG = {
+  main: [
+    {
+      key: '/dashboard',
+      icon: <LayoutDashboard size={18} />,
+      label: '仪表盘',
+      path: '/dashboard',
+      permission: 'dashboard:view',
+      description: '系统概览和关键指标',
+    },
+    {
+      key: '/tickets',
+      icon: <FileText size={18} />,
+      label: '工单管理',
+      path: '/tickets',
+      permission: 'ticket:view',
+      description: '管理和跟踪IT工单',
+      badge: 'New',
+    },
+    {
+      key: '/incidents',
+      icon: <AlertTriangle size={18} />,
+      label: '事件管理',
+      path: '/incidents',
+      permission: 'incident:view',
+      description: '处理IT事件和故障',
+    },
+    {
+      key: '/problems',
+      icon: <HelpCircle size={18} />,
+      label: '问题管理',
+      path: '/problems',
+      permission: 'problem:view',
+      description: '分析根本原因和解决方案',
+    },
+    {
+      key: '/changes',
+      icon: <BarChart3 size={18} />,
+      label: '变更管理',
+      path: '/changes',
+      permission: 'change:view',
+      description: '管理IT变更和发布',
+    },
+    {
+      key: '/cmdb',
+      icon: <Database size={18} />,
+      label: '配置管理',
+      path: '/cmdb',
+      permission: 'cmdb:view',
+      description: 'IT资产和配置项管理',
+    },
+    {
+      key: '/service-catalog',
+      icon: <BookOpen size={18} />,
+      label: '服务目录',
+      path: '/service-catalog',
+      permission: 'service:view',
+      description: 'IT服务目录和请求',
+    },
+    {
+      key: '/knowledge-base',
+      icon: <HelpCircle size={18} />,
+      label: '知识库',
+      path: '/knowledge-base',
+      permission: 'knowledge:view',
+      description: '技术文档和解决方案',
+    },
+    {
+      key: '/sla',
+      icon: <Calendar size={18} />,
+      label: 'SLA管理',
+      path: '/sla',
+      permission: 'sla:view',
+      description: '服务级别协议管理',
+    },
+    {
+      key: '/reports',
+      icon: <TrendingUp size={18} />,
+      label: '报表分析',
+      path: '/reports',
+      permission: 'report:view',
+      description: '数据分析和报表',
+    },
+  ],
+  admin: [
+    {
+      key: '/workflow',
+      icon: <Workflow size={18} />,
+      label: '工作流管理',
+      path: '/workflow',
+      permission: 'workflow:config',
+      description: '配置业务流程和自动化',
+    },
+    {
+      key: '/admin',
+      icon: <Shield size={18} />,
+      label: '系统管理',
+      path: '/admin',
+      permission: 'admin:view',
+      description: '用户、权限和系统配置',
+    },
+  ],
+};
 
 interface SidebarProps {
   collapsed: boolean;
-  onToggle: () => void;
+  onCollapse: (collapsed: boolean) => void;
 }
 
-/**
- * 侧边栏组件
- */
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
+  const { token } = theme.useToken();
+  const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuthStore();
+
+  const handleMenuClick = ({ key }: { key: string }) => {
+    router.push(key);
+  };
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  // 渲染菜单项，支持徽章和描述
+  const renderMenuItems = (items: typeof MENU_CONFIG.main) => {
+    return items.map(item => ({
+      key: item.key,
+      icon: item.icon,
+      label: (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '4px 0',
+          }}
+        >
+          <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.label}</span>
+          {item.badge && (
+            <Badge
+              count={item.badge}
+              size='small'
+              style={{
+                backgroundColor: '#10b981',
+                fontSize: '10px',
+                lineHeight: '12px',
+                fontWeight: '600',
+              }}
+            />
+          )}
+        </div>
+      ),
+      onClick: () => handleMenuClick({ key: item.key }),
+      style: {
+        margin: '2px 8px',
+        borderRadius: '8px',
+        padding: '8px 12px',
+      },
+    }));
+  };
 
   return (
-    <div
-      className={`fixed inset-y-0 left-0 z-50 bg-white shadow-lg transition-all duration-300 ${
-        collapsed ? 'w-16' : 'w-64'
-      }`}
+    <Sider
+      trigger={null}
+      collapsible
+      collapsed={collapsed}
+      onCollapse={onCollapse}
+      style={{
+        background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+        borderRight: `1px solid ${token.colorBorder}`,
+        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.08)',
+        overflow: 'hidden',
+      }}
+      width={collapsed ? 80 : 260}
     >
-      {/* 侧边栏头部 */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+      {/* Logo 区域 */}
+      <div
+        style={{
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          padding: collapsed ? '0 16px' : '0 24px',
+          borderBottom: `1px solid ${token.colorBorder}`,
+          background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            background: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '20px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+          }}
+        >
+          IT
+        </div>
         {!collapsed && (
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">IT</span>
+          <div style={{ marginLeft: 16 }}>
+            <div
+              style={{
+                fontSize: '20px',
+                fontWeight: '700',
+                color: 'white',
+                lineHeight: '1',
+              }}
+            >
+              ITSM
             </div>
-            <span className="font-semibold text-gray-900">ITSM 系统</span>
+            <div
+              style={{
+                fontSize: '10px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                marginTop: '2px',
+              }}
+            >
+              System
+            </div>
           </div>
         )}
-        
-        <button
-          onClick={onToggle}
-          className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4 text-gray-600" />
-          ) : (
-            <ChevronLeft className="w-4 h-4 text-gray-600" />
-          )}
-        </button>
       </div>
 
-      {/* 导航菜单 */}
-      <nav className="mt-4 px-2">
-        <ul className="space-y-1">
-          {navigationItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-            const Icon = item.icon;
+      {/* 主菜单 */}
+      <div style={{ padding: '16px 0', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+        <Menu
+          mode='inline'
+          selectedKeys={[pathname]}
+          style={{
+            border: 'none',
+            background: 'transparent',
+          }}
+          items={renderMenuItems(MENU_CONFIG.main)}
+          theme='light'
+          className='custom-menu'
+        />
+      </div>
 
-            return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className={`
-                    flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
-                    ${isActive
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                    }
-                  `}
-                  title={collapsed ? item.name : undefined}
-                >
-                  <Icon className={`flex-shrink-0 w-5 h-5 ${collapsed ? 'mx-auto' : 'mr-3'}`} />
-                  {!collapsed && (
-                    <span className="truncate">{item.name}</span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      {/* 管理员菜单 */}
+      {isAdmin && (
+        <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+          {!collapsed && (
+            <div
+              style={{
+                padding: '8px 24px',
+                fontSize: '11px',
+                color: token.colorTextSecondary,
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+              }}
+            >
+              管理功能
+            </div>
+          )}
+          <div
+            style={{
+              padding: '8px 12px',
+              borderTop: `1px solid ${token.colorBorder}`,
+            }}
+          >
+            <Menu
+              mode='inline'
+              selectedKeys={[pathname]}
+              style={{
+                border: 'none',
+                background: 'transparent',
+              }}
+              items={renderMenuItems(MENU_CONFIG.admin)}
+              theme='light'
+            />
+          </div>
+        </div>
+      )}
 
-      {/* 侧边栏底部 */}
+      {/* 底部用户信息 */}
       {!collapsed && (
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-blue-50 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-xs text-gray-600">系统运行正常</span>
+        <div
+          style={{
+            padding: '16px 24px',
+            borderTop: `1px solid ${token.colorBorder}`,
+            background: 'rgba(0, 0, 0, 0.02)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '14px',
+              }}
+            >
+              {user?.name?.[0] || user?.username?.[0] || 'U'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: token.colorText,
+                  marginBottom: '2px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {user?.name || user?.username}
+              </div>
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: token.colorTextSecondary,
+                  textTransform: 'capitalize',
+                }}
+              >
+                {user?.role || 'user'}
+              </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </Sider>
   );
-}
+};
