@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { Form, Input, Select, Button, Card, message, Alert } from 'antd';
+import { Form, Input, Select, Button, Card, message, Alert, Spin } from 'antd';
 import { problemService, ProblemPriority } from '@/lib/services/problem-service';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-const CreateProblemPage = () => {
+const CreateProblemPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
@@ -189,6 +189,20 @@ const CreateProblemPage = () => {
         </Form>
       </Card>
     </div>
+  );
+};
+
+const CreateProblemPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className='flex items-center justify-center min-h-screen'>
+          <Spin size='large' />
+        </div>
+      }
+    >
+      <CreateProblemPageContent />
+    </Suspense>
   );
 };
 

@@ -1,6 +1,16 @@
 'use client';
 
-import { RefreshCw, Save, Mail, Network, Globe, Database, MemoryStick } from 'lucide-react';
+import {
+  RefreshCw,
+  Save,
+  Mail,
+  Network,
+  Globe,
+  Database,
+  MemoryStick,
+  Settings,
+  Shield,
+} from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import {
