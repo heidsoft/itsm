@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { LAYOUT_CONFIG } from '@/config/layout.config';
 
 const { Content } = Layout;
 
@@ -34,12 +35,17 @@ export function AppLayout({
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      {/* 侧边栏 */}
+    <Layout hasSider style={{ minHeight: '100vh' }}>
+      {/* 侧边栏 - 使用 Ant Design 标准尺寸 */}
       <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
-      <Layout>
-        {/* 头部 */}
+      <Layout
+        style={{
+          marginLeft: collapsed ? LAYOUT_CONFIG.sider.collapsedWidth : LAYOUT_CONFIG.sider.width,
+          transition: LAYOUT_CONFIG.transitions.base,
+        }}
+      >
+        {/* 头部 - 高度 64px (Ant Design 标准) */}
         <Header
           collapsed={collapsed}
           onCollapse={setCollapsed}
@@ -50,24 +56,26 @@ export function AppLayout({
           showBreadcrumb={showBreadcrumb}
         />
 
-        {/* 主内容区域 */}
+        {/* 主内容区域 - 遵循 8px 栅格系统 */}
         <Content
           style={{
-            margin: collapsed ? '16px' : '24px',
-            padding: collapsed ? '16px' : '24px',
-            background: '#f8fafc',
-            minHeight: 'calc(100vh - 112px)',
-            transition: 'all 0.3s ease',
+            margin: collapsed
+              ? `${LAYOUT_CONFIG.content.marginCollapsed}px`
+              : `${LAYOUT_CONFIG.content.marginExpanded}px`,
+            padding: collapsed
+              ? `${LAYOUT_CONFIG.content.paddingCollapsed}px`
+              : `${LAYOUT_CONFIG.content.padding}px`,
+            background: '#fff',
+            minHeight: LAYOUT_CONFIG.content.minHeight,
+            borderRadius: LAYOUT_CONFIG.borderRadius.lg,
+            transition: LAYOUT_CONFIG.transitions.base,
           }}
+          className='responsive-content'
         >
           {/* 返回按钮 */}
           {showBackButton && (
-            <div style={{ marginBottom: 16 }}>
-              <Button
-                icon={<ArrowLeft size={16} />}
-                onClick={() => router.back()}
-                style={{ marginBottom: 16 }}
-              >
+            <div style={{ marginBottom: LAYOUT_CONFIG.spacing.md }}>
+              <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size='small'>
                 返回
               </Button>
             </div>
@@ -77,22 +85,22 @@ export function AppLayout({
           {showPageHeader && (title || description || extra) && (
             <div
               style={{
-                marginBottom: 24,
-                paddingBottom: 16,
+                marginBottom: LAYOUT_CONFIG.content.pageHeaderMarginBottom,
+                paddingBottom: LAYOUT_CONFIG.content.pageHeaderPaddingBottom,
                 borderBottom: '1px solid #e5e7eb',
               }}
             >
               {/* 标题和描述 */}
               {(title || description) && (
-                <div style={{ marginBottom: extra ? 16 : 0 }}>
+                <div style={{ marginBottom: extra ? LAYOUT_CONFIG.spacing.md : 0 }}>
                   {title && (
                     <h1
                       style={{
-                        fontSize: '24px',
+                        fontSize: `${LAYOUT_CONFIG.content.pageTitleFontSize}px`,
                         fontWeight: '600',
                         color: '#1f2937',
                         margin: 0,
-                        marginBottom: description ? 8 : 0,
+                        marginBottom: description ? LAYOUT_CONFIG.spacing.xs : 0,
                       }}
                     >
                       {title}
@@ -101,7 +109,7 @@ export function AppLayout({
                   {description && (
                     <p
                       style={{
-                        fontSize: '14px',
+                        fontSize: `${LAYOUT_CONFIG.content.pageDescFontSize}px`,
                         color: '#6b7280',
                         margin: 0,
                         lineHeight: '1.5',

@@ -7,7 +7,7 @@ export default function KnowledgeBaseLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout>
+    <AppLayout title="知识库" description="技术文档和解决方案" showPageHeader={true}>
       {children}
     </AppLayout>
   );

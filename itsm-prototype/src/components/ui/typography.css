@@ -11,43 +11,79 @@
 
 /* 标题层级系统 */
 .heading-1 {
-  @apply text-4xl md:text-5xl font-bold leading-tight tracking-tight;
+  @apply text-4xl font-bold leading-tight tracking-tight;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.025em;
 }
 
+@media (min-width: 768px) {
+  .heading-1 {
+    @apply text-5xl;
+  }
+}
+
 .heading-2 {
-  @apply text-3xl md:text-4xl font-bold leading-tight tracking-tight;
+  @apply text-3xl font-bold leading-tight tracking-tight;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
+@media (min-width: 768px) {
+  .heading-2 {
+    @apply text-4xl;
+  }
+}
+
 .heading-3 {
-  @apply text-2xl md:text-3xl font-semibold leading-snug;
+  @apply text-2xl font-semibold leading-snug;
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.015em;
 }
 
+@media (min-width: 768px) {
+  .heading-3 {
+    @apply text-3xl;
+  }
+}
+
 .heading-4 {
-  @apply text-xl md:text-2xl font-semibold leading-snug;
+  @apply text-xl font-semibold leading-snug;
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.01em;
 }
 
+@media (min-width: 768px) {
+  .heading-4 {
+    @apply text-2xl;
+  }
+}
+
 .heading-5 {
-  @apply text-lg md:text-xl font-medium leading-normal;
+  @apply text-lg font-medium leading-normal;
   font-weight: 500;
   line-height: 1.4;
 }
 
+@media (min-width: 768px) {
+  .heading-5 {
+    @apply text-xl;
+  }
+}
+
 .heading-6 {
-  @apply text-base md:text-lg font-medium leading-normal;
+  @apply text-base font-medium leading-normal;
   font-weight: 500;
   line-height: 1.45;
+}
+
+@media (min-width: 768px) {
+  .heading-6 {
+    @apply text-lg;
+  }
 }
 
 /* 正文文本系统 */

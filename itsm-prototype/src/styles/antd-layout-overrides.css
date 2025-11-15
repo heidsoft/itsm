@@ -1,0 +1,274 @@
+/**
+ * Ant Design Layout 组件样式覆盖
+ * 完全遵循官方设计规范
+ * 参考: https://ant.design/components/layout-cn
+ */
+
+/* ========== Layout 根组件 ========== */
+.ant-layout {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* ========== Header 顶部导航 (Ant Design 标准: 64px) ========== */
+.ant-layout-header {
+  height: 64px !important;            /* 标准高度: 48+8n, n=2 */
+  line-height: 64px !important;
+  padding: 0 24px !important;          /* 标准内边距 */
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+}
+
+/* Header 响应式 */
+@media (max-width: 768px) {
+  .ant-layout-header {
+    padding: 0 16px !important;
+  }
+}
+
+/* ========== Sider 侧边导航 (Ant Design 标准: 200px/80px) ========== */
+.ant-layout-sider {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sider 展开状态 */
+.ant-layout-sider:not(.ant-layout-sider-collapsed) {
+  flex: 0 0 200px !important;          /* 标准宽度: 200+8n, n=0 */
+  max-width: 200px !important;
+  min-width: 200px !important;
+  width: 200px !important;
+}
+
+/* Sider 收起状态 */
+.ant-layout-sider-collapsed {
+  flex: 0 0 80px !important;           /* 标准收起宽度 */
+  max-width: 80px !important;
+  min-width: 80px !important;
+  width: 80px !important;
+}
+
+/* Sider Logo区域高度 = Header高度 */
+.ant-layout-sider-children > div:first-child {
+  height: 64px;                        /* 与Header高度一致 */
+}
+
+/* Sider 背景 */
+.ant-layout-sider-light {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+/* ========== Content 内容区 ========== */
+.ant-layout-content {
+  margin: 24px 24px 24px 224px !important;  /* 24px + 200px */
+  padding: 24px !important;
+  min-height: calc(100vh - 64px);
+  background: #fff;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Content - Sider收起状态 */
+.ant-layout-has-sider.sider-collapsed .ant-layout-content {
+  margin-left: 96px !important;        /* 16px + 80px */
+  margin: 16px !important;
+  margin-left: 96px !important;
+  padding: 16px !important;
+}
+
+/* ========== Menu 菜单 ========== */
+.ant-menu-inline {
+  border-inline-end: none !important;
+}
+
+/* 菜单项高度 */
+.ant-menu-item,
+.ant-menu-submenu-title {
+  height: 40px !important;             /* 32 + 8 */
+  line-height: 40px !important;
+  margin: 4px 8px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+}
+
+/* 当前选中项 - 大色块强调 */
+.ant-menu-item-selected {
+  background: linear-gradient(90deg, #e6f4ff 0%, #bae0ff 100%) !important;
+  border-left: 4px solid #1890ff !important;
+  padding-left: 8px !important;        /* 减去border宽度 */
+}
+
+.ant-menu-item-selected::after {
+  border-inline-end: none !important;  /* 移除默认右边框 */
+}
+
+/* 高亮火柴棍效果 */
+.ant-menu-item-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #1890ff;
+  border-radius: 0 4px 4px 0;
+}
+
+/* 悬停效果 */
+.ant-menu-item:hover,
+.ant-menu-submenu-title:hover {
+  background: rgba(24, 144, 255, 0.08) !important;
+}
+
+/* 字体高亮变色 */
+.ant-menu-item-selected .ant-menu-title-content {
+  color: #1890ff !important;
+  font-weight: 600 !important;
+}
+
+/* ========== Breadcrumb 面包屑 ========== */
+.ant-breadcrumb {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.ant-breadcrumb a {
+  color: #8c8c8c;
+  transition: color 0.2s;
+}
+
+.ant-breadcrumb a:hover {
+  color: #1890ff;
+}
+
+/* ========== 响应式适配 ========== */
+
+/* Tablet (768px - 991px) */
+@media (max-width: 991px) {
+  .ant-layout-sider:not(.ant-layout-sider-collapsed) {
+    flex: 0 0 200px !important;
+    max-width: 200px !important;
+    min-width: 200px !important;
+    width: 200px !important;
+  }
+  
+  .ant-layout-content {
+    margin: 16px !important;
+    margin-left: 96px !important;      /* 强制收起状态 */
+    padding: 16px !important;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+  .ant-layout-header {
+    height: 56px !important;           /* 移动端可适当缩小 */
+    line-height: 56px !important;
+    padding: 0 12px !important;
+  }
+  
+  .ant-layout-sider {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+  }
+  
+  /* 移动端抽屉模式 */
+  .ant-layout-sider:not(.ant-layout-sider-collapsed) {
+    transform: translateX(-100%);
+  }
+  
+  .ant-layout-sider.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .ant-layout-content {
+    margin: 8px !important;
+    padding: 12px !important;
+    margin-left: 8px !important;
+  }
+  
+  /* 隐藏面包屑 */
+  .ant-breadcrumb {
+    display: none;
+  }
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+  .ant-layout-sider,
+  .ant-layout-header {
+    display: none !important;
+  }
+  
+  .ant-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ========== 深色模式适配 ========== */
+@media (prefers-color-scheme: dark) {
+  .ant-layout {
+    background: #141414;
+  }
+  
+  .ant-layout-header {
+    background: #1f1f1f !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+  }
+  
+  .ant-layout-sider-light {
+    background: linear-gradient(180deg, #1f1f1f 0%, #141414 100%) !important;
+  }
+  
+  .ant-layout-content {
+    background: #1f1f1f;
+  }
+}
+
+/* ========== 动画增强 ========== */
+.ant-layout-sider {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-menu-item,
+.ant-menu-submenu-title {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ========== 无障碍优化 ========== */
+.ant-menu-item:focus-visible,
+.ant-menu-submenu-title:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 减少动画（尊重用户偏好） */
+@media (prefers-reduced-motion: reduce) {
+  .ant-layout-sider,
+  .ant-menu-item,
+  .ant-menu-submenu-title,
+  .ant-layout-content {
+    transition: none !important;
+  }
+}
+
+/* ========== 性能优化 ========== */
+.ant-layout-sider,
+.ant-layout-content {
+  will-change: width, margin, padding;
+}
+
+/* 强制GPU加速 */
+.ant-menu-item-selected::before {
+  transform: translateZ(0);
+}
+

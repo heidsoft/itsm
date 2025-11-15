@@ -555,7 +555,7 @@ const QuickActionGroup = ({
                   size="small"
                   hoverable
                   style={{ height: "100%" }}
-                  bodyStyle={{ padding: token.paddingMD }}
+                  styles={{ body: { padding: token.paddingMD } }}
                 >
                   <Space align="start" style={{ width: "100%" }}>
                     <Avatar
@@ -633,7 +633,7 @@ const AdminDashboard = () => {
           marginBottom: token.marginLG,
           border: "none",
         }}
-        bodyStyle={{ padding: token.paddingXL }}
+        styles={{ body: { padding: token.paddingLG } }}
       >
         <Row justify="space-between" align="middle">
           <Col>

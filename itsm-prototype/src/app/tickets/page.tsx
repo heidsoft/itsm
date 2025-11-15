@@ -186,7 +186,7 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-4'>
       {/* 统计卡片 - 懒加载 */}
       <LazyWrapper fallback={<LoadingSpinner />}>
         <TicketStats stats={stats} />

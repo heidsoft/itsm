@@ -6,5 +6,5 @@ export default function ServiceCatalogLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AppLayout>{children}</AppLayout>;
+  return <AppLayout title="服务目录" description="IT服务目录和请求" showPageHeader={true}>{children}</AppLayout>;
 }

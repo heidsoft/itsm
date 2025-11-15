@@ -5,5 +5,5 @@ export default function WorkflowLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AppLayout>{children}</AppLayout>;
+  return <AppLayout title="工作流管理" description="配置业务流程和自动化" showPageHeader={true}>{children}</AppLayout>;
 }

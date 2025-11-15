@@ -7,7 +7,7 @@ export default function ProblemsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout>
+    <AppLayout title="问题管理" description="分析根本原因和解决方案" showPageHeader={true}>
       {children}
     </AppLayout>
   );
