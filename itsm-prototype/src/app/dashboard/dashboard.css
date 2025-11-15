@@ -1,0 +1,181 @@
+/* 企业级ITSM仪表盘样式 */
+
+/* KPI卡片动画 */
+.enterprise-kpi-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.enterprise-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.enterprise-kpi-card:hover::before {
+  left: 100%;
+  opacity: 1;
+}
+
+/* 进度条样式 */
+.enterprise-kpi-progress .ant-progress-bg {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 图表卡片样式 */
+.enterprise-chart-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enterprise-chart-card:hover {
+  transform: translateY(-4px);
+}
+
+/* 快速操作卡片 */
+.enterprise-action-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enterprise-action-card:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* 平滑滚动 */
+.enterprise-dashboard-container {
+  scroll-behavior: smooth;
+}
+
+/* Ant Design组件覆盖 */
+.enterprise-dashboard-container .ant-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enterprise-dashboard-container .ant-tabs-tab {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.enterprise-dashboard-container .ant-tabs-tab:hover {
+  color: #3b82f6;
+}
+
+.enterprise-dashboard-container .ant-tabs-tab-active {
+  font-weight: 600;
+}
+
+/* 加载状态优化 */
+.enterprise-dashboard-container .ant-spin {
+  color: #3b82f6;
+}
+
+/* 徽章样式 */
+.enterprise-dashboard-container .ant-badge-status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.enterprise-dashboard-container .ant-badge-status-processing {
+  animation: statusProcessing 1.2s infinite ease-in-out;
+}
+
+@keyframes statusProcessing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* 按钮悬停效果 */
+.enterprise-dashboard-container .ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .enterprise-dashboard-container .ant-card-body {
+    padding: 16px;
+  }
+  
+  .enterprise-kpi-card {
+    min-height: 160px !important;
+  }
+  
+  .enterprise-chart-card {
+    min-height: 360px !important;
+  }
+  
+  .enterprise-action-card {
+    min-height: 180px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .enterprise-dashboard-container .ant-statistic-content-value {
+    font-size: 28px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .enterprise-dashboard-container {
+    background: white;
+  }
+  
+  .enterprise-dashboard-container .ant-btn,
+  .enterprise-dashboard-container .ant-dropdown {
+    display: none;
+  }
+  
+  .enterprise-dashboard-container .ant-card {
+    page-break-inside: avoid;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .enterprise-dashboard-container {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #374151;
+  }
+}
+
+/* 性能优化 */
+.enterprise-dashboard-container * {
+  will-change: auto;
+}
+
+.enterprise-dashboard-container .ant-card:hover {
+  will-change: transform, box-shadow;
+}
+
+/* 无障碍优化 */
+.enterprise-dashboard-container *:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.enterprise-dashboard-container button:focus-visible,
+.enterprise-dashboard-container a:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+

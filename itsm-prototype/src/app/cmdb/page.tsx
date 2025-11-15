@@ -182,19 +182,19 @@ const CMDBPage = () => {
 
   // 渲染统计卡片
   const renderStatsCards = () => (
-    <div style={{ marginBottom: 24 }}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+    <div style={{ marginBottom: 16 }}>
+      <Row gutter={[12, 12]}>
+        <Col xs={24} sm={12} md={6} lg={6}>
           <Card 
             style={{ 
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+              borderRadius: 12,
+              boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '16px' } }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.4)';
@@ -223,17 +223,17 @@ const CMDBPage = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6}>
           <Card 
             style={{ 
               background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
               border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(240, 147, 251, 0.3)',
+              borderRadius: 12,
+              boxShadow: '0 4px 16px rgba(240, 147, 251, 0.3)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '16px' } }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 12px 40px rgba(240, 147, 251, 0.4)';
@@ -262,17 +262,17 @@ const CMDBPage = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6}>
           <Card 
             style={{ 
               background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
               border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(79, 172, 254, 0.3)',
+              borderRadius: 12,
+              boxShadow: '0 4px 16px rgba(79, 172, 254, 0.3)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '16px' } }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 12px 40px rgba(79, 172, 254, 0.4)';
@@ -301,17 +301,17 @@ const CMDBPage = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} md={6} lg={6}>
           <Card 
             style={{ 
               background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
               border: 'none',
-              borderRadius: 16,
-              boxShadow: '0 8px 32px rgba(250, 112, 154, 0.3)',
+              borderRadius: 12,
+              boxShadow: '0 4px 16px rgba(250, 112, 154, 0.3)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '16px' } }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 12px 40px rgba(250, 112, 154, 0.4)';
@@ -348,12 +348,12 @@ const CMDBPage = () => {
   const renderFilters = () => (
     <Card 
       style={{ 
-        marginBottom: 24,
-        borderRadius: 16,
+        marginBottom: 16,
+        borderRadius: 12,
         border: '1px solid #f0f0f0',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
       }}
-      bodyStyle={{ padding: '24px' }}
+      styles={{ body: { padding: '16px' } }}
     >
       <Row gutter={[20, 16]} align="middle">
         <Col xs={24} sm={12} md={8}>
@@ -483,7 +483,7 @@ const CMDBPage = () => {
         border: '1px solid #f0f0f0',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
       }}
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
     >
       <div style={{ padding: '24px 24px 0 24px', display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

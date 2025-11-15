@@ -22,23 +22,24 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, color, bgColor }) => (
-  <Col xs={24} sm={12} lg={6}>
+  <Col xs={24} sm={12} md={6} lg={6} xl={6}>
     <Card
       className={`border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br ${bgColor}`}
-      bodyStyle={{ padding: '24px' }}
+      styles={{ body: { padding: '16px' } }}
     >
       <div className='flex items-center justify-between'>
         <div>
-          <div className='text-sm text-gray-600 mb-1'>{title}</div>
-          <div className={`text-2xl font-bold ${color}`}>{value.toLocaleString()}</div>
+          <div className='text-xs text-gray-600 mb-1 font-medium'>{title}</div>
+          <div className={`text-xl font-bold ${color}`}>{value.toLocaleString()}</div>
         </div>
         <div
-          className={`w-12 h-12 ${color.replace(
+          className={`w-10 h-10 ${color.replace(
             'text-',
             'bg-'
-          )} rounded-lg flex items-center justify-center`}
+          )} rounded-lg flex items-center justify-center shadow-sm`}
+          style={{ opacity: 0.9 }}
         >
-          {icon}
+          {React.cloneElement(icon as React.ReactElement, { size: 20 })}
         </div>
       </div>
     </Card>
@@ -50,38 +51,38 @@ StatCard.displayName = 'StatCard';
 export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats }) => {
   const statCards = [
     {
-      title: 'Total Tickets',
+      title: '总工单数',
       value: stats.total,
-      icon: <FileText size={24} className='text-white' />,
+      icon: <FileText size={20} className='text-white' />,
       color: 'text-blue-600',
       bgColor: 'from-blue-50 to-blue-100',
     },
     {
-      title: 'Open',
+      title: '待处理',
       value: stats.open,
-      icon: <Clock size={24} className='text-white' />,
+      icon: <Clock size={20} className='text-white' />,
       color: 'text-orange-600',
       bgColor: 'from-orange-50 to-orange-100',
     },
     {
-      title: 'Resolved',
+      title: '已解决',
       value: stats.resolved,
-      icon: <CheckCircle size={24} className='text-white' />,
+      icon: <CheckCircle size={20} className='text-white' />,
       color: 'text-green-600',
       bgColor: 'from-green-50 to-green-100',
     },
     {
-      title: 'High Priority',
+      title: '高优先级',
       value: stats.highPriority,
-      icon: <AlertTriangle size={24} className='text-white' />,
+      icon: <AlertTriangle size={20} className='text-white' />,
       color: 'text-red-600',
       bgColor: 'from-red-50 to-red-100',
     },
   ];
 
   return (
-    <div className='mb-6'>
-      <Row gutter={[16, 16]}>
+    <div className='mb-4'>
+      <Row gutter={[12, 12]}>
         {statCards.map((card, index) => (
           <StatCard
             key={index}

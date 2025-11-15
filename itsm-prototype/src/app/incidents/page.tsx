@@ -139,74 +139,54 @@ export default function IncidentsPage() {
 
   // Render statistics cards
   const renderStatsCards = () => (
-    <div className='mb-8'>
-      <Row gutter={[24, 24]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <AlertTriangle className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>{metrics.total_incidents}</div>
-              <div className='text-blue-100 font-medium text-sm'>Total Incidents</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-green-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-blue-100'>Real-time Monitoring</span>
-              </div>
+    <div className='mb-4'>
+      <Row gutter={[12, 12]}>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <AlertTriangle className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>{metrics.total_incidents}</div>
+            <div className='text-blue-100 font-medium text-xs'>总事件数</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <Clock className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>{metrics.critical_incidents}</div>
-              <div className='text-orange-100 font-medium text-sm'>Pending Incidents</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-yellow-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-orange-100'>Needs Attention</span>
-              </div>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <Clock className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>{metrics.critical_incidents}</div>
+            <div className='text-orange-100 font-medium text-xs'>关键事件</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <CheckCircle className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>{metrics.major_incidents}</div>
-              <div className='text-green-100 font-medium text-sm'>Resolved Incidents</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-green-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-green-100'>Completed</span>
-              </div>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <CheckCircle className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>{metrics.major_incidents}</div>
+            <div className='text-green-100 font-medium text-xs'>主要事件</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-700 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <AlertCircle className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>{metrics.avg_resolution_time}</div>
-              <div className='text-purple-100 font-medium text-sm'>Avg Resolution Time (Hours)</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-blue-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-purple-100'>Efficiency Metric</span>
-              </div>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <AlertCircle className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>{metrics.avg_resolution_time}</div>
+            <div className='text-purple-100 font-medium text-xs'>平均解决时间(小时)</div>
           </Card>
         </Col>
       </Row>
@@ -215,15 +195,10 @@ export default function IncidentsPage() {
 
   // Render filters
   const renderFilters = () => (
-    <Card className='mb-8 bg-white/60 backdrop-blur-sm border border-white/20 shadow-lg rounded-2xl overflow-hidden'>
-      <div className='bg-gradient-to-r from-gray-50 to-blue-50 p-6 border-b border-gray-100'>
-        <div className='flex items-center space-x-3 mb-4'>
-          <div className='w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center'>
-            <SearchOutlined className='text-white text-sm' />
-          </div>
-          <h3 className='text-lg font-semibold text-gray-800'>Incident Filtering & Search</h3>
-        </div>
-        <Row gutter={[24, 16]} align='middle'>
+    <Card className='mb-4 shadow-sm border-0' styles={{ body: { padding: '16px' } }}>
+      <div className='mb-3'>
+        <h3 className='text-sm font-semibold text-gray-800 mb-3'>筛选与搜索</h3>
+        <Row gutter={[12, 12]} align='middle'>
           <Col xs={24} sm={12} md={8}>
             <div className='space-y-2'>
               <label className='text-sm font-medium text-gray-700'>Search Incidents</label>

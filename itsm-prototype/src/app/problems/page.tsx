@@ -132,74 +132,54 @@ const ProblemListPage = () => {
 
   // 渲染统计卡片
   const renderStatsCards = () => (
-    <div className='mb-6'>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <AlertTriangle className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>0</div>
-              <div className='text-blue-100 font-medium text-sm'>总问题数</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-blue-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-blue-100'>问题总览</span>
-              </div>
+    <div className='mb-4'>
+      <Row gutter={[12, 12]}>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <AlertTriangle className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>0</div>
+            <div className='text-blue-100 font-medium text-xs'>总问题数</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <AlertTriangle className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>0</div>
-              <div className='text-orange-100 font-medium text-sm'>待处理</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-orange-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-orange-100'>需要关注</span>
-              </div>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <AlertTriangle className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>0</div>
+            <div className='text-orange-100 font-medium text-xs'>待处理</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-700 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <RefreshCw className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>0</div>
-              <div className='text-cyan-100 font-medium text-sm'>处理中</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-cyan-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-cyan-100'>正在处理</span>
-              </div>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <RefreshCw className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>0</div>
+            <div className='text-cyan-100 font-medium text-xs'>处理中</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='text-center hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 text-white overflow-hidden relative h-full'>
-            <div className='absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10'></div>
-            <div className='absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8'></div>
-            <div className='relative z-10'>
-              <div className='w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm'>
-                <AlertTriangle className='w-6 h-6 text-white' />
-              </div>
-              <div className='text-3xl font-bold mb-2'>0</div>
-              <div className='text-green-100 font-medium text-sm'>已解决</div>
-              <div className='mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1'>
-                <div className='w-2 h-2 bg-green-300 rounded-full animate-pulse'></div>
-                <span className='text-sm font-medium text-green-100'>处理完成</span>
-              </div>
+        <Col xs={24} sm={12} md={6} lg={6}>
+          <Card 
+            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white'
+            styles={{ body: { padding: '16px' } }}
+          >
+            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
+              <AlertTriangle className='w-5 h-5 text-white' />
             </div>
+            <div className='text-2xl font-bold mb-1'>0</div>
+            <div className='text-green-100 font-medium text-xs'>已解决</div>
           </Card>
         </Col>
       </Row>

@@ -7,7 +7,7 @@ export default function ReportsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout>
+    <AppLayout title="报表分析" description="数据分析和报表" showPageHeader={true}>
       {children}
     </AppLayout>
   );

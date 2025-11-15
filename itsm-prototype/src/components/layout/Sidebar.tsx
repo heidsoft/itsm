@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { LAYOUT_CONFIG } from '@/config/layout.config';
 
 const { Sider } = Layout;
 
@@ -153,18 +154,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '4px 0',
+            padding: '2px 0',
           }}
         >
-          <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.label}</span>
+          <span style={{ fontSize: '13px', fontWeight: '500' }}>{item.label}</span>
           {item.badge && (
             <Badge
               count={item.badge}
               size='small'
               style={{
                 backgroundColor: '#10b981',
-                fontSize: '10px',
-                lineHeight: '12px',
+                fontSize: '9px',
+                lineHeight: '10px',
                 fontWeight: '600',
               }}
             />
@@ -174,8 +175,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       onClick: () => handleMenuClick({ key: item.key }),
       style: {
         margin: '2px 8px',
-        borderRadius: '8px',
-        padding: '8px 12px',
+        borderRadius: '6px',
+        padding: '6px 10px',
+        height: 'auto',
       },
     }));
   };
@@ -186,39 +188,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       collapsible
       collapsed={collapsed}
       onCollapse={onCollapse}
+      breakpoint={LAYOUT_CONFIG.sider.breakpoint}
+      collapsedWidth={LAYOUT_CONFIG.sider.collapsedWidth}
+      width={LAYOUT_CONFIG.sider.width}
       style={{
+        overflow: 'auto',
+        height: '100vh',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        bottom: 0,
         background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
         borderRight: `1px solid ${token.colorBorder}`,
-        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.08)',
-        overflow: 'hidden',
+        boxShadow: LAYOUT_CONFIG.shadows.md,
+        zIndex: LAYOUT_CONFIG.zIndex.sider,
       }}
-      width={collapsed ? 80 : 260}
     >
-      {/* Logo 区域 */}
+      {/* Logo 区域 - 高度与 Header 一致 (64px) */}
       <div
         style={{
-          height: 64,
+          height: LAYOUT_CONFIG.sider.logoAreaHeight,
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          padding: collapsed ? '0 16px' : '0 24px',
+          padding: collapsed 
+            ? LAYOUT_CONFIG.sider.logoPaddingCollapsed 
+            : LAYOUT_CONFIG.sider.logoPadding,
           borderBottom: `1px solid ${token.colorBorder}`,
           background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)',
+          boxShadow: LAYOUT_CONFIG.shadows.sm,
         }}
       >
         <div
           style={{
-            width: 40,
-            height: 40,
+            width: LAYOUT_CONFIG.sider.logoIconSize,
+            height: LAYOUT_CONFIG.sider.logoIconSize,
             background: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
+            borderRadius: LAYOUT_CONFIG.borderRadius.lg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: '20px',
+            fontSize: `${LAYOUT_CONFIG.header.fontSize}px`,
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
           }}
@@ -226,10 +238,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           IT
         </div>
         {!collapsed && (
-          <div style={{ marginLeft: 16 }}>
+          <div style={{ marginLeft: LAYOUT_CONFIG.spacing.md }}>
             <div
               style={{
-                fontSize: '20px',
+                fontSize: `${LAYOUT_CONFIG.sider.logoTextSize}px`,
                 fontWeight: '700',
                 color: 'white',
                 lineHeight: '1',
@@ -253,7 +265,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       </div>
 
       {/* 主菜单 */}
-      <div style={{ padding: '16px 0', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+      <div style={{ 
+        padding: LAYOUT_CONFIG.sider.menuPadding, 
+        overflowY: 'auto', 
+        maxHeight: `calc(100vh - ${LAYOUT_CONFIG.sider.logoAreaHeight + 120}px)` 
+      }}>
         <Menu
           mode='inline'
           selectedKeys={[pathname]}
@@ -269,16 +285,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
 
       {/* 管理员菜单 */}
       {isAdmin && (
-        <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '12px' }}>
           {!collapsed && (
             <div
               style={{
-                padding: '8px 24px',
-                fontSize: '11px',
+                padding: '6px 16px',
+                fontSize: '10px',
                 color: token.colorTextSecondary,
                 fontWeight: '600',
                 textTransform: 'uppercase',
-                letterSpacing: '1px',
+                letterSpacing: '0.5px',
               }}
             >
               管理功能
@@ -286,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           )}
           <div
             style={{
-              padding: '8px 12px',
+              padding: '6px 8px',
               borderTop: `1px solid ${token.colorBorder}`,
             }}
           >
@@ -308,16 +324,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       {!collapsed && (
         <div
           style={{
-            padding: '16px 24px',
+            padding: '12px 16px',
             borderTop: `1px solid ${token.colorBorder}`,
             background: 'rgba(0, 0, 0, 0.02)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
                 display: 'flex',
@@ -325,7 +341,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
                 justifyContent: 'center',
                 color: 'white',
                 fontWeight: '600',
-                fontSize: '14px',
+                fontSize: '12px',
               }}
             >
               {user?.name?.[0] || user?.username?.[0] || 'U'}
@@ -333,22 +349,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   color: token.colorText,
                   marginBottom: '2px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  lineHeight: '1.2',
                 }}
               >
                 {user?.name || user?.username}
               </div>
               <div
                 style={{
-                  fontSize: '12px',
+                  fontSize: '11px',
                   color: token.colorTextSecondary,
                   textTransform: 'capitalize',
+                  lineHeight: '1.2',
                 }}
               >
                 {user?.role || 'user'}

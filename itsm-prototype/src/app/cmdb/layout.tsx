@@ -7,7 +7,7 @@ export default function CMDBLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout>
+    <AppLayout title="配置管理" description="IT资产和配置项管理" showPageHeader={true}>
       {children}
     </AppLayout>
   );

@@ -33,7 +33,10 @@ const { Text } = Typography;
 interface HeaderProps {
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
+  title?: string;
   breadcrumb?: Array<{ title: string; href?: string }>;
+  showBackButton?: boolean;
+  extra?: React.ReactNode;
   showBreadcrumb?: boolean;
 }
 
@@ -230,14 +233,14 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <AntHeader
       style={{
-        padding: '0 24px',
+        padding: '0 16px',
         background: '#fff',
         borderBottom: '1px solid #f0f0f0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: 64,
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        height: 56,
+        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
       }}
     >
       {/* 左侧区域 */}
@@ -245,16 +248,16 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 折叠按钮 */}
         <Button
           type='text'
-          icon={collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+          icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           onClick={() => onCollapse(!collapsed)}
           style={{
             fontSize: '16px',
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '8px',
+            borderRadius: '6px',
           }}
         />
 
@@ -262,7 +265,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Text
             style={{
-              fontSize: '18px',
+              fontSize: '16px',
               fontWeight: '600',
               color: '#1f2937',
               marginRight: 8,
@@ -322,17 +325,18 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 右侧区域 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {/* 搜索框 */}
         <Input
-          placeholder='搜索工单、知识库、配置项...'
-          prefix={<Search size={16} style={{ color: '#9ca3af' }} />}
+          placeholder='搜索工单、知识库...'
+          prefix={<Search size={14} style={{ color: '#9ca3af' }} />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
           onPressEnter={() => handleSearch(searchValue)}
+          size="small"
           style={{
-            width: 280,
-            borderRadius: '8px',
+            width: 240,
+            borderRadius: '6px',
             border: '1px solid #e5e7eb',
             transition: 'all 0.2s',
           }}
@@ -351,15 +355,15 @@ export const Header: React.FC<HeaderProps> = ({
           <Badge count={unreadCount} size='small' offset={[-2, 2]}>
             <Button
               type='text'
-              icon={<Bell size={20} />}
+              icon={<Bell size={18} />}
               onClick={() => setNotificationsOpen(true)}
               style={{
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 position: 'relative',
               }}
             />
@@ -395,11 +399,12 @@ export const Header: React.FC<HeaderProps> = ({
             }}
           >
             <Avatar
-              size={32}
+              size={28}
               style={{
                 background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
                 color: '#fff',
                 fontWeight: '600',
+                fontSize: '12px',
               }}
             >
               {user?.name?.[0] || user?.username?.[0] || 'U'}
@@ -413,18 +418,19 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Text
                 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '500',
                   color: '#1f2937',
+                  lineHeight: '1.2',
                 }}
               >
                 {user?.name || user?.username}
               </Text>
-              <Text style={{ fontSize: '12px', color: '#6b7280' }}>
+              <Text style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2' }}>
                 {user?.role === 'admin' ? '管理员' : '用户'}
               </Text>
             </div>
-            <ChevronDown size={16} style={{ color: '#9ca3af' }} />
+            <ChevronDown size={14} style={{ color: '#9ca3af' }} />
           </div>
         </Dropdown>
       </div>
