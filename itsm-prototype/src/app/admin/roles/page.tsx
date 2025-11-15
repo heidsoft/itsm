@@ -1,6 +1,17 @@
 'use client';
 
-import { Plus, Edit, Trash2, Shield, Users, Settings } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Shield,
+  Users,
+  Settings,
+  Key,
+  CheckCircle,
+  XCircle,
+  Search,
+} from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import {

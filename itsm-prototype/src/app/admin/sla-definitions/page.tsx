@@ -33,6 +33,7 @@ import {
   Progress,
   List,
   Badge,
+  Tag,
 } from 'antd';
 const { Title, Text } = Typography;
 const { Option } = Select;

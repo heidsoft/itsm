@@ -19,7 +19,16 @@ import {
   Steps,
   Collapse,
 } from 'antd';
-import { FileText, Paperclip, Send, Bot, Lightbulb, Workflow, CheckCircle } from 'lucide-react';
+import {
+  FileText,
+  Paperclip,
+  Send,
+  Bot,
+  Lightbulb,
+  Workflow,
+  CheckCircle,
+  Tag as TagIcon,
+} from 'lucide-react';
 import { AIWorkflowAssistant } from '@/components/business/AIWorkflowAssistant';
 import { ticketService, TicketPriority, TicketType } from '@/lib/services/ticket-service';
 
