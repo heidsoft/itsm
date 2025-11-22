@@ -28,12 +28,49 @@ const apiRoutes = [
 ];
 
 /**
+ * 从请求中获取认证 Token
+ * 支持多种方式：Cookie、Authorization Header
+ */
+function getAuthToken(request: NextRequest): string | null {
+  // 1. 优先从 Cookie 读取（浏览器访问）
+  const cookieToken = request.cookies.get('auth-token')?.value;
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // 2. 从 Authorization Header 读取（API 调用）
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader) {
+    // 支持 Bearer Token 格式
+    if (authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+    // 支持直接传递 Token
+    return authHeader;
+  }
+
+  // 3. 从自定义 Header 读取
+  const customToken = request.headers.get('X-Auth-Token');
+  if (customToken) {
+    return customToken;
+  }
+
+  // 4. 兼容旧的 access_token cookie
+  const accessToken = request.cookies.get('access_token')?.value;
+  if (accessToken) {
+    return accessToken;
+  }
+
+  return null;
+}
+
+/**
  * Next.js 中间件
  * 处理路由保护和认证检查
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('auth-token')?.value;
+  const token = getAuthToken(request);
 
   // 检查是否为API路由
   if (apiRoutes.some(route => pathname.startsWith(route))) {

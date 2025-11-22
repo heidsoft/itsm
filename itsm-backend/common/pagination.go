@@ -65,7 +65,7 @@ func (p *PaginationRequest) GetLimit() int {
 // NewPaginationResponse 创建分页响应
 func NewPaginationResponse(page, pageSize int, total int64) *PaginationResponse {
 	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
-	
+
 	return &PaginationResponse{
 		Page:       page,
 		PageSize:   pageSize,
@@ -91,25 +91,18 @@ func SuccessWithPagination(c *gin.Context, data interface{}, page, pageSize int,
 	Success(c, response)
 }
 
-// 常用分页配置
-const (
-	DefaultPage     = 1
-	DefaultPageSize = 20
-	MaxPageSize     = 100
-)
-
 // ValidatePagination 验证分页参数
 func ValidatePagination(page, pageSize int) (int, int) {
 	if page <= 0 {
 		page = DefaultPage
 	}
-	
+
 	if pageSize <= 0 {
 		pageSize = DefaultPageSize
 	} else if pageSize > MaxPageSize {
 		pageSize = MaxPageSize
 	}
-	
+
 	return page, pageSize
 }
 
@@ -124,7 +117,7 @@ type PaginationMeta struct {
 // NewPaginationMeta 创建分页元数据
 func NewPaginationMeta(page, pageSize int) *PaginationMeta {
 	page, pageSize = ValidatePagination(page, pageSize)
-	
+
 	return &PaginationMeta{
 		Offset: (page - 1) * pageSize,
 		Limit:  pageSize,
