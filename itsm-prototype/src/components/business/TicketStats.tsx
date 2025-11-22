@@ -2,7 +2,12 @@
 
 import React from 'react';
 import { Card, Row, Col } from 'antd';
-import { FileText, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import {
+  FileTextOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
 
 interface TicketStatsProps {
   stats: {
@@ -39,7 +44,7 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, colo
           )} rounded-lg flex items-center justify-center shadow-sm`}
           style={{ opacity: 0.9 }}
         >
-          {React.cloneElement(icon as React.ReactElement, { size: 20 })}
+          <span className="text-white text-xl">{icon}</span>
         </div>
       </div>
     </Card>
@@ -53,28 +58,28 @@ export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats }) =>
     {
       title: '总工单数',
       value: stats.total,
-      icon: <FileText size={20} className='text-white' />,
+      icon: <FileTextOutlined />,
       color: 'text-blue-600',
       bgColor: 'from-blue-50 to-blue-100',
     },
     {
       title: '待处理',
       value: stats.open,
-      icon: <Clock size={20} className='text-white' />,
+      icon: <ClockCircleOutlined />,
       color: 'text-orange-600',
       bgColor: 'from-orange-50 to-orange-100',
     },
     {
       title: '已解决',
       value: stats.resolved,
-      icon: <CheckCircle size={20} className='text-white' />,
+      icon: <CheckCircleOutlined />,
       color: 'text-green-600',
       bgColor: 'from-green-50 to-green-100',
     },
     {
       title: '高优先级',
       value: stats.highPriority,
-      icon: <AlertTriangle size={20} className='text-white' />,
+      icon: <ExclamationCircleOutlined />,
       color: 'text-red-600',
       bgColor: 'from-red-50 to-red-100',
     },

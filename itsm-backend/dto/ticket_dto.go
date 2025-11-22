@@ -48,6 +48,22 @@ type ListTicketsRequest struct {
 	SortOrder   string     `json:"sort_order" form:"sort_order"`
 }
 
+// TicketResponse 工单响应
+type TicketResponse struct {
+	ID           int       `json:"id"`
+	Title        string    `json:"title"`
+	Description  string    `json:"description"`
+	Status       string    `json:"status"`
+	Priority     string    `json:"priority"`
+	TicketNumber string    `json:"ticket_number"`
+	RequesterID  int       `json:"requester_id"`
+	AssigneeID   int       `json:"assignee_id,omitempty"`
+	TenantID     int       `json:"tenant_id"`
+	CategoryID   int       `json:"category_id,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
 // ListTicketsResponse 工单列表响应
 type ListTicketsResponse struct {
 	Tickets  []*ent.Ticket `json:"tickets"`

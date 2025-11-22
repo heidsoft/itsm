@@ -42,12 +42,28 @@ export class TicketApi {
     action: 'approve' | 'reject';
     comment: string;
     step_name: string;
-  }): Promise<unknown> {
+  }): Promise<{
+    success: boolean;
+    ticket: Ticket;
+    message: string;
+    approval_status: 'approved' | 'rejected' | 'pending';
+  }> {
     return httpClient.post(`/api/v1/tickets/${id}/approve`, data);
   }
 
   // Add comment
-  static async addComment(id: number, content: string): Promise<unknown> {
+  static async addComment(id: number, content: string): Promise<{
+    id: number;
+    ticket_id: number;
+    content: string;
+    created_by: number;
+    created_at: string;
+    author?: {
+      id: number;
+      name: string;
+      username: string;
+    };
+  }> {
     return httpClient.post(`/api/v1/tickets/${id}/comment`, { content });
   }
 
@@ -118,7 +134,19 @@ export class TicketApi {
     content: string;
     type: 'comment' | 'work_note';
     is_internal?: boolean;
-  }): Promise<unknown> {
+  }): Promise<{
+    id: number;
+    content: string;
+    type: string;
+    created_by: number;
+    created_at: string;
+    author?: {
+      id: number;
+      name: string;
+      username: string;
+    };
+    is_internal: boolean;
+  }> {
     return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
   }
 
@@ -137,7 +165,16 @@ export class TicketApi {
   }
 
   // Upload ticket attachment
-  static async uploadTicketAttachment(id: number, file: File): Promise<unknown> {
+  static async uploadTicketAttachment(id: number, file: File): Promise<{
+    id: number;
+    filename: string;
+    original_name: string;
+    file_size: number;
+    mime_type: string;
+    url: string;
+    uploaded_by: number;
+    uploaded_at: string;
+  }> {
     const formData = new FormData();
     formData.append('file', file);
     
@@ -175,7 +212,16 @@ export class TicketApi {
     status: string;
     comments?: string;
     assignee_id?: number;
-  }): Promise<unknown> {
+  }): Promise<{
+    id: number;
+    step_name: string;
+    step_order: number;
+    status: string;
+    assignee_id?: number;
+    started_at?: string;
+    completed_at?: string;
+    comments?: string;
+  }> {
     return httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
   }
 
@@ -194,12 +240,23 @@ export class TicketApi {
   }
 
   // Add ticket tags
-  static async addTicketTags(id: number, tags: string[]): Promise<unknown> {
+  static async addTicketTags(id: number, tags: string[]): Promise<{
+    success: boolean;
+    ticket_id: number;
+    tags: string[];
+    message: string;
+  }> {
     return httpClient.post(`/api/v1/tickets/${id}/tags`, { tags });
   }
 
   // Remove ticket tags
-  static async removeTicketTags(id: number, tags: string[]): Promise<unknown> {
+  static async removeTicketTags(id: number, tags: string[]): Promise<{
+    success: boolean;
+    ticket_id: number;
+    removed_tags: string[];
+    remaining_tags: string[];
+    message: string;
+  }> {
     return httpClient.request({
       method: 'DELETE',
       url: `/api/v1/tickets/${id}/tags`,

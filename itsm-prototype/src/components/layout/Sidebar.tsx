@@ -3,18 +3,18 @@
 import React from 'react';
 import { Layout, Menu, theme, Badge } from 'antd';
 import {
-  LayoutDashboard,
-  FileText,
-  AlertTriangle,
-  BookOpen,
-  BarChart3,
-  Database,
-  HelpCircle,
-  Calendar,
-  Workflow,
-  Shield,
-  TrendingUp,
-} from 'lucide-react';
+  DashboardOutlined,
+  FileTextOutlined,
+  ExclamationCircleOutlined,
+  BookOutlined,
+  BarChartOutlined,
+  DatabaseOutlined,
+  QuestionCircleOutlined,
+  CalendarOutlined,
+  DeploymentUnitOutlined,
+  SafetyOutlined,
+  RiseOutlined,
+} from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
@@ -26,7 +26,7 @@ const MENU_CONFIG = {
   main: [
     {
       key: '/dashboard',
-      icon: <LayoutDashboard size={18} />,
+      icon: <DashboardOutlined />,
       label: '仪表盘',
       path: '/dashboard',
       permission: 'dashboard:view',
@@ -34,7 +34,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/tickets',
-      icon: <FileText size={18} />,
+      icon: <FileTextOutlined />,
       label: '工单管理',
       path: '/tickets',
       permission: 'ticket:view',
@@ -43,7 +43,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/incidents',
-      icon: <AlertTriangle size={18} />,
+      icon: <ExclamationCircleOutlined />,
       label: '事件管理',
       path: '/incidents',
       permission: 'incident:view',
@@ -51,7 +51,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/problems',
-      icon: <HelpCircle size={18} />,
+      icon: <QuestionCircleOutlined />,
       label: '问题管理',
       path: '/problems',
       permission: 'problem:view',
@@ -59,7 +59,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/changes',
-      icon: <BarChart3 size={18} />,
+      icon: <BarChartOutlined />,
       label: '变更管理',
       path: '/changes',
       permission: 'change:view',
@@ -67,7 +67,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/cmdb',
-      icon: <Database size={18} />,
+      icon: <DatabaseOutlined />,
       label: '配置管理',
       path: '/cmdb',
       permission: 'cmdb:view',
@@ -75,7 +75,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/service-catalog',
-      icon: <BookOpen size={18} />,
+      icon: <BookOutlined />,
       label: '服务目录',
       path: '/service-catalog',
       permission: 'service:view',
@@ -83,7 +83,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/knowledge-base',
-      icon: <HelpCircle size={18} />,
+      icon: <QuestionCircleOutlined />,
       label: '知识库',
       path: '/knowledge-base',
       permission: 'knowledge:view',
@@ -91,7 +91,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/sla',
-      icon: <Calendar size={18} />,
+      icon: <CalendarOutlined />,
       label: 'SLA管理',
       path: '/sla',
       permission: 'sla:view',
@@ -99,7 +99,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/reports',
-      icon: <TrendingUp size={18} />,
+      icon: <RiseOutlined />,
       label: '报表分析',
       path: '/reports',
       permission: 'report:view',
@@ -109,7 +109,7 @@ const MENU_CONFIG = {
   admin: [
     {
       key: '/workflow',
-      icon: <Workflow size={18} />,
+      icon: <DeploymentUnitOutlined />,
       label: '工作流管理',
       path: '/workflow',
       permission: 'workflow:config',
@@ -117,7 +117,7 @@ const MENU_CONFIG = {
     },
     {
       key: '/admin',
-      icon: <Shield size={18} />,
+      icon: <SafetyOutlined />,
       label: '系统管理',
       path: '/admin',
       permission: 'admin:view',

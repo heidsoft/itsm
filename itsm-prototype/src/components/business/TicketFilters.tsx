@@ -1,8 +1,21 @@
+'use client';
+
 import React from 'react';
+import { Card, Select, Input, DatePicker, Button, Space, Row, Col } from 'antd';
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  FilterOutlined,
+  ClearOutlined,
+} from '@ant-design/icons';
+import dayjs from 'dayjs';
+
+const { RangePicker } = DatePicker;
 
 export type TicketFilterState = {
   status: 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
   priority: 'all' | 'p1' | 'p2' | 'p3' | 'p4';
+  type?: 'all' | string;
   keyword: string;
   dateStart: string; // YYYY-MM-DD
   dateEnd: string; // YYYY-MM-DD
@@ -10,145 +23,204 @@ export type TicketFilterState = {
 };
 
 interface Props {
-  value: TicketFilterState;
-  onChange: (next: TicketFilterState) => void;
+  filters: TicketFilterState;
+  onFilterChange: (filters: Partial<TicketFilterState>) => void;
+  onSearch?: (keyword: string) => void;
+  onRefresh?: () => void;
+  loading?: boolean;
 }
 
 const DEFAULT_VALUE: TicketFilterState = {
   status: 'all',
   priority: 'all',
+  type: 'all',
   keyword: '',
   dateStart: '',
   dateEnd: '',
   sortBy: 'createdAt_desc',
 };
 
-// 组件策略：
-// - 下拉选择（状态、优先级、排序）即时触发 onChange
-// - 文本与日期输入在"应用"按钮点击时提交
-// - "重置"按钮恢复默认并触发 onChange
-function TicketFilters({ value, onChange }: Props) {
-  const [local, setLocal] = React.useState<TicketFilterState>(value);
+// 组件策略：使用Ant Design组件提升UI质量
+function TicketFilters({ 
+  filters = DEFAULT_VALUE, 
+  onFilterChange, 
+  onSearch, 
+  onRefresh,
+  loading = false 
+}: Props) {
+  const [localKeyword, setLocalKeyword] = React.useState(filters?.keyword || '');
 
+  // 同步外部filters到本地keyword
   React.useEffect(() => {
-    setLocal(value);
-  }, [value.status, value.priority, value.keyword, value.dateStart, value.dateEnd, value.sortBy]);
+    if (filters?.keyword !== undefined) {
+      setLocalKeyword(filters.keyword);
+    }
+  }, [filters?.keyword]);
 
-  const patch = (partial: Partial<TicketFilterState>) =>
-    ({ ...local, ...partial } as TicketFilterState);
-
-  const handleImmediateChange = (partial: Partial<TicketFilterState>) => {
-    const next = patch(partial);
-    setLocal(next);
-    onChange(next);
+  const handleStatusChange = (value: string) => {
+    onFilterChange({ status: value as TicketFilterState['status'] });
   };
 
-  const handleApply = () => {
-    onChange(local);
+  const handlePriorityChange = (value: string) => {
+    onFilterChange({ priority: value as TicketFilterState['priority'] });
+  };
+
+  const handleSortChange = (value: string) => {
+    onFilterChange({ sortBy: value as TicketFilterState['sortBy'] });
+  };
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch(localKeyword);
+    } else {
+      onFilterChange({ keyword: localKeyword });
+    }
+  };
+
+  const handleDateRangeChange = (dates: any) => {
+    if (dates && dates[0] && dates[1]) {
+      onFilterChange({
+        dateStart: dates[0].format('YYYY-MM-DD'),
+        dateEnd: dates[1].format('YYYY-MM-DD'),
+      });
+    } else {
+      onFilterChange({
+        dateStart: '',
+        dateEnd: '',
+      });
+    }
   };
 
   const handleReset = () => {
-    setLocal(DEFAULT_VALUE);
-    onChange(DEFAULT_VALUE);
+    setLocalKeyword('');
+    onFilterChange(DEFAULT_VALUE);
   };
 
+  const dateRange =
+    filters?.dateStart && filters?.dateEnd
+      ? [dayjs(filters.dateStart), dayjs(filters.dateEnd)]
+      : null;
+
   return (
-    <div data-testid='ticket-filters' aria-label='工单过滤与排序'>
-      {/* 状态 */}
-      <label>
-        状态
-        <select
-          data-testid='filter-status-select'
-          value={local.status}
-          onChange={e =>
-            handleImmediateChange({ status: e.target.value as TicketFilterState['status'] })
-          }
-        >
-          <option value='all'>全部</option>
-          <option value='open'>待处理</option>
-          <option value='in_progress'>处理中</option>
-          <option value='resolved'>已解决</option>
-          <option value='closed'>已关闭</option>
-        </select>
-      </label>
+    <Card
+      className="mb-4"
+      styles={{ body: { padding: '16px' } }}
+      data-testid="ticket-filters"
+    >
+      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Row gutter={[12, 12]} align="middle">
+          {/* 搜索框 */}
+          <Col xs={24} sm={24} md={8} lg={6}>
+            <Input
+              placeholder="搜索工单标题或描述..."
+              prefix={<SearchOutlined />}
+              value={localKeyword}
+              onChange={(e) => setLocalKeyword(e.target.value)}
+              onPressEnter={handleSearch}
+              allowClear
+              data-testid="filter-keyword-input"
+            />
+          </Col>
 
-      {/* 优先级 */}
-      <label>
-        优先级
-        <select
-          data-testid='filter-priority-select'
-          value={local.priority}
-          onChange={e =>
-            handleImmediateChange({ priority: e.target.value as TicketFilterState['priority'] })
-          }
-        >
-          <option value='all'>全部</option>
-          <option value='p1'>P1</option>
-          <option value='p2'>P2</option>
-          <option value='p3'>P3</option>
-          <option value='p4'>P4</option>
-        </select>
-      </label>
+          {/* 状态筛选 */}
+          <Col xs={12} sm={8} md={4} lg={3}>
+            <Select
+              style={{ width: '100%' }}
+              placeholder="状态"
+              value={filters?.status || 'all'}
+              onChange={handleStatusChange}
+              data-testid="filter-status-select"
+              options={[
+                { label: '全部状态', value: 'all' },
+                { label: '待处理', value: 'open' },
+                { label: '处理中', value: 'in_progress' },
+                { label: '已解决', value: 'resolved' },
+                { label: '已关闭', value: 'closed' },
+              ]}
+            />
+          </Col>
 
-      {/* 关键字 */}
-      <label>
-        关键字
-        <input
-          data-testid='filter-keyword-input'
-          type='text'
-          value={local.keyword}
-          onChange={e => setLocal(patch({ keyword: e.target.value }))}
-          placeholder='搜索标题或描述'
-        />
-      </label>
+          {/* 优先级筛选 */}
+          <Col xs={12} sm={8} md={4} lg={3}>
+            <Select
+              style={{ width: '100%' }}
+              placeholder="优先级"
+              value={filters?.priority || 'all'}
+              onChange={handlePriorityChange}
+              data-testid="filter-priority-select"
+              options={[
+                { label: '全部优先级', value: 'all' },
+                { label: 'P1-紧急', value: 'p1' },
+                { label: 'P2-高', value: 'p2' },
+                { label: 'P3-中', value: 'p3' },
+                { label: 'P4-低', value: 'p4' },
+              ]}
+            />
+          </Col>
 
-      {/* 日期范围 */}
-      <label>
-        开始日期
-        <input
-          data-testid='filter-date-start'
-          type='date'
-          value={local.dateStart}
-          onChange={e => setLocal(patch({ dateStart: e.target.value }))}
-        />
-      </label>
-      <label>
-        结束日期
-        <input
-          data-testid='filter-date-end'
-          type='date'
-          value={local.dateEnd}
-          onChange={e => setLocal(patch({ dateEnd: e.target.value }))}
-        />
-      </label>
+          {/* 日期范围 */}
+          <Col xs={24} sm={12} md={6} lg={5}>
+            <RangePicker
+              style={{ width: '100%' }}
+              value={dateRange as any}
+              onChange={handleDateRangeChange}
+              format="YYYY-MM-DD"
+              placeholder={['开始日期', '结束日期']}
+              data-testid="filter-date-range"
+            />
+          </Col>
 
-      {/* 排序 */}
-      <label>
-        排序
-        <select
-          data-testid='filter-sort-select'
-          value={local.sortBy}
-          onChange={e =>
-            handleImmediateChange({ sortBy: e.target.value as TicketFilterState['sortBy'] })
-          }
-        >
-          <option value='createdAt_desc'>最近创建</option>
-          <option value='createdAt_asc'>最早创建</option>
-          <option value='priority_desc'>优先级高到低</option>
-          <option value='priority_asc'>优先级低到高</option>
-        </select>
-      </label>
+          {/* 排序 */}
+          <Col xs={12} sm={8} md={4} lg={3}>
+            <Select
+              style={{ width: '100%' }}
+              placeholder="排序"
+              value={filters?.sortBy || 'createdAt_desc'}
+              onChange={handleSortChange}
+              data-testid="filter-sort-select"
+              options={[
+                { label: '最新创建', value: 'createdAt_desc' },
+                { label: '最早创建', value: 'createdAt_asc' },
+                { label: '优先级↓', value: 'priority_desc' },
+                { label: '优先级↑', value: 'priority_asc' },
+              ]}
+            />
+          </Col>
 
-      {/* 操作 */}
-      <div style={{ display: 'inline-flex', gap: 8, marginLeft: 8 }}>
-        <button data-testid='filter-apply-btn' onClick={handleApply}>
-          应用
-        </button>
-        <button data-testid='filter-reset-btn' onClick={handleReset}>
-          重置
-        </button>
-      </div>
-    </div>
+          {/* 操作按钮 */}
+          <Col xs={12} sm={8} md={6} lg={4}>
+            <Space.Compact style={{ width: '100%' }}>
+              <Button
+                icon={<SearchOutlined />}
+                type="primary"
+                onClick={handleSearch}
+                loading={loading}
+                data-testid="filter-apply-btn"
+              >
+                搜索
+              </Button>
+              <Button
+                icon={<ClearOutlined />}
+                onClick={handleReset}
+                data-testid="filter-reset-btn"
+              >
+                重置
+              </Button>
+              {onRefresh && (
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={onRefresh}
+                  loading={loading}
+                  data-testid="filter-refresh-btn"
+                >
+                  刷新
+                </Button>
+              )}
+            </Space.Compact>
+          </Col>
+        </Row>
+      </Space>
+    </Card>
   );
 }
 

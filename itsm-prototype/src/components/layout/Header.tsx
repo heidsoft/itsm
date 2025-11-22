@@ -15,15 +15,15 @@ import {
   message,
 } from 'antd';
 import {
-  User,
-  Search,
-  LogOut,
-  Bell,
-  ChevronDown,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Settings,
-} from 'lucide-react';
+  UserOutlined,
+  SearchOutlined,
+  LogoutOutlined,
+  BellOutlined,
+  DownOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 
@@ -71,13 +71,13 @@ export const Header: React.FC<HeaderProps> = ({
     {
       key: 'profile',
       label: '个人资料',
-      icon: <User size={16} />,
+      icon: <UserOutlined />,
       onClick: () => router.push('/profile'),
     },
     {
       key: 'settings',
       label: '设置',
-      icon: <Settings size={16} />,
+      icon: <SettingOutlined />,
       onClick: () => router.push('/settings'),
     },
     {
@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
     {
       key: 'logout',
       label: '退出登录',
-      icon: <LogOut size={16} />,
+      icon: <LogoutOutlined />,
       onClick: handleLogout,
     },
   ];
@@ -248,7 +248,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 折叠按钮 */}
         <Button
           type='text'
-          icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           onClick={() => onCollapse(!collapsed)}
           style={{
             fontSize: '16px',
@@ -329,7 +329,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 搜索框 */}
         <Input
           placeholder='搜索工单、知识库...'
-          prefix={<Search size={14} style={{ color: '#9ca3af' }} />}
+          prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
           onPressEnter={() => handleSearch(searchValue)}
@@ -355,7 +355,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Badge count={unreadCount} size='small' offset={[-2, 2]}>
             <Button
               type='text'
-              icon={<Bell size={18} />}
+              icon={<BellOutlined />}
               onClick={() => setNotificationsOpen(true)}
               style={{
                 width: 36,
@@ -430,7 +430,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {user?.role === 'admin' ? '管理员' : '用户'}
               </Text>
             </div>
-            <ChevronDown size={14} style={{ color: '#9ca3af' }} />
+            <DownOutlined style={{ color: '#9ca3af' }} />
           </div>
         </Dropdown>
       </div>
@@ -439,7 +439,7 @@ export const Header: React.FC<HeaderProps> = ({
       <Drawer
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Bell size={20} style={{ color: '#3b82f6' }} />
+            <BellOutlined style={{ color: '#3b82f6', fontSize: 20 }} />
             <span>通知中心</span>
             {unreadCount > 0 && <Badge count={unreadCount} size='small' />}
           </div>
@@ -540,7 +540,7 @@ export const Header: React.FC<HeaderProps> = ({
               color: '#9ca3af',
             }}
           >
-            <Bell size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+            <BellOutlined style={{ fontSize: 48, marginBottom: '16px', opacity: 0.5 }} />
             <Text>暂无通知</Text>
           </div>
         )}
