@@ -20,6 +20,7 @@ import {
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { colors } from '@/lib/design-system/colors';
+import { AuthService } from '@/lib/services/auth-service'; // Import the actual AuthService
 
 const { Text, Title } = Typography;
 
@@ -36,48 +37,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  // 真实的后端认证服务
-  const authService = {
-    async login(username: string, password: string) {
-      try {
-        const response = await fetch('http://localhost:8090/api/v1/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username,
-            password,
-            tenant_code: '', // 可选，暂时为空
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || '登录失败');
-        }
-
-        const data = await response.json();
-        console.log('后端响应:', data);
-
-        if (data.code === 0 && data.data) {
-          return {
-            success: true,
-            user: data.data.user,
-            token: data.data.access_token,
-            refreshToken: data.data.refresh_token,
-            tenant: data.data.tenant,
-          };
-        } else {
-          throw new Error(data.message || '登录失败');
-        }
-      } catch (error) {
-        console.error('登录请求失败:', error);
-        throw error;
-      }
-    },
-  };
-
   // 处理登录提交
   const handleLogin = async (values: { username: string; password: string }) => {
     console.log('开始登录:', values);
@@ -85,24 +44,17 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await authService.login(values.username, values.password);
-      console.log('登录结果:', result);
+      const success = await AuthService.login(values.username, values.password);
 
-      if (result.success) {
-        // 存储认证信息到localStorage
-        localStorage.setItem('auth_token', result.token);
-        localStorage.setItem('refresh_token', result.refreshToken);
-        localStorage.setItem('user_info', JSON.stringify(result.user));
-        localStorage.setItem('tenant_info', JSON.stringify(result.tenant));
-
-        // 设置认证cookie（中间件需要）
-        document.cookie = `auth-token=${result.token}; path=/; max-age=900; SameSite=Lax`; // 15分钟
-        document.cookie = `refresh-token=${result.refreshToken}; path=/; max-age=604800; SameSite=Lax`; // 7天
+      if (success) {
         console.log('认证信息已存储，准备跳转');
-
         // 跳转到仪表板
         router.push('/dashboard');
         console.log('已执行跳转命令');
+      } else {
+        // AuthService.login already handles error messages via console.error,
+        // but for UI display, we can catch a generic message or specific ones if AuthService throws them.
+        setError('登录失败，请检查您的用户名和密码');
       }
     } catch (err) {
       console.error('登录错误:', err);

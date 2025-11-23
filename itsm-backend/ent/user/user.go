@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -24,6 +25,8 @@ const (
 	FieldRole = "role"
 	// FieldDepartment holds the string denoting the department field in the database.
 	FieldDepartment = "department"
+	// FieldDepartmentID holds the string denoting the department_id field in the database.
+	FieldDepartmentID = "department_id"
 	// FieldPhone holds the string denoting the phone field in the database.
 	FieldPhone = "phone"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
@@ -36,8 +39,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeDepartmentRef holds the string denoting the department_ref edge name in mutations.
+	EdgeDepartmentRef = "department_ref"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// DepartmentRefTable is the table that holds the department_ref relation/edge.
+	DepartmentRefTable = "users"
+	// DepartmentRefInverseTable is the table name for the Department entity.
+	// It exists in this package in order to avoid circular dependency with the "department" package.
+	DepartmentRefInverseTable = "departments"
+	// DepartmentRefColumn is the table column denoting the department_ref relation/edge.
+	DepartmentRefColumn = "department_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -48,6 +60,7 @@ var Columns = []string{
 	FieldName,
 	FieldRole,
 	FieldDepartment,
+	FieldDepartmentID,
 	FieldPhone,
 	FieldPasswordHash,
 	FieldActive,
@@ -56,10 +69,21 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"team_users",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -150,6 +174,11 @@ func ByDepartment(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDepartment, opts...).ToFunc()
 }
 
+// ByDepartmentID orders the results by the department_id field.
+func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
+}
+
 // ByPhone orders the results by the phone field.
 func ByPhone(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPhone, opts...).ToFunc()
@@ -178,4 +207,18 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDepartmentRefField orders the results by department_ref field.
+func ByDepartmentRefField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDepartmentRefStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newDepartmentRefStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DepartmentRefInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentRefTable, DepartmentRefColumn),
+	)
 }

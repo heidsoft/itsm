@@ -28,12 +28,16 @@ const (
 	FieldIsActive = "is_active"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
+	// FieldDepartmentID holds the string denoting the department_id field in the database.
+	FieldDepartmentID = "department_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// EdgeWorkflowInstances holds the string denoting the workflow_instances edge name in mutations.
 	EdgeWorkflowInstances = "workflow_instances"
+	// EdgeDepartment holds the string denoting the department edge name in mutations.
+	EdgeDepartment = "department"
 	// Table holds the table name of the workflow in the database.
 	Table = "workflows"
 	// WorkflowInstancesTable is the table that holds the workflow_instances relation/edge.
@@ -43,6 +47,13 @@ const (
 	WorkflowInstancesInverseTable = "workflow_instances"
 	// WorkflowInstancesColumn is the table column denoting the workflow_instances relation/edge.
 	WorkflowInstancesColumn = "workflow_id"
+	// DepartmentTable is the table that holds the department relation/edge.
+	DepartmentTable = "workflows"
+	// DepartmentInverseTable is the table name for the Department entity.
+	// It exists in this package in order to avoid circular dependency with the "department" package.
+	DepartmentInverseTable = "departments"
+	// DepartmentColumn is the table column denoting the department relation/edge.
+	DepartmentColumn = "department_id"
 )
 
 // Columns holds all SQL columns for workflow fields.
@@ -55,6 +66,7 @@ var Columns = []string{
 	FieldVersion,
 	FieldIsActive,
 	FieldTenantID,
+	FieldDepartmentID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -126,6 +138,11 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
+// ByDepartmentID orders the results by the department_id field.
+func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -149,10 +166,24 @@ func ByWorkflowInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newWorkflowInstancesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByDepartmentField orders the results by department field.
+func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newWorkflowInstancesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(WorkflowInstancesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
+	)
+}
+func newDepartmentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DepartmentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
 	)
 }

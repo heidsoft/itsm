@@ -19,6 +19,7 @@ import {
   Statistic,
   Alert,
   App,
+  Skeleton,
 } from 'antd';
 import {
   Plus,
@@ -41,10 +42,11 @@ import {
   Code,
 } from 'lucide-react';
 
-import { WorkflowDesigner } from '../components/WorkflowDesigner';
+import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 
 import { useRouter } from 'next/navigation';
+import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 
@@ -63,7 +65,16 @@ interface Workflow {
   created_by: string;
 }
 
+const WorkflowManagementPageSkeleton: React.FC = () => (
+  <div>
+    <Skeleton active paragraph={{ rows: 4 }} />
+    <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 24 }} />
+    <Skeleton active paragraph={{ rows: 8 }} style={{ marginTop: 24 }} />
+  </div>
+);
+
 const WorkflowManagementPage = () => {
+  const { t } = useI18n();
   const router = useRouter();
   const { modal } = App.useApp();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -94,9 +105,9 @@ const WorkflowManagementPage = () => {
     () => [
       {
         id: 1,
-        name: '工单审批流程',
-        description: '标准工单审批流程，包含提交、审核、处理、验收等环节',
-        category: 'ticket_approval',
+        name: t('workflow.ticketApprovalProcess'),
+        description: t('workflow.ticketApprovalDescription'),
+        category: t('workflow.approvalProcess'),
         version: '1.0.0',
         status: 'active',
         bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
@@ -139,9 +150,9 @@ const WorkflowManagementPage = () => {
       },
       {
         id: 2,
-        name: '事件处理流程',
-        description: 'IT事件处理标准流程，支持自动分配和升级',
-        category: '事件处理',
+        name: t('workflow.incidentHandlingProcess'),
+        description: t('workflow.incidentHandlingDescription'),
+        category: t('workflow.incidentHandling'),
         version: '2.1.0',
         status: 'active',
         bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
@@ -192,9 +203,9 @@ const WorkflowManagementPage = () => {
       },
       {
         id: 3,
-        name: '变更管理流程',
-        description: 'IT变更管理流程，包含变更申请、审批、实施、验证',
-        category: '变更管理',
+        name: t('workflow.changeManagementProcess'),
+        description: t('workflow.changeManagementDescription'),
+        category: t('workflow.changeManagement'),
         version: '1.5.0',
         status: 'draft',
         bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
@@ -241,7 +252,7 @@ const WorkflowManagementPage = () => {
         created_by: '王五',
       },
     ],
-    []
+    [t]
   );
 
   const loadWorkflows = useCallback(async () => {
@@ -251,11 +262,11 @@ const WorkflowManagementPage = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       setWorkflows(mockWorkflows);
     } catch {
-      message.error('加载工作流失败');
+      message.error(t('workflow.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [mockWorkflows]);
+  }, [mockWorkflows, t]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -274,9 +285,9 @@ const WorkflowManagementPage = () => {
         avgExecutionTime: Math.floor(Math.random() * 120) + 30, // 模拟平均执行时间(分钟)
       });
     } catch {
-      console.error('加载统计数据失败');
+      console.error(t('workflow.loadStatsFailed'));
     }
-  }, [workflows, mockWorkflows]);
+  }, [workflows, mockWorkflows, t]);
 
   useEffect(() => {
     loadWorkflows();
@@ -302,7 +313,7 @@ const WorkflowManagementPage = () => {
     setEditingWorkflow(workflow);
 
     // 根据工作流类型选择对应的设计器
-    if (workflow.category === 'ticket_approval' || workflow.name.includes('审批')) {
+    if (workflow.category === 'ticket_approval' || workflow.category === t('workflow.approvalProcess') || workflow.name.includes(t('workflow.approvalProcess'))) {
       // 工单审批流程使用专门的设计器
       router.push(`/workflow/ticket-approval?id=${workflow.id}`);
     } else {
@@ -313,13 +324,13 @@ const WorkflowManagementPage = () => {
 
   const handleViewBPMN = (workflow: Workflow) => {
     if (!workflow.bpmn_xml) {
-      message.warning('该工作流没有BPMN定义');
+      message.warning(t('workflow.noBPMNDefinition'));
       return;
     }
 
     // 显示BPMN XML内容
     Modal.info({
-      title: `${workflow.name} - BPMN XML`,
+      title: `${workflow.name} - ${t('workflow.bpmnXml')}`,
       width: 800,
       content: (
         <div style={{ maxHeight: '500px', overflow: 'auto' }}>
@@ -336,26 +347,26 @@ const WorkflowManagementPage = () => {
           </pre>
         </div>
       ),
-      okText: '关闭',
+      okText: t('workflow.close'),
     });
   };
 
   const handleDeleteWorkflow = async (id: number) => {
     modal.confirm({
-      title: '确认删除',
-      content: '删除工作流将同时删除所有相关实例，此操作不可恢复。确定要删除吗？',
-      okText: '确定删除',
+      title: t('workflow.confirmDelete'),
+      content: t('workflow.deleteConfirmation'),
+      okText: t('workflow.confirmDelete'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
           // 模拟删除API调用
           await new Promise(resolve => setTimeout(resolve, 1000));
           setWorkflows(prev => prev.filter(w => w.id !== id));
-          message.success('工作流删除成功');
+          message.success(t('workflow.deleteSuccess'));
           loadStats();
         } catch {
-          message.error('删除失败');
+          message.error(t('workflow.deleteFailed'));
         }
       },
     });
@@ -363,10 +374,10 @@ const WorkflowManagementPage = () => {
 
   const handleDeployWorkflow = async (id: number) => {
     modal.confirm({
-      title: '确认部署',
-      content: '部署后工作流将变为激活状态，可以创建新的流程实例。确定要部署吗？',
-      okText: '确定部署',
-      cancelText: '取消',
+      title: t('workflow.confirmDeploy'),
+      content: t('workflow.deployConfirmation'),
+      okText: t('workflow.confirmDeploy'),
+      cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
           // 模拟部署API调用
@@ -374,10 +385,10 @@ const WorkflowManagementPage = () => {
           setWorkflows(prev =>
             prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w))
           );
-          message.success('工作流部署成功');
+          message.success(t('workflow.deploySuccess'));
           loadStats();
         } catch {
-          message.error('部署失败');
+          message.error(t('workflow.deployFailed'));
         }
       },
     });
@@ -390,20 +401,20 @@ const WorkflowManagementPage = () => {
       const newWorkflow: Workflow = {
         ...workflow,
         id: Date.now(), // 临时ID
-        name: `${workflow.name} - 副本`,
+        name: `${workflow.name} - ${t('workflow.copySuffix')}`,
         status: 'draft',
         version: '1.0.0',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         instances_count: 0,
         running_instances: 0,
-        created_by: '当前用户',
+        created_by: t('workflow.currentUser'),
       };
       setWorkflows(prev => [newWorkflow, ...prev]);
-      message.success(`工作流 "${workflow.name}" 复制成功`);
+      message.success(t('workflow.copySuccess', { name: workflow.name }));
       loadStats();
     } catch {
-      message.error('复制失败');
+      message.error(t('workflow.copyFailed'));
     }
   };
 
@@ -424,15 +435,16 @@ const WorkflowManagementPage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `workflow_${workflow.name}_${workflow.version}.json`;
+      a.download = `workflow_batch_export_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      message.success(`工作流 "${workflow.name}" 导出成功`);
+      message.success(t('workflow.batchExportSuccess', { count: selectedRowKeys.length }));
+      setSelectedRowKeys([]);
     } catch {
-      message.error('导出失败');
+      message.error(t('workflow.batchExportFailed'));
     }
   };
 
@@ -449,7 +461,7 @@ const WorkflowManagementPage = () => {
         const importData = JSON.parse(text);
 
         if (!importData.workflow) {
-          throw new Error('无效的工作流文件');
+          throw new Error(t('workflow.invalidWorkflowFile'));
         }
 
         const newWorkflow: Workflow = {
@@ -460,14 +472,14 @@ const WorkflowManagementPage = () => {
           status: 'draft',
           instances_count: 0,
           running_instances: 0,
-          created_by: '当前用户',
+          created_by: t('workflow.currentUser'),
         };
 
         setWorkflows(prev => [newWorkflow, ...prev]);
-        message.success(`工作流 "${newWorkflow.name}" 导入成功`);
+        message.success(t('workflow.importSuccess', { name: newWorkflow.name }));
         loadStats();
       } catch (error) {
-        message.error('导入失败：' + (error as Error).message);
+        message.error(t('workflow.importFailed') + (error as Error).message);
       }
     };
     input.click();
@@ -475,21 +487,21 @@ const WorkflowManagementPage = () => {
 
   const handleStopWorkflow = async (id: number) => {
     modal.confirm({
-      title: '确认停用',
-      content: '停用工作流后将无法创建新的流程实例，但已有实例会继续运行。确定要停用吗？',
-      okText: '确定停用',
+      title: t('workflow.confirmDeactivate'),
+      content: t('workflow.deactivateConfirmation'),
+      okText: t('workflow.confirmDeactivate'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
           await new Promise(resolve => setTimeout(resolve, 1000));
           setWorkflows(prev =>
             prev.map(w => (w.id === id ? { ...w, status: 'inactive' as const } : w))
           );
-          message.success('工作流已停用');
+          message.success(t('workflow.deactivateSuccess'));
           loadStats();
         } catch {
-          message.error('停用失败');
+          message.error(t('workflow.deactivateFailed'));
         }
       },
     });
@@ -499,34 +511,34 @@ const WorkflowManagementPage = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setWorkflows(prev => prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w)));
-      message.success('工作流已激活');
+      message.success(t('workflow.activateSuccess'));
       loadStats();
     } catch {
-      message.error('激活失败');
+      message.error(t('workflow.activateFailed'));
     }
   };
 
   const handleBatchDelete = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要删除的工作流');
+      message.warning(t('workflow.selectWorkflowsToDelete'));
       return;
     }
 
     modal.confirm({
-      title: '批量删除确认',
-      content: `确定要删除选中的 ${selectedRowKeys.length} 个工作流吗？此操作不可恢复。`,
-      okText: '确定删除',
+      title: t('workflow.batchDeleteConfirmation'),
+      content: t('workflow.batchDeleteContent', { count: selectedRowKeys.length }),
+      okText: t('workflow.batchDeleteOk'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
           await new Promise(resolve => setTimeout(resolve, 1000));
           setWorkflows(prev => prev.filter(w => !selectedRowKeys.includes(w.id)));
           setSelectedRowKeys([]);
-          message.success(`成功删除 ${selectedRowKeys.length} 个工作流`);
+          message.success(t('workflow.batchDeleteSuccess', { count: selectedRowKeys.length }));
           loadStats();
         } catch {
-          message.error('批量删除失败');
+          message.error(t('workflow.batchDeleteFailed'));
         }
       },
     });
@@ -534,15 +546,15 @@ const WorkflowManagementPage = () => {
 
   const handleBatchActivate = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要激活的工作流');
+      message.warning(t('workflow.selectWorkflowsToActivate'));
       return;
     }
 
     modal.confirm({
-      title: '批量激活确认',
-      content: `确定要激活选中的 ${selectedRowKeys.length} 个工作流吗？`,
-      okText: '确定激活',
-      cancelText: '取消',
+      title: t('workflow.batchActivateConfirmation'),
+      content: t('workflow.batchActivateContent', { count: selectedRowKeys.length }),
+      okText: t('workflow.batchActivateOk'),
+      cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -552,10 +564,10 @@ const WorkflowManagementPage = () => {
             )
           );
           setSelectedRowKeys([]);
-          message.success(`成功激活 ${selectedRowKeys.length} 个工作流`);
+          message.success(t('workflow.batchActivateSuccess', { count: selectedRowKeys.length }));
           loadStats();
         } catch {
-          message.error('批量激活失败');
+          message.error(t('workflow.batchActivateFailed'));
         }
       },
     });
@@ -563,16 +575,16 @@ const WorkflowManagementPage = () => {
 
   const handleBatchStop = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要停用的工作流');
+      message.warning(t('workflow.selectWorkflowsToDeactivate'));
       return;
     }
 
     modal.confirm({
-      title: '批量停用确认',
-      content: `确定要停用选中的 ${selectedRowKeys.length} 个工作流吗？`,
-      okText: '确定停用',
+      title: t('workflow.batchDeactivateConfirmation'),
+      content: t('workflow.batchDeactivateContent', { count: selectedRowKeys.length }),
+      okText: t('workflow.batchDeactivateOk'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -582,10 +594,10 @@ const WorkflowManagementPage = () => {
             )
           );
           setSelectedRowKeys([]);
-          message.success(`成功停用 ${selectedRowKeys.length} 个工作流`);
+          message.success(t('workflow.batchDeactivateSuccess', { count: selectedRowKeys.length }));
           loadStats();
         } catch {
-          message.error('批量停用失败');
+          message.error(t('workflow.batchDeactivateFailed'));
         }
       },
     });
@@ -593,7 +605,7 @@ const WorkflowManagementPage = () => {
 
   const handleBatchExport = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要导出的工作流');
+      message.warning(t('workflow.selectWorkflowsToExport'));
       return;
     }
 
@@ -612,16 +624,16 @@ const WorkflowManagementPage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `workflows_batch_export_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `workflow_batch_export_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      message.success(`成功导出 ${selectedRowKeys.length} 个工作流`);
+      message.success(t('workflow.batchExportSuccess', { count: selectedRowKeys.length }));
       setSelectedRowKeys([]);
     } catch {
-      message.error('批量导出失败');
+      message.error(t('workflow.batchExportFailed'));
     }
   };
 
@@ -637,17 +649,17 @@ const WorkflowManagementPage = () => {
 
   const getStatusText = (status: string) => {
     const texts = {
-      draft: '草稿',
-      active: '激活',
-      inactive: '停用',
-      archived: '归档',
+      draft: t('workflow.draft'),
+      active: t('workflow.activated'),
+      inactive: t('workflow.deactivated'),
+      archived: t('workflow.archived'),
     };
     return texts[status as keyof typeof texts] || status;
   };
 
   const columns = [
     {
-      title: '工作流名称',
+      title: t('workflow.name'),
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: Workflow) => (
@@ -658,70 +670,70 @@ const WorkflowManagementPage = () => {
       ),
     },
     {
-      title: '分类',
+      title: t('workflow.category'),
       dataIndex: 'category',
       key: 'category',
       width: 120,
       render: (category: string) => <Tag color='blue'>{category}</Tag>,
     },
     {
-      title: '版本',
+      title: t('workflow.version'),
       dataIndex: 'version',
       key: 'version',
       width: 100,
       render: (version: string) => <span className='font-mono text-sm'>{version}</span>,
     },
     {
-      title: '状态',
+      title: t('workflow.status'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>,
     },
     {
-      title: 'BPMN状态',
+      title: t('workflow.bpmnStatus'),
       key: 'bpmn_status',
       width: 120,
       render: (record: Workflow) => (
         <Tag color={record.bpmn_xml ? 'green' : 'orange'}>
-          {record.bpmn_xml ? '已定义' : '未定义'}
+          {record.bpmn_xml ? t('workflow.defined') : t('workflow.undefined')}
         </Tag>
       ),
     },
     {
-      title: '实例统计',
+      title: t('workflow.instanceStats'),
       key: 'instances',
       width: 150,
       render: (record: Workflow) => (
         <div className='text-sm'>
-          <div>总数: {record.instances_count}</div>
-          <div>运行中: {record.running_instances}</div>
+          <div>{t('workflow.total')}: {record.instances_count}</div>
+          <div>{t('workflow.running')}: {record.running_instances}</div>
         </div>
       ),
     },
     {
-      title: '创建时间',
+      title: t('workflow.createdAt'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{new Date(date).toLocaleDateString('zh-CN')}</div>
+        <div className='text-sm'>{new Date(date).toLocaleDateString()}</div>
       ),
     },
     {
-      title: '操作',
+      title: t('workflow.actions'),
       key: 'action',
       width: 200,
       render: (record: Workflow) => (
         <Space>
-          <Tooltip title='设计工作流'>
+          <Tooltip title={t('workflow.designWorkflow')}>
             <Button
               type='text'
               icon={<GitBranch className='w-4 h-4' />}
               onClick={() => handleDesignWorkflow(record)}
             />
           </Tooltip>
-          <Tooltip title='查看详情'>
+          <Tooltip title={t('workflow.viewDetails')}>
             <Button
               type='text'
               icon={<Eye className='w-4 h-4' />}
@@ -733,20 +745,20 @@ const WorkflowManagementPage = () => {
               items: [
                 {
                   key: 'edit',
-                  label: '编辑',
+                  label: t('workflow.edit'),
                   icon: <Edit className='w-4 h-4' />,
                   onClick: () => handleEditWorkflow(record),
                 },
                 {
                   key: 'deploy',
-                  label: record.status === 'draft' ? '部署' : '重新部署',
+                  label: record.status === 'draft' ? t('workflow.deploy') : t('workflow.redeploy'),
                   icon: <PlayCircle className='w-4 h-4' />,
                   onClick: () => handleDeployWorkflow(record.id),
                   disabled: record.status === 'active',
                 },
                 {
                   key: 'activate',
-                  label: '激活',
+                  label: t('workflow.activate'),
                   icon: <CheckCircle className='w-4 h-4' />,
                   onClick: () => handleActivateWorkflow(record.id),
                   style: {
@@ -755,7 +767,7 @@ const WorkflowManagementPage = () => {
                 },
                 {
                   key: 'stop',
-                  label: '停用',
+                  label: t('workflow.deactivate'),
                   icon: <PauseCircle className='w-4 h-4' />,
                   onClick: () => handleStopWorkflow(record.id),
                   style: {
@@ -767,33 +779,33 @@ const WorkflowManagementPage = () => {
                 },
                 {
                   key: 'copy',
-                  label: '复制',
+                  label: t('workflow.copy'),
                   icon: <Copy className='w-4 h-4' />,
                   onClick: () => handleCopyWorkflow(record),
                 },
                 {
                   key: 'export',
-                  label: '导出',
+                  label: t('workflow.export'),
                   icon: <Download className='w-4 h-4' />,
                   onClick: () => handleExportWorkflow(record),
                 },
                 {
                   key: 'instances',
-                  label: '查看实例',
+                  label: t('workflow.viewInstances'),
                   icon: <BarChart3 className='w-4 h-4' />,
                   onClick: () =>
                     window.open(`/workflow/instances?workflowId=${record.id}`, '_blank'),
                 },
                 {
                   key: 'versions',
-                  label: '版本管理',
+                  label: t('workflow.versionManagement'),
                   icon: <GitBranch className='w-4 h-4' />,
                   onClick: () =>
                     window.open(`/workflow/versions?workflowId=${record.id}`, '_blank'),
                 },
                 {
                   key: 'viewBPMN',
-                  label: '查看BPMN',
+                  label: t('workflow.viewBPMN'),
                   icon: <Code className='w-4 h-4' />,
                   onClick: () => handleViewBPMN(record),
                   disabled: !record.bpmn_xml,
@@ -803,7 +815,7 @@ const WorkflowManagementPage = () => {
                 },
                 {
                   key: 'delete',
-                  label: '删除',
+                  label: t('workflow.delete'),
                   icon: <Trash2 className='w-4 h-4' />,
                   danger: true,
                   onClick: () => handleDeleteWorkflow(record.id),
@@ -834,37 +846,40 @@ const WorkflowManagementPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className='enterprise-card'>
             <Statistic
-              title='总工作流'
+              title={t('workflow.totalWorkflows')}
               value={stats.total}
               prefix={<FileText className='w-5 h-5' />}
               valueStyle={{ color: '#1890ff' }}
             />
             <div className='mt-2 text-xs text-gray-500'>
-              激活 {stats.active} | 草稿 {stats.draft} | 停用 {stats.inactive}
+              {t('workflow.active')} {stats.active} | {t('workflow.draft')} {stats.draft} |{' '}
+              {t('workflow.inactive')} {stats.inactive}
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className='enterprise-card'>
             <Statistic
-              title='运行中实例'
+              title={t('workflow.runningInstances')}
               value={stats.running}
               prefix={<Clock className='w-5 h-5' />}
               valueStyle={{ color: '#faad14' }}
             />
-            <div className='mt-2 text-xs text-gray-500'>今日新增 {stats.todayInstances} 个实例</div>
+            <div className='mt-2 text-xs text-gray-500'>
+              {t('workflow.todayNewInstances', { count: stats.todayInstances })}
+            </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className='enterprise-card'>
             <Statistic
-              title='已完成实例'
+              title={t('workflow.completedInstances')}
               value={stats.completed}
               prefix={<CheckCircle className='w-5 h-5' />}
               valueStyle={{ color: '#52c41a' }}
             />
             <div className='mt-2 text-xs text-gray-500'>
-              完成率{' '}
+              {t('workflow.completionRate')}{' '}
               {stats.total > 0
                 ? Math.round((stats.completed / (stats.completed + stats.running)) * 100)
                 : 0}
@@ -875,14 +890,14 @@ const WorkflowManagementPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className='enterprise-card'>
             <Statistic
-              title='平均执行时间'
+              title={t('workflow.avgExecutionTime')}
               value={stats.avgExecutionTime}
-              suffix='分钟'
+              suffix={t('workflow.minutes')}
               prefix={<BarChart3 className='w-5 h-5' />}
               valueStyle={{ color: '#722ed1' }}
             />
             <div className='mt-2 text-xs text-gray-500'>
-              {stats.avgExecutionTime < 60 ? '执行效率良好' : '可优化空间'}
+              {stats.avgExecutionTime < 60 ? t('workflow.goodEfficiency') : t('workflow.optimizableSpace')}
             </div>
           </Card>
         </Col>
@@ -893,7 +908,7 @@ const WorkflowManagementPage = () => {
         <Row gutter={[16, 16]} align='middle'>
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder='搜索工作流...'
+              placeholder={t('workflow.searchPlaceholder')}
               prefix={<Search className='w-4 h-4' />}
               value={filters.keyword}
               onChange={e => setFilters(prev => ({ ...prev, keyword: e.target.value }))}
@@ -902,29 +917,29 @@ const WorkflowManagementPage = () => {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='状态筛选'
+              placeholder={t('workflow.statusFilter')}
               value={filters.status}
               onChange={value => setFilters(prev => ({ ...prev, status: value }))}
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='draft'>草稿</Option>
-              <Option value='active'>激活</Option>
-              <Option value='inactive'>停用</Option>
-              <Option value='archived'>归档</Option>
+              <Option value='draft'>{t('workflow.draft')}</Option>
+              <Option value='active'>{t('workflow.activated')}</Option>
+              <Option value='inactive'>{t('workflow.deactivated')}</Option>
+              <Option value='archived'>{t('workflow.archived')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='分类筛选'
+              placeholder={t('workflow.categoryFilter')}
               value={filters.category}
               onChange={value => setFilters(prev => ({ ...prev, category: value }))}
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='审批流程'>审批流程</Option>
-              <Option value='事件处理'>事件处理</Option>
-              <Option value='变更管理'>变更管理</Option>
+              <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
+              <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
+              <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
@@ -934,19 +949,19 @@ const WorkflowManagementPage = () => {
                   items: [
                     {
                       key: 'ticket_approval',
-                      label: '工单审批流程',
+                      label: t('workflow.ticketApprovalProcess'),
                       icon: <GitBranch className='w-4 h-4' />,
                       onClick: () => router.push('/workflow/ticket-approval'),
                     },
                     {
                       key: 'general',
-                      label: '通用工作流',
+                      label: t('workflow.generalWorkflow'),
                       icon: <GitBranch className='w-4 h-4' />,
                       onClick: handleCreateWorkflow,
                     },
                     {
                       key: 'bpmn',
-                      label: 'BPMN工作流',
+                      label: t('workflow.bpmnWorkflow'),
                       icon: <Code className='w-4 h-4' />,
                       onClick: () => {
                         setEditingWorkflow(null);
@@ -958,14 +973,14 @@ const WorkflowManagementPage = () => {
                 trigger={['click']}
               >
                 <Button type='primary' icon={<Plus className='w-4 h-4' />}>
-                  新建工作流 <MoreHorizontal className='w-3 h-3 ml-1' />
+                  {t('workflow.newWorkflow')} <MoreHorizontal className='w-3 h-3 ml-1' />
                 </Button>
               </Dropdown>
               <Button icon={<Upload className='w-4 h-4' />} onClick={handleImportWorkflow}>
-                导入
+                {t('workflow.import')}
               </Button>
               <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadWorkflows}>
-                刷新
+                {t('workflow.refresh')}
               </Button>
             </Space>
           </Col>
@@ -978,9 +993,9 @@ const WorkflowManagementPage = () => {
           <Alert
             message={
               <Space>
-                <span>已选择 {selectedRowKeys.length} 个工作流</span>
+                <span>{t('workflow.selectedWorkflows', { count: selectedRowKeys.length })}</span>
                 <Button size='small' onClick={() => setSelectedRowKeys([])}>
-                  取消选择
+                  {t('workflow.cancelSelection')}
                 </Button>
               </Space>
             }
@@ -988,16 +1003,16 @@ const WorkflowManagementPage = () => {
             action={
               <Space>
                 <Button size='small' type='primary' onClick={handleBatchActivate}>
-                  批量激活
+                  {t('workflow.batchActivate')}
                 </Button>
                 <Button size='small' onClick={handleBatchStop}>
-                  批量停用
+                  {t('workflow.batchDeactivate')}
                 </Button>
                 <Button size='small' onClick={handleBatchExport}>
-                  批量导出
+                  {t('workflow.batchExport')}
                 </Button>
                 <Button size='small' danger onClick={handleBatchDelete}>
-                  批量删除
+                  {t('workflow.batchDelete')}
                 </Button>
               </Space>
             }
@@ -1023,7 +1038,7 @@ const WorkflowManagementPage = () => {
               Table.SELECTION_NONE,
               {
                 key: 'select-active',
-                text: '选择激活的',
+                text: t('workflow.selectActive'),
                 onSelect: () => {
                   const activeKeys = filteredWorkflows
                     .filter(w => w.status === 'active')
@@ -1033,7 +1048,7 @@ const WorkflowManagementPage = () => {
               },
               {
                 key: 'select-draft',
-                text: '选择草稿',
+                text: t('workflow.selectDraft'),
                 onSelect: () => {
                   const draftKeys = filteredWorkflows
                     .filter(w => w.status === 'draft')
@@ -1046,7 +1061,7 @@ const WorkflowManagementPage = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: (total, range) => t('workflow.showTotal', { start: range[0], end: range[1], total }),
           }}
           scroll={{ x: 1200 }}
         />
@@ -1054,7 +1069,7 @@ const WorkflowManagementPage = () => {
 
       {/* 创建/编辑工作流模态框 */}
       <Modal
-        title={editingWorkflow ? '编辑工作流' : '新建工作流'}
+        title={editingWorkflow ? t('workflow.editWorkflow') : t('workflow.newWorkflow')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -1066,46 +1081,46 @@ const WorkflowManagementPage = () => {
           initialValues={editingWorkflow || {}}
           onFinish={async () => {
             try {
-              message.success(editingWorkflow ? '工作流更新成功' : '工作流创建成功');
+              message.success(editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess'));
               setModalVisible(false);
               loadWorkflows();
             } catch {
-              message.error('操作失败');
+              message.error(t('workflow.operationFailed'));
             }
           }}
         >
           <Form.Item
             name='name'
-            label='工作流名称'
-            rules={[{ required: true, message: '请输入工作流名称' }]}
+            label={t('workflow.workflowName')}
+            rules={[{ required: true, message: t('workflow.workflowNameRequired') }]}
           >
-            <Input placeholder='请输入工作流名称' />
+            <Input placeholder={t('workflow.workflowNamePlaceholder')} />
           </Form.Item>
 
-          <Form.Item name='description' label='描述'>
-            <Input.TextArea rows={3} placeholder='请输入工作流描述' />
+          <Form.Item name='description' label={t('workflow.workflowDescription')}>
+            <Input.TextArea rows={3} placeholder={t('workflow.workflowDescriptionPlaceholder')} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name='category'
-                label='分类'
-                rules={[{ required: true, message: '请选择分类' }]}
+                label={t('workflow.category')}
+                rules={[{ required: true, message: t('workflow.categoryRequired') }]}
               >
-                <Select placeholder='选择分类'>
-                  <Option value='审批流程'>审批流程</Option>
-                  <Option value='事件处理'>事件处理</Option>
-                  <Option value='变更管理'>变更管理</Option>
+                <Select placeholder={t('workflow.categoryPlaceholder')}>
+                  <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
+                  <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
+                  <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='status' label='状态'>
-                <Select placeholder='选择状态'>
-                  <Option value='draft'>草稿</Option>
-                  <Option value='active'>激活</Option>
-                  <Option value='inactive'>停用</Option>
+              <Form.Item name='status' label={t('workflow.status')}>
+                <Select placeholder={t('workflow.statusPlaceholder')}>
+                  <Option value='draft'>{t('workflow.draft')}</Option>
+                  <Option value='active'>{t('workflow.activated')}</Option>
+                  <Option value='inactive'>{t('workflow.deactivated')}</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -1114,9 +1129,9 @@ const WorkflowManagementPage = () => {
           <Form.Item>
             <Space>
               <Button type='primary' htmlType='submit'>
-                {editingWorkflow ? '更新' : '创建'}
+                {editingWorkflow ? t('workflow.update') : t('workflow.create')}
               </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
+              <Button onClick={() => setModalVisible(false)}>{t('workflow.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -1124,7 +1139,7 @@ const WorkflowManagementPage = () => {
 
       {/* 工作流设计器 */}
       <Modal
-        title={`BPMN工作流设计器 - ${editingWorkflow?.name || '新建工作流'}`}
+        title={`${t('workflow.bpmnWorkflowDesigner')} - ${editingWorkflow?.name || t('workflow.newWorkflow')}`}
         open={designerVisible}
         onCancel={() => setDesignerVisible(false)}
         footer={null}
@@ -1132,8 +1147,8 @@ const WorkflowManagementPage = () => {
         style={{ top: 10 }}
         destroyOnHidden
       >
-        <EnhancedBPMNDesigner
-          initialXML={editingWorkflow?.bpmn_xml || ''}
+        <BPMNDesigner
+          xml={editingWorkflow?.bpmn_xml || ''}
           onSave={async (xml: string) => {
             try {
               if (editingWorkflow) {
@@ -1141,21 +1156,21 @@ const WorkflowManagementPage = () => {
                 await WorkflowAPI.updateWorkflow(editingWorkflow.id, {
                   bpmn_xml: xml,
                 });
-                message.success('工作流保存成功');
+                message.success(t('workflow.saveSuccess'));
               } else {
                 // 创建新工作流
                 await WorkflowAPI.createWorkflow({
-                  name: '新建BPMN工作流',
-                  description: '通过BPMN设计器创建的工作流',
-                  category: '审批流程',
+                  name: t('workflow.newBPMNWorkflow'),
+                  description: t('workflow.bpmnWorkflowDescription'),
+                  category: t('workflow.approvalProcess'),
                   bpmn_xml: xml,
                 });
-                message.success('工作流创建成功');
+                message.success(t('workflow.createWorkflowSuccess'));
               }
               setDesignerVisible(false);
               loadWorkflows();
             } catch (error) {
-              message.error('保存失败: ' + (error as Error).message);
+              message.error(t('workflow.saveFailed') + (error as Error).message);
             }
           }}
           onDeploy={async (xml: string) => {
@@ -1167,22 +1182,22 @@ const WorkflowManagementPage = () => {
                 });
                 // 然后部署工作流
                 await WorkflowAPI.deployWorkflow(editingWorkflow.id);
-                message.success('工作流部署成功');
+                message.success(t('workflow.deploySuccess'));
               } else {
                 // 创建并部署新工作流
                 const newWorkflow = await WorkflowAPI.createWorkflow({
-                  name: '新建BPMN工作流',
-                  description: '通过BPMN设计器创建的工作流',
-                  category: '审批流程',
+                  name: t('workflow.newBPMNWorkflow'),
+                  description: t('workflow.bpmnWorkflowDescription'),
+                  category: t('workflow.approvalProcess'),
                   bpmn_xml: xml,
                 });
                 await WorkflowAPI.deployWorkflow(newWorkflow.id);
-                message.success('工作流创建并部署成功');
+                message.success(t('workflow.createAndDeploySuccess'));
               }
               setDesignerVisible(false);
               loadWorkflows();
             } catch (error) {
-              message.error('部署失败: ' + (error as Error).message);
+              message.error(t('workflow.deployFailed') + (error as Error).message);
             }
           }}
           height={700}

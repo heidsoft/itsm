@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
@@ -219,6 +220,26 @@ func (tu *TicketUpdate) ClearCategoryID() *TicketUpdate {
 	return tu
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (tu *TicketUpdate) SetDepartmentID(i int) *TicketUpdate {
+	tu.mutation.SetDepartmentID(i)
+	return tu
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableDepartmentID(i *int) *TicketUpdate {
+	if i != nil {
+		tu.SetDepartmentID(*i)
+	}
+	return tu
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (tu *TicketUpdate) ClearDepartmentID() *TicketUpdate {
+	tu.mutation.ClearDepartmentID()
+	return tu
+}
+
 // SetParentTicketID sets the "parent_ticket_id" field.
 func (tu *TicketUpdate) SetParentTicketID(i int) *TicketUpdate {
 	tu.mutation.SetParentTicketID(i)
@@ -369,6 +390,11 @@ func (tu *TicketUpdate) SetCategory(t *TicketCategory) *TicketUpdate {
 	return tu.SetCategoryID(t.ID)
 }
 
+// SetDepartment sets the "department" edge to the Department entity.
+func (tu *TicketUpdate) SetDepartment(d *Department) *TicketUpdate {
+	return tu.SetDepartmentID(d.ID)
+}
+
 // AddTagIDs adds the "tags" edge to the TicketTag entity by IDs.
 func (tu *TicketUpdate) AddTagIDs(ids ...int) *TicketUpdate {
 	tu.mutation.AddTagIDs(ids...)
@@ -453,6 +479,12 @@ func (tu *TicketUpdate) ClearTemplate() *TicketUpdate {
 // ClearCategory clears the "category" edge to the TicketCategory entity.
 func (tu *TicketUpdate) ClearCategory() *TicketUpdate {
 	tu.mutation.ClearCategory()
+	return tu
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (tu *TicketUpdate) ClearDepartment() *TicketUpdate {
+	tu.mutation.ClearDepartment()
 	return tu
 }
 
@@ -745,6 +777,35 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.DepartmentTable,
+			Columns: []string{ticket.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.DepartmentTable,
+			Columns: []string{ticket.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1195,6 +1256,26 @@ func (tuo *TicketUpdateOne) ClearCategoryID() *TicketUpdateOne {
 	return tuo
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (tuo *TicketUpdateOne) SetDepartmentID(i int) *TicketUpdateOne {
+	tuo.mutation.SetDepartmentID(i)
+	return tuo
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableDepartmentID(i *int) *TicketUpdateOne {
+	if i != nil {
+		tuo.SetDepartmentID(*i)
+	}
+	return tuo
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (tuo *TicketUpdateOne) ClearDepartmentID() *TicketUpdateOne {
+	tuo.mutation.ClearDepartmentID()
+	return tuo
+}
+
 // SetParentTicketID sets the "parent_ticket_id" field.
 func (tuo *TicketUpdateOne) SetParentTicketID(i int) *TicketUpdateOne {
 	tuo.mutation.SetParentTicketID(i)
@@ -1345,6 +1426,11 @@ func (tuo *TicketUpdateOne) SetCategory(t *TicketCategory) *TicketUpdateOne {
 	return tuo.SetCategoryID(t.ID)
 }
 
+// SetDepartment sets the "department" edge to the Department entity.
+func (tuo *TicketUpdateOne) SetDepartment(d *Department) *TicketUpdateOne {
+	return tuo.SetDepartmentID(d.ID)
+}
+
 // AddTagIDs adds the "tags" edge to the TicketTag entity by IDs.
 func (tuo *TicketUpdateOne) AddTagIDs(ids ...int) *TicketUpdateOne {
 	tuo.mutation.AddTagIDs(ids...)
@@ -1429,6 +1515,12 @@ func (tuo *TicketUpdateOne) ClearTemplate() *TicketUpdateOne {
 // ClearCategory clears the "category" edge to the TicketCategory entity.
 func (tuo *TicketUpdateOne) ClearCategory() *TicketUpdateOne {
 	tuo.mutation.ClearCategory()
+	return tuo
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (tuo *TicketUpdateOne) ClearDepartment() *TicketUpdateOne {
+	tuo.mutation.ClearDepartment()
 	return tuo
 }
 
@@ -1751,6 +1843,35 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.DepartmentTable,
+			Columns: []string{ticket.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.DepartmentTable,
+			Columns: []string{ticket.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

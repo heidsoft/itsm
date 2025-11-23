@@ -105,6 +105,11 @@ func CategoryID(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCategoryID, v))
 }
 
+// DepartmentID applies equality check predicate on the "department_id" field. It's identical to DepartmentIDEQ.
+func DepartmentID(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldDepartmentID, v))
+}
+
 // ParentTicketID applies equality check predicate on the "parent_ticket_id" field. It's identical to ParentTicketIDEQ.
 func ParentTicketID(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldParentTicketID, v))
@@ -670,6 +675,36 @@ func CategoryIDNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldCategoryID))
 }
 
+// DepartmentIDEQ applies the EQ predicate on the "department_id" field.
+func DepartmentIDEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDNEQ applies the NEQ predicate on the "department_id" field.
+func DepartmentIDNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDIn applies the In predicate on the "department_id" field.
+func DepartmentIDIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDNotIn applies the NotIn predicate on the "department_id" field.
+func DepartmentIDNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDIsNil applies the IsNil predicate on the "department_id" field.
+func DepartmentIDIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldDepartmentID))
+}
+
+// DepartmentIDNotNil applies the NotNil predicate on the "department_id" field.
+func DepartmentIDNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldDepartmentID))
+}
+
 // ParentTicketIDEQ applies the EQ predicate on the "parent_ticket_id" field.
 func ParentTicketIDEQ(v int) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldParentTicketID, v))
@@ -1048,6 +1083,29 @@ func HasCategory() predicate.Ticket {
 func HasCategoryWith(preds ...predicate.TicketCategory) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newCategoryStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDepartment applies the HasEdge predicate on the "department" edge.
+func HasDepartment() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
+func HasDepartmentWith(preds ...predicate.Department) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newDepartmentStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

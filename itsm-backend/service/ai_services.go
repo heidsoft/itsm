@@ -13,11 +13,13 @@ func SimilarIncidents(ctx context.Context, vectors *VectorStore, embedder Embedd
 	}
 	vec, err := embedder.Embed(query)
 	if err != nil {
-		return nil, err
+		// Embedding failed
+		return []map[string]any{}, nil
 	}
 	rows, err := vectors.SearchTopKByType(ctx, tenantID, "incident", vec, k)
 	if err != nil {
-		return nil, err
+		// 如果向量搜索失败（例如pgvector扩展未安装），降级为空结果
+		return []map[string]any{}, nil
 	}
 	defer rows.Close()
 	out := []map[string]any{}

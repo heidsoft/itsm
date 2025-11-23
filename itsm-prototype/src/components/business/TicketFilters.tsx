@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Select, Input, DatePicker, Button, Space, Row, Col } from 'antd';
+import { Card, Select, Input, DatePicker, Button, Space, Row, Col, Skeleton } from 'antd';
 import {
   SearchOutlined,
   ReloadOutlined,
@@ -40,13 +40,41 @@ const DEFAULT_VALUE: TicketFilterState = {
   sortBy: 'createdAt_desc',
 };
 
+const TicketFiltersSkeleton: React.FC = () => (
+    <Card className="mb-4" styles={{ body: { padding: '16px' } }}>
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Row gutter={[12, 12]} align="middle">
+                <Col xs={24} sm={24} md={8} lg={6}>
+                    <Skeleton.Input active style={{ width: '100%' }} />
+                </Col>
+                <Col xs={12} sm={8} md={4} lg={3}>
+                    <Skeleton.Input active style={{ width: '100%' }} />
+                </Col>
+                <Col xs={12} sm={8} md={4} lg={3}>
+                    <Skeleton.Input active style={{ width: '100%' }} />
+                </Col>
+                <Col xs={24} sm={12} md={6} lg={5}>
+                    <Skeleton.Input active style={{ width: '100%' }} />
+                </Col>
+                <Col xs={12} sm={8} md={4} lg={3}>
+                    <Skeleton.Input active style={{ width: '100%' }} />
+                </Col>
+                <Col xs={12} sm={8} md={6} lg={4}>
+                    <Skeleton.Button active />
+                </Col>
+            </Row>
+        </Space>
+    </Card>
+);
+
+
 // 组件策略：使用Ant Design组件提升UI质量
-function TicketFilters({ 
-  filters = DEFAULT_VALUE, 
-  onFilterChange, 
-  onSearch, 
+function TicketFilters({
+  filters = DEFAULT_VALUE,
+  onFilterChange,
+  onSearch,
   onRefresh,
-  loading = false 
+  loading = false
 }: Props) {
   const [localKeyword, setLocalKeyword] = React.useState(filters?.keyword || '');
 
@@ -101,6 +129,10 @@ function TicketFilters({
       ? [dayjs(filters.dateStart), dayjs(filters.dateEnd)]
       : null;
 
+    if (loading) {
+        return <TicketFiltersSkeleton />;
+    }
+
   return (
     <Card
       className="mb-4"
@@ -119,6 +151,7 @@ function TicketFilters({
               onPressEnter={handleSearch}
               allowClear
               data-testid="filter-keyword-input"
+              disabled={loading}
             />
           </Col>
 
@@ -137,6 +170,7 @@ function TicketFilters({
                 { label: '已解决', value: 'resolved' },
                 { label: '已关闭', value: 'closed' },
               ]}
+              disabled={loading}
             />
           </Col>
 
@@ -155,6 +189,7 @@ function TicketFilters({
                 { label: 'P3-中', value: 'p3' },
                 { label: 'P4-低', value: 'p4' },
               ]}
+              disabled={loading}
             />
           </Col>
 
@@ -167,6 +202,7 @@ function TicketFilters({
               format="YYYY-MM-DD"
               placeholder={['开始日期', '结束日期']}
               data-testid="filter-date-range"
+              disabled={loading}
             />
           </Col>
 
@@ -184,6 +220,7 @@ function TicketFilters({
                 { label: '优先级↓', value: 'priority_desc' },
                 { label: '优先级↑', value: 'priority_asc' },
               ]}
+              disabled={loading}
             />
           </Col>
 
@@ -196,6 +233,7 @@ function TicketFilters({
                 onClick={handleSearch}
                 loading={loading}
                 data-testid="filter-apply-btn"
+                disabled={loading}
               >
                 搜索
               </Button>
@@ -203,6 +241,7 @@ function TicketFilters({
                 icon={<ClearOutlined />}
                 onClick={handleReset}
                 data-testid="filter-reset-btn"
+                disabled={loading}
               >
                 重置
               </Button>
@@ -212,6 +251,7 @@ function TicketFilters({
                   onClick={onRefresh}
                   loading={loading}
                   data-testid="filter-refresh-btn"
+                  disabled={loading}
                 >
                   刷新
                 </Button>
@@ -226,3 +266,4 @@ function TicketFilters({
 
 export default TicketFilters;
 export { TicketFilters };
+

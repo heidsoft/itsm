@@ -1,4 +1,10 @@
 /* 企业级ITSM仪表盘样式 */
+.enterprise-dashboard-container {
+  /* 使用主题定义的布局背景色 */
+  background-color: #f8fafc; /* slate-50 from antdTheme.token.colorBgLayout */
+  padding: 24px; /* Consistent with antdTheme.token.paddingLG */
+  scroll-behavior: smooth;
+}
 
 /* KPI卡片动画 */
 .enterprise-kpi-card {
@@ -52,14 +58,13 @@
   transform: translateY(-6px) scale(1.02);
 }
 
-/* 平滑滚动 */
-.enterprise-dashboard-container {
-  scroll-behavior: smooth;
-}
 
 /* Ant Design组件覆盖 */
 .enterprise-dashboard-container .ant-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px; /* Consistent with antdTheme.token.borderRadiusLG */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* Consistent with designSystem.boxShadow.md */
+  border: 1px solid #e2e8f0; /* Consistent with antdTheme.token.colorBorder */
 }
 
 .enterprise-dashboard-container .ant-tabs-tab {

@@ -50,6 +50,8 @@ type ProcessInstance struct {
 	ParentProcessInstanceID string `json:"parent_process_instance_id,omitempty"`
 	// 根流程实例ID
 	RootProcessInstanceID string `json:"root_process_instance_id,omitempty"`
+	// 流程引擎状态快照
+	StateSnapshot []uint8 `json:"state_snapshot,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -62,7 +64,7 @@ func (*ProcessInstance) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case processinstance.FieldVariables:
+		case processinstance.FieldVariables, processinstance.FieldStateSnapshot:
 			values[i] = new([]byte)
 		case processinstance.FieldID, processinstance.FieldTenantID:
 			values[i] = new(sql.NullInt64)
@@ -189,6 +191,14 @@ func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pi.RootProcessInstanceID = value.String
 			}
+		case processinstance.FieldStateSnapshot:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field state_snapshot", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &pi.StateSnapshot); err != nil {
+					return fmt.Errorf("unmarshal field state_snapshot: %w", err)
+				}
+			}
 		case processinstance.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -284,6 +294,9 @@ func (pi *ProcessInstance) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("root_process_instance_id=")
 	builder.WriteString(pi.RootProcessInstanceID)
+	builder.WriteString(", ")
+	builder.WriteString("state_snapshot=")
+	builder.WriteString(fmt.Sprintf("%v", pi.StateSnapshot))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(pi.CreatedAt.Format(time.ANSIC))

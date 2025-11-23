@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col } from 'antd';
+import { Card, Row, Col, Skeleton } from 'antd';
 import {
   FileTextOutlined,
   ClockCircleOutlined,
@@ -16,6 +16,7 @@ interface TicketStatsProps {
     resolved: number;
     highPriority: number;
   };
+  loading?: boolean;
 }
 
 interface StatCardProps {
@@ -53,7 +54,29 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, colo
 
 StatCard.displayName = 'StatCard';
 
-export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats }) => {
+const TicketStatsSkeleton: React.FC = () => (
+    <Row gutter={[12, 12]}>
+        {Array.from({ length: 4 }).map((_, index) => (
+            <Col key={index} xs={24} sm={12} md={6} lg={6} xl={6}>
+                <Card className='border-0 shadow-sm' styles={{ body: { padding: '16px' } }}>
+                    <div className='flex items-center justify-between'>
+                        <div>
+                            <Skeleton.Input active style={{ width: '80px', height: '16px' }} />
+                            <Skeleton.Input active style={{ width: '50px', height: '24px', marginTop: '8px' }} />
+                        </div>
+                        <Skeleton.Avatar active size='large' shape='square' />
+                    </div>
+                </Card>
+            </Col>
+        ))}
+    </Row>
+);
+
+export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats, loading }) => {
+    if (loading) {
+        return <TicketStatsSkeleton />;
+    }
+
   const statCards = [
     {
       title: '总工单数',

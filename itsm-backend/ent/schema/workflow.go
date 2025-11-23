@@ -36,6 +36,9 @@ func (Workflow) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),
+		field.Int("department_id").
+			Comment("部门ID").
+			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
@@ -51,5 +54,10 @@ func (Workflow) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("workflow_instances", WorkflowInstance.Type).
 			Comment("工作流实例"),
+		edge.From("department", Department.Type).
+			Ref("workflows").
+			Field("department_id").
+			Unique().
+			Comment("所属部门"),
 	}
 }

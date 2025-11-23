@@ -12,6 +12,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -311,6 +312,24 @@ func (piu *ProcessInstanceUpdate) ClearRootProcessInstanceID() *ProcessInstanceU
 	return piu
 }
 
+// SetStateSnapshot sets the "state_snapshot" field.
+func (piu *ProcessInstanceUpdate) SetStateSnapshot(u []uint8) *ProcessInstanceUpdate {
+	piu.mutation.SetStateSnapshot(u)
+	return piu
+}
+
+// AppendStateSnapshot appends u to the "state_snapshot" field.
+func (piu *ProcessInstanceUpdate) AppendStateSnapshot(u []uint8) *ProcessInstanceUpdate {
+	piu.mutation.AppendStateSnapshot(u)
+	return piu
+}
+
+// ClearStateSnapshot clears the value of the "state_snapshot" field.
+func (piu *ProcessInstanceUpdate) ClearStateSnapshot() *ProcessInstanceUpdate {
+	piu.mutation.ClearStateSnapshot()
+	return piu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (piu *ProcessInstanceUpdate) SetCreatedAt(t time.Time) *ProcessInstanceUpdate {
 	piu.mutation.SetCreatedAt(t)
@@ -489,6 +508,17 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 	}
 	if piu.mutation.RootProcessInstanceIDCleared() {
 		_spec.ClearField(processinstance.FieldRootProcessInstanceID, field.TypeString)
+	}
+	if value, ok := piu.mutation.StateSnapshot(); ok {
+		_spec.SetField(processinstance.FieldStateSnapshot, field.TypeJSON, value)
+	}
+	if value, ok := piu.mutation.AppendedStateSnapshot(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, processinstance.FieldStateSnapshot, value)
+		})
+	}
+	if piu.mutation.StateSnapshotCleared() {
+		_spec.ClearField(processinstance.FieldStateSnapshot, field.TypeJSON)
 	}
 	if value, ok := piu.mutation.CreatedAt(); ok {
 		_spec.SetField(processinstance.FieldCreatedAt, field.TypeTime, value)
@@ -799,6 +829,24 @@ func (piuo *ProcessInstanceUpdateOne) ClearRootProcessInstanceID() *ProcessInsta
 	return piuo
 }
 
+// SetStateSnapshot sets the "state_snapshot" field.
+func (piuo *ProcessInstanceUpdateOne) SetStateSnapshot(u []uint8) *ProcessInstanceUpdateOne {
+	piuo.mutation.SetStateSnapshot(u)
+	return piuo
+}
+
+// AppendStateSnapshot appends u to the "state_snapshot" field.
+func (piuo *ProcessInstanceUpdateOne) AppendStateSnapshot(u []uint8) *ProcessInstanceUpdateOne {
+	piuo.mutation.AppendStateSnapshot(u)
+	return piuo
+}
+
+// ClearStateSnapshot clears the value of the "state_snapshot" field.
+func (piuo *ProcessInstanceUpdateOne) ClearStateSnapshot() *ProcessInstanceUpdateOne {
+	piuo.mutation.ClearStateSnapshot()
+	return piuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (piuo *ProcessInstanceUpdateOne) SetCreatedAt(t time.Time) *ProcessInstanceUpdateOne {
 	piuo.mutation.SetCreatedAt(t)
@@ -1007,6 +1055,17 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 	}
 	if piuo.mutation.RootProcessInstanceIDCleared() {
 		_spec.ClearField(processinstance.FieldRootProcessInstanceID, field.TypeString)
+	}
+	if value, ok := piuo.mutation.StateSnapshot(); ok {
+		_spec.SetField(processinstance.FieldStateSnapshot, field.TypeJSON, value)
+	}
+	if value, ok := piuo.mutation.AppendedStateSnapshot(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, processinstance.FieldStateSnapshot, value)
+		})
+	}
+	if piuo.mutation.StateSnapshotCleared() {
+		_spec.ClearField(processinstance.FieldStateSnapshot, field.TypeJSON)
 	}
 	if value, ok := piuo.mutation.CreatedAt(); ok {
 		_spec.SetField(processinstance.FieldCreatedAt, field.TypeTime, value)

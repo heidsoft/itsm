@@ -2,8 +2,13 @@ import type { Metadata } from 'next';
 import { Inter, Noto_Sans_SC } from 'next/font/google';
 import './globals.css';
 import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import antdTheme from '@/lib/antd-theme';
+
+dayjs.locale('zh-cn');
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { QueryProvider } from '@/app/lib/providers/QueryProvider';
 
@@ -103,7 +108,7 @@ export default function RootLayout({
           fontFamily: `var(--font-noto-sans-sc), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
         }}
       >
-        <ConfigProvider theme={antdTheme}>
+        <ConfigProvider theme={antdTheme} locale={zhCN}>
           <QueryProvider>
             <ErrorBoundary>{children}</ErrorBoundary>
           </QueryProvider>

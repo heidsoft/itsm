@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Layout, ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import { usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -63,7 +64,7 @@ export default function MainLayout({
   }
 
   return (
-    <ConfigProvider>
+    <ConfigProvider locale={zhCN}>
       <Layout style={{ minHeight: '100vh' }}>
         {/* 侧边栏 */}
         <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />

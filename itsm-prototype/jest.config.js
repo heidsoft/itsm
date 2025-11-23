@@ -11,7 +11,7 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@/components/(.*)$': '<rootDir>/src/app/components/$1',
+    '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/lib/(.*)$': '<rootDir>/src/app/lib/$1',
     '^@/hooks/(.*)$': '<rootDir>/src/app/hooks/$1',
     '^@/types/(.*)$': '<rootDir>/src/types/$1',
@@ -42,7 +42,7 @@ const customJestConfig = {
       statements: 70,
     },
     // Specific thresholds for critical components
-    'src/app/components/**/*.{js,jsx,ts,tsx}': {
+    'src/components/**/*.{js,jsx,ts,tsx}': {
       branches: 80,
       functions: 80,
       lines: 80,

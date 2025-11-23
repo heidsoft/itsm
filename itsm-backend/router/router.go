@@ -5,6 +5,7 @@ import (
 
 	"itsm-backend/controller"
 	"itsm-backend/ent"
+	"itsm-backend/handlers"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -18,13 +19,22 @@ type RouterConfig struct {
 	Client    *ent.Client
 
 	// Controllers
-	TicketController   *controller.TicketController
-	IncidentController *controller.IncidentController
-	SLAController      *controller.SLAController
-	AuthController     *controller.AuthController
-	UserController     *controller.UserController
-	AIController       *controller.AIController
-	AuditLogController *controller.AuditLogController
+	TicketController       *controller.TicketController
+	IncidentController     *controller.IncidentController
+	SLAController          *controller.SLAController
+	AuthController         *controller.AuthController
+	UserController         *controller.UserController
+	AIController           *controller.AIController
+	AuditLogController     *controller.AuditLogController
+	BPMNWorkflowController *controller.BPMNWorkflowController
+	DashboardHandler       *handlers.DashboardHandler
+
+	// New Controllers (uncomment after ent generate)
+	DepartmentController  *controller.DepartmentController
+	ProjectController     *controller.ProjectController
+	ApplicationController *controller.ApplicationController
+	TeamController        *controller.TeamController
+	TagController         *controller.TagController
 }
 
 // SetupRoutes 设置路由
@@ -103,6 +113,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// 控制器方法与现有实现对齐
 			incidents.GET("", config.IncidentController.ListIncidents)
 			incidents.POST("", config.IncidentController.CreateIncident)
+			incidents.GET("/stats", config.IncidentController.GetIncidentStats)
 			incidents.GET("/:id", config.IncidentController.GetIncident)
 			incidents.PUT("/:id", config.IncidentController.UpdateIncident)
 			// incidents.POST("/:id/close", config.IncidentController.CloseIncident) // TODO: 实现CloseIncident方法
@@ -148,10 +159,82 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			ai.GET("/metrics", config.AIController.GetMetrics)
 		}
 
+		// Dashboard仪表盘
+		dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
+		{
+			// 概览数据
+			dashboard.GET("/overview", config.DashboardHandler.GetOverview)
+
+			// 分项数据
+			dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
+			dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
+			dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)
+			dashboard.GET("/sla-data", config.DashboardHandler.GetSLAData)
+			dashboard.GET("/satisfaction-data", config.DashboardHandler.GetSatisfactionData)
+			dashboard.GET("/quick-actions", config.DashboardHandler.GetQuickActions)
+			dashboard.GET("/recent-activities", config.DashboardHandler.GetRecentActivities)
+		}
+
+		// 部门管理
+		departments := tenant.(*gin.RouterGroup).Group("/departments")
+		{
+			departments.POST("", config.DepartmentController.CreateDepartment)
+			departments.GET("/tree", config.DepartmentController.GetDepartmentTree)
+			departments.PUT("/:id", config.DepartmentController.UpdateDepartment)
+			departments.DELETE("/:id", config.DepartmentController.DeleteDepartment)
+		}
+
+		// 团队管理
+		teams := tenant.(*gin.RouterGroup).Group("/teams")
+		{
+			teams.GET("", config.TeamController.ListTeams)
+			teams.POST("", config.TeamController.CreateTeam)
+			teams.PUT("/:id", config.TeamController.UpdateTeam)
+			teams.DELETE("/:id", config.TeamController.DeleteTeam)
+			teams.POST("/members", config.TeamController.AddMember)
+		}
+
+		// 项目管理
+		projects := tenant.(*gin.RouterGroup).Group("/projects")
+		{
+			projects.GET("", config.ProjectController.ListProjects)
+			projects.POST("", config.ProjectController.CreateProject)
+			projects.PUT("/:id", config.ProjectController.UpdateProject)
+			projects.DELETE("/:id", config.ProjectController.DeleteProject)
+		}
+
+		// 应用管理
+		apps := tenant.(*gin.RouterGroup).Group("/applications")
+		{
+			apps.GET("", config.ApplicationController.ListApplications)
+			apps.POST("", config.ApplicationController.CreateApplication)
+			apps.PUT("/:id", config.ApplicationController.UpdateApplication)
+			apps.DELETE("/:id", config.ApplicationController.DeleteApplication)
+			apps.GET("/microservices", config.ApplicationController.ListMicroservices)
+			apps.POST("/microservices", config.ApplicationController.CreateMicroservice)
+			apps.PUT("/microservices/:id", config.ApplicationController.UpdateMicroservice)
+			apps.DELETE("/microservices/:id", config.ApplicationController.DeleteMicroservice)
+		}
+
+		// 通用标签管理
+		tags := tenant.(*gin.RouterGroup).Group("/tags")
+		{
+			tags.GET("", config.TagController.ListTags)
+			tags.POST("", config.TagController.CreateTag)
+			tags.PUT("/:id", config.TagController.UpdateTag)
+			tags.DELETE("/:id", config.TagController.DeleteTag)
+			tags.POST("/bind", config.TagController.BindTag)
+		}
+
 		// 审计日志（需要具备 audit_logs:read 权限）
 		audit := tenant.(*gin.RouterGroup).Group("/audit-logs")
 		{
 			audit.GET("", middleware.RequirePermission("audit_logs", "read"), config.AuditLogController.ListAuditLogs)
+		}
+
+		// BPMN 工作流
+		if config.BPMNWorkflowController != nil {
+			config.BPMNWorkflowController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 	}
 }

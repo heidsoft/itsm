@@ -11,7 +11,8 @@
  *    - 展示类页面: 80px (n=4)
  * 
  * 2. 侧边导航宽度计算公式: 200+8n
- *    - 标准宽度: 200px (n=0) ✅ 我们使用
+ *    - 标准宽度: 200px (n=0)
+ *    - 宽版宽度: 256px (n=7) ✅ 针对PC端优化
  *    - 收起宽度: 80px (标准) ✅ 我们使用
  * 
  * 3. 二级导航高度:
@@ -34,7 +35,7 @@ export const LAYOUT_CONFIG = {
 
   // ========== Sider 配置 (Ant Design 标准: 200px/80px) ==========
   sider: {
-    width: 200,                    // 200px = 200 + 8×0 ✅
+    width: 256,                    // 256px = 200 + 8×7 (加宽以适配PC端)
     collapsedWidth: 80,            // 80px 标准收起宽度 ✅
     breakpoint: 'lg' as const,     // 992px 响应式断点
     logoAreaHeight: 64,            // Logo区域高度 = Header高度
@@ -42,8 +43,8 @@ export const LAYOUT_CONFIG = {
     logoPaddingCollapsed: '0 20px', // 收起时内边距
     logoIconSize: 40,              // Logo图标大小
     logoTextSize: 20,              // Logo文字大小
-    menuPadding: '16px 0',         // 菜单内边距
-    menuItemHeight: 40,            // 菜单项高度 = 32 + 8
+    menuPadding: '16px 8px',       // 菜单内边距 (增加水平间距)
+    menuItemHeight: 48,            // 菜单项高度 = 40 + 8 (增加高度)
     shadow: '2px 0 8px rgba(0, 0, 0, 0.1)', // 阴影
   },
 
@@ -55,7 +56,7 @@ export const LAYOUT_CONFIG = {
     marginMobile: 8,               // 移动端外边距
     
     // 左边距 (Sider宽度 + margin)
-    marginLeftExpanded: 224,       // 200 + 24
+    marginLeftExpanded: 280,       // 256 + 24
     marginLeftCollapsed: 96,       // 80 + 16
     
     // 内边距
@@ -69,7 +70,7 @@ export const LAYOUT_CONFIG = {
     // 页头
     pageHeaderMarginBottom: 24,    // 页头底部边距
     pageHeaderPaddingBottom: 16,   // 页头内边距
-    pageTitleFontSize: 20,         // 标题字号
+    pageTitleFontSize: 24,         // 标题字号 (增大)
     pageDescFontSize: 14,          // 描述字号
   },
 
@@ -184,4 +185,3 @@ console.assert(
 console.log('✅ Layout配置符合 Ant Design 官方设计规范');
 
 export default LAYOUT_CONFIG;
-

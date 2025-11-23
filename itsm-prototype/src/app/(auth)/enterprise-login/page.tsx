@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import EnterpriseLoginForm from '../../components/EnterpriseLoginForm';
+import { LoginForm } from '@/components/EnterpriseLoginForm';
 
 interface LoginUser {
   username?: string;
@@ -204,7 +204,7 @@ export default function EnterpriseLoginDemo() {
             {/* 右侧：登录组件 */}
             <div className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-xl rounded-2xl">
               <div className="p-6">
-                <EnterpriseLoginForm
+                <LoginForm
                   onLogin={handleLogin}
                   onForgotPassword={handleForgotPassword}
                   onSSOLogin={handleSSOLogin}

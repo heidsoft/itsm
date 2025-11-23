@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/user"
 	"time"
@@ -104,6 +105,26 @@ func (uu *UserUpdate) ClearDepartment() *UserUpdate {
 	return uu
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (uu *UserUpdate) SetDepartmentID(i int) *UserUpdate {
+	uu.mutation.SetDepartmentID(i)
+	return uu
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableDepartmentID(i *int) *UserUpdate {
+	if i != nil {
+		uu.SetDepartmentID(*i)
+	}
+	return uu
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (uu *UserUpdate) ClearDepartmentID() *UserUpdate {
+	uu.mutation.ClearDepartmentID()
+	return uu
+}
+
 // SetPhone sets the "phone" field.
 func (uu *UserUpdate) SetPhone(s string) *UserUpdate {
 	uu.mutation.SetPhone(s)
@@ -193,9 +214,34 @@ func (uu *UserUpdate) SetUpdatedAt(t time.Time) *UserUpdate {
 	return uu
 }
 
+// SetDepartmentRefID sets the "department_ref" edge to the Department entity by ID.
+func (uu *UserUpdate) SetDepartmentRefID(id int) *UserUpdate {
+	uu.mutation.SetDepartmentRefID(id)
+	return uu
+}
+
+// SetNillableDepartmentRefID sets the "department_ref" edge to the Department entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableDepartmentRefID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetDepartmentRefID(*id)
+	}
+	return uu
+}
+
+// SetDepartmentRef sets the "department_ref" edge to the Department entity.
+func (uu *UserUpdate) SetDepartmentRef(d *Department) *UserUpdate {
+	return uu.SetDepartmentRefID(d.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearDepartmentRef clears the "department_ref" edge to the Department entity.
+func (uu *UserUpdate) ClearDepartmentRef() *UserUpdate {
+	uu.mutation.ClearDepartmentRef()
+	return uu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -323,6 +369,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if uu.mutation.DepartmentRefCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.DepartmentRefTable,
+			Columns: []string{user.DepartmentRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.DepartmentRefIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.DepartmentRefTable,
+			Columns: []string{user.DepartmentRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -419,6 +494,26 @@ func (uuo *UserUpdateOne) ClearDepartment() *UserUpdateOne {
 	return uuo
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (uuo *UserUpdateOne) SetDepartmentID(i int) *UserUpdateOne {
+	uuo.mutation.SetDepartmentID(i)
+	return uuo
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableDepartmentID(i *int) *UserUpdateOne {
+	if i != nil {
+		uuo.SetDepartmentID(*i)
+	}
+	return uuo
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (uuo *UserUpdateOne) ClearDepartmentID() *UserUpdateOne {
+	uuo.mutation.ClearDepartmentID()
+	return uuo
+}
+
 // SetPhone sets the "phone" field.
 func (uuo *UserUpdateOne) SetPhone(s string) *UserUpdateOne {
 	uuo.mutation.SetPhone(s)
@@ -508,9 +603,34 @@ func (uuo *UserUpdateOne) SetUpdatedAt(t time.Time) *UserUpdateOne {
 	return uuo
 }
 
+// SetDepartmentRefID sets the "department_ref" edge to the Department entity by ID.
+func (uuo *UserUpdateOne) SetDepartmentRefID(id int) *UserUpdateOne {
+	uuo.mutation.SetDepartmentRefID(id)
+	return uuo
+}
+
+// SetNillableDepartmentRefID sets the "department_ref" edge to the Department entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableDepartmentRefID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetDepartmentRefID(*id)
+	}
+	return uuo
+}
+
+// SetDepartmentRef sets the "department_ref" edge to the Department entity.
+func (uuo *UserUpdateOne) SetDepartmentRef(d *Department) *UserUpdateOne {
+	return uuo.SetDepartmentRefID(d.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearDepartmentRef clears the "department_ref" edge to the Department entity.
+func (uuo *UserUpdateOne) ClearDepartmentRef() *UserUpdateOne {
+	uuo.mutation.ClearDepartmentRef()
+	return uuo
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -667,6 +787,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if uuo.mutation.DepartmentRefCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.DepartmentRefTable,
+			Columns: []string{user.DepartmentRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.DepartmentRefIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.DepartmentRefTable,
+			Columns: []string{user.DepartmentRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

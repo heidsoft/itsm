@@ -1114,6 +1114,16 @@ func RootProcessInstanceIDContainsFold(v string) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldContainsFold(FieldRootProcessInstanceID, v))
 }
 
+// StateSnapshotIsNil applies the IsNil predicate on the "state_snapshot" field.
+func StateSnapshotIsNil() predicate.ProcessInstance {
+	return predicate.ProcessInstance(sql.FieldIsNull(FieldStateSnapshot))
+}
+
+// StateSnapshotNotNil applies the NotNil predicate on the "state_snapshot" field.
+func StateSnapshotNotNil() predicate.ProcessInstance {
+	return predicate.ProcessInstance(sql.FieldNotNull(FieldStateSnapshot))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldEQ(FieldCreatedAt, v))

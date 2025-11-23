@@ -46,7 +46,7 @@ import {
   GitPullRequest,
 } from 'lucide-react';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
-import { LoadingSkeleton } from '../ui/LoadingSkeleton';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;

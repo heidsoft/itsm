@@ -95,6 +95,16 @@ func TenantID(v int) predicate.TicketCategory {
 	return predicate.TicketCategory(sql.FieldEQ(FieldTenantID, v))
 }
 
+// DepartmentID applies equality check predicate on the "department_id" field. It's identical to DepartmentIDEQ.
+func DepartmentID(v int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// WorkflowID applies equality check predicate on the "workflow_id" field. It's identical to WorkflowIDEQ.
+func WorkflowID(v int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEQ(FieldWorkflowID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.TicketCategory {
 	return predicate.TicketCategory(sql.FieldEQ(FieldCreatedAt, v))
@@ -470,6 +480,66 @@ func TenantIDLTE(v int) predicate.TicketCategory {
 	return predicate.TicketCategory(sql.FieldLTE(FieldTenantID, v))
 }
 
+// DepartmentIDEQ applies the EQ predicate on the "department_id" field.
+func DepartmentIDEQ(v int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDNEQ applies the NEQ predicate on the "department_id" field.
+func DepartmentIDNEQ(v int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDIn applies the In predicate on the "department_id" field.
+func DepartmentIDIn(vs ...int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDNotIn applies the NotIn predicate on the "department_id" field.
+func DepartmentIDNotIn(vs ...int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNotIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDIsNil applies the IsNil predicate on the "department_id" field.
+func DepartmentIDIsNil() predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldIsNull(FieldDepartmentID))
+}
+
+// DepartmentIDNotNil applies the NotNil predicate on the "department_id" field.
+func DepartmentIDNotNil() predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNotNull(FieldDepartmentID))
+}
+
+// WorkflowIDEQ applies the EQ predicate on the "workflow_id" field.
+func WorkflowIDEQ(v int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEQ(FieldWorkflowID, v))
+}
+
+// WorkflowIDNEQ applies the NEQ predicate on the "workflow_id" field.
+func WorkflowIDNEQ(v int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNEQ(FieldWorkflowID, v))
+}
+
+// WorkflowIDIn applies the In predicate on the "workflow_id" field.
+func WorkflowIDIn(vs ...int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldIn(FieldWorkflowID, vs...))
+}
+
+// WorkflowIDNotIn applies the NotIn predicate on the "workflow_id" field.
+func WorkflowIDNotIn(vs ...int) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNotIn(FieldWorkflowID, vs...))
+}
+
+// WorkflowIDIsNil applies the IsNil predicate on the "workflow_id" field.
+func WorkflowIDIsNil() predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldIsNull(FieldWorkflowID))
+}
+
+// WorkflowIDNotNil applies the NotNil predicate on the "workflow_id" field.
+func WorkflowIDNotNil() predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNotNull(FieldWorkflowID))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.TicketCategory {
 	return predicate.TicketCategory(sql.FieldEQ(FieldCreatedAt, v))
@@ -611,6 +681,52 @@ func HasParent() predicate.TicketCategory {
 func HasParentWith(preds ...predicate.TicketCategory) predicate.TicketCategory {
 	return predicate.TicketCategory(func(s *sql.Selector) {
 		step := newParentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDepartment applies the HasEdge predicate on the "department" edge.
+func HasDepartment() predicate.TicketCategory {
+	return predicate.TicketCategory(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
+func HasDepartmentWith(preds ...predicate.Department) predicate.TicketCategory {
+	return predicate.TicketCategory(func(s *sql.Selector) {
+		step := newDepartmentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasWorkflow applies the HasEdge predicate on the "workflow" edge.
+func HasWorkflow() predicate.TicketCategory {
+	return predicate.TicketCategory(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, WorkflowTable, WorkflowColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWorkflowWith applies the HasEdge predicate on the "workflow" edge with a given conditions (other predicates).
+func HasWorkflowWith(preds ...predicate.Workflow) predicate.TicketCategory {
+	return predicate.TicketCategory(func(s *sql.Selector) {
+		step := newWorkflowStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

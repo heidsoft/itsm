@@ -41,6 +41,12 @@ func (TicketCategory) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),
+		field.Int("department_id").
+			Comment("所属部门ID").
+			Optional(),
+		field.Int("workflow_id").
+			Comment("关联工作流ID").
+			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
@@ -63,5 +69,14 @@ func (TicketCategory) Edges() []ent.Edge {
 			Field("parent_id").
 			Unique().
 			Comment("父分类"),
+		edge.From("department", Department.Type).
+			Ref("categories").
+			Field("department_id").
+			Unique().
+			Comment("所属部门"),
+		edge.To("workflow", Workflow.Type).
+			Field("workflow_id").
+			Unique().
+			Comment("关联工作流"),
 	}
 }

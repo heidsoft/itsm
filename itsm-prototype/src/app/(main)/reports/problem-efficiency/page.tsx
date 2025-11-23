@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Statistic, Row, Col, List, Tag, Typography } from "antd";
 import { AlertTriangle, CheckCircle, Clock, XCircle } from "lucide-react";
-import { mockProblemsData } from "../../lib/mock-data";
+import { mockProblemsData } from "@/app/lib/mock-data";
 
 const { Title, Text } = Typography;
 

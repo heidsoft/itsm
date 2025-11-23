@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, Row, Col, Input, Select, DatePicker, Button, Space } from 'antd';
 import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
 import { ApprovalChainFilters as ApprovalChainFiltersType } from '../../../../types/approval-chain';
-import { useDebouncedCallback } from '../../../../lib/component-utils';
+import { useDebouncedCallback } from '@/lib/component-utils';
 import dayjs from 'dayjs';
 
 const { Search } = Input;

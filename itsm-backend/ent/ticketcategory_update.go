@@ -6,9 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -174,6 +176,46 @@ func (tcu *TicketCategoryUpdate) AddTenantID(i int) *TicketCategoryUpdate {
 	return tcu
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (tcu *TicketCategoryUpdate) SetDepartmentID(i int) *TicketCategoryUpdate {
+	tcu.mutation.SetDepartmentID(i)
+	return tcu
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (tcu *TicketCategoryUpdate) SetNillableDepartmentID(i *int) *TicketCategoryUpdate {
+	if i != nil {
+		tcu.SetDepartmentID(*i)
+	}
+	return tcu
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (tcu *TicketCategoryUpdate) ClearDepartmentID() *TicketCategoryUpdate {
+	tcu.mutation.ClearDepartmentID()
+	return tcu
+}
+
+// SetWorkflowID sets the "workflow_id" field.
+func (tcu *TicketCategoryUpdate) SetWorkflowID(i int) *TicketCategoryUpdate {
+	tcu.mutation.SetWorkflowID(i)
+	return tcu
+}
+
+// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
+func (tcu *TicketCategoryUpdate) SetNillableWorkflowID(i *int) *TicketCategoryUpdate {
+	if i != nil {
+		tcu.SetWorkflowID(*i)
+	}
+	return tcu
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (tcu *TicketCategoryUpdate) ClearWorkflowID() *TicketCategoryUpdate {
+	tcu.mutation.ClearWorkflowID()
+	return tcu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tcu *TicketCategoryUpdate) SetCreatedAt(t time.Time) *TicketCategoryUpdate {
 	tcu.mutation.SetCreatedAt(t)
@@ -229,6 +271,16 @@ func (tcu *TicketCategoryUpdate) SetParent(t *TicketCategory) *TicketCategoryUpd
 	return tcu.SetParentID(t.ID)
 }
 
+// SetDepartment sets the "department" edge to the Department entity.
+func (tcu *TicketCategoryUpdate) SetDepartment(d *Department) *TicketCategoryUpdate {
+	return tcu.SetDepartmentID(d.ID)
+}
+
+// SetWorkflow sets the "workflow" edge to the Workflow entity.
+func (tcu *TicketCategoryUpdate) SetWorkflow(w *Workflow) *TicketCategoryUpdate {
+	return tcu.SetWorkflowID(w.ID)
+}
+
 // Mutation returns the TicketCategoryMutation object of the builder.
 func (tcu *TicketCategoryUpdate) Mutation() *TicketCategoryMutation {
 	return tcu.mutation
@@ -279,6 +331,18 @@ func (tcu *TicketCategoryUpdate) RemoveChildren(t ...*TicketCategory) *TicketCat
 // ClearParent clears the "parent" edge to the TicketCategory entity.
 func (tcu *TicketCategoryUpdate) ClearParent() *TicketCategoryUpdate {
 	tcu.mutation.ClearParent()
+	return tcu
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (tcu *TicketCategoryUpdate) ClearDepartment() *TicketCategoryUpdate {
+	tcu.mutation.ClearDepartment()
+	return tcu
+}
+
+// ClearWorkflow clears the "workflow" edge to the Workflow entity.
+func (tcu *TicketCategoryUpdate) ClearWorkflow() *TicketCategoryUpdate {
+	tcu.mutation.ClearWorkflow()
 	return tcu
 }
 
@@ -508,6 +572,64 @@ func (tcu *TicketCategoryUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tcu.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticketcategory.DepartmentTable,
+			Columns: []string{ticketcategory.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcu.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticketcategory.DepartmentTable,
+			Columns: []string{ticketcategory.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tcu.mutation.WorkflowCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   ticketcategory.WorkflowTable,
+			Columns: []string{ticketcategory.WorkflowColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcu.mutation.WorkflowIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   ticketcategory.WorkflowTable,
+			Columns: []string{ticketcategory.WorkflowColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tcu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketcategory.Label}
@@ -673,6 +795,46 @@ func (tcuo *TicketCategoryUpdateOne) AddTenantID(i int) *TicketCategoryUpdateOne
 	return tcuo
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (tcuo *TicketCategoryUpdateOne) SetDepartmentID(i int) *TicketCategoryUpdateOne {
+	tcuo.mutation.SetDepartmentID(i)
+	return tcuo
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (tcuo *TicketCategoryUpdateOne) SetNillableDepartmentID(i *int) *TicketCategoryUpdateOne {
+	if i != nil {
+		tcuo.SetDepartmentID(*i)
+	}
+	return tcuo
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (tcuo *TicketCategoryUpdateOne) ClearDepartmentID() *TicketCategoryUpdateOne {
+	tcuo.mutation.ClearDepartmentID()
+	return tcuo
+}
+
+// SetWorkflowID sets the "workflow_id" field.
+func (tcuo *TicketCategoryUpdateOne) SetWorkflowID(i int) *TicketCategoryUpdateOne {
+	tcuo.mutation.SetWorkflowID(i)
+	return tcuo
+}
+
+// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
+func (tcuo *TicketCategoryUpdateOne) SetNillableWorkflowID(i *int) *TicketCategoryUpdateOne {
+	if i != nil {
+		tcuo.SetWorkflowID(*i)
+	}
+	return tcuo
+}
+
+// ClearWorkflowID clears the value of the "workflow_id" field.
+func (tcuo *TicketCategoryUpdateOne) ClearWorkflowID() *TicketCategoryUpdateOne {
+	tcuo.mutation.ClearWorkflowID()
+	return tcuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tcuo *TicketCategoryUpdateOne) SetCreatedAt(t time.Time) *TicketCategoryUpdateOne {
 	tcuo.mutation.SetCreatedAt(t)
@@ -728,6 +890,16 @@ func (tcuo *TicketCategoryUpdateOne) SetParent(t *TicketCategory) *TicketCategor
 	return tcuo.SetParentID(t.ID)
 }
 
+// SetDepartment sets the "department" edge to the Department entity.
+func (tcuo *TicketCategoryUpdateOne) SetDepartment(d *Department) *TicketCategoryUpdateOne {
+	return tcuo.SetDepartmentID(d.ID)
+}
+
+// SetWorkflow sets the "workflow" edge to the Workflow entity.
+func (tcuo *TicketCategoryUpdateOne) SetWorkflow(w *Workflow) *TicketCategoryUpdateOne {
+	return tcuo.SetWorkflowID(w.ID)
+}
+
 // Mutation returns the TicketCategoryMutation object of the builder.
 func (tcuo *TicketCategoryUpdateOne) Mutation() *TicketCategoryMutation {
 	return tcuo.mutation
@@ -778,6 +950,18 @@ func (tcuo *TicketCategoryUpdateOne) RemoveChildren(t ...*TicketCategory) *Ticke
 // ClearParent clears the "parent" edge to the TicketCategory entity.
 func (tcuo *TicketCategoryUpdateOne) ClearParent() *TicketCategoryUpdateOne {
 	tcuo.mutation.ClearParent()
+	return tcuo
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (tcuo *TicketCategoryUpdateOne) ClearDepartment() *TicketCategoryUpdateOne {
+	tcuo.mutation.ClearDepartment()
+	return tcuo
+}
+
+// ClearWorkflow clears the "workflow" edge to the Workflow entity.
+func (tcuo *TicketCategoryUpdateOne) ClearWorkflow() *TicketCategoryUpdateOne {
+	tcuo.mutation.ClearWorkflow()
 	return tcuo
 }
 
@@ -1030,6 +1214,64 @@ func (tcuo *TicketCategoryUpdateOne) sqlSave(ctx context.Context) (_node *Ticket
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tcuo.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticketcategory.DepartmentTable,
+			Columns: []string{ticketcategory.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcuo.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticketcategory.DepartmentTable,
+			Columns: []string{ticketcategory.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tcuo.mutation.WorkflowCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   ticketcategory.WorkflowTable,
+			Columns: []string{ticketcategory.WorkflowColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tcuo.mutation.WorkflowIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   ticketcategory.WorkflowTable,
+			Columns: []string{ticketcategory.WorkflowColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -49,6 +49,8 @@ export interface WorkflowDefinition {
   updatedByName?: string;
   createdAt: Date;
   updatedAt: Date;
+  departmentId?: number;
+  bpmn_xml?: string;
 }
 
 // ==================== 工作流节点 ====================
@@ -481,6 +483,8 @@ export interface CreateWorkflowRequest {
   connections?: WorkflowConnection[];
   variables?: WorkflowVariable[];
   settings?: Partial<WorkflowSettings>;
+  departmentId?: number;
+  bpmn_xml?: string;
 }
 
 /**
@@ -494,6 +498,7 @@ export interface UpdateWorkflowRequest {
   variables?: WorkflowVariable[];
   triggers?: WorkflowTrigger[];
   settings?: Partial<WorkflowSettings>;
+  departmentId?: number;
 }
 
 /**

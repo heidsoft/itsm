@@ -8,6 +8,34 @@ import (
 )
 
 var (
+	// ApplicationsColumns holds the columns for the "applications" table.
+	ApplicationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "type", Type: field.TypeString, Default: "web"},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "project_id", Type: field.TypeInt, Nullable: true},
+	}
+	// ApplicationsTable holds the schema information for the "applications" table.
+	ApplicationsTable = &schema.Table{
+		Name:       "applications",
+		Columns:    ApplicationsColumns,
+		PrimaryKey: []*schema.Column{ApplicationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "applications_projects_applications",
+				Columns:    []*schema.Column{ApplicationsColumns[10]},
+				RefColumns: []*schema.Column{ProjectsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// AuditLogsColumns holds the columns for the "audit_logs" table.
 	AuditLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -153,6 +181,32 @@ var (
 		Name:       "conversations",
 		Columns:    ConversationsColumns,
 		PrimaryKey: []*schema.Column{ConversationsColumns[0]},
+	}
+	// DepartmentsColumns holds the columns for the "departments" table.
+	DepartmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "manager_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parent_id", Type: field.TypeInt, Nullable: true},
+	}
+	// DepartmentsTable holds the schema information for the "departments" table.
+	DepartmentsTable = &schema.Table{
+		Name:       "departments",
+		Columns:    DepartmentsColumns,
+		PrimaryKey: []*schema.Column{DepartmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "departments_departments_children",
+				Columns:    []*schema.Column{DepartmentsColumns[8]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// IncidentsColumns holds the columns for the "incidents" table.
 	IncidentsColumns = []*schema.Column{
@@ -377,6 +431,36 @@ var (
 				Columns:    []*schema.Column{MessagesColumns[5]},
 				RefColumns: []*schema.Column{ConversationsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// MicroservicesColumns holds the columns for the "microservices" table.
+	MicroservicesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "language", Type: field.TypeString, Nullable: true},
+		{Name: "framework", Type: field.TypeString, Nullable: true},
+		{Name: "git_repo", Type: field.TypeString, Nullable: true},
+		{Name: "ci_pipeline", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "application_id", Type: field.TypeInt, Nullable: true},
+	}
+	// MicroservicesTable holds the schema information for the "microservices" table.
+	MicroservicesTable = &schema.Table{
+		Name:       "microservices",
+		Columns:    MicroservicesColumns,
+		PrimaryKey: []*schema.Column{MicroservicesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "microservices_applications_microservices",
+				Columns:    []*schema.Column{MicroservicesColumns[12]},
+				RefColumns: []*schema.Column{ApplicationsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -636,6 +720,7 @@ var (
 		{Name: "initiator", Type: field.TypeString, Nullable: true},
 		{Name: "parent_process_instance_id", Type: field.TypeString, Nullable: true},
 		{Name: "root_process_instance_id", Type: field.TypeString, Nullable: true},
+		{Name: "state_snapshot", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -852,6 +937,35 @@ var (
 			},
 		},
 	}
+	// ProjectsColumns holds the columns for the "projects" table.
+	ProjectsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "manager_id", Type: field.TypeInt, Nullable: true},
+		{Name: "start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true},
+	}
+	// ProjectsTable holds the schema information for the "projects" table.
+	ProjectsTable = &schema.Table{
+		Name:       "projects",
+		Columns:    ProjectsColumns,
+		PrimaryKey: []*schema.Column{ProjectsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "projects_departments_projects",
+				Columns:    []*schema.Column{ProjectsColumns[11]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// PromptTemplatesColumns holds the columns for the "prompt_templates" table.
 	PromptTemplatesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -992,6 +1106,41 @@ var (
 		Columns:    ServiceRequestsColumns,
 		PrimaryKey: []*schema.Column{ServiceRequestsColumns[0]},
 	}
+	// TagsColumns holds the columns for the "tags" table.
+	TagsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "color", Type: field.TypeString, Default: "#1890ff"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// TagsTable holds the schema information for the "tags" table.
+	TagsTable = &schema.Table{
+		Name:       "tags",
+		Columns:    TagsColumns,
+		PrimaryKey: []*schema.Column{TagsColumns[0]},
+	}
+	// TeamsColumns holds the columns for the "teams" table.
+	TeamsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "manager_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// TeamsTable holds the schema information for the "teams" table.
+	TeamsTable = &schema.Table{
+		Name:       "teams",
+		Columns:    TeamsColumns,
+		PrimaryKey: []*schema.Column{TeamsColumns[0]},
+	}
 	// TenantsColumns holds the columns for the "tenants" table.
 	TenantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1027,6 +1176,7 @@ var (
 		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "sla_definition_id", Type: field.TypeInt, Nullable: true},
 		{Name: "parent_ticket_id", Type: field.TypeInt, Nullable: true},
 		{Name: "category_id", Type: field.TypeInt, Nullable: true},
@@ -1040,32 +1190,38 @@ var (
 		PrimaryKey: []*schema.Column{TicketsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "tickets_sla_definitions_tickets",
+				Symbol:     "tickets_departments_tickets",
 				Columns:    []*schema.Column{TicketsColumns[15]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_sla_definitions_tickets",
+				Columns:    []*schema.Column{TicketsColumns[16]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_tickets_related_tickets",
-				Columns:    []*schema.Column{TicketsColumns[16]},
+				Columns:    []*schema.Column{TicketsColumns[17]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_categories_tickets",
-				Columns:    []*schema.Column{TicketsColumns[17]},
+				Columns:    []*schema.Column{TicketsColumns[18]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[18]},
+				Columns:    []*schema.Column{TicketsColumns[19]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[19]},
+				Columns:    []*schema.Column{TicketsColumns[20]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1083,7 +1239,9 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "parent_id", Type: field.TypeInt, Nullable: true},
+		{Name: "workflow_id", Type: field.TypeInt, Nullable: true},
 	}
 	// TicketCategoriesTable holds the schema information for the "ticket_categories" table.
 	TicketCategoriesTable = &schema.Table{
@@ -1092,9 +1250,21 @@ var (
 		PrimaryKey: []*schema.Column{TicketCategoriesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "ticket_categories_ticket_categories_children",
+				Symbol:     "ticket_categories_departments_categories",
 				Columns:    []*schema.Column{TicketCategoriesColumns[10]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "ticket_categories_ticket_categories_children",
+				Columns:    []*schema.Column{TicketCategoriesColumns[11]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "ticket_categories_workflows_workflow",
+				Columns:    []*schema.Column{TicketCategoriesColumns[12]},
+				RefColumns: []*schema.Column{WorkflowsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -1191,12 +1361,28 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true},
+		{Name: "team_users", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "users_departments_users",
+				Columns:    []*schema.Column{UsersColumns[12]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "users_teams_users",
+				Columns:    []*schema.Column{UsersColumns[13]},
+				RefColumns: []*schema.Column{TeamsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// WorkflowsColumns holds the columns for the "workflows" table.
 	WorkflowsColumns = []*schema.Column{
@@ -1210,12 +1396,21 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 	}
 	// WorkflowsTable holds the schema information for the "workflows" table.
 	WorkflowsTable = &schema.Table{
 		Name:       "workflows",
 		Columns:    WorkflowsColumns,
 		PrimaryKey: []*schema.Column{WorkflowsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workflows_departments_workflows",
+				Columns:    []*schema.Column{WorkflowsColumns[10]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// WorkflowInstancesColumns holds the columns for the "workflow_instances" table.
 	WorkflowInstancesColumns = []*schema.Column{
@@ -1253,6 +1448,56 @@ var (
 			},
 		},
 	}
+	// ApplicationTagsColumns holds the columns for the "application_tags" table.
+	ApplicationTagsColumns = []*schema.Column{
+		{Name: "application_id", Type: field.TypeInt},
+		{Name: "tag_id", Type: field.TypeInt},
+	}
+	// ApplicationTagsTable holds the schema information for the "application_tags" table.
+	ApplicationTagsTable = &schema.Table{
+		Name:       "application_tags",
+		Columns:    ApplicationTagsColumns,
+		PrimaryKey: []*schema.Column{ApplicationTagsColumns[0], ApplicationTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "application_tags_application_id",
+				Columns:    []*schema.Column{ApplicationTagsColumns[0]},
+				RefColumns: []*schema.Column{ApplicationsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "application_tags_tag_id",
+				Columns:    []*schema.Column{ApplicationTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// DepartmentTagsColumns holds the columns for the "department_tags" table.
+	DepartmentTagsColumns = []*schema.Column{
+		{Name: "department_id", Type: field.TypeInt},
+		{Name: "tag_id", Type: field.TypeInt},
+	}
+	// DepartmentTagsTable holds the schema information for the "department_tags" table.
+	DepartmentTagsTable = &schema.Table{
+		Name:       "department_tags",
+		Columns:    DepartmentTagsColumns,
+		PrimaryKey: []*schema.Column{DepartmentTagsColumns[0], DepartmentTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "department_tags_department_id",
+				Columns:    []*schema.Column{DepartmentTagsColumns[0]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "department_tags_tag_id",
+				Columns:    []*schema.Column{DepartmentTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// IncidentRelatedIncidentsColumns holds the columns for the "incident_related_incidents" table.
 	IncidentRelatedIncidentsColumns = []*schema.Column{
 		{Name: "incident_id", Type: field.TypeInt},
@@ -1278,8 +1523,84 @@ var (
 			},
 		},
 	}
+	// MicroserviceTagsColumns holds the columns for the "microservice_tags" table.
+	MicroserviceTagsColumns = []*schema.Column{
+		{Name: "microservice_id", Type: field.TypeInt},
+		{Name: "tag_id", Type: field.TypeInt},
+	}
+	// MicroserviceTagsTable holds the schema information for the "microservice_tags" table.
+	MicroserviceTagsTable = &schema.Table{
+		Name:       "microservice_tags",
+		Columns:    MicroserviceTagsColumns,
+		PrimaryKey: []*schema.Column{MicroserviceTagsColumns[0], MicroserviceTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "microservice_tags_microservice_id",
+				Columns:    []*schema.Column{MicroserviceTagsColumns[0]},
+				RefColumns: []*schema.Column{MicroservicesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "microservice_tags_tag_id",
+				Columns:    []*schema.Column{MicroserviceTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ProjectTagsColumns holds the columns for the "project_tags" table.
+	ProjectTagsColumns = []*schema.Column{
+		{Name: "project_id", Type: field.TypeInt},
+		{Name: "tag_id", Type: field.TypeInt},
+	}
+	// ProjectTagsTable holds the schema information for the "project_tags" table.
+	ProjectTagsTable = &schema.Table{
+		Name:       "project_tags",
+		Columns:    ProjectTagsColumns,
+		PrimaryKey: []*schema.Column{ProjectTagsColumns[0], ProjectTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "project_tags_project_id",
+				Columns:    []*schema.Column{ProjectTagsColumns[0]},
+				RefColumns: []*schema.Column{ProjectsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "project_tags_tag_id",
+				Columns:    []*schema.Column{ProjectTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// TeamTagsColumns holds the columns for the "team_tags" table.
+	TeamTagsColumns = []*schema.Column{
+		{Name: "team_id", Type: field.TypeInt},
+		{Name: "tag_id", Type: field.TypeInt},
+	}
+	// TeamTagsTable holds the schema information for the "team_tags" table.
+	TeamTagsTable = &schema.Table{
+		Name:       "team_tags",
+		Columns:    TeamTagsColumns,
+		PrimaryKey: []*schema.Column{TeamTagsColumns[0], TeamTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "team_tags_team_id",
+				Columns:    []*schema.Column{TeamTagsColumns[0]},
+				RefColumns: []*schema.Column{TeamsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "team_tags_tag_id",
+				Columns:    []*schema.Column{TeamTagsColumns[1]},
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ApplicationsTable,
 		AuditLogsTable,
 		CiAttributeDefinitionsTable,
 		CiRelationshipsTable,
@@ -1287,6 +1608,7 @@ var (
 		ChangesTable,
 		ConfigurationItemsTable,
 		ConversationsTable,
+		DepartmentsTable,
 		IncidentsTable,
 		IncidentAlertsTable,
 		IncidentEventsTable,
@@ -1295,6 +1617,7 @@ var (
 		IncidentRuleExecutionsTable,
 		KnowledgeArticlesTable,
 		MessagesTable,
+		MicroservicesTable,
 		NotificationsTable,
 		ProblemsTable,
 		ProcessDefinitionsTable,
@@ -1303,12 +1626,15 @@ var (
 		ProcessInstancesTable,
 		ProcessTasksTable,
 		ProcessVariablesTable,
+		ProjectsTable,
 		PromptTemplatesTable,
 		SLADefinitionsTable,
 		SLAMetricsTable,
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
+		TagsTable,
+		TeamsTable,
 		TenantsTable,
 		TicketsTable,
 		TicketCategoriesTable,
@@ -1318,29 +1644,54 @@ var (
 		UsersTable,
 		WorkflowsTable,
 		WorkflowInstancesTable,
+		ApplicationTagsTable,
+		DepartmentTagsTable,
 		IncidentRelatedIncidentsTable,
+		MicroserviceTagsTable,
+		ProjectTagsTable,
+		TeamTagsTable,
 	}
 )
 
 func init() {
+	ApplicationsTable.ForeignKeys[0].RefTable = ProjectsTable
+	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	IncidentAlertsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
+	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
+	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	SLAMetricsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
-	TicketsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
-	TicketsTable.ForeignKeys[1].RefTable = TicketsTable
-	TicketsTable.ForeignKeys[2].RefTable = TicketCategoriesTable
-	TicketsTable.ForeignKeys[3].RefTable = TicketTagsTable
-	TicketsTable.ForeignKeys[4].RefTable = TicketTemplatesTable
-	TicketCategoriesTable.ForeignKeys[0].RefTable = TicketCategoriesTable
+	TicketsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	TicketsTable.ForeignKeys[1].RefTable = SLADefinitionsTable
+	TicketsTable.ForeignKeys[2].RefTable = TicketsTable
+	TicketsTable.ForeignKeys[3].RefTable = TicketCategoriesTable
+	TicketsTable.ForeignKeys[4].RefTable = TicketTagsTable
+	TicketsTable.ForeignKeys[5].RefTable = TicketTemplatesTable
+	TicketCategoriesTable.ForeignKeys[0].RefTable = DepartmentsTable
+	TicketCategoriesTable.ForeignKeys[1].RefTable = TicketCategoriesTable
+	TicketCategoriesTable.ForeignKeys[2].RefTable = WorkflowsTable
 	TicketTagsTable.ForeignKeys[0].RefTable = TicketsTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
+	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
+	UsersTable.ForeignKeys[1].RefTable = TeamsTable
+	WorkflowsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	WorkflowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
 	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
+	ApplicationTagsTable.ForeignKeys[0].RefTable = ApplicationsTable
+	ApplicationTagsTable.ForeignKeys[1].RefTable = TagsTable
+	DepartmentTagsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	DepartmentTagsTable.ForeignKeys[1].RefTable = TagsTable
 	IncidentRelatedIncidentsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentRelatedIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
+	MicroserviceTagsTable.ForeignKeys[0].RefTable = MicroservicesTable
+	MicroserviceTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ProjectTagsTable.ForeignKeys[0].RefTable = ProjectsTable
+	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
+	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable
+	TeamTagsTable.ForeignKeys[1].RefTable = TagsTable
 }

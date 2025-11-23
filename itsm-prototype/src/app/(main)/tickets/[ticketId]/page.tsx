@@ -53,13 +53,13 @@ const TicketDetailPage: React.FC = () => {
       })) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success('Approved successfully');
+        antMessage.success('批准成功');
         fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || 'Approval failed');
+        antMessage.error(response.message || '批准失败');
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : 'Network error');
+      antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
   };
 
@@ -71,13 +71,13 @@ const TicketDetailPage: React.FC = () => {
       })) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success('Rejected successfully');
+        antMessage.success('已拒绝');
         fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || 'Rejection failed');
+        antMessage.error(response.message || '操作失败');
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : 'Network error');
+      antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
   };
 
@@ -89,13 +89,13 @@ const TicketDetailPage: React.FC = () => {
       })) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success('Assigned successfully');
+        antMessage.success('分配成功');
         fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || 'Assignment failed');
+        antMessage.error(response.message || '分配失败');
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : 'Network error');
+      antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
   };
 
@@ -108,13 +108,13 @@ const TicketDetailPage: React.FC = () => {
       )) as unknown as ApiResponse<Ticket>;
 
       if (response.code === 0) {
-        antMessage.success('Updated successfully');
+        antMessage.success('更新成功');
         fetchTicket(); // Refresh data
       } else {
-        antMessage.error(response.message || 'Update failed');
+        antMessage.error(response.message || '更新失败');
       }
     } catch (error) {
-      antMessage.error(error instanceof Error ? error.message : 'Network error');
+      antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
   };
 
@@ -124,7 +124,7 @@ const TicketDetailPage: React.FC = () => {
         <Card>
           <div className='text-center py-8'>
             <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-            <Text className='mt-4 block'>Loading...</Text>
+            <Text className='mt-4 block'>加载中...</Text>
           </div>
         </Card>
       </div>
@@ -138,12 +138,12 @@ const TicketDetailPage: React.FC = () => {
           <div className='text-center py-8'>
             <AlertCircle className='w-12 h-12 text-red-500 mx-auto mb-4' />
             <Title level={4} className='text-red-600 mb-2'>
-              Load Failed
+              加载失败
             </Title>
             <Text type='secondary'>{error}</Text>
             <div className='mt-4'>
               <Button type='primary' onClick={fetchTicket}>
-                Retry
+                重试
               </Button>
             </div>
           </div>
@@ -159,12 +159,12 @@ const TicketDetailPage: React.FC = () => {
           <div className='text-center py-8'>
             <XCircle className='w-12 h-12 text-gray-400 mx-auto mb-4' />
             <Title level={4} className='text-gray-600 mb-2'>
-              Ticket Not Found
+              未找到工单
             </Title>
-            <Text type='secondary'>The specified ticket was not found</Text>
+            <Text type='secondary'>未找到指定的工单</Text>
             <div className='mt-4'>
               <Link href='/tickets'>
-                <Button type='primary'>Back to Ticket List</Button>
+                <Button type='primary'>返回工单列表</Button>
               </Link>
             </div>
           </div>
@@ -181,12 +181,12 @@ const TicketDetailPage: React.FC = () => {
           <div className='flex items-center space-x-4'>
             <Link href='/tickets'>
               <Button icon={<ArrowLeft />} type='text'>
-                Back to List
+                返回列表
               </Button>
             </Link>
             <div>
               <Title level={2} className='mb-1'>
-                Ticket Details #{ticket.id}
+                工单详情 #{ticket.id}
               </Title>
               <Text type='secondary'>{ticket.title}</Text>
             </div>
@@ -202,10 +202,10 @@ const TicketDetailPage: React.FC = () => {
               }
               text={
                 ticket.status === 'open'
-                  ? 'In Progress'
+                  ? '处理中'
                   : ticket.status === 'closed'
-                  ? 'Closed'
-                  : 'Pending'
+                  ? '已关闭'
+                  : '待处理'
               }
             />
             <Tag
@@ -218,10 +218,10 @@ const TicketDetailPage: React.FC = () => {
               }
             >
               {ticket.priority === 'high'
-                ? 'High Priority'
+                ? '高优先级'
                 : ticket.priority === 'medium'
-                ? 'Medium Priority'
-                : 'Low Priority'}
+                ? '中优先级'
+                : '低优先级'}
             </Tag>
           </div>
         </div>

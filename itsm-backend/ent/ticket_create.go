@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
@@ -134,6 +135,20 @@ func (tc *TicketCreate) SetNillableCategoryID(i *int) *TicketCreate {
 	return tc
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (tc *TicketCreate) SetDepartmentID(i int) *TicketCreate {
+	tc.mutation.SetDepartmentID(i)
+	return tc
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableDepartmentID(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetDepartmentID(*i)
+	}
+	return tc
+}
+
 // SetParentTicketID sets the "parent_ticket_id" field.
 func (tc *TicketCreate) SetParentTicketID(i int) *TicketCreate {
 	tc.mutation.SetParentTicketID(i)
@@ -254,6 +269,11 @@ func (tc *TicketCreate) SetTemplate(t *TicketTemplate) *TicketCreate {
 // SetCategory sets the "category" edge to the TicketCategory entity.
 func (tc *TicketCreate) SetCategory(t *TicketCategory) *TicketCreate {
 	return tc.SetCategoryID(t.ID)
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (tc *TicketCreate) SetDepartment(d *Department) *TicketCreate {
+	return tc.SetDepartmentID(d.ID)
 }
 
 // AddTagIDs adds the "tags" edge to the TicketTag entity by IDs.
@@ -539,6 +559,23 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.CategoryID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticket.DepartmentTable,
+			Columns: []string{ticket.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.DepartmentID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := tc.mutation.TagsIDs(); len(nodes) > 0 {

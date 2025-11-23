@@ -44,6 +44,8 @@ var RolePermissions = map[string][]Permission{
         {Resource: "incident", Action: "admin"},
         // 审计日志权限：仅管理员及以上可读
         {Resource: "audit_logs", Action: "read"},
+        {Resource: "ai", Action: "read"},
+        {Resource: "ai", Action: "write"},
     },
     "manager": {
         {Resource: "ticket", Action: "read"},
@@ -78,6 +80,8 @@ var RolePermissions = map[string][]Permission{
         {Resource: "ticket", Action: "write"}, // 最终用户可以创建和更新自己的工单
         {Resource: "knowledge", Action: "read"},
         {Resource: "dashboard", Action: "read"},
+        {Resource: "ai", Action: "read"},
+        {Resource: "ai", Action: "write"},
     },
 }
 
@@ -97,6 +101,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/incidents":         {Resource: "incident", Action: "read"},
 		"/api/v1/incidents/*":       {Resource: "incident", Action: "read"},
 		"/api/v1/audit-logs":        {Resource: "audit_logs", Action: "read"},
+		"/api/v1/ai/*":              {Resource: "ai", Action: "read"},
 	},
 	"POST": {
 		"/api/v1/tickets":           {Resource: "ticket", Action: "write"},
@@ -105,6 +110,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/knowledge":         {Resource: "knowledge", Action: "write"},
 		"/api/v1/cmdb":              {Resource: "cmdb", Action: "write"},
 		"/api/v1/incidents":         {Resource: "incident", Action: "write"},
+		"/api/v1/ai/*":              {Resource: "ai", Action: "write"},
 	},
 	"PUT": {
 		"/api/v1/tickets/*":         {Resource: "ticket", Action: "write"},

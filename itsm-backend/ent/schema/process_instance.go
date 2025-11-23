@@ -65,6 +65,9 @@ func (ProcessInstance) Fields() []ent.Field {
 		field.String("root_process_instance_id").
 			Comment("根流程实例ID").
 			Optional(),
+		field.JSON("state_snapshot", []byte{}).
+			Comment("流程引擎状态快照").
+			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),

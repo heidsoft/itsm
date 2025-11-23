@@ -328,6 +328,10 @@ export const useErrorHandler = () => {
   };
 };
 
+import styles from './error-handler.module.css';
+
+...
+
 // 错误边界组件
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> },
@@ -357,13 +361,13 @@ export class ErrorBoundary extends React.Component<
       }
 
       return (
-        <div className='flex items-center justify-center min-h-[400px] p-8'>
-          <div className='text-center'>
-            <h2 className='text-xl font-semibold text-red-600 mb-4'>出现错误</h2>
-            <p className='text-gray-600 mb-4'>{this.state.error?.message}</p>
+        <div className={styles.errorBoundary}>
+          <div className={styles.errorBoundaryContent}>
+            <h2 className={styles.errorBoundaryTitle}>出现错误</h2>
+            <p className={styles.errorBoundaryMessage}>{this.state.error?.message}</p>
             <button
               onClick={() => this.setState({ hasError: false, error: undefined })}
-              className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+              className={styles.retryButton}
             >
               重试
             </button>

@@ -34,6 +34,8 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 interface AIWorkflowAssistantProps {
+  initialTitle?: string;
+  initialDescription?: string;
   onSuggestion?: (suggestion: any) => void;
   className?: string;
 }
@@ -49,11 +51,13 @@ interface WorkflowSuggestion {
 }
 
 export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
+  initialTitle = '',
+  initialDescription = '',
   onSuggestion,
   className = '',
 }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<WorkflowSuggestion | null>(null);
   const [knowledgeResults, setKnowledgeResults] = useState<any[]>([]);

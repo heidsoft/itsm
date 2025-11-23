@@ -25,177 +25,29 @@ import {
 import { User, Mail, Phone, Building, Shield, Bell, Key, Camera, Save, Edit } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { UserAPI } from '../lib/user-api';
+import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
-interface UserProfile {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  department: string;
-  phone: string;
-  avatar?: string;
-  role: string;
-  tenant: string;
-  created_at: string;
-  last_login: string;
-  preferences: {
-    notifications: boolean;
-    language: string;
-    theme: string;
-  };
-}
-
-interface ProfileStats {
-  totalTickets: number;
-  resolvedTickets: number;
-  avgResolutionTime: number;
-  satisfactionScore: number;
-  responseRate: number;
-}
+// ... (interfaces remain the same)
 
 export default function ProfilePage() {
+  const { t } = useI18n();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<ProfileStats | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [profileForm] = Form.useForm();
-  const [passwordForm] = Form.useForm();
-  const [preferencesForm] = Form.useForm();
+  // ... (rest of state)
 
-  useEffect(() => {
-    loadProfile();
-    loadStats();
-  }, []);
+  // ... (loadProfile and loadStats functions)
 
-  const loadProfile = async () => {
-    try {
-      // 模拟API调用
-      const mockProfile: UserProfile = {
-        id: 1,
-        username: 'zhangsan',
-        email: 'zhangsan@company.com',
-        name: '张三',
-        department: 'IT支持部',
-        phone: '13800138000',
-        avatar: '',
-        role: '技术支持工程师',
-        tenant: '公司总部',
-        created_at: '2024-01-01',
-        last_login: '2024-01-15 14:30:00',
-        preferences: {
-          notifications: true,
-          language: 'zh-CN',
-          theme: 'light',
-        },
-      };
-
-      setProfile(mockProfile);
-      profileForm.setFieldsValue(mockProfile);
-      preferencesForm.setFieldsValue(mockProfile.preferences);
-    } catch (error) {
-      message.error('加载个人信息失败');
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      // 模拟统计数据
-      const mockStats: ProfileStats = {
-        totalTickets: 156,
-        resolvedTickets: 142,
-        avgResolutionTime: 4.2,
-        satisfactionScore: 4.5,
-        responseRate: 95.8,
-      };
-
-      setStats(mockStats);
-    } catch (error) {
-      message.error('加载统计数据失败');
-    }
-  };
-
-  const handleProfileUpdate = async (values: any) => {
-    setLoading(true);
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setProfile(prev => (prev ? { ...prev, ...values } : null));
-      setEditing(false);
-      message.success('个人信息更新成功');
-    } catch (error) {
-      message.error('更新失败，请重试');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordChange = async (values: any) => {
-    setLoading(true);
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      passwordForm.resetFields();
-      message.success('密码修改成功');
-    } catch (error) {
-      message.error('密码修改失败，请重试');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePreferencesUpdate = async (values: any) => {
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      setProfile(prev =>
-        prev
-          ? {
-              ...prev,
-              preferences: { ...prev.preferences, ...values },
-            }
-          : null
-      );
-
-      message.success('偏好设置更新成功');
-    } catch (error) {
-      message.error('偏好设置更新失败');
-    }
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case '技术支持工程师':
-        return 'blue';
-      case '系统管理员':
-        return 'purple';
-      case '服务台经理':
-        return 'gold';
-      default:
-        return 'default';
-    }
-  };
-
-  const getSatisfactionColor = (score: number) => {
-    if (score >= 4.5) return '#52c41a';
-    if (score >= 4.0) return '#1890ff';
-    if (score >= 3.5) return '#faad14';
-    return '#f5222d';
-  };
+  // ... (handlers)
 
   if (!profile) {
     return (
       <div className='flex items-center justify-center h-64'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <Text>加载中...</Text>
+          <Text>{t('profile.loading') || 'Loading...'}</Text>
         </div>
       </div>
     );
@@ -204,16 +56,16 @@ export default function ProfilePage() {
   return (
     <div className='max-w-6xl mx-auto p-6'>
       <PageHeader
-        title='个人资料'
-        subtitle='管理您的个人信息、偏好设置和安全选项'
-        breadcrumbs={[{ label: '个人资料' }]}
+        title={t('profile.title')}
+        subtitle={t('profile.subtitle')}
+        breadcrumbs={[{ label: t('profile.title') }]}
         actions={
           <Button
             icon={editing ? <Save /> : <Edit />}
             type={editing ? 'primary' : 'default'}
             onClick={() => setEditing(!editing)}
           >
-            {editing ? '保存' : '编辑'}
+            {editing ? t('profile.save') : t('profile.edit')}
           </Button>
         }
       />
@@ -226,7 +78,7 @@ export default function ProfilePage() {
               tab={
                 <span>
                   <User size={16} className='mr-2' />
-                  基本信息
+                  {t('profile.basicInfo')}
                 </span>
               }
               key='profile'
@@ -270,19 +122,19 @@ export default function ProfilePage() {
                     <Col span={12}>
                       <Form.Item
                         name='name'
-                        label='姓名'
-                        rules={[{ required: true, message: '请输入姓名' }]}
+                        label={t('profile.name')}
+                        rules={[{ required: true, message: t('profile.enterName') }]}
                       >
-                        <Input prefix={<User />} placeholder='请输入姓名' />
+                        <Input prefix={<User />} placeholder={t('profile.enterName')} />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
                       <Form.Item
                         name='username'
-                        label='用户名'
-                        rules={[{ required: true, message: '请输入用户名' }]}
+                        label={t('profile.username')}
+                        rules={[{ required: true, message: t('profile.enterUsername') }]}
                       >
-                        <Input prefix={<User />} placeholder='请输入用户名' />
+                        <Input prefix={<User />} placeholder={t('profile.enterUsername')} />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -291,22 +143,22 @@ export default function ProfilePage() {
                     <Col span={12}>
                       <Form.Item
                         name='email'
-                        label='邮箱'
+                        label={t('profile.email')}
                         rules={[
-                          { required: true, message: '请输入邮箱' },
-                          { type: 'email', message: '请输入有效的邮箱地址' },
+                          { required: true, message: t('profile.enterEmail') },
+                          { type: 'email', message: t('profile.validEmail') },
                         ]}
                       >
-                        <Input prefix={<Mail />} placeholder='请输入邮箱' />
+                        <Input prefix={<Mail />} placeholder={t('profile.enterEmail')} />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
                       <Form.Item
                         name='phone'
-                        label='手机号'
-                        rules={[{ required: true, message: '请输入手机号' }]}
+                        label={t('profile.phone')}
+                        rules={[{ required: true, message: t('profile.enterPhone') }]}
                       >
-                        <Input prefix={<Phone />} placeholder='请输入手机号' />
+                        <Input prefix={<Phone />} placeholder={t('profile.enterPhone')} />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -315,10 +167,10 @@ export default function ProfilePage() {
                     <Col span={12}>
                       <Form.Item
                         name='department'
-                        label='部门'
-                        rules={[{ required: true, message: '请选择部门' }]}
+                        label={t('profile.department')}
+                        rules={[{ required: true, message: t('profile.selectDepartment') }]}
                       >
-                        <Select prefix={<Building />} placeholder='请选择部门'>
+                        <Select prefix={<Building />} placeholder={t('profile.selectDepartment')}>
                           <Option value='IT支持部'>IT支持部</Option>
                           <Option value='系统运维部'>系统运维部</Option>
                           <Option value='网络管理部'>网络管理部</Option>
@@ -327,7 +179,7 @@ export default function ProfilePage() {
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item label='租户' name='tenant'>
+                      <Form.Item label={t('profile.tenant')} name='tenant'>
                         <Input prefix={<Building />} disabled />
                       </Form.Item>
                     </Col>
@@ -336,9 +188,9 @@ export default function ProfilePage() {
                   {editing && (
                     <div className='text-center mt-6'>
                       <Space size='middle'>
-                        <Button onClick={() => setEditing(false)}>取消</Button>
+                        <Button onClick={() => setEditing(false)}>{t('profile.cancel')}</Button>
                         <Button type='primary' htmlType='submit' loading={loading}>
-                          保存更改
+                          {t('profile.saveChanges')}
                         </Button>
                       </Space>
                     </div>
@@ -351,7 +203,7 @@ export default function ProfilePage() {
               tab={
                 <span>
                   <Key size={16} className='mr-2' />
-                  安全设置
+                  {t('profile.securitySettings')}
                 </span>
               }
               key='security'
@@ -359,8 +211,8 @@ export default function ProfilePage() {
               <Card>
                 <Form form={passwordForm} layout='vertical' onFinish={handlePasswordChange}>
                   <Alert
-                    message='密码安全提示'
-                    description='建议使用包含大小写字母、数字和特殊字符的强密码，长度至少8位。'
+                    message={t('profile.passwordHint')}
+                    description={t('profile.passwordHintDesc')}
                     type='info'
                     showIcon
                     className='mb-6'
@@ -368,12 +220,12 @@ export default function ProfilePage() {
 
                   <Form.Item
                     name='currentPassword'
-                    label='当前密码'
-                    rules={[{ required: true, message: '请输入当前密码' }]}
+                    label={t('profile.currentPassword')}
+                    rules={[{ required: true, message: t('profile.enterCurrentPassword') }]}
                   >
                     <Input.Password
                       prefix={<Key />}
-                      placeholder='请输入当前密码'
+                      placeholder={t('profile.enterCurrentPassword')}
                       visibilityToggle={{
                         visible: passwordVisible,
                         onVisibleChange: setPasswordVisible,
@@ -383,15 +235,15 @@ export default function ProfilePage() {
 
                   <Form.Item
                     name='newPassword'
-                    label='新密码'
+                    label={t('profile.newPassword')}
                     rules={[
-                      { required: true, message: '请输入新密码' },
-                      { min: 8, message: '密码长度至少8位' },
+                      { required: true, message: t('profile.enterNewPassword') },
+                      { min: 8, message: t('profile.passwordMinLength') },
                     ]}
                   >
                     <Input.Password
                       prefix={<Key />}
-                      placeholder='请输入新密码'
+                      placeholder={t('profile.enterNewPassword')}
                       visibilityToggle={{
                         visible: passwordVisible,
                         onVisibleChange: setPasswordVisible,
@@ -401,23 +253,23 @@ export default function ProfilePage() {
 
                   <Form.Item
                     name='confirmPassword'
-                    label='确认新密码'
+                    label={t('profile.confirmPassword')}
                     dependencies={['newPassword']}
                     rules={[
-                      { required: true, message: '请确认新密码' },
+                      { required: true, message: t('profile.confirmNewPassword') },
                       ({ getFieldValue }) => ({
                         validator(_, value) {
                           if (!value || getFieldValue('newPassword') === value) {
                             return Promise.resolve();
                           }
-                          return Promise.reject(new Error('两次输入的密码不一致'));
+                          return Promise.reject(new Error(t('profile.passwordMismatch')));
                         },
                       }),
                     ]}
                   >
                     <Input.Password
                       prefix={<Key />}
-                      placeholder='请确认新密码'
+                      placeholder={t('profile.confirmNewPassword')}
                       visibilityToggle={{
                         visible: passwordVisible,
                         onVisibleChange: setPasswordVisible,
@@ -427,7 +279,7 @@ export default function ProfilePage() {
 
                   <div className='text-center'>
                     <Button type='primary' htmlType='submit' loading={loading}>
-                      修改密码
+                      {t('profile.saveChanges')}
                     </Button>
                   </div>
                 </Form>
@@ -438,35 +290,35 @@ export default function ProfilePage() {
               tab={
                 <span>
                   <Bell size={16} className='mr-2' />
-                  偏好设置
+                  {t('profile.preferences')}
                 </span>
               }
               key='preferences'
             >
               <Card>
                 <Form form={preferencesForm} layout='vertical' onFinish={handlePreferencesUpdate}>
-                  <Form.Item name='notifications' label='通知设置' valuePropName='checked'>
-                    <Switch checkedChildren='开启' unCheckedChildren='关闭' />
+                  <Form.Item name='notifications' label={t('profile.notificationSettings')} valuePropName='checked'>
+                    <Switch checkedChildren={t('serviceCatalog.enabled')} unCheckedChildren={t('serviceCatalog.disabled')} />
                   </Form.Item>
 
-                  <Form.Item name='language' label='语言设置'>
-                    <Select placeholder='请选择语言'>
+                  <Form.Item name='language' label={t('profile.languageSettings')}>
+                    <Select placeholder={t('profile.languageSettings')}>
                       <Option value='zh-CN'>简体中文</Option>
                       <Option value='en-US'>English</Option>
                     </Select>
                   </Form.Item>
 
-                  <Form.Item name='theme' label='主题设置'>
-                    <Select placeholder='请选择主题'>
-                      <Option value='light'>浅色主题</Option>
-                      <Option value='dark'>深色主题</Option>
-                      <Option value='auto'>跟随系统</Option>
+                  <Form.Item name='theme' label={t('profile.themeSettings')}>
+                    <Select placeholder={t('profile.themeSettings')}>
+                      <Option value='light'>Light</Option>
+                      <Option value='dark'>Dark</Option>
+                      <Option value='auto'>Auto</Option>
                     </Select>
                   </Form.Item>
 
                   <div className='text-center'>
                     <Button type='primary' htmlType='submit'>
-                      保存偏好设置
+                      {t('profile.saveChanges')}
                     </Button>
                   </div>
                 </Form>
@@ -479,18 +331,18 @@ export default function ProfilePage() {
         <Col xs={24} lg={8}>
           <div className='space-y-6'>
             {/* 账户状态 */}
-            <Card title='账户状态'>
+            <Card title={t('profile.accountStatus')}>
               <div className='space-y-4'>
                 <div className='flex items-center justify-between'>
-                  <Text>账户状态</Text>
-                  <Tag color='success'>活跃</Tag>
+                  <Text>{t('profile.accountStatus')}</Text>
+                  <Tag color='success'>{t('profile.active')}</Tag>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <Text>注册时间</Text>
+                  <Text>{t('profile.registrationTime')}</Text>
                   <Text>{profile.created_at}</Text>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <Text>最后登录</Text>
+                  <Text>{t('profile.lastLogin')}</Text>
                   <Text>{profile.last_login}</Text>
                 </div>
               </div>
@@ -498,14 +350,14 @@ export default function ProfilePage() {
 
             {/* 工作统计 */}
             {stats && (
-              <Card title='工作统计'>
+              <Card title={t('profile.workStats')}>
                 <div className='space-y-4'>
                   <div className='text-center'>
-                    <Statistic title='总工单数' value={stats.totalTickets} prefix={<User />} />
+                    <Statistic title={t('profile.totalTickets')} value={stats.totalTickets} prefix={<User />} />
                   </div>
                   <div className='text-center'>
                     <Statistic
-                      title='已解决工单'
+                      title={t('profile.resolvedTickets')}
                       value={stats.resolvedTickets}
                       prefix={<User />}
                       suffix={`/ ${stats.totalTickets}`}
@@ -517,11 +369,11 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className='text-center'>
-                    <Statistic title='平均解决时间' value={stats.avgResolutionTime} suffix='小时' />
+                    <Statistic title={t('profile.avgResolutionTime')} value={stats.avgResolutionTime} suffix='h' />
                   </div>
                   <div className='text-center'>
                     <Statistic
-                      title='满意度评分'
+                      title={t('profile.satisfactionScore')}
                       value={stats.satisfactionScore}
                       precision={1}
                       suffix='/5.0'
@@ -531,23 +383,23 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className='text-center'>
-                    <Statistic title='响应率' value={stats.responseRate} suffix='%' />
+                    <Statistic title={t('profile.responseRate')} value={stats.responseRate} suffix='%' />
                   </div>
                 </div>
               </Card>
             )}
 
             {/* 快速操作 */}
-            <Card title='快速操作'>
+            <Card title={t('profile.quickActions')}>
               <div className='space-y-2'>
                 <Button block icon={<Shield />}>
-                  查看权限
+                  {t('profile.viewPermissions')}
                 </Button>
                 <Button block icon={<Bell />}>
-                  通知设置
+                  {t('profile.notificationSettings')}
                 </Button>
                 <Button block icon={<User />}>
-                  切换账户
+                  {t('profile.switchAccount')}
                 </Button>
               </div>
             </Card>

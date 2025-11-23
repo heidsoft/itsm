@@ -17,6 +17,7 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   department?: string;
+  departmentId?: number;
   jobTitle?: string;
   manager?: User;
   location?: string;
@@ -104,6 +105,7 @@ export interface CreateUserRequest {
   phone?: string;
   role: UserRole;
   department?: string;
+  departmentId?: number;
   jobTitle?: string;
   managerId?: number;
   location?: string;
@@ -123,6 +125,7 @@ export interface UpdateUserRequest {
   role?: UserRole;
   status?: UserStatus;
   department?: string;
+  departmentId?: number;
   jobTitle?: string;
   managerId?: number;
   location?: string;

@@ -80,49 +80,49 @@ export const LazyTicketTemplateModal = lazy(() =>
 );
 
 export const LazyDashboard = lazy(() =>
-  import('@/app/dashboard/page').then(module => ({
+  import('@/app/(main)/dashboard/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyTicketsPage = lazy(() =>
-  import('@/app/tickets/page').then(module => ({
+  import('@/app/(main)/tickets/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyIncidentsPage = lazy(() =>
-  import('@/app/incidents/page').then(module => ({
+  import('@/app/(main)/incidents/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyProblemsPage = lazy(() =>
-  import('@/app/problems/page').then(module => ({
+  import('@/app/(main)/problems/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyChangesPage = lazy(() =>
-  import('@/app/changes/page').then(module => ({
+  import('@/app/(main)/changes/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyKnowledgePage = lazy(() =>
-  import('@/app/knowledge-base/page').then(module => ({
+  import('@/app/(main)/knowledge-base/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyReportsPage = lazy(() =>
-  import('@/app/reports/page').then(module => ({
+  import('@/app/(main)/reports/page').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyAdminPage = lazy(() =>
-  import('@/app/admin/page').then(module => ({
+  import('@/app/(main)/admin/page').then(module => ({
     default: module.default,
   }))
 );
@@ -148,13 +148,13 @@ export const LazyHeader = lazy(() =>
 
 // 懒加载的图表组件
 export const LazyCharts = lazy(() =>
-  import('@/app/dashboard/charts').then(module => ({
+  import('@/app/(main)/dashboard/charts').then(module => ({
     default: module.default,
   }))
 );
 
 export const LazyTicketAssociation = lazy(() =>
-  import('@/app/components/TicketAssociation').then(module => ({
+  import('@/components/business/TicketAssociation').then(module => ({
     default: module.TicketAssociation,
   }))
 );

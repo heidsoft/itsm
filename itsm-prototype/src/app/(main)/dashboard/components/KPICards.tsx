@@ -3,17 +3,15 @@
 import React from 'react';
 import { Card, Row, Col, Statistic, Tooltip, Spin, Progress } from 'antd';
 import {
-  RiseOutlined,
-  FallOutlined,
-  MinusOutlined,
-  DashboardOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  UserOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from '@ant-design/icons';
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  LayoutDashboard,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  User,
+} from 'lucide-react';
 import { KPIMetric } from '../types/dashboard.types';
 
 interface KPICardsProps {
@@ -27,32 +25,32 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
   const getTrendIcon = () => {
     switch (metric.trend) {
       case 'up':
-        return <ArrowUpOutlined style={{ fontSize: 18, color: '#10b981' }} />;
+        return <ArrowUp style={{ width: 16, height: 16, color: '#10b981' }} />; // Smaller icon
       case 'down':
-        return <ArrowDownOutlined style={{ fontSize: 18, color: '#ef4444' }} />;
+        return <ArrowDown style={{ width: 16, height: 16, color: '#ef4444' }} />; // Smaller icon
       default:
-        return <MinusOutlined style={{ fontSize: 18, color: '#9ca3af' }} />;
+        return <Minus style={{ width: 16, height: 16, color: '#9ca3af' }} />; // Smaller icon
     }
   };
 
   // 获取默认图标
   const getDefaultIcon = () => {
-    const iconStyle = { fontSize: 24 };
+    const iconStyle = { width: 28, height: 28 }; // Slightly larger icon
     switch (metric.id) {
       case 'total-tickets':
-        return <DashboardOutlined style={iconStyle} />;
+        return <LayoutDashboard style={iconStyle} />;
       case 'open-tickets':
-        return <WarningOutlined style={iconStyle} />;
+        return <AlertTriangle style={iconStyle} />;
       case 'resolved-tickets':
-        return <CheckCircleOutlined style={iconStyle} />;
+        return <CheckCircle style={iconStyle} />;
       case 'sla-compliance':
-        return <ClockCircleOutlined style={iconStyle} />;
+        return <Clock style={iconStyle} />;
       case 'avg-resolution':
-        return <ClockCircleOutlined style={iconStyle} />;
+        return <Clock style={iconStyle} />;
       case 'user-satisfaction':
-        return <UserOutlined style={iconStyle} />;
+        return <User style={iconStyle} />;
       default:
-        return <DashboardOutlined style={iconStyle} />;
+        return <LayoutDashboard style={iconStyle} />;
     }
   };
 
@@ -68,13 +66,16 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
   };
 
   return (
-    <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
+    <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6}>
       <Card
-        className='enterprise-kpi-card h-full border-0 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group overflow-hidden'
+        className='enterprise-kpi-card h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group'
         style={{
-          borderRadius: '12px',
-          background: '#ffffff',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)',
+          borderRadius: 8, // antdTheme.token.borderRadiusLG
+          background: '#ffffff', // antdTheme.token.colorBgContainer
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)', // designSystem.boxShadow.base
+          borderColor: '#e2e8f0', // antdTheme.token.colorBorder
+          borderWidth: 1,
+          borderStyle: 'solid',
         }}
         styles={{
           body: {
@@ -86,62 +87,34 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           },
         }}
       >
-        {/* 背景装饰渐变 */}
-        <div
-          className='absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500'
-          style={{
-            background: `radial-gradient(circle at top right, ${metric.color}15 0%, transparent 70%)`,
-          }}
-        />
-
-        <div className='relative z-10 flex flex-col h-full'>
+        {/* 简化设计：去除背景装饰 */}
+        <div className='flex flex-col h-full'>
           {/* 顶部区域：图标和趋势 */}
           <div className='flex items-start justify-between mb-4'>
+            {/* 简化图标容器：去除渐变和缩放动画 */}
             <div
-              className='w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110'
+              className='w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200'
               style={{
-                background: `linear-gradient(135deg, ${metric.color}20 0%, ${metric.color}10 100%)`,
-                border: `2px solid ${metric.color}30`,
+                backgroundColor: `${metric.color}15`,
               }}
             >
               <div style={{ color: metric.color }}>{metric.icon || getDefaultIcon()}</div>
             </div>
 
-            {metric.trend && (
+            {/* 简化趋势指示器 */}
+            {metric.change !== undefined && (
               <div
-                className='px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-sm'
-                style={{
-                  backgroundColor:
-                    metric.trend === 'up'
-                      ? '#f0fdf4'
-                      : metric.trend === 'down'
-                      ? '#fef2f2'
-                      : '#f9fafb',
-                  border: `1px solid ${
-                    metric.trend === 'up'
-                      ? '#bbf7d0'
-                      : metric.trend === 'down'
-                      ? '#fecaca'
-                      : '#e5e7eb'
-                  }`,
-                }}
+                className={`text-sm font-semibold flex items-center gap-1 ${ // Added flex items-center gap-1
+                  metric.trend === 'up'
+                    ? 'text-green-500' // antdTheme.token.colorSuccess
+                    : metric.trend === 'down'
+                    ? 'text-red-500' // antdTheme.token.colorError
+                    : 'text-gray-500' // antdTheme.token.colorTextSecondary
+                }`}
               >
                 {getTrendIcon()}
-                {metric.change !== undefined && (
-                  <span
-                    className='text-xs font-bold'
-                    style={{
-                      color:
-                        metric.trend === 'up'
-                          ? '#16a34a'
-                          : metric.trend === 'down'
-                          ? '#dc2626'
-                          : '#6b7280',
-                    }}
-                  >
-                    {Math.abs(metric.change)}%
-                  </span>
-                )}
+                {metric.change > 0 ? '+' : ''}
+                {metric.change}%
               </div>
             )}
           </div>
@@ -149,7 +122,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           {/* 标题 */}
           <div className='mb-3'>
             <Tooltip title={metric.description || metric.title}>
-              <h3 className='text-sm font-medium text-gray-600 leading-tight line-clamp-2'>
+              <h3 className='text-base font-semibold text-gray-800 leading-tight line-clamp-2'> {/* Changed text size and color */}
                 {metric.title}
               </h3>
             </Tooltip>
@@ -159,7 +132,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           <div className='flex-1 flex flex-col justify-center mb-3'>
             <div className='flex items-baseline gap-2'>
               <span
-                className='text-4xl font-bold leading-none tracking-tight'
+                className='text-4xl font-bold leading-none' // Removed tracking-tight
                 style={{ color: metric.color }}
               >
                 {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
@@ -170,40 +143,28 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
             </div>
           </div>
 
-          {/* 底部进度条 */}
-          <div className='mt-auto'>
-            <Progress
-              percent={getProgressPercent()}
-              strokeColor={metric.color}
-              showInfo={false}
-              strokeWidth={4}
-              trailColor='#f0f0f0'
-              className='enterprise-kpi-progress'
-            />
-            {metric.change !== undefined && (
-              <div className='flex items-center justify-between mt-2'>
-                <span className='text-xs text-gray-500'>vs 上期</span>
+          {/* 简化底部：去除装饰性进度条 */}
+          {metric.change !== undefined && (
+            <div className='mt-auto pt-3 border-t border-gray-100'>
+              <span className='text-xs text-gray-500'>
+                相比上期
                 <span
-                  className='text-xs font-semibold'
+                  className='ml-2 font-semibold'
                   style={{
                     color:
                       metric.changeType === 'increase'
-                        ? '#16a34a'
+                        ? '#10b981' // antdTheme.token.colorSuccess
                         : metric.changeType === 'decrease'
-                        ? '#dc2626'
-                        : '#6b7280',
+                        ? '#ef4444' // antdTheme.token.colorError
+                        : '#6b7280', // antdTheme.token.colorTextSecondary
                   }}
                 >
-                  {metric.changeType === 'increase'
-                    ? '+'
-                    : metric.changeType === 'decrease'
-                    ? '-'
-                    : ''}
+                  {metric.changeType === 'increase' ? '↑' : metric.changeType === 'decrease' ? '↓' : '—'}{' '}
                   {Math.abs(metric.change)}%
                 </span>
-              </div>
-            )}
-          </div>
+              </span>
+            </div>
+          )}
         </div>
       </Card>
     </Col>
@@ -223,8 +184,8 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
               <Card
                 className='h-44 border-0'
                 style={{
-                  borderRadius: '12px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+                  borderRadius: 8, // antdTheme.token.borderRadiusLG
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)', // designSystem.boxShadow.base
                 }}
               >
                 <div className='flex items-center justify-center h-full'>
@@ -247,12 +208,14 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
         <Card
           className='text-center py-12 border-0'
           style={{
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            borderRadius: 8, // antdTheme.token.borderRadiusLG
+            background: '#f8fafc', // antdTheme.token.colorBgLayout
+            boxShadow: 'none', // No shadow for empty state background
+            border: '1px dashed #cbd5e1', // designSystem.colors.neutral[300]
           }}
         >
           <div className='text-gray-500'>
-            <div className='w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4'>
+            <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4'>
               <DashboardOutlined style={{ fontSize: 32, color: '#9ca3af' }} />
             </div>
             <p className='text-base font-medium text-gray-700 mb-1'>暂无KPI数据</p>
@@ -269,9 +232,21 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
         {metrics.map(metric => (
           <EnterpriseKPICard key={metric.id} metric={metric} />
         ))}
+        {/* Placeholder for two more cards if needed, maintain layout */}
+        {metrics.length === 4 && (
+          <>
+            <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6} />
+            <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6} />
+          </>
+        )}
+        {metrics.length === 5 && (
+          <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6} />
+        )}
       </Row>
     </div>
   );
 });
 
 KPICards.displayName = 'KPICards';
+
+

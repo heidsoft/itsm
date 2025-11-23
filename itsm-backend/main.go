@@ -18,6 +18,7 @@ import (
 	"itsm-backend/database"   // 自定义数据库包
 	"itsm-backend/ent/tenant" // 租户查询
 	"itsm-backend/ent/user"   // Ent 用户schema枚举与查询
+	"itsm-backend/handlers"   // 自定义handlers包
 	"itsm-backend/middleware" // 注入全局日志器
 	"itsm-backend/router"     // 自定义路由包
 	"itsm-backend/service"    // 自定义服务包
@@ -180,23 +181,48 @@ func main() {
 	userController := controller.NewUserController(userService, sugar)
 	authController := controller.NewAuthController(authService)
 	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
+	aiController.SetEmbeddingResources(embedder, vectorStore)
+
+	// 初始化部门控制器
+	departmentController := controller.NewDepartmentController(client)
+	projectController := controller.NewProjectController(client)
+	applicationController := controller.NewApplicationController(client)
+	teamController := controller.NewTeamController(client)
+	tagController := controller.NewTagController(client)
+
+	// BPMN工作流
+	processEngine := service.NewCustomProcessEngine(client, sugar)
+	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine)
+
 	// 审计日志控制器
 	auditLogController := controller.NewAuditLogController(auditService, sugar)
 
 	// 7. 设置路由
 	// 配置路由结构
 	r := gin.Default()
+	// 初始化Dashboard Service
+	dashboardService := service.NewDashboardService(client, sugar)
+	// 初始化Dashboard Handler
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
+
 	routerConfig := &router.RouterConfig{
-		JWTSecret:          cfg.JWT.Secret,
-		Logger:             sugar,
-		Client:             client,
-		TicketController:   ticketController,
-		IncidentController: incidentController,
-		SLAController:      slaController,
-		AuthController:     authController,
-		UserController:     userController,
-		AIController:       aiController,
-		AuditLogController: auditLogController,
+		JWTSecret:              cfg.JWT.Secret,
+		Logger:                 sugar,
+		Client:                 client,
+		TicketController:       ticketController,
+		IncidentController:     incidentController,
+		SLAController:          slaController,
+		AuthController:         authController,
+		UserController:         userController,
+		AIController:           aiController,
+		AuditLogController:     auditLogController,
+		BPMNWorkflowController: bpmnWorkflowController,
+		DashboardHandler:       dashboardHandler,
+		DepartmentController:   departmentController,
+		ProjectController:      projectController,
+		ApplicationController:  applicationController,
+		TeamController:         teamController,
+		TagController:          tagController,
 	}
 
 	// SetupRoutes函数配置Gin路由，定义API端点

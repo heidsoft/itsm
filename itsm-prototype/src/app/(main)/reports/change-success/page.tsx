@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { mockChangesData } from '../../lib/mock-data';
+import { mockChangesData } from '@/app/lib/mock-data';
 
 // 按状态统计变更
 const statusData = mockChangesData.reduce((acc, change) => {

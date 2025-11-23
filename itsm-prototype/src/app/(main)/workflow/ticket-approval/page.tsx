@@ -22,6 +22,7 @@ import {
   Steps,
   Timeline,
   App,
+  message,
 } from "antd";
 import {
   ArrowLeft,
@@ -40,7 +41,8 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import TicketApprovalWorkflowDesigner from "../../components/TicketApprovalWorkflowDesigner";
+import WorkflowEngine from "@/app/components/workflow/WorkflowEngine";
+import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -63,21 +65,21 @@ const getNodeTypeColor = (type: string) => {
   }
 };
 
-// 获取节点类型名称
-const getNodeTypeName = (type: string) => {
+// 获取节点类型名称（将在组件内使用国际化）
+const getNodeTypeName = (type: string, t: (key: string) => string) => {
   switch (type) {
     case "start":
-      return "开始";
+      return t('workflow.nodeTypeStart');
     case "approval":
-      return "审批";
+      return t('workflow.nodeTypeApproval');
     case "condition":
-      return "条件";
+      return t('workflow.nodeTypeCondition');
     case "action":
-      return "动作";
+      return t('workflow.nodeTypeAction');
     case "end":
-      return "结束";
+      return t('workflow.nodeTypeEnd');
     default:
-      return "未知";
+      return t('workflow.nodeTypeUnknown');
   }
 };
 
@@ -96,6 +98,7 @@ interface TicketApprovalWorkflow {
 }
 
 const TicketApprovalWorkflowPage = () => {
+  const { t } = useI18n();
   const router = useRouter();
   const { modal } = App.useApp();
   const [workflow, setWorkflow] = useState<TicketApprovalWorkflow | null>(null);
@@ -112,9 +115,9 @@ const TicketApprovalWorkflowPage = () => {
 
     // 设置表单初始值
     form.setFieldsValue({
-      name: workflowData.name || "工单审批流程",
-      description: workflowData.description || "标准工单审批流程",
-      category: "审批流程",
+      name: workflowData.name || t('workflow.ticketApprovalProcess'),
+      description: workflowData.description || t('workflow.ticketApprovalDescription'),
+      category: t('workflow.approvalProcess'),
       version: workflowData.metadata?.version || "1.0.0",
     });
   };
@@ -136,12 +139,12 @@ const TicketApprovalWorkflowPage = () => {
         updated_at: new Date().toISOString(),
         instances_count: 0,
         running_instances: 0,
-        created_by: "当前用户",
+        created_by: t('workflow.currentUser'),
       };
 
       console.log("最终保存的工作流:", finalWorkflow);
 
-      message.success("工单审批流程保存成功！");
+      message.success(t('workflow.ticketApprovalSaveSuccess'));
       setSaveModalVisible(false);
 
       // 保存成功后返回工作流列表
@@ -149,7 +152,7 @@ const TicketApprovalWorkflowPage = () => {
         router.push("/workflow");
       }, 1000);
     } catch (error) {
-      message.error("保存失败，请检查必填项");
+      message.error(t('workflow.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -157,10 +160,10 @@ const TicketApprovalWorkflowPage = () => {
 
   const handleCancel = () => {
     modal.confirm({
-      title: "确认离开",
-      content: "离开此页面将丢失未保存的更改，确定要离开吗？",
-      okText: "确定离开",
-      cancelText: "继续编辑",
+      title: t('workflow.confirmLeave'),
+      content: t('workflow.leaveConfirmation'),
+      okText: t('workflow.confirmLeave'),
+      cancelText: t('workflow.continueEdit'),
       okType: "danger",
       onOk: () => {
         router.push("/workflow");
@@ -170,7 +173,7 @@ const TicketApprovalWorkflowPage = () => {
 
   const handlePreview = () => {
     if (!workflow) {
-      message.warning("请先设计工作流程");
+      message.warning(t('workflow.designWorkflowFirst'));
       return;
     }
 
@@ -198,26 +201,24 @@ const TicketApprovalWorkflowPage = () => {
       title: (
         <div className="flex items-center gap-2">
           <Eye className="w-5 h-5" />
-          工作流预览
+          {t('workflow.workflowPreview')}
         </div>
       ),
       width: 800,
       content: (
         <div className="space-y-6">
           <Alert
-            message="工作流程概览"
-            description={`该工作流包含 ${
-              workflow.nodes?.length || 0
-            } 个节点，其中 ${
-              workflow.nodes?.filter((n: any) => n.type === "approval")
-                .length || 0
-            } 个审批节点`}
+            message={t('workflow.workflowOverview')}
+            description={t('workflow.workflowOverviewDescription', { 
+              total: workflow.nodes?.length || 0,
+              approval: workflow.nodes?.filter((n: any) => n.type === "approval").length || 0
+            })}
             type="info"
             showIcon
           />
 
           <div>
-            <Title level={5}>流程步骤</Title>
+            <Title level={5}>{t('workflow.processSteps')}</Title>
             <Steps
               direction="vertical"
               size="small"
@@ -227,7 +228,7 @@ const TicketApprovalWorkflowPage = () => {
           </div>
 
           <div>
-            <Title level={5}>节点详情</Title>
+            <Title level={5}>{t('workflow.nodeDetails')}</Title>
             <List
               size="small"
               dataSource={workflow.nodes || []}
@@ -239,7 +240,7 @@ const TicketApprovalWorkflowPage = () => {
                       <div className="flex items-center gap-2">
                         <Text strong>{node.name}</Text>
                         <Tag color={getNodeTypeColor(node.type)}>
-                          {getNodeTypeName(node.type)}
+                          {getNodeTypeName(node.type, t)}
                         </Tag>
                       </div>
                       {node.description && (
@@ -250,10 +251,10 @@ const TicketApprovalWorkflowPage = () => {
                       {node.type === "approval" && node.config?.approvers && (
                         <div className="mt-1">
                           <Tag color="blue" className="text-xs">
-                            {node.config.approvers.value?.length || 0} 审批人
+                            {t('workflow.approversCount', { count: node.config.approvers.value?.length || 0 })}
                           </Tag>
                           <Tag color="orange" className="text-xs">
-                            {node.config.timeout || 24}小时
+                            {t('workflow.timeoutHours', { hours: node.config.timeout || 24 })}
                           </Tag>
                         </div>
                       )}
@@ -268,16 +269,7 @@ const TicketApprovalWorkflowPage = () => {
     });
   };
 
-  const getNodeTypeName = (type: string) => {
-    const names: Record<string, string> = {
-      start: "开始",
-      approval: "审批",
-      condition: "条件",
-      action: "动作",
-      end: "结束",
-    };
-    return names[type] || type;
-  };
+  // getNodeTypeName 已在文件顶部定义，使用国际化版本
 
   const getNodeTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -301,16 +293,16 @@ const TicketApprovalWorkflowPage = () => {
                 icon={<ArrowLeft className="w-4 h-4" />}
                 onClick={handleCancel}
               >
-                返回工作流列表
+                {t('workflow.backToWorkflowList')}
               </Button>
               <Divider type="vertical" />
               <div>
                 <Title level={3} className="!mb-1">
                   <GitBranch className="inline-block w-6 h-6 mr-2" />
-                  工单审批流程设计器
+                  {t('workflow.ticketApprovalDesigner')}
                 </Title>
                 <Text type="secondary">
-                  设计和配置工单的审批流程，支持多级审批和条件分支
+                  {t('workflow.ticketApprovalDesignerDescription')}
                 </Text>
               </div>
             </div>
@@ -321,13 +313,13 @@ const TicketApprovalWorkflowPage = () => {
                 onClick={handlePreview}
                 disabled={!workflow}
               >
-                预览
+                {t('workflow.preview')}
               </Button>
               <Button
                 icon={<Download className="w-4 h-4" />}
                 disabled={!workflow}
               >
-                导出
+                {t('workflow.export')}
               </Button>
               <Button
                 type="primary"
@@ -335,7 +327,7 @@ const TicketApprovalWorkflowPage = () => {
                 disabled={!workflow}
                 onClick={() => setSaveModalVisible(true)}
               >
-                保存流程
+                {t('workflow.saveWorkflow')}
               </Button>
             </Space>
           </div>
@@ -344,7 +336,7 @@ const TicketApprovalWorkflowPage = () => {
 
       {/* 设计器区域 */}
       <div className="flex-1">
-        <TicketApprovalWorkflowDesigner
+        <WorkflowEngine
           workflow={workflow}
           onSave={handleSaveWorkflow}
           onCancel={handleCancel}
@@ -353,43 +345,43 @@ const TicketApprovalWorkflowPage = () => {
 
       {/* 保存确认模态框 */}
       <Modal
-        title="保存工单审批流程"
+        title={t('workflow.saveTicketApprovalWorkflow')}
         open={saveModalVisible}
         onOk={handleFinalSave}
         onCancel={() => setSaveModalVisible(false)}
         width={600}
         confirmLoading={loading}
-        okText="确认保存"
-        cancelText="取消"
+        okText={t('workflow.confirmSave')}
+        cancelText={t('workflow.cancel')}
       >
         <div className="space-y-6">
           <Alert
-            message="保存确认"
-            description="请确认工作流的基本信息，保存后将可以在工作流管理中查看和部署"
+            message={t('workflow.saveConfirmation')}
+            description={t('workflow.saveConfirmationDescription')}
             type="info"
             showIcon
           />
 
           {workflow && (
-            <Card size="small" title="流程统计">
+            <Card size="small" title={t('workflow.processStatistics')}>
               <Row gutter={16}>
                 <Col span={6}>
                   <Statistic
-                    title="总节点"
+                    title={t('workflow.totalNodes')}
                     value={workflow.metadata?.nodeCount || 0}
                     prefix={<GitBranch className="w-4 h-4" />}
                   />
                 </Col>
                 <Col span={6}>
                   <Statistic
-                    title="审批节点"
+                    title={t('workflow.approvalNodes')}
                     value={workflow.metadata?.approvalCount || 0}
                     prefix={<Users className="w-4 h-4" />}
                   />
                 </Col>
                 <Col span={6}>
                   <Statistic
-                    title="条件节点"
+                    title={t('workflow.conditionNodes')}
                     value={
                       workflow.nodes?.filter((n: any) => n.type === "condition")
                         .length || 0
@@ -399,7 +391,7 @@ const TicketApprovalWorkflowPage = () => {
                 </Col>
                 <Col span={6}>
                   <Statistic
-                    title="动作节点"
+                    title={t('workflow.actionNodes')}
                     value={
                       workflow.nodes?.filter((n: any) => n.type === "action")
                         .length || 0
@@ -415,53 +407,53 @@ const TicketApprovalWorkflowPage = () => {
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  label="流程名称"
+                  label={t('workflow.processName')}
                   name="name"
-                  rules={[{ required: true, message: "请输入流程名称" }]}
+                  rules={[{ required: true, message: t('workflow.processNameRequired') }]}
                 >
-                  <Input placeholder="输入流程名称" />
+                  <Input placeholder={t('workflow.processNamePlaceholder')} />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
-                  label="流程分类"
+                  label={t('workflow.processCategory')}
                   name="category"
-                  rules={[{ required: true, message: "请选择流程分类" }]}
+                  rules={[{ required: true, message: t('workflow.processCategoryRequired') }]}
                 >
-                  <Select placeholder="选择流程分类">
-                    <Option value="审批流程">审批流程</Option>
-                    <Option value="工单流程">工单流程</Option>
-                    <Option value="事件流程">事件流程</Option>
-                    <Option value="变更流程">变更流程</Option>
+                  <Select placeholder={t('workflow.processCategoryPlaceholder')}>
+                    <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
+                    <Option value={t('workflow.ticketProcess')}>{t('workflow.ticketProcess')}</Option>
+                    <Option value={t('workflow.incidentProcess')}>{t('workflow.incidentProcess')}</Option>
+                    <Option value={t('workflow.changeProcess')}>{t('workflow.changeProcess')}</Option>
                   </Select>
                 </Form.Item>
               </Col>
             </Row>
 
             <Form.Item
-              label="流程描述"
+              label={t('workflow.processDescription')}
               name="description"
-              rules={[{ required: true, message: "请输入流程描述" }]}
+              rules={[{ required: true, message: t('workflow.processDescriptionRequired') }]}
             >
-              <Input.TextArea rows={3} placeholder="描述此工作流的用途和特点" />
+              <Input.TextArea rows={3} placeholder={t('workflow.processDescriptionPlaceholder')} />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
-                  label="版本号"
+                  label={t('workflow.version')}
                   name="version"
-                  rules={[{ required: true, message: "请输入版本号" }]}
+                  rules={[{ required: true, message: t('workflow.versionRequired') }]}
                 >
-                  <Input placeholder="如: 1.0.0" />
+                  <Input placeholder={t('workflow.versionPlaceholder')} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="初始状态" name="status" initialValue="draft">
+                <Form.Item label={t('workflow.initialStatus')} name="status" initialValue="draft">
                   <Select disabled>
-                    <Option value="draft">草稿</Option>
-                    <Option value="active">启用</Option>
-                    <Option value="inactive">停用</Option>
+                    <Option value="draft">{t('workflow.draft')}</Option>
+                    <Option value="active">{t('workflow.statusEnabled')}</Option>
+                    <Option value="inactive">{t('workflow.statusDisabled')}</Option>
                   </Select>
                 </Form.Item>
               </Col>

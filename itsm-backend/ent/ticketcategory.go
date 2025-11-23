@@ -4,7 +4,9 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/workflow"
 	"strings"
 	"time"
 
@@ -33,6 +35,10 @@ type TicketCategory struct {
 	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 所属部门ID
+	DepartmentID int `json:"department_id,omitempty"`
+	// 关联工作流ID
+	WorkflowID int `json:"workflow_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -51,9 +57,13 @@ type TicketCategoryEdges struct {
 	Children []*TicketCategory `json:"children,omitempty"`
 	// 父分类
 	Parent *TicketCategory `json:"parent,omitempty"`
+	// 所属部门
+	Department *Department `json:"department,omitempty"`
+	// 关联工作流
+	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // TicketsOrErr returns the Tickets value or an error if the edge
@@ -85,6 +95,28 @@ func (e TicketCategoryEdges) ParentOrErr() (*TicketCategory, error) {
 	return nil, &NotLoadedError{edge: "parent"}
 }
 
+// DepartmentOrErr returns the Department value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketCategoryEdges) DepartmentOrErr() (*Department, error) {
+	if e.Department != nil {
+		return e.Department, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: department.Label}
+	}
+	return nil, &NotLoadedError{edge: "department"}
+}
+
+// WorkflowOrErr returns the Workflow value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketCategoryEdges) WorkflowOrErr() (*Workflow, error) {
+	if e.Workflow != nil {
+		return e.Workflow, nil
+	} else if e.loadedTypes[4] {
+		return nil, &NotFoundError{label: workflow.Label}
+	}
+	return nil, &NotLoadedError{edge: "workflow"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*TicketCategory) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -92,7 +124,7 @@ func (*TicketCategory) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticketcategory.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case ticketcategory.FieldID, ticketcategory.FieldParentID, ticketcategory.FieldLevel, ticketcategory.FieldSortOrder, ticketcategory.FieldTenantID:
+		case ticketcategory.FieldID, ticketcategory.FieldParentID, ticketcategory.FieldLevel, ticketcategory.FieldSortOrder, ticketcategory.FieldTenantID, ticketcategory.FieldDepartmentID, ticketcategory.FieldWorkflowID:
 			values[i] = new(sql.NullInt64)
 		case ticketcategory.FieldName, ticketcategory.FieldDescription, ticketcategory.FieldCode:
 			values[i] = new(sql.NullString)
@@ -167,6 +199,18 @@ func (tc *TicketCategory) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				tc.TenantID = int(value.Int64)
 			}
+		case ticketcategory.FieldDepartmentID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				tc.DepartmentID = int(value.Int64)
+			}
+		case ticketcategory.FieldWorkflowID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
+			} else if value.Valid {
+				tc.WorkflowID = int(value.Int64)
+			}
 		case ticketcategory.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -205,6 +249,16 @@ func (tc *TicketCategory) QueryChildren() *TicketCategoryQuery {
 // QueryParent queries the "parent" edge of the TicketCategory entity.
 func (tc *TicketCategory) QueryParent() *TicketCategoryQuery {
 	return NewTicketCategoryClient(tc.config).QueryParent(tc)
+}
+
+// QueryDepartment queries the "department" edge of the TicketCategory entity.
+func (tc *TicketCategory) QueryDepartment() *DepartmentQuery {
+	return NewTicketCategoryClient(tc.config).QueryDepartment(tc)
+}
+
+// QueryWorkflow queries the "workflow" edge of the TicketCategory entity.
+func (tc *TicketCategory) QueryWorkflow() *WorkflowQuery {
+	return NewTicketCategoryClient(tc.config).QueryWorkflow(tc)
 }
 
 // Update returns a builder for updating this TicketCategory.
@@ -253,6 +307,12 @@ func (tc *TicketCategory) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", tc.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("department_id=")
+	builder.WriteString(fmt.Sprintf("%v", tc.DepartmentID))
+	builder.WriteString(", ")
+	builder.WriteString("workflow_id=")
+	builder.WriteString(fmt.Sprintf("%v", tc.WorkflowID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(tc.CreatedAt.Format(time.ANSIC))

@@ -1,350 +1,63 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Clock, CheckCircle, Eye, Edit, MoreHorizontal } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button, Space, Pagination, Skeleton } from 'antd';
+import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+import { useIncidentsData } from './hooks/useIncidentsData';
+import { IncidentStats } from './components/IncidentStats';
+import { IncidentFilters } from './components/IncidentFilters';
+import { IncidentList } from './components/IncidentList';
+import { useI18n } from '@/lib/i18n';
 
-import { Card, Table, Tag, Button, Space, Row, Col, Input, Select, Badge, message } from 'antd';
-import { SearchOutlined, PlusOutlined, DownloadOutlined } from '@ant-design/icons';
-import { AlertCircle } from 'lucide-react';
-import { IncidentAPI, Incident } from '@/lib/api/incident-api';
-// AppLayout is handled by layout.tsx
-
-const { Search } = Input;
-const { Option } = Select;
+const IncidentsPageSkeleton: React.FC = () => (
+  <div>
+    <Skeleton active paragraph={{ rows: 4 }} />
+    <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 24 }} />
+    <Skeleton active paragraph={{ rows: 8 }} style={{ marginTop: 24 }} />
+  </div>
+);
 
 export default function IncidentsPage() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState({
-    status: '',
-    priority: '',
-    source: '',
-    keyword: '',
-  });
+  const { t } = useI18n();
+  const {
+    incidents,
+    loading,
+    total,
+    currentPage,
+    pageSize,
+    metrics,
+    setCurrentPage,
+    setPageSize,
+    handleSearch,
+    handleFilterChange,
+    loadIncidents,
+  } = useIncidentsData();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // 统计数据
-  const [metrics, setMetrics] = useState({
-    total_incidents: 0,
-    critical_incidents: 0,
-    major_incidents: 0,
-    avg_resolution_time: 0,
-  });
-
-  const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
-    open: {
-      color: '#fa8c16',
-      text: 'Open',
-      backgroundColor: '#fff7e6',
-    },
-    'in-progress': {
-      color: '#1890ff',
-      text: 'In Progress',
-      backgroundColor: '#e6f7ff',
-    },
-    resolved: {
-      color: '#52c41a',
-      text: 'Resolved',
-      backgroundColor: '#f6ffed',
-    },
-    closed: {
-      color: '#00000073',
-      text: 'Closed',
-      backgroundColor: '#fafafa',
-    },
-  };
-
-  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
-    low: {
-      color: '#52c41a',
-      text: 'Low',
-      backgroundColor: '#f6ffed',
-    },
-    medium: {
-      color: '#1890ff',
-      text: 'Medium',
-      backgroundColor: '#e6f7ff',
-    },
-    high: {
-      color: '#fa8c16',
-      text: 'High',
-      backgroundColor: '#fff7e6',
-    },
-    critical: {
-      color: '#ff4d4f',
-      text: 'Critical',
-      backgroundColor: '#fff2f0',
-    },
-  };
-
-  useEffect(() => {
-    loadIncidents();
-    loadMetrics();
-  }, [currentPage, pageSize, filters]);
-
-  const loadIncidents = async () => {
-    setLoading(true);
-    try {
-      const response = await IncidentAPI.listIncidents({
-        page: currentPage,
-        page_size: pageSize,
-        status: filters.status,
-        priority: filters.priority,
-        source: filters.source,
-        keyword: filters.keyword,
-      });
-      setIncidents(response.incidents);
-      setTotal(response.total);
-    } catch (error) {
-      console.error('Failed to load incidents:', error);
-      message.error('无法加载事件数据，请确保后端服务正在运行');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMetrics = async () => {
-    try {
-      const response = await IncidentAPI.getIncidentMetrics();
-      setMetrics(response);
-    } catch (error) {
-      console.error('Failed to load metrics:', error);
-      // 如果无法加载，使用默认值
-      setMetrics({
-        total_incidents: 0,
-        critical_incidents: 0,
-        major_incidents: 0,
-        avg_resolution_time: 0,
-      });
-    }
-  };
-
-  const handleSearch = (value: string) => {
-    setFilters({ ...filters, keyword: value });
-    setCurrentPage(1);
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value });
-    setCurrentPage(1);
-  };
-
   const handleCreateIncident = () => {
-    // Navigate to create incident page
     window.location.href = '/incidents/new';
   };
 
-  // Render statistics cards
-  const renderStatsCards = () => (
-    <div className='mb-4'>
-      <Row gutter={[12, 12]}>
-        <Col xs={24} sm={12} md={6} lg={6}>
-          <Card 
-            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative'
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
-              <AlertTriangle className='w-5 h-5 text-white' />
-            </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.total_incidents}</div>
-            <div className='text-blue-100 font-medium text-xs'>总事件数</div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
-          <Card 
-            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative'
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
-              <Clock className='w-5 h-5 text-white' />
-            </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.critical_incidents}</div>
-            <div className='text-orange-100 font-medium text-xs'>关键事件</div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
-          <Card 
-            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative'
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
-              <CheckCircle className='w-5 h-5 text-white' />
-            </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.major_incidents}</div>
-            <div className='text-green-100 font-medium text-xs'>主要事件</div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
-          <Card 
-            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative'
-            styles={{ body: { padding: '16px' } }}
-          >
-            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
-              <AlertCircle className='w-5 h-5 text-white' />
-            </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.avg_resolution_time}</div>
-            <div className='text-purple-100 font-medium text-xs'>平均解决时间(小时)</div>
-          </Card>
-        </Col>
-      </Row>
-    </div>
-  );
+  if (loading) {
+    return <IncidentsPageSkeleton />;
+  }
 
-  // Render filters
-  const renderFilters = () => (
-    <Card className='mb-4 shadow-sm border-0' styles={{ body: { padding: '16px' } }}>
-      <div className='mb-3'>
-        <h3 className='text-sm font-semibold text-gray-800 mb-3'>筛选与搜索</h3>
-        <Row gutter={[12, 12]} align='middle'>
-          <Col xs={24} sm={12} md={8}>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>Search Incidents</label>
-              <Search
-                placeholder='Search incident title, ID or description...'
-                allowClear
-                onSearch={handleSearch}
-                size='large'
-                enterButton
-                className='rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
-              />
-            </div>
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>Status Filter</label>
-              <Select
-                placeholder='Select Status'
-                size='large'
-                allowClear
-                value={filters.status}
-                onChange={value => handleFilterChange('status', value)}
-                className='w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
-              >
-                <Option value='open'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-orange-500 rounded-full'></div>
-                    <span>Open</span>
-                  </div>
-                </Option>
-                <Option value='in-progress'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
-                    <span>In Progress</span>
-                  </div>
-                </Option>
-                <Option value='resolved'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-green-500 rounded-full'></div>
-                    <span>Resolved</span>
-                  </div>
-                </Option>
-                <Option value='closed'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-gray-500 rounded-full'></div>
-                    <span>Closed</span>
-                  </div>
-                </Option>
-              </Select>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>Priority</label>
-              <Select
-                placeholder='Select Priority'
-                size='large'
-                allowClear
-                value={filters.priority}
-                onChange={value => handleFilterChange('priority', value)}
-                className='w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
-              >
-                <Option value='low'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-green-500 rounded-full'></div>
-                    <span>Low</span>
-                  </div>
-                </Option>
-                <Option value='medium'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
-                    <span>Medium</span>
-                  </div>
-                </Option>
-                <Option value='high'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-orange-500 rounded-full'></div>
-                    <span>High</span>
-                  </div>
-                </Option>
-                <Option value='critical'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-2 h-2 bg-red-500 rounded-full animate-pulse'></div>
-                    <span>Critical</span>
-                  </div>
-                </Option>
-              </Select>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>Source</label>
-              <Select
-                placeholder='Select Source'
-                size='large'
-                allowClear
-                value={filters.source}
-                onChange={value => handleFilterChange('source', value)}
-                className='w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
-              >
-                <Option value='email'>📧 邮件</Option>
-                <Option value='phone'>📞 电话</Option>
-                <Option value='web'>🌐 网页</Option>
-                <Option value='system'>⚙️ 系统</Option>
-              </Select>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} md={4}>
-            <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>Actions</label>
-              <Button
-                icon={<SearchOutlined />}
-                onClick={loadIncidents}
-                loading={loading}
-                size='large'
-                className='w-full bg-gradient-to-r from-blue-500 to-indigo-600 border-0 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg font-medium'
-              >
-                Refresh Data
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      </div>
-    </Card>
-  );
-
-  // 渲染事件列表
-  const renderIncidentList = () => (
+  return (
     <div>
+      <IncidentStats metrics={metrics} />
+      <IncidentFilters
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onRefresh={loadIncidents}
+      />
       <div className='bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-lg mb-6'>
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6'>
           <div className='flex items-center space-x-4'>
-            <div className='w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg'>
-              <AlertTriangle className='w-5 h-5 text-white' />
-            </div>
             <div>
-              <h3 className='text-lg font-semibold text-gray-800'>事件管理列表</h3>
-              <p className='text-sm text-gray-600'>管理和跟踪所有系统事件</p>
+              <h3 className='text-lg font-semibold text-gray-800'>{t('incidents.listTitle')}</h3>
+              <p className='text-sm text-gray-600'>{t('incidents.listDescription')}</p>
             </div>
-            {selectedRowKeys.length > 0 && (
-              <Badge
-                count={selectedRowKeys.length}
-                showZero
-                className='bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full px-3 py-1 text-sm font-medium shadow-lg'
-              />
-            )}
           </div>
           <Space size='middle' className='flex-wrap'>
             <Button
@@ -352,7 +65,7 @@ export default function IncidentsPage() {
               size='large'
               className='bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg font-medium'
             >
-              导出数据
+              {t('incidents.export')}
             </Button>
             <Button
               type='primary'
@@ -361,194 +74,32 @@ export default function IncidentsPage() {
               onClick={handleCreateIncident}
               className='bg-gradient-to-r from-green-500 to-emerald-600 border-0 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg font-medium'
             >
-              创建事件
+              {t('incidents.create')}
             </Button>
           </Space>
         </div>
-      </div>
-
-      <div className='bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden'>
-        <Table
-          rowSelection={{
-            selectedRowKeys,
-            onChange: setSelectedRowKeys,
-          }}
-          columns={columns}
-          dataSource={incidents}
-          rowKey='id'
+        <IncidentList
+          incidents={incidents}
           loading={loading}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `Items ${range[0]}-${range[1]} of ${total}`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
+          selectedRowKeys={selectedRowKeys}
+          onSelectedRowKeysChange={setSelectedRowKeys}
+          onEdit={incident => (window.location.href = `/incidents/${incident.id}/edit`)}
+          onView={incident => (window.location.href = `/incidents/${incident.id}`)}
+        />
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={total}
+          showSizeChanger
+          showQuickJumper
+          showTotal={(total, range) => t('incidents.paginationItems', { start: range[0], end: range[1], total })}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
           }}
-          scroll={{ x: 1200 }}
-          className='[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:border-b-2 [&_.ant-table-thead>tr>th]:border-gray-200 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-thead>tr>th]:text-gray-700 [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-b [&_.ant-table-tbody>tr>td]:border-gray-100 [&_.ant-table-tbody>tr>td]:py-4'
+          style={{ marginTop: 16, textAlign: 'right' }}
         />
       </div>
-    </div>
-  );
-
-  // 表格列定义
-  const columns = [
-    {
-      title: '事件信息',
-      key: 'incident_info',
-      width: 300,
-      render: (_: unknown, record: Incident) => (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              backgroundColor: '#e6f7ff',
-              borderRadius: 8,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: 12,
-            }}
-          >
-            <AlertTriangle size={20} style={{ color: '#1890ff' }} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 'medium', color: '#000', marginBottom: 4 }}>
-              {record.title}
-            </div>
-            <div style={{ fontSize: 'small', color: '#666' }}>
-              #{record.incident_number} • {record.category}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: string) => {
-        const config = statusConfig[status];
-        return (
-          <span
-            style={{
-              padding: '4px 12px',
-              borderRadius: 16,
-              fontSize: 'small',
-              fontWeight: 500,
-              color: config.color,
-              backgroundColor: config.backgroundColor,
-            }}
-          >
-            {config.text}
-          </span>
-        );
-      },
-    },
-    {
-      title: '优先级',
-      dataIndex: 'priority',
-      key: 'priority',
-      width: 100,
-      render: (priority: string) => {
-        const config = priorityConfig[priority];
-        return (
-          <span
-            style={{
-              padding: '4px 12px',
-              borderRadius: 16,
-              fontSize: 'small',
-              fontWeight: 500,
-              color: config.color,
-              backgroundColor: config.backgroundColor,
-            }}
-          >
-            {config.text}
-          </span>
-        );
-      },
-    },
-    {
-      title: '影响范围',
-      dataIndex: 'impact',
-      key: 'impact',
-      width: 120,
-      render: (impact: string) => {
-        const impactConfig: Record<string, { color: string; text: string }> = {
-          low: { color: 'green', text: 'Low' },
-          medium: { color: 'orange', text: 'Medium' },
-          high: { color: 'red', text: 'High' },
-        };
-        const config = impactConfig[impact] || { color: 'default', text: impact };
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: '报告人',
-      dataIndex: 'reporter',
-      key: 'reporter',
-      width: 150,
-      render: (reporter: { name: string }) => (
-        <div style={{ fontSize: 'small' }}>{reporter?.name || 'Unknown'}</div>
-      ),
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 150,
-      render: (created_at: string) => (
-        <div style={{ fontSize: 'small', color: '#666' }}>
-          {new Date(created_at).toLocaleDateString('en-US')}
-        </div>
-      ),
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 150,
-      render: (_: unknown, record: Incident) => (
-        <Space size='small'>
-          <Button
-            type='text'
-            size='small'
-            icon={<Eye size={16} />}
-            onClick={() => window.open(`/incidents/${record.id}`)}
-            className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2'
-            title='View Details'
-          />
-          <Button
-            type='text'
-            size='small'
-            icon={<Edit size={16} />}
-            onClick={() => window.open(`/incidents/${record.id}/edit`)}
-            className='text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2'
-            title='Edit Incident'
-          />
-          <Button
-            type='text'
-            size='small'
-            icon={<MoreHorizontal size={16} />}
-            className='text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2'
-            title='More Actions'
-          />
-        </Space>
-      ),
-    },
-  ];
-
-  return (
-    <div>
-      {renderStatsCards()}
-      {renderFilters()}
-      {renderIncidentList()}
     </div>
   );
 }

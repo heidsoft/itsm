@@ -39,6 +39,8 @@ class HttpClient {
     this.token = token;
     if (typeof window !== 'undefined') {
       localStorage.setItem('access_token', token); // Changed to access_token
+      // 同步更新 Cookie，有效期 15 分钟
+      document.cookie = `auth-token=${token}; path=/; max-age=900; SameSite=Lax`;
     }
   }
 
@@ -46,6 +48,9 @@ class HttpClient {
     this.token = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token'); // Changed to access_token
+      // 清除 Cookie
+      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie = 'refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
   }
 
@@ -232,16 +237,36 @@ class HttpClient {
       if (responseData.code !== 0) {
         const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
-        throw new Error((responseData.message || 'Request failed') + suffix);
+        const errorMessage = responseData.message || 'Request failed';
+        console.error('API Error:', {
+          code: responseData.code,
+          message: errorMessage,
+          endpoint,
+          url
+        });
+        throw new Error(errorMessage + suffix);
       }
       
       return responseData.data;
     } catch (error: unknown) {
-      console.error('Request failed:', error);
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout, please try again later');
+      console.error('Request failed:', {
+        error,
+        endpoint,
+        url: `${this.baseURL}${endpoint}`,
+        method: config.method
+      });
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout, please try again later');
+        }
+        // 如果是网络错误，提供更友好的错误信息
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          throw new Error('无法连接到服务器，请检查网络连接或确保后端服务正在运行');
+        }
+        throw error;
       }
-      throw error;
+      throw new Error('Unknown error occurred');
     }
   }
 

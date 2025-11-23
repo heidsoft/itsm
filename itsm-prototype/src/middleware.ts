@@ -9,9 +9,19 @@ const protectedRoutes = [
   '/problems',
   '/changes',
   '/assets',
+  '/cmdb',
+  '/service-catalog',
+  '/knowledge-base',
+  '/sla',
+  '/reports',
+  '/workflow',
   '/users',
   '/settings',
-  '/reports',
+  '/admin',
+  '/enterprise',
+  '/projects',
+  '/applications',
+  '/tags',
 ];
 
 // 公开路由（不需要认证）

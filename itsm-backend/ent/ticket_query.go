@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
@@ -31,6 +32,7 @@ type TicketQuery struct {
 	predicates            []predicate.Ticket
 	withTemplate          *TicketTemplateQuery
 	withCategory          *TicketCategoryQuery
+	withDepartment        *DepartmentQuery
 	withTags              *TicketTagQuery
 	withRelatedTickets    *TicketQuery
 	withParentTicket      *TicketQuery
@@ -111,6 +113,28 @@ func (tq *TicketQuery) QueryCategory() *TicketCategoryQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
 			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticket.CategoryTable, ticket.CategoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDepartment chains the current query on the "department" edge.
+func (tq *TicketQuery) QueryDepartment() *DepartmentQuery {
+	query := (&DepartmentClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticket.DepartmentTable, ticket.DepartmentColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -444,6 +468,7 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		predicates:            append([]predicate.Ticket{}, tq.predicates...),
 		withTemplate:          tq.withTemplate.Clone(),
 		withCategory:          tq.withCategory.Clone(),
+		withDepartment:        tq.withDepartment.Clone(),
 		withTags:              tq.withTags.Clone(),
 		withRelatedTickets:    tq.withRelatedTickets.Clone(),
 		withParentTicket:      tq.withParentTicket.Clone(),
@@ -475,6 +500,17 @@ func (tq *TicketQuery) WithCategory(opts ...func(*TicketCategoryQuery)) *TicketQ
 		opt(query)
 	}
 	tq.withCategory = query
+	return tq
+}
+
+// WithDepartment tells the query-builder to eager-load the nodes that are connected to
+// the "department" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithDepartment(opts ...func(*DepartmentQuery)) *TicketQuery {
+	query := (&DepartmentClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withDepartment = query
 	return tq
 }
 
@@ -623,9 +659,10 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [9]bool{
 			tq.withTemplate != nil,
 			tq.withCategory != nil,
+			tq.withDepartment != nil,
 			tq.withTags != nil,
 			tq.withRelatedTickets != nil,
 			tq.withParentTicket != nil,
@@ -664,6 +701,12 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 	if query := tq.withCategory; query != nil {
 		if err := tq.loadCategory(ctx, query, nodes, nil,
 			func(n *Ticket, e *TicketCategory) { n.Edges.Category = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withDepartment; query != nil {
+		if err := tq.loadDepartment(ctx, query, nodes, nil,
+			func(n *Ticket, e *Department) { n.Edges.Department = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -761,6 +804,35 @@ func (tq *TicketQuery) loadCategory(ctx context.Context, query *TicketCategoryQu
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "category_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (tq *TicketQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *Department)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Ticket)
+	for i := range nodes {
+		fk := nodes[i].DepartmentID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(department.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -980,6 +1052,9 @@ func (tq *TicketQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if tq.withCategory != nil {
 			_spec.Node.AddColumnOnce(ticket.FieldCategoryID)
+		}
+		if tq.withDepartment != nil {
+			_spec.Node.AddColumnOnce(ticket.FieldDepartmentID)
 		}
 		if tq.withParentTicket != nil {
 			_spec.Node.AddColumnOnce(ticket.FieldParentTicketID)

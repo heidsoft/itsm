@@ -5,6 +5,7 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/workflow"
 	"strings"
 	"time"
@@ -32,6 +33,8 @@ type Workflow struct {
 	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
+	// 部门ID
+	DepartmentID int `json:"department_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -46,9 +49,11 @@ type Workflow struct {
 type WorkflowEdges struct {
 	// 工作流实例
 	WorkflowInstances []*WorkflowInstance `json:"workflow_instances,omitempty"`
+	// 所属部门
+	Department *Department `json:"department,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // WorkflowInstancesOrErr returns the WorkflowInstances value or an error if the edge
@@ -60,6 +65,17 @@ func (e WorkflowEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
 	return nil, &NotLoadedError{edge: "workflow_instances"}
 }
 
+// DepartmentOrErr returns the Department value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e WorkflowEdges) DepartmentOrErr() (*Department, error) {
+	if e.Department != nil {
+		return e.Department, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: department.Label}
+	}
+	return nil, &NotLoadedError{edge: "department"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Workflow) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -69,7 +85,7 @@ func (*Workflow) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case workflow.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case workflow.FieldID, workflow.FieldTenantID:
+		case workflow.FieldID, workflow.FieldTenantID, workflow.FieldDepartmentID:
 			values[i] = new(sql.NullInt64)
 		case workflow.FieldName, workflow.FieldDescription, workflow.FieldType, workflow.FieldVersion:
 			values[i] = new(sql.NullString)
@@ -140,6 +156,12 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				w.TenantID = int(value.Int64)
 			}
+		case workflow.FieldDepartmentID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				w.DepartmentID = int(value.Int64)
+			}
 		case workflow.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -168,6 +190,11 @@ func (w *Workflow) Value(name string) (ent.Value, error) {
 // QueryWorkflowInstances queries the "workflow_instances" edge of the Workflow entity.
 func (w *Workflow) QueryWorkflowInstances() *WorkflowInstanceQuery {
 	return NewWorkflowClient(w.config).QueryWorkflowInstances(w)
+}
+
+// QueryDepartment queries the "department" edge of the Workflow entity.
+func (w *Workflow) QueryDepartment() *DepartmentQuery {
+	return NewWorkflowClient(w.config).QueryDepartment(w)
 }
 
 // Update returns a builder for updating this Workflow.
@@ -213,6 +240,9 @@ func (w *Workflow) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", w.TenantID))
+	builder.WriteString(", ")
+	builder.WriteString("department_id=")
+	builder.WriteString(fmt.Sprintf("%v", w.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(w.CreatedAt.Format(time.ANSIC))
