@@ -45,6 +45,8 @@ const (
 	FieldParentProcessInstanceID = "parent_process_instance_id"
 	// FieldRootProcessInstanceID holds the string denoting the root_process_instance_id field in the database.
 	FieldRootProcessInstanceID = "root_process_instance_id"
+	// FieldStateSnapshot holds the string denoting the state_snapshot field in the database.
+	FieldStateSnapshot = "state_snapshot"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -72,6 +74,7 @@ var Columns = []string{
 	FieldInitiator,
 	FieldParentProcessInstanceID,
 	FieldRootProcessInstanceID,
+	FieldStateSnapshot,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }

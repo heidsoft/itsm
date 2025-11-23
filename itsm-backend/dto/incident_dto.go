@@ -266,3 +266,14 @@ type CorrelatedIncident struct {
 	CorrelationReason string    `json:"correlation_reason" example:"相似的错误模式和影响范围"`
 	CreatedAt         time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
 }
+
+// IncidentStatsResponse 事件统计响应
+type IncidentStatsResponse struct {
+	TotalIncidents    int     `json:"total_incidents"`
+	OpenIncidents     int     `json:"open_incidents"`
+	CriticalIncidents int     `json:"critical_incidents"`
+	MajorIncidents    int     `json:"major_incidents"`
+	AvgResolutionTime float64 `json:"avg_resolution_time"`
+	MTTA              float64 `json:"mtta"` // Mean Time To Acknowledge
+	MTTR              float64 `json:"mttr"` // Mean Time To Resolve
+}

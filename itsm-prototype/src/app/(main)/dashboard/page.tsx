@@ -12,21 +12,30 @@ import {
   Dropdown,
   Tabs,
   Divider,
+  Row,
+  Col,
+  Skeleton,
 } from 'antd';
 import {
-  SyncOutlined,
-  SettingOutlined,
-  ClockCircleOutlined,
-  ThunderboltOutlined,
-  LineChartOutlined,
-  RiseOutlined,
-  DashboardOutlined,
-} from '@ant-design/icons';
+  RefreshCw,
+  Settings,
+  LayoutDashboard,
+  Zap,
+  LineChart,
+  TrendingUp,
+} from 'lucide-react';
 import { KPICards } from './components/KPICards';
 import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
 import { useDashboardData } from './hooks/useDashboardData';
 import { QuickAction } from './types/dashboard.types';
+import TicketTrendChart from './components/TicketTrendChart';
+import IncidentDistributionChart from './components/IncidentDistributionChart';
+import SLAComplianceChart from './components/SLAComplianceChart';
+import UserSatisfactionChart from './components/UserSatisfactionChart';
+import ResponseTimeChart from './components/ResponseTimeChart';
+import TeamWorkloadChart from './components/TeamWorkloadChart';
+import PeakHoursChart from './components/PeakHoursChart';
 
 export default function DashboardPage() {
   const {
@@ -144,7 +153,7 @@ export default function DashboardPage() {
         }}
       >
         <div className='text-red-500 mb-4'>
-          <DashboardOutlined style={{ fontSize: 64 }} />
+          <LayoutDashboard style={{ fontSize: 64 }} />
         </div>
         <h3 className='text-xl font-bold text-gray-900 mb-2'>仪表盘加载失败</h3>
         <p className='text-gray-600 mb-6'>{error}</p>
@@ -152,7 +161,7 @@ export default function DashboardPage() {
           type='primary'
           size='large'
           onClick={refresh}
-          icon={<SyncOutlined />}
+          icon={<RefreshCw />}
           style={{
             height: '44px',
             borderRadius: '8px',
@@ -164,195 +173,201 @@ export default function DashboardPage() {
     );
   }
 
+  const renderSkeletons = () => (
+    <>
+      <Row gutter={[16, 16]}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Col key={index} xs={24} sm={12} md={12} lg={6}>
+            <Skeleton active paragraph={{ rows: 4 }} />
+          </Col>
+        ))}
+      </Row>
+      <Divider />
+      <Skeleton active paragraph={{ rows: 2 }} />
+      <Divider />
+      <Skeleton active paragraph={{ rows: 8 }} />
+    </>
+  );
+
   return (
     <div className='enterprise-dashboard-container'>
-      {/* 企业级顶部工具栏 */}
-      <div className='mb-6'>
-        <Card
-          className='border-0 shadow-sm'
-          style={{
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
-          }}
-          styles={{ body: { padding: '16px 24px' } }}
-        >
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
-              <div className='w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg'>
-                <DashboardOutlined style={{ fontSize: 20, color: '#ffffff' }} />
-              </div>
-              <div>
-                <h1 className='text-xl font-bold text-gray-900 mb-0.5 flex items-center gap-2'>
-                  ITSM 运营仪表盘
-                  <Badge status='processing' text='实时监控' />
-                </h1>
-                <p className='text-sm text-gray-600 m-0'>实时监控系统运行状态和关键业务指标</p>
-              </div>
-            </div>
-
-            <Space size='middle'>
-              {lastUpdated && (
-                <div className='hidden md:flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200 shadow-sm'>
-                  <ClockCircleOutlined style={{ fontSize: 16, color: '#6b7280' }} />
-                  <span className='text-xs font-medium text-gray-700'>
-                    {new Date(lastUpdated).toLocaleTimeString()}
-                  </span>
-                </div>
-              )}
-
-              <Dropdown
-                menu={{ items: controlMenuItems }}
-                placement='bottomRight'
-                trigger={['click']}
-              >
-                <Button
-                  icon={<SettingOutlined />}
-                  className='flex items-center font-medium'
-                  style={{
-                    height: '40px',
-                    borderRadius: '8px',
-                  }}
-                >
-                  <span className='hidden sm:inline ml-1'>设置</span>
-                </Button>
-              </Dropdown>
-
-              <Button
-                type='primary'
-                icon={<SyncOutlined />}
-                onClick={refresh}
-                loading={loading}
-                className='font-medium'
-                style={{
-                  height: '40px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  border: 'none',
-                }}
-              >
-                刷新数据
-              </Button>
-            </Space>
-          </div>
-        </Card>
-      </div>
-
-      {/* KPI指标卡片区域 */}
-      <div className='mb-6'>
-        <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
-      </div>
-
-      <Divider style={{ margin: '32px 0' }} />
-
-      {/* 快速操作区域 */}
-      <div className='mb-6'>
-        <div className='mb-4'>
-          <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
-            <ThunderboltOutlined style={{ fontSize: 22, color: '#f97316' }} />
-            快速操作
-          </h2>
-          <p className='text-sm text-gray-600'>常用功能快捷入口，提升工作效率</p>
+      {/* 简化顶部工具栏 */}
+      <div className='flex items-center justify-between mb-6 pb-4 border-b border-gray-200'>
+        <div>
+          <h1 className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
+            ITSM 运营仪表盘
+            {isConnected && <Badge status='success' text='在线' />}
+          </h1>
+          <p className='text-sm text-gray-600 mt-1'>实时监控系统运行状态和关键业务指标</p>
         </div>
-        <QuickActions
-          actions={data?.quickActions || []}
-          loading={loading}
-          onActionClick={handleQuickActionClick}
-          showTitle={false}
-          compact={false}
-        />
+
+        <Space size='middle'>
+          {lastUpdated && (
+            <span className='text-sm text-gray-500'>
+              更新于 {new Date(lastUpdated).toLocaleTimeString()}
+            </span>
+          )}
+
+          <Button
+            type='default'
+            icon={<RefreshCw spin={loading} />}
+            onClick={refresh}
+          >
+            刷新
+          </Button>
+
+          <Dropdown menu={{ items: controlMenuItems }} trigger={['click']} placement='bottomRight'>
+            <Button icon={<Settings />}>设置</Button>
+          </Dropdown>
+        </Space>
       </div>
 
-      <Divider style={{ margin: '32px 0' }} />
-
-      {/* 图表分析区域 */}
-      <div className='mb-6'>
-        <Card
-          className='border-0 shadow-sm'
-          style={{
-            borderRadius: '12px',
-          }}
-          styles={{ body: { padding: '24px' } }}
-        >
-          <div className='mb-5'>
-            <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
-              <LineChartOutlined style={{ fontSize: 22, color: '#3b82f6' }} />
-              数据分析与趋势
-            </h2>
-            <p className='text-sm text-gray-600'>系统性能和业务趋势的可视化分析</p>
+      {loading ? (
+        renderSkeletons()
+      ) : (
+        <>
+          {/* KPI指标卡片区域 */}
+          <div className='mb-6'>
+            <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
           </div>
 
-          <Tabs
-            activeKey={activeChartTab}
-            onChange={setActiveChartTab}
-            size='large'
-            items={[
-              {
-                key: 'all',
-                label: (
-                  <span className='flex items-center gap-2'>
-                    <DashboardOutlined />
-                    全部图表
-                  </span>
-                ),
-                children: (
-                  <div className='pt-4'>
-                    <ChartsSection
-                      ticketTrend={data?.ticketTrend || []}
-                      incidentDistribution={data?.incidentDistribution || []}
-                      slaData={data?.slaData || []}
-                      satisfactionData={data?.satisfactionData || []}
-                      loading={loading}
-                      showTitle={false}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: 'tickets',
-                label: (
-                  <span className='flex items-center gap-2'>
-                    <LineChartOutlined />
-                    工单与事件
-                  </span>
-                ),
-                children: (
-                  <div className='pt-4'>
-                    <ChartsSection
-                      ticketTrend={data?.ticketTrend || []}
-                      incidentDistribution={data?.incidentDistribution || []}
-                      slaData={[]}
-                      satisfactionData={[]}
-                      loading={loading}
-                      showTitle={false}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: 'performance',
-                label: (
-                  <span className='flex items-center gap-2'>
-                    <RiseOutlined />
-                    性能与满意度
-                  </span>
-                ),
-                children: (
-                  <div className='pt-4'>
-                    <ChartsSection
-                      ticketTrend={[]}
-                      incidentDistribution={[]}
-                      slaData={data?.slaData || []}
-                      satisfactionData={data?.satisfactionData || []}
-                      loading={loading}
-                      showTitle={false}
-                    />
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </Card>
-      </div>
+          <Divider style={{ margin: '32px 0' }} />
+
+          {/* 快速操作区域 */}
+          <div className='mb-6'>
+            <div className='mb-4'>
+              <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
+                <Zap style={{ fontSize: 22, color: '#f97316' }} />
+                快速操作
+              </h2>
+              <p className='text-sm text-gray-600'>常用功能快捷入口，提升工作效率</p>
+            </div>
+            <QuickActions
+              actions={data?.quickActions || []}
+              loading={loading}
+              onActionClick={handleQuickActionClick}
+              showTitle={false}
+              compact={false}
+            />
+          </div>
+
+          <Divider style={{ margin: '32px 0' }} />
+
+          {/* 图表分析区域 */}
+          <div className='mb-6'>
+            <Card
+              className='border-0 shadow-sm'
+              style={{
+                borderRadius: '12px',
+              }}
+              styles={{ body: { padding: '24px' } }}
+            >
+              <div className='mb-5'>
+                <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
+                  <LineChart style={{ fontSize: 22, color: '#3b82f6' }} />
+                  数据分析与趋势
+                </h2>
+                <p className='text-sm text-gray-600'>系统性能和业务趋势的可视化分析</p>
+              </div>
+
+              <Tabs
+                activeKey={activeChartTab}
+                onChange={setActiveChartTab}
+                size='large'
+                items={[
+                  {
+                    key: 'all',
+                    label: (
+                      <span className='flex items-center gap-2'>
+                        <LayoutDashboard />
+                        全部图表
+                      </span>
+                    ),
+                    children: (
+                      <div className='pt-4'>
+                        <ChartsSection loading={loading}>
+                          <Col xs={24} lg={12}>
+                            <TicketTrendChart data={data?.ticketTrend || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <IncidentDistributionChart data={data?.incidentDistribution || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <ResponseTimeChart data={data?.responseTimeDistribution || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <TeamWorkloadChart data={data?.teamWorkload || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <SLAComplianceChart data={data?.slaData || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <PeakHoursChart data={data?.peakHours || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <UserSatisfactionChart data={data?.satisfactionData || []} />
+                          </Col>
+                        </ChartsSection>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'tickets',
+                    label: (
+                      <span className='flex items-center gap-2'>
+                        <LineChart />
+                        工单与事件
+                      </span>
+                    ),
+                    children: (
+                      <div className='pt-4'>
+                        <ChartsSection loading={loading}>
+                          <Col xs={24} lg={12}>
+                            <TicketTrendChart data={data?.ticketTrend || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <IncidentDistributionChart data={data?.incidentDistribution || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <ResponseTimeChart data={data?.responseTimeDistribution || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <PeakHoursChart data={data?.peakHours || []} />
+                          </Col>
+                        </ChartsSection>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'performance',
+                    label: (
+                      <span className='flex items-center gap-2'>
+                        <TrendingUp />
+                        性能与满意度
+                      </span>
+                    ),
+                    children: (
+                      <div className='pt-4'>
+                        <ChartsSection loading={loading}>
+                          <Col xs={24} lg={12}>
+                            <SLAComplianceChart data={data?.slaData || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <UserSatisfactionChart data={data?.satisfactionData || []} />
+                          </Col>
+                          <Col xs={24} lg={12}>
+                            <TeamWorkloadChart data={data?.teamWorkload || []} />
+                          </Col>
+                        </ChartsSection>
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

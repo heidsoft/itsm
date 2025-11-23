@@ -6,8 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -109,6 +111,34 @@ func (tcc *TicketCategoryCreate) SetTenantID(i int) *TicketCategoryCreate {
 	return tcc
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (tcc *TicketCategoryCreate) SetDepartmentID(i int) *TicketCategoryCreate {
+	tcc.mutation.SetDepartmentID(i)
+	return tcc
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (tcc *TicketCategoryCreate) SetNillableDepartmentID(i *int) *TicketCategoryCreate {
+	if i != nil {
+		tcc.SetDepartmentID(*i)
+	}
+	return tcc
+}
+
+// SetWorkflowID sets the "workflow_id" field.
+func (tcc *TicketCategoryCreate) SetWorkflowID(i int) *TicketCategoryCreate {
+	tcc.mutation.SetWorkflowID(i)
+	return tcc
+}
+
+// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
+func (tcc *TicketCategoryCreate) SetNillableWorkflowID(i *int) *TicketCategoryCreate {
+	if i != nil {
+		tcc.SetWorkflowID(*i)
+	}
+	return tcc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tcc *TicketCategoryCreate) SetCreatedAt(t time.Time) *TicketCategoryCreate {
 	tcc.mutation.SetCreatedAt(t)
@@ -170,6 +200,16 @@ func (tcc *TicketCategoryCreate) AddChildren(t ...*TicketCategory) *TicketCatego
 // SetParent sets the "parent" edge to the TicketCategory entity.
 func (tcc *TicketCategoryCreate) SetParent(t *TicketCategory) *TicketCategoryCreate {
 	return tcc.SetParentID(t.ID)
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (tcc *TicketCategoryCreate) SetDepartment(d *Department) *TicketCategoryCreate {
+	return tcc.SetDepartmentID(d.ID)
+}
+
+// SetWorkflow sets the "workflow" edge to the Workflow entity.
+func (tcc *TicketCategoryCreate) SetWorkflow(w *Workflow) *TicketCategoryCreate {
+	return tcc.SetWorkflowID(w.ID)
 }
 
 // Mutation returns the TicketCategoryMutation object of the builder.
@@ -379,6 +419,40 @@ func (tcc *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.Create
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ParentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tcc.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   ticketcategory.DepartmentTable,
+			Columns: []string{ticketcategory.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.DepartmentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tcc.mutation.WorkflowIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   ticketcategory.WorkflowTable,
+			Columns: []string{ticketcategory.WorkflowColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.WorkflowID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

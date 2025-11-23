@@ -189,6 +189,9 @@ export const sessionSecurity = {
   },
 
   // 安全的localStorage操作
+  // 警告：localStorage不是一个安全的地方来存储敏感信息，例如认证令牌。
+  // 任何在同一域名下运行的脚本都可以访问localStorage。
+  // 对于敏感数据，请使用HttpOnly cookies。
   secureStorage: {
     setItem: (key: string, value: string, expirationMinutes?: number): void => {
       const item = {
@@ -287,6 +290,7 @@ export const networkSecurity = {
 };
 
 // 数据加密（简单实现，生产环境建议使用专业加密库）
+// 警告：这些函数不是真正的加密，不应用于敏感数据。
 export const encryption = {
   // Base64编码
   base64Encode: (text: string): string => {

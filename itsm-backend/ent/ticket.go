@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
@@ -40,6 +41,8 @@ type Ticket struct {
 	TemplateID int `json:"template_id,omitempty"`
 	// 分类ID
 	CategoryID int `json:"category_id,omitempty"`
+	// 部门ID
+	DepartmentID int `json:"department_id,omitempty"`
 	// 父工单ID
 	ParentTicketID int `json:"parent_ticket_id,omitempty"`
 	// SLA定义ID
@@ -69,6 +72,8 @@ type TicketEdges struct {
 	Template *TicketTemplate `json:"template,omitempty"`
 	// 工单分类
 	Category *TicketCategory `json:"category,omitempty"`
+	// 所属部门
+	Department *Department `json:"department,omitempty"`
 	// 工单标签
 	Tags []*TicketTag `json:"tags,omitempty"`
 	// 关联工单
@@ -83,7 +88,7 @@ type TicketEdges struct {
 	SLAViolations []*SLAViolation `json:"sla_violations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -108,10 +113,21 @@ func (e TicketEdges) CategoryOrErr() (*TicketCategory, error) {
 	return nil, &NotLoadedError{edge: "category"}
 }
 
+// DepartmentOrErr returns the Department value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TicketEdges) DepartmentOrErr() (*Department, error) {
+	if e.Department != nil {
+		return e.Department, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: department.Label}
+	}
+	return nil, &NotLoadedError{edge: "department"}
+}
+
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) TagsOrErr() ([]*TicketTag, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
@@ -120,7 +136,7 @@ func (e TicketEdges) TagsOrErr() ([]*TicketTag, error) {
 // RelatedTicketsOrErr returns the RelatedTickets value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) RelatedTicketsOrErr() ([]*Ticket, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.RelatedTickets, nil
 	}
 	return nil, &NotLoadedError{edge: "related_tickets"}
@@ -131,7 +147,7 @@ func (e TicketEdges) RelatedTicketsOrErr() ([]*Ticket, error) {
 func (e TicketEdges) ParentTicketOrErr() (*Ticket, error) {
 	if e.ParentTicket != nil {
 		return e.ParentTicket, nil
-	} else if e.loadedTypes[4] {
+	} else if e.loadedTypes[5] {
 		return nil, &NotFoundError{label: ticket.Label}
 	}
 	return nil, &NotLoadedError{edge: "parent_ticket"}
@@ -140,7 +156,7 @@ func (e TicketEdges) ParentTicketOrErr() (*Ticket, error) {
 // WorkflowInstancesOrErr returns the WorkflowInstances value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.WorkflowInstances, nil
 	}
 	return nil, &NotLoadedError{edge: "workflow_instances"}
@@ -151,7 +167,7 @@ func (e TicketEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
 func (e TicketEdges) SLADefinitionOrErr() (*SLADefinition, error) {
 	if e.SLADefinition != nil {
 		return e.SLADefinition, nil
-	} else if e.loadedTypes[6] {
+	} else if e.loadedTypes[7] {
 		return nil, &NotFoundError{label: sladefinition.Label}
 	}
 	return nil, &NotLoadedError{edge: "sla_definition"}
@@ -160,7 +176,7 @@ func (e TicketEdges) SLADefinitionOrErr() (*SLADefinition, error) {
 // SLAViolationsOrErr returns the SLAViolations value or an error if the edge
 // was not loaded in eager-loading.
 func (e TicketEdges) SLAViolationsOrErr() ([]*SLAViolation, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.SLAViolations, nil
 	}
 	return nil, &NotLoadedError{edge: "sla_violations"}
@@ -171,7 +187,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID:
+		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID:
 			values[i] = new(sql.NullInt64)
 		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber:
 			values[i] = new(sql.NullString)
@@ -260,6 +276,12 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.CategoryID = int(value.Int64)
 			}
+		case ticket.FieldDepartmentID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				t.DepartmentID = int(value.Int64)
+			}
 		case ticket.FieldParentTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_ticket_id", values[i])
@@ -336,6 +358,11 @@ func (t *Ticket) QueryTemplate() *TicketTemplateQuery {
 // QueryCategory queries the "category" edge of the Ticket entity.
 func (t *Ticket) QueryCategory() *TicketCategoryQuery {
 	return NewTicketClient(t.config).QueryCategory(t)
+}
+
+// QueryDepartment queries the "department" edge of the Ticket entity.
+func (t *Ticket) QueryDepartment() *DepartmentQuery {
+	return NewTicketClient(t.config).QueryDepartment(t)
 }
 
 // QueryTags queries the "tags" edge of the Ticket entity.
@@ -420,6 +447,9 @@ func (t *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("category_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.CategoryID))
+	builder.WriteString(", ")
+	builder.WriteString("department_id=")
+	builder.WriteString(fmt.Sprintf("%v", t.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("parent_ticket_id=")
 	builder.WriteString(fmt.Sprintf("%v", t.ParentTicketID))

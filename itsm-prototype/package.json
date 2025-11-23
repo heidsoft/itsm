@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.2",
+    "@ant-design/pro-components": "^2.8.10",
     "@bpmn-io/element-template-chooser": "^2.0.0",
     "@bpmn-io/properties-panel": "^3.31.0",
     "@hello-pangea/dnd": "^18.0.1",

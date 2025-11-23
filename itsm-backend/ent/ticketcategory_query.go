@@ -6,9 +6,11 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/workflow"
 	"math"
 
 	"entgo.io/ent"
@@ -20,13 +22,15 @@ import (
 // TicketCategoryQuery is the builder for querying TicketCategory entities.
 type TicketCategoryQuery struct {
 	config
-	ctx          *QueryContext
-	order        []ticketcategory.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.TicketCategory
-	withTickets  *TicketQuery
-	withChildren *TicketCategoryQuery
-	withParent   *TicketCategoryQuery
+	ctx            *QueryContext
+	order          []ticketcategory.OrderOption
+	inters         []Interceptor
+	predicates     []predicate.TicketCategory
+	withTickets    *TicketQuery
+	withChildren   *TicketCategoryQuery
+	withParent     *TicketCategoryQuery
+	withDepartment *DepartmentQuery
+	withWorkflow   *WorkflowQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -122,6 +126,50 @@ func (tcq *TicketCategoryQuery) QueryParent() *TicketCategoryQuery {
 			sqlgraph.From(ticketcategory.Table, ticketcategory.FieldID, selector),
 			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticketcategory.ParentTable, ticketcategory.ParentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDepartment chains the current query on the "department" edge.
+func (tcq *TicketCategoryQuery) QueryDepartment() *DepartmentQuery {
+	query := (&DepartmentClient{config: tcq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tcq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tcq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketcategory.Table, ticketcategory.FieldID, selector),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketcategory.DepartmentTable, ticketcategory.DepartmentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflow chains the current query on the "workflow" edge.
+func (tcq *TicketCategoryQuery) QueryWorkflow() *WorkflowQuery {
+	query := (&WorkflowClient{config: tcq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tcq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tcq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketcategory.Table, ticketcategory.FieldID, selector),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ticketcategory.WorkflowTable, ticketcategory.WorkflowColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
 		return fromU, nil
@@ -316,14 +364,16 @@ func (tcq *TicketCategoryQuery) Clone() *TicketCategoryQuery {
 		return nil
 	}
 	return &TicketCategoryQuery{
-		config:       tcq.config,
-		ctx:          tcq.ctx.Clone(),
-		order:        append([]ticketcategory.OrderOption{}, tcq.order...),
-		inters:       append([]Interceptor{}, tcq.inters...),
-		predicates:   append([]predicate.TicketCategory{}, tcq.predicates...),
-		withTickets:  tcq.withTickets.Clone(),
-		withChildren: tcq.withChildren.Clone(),
-		withParent:   tcq.withParent.Clone(),
+		config:         tcq.config,
+		ctx:            tcq.ctx.Clone(),
+		order:          append([]ticketcategory.OrderOption{}, tcq.order...),
+		inters:         append([]Interceptor{}, tcq.inters...),
+		predicates:     append([]predicate.TicketCategory{}, tcq.predicates...),
+		withTickets:    tcq.withTickets.Clone(),
+		withChildren:   tcq.withChildren.Clone(),
+		withParent:     tcq.withParent.Clone(),
+		withDepartment: tcq.withDepartment.Clone(),
+		withWorkflow:   tcq.withWorkflow.Clone(),
 		// clone intermediate query.
 		sql:  tcq.sql.Clone(),
 		path: tcq.path,
@@ -360,6 +410,28 @@ func (tcq *TicketCategoryQuery) WithParent(opts ...func(*TicketCategoryQuery)) *
 		opt(query)
 	}
 	tcq.withParent = query
+	return tcq
+}
+
+// WithDepartment tells the query-builder to eager-load the nodes that are connected to
+// the "department" edge. The optional arguments are used to configure the query builder of the edge.
+func (tcq *TicketCategoryQuery) WithDepartment(opts ...func(*DepartmentQuery)) *TicketCategoryQuery {
+	query := (&DepartmentClient{config: tcq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tcq.withDepartment = query
+	return tcq
+}
+
+// WithWorkflow tells the query-builder to eager-load the nodes that are connected to
+// the "workflow" edge. The optional arguments are used to configure the query builder of the edge.
+func (tcq *TicketCategoryQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *TicketCategoryQuery {
+	query := (&WorkflowClient{config: tcq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tcq.withWorkflow = query
 	return tcq
 }
 
@@ -441,10 +513,12 @@ func (tcq *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	var (
 		nodes       = []*TicketCategory{}
 		_spec       = tcq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
 			tcq.withTickets != nil,
 			tcq.withChildren != nil,
 			tcq.withParent != nil,
+			tcq.withDepartment != nil,
+			tcq.withWorkflow != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -482,6 +556,18 @@ func (tcq *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	if query := tcq.withParent; query != nil {
 		if err := tcq.loadParent(ctx, query, nodes, nil,
 			func(n *TicketCategory, e *TicketCategory) { n.Edges.Parent = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tcq.withDepartment; query != nil {
+		if err := tcq.loadDepartment(ctx, query, nodes, nil,
+			func(n *TicketCategory, e *Department) { n.Edges.Department = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tcq.withWorkflow; query != nil {
+		if err := tcq.loadWorkflow(ctx, query, nodes, nil,
+			func(n *TicketCategory, e *Workflow) { n.Edges.Workflow = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -578,6 +664,64 @@ func (tcq *TicketCategoryQuery) loadParent(ctx context.Context, query *TicketCat
 	}
 	return nil
 }
+func (tcq *TicketCategoryQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Department)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*TicketCategory)
+	for i := range nodes {
+		fk := nodes[i].DepartmentID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(department.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (tcq *TicketCategoryQuery) loadWorkflow(ctx context.Context, query *WorkflowQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Workflow)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*TicketCategory)
+	for i := range nodes {
+		fk := nodes[i].WorkflowID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(workflow.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "workflow_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (tcq *TicketCategoryQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := tcq.querySpec()
@@ -606,6 +750,12 @@ func (tcq *TicketCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if tcq.withParent != nil {
 			_spec.Node.AddColumnOnce(ticketcategory.FieldParentID)
+		}
+		if tcq.withDepartment != nil {
+			_spec.Node.AddColumnOnce(ticketcategory.FieldDepartmentID)
+		}
+		if tcq.withWorkflow != nil {
+			_spec.Node.AddColumnOnce(ticketcategory.FieldWorkflowID)
 		}
 	}
 	if ps := tcq.predicates; len(ps) > 0 {

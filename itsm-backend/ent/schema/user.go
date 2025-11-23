@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -30,10 +31,13 @@ func (User) Fields() []ent.Field {
             Comment("角色").
             Values("super_admin", "admin", "manager", "agent", "technician", "end_user").
             Default("end_user"),
-        field.String("department").
-            Comment("部门").
-            Optional(),
-        field.String("phone").
+		field.String("department").
+			Comment("部门").
+			Optional(),
+		field.Int("department_id").
+			Comment("部门ID").
+			Optional(),
+		field.String("phone").
             Comment("电话").
             Optional(),
         field.String("password_hash").
@@ -57,5 +61,10 @@ func (User) Fields() []ent.Field {
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("department_ref", Department.Type).
+			Ref("users").
+			Field("department_id").
+			Unique(),
+	}
 }

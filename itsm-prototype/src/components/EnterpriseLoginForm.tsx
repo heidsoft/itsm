@@ -131,7 +131,7 @@ const validateTOTPCode = (code: string): boolean => {
 };
 
 // 主组件
-export const EnterpriseLoginForm: React.FC<EnterpriseLoginFormProps> = ({
+export const LoginForm: React.FC<EnterpriseLoginFormProps> = ({
   onLogin,
   onForgotPassword,
   onSSOLogin,
@@ -682,4 +682,6 @@ export const EnterpriseLoginForm: React.FC<EnterpriseLoginFormProps> = ({
   );
 };
 
-export default EnterpriseLoginForm;
+// 保持向后兼容的导出
+export const EnterpriseLoginForm = LoginForm;
+export default LoginForm;

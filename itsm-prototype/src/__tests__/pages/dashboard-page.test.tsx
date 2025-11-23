@@ -139,7 +139,7 @@ describe('DashboardPage', () => {
 
   describe('页面渲染', () => {
     it('应该正确渲染仪表盘页面', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -149,7 +149,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示欢迎信息', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -161,7 +161,7 @@ describe('DashboardPage', () => {
 
   describe('KPI 指标卡片', () => {
     it('应该显示总工单数', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -170,7 +170,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示未解决工单数', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -179,7 +179,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示已解决工单数', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -188,7 +188,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示平均解决时间', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -197,7 +197,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示增长趋势', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -210,7 +210,7 @@ describe('DashboardPage', () => {
 
   describe('快速操作', () => {
     it('应该显示快速操作按钮', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -223,7 +223,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该支持点击快速操作', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -237,7 +237,7 @@ describe('DashboardPage', () => {
 
   describe('图表展示', () => {
     it('应该显示工单趋势图', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -249,7 +249,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示状态分布图', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -259,7 +259,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示优先级分布图', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -271,7 +271,7 @@ describe('DashboardPage', () => {
 
   describe('最近工单', () => {
     it('应该显示最近工单列表', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -281,7 +281,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该支持点击工单查看详情', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -295,7 +295,7 @@ describe('DashboardPage', () => {
 
   describe('自动刷新', () => {
     it('应该显示自动刷新开关', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -306,7 +306,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该支持手动刷新', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -319,7 +319,7 @@ describe('DashboardPage', () => {
     });
 
     it('应该显示最后更新时间', async () => {
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -349,7 +349,7 @@ describe('DashboardPage', () => {
         isConnected: true,
       });
 
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       // 应该显示加载指示器
@@ -379,7 +379,7 @@ describe('DashboardPage', () => {
         isConnected: false,
       });
 
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -407,7 +407,7 @@ describe('DashboardPage', () => {
         isConnected: false,
       });
 
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
@@ -425,7 +425,7 @@ describe('DashboardPage', () => {
       global.innerWidth = 375;
       global.innerHeight = 667;
 
-      const DashboardPage = (await import('@/app/dashboard/page')).default;
+      const DashboardPage = (await import('@/app/(main)/dashboard/page')).default;
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {

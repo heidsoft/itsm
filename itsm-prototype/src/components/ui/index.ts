@@ -9,10 +9,12 @@
 export { 
   EnterpriseCard, 
   EnterpriseStatCard, 
-  EnterpriseChartCard,
+  ChartCard,
+  EnterpriseChartCard, // 向后兼容
   type EnterpriseCardProps,
   type EnterpriseStatCardProps,
-  type EnterpriseChartCardProps,
+  type ChartCardProps,
+  type EnterpriseChartCardProps, // 向后兼容
 } from './EnterpriseCard';
 
 export { 

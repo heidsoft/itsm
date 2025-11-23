@@ -47,6 +47,9 @@ func (Ticket) Fields() []ent.Field {
 		field.Int("category_id").
 			Comment("分类ID").
 			Optional(),
+		field.Int("department_id").
+			Comment("部门ID").
+			Optional(),
 		field.Int("parent_ticket_id").
 			Comment("父工单ID").
 			Optional(),
@@ -88,6 +91,11 @@ func (Ticket) Edges() []ent.Edge {
 			Field("category_id").
 			Unique().
 			Comment("工单分类"),
+		edge.From("department", Department.Type).
+			Ref("tickets").
+			Field("department_id").
+			Unique().
+			Comment("所属部门"),
 		edge.To("tags", TicketTag.Type).
 			Comment("工单标签"),
 		edge.To("related_tickets", Ticket.Type).

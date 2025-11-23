@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
 	"time"
@@ -95,6 +96,20 @@ func (wc *WorkflowCreate) SetTenantID(i int) *WorkflowCreate {
 	return wc
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (wc *WorkflowCreate) SetDepartmentID(i int) *WorkflowCreate {
+	wc.mutation.SetDepartmentID(i)
+	return wc
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (wc *WorkflowCreate) SetNillableDepartmentID(i *int) *WorkflowCreate {
+	if i != nil {
+		wc.SetDepartmentID(*i)
+	}
+	return wc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (wc *WorkflowCreate) SetCreatedAt(t time.Time) *WorkflowCreate {
 	wc.mutation.SetCreatedAt(t)
@@ -136,6 +151,11 @@ func (wc *WorkflowCreate) AddWorkflowInstances(w ...*WorkflowInstance) *Workflow
 		ids[i] = w[i].ID
 	}
 	return wc.AddWorkflowInstanceIDs(ids...)
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (wc *WorkflowCreate) SetDepartment(d *Department) *WorkflowCreate {
+	return wc.SetDepartmentID(d.ID)
 }
 
 // Mutation returns the WorkflowMutation object of the builder.
@@ -307,6 +327,23 @@ func (wc *WorkflowCreate) createSpec() (*Workflow, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflow.DepartmentTable,
+			Columns: []string{workflow.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.DepartmentID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

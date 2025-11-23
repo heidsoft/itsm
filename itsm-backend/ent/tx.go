@@ -12,6 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Application is the client for interacting with the Application builders.
+	Application *ApplicationClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
@@ -26,6 +28,8 @@ type Tx struct {
 	ConfigurationItem *ConfigurationItemClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
+	// Department is the client for interacting with the Department builders.
+	Department *DepartmentClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
@@ -42,6 +46,8 @@ type Tx struct {
 	KnowledgeArticle *KnowledgeArticleClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// Microservice is the client for interacting with the Microservice builders.
+	Microservice *MicroserviceClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
 	// Problem is the client for interacting with the Problem builders.
@@ -58,6 +64,8 @@ type Tx struct {
 	ProcessTask *ProcessTaskClient
 	// ProcessVariable is the client for interacting with the ProcessVariable builders.
 	ProcessVariable *ProcessVariableClient
+	// Project is the client for interacting with the Project builders.
+	Project *ProjectClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
@@ -70,6 +78,10 @@ type Tx struct {
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
+	// Tag is the client for interacting with the Tag builders.
+	Tag *TagClient
+	// Team is the client for interacting with the Team builders.
+	Team *TeamClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
@@ -219,6 +231,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Application = NewApplicationClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
@@ -226,6 +239,7 @@ func (tx *Tx) init() {
 	tx.Change = NewChangeClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
+	tx.Department = NewDepartmentClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
 	tx.IncidentEvent = NewIncidentEventClient(tx.config)
@@ -234,6 +248,7 @@ func (tx *Tx) init() {
 	tx.IncidentRuleExecution = NewIncidentRuleExecutionClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
+	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
 	tx.ProcessDefinition = NewProcessDefinitionClient(tx.config)
@@ -242,12 +257,15 @@ func (tx *Tx) init() {
 	tx.ProcessInstance = NewProcessInstanceClient(tx.config)
 	tx.ProcessTask = NewProcessTaskClient(tx.config)
 	tx.ProcessVariable = NewProcessVariableClient(tx.config)
+	tx.Project = NewProjectClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
 	tx.SLAMetric = NewSLAMetricClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
+	tx.Tag = NewTagClient(tx.config)
+	tx.Team = NewTeamClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
 	tx.TicketCategory = NewTicketCategoryClient(tx.config)
@@ -266,7 +284,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: AuditLog.QueryXXX(), the query will be executed
+// applies a query, for example: Application.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

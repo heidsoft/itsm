@@ -85,6 +85,11 @@ func TenantID(v int) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldTenantID, v))
 }
 
+// DepartmentID applies equality check predicate on the "department_id" field. It's identical to DepartmentIDEQ.
+func DepartmentID(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldEQ(FieldDepartmentID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldCreatedAt, v))
@@ -415,6 +420,36 @@ func TenantIDLTE(v int) predicate.Workflow {
 	return predicate.Workflow(sql.FieldLTE(FieldTenantID, v))
 }
 
+// DepartmentIDEQ applies the EQ predicate on the "department_id" field.
+func DepartmentIDEQ(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDNEQ applies the NEQ predicate on the "department_id" field.
+func DepartmentIDNEQ(v int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldNEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDIn applies the In predicate on the "department_id" field.
+func DepartmentIDIn(vs ...int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDNotIn applies the NotIn predicate on the "department_id" field.
+func DepartmentIDNotIn(vs ...int) predicate.Workflow {
+	return predicate.Workflow(sql.FieldNotIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDIsNil applies the IsNil predicate on the "department_id" field.
+func DepartmentIDIsNil() predicate.Workflow {
+	return predicate.Workflow(sql.FieldIsNull(FieldDepartmentID))
+}
+
+// DepartmentIDNotNil applies the NotNil predicate on the "department_id" field.
+func DepartmentIDNotNil() predicate.Workflow {
+	return predicate.Workflow(sql.FieldNotNull(FieldDepartmentID))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Workflow {
 	return predicate.Workflow(sql.FieldEQ(FieldCreatedAt, v))
@@ -510,6 +545,29 @@ func HasWorkflowInstances() predicate.Workflow {
 func HasWorkflowInstancesWith(preds ...predicate.WorkflowInstance) predicate.Workflow {
 	return predicate.Workflow(func(s *sql.Selector) {
 		step := newWorkflowInstancesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDepartment applies the HasEdge predicate on the "department" edge.
+func HasDepartment() predicate.Workflow {
+	return predicate.Workflow(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
+func HasDepartmentWith(preds ...predicate.Department) predicate.Workflow {
+	return predicate.Workflow(func(s *sql.Selector) {
+		step := newDepartmentStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

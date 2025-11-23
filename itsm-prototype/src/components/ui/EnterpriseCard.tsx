@@ -212,17 +212,17 @@ export const EnterpriseStatCard: React.FC<EnterpriseStatCardProps> = ({
 };
 
 /**
- * 企业级图表卡片
+ * 图表卡片组件
  * 
  * 专门用于图表展示的卡片容器
  */
-export interface EnterpriseChartCardProps extends EnterpriseCardProps {
+export interface ChartCardProps extends EnterpriseCardProps {
   chartTitle?: string;
   extra?: React.ReactNode;
   loading?: boolean;
 }
 
-export const EnterpriseChartCard: React.FC<EnterpriseChartCardProps> = ({
+export const ChartCard: React.FC<ChartCardProps> = ({
   chartTitle,
   extra,
   loading,
@@ -249,6 +249,10 @@ export const EnterpriseChartCard: React.FC<EnterpriseChartCardProps> = ({
     </EnterpriseCard>
   );
 };
+
+// 保持向后兼容的导出
+export const EnterpriseChartCard = ChartCard;
+export type EnterpriseChartCardProps = ChartCardProps;
 
 export default EnterpriseCard;
 

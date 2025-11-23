@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
@@ -139,6 +140,26 @@ func (wu *WorkflowUpdate) AddTenantID(i int) *WorkflowUpdate {
 	return wu
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (wu *WorkflowUpdate) SetDepartmentID(i int) *WorkflowUpdate {
+	wu.mutation.SetDepartmentID(i)
+	return wu
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (wu *WorkflowUpdate) SetNillableDepartmentID(i *int) *WorkflowUpdate {
+	if i != nil {
+		wu.SetDepartmentID(*i)
+	}
+	return wu
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (wu *WorkflowUpdate) ClearDepartmentID() *WorkflowUpdate {
+	wu.mutation.ClearDepartmentID()
+	return wu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (wu *WorkflowUpdate) SetCreatedAt(t time.Time) *WorkflowUpdate {
 	wu.mutation.SetCreatedAt(t)
@@ -174,6 +195,11 @@ func (wu *WorkflowUpdate) AddWorkflowInstances(w ...*WorkflowInstance) *Workflow
 	return wu.AddWorkflowInstanceIDs(ids...)
 }
 
+// SetDepartment sets the "department" edge to the Department entity.
+func (wu *WorkflowUpdate) SetDepartment(d *Department) *WorkflowUpdate {
+	return wu.SetDepartmentID(d.ID)
+}
+
 // Mutation returns the WorkflowMutation object of the builder.
 func (wu *WorkflowUpdate) Mutation() *WorkflowMutation {
 	return wu.mutation
@@ -198,6 +224,12 @@ func (wu *WorkflowUpdate) RemoveWorkflowInstances(w ...*WorkflowInstance) *Workf
 		ids[i] = w[i].ID
 	}
 	return wu.RemoveWorkflowInstanceIDs(ids...)
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (wu *WorkflowUpdate) ClearDepartment() *WorkflowUpdate {
+	wu.mutation.ClearDepartment()
+	return wu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -346,6 +378,35 @@ func (wu *WorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if wu.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflow.DepartmentTable,
+			Columns: []string{workflow.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflow.DepartmentTable,
+			Columns: []string{workflow.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, wu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{workflow.Label}
@@ -475,6 +536,26 @@ func (wuo *WorkflowUpdateOne) AddTenantID(i int) *WorkflowUpdateOne {
 	return wuo
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (wuo *WorkflowUpdateOne) SetDepartmentID(i int) *WorkflowUpdateOne {
+	wuo.mutation.SetDepartmentID(i)
+	return wuo
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (wuo *WorkflowUpdateOne) SetNillableDepartmentID(i *int) *WorkflowUpdateOne {
+	if i != nil {
+		wuo.SetDepartmentID(*i)
+	}
+	return wuo
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (wuo *WorkflowUpdateOne) ClearDepartmentID() *WorkflowUpdateOne {
+	wuo.mutation.ClearDepartmentID()
+	return wuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (wuo *WorkflowUpdateOne) SetCreatedAt(t time.Time) *WorkflowUpdateOne {
 	wuo.mutation.SetCreatedAt(t)
@@ -510,6 +591,11 @@ func (wuo *WorkflowUpdateOne) AddWorkflowInstances(w ...*WorkflowInstance) *Work
 	return wuo.AddWorkflowInstanceIDs(ids...)
 }
 
+// SetDepartment sets the "department" edge to the Department entity.
+func (wuo *WorkflowUpdateOne) SetDepartment(d *Department) *WorkflowUpdateOne {
+	return wuo.SetDepartmentID(d.ID)
+}
+
 // Mutation returns the WorkflowMutation object of the builder.
 func (wuo *WorkflowUpdateOne) Mutation() *WorkflowMutation {
 	return wuo.mutation
@@ -534,6 +620,12 @@ func (wuo *WorkflowUpdateOne) RemoveWorkflowInstances(w ...*WorkflowInstance) *W
 		ids[i] = w[i].ID
 	}
 	return wuo.RemoveWorkflowInstanceIDs(ids...)
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (wuo *WorkflowUpdateOne) ClearDepartment() *WorkflowUpdateOne {
+	wuo.mutation.ClearDepartment()
+	return wuo
 }
 
 // Where appends a list predicates to the WorkflowUpdate builder.
@@ -705,6 +797,35 @@ func (wuo *WorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Workflow, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflow.DepartmentTable,
+			Columns: []string{workflow.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   workflow.DepartmentTable,
+			Columns: []string{workflow.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

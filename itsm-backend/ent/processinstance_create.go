@@ -204,6 +204,12 @@ func (pic *ProcessInstanceCreate) SetNillableRootProcessInstanceID(s *string) *P
 	return pic
 }
 
+// SetStateSnapshot sets the "state_snapshot" field.
+func (pic *ProcessInstanceCreate) SetStateSnapshot(u []uint8) *ProcessInstanceCreate {
+	pic.mutation.SetStateSnapshot(u)
+	return pic
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (pic *ProcessInstanceCreate) SetCreatedAt(t time.Time) *ProcessInstanceCreate {
 	pic.mutation.SetCreatedAt(t)
@@ -420,6 +426,10 @@ func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Crea
 	if value, ok := pic.mutation.RootProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldRootProcessInstanceID, field.TypeString, value)
 		_node.RootProcessInstanceID = value
+	}
+	if value, ok := pic.mutation.StateSnapshot(); ok {
+		_spec.SetField(processinstance.FieldStateSnapshot, field.TypeJSON, value)
+		_node.StateSnapshot = value
 	}
 	if value, ok := pic.mutation.CreatedAt(); ok {
 		_spec.SetField(processinstance.FieldCreatedAt, field.TypeTime, value)

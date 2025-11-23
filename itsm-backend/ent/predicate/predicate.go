@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Application is the predicate function for application builders.
+type Application func(*sql.Selector)
+
 // AuditLog is the predicate function for auditlog builders.
 type AuditLog func(*sql.Selector)
 
@@ -26,6 +29,9 @@ type ConfigurationItem func(*sql.Selector)
 
 // Conversation is the predicate function for conversation builders.
 type Conversation func(*sql.Selector)
+
+// Department is the predicate function for department builders.
+type Department func(*sql.Selector)
 
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
@@ -51,6 +57,9 @@ type KnowledgeArticle func(*sql.Selector)
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 
+// Microservice is the predicate function for microservice builders.
+type Microservice func(*sql.Selector)
+
 // Notification is the predicate function for notification builders.
 type Notification func(*sql.Selector)
 
@@ -75,6 +84,9 @@ type ProcessTask func(*sql.Selector)
 // ProcessVariable is the predicate function for processvariable builders.
 type ProcessVariable func(*sql.Selector)
 
+// Project is the predicate function for project builders.
+type Project func(*sql.Selector)
+
 // PromptTemplate is the predicate function for prompttemplate builders.
 type PromptTemplate func(*sql.Selector)
 
@@ -92,6 +104,12 @@ type ServiceCatalog func(*sql.Selector)
 
 // ServiceRequest is the predicate function for servicerequest builders.
 type ServiceRequest func(*sql.Selector)
+
+// Tag is the predicate function for tag builders.
+type Tag func(*sql.Selector)
+
+// Team is the predicate function for team builders.
+type Team func(*sql.Selector)
 
 // Tenant is the predicate function for tenant builders.
 type Tenant func(*sql.Selector)

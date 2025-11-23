@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
@@ -25,6 +26,7 @@ type WorkflowQuery struct {
 	inters                []Interceptor
 	predicates            []predicate.Workflow
 	withWorkflowInstances *WorkflowInstanceQuery
+	withDepartment        *DepartmentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +78,28 @@ func (wq *WorkflowQuery) QueryWorkflowInstances() *WorkflowInstanceQuery {
 			sqlgraph.From(workflow.Table, workflow.FieldID, selector),
 			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, workflow.WorkflowInstancesTable, workflow.WorkflowInstancesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDepartment chains the current query on the "department" edge.
+func (wq *WorkflowQuery) QueryDepartment() *DepartmentQuery {
+	query := (&DepartmentClient{config: wq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, selector),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflow.DepartmentTable, workflow.DepartmentColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -276,6 +300,7 @@ func (wq *WorkflowQuery) Clone() *WorkflowQuery {
 		inters:                append([]Interceptor{}, wq.inters...),
 		predicates:            append([]predicate.Workflow{}, wq.predicates...),
 		withWorkflowInstances: wq.withWorkflowInstances.Clone(),
+		withDepartment:        wq.withDepartment.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
 		path: wq.path,
@@ -290,6 +315,17 @@ func (wq *WorkflowQuery) WithWorkflowInstances(opts ...func(*WorkflowInstanceQue
 		opt(query)
 	}
 	wq.withWorkflowInstances = query
+	return wq
+}
+
+// WithDepartment tells the query-builder to eager-load the nodes that are connected to
+// the "department" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkflowQuery) WithDepartment(opts ...func(*DepartmentQuery)) *WorkflowQuery {
+	query := (&DepartmentClient{config: wq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withDepartment = query
 	return wq
 }
 
@@ -371,8 +407,9 @@ func (wq *WorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Wor
 	var (
 		nodes       = []*Workflow{}
 		_spec       = wq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			wq.withWorkflowInstances != nil,
+			wq.withDepartment != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -399,6 +436,12 @@ func (wq *WorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Wor
 			func(n *Workflow, e *WorkflowInstance) {
 				n.Edges.WorkflowInstances = append(n.Edges.WorkflowInstances, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := wq.withDepartment; query != nil {
+		if err := wq.loadDepartment(ctx, query, nodes, nil,
+			func(n *Workflow, e *Department) { n.Edges.Department = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -436,6 +479,35 @@ func (wq *WorkflowQuery) loadWorkflowInstances(ctx context.Context, query *Workf
 	}
 	return nil
 }
+func (wq *WorkflowQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*Workflow, init func(*Workflow), assign func(*Workflow, *Department)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Workflow)
+	for i := range nodes {
+		fk := nodes[i].DepartmentID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(department.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (wq *WorkflowQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := wq.querySpec()
@@ -461,6 +533,9 @@ func (wq *WorkflowQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != workflow.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if wq.withDepartment != nil {
+			_spec.Node.AddColumnOnce(workflow.FieldDepartmentID)
 		}
 	}
 	if ps := wq.predicates; len(ps) > 0 {

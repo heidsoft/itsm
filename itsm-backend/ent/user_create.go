@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/user"
 	"time"
 
@@ -62,6 +63,20 @@ func (uc *UserCreate) SetDepartment(s string) *UserCreate {
 func (uc *UserCreate) SetNillableDepartment(s *string) *UserCreate {
 	if s != nil {
 		uc.SetDepartment(*s)
+	}
+	return uc
+}
+
+// SetDepartmentID sets the "department_id" field.
+func (uc *UserCreate) SetDepartmentID(i int) *UserCreate {
+	uc.mutation.SetDepartmentID(i)
+	return uc
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (uc *UserCreate) SetNillableDepartmentID(i *int) *UserCreate {
+	if i != nil {
+		uc.SetDepartmentID(*i)
 	}
 	return uc
 }
@@ -132,6 +147,25 @@ func (uc *UserCreate) SetNillableUpdatedAt(t *time.Time) *UserCreate {
 		uc.SetUpdatedAt(*t)
 	}
 	return uc
+}
+
+// SetDepartmentRefID sets the "department_ref" edge to the Department entity by ID.
+func (uc *UserCreate) SetDepartmentRefID(id int) *UserCreate {
+	uc.mutation.SetDepartmentRefID(id)
+	return uc
+}
+
+// SetNillableDepartmentRefID sets the "department_ref" edge to the Department entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableDepartmentRefID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetDepartmentRefID(*id)
+	}
+	return uc
+}
+
+// SetDepartmentRef sets the "department_ref" edge to the Department entity.
+func (uc *UserCreate) SetDepartmentRef(d *Department) *UserCreate {
+	return uc.SetDepartmentRefID(d.ID)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -315,6 +349,23 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := uc.mutation.DepartmentRefIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.DepartmentRefTable,
+			Columns: []string{user.DepartmentRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.DepartmentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

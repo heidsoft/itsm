@@ -113,19 +113,30 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 // @Tags 事件管理
 // @Produce json
 // @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(10)
+// @Param page_size query int false "每页数量" default(10)
+// @Param size query int false "每页数量（兼容旧参数）" default(10)
 // @Param status query string false "状态筛选"
 // @Param priority query string false "优先级筛选"
 // @Param severity query string false "严重程度筛选"
 // @Param category query string false "分类筛选"
+// @Param source query string false "来源筛选"
+// @Param keyword query string false "关键词搜索（标题、描述、事件编号）"
 // @Param assignee_id query int false "处理人ID筛选"
-// @Success 200 {object} common.Response{data=common.PaginatedResponse{items=[]dto.IncidentResponse}}
+// @Success 200 {object} common.Response{data=object{incidents=[]dto.IncidentResponse,total=int,page=int,page_size=int,total_pages=int}}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents [get]
 func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "10"))
+	// 支持 page_size 和 size 两种参数名
+	pageSizeStr := ctx.Query("page_size")
+	if pageSizeStr == "" {
+		pageSizeStr = ctx.DefaultQuery("size", "10")
+	}
+	size, _ := strconv.Atoi(pageSizeStr)
+	if size <= 0 {
+		size = 10
+	}
 
 	// 构建筛选条件
 	filters := make(map[string]interface{})
@@ -141,6 +152,12 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	if category := ctx.Query("category"); category != "" {
 		filters["category"] = category
 	}
+	if source := ctx.Query("source"); source != "" {
+		filters["source"] = source
+	}
+	if keyword := ctx.Query("keyword"); keyword != "" {
+		filters["keyword"] = keyword
+	}
 	if assigneeIDStr := ctx.Query("assignee_id"); assigneeIDStr != "" {
 		if assigneeID, err := strconv.Atoi(assigneeIDStr); err == nil {
 			filters["assignee_id"] = assigneeID
@@ -148,6 +165,12 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
 	incidents, total, err := c.incidentService.ListIncidents(ctx.Request.Context(), tenantID, page, size, filters)
 	if err != nil {
 		c.logger.Errorw("Failed to list incidents", "error", err)
@@ -155,11 +178,21 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 		return
 	}
 
+	// 计算总页数
+	totalPages := (total + size - 1) / size
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	// 返回前端期望的格式
 	common.Success(ctx, gin.H{
-		"items":    incidents,
-		"total":    total,
-		"page":     page,
-		"pageSize": size,
+		"incidents":  incidents,
+		"items":     incidents, // 保持向后兼容
+		"total":     total,
+		"page":      page,
+		"page_size": size,
+		"pageSize": size, // 保持向后兼容
+		"total_pages": totalPages,
 	})
 }
 
@@ -433,6 +466,32 @@ func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
 	metrics := []interface{}{}
 
 	common.SuccessWithMessage(ctx, "获取事件指标成功", metrics)
+}
+
+// GetIncidentStats 获取事件统计
+// @Summary 获取事件统计
+// @Description 获取事件统计数据
+// @Tags 事件管理
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.IncidentStatsResponse}
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/stats [get]
+func (c *IncidentController) GetIncidentStats(ctx *gin.Context) {
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		c.logger.Errorw("Failed to get tenant ID", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		return
+	}
+
+	stats, err := c.incidentService.GetIncidentStats(ctx.Request.Context(), tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to get incident stats", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件统计失败")
+		return
+	}
+
+	common.Success(ctx, stats)
 }
 
 // CreateIncidentEvent 创建事件活动记录

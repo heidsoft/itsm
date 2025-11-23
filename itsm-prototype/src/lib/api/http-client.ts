@@ -39,6 +39,8 @@ class HttpClient {
     this.token = token;
     if (typeof window !== 'undefined') {
       localStorage.setItem('access_token', token); // Changed to access_token
+      // 同步更新 Cookie，有效期 15 分钟
+      document.cookie = `auth-token=${token}; path=/; max-age=900; SameSite=Lax`;
     }
   }
 
@@ -46,6 +48,9 @@ class HttpClient {
     this.token = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token'); // Changed to access_token
+      // 清除 Cookie
+      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie = 'refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
   }
 
@@ -79,6 +84,10 @@ class HttpClient {
 
   getTenantId(): number | null {
     return this.tenantId;
+  }
+
+  getAuthToken(): string | null {
+    return this.token;
   }
 
   private getHeaders(): Record<string, string> {

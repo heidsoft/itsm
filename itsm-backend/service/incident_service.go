@@ -142,6 +142,19 @@ func (s *IncidentService) ListIncidents(ctx context.Context, tenantID int, page,
 	if category, ok := filters["category"].(string); ok && category != "" {
 		query = query.Where(incident.CategoryEQ(category))
 	}
+	if source, ok := filters["source"].(string); ok && source != "" {
+		query = query.Where(incident.SourceEQ(source))
+	}
+	if keyword, ok := filters["keyword"].(string); ok && keyword != "" {
+		// 关键词搜索：标题、描述、事件编号
+		query = query.Where(
+			incident.Or(
+				incident.TitleContains(keyword),
+				incident.DescriptionContains(keyword),
+				incident.IncidentNumberContains(keyword),
+			),
+		)
+	}
 	if assigneeID, ok := filters["assignee_id"].(int); ok && assigneeID > 0 {
 		query = query.Where(incident.AssigneeIDEQ(assigneeID))
 	}
@@ -846,4 +859,106 @@ func (s *IncidentService) toIncidentMetricResponse(metric *ent.IncidentMetric) *
 		CreatedAt:   metric.CreatedAt,
 		UpdatedAt:   metric.UpdatedAt,
 	}
+}
+
+// GetIncidentStats 获取事件统计信息
+func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*dto.IncidentStatsResponse, error) {
+	s.logger.Infow("Getting incident stats", "tenant_id", tenantID)
+
+	// 获取总事件数
+	totalIncidents, err := s.client.Incident.Query().
+		Where(incident.TenantIDEQ(tenantID)).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to count total incidents", "error", err)
+		return nil, fmt.Errorf("failed to count total incidents: %w", err)
+	}
+
+	// 获取开放事件数（new, in_progress）
+	openIncidents, err := s.client.Incident.Query().
+		Where(incident.TenantIDEQ(tenantID), incident.StatusIn("new", "in_progress")).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to count open incidents", "error", err)
+		return nil, fmt.Errorf("failed to count open incidents: %w", err)
+	}
+
+	// 获取关键事件数（severity = critical）
+	criticalIncidents, err := s.client.Incident.Query().
+		Where(incident.TenantIDEQ(tenantID), incident.SeverityEQ("critical")).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to count critical incidents", "error", err)
+		return nil, fmt.Errorf("failed to count critical incidents: %w", err)
+	}
+
+	// 获取主要事件数（使用 severity = critical 或 priority = high/urgent 作为主要事件）
+	majorIncidents, err := s.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.Or(
+				incident.SeverityEQ("critical"),
+				incident.PriorityIn("high", "urgent"),
+			),
+		).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to count major incidents", "error", err)
+		return nil, fmt.Errorf("failed to count major incidents: %w", err)
+	}
+
+	// 获取已解决的事件，计算平均解决时间
+	resolvedIncidents, err := s.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.StatusEQ("resolved"),
+			incident.ResolvedAtNotNil(),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get resolved incidents", "error", err)
+		return nil, fmt.Errorf("failed to get resolved incidents: %w", err)
+	}
+
+	var totalResolutionTime float64
+	var totalAcknowledgeTime float64
+	resolvedCount := len(resolvedIncidents)
+	acknowledgedCount := 0
+
+	for _, inc := range resolvedIncidents {
+		if !inc.ResolvedAt.IsZero() && !inc.DetectedAt.IsZero() {
+			resolutionTime := inc.ResolvedAt.Sub(inc.DetectedAt).Hours()
+			totalResolutionTime += resolutionTime
+		}
+		// 使用 detected_at 到 created_at 的时间差作为确认时间（简化实现）
+		if !inc.DetectedAt.IsZero() && !inc.CreatedAt.IsZero() {
+			acknowledgeTime := inc.DetectedAt.Sub(inc.CreatedAt).Hours()
+			if acknowledgeTime > 0 {
+				totalAcknowledgeTime += acknowledgeTime
+				acknowledgedCount++
+			}
+		}
+	}
+
+	var avgResolutionTime float64
+	if resolvedCount > 0 {
+		avgResolutionTime = totalResolutionTime / float64(resolvedCount)
+	}
+
+	var mtta float64
+	if acknowledgedCount > 0 {
+		mtta = totalAcknowledgeTime / float64(acknowledgedCount)
+	}
+
+	var mttr float64 = avgResolutionTime
+
+	return &dto.IncidentStatsResponse{
+		TotalIncidents:    totalIncidents,
+		OpenIncidents:     openIncidents,
+		CriticalIncidents: criticalIncidents,
+		MajorIncidents:    majorIncidents,
+		AvgResolutionTime: avgResolutionTime,
+		MTTA:              mtta,
+		MTTR:              mttr,
+	}, nil
 }

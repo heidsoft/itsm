@@ -1,32 +1,27 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Statistic, Progress } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Skeleton } from 'antd';
 import { Star, Users, ThumbsUp, MessageSquare } from 'lucide-react';
+import { useSatisfactionData } from './hooks/useSatisfactionData';
 
-interface SatisfactionMetrics {
-  overall: number;
-  responseTime: number;
-  resolutionQuality: number;
-  communication: number;
-  totalResponses: number;
-}
+const SatisfactionDashboardSkeleton: React.FC = () => (
+  <Card title='客户满意度仪表盘' className='shadow-sm'>
+    <Row gutter={[16, 16]}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Col key={index} xs={24} sm={12} lg={6}>
+          <Card className='text-center'>
+            <Skeleton active paragraph={{ rows: 2 }} />
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  </Card>
+);
 
-interface SatisfactionDashboardProps {
-  metrics?: SatisfactionMetrics;
-  period?: string;
-}
+const SatisfactionDashboard: React.FC = () => {
+  const { metrics, loading } = useSatisfactionData();
 
-const SatisfactionDashboard: React.FC<SatisfactionDashboardProps> = ({
-  metrics = {
-    overall: 4.2,
-    responseTime: 4.0,
-    resolutionQuality: 4.3,
-    communication: 4.1,
-    totalResponses: 1250,
-  },
-  period = '本月',
-}) => {
   const getSatisfactionColor = (score: number) => {
     if (score >= 4.5) return '#52c41a';
     if (score >= 4.0) return '#1890ff';
@@ -40,6 +35,10 @@ const SatisfactionDashboard: React.FC<SatisfactionDashboardProps> = ({
     if (score >= 3.5) return '一般';
     return '不满意';
   };
+
+  if (loading || !metrics) {
+    return <SatisfactionDashboardSkeleton />;
+  }
 
   return (
     <div className='space-y-4'>
@@ -131,7 +130,7 @@ const SatisfactionDashboard: React.FC<SatisfactionDashboardProps> = ({
 
         <div className='mt-4 text-center text-gray-600'>
           <span>
-            基于 {metrics.totalResponses} 份{period}反馈数据
+            基于 {metrics.totalResponses} 份反馈数据
           </span>
         </div>
       </Card>

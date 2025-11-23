@@ -39,12 +39,14 @@ import {
   SLAPriority,
   SLAStatus,
   EscalationLevel,
-} from '../../lib/services/sla-service';
+} from '@/lib/services/sla-service';
+import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 export default function SLAManagementPage() {
+  const { t } = useI18n();
   // 状态管理
   const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
   const [slaInstances, setSlaInstances] = useState<SLAInstance[]>([]);
@@ -85,12 +87,12 @@ export default function SLAManagementPage() {
       setSlaDefinitions(response.items);
       setPagination(prev => ({ ...prev, total: response.total }));
     } catch (error) {
-      message.error('加载SLA定义失败');
+      message.error(t('sla.loadDefinitionsFailed'));
       console.error('Load SLA definitions error:', error);
     } finally {
       setLoading(false);
     }
-  }, [pagination.current, pagination.pageSize]);
+  }, [pagination.current, pagination.pageSize, t]);
 
   // 加载SLA统计
   const loadSLAStats = useCallback(async () => {
@@ -99,12 +101,12 @@ export default function SLAManagementPage() {
       const statsData = await slaService.getSLAStats();
       setStats(statsData);
     } catch (error) {
-      message.error('加载SLA统计失败');
+      message.error(t('sla.loadStatsFailed'));
       console.error('Load SLA stats error:', error);
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // 加载SLA实例
   const loadSLAInstances = useCallback(async () => {
@@ -115,10 +117,10 @@ export default function SLAManagementPage() {
       });
       setSlaInstances(response.items);
     } catch (error) {
-      message.error('加载SLA实例失败');
+      message.error(t('sla.loadInstancesFailed'));
       console.error('Load SLA instances error:', error);
     }
-  }, []);
+  }, [t]);
 
   // 初始化加载
   useEffect(() => {
@@ -158,14 +160,14 @@ export default function SLAManagementPage() {
     async (id: number) => {
       try {
         await slaService.deleteSLADefinition(id);
-        message.success('SLA定义删除成功');
+        message.success(t('sla.deleteSuccess'));
         loadSLADefinitions();
       } catch (error) {
-        message.error('删除SLA定义失败');
+        message.error(t('sla.deleteFailed'));
         console.error('Delete SLA error:', error);
       }
     },
-    [loadSLADefinitions]
+    [loadSLADefinitions, t]
   );
 
   // 提交表单
@@ -174,19 +176,19 @@ export default function SLAManagementPage() {
       try {
         if (editingSLA) {
           await slaService.updateSLADefinition(editingSLA.id, values);
-          message.success('SLA定义更新成功');
+          message.success(t('sla.updateSuccess'));
         } else {
           await slaService.createSLADefinition(values);
-          message.success('SLA定义创建成功');
+          message.success(t('sla.createSuccess'));
         }
         setModalVisible(false);
         loadSLADefinitions();
       } catch (error) {
-        message.error(editingSLA ? '更新SLA定义失败' : '创建SLA定义失败');
+        message.error(editingSLA ? t('sla.updateFailed') : t('sla.createFailed'));
         console.error('Submit SLA error:', error);
       }
     },
-    [editingSLA, loadSLADefinitions]
+    [editingSLA, loadSLADefinitions, t]
   );
 
   // 获取SLA状态颜色
@@ -209,13 +211,13 @@ export default function SLAManagementPage() {
   const getSLATypeLabel = (type: SLAType) => {
     switch (type) {
       case SLAType.RESPONSE_TIME:
-        return '响应时间';
+        return t('sla.responseTime');
       case SLAType.RESOLUTION_TIME:
-        return '解决时间';
+        return t('sla.resolutionTime');
       case SLAType.AVAILABILITY:
-        return '可用性';
+        return t('sla.availability');
       case SLAType.PERFORMANCE:
-        return '性能';
+        return t('sla.performance');
       default:
         return type;
     }
@@ -240,19 +242,19 @@ export default function SLAManagementPage() {
   // SLA定义表格列
   const slaColumns = [
     {
-      title: 'SLA名称',
+      title: t('sla.name'),
       dataIndex: 'name',
       key: 'name',
       sorter: true,
     },
     {
-      title: '类型',
+      title: t('sla.type'),
       dataIndex: 'type',
       key: 'type',
       render: (type: SLAType) => <Tag color='blue'>{getSLATypeLabel(type)}</Tag>,
     },
     {
-      title: '优先级',
+      title: t('sla.priority'),
       dataIndex: 'priority',
       key: 'priority',
       render: (priority: SLAPriority) => (
@@ -260,13 +262,13 @@ export default function SLAManagementPage() {
       ),
     },
     {
-      title: '目标时间',
+      title: t('sla.targetTime'),
       dataIndex: 'targetTime',
       key: 'targetTime',
-      render: (time: number) => `${time}分钟`,
+      render: (time: number) => `${time}${t('sla.minutes')}`,
     },
     {
-      title: '状态',
+      title: t('sla.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: SLAStatus) => (
@@ -274,17 +276,17 @@ export default function SLAManagementPage() {
       ),
     },
     {
-      title: '操作',
+      title: t('sla.actions'),
       key: 'actions',
       render: (_: any, record: SLADefinition) => (
         <Space size='small'>
-          <Tooltip title='查看详情'>
+          <Tooltip title={t('sla.viewDetails')}>
             <Button icon={<EyeOutlined />} size='small' />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title={t('sla.edit')}>
             <Button icon={<EditOutlined />} size='small' onClick={() => handleEditSLA(record)} />
           </Tooltip>
-          <Tooltip title='删除'>
+          <Tooltip title={t('sla.delete')}>
             <Button
               icon={<DeleteOutlined />}
               size='small'
@@ -300,17 +302,17 @@ export default function SLAManagementPage() {
   // SLA实例表格列
   const instanceColumns = [
     {
-      title: '工单号',
+      title: t('sla.ticketNumber'),
       dataIndex: 'ticketNumber',
       key: 'ticketNumber',
     },
     {
-      title: 'SLA名称',
+      title: t('sla.name'),
       dataIndex: ['slaDefinition', 'name'],
       key: 'slaName',
     },
     {
-      title: '状态',
+      title: t('sla.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
@@ -342,17 +344,17 @@ export default function SLAManagementPage() {
       },
     },
     {
-      title: '剩余时间',
+      title: t('sla.remainingTime'),
       dataIndex: 'remainingTime',
       key: 'remainingTime',
       render: (time: number) => {
         const hours = Math.floor(time / 60);
         const minutes = time % 60;
-        return `${hours}小时${minutes}分钟`;
+        return `${hours}${t('sla.hours')}${minutes}${t('sla.minutes')}`;
       },
     },
     {
-      title: '升级级别',
+      title: t('sla.escalationLevel'),
       dataIndex: 'currentLevel',
       key: 'currentLevel',
       render: (level: EscalationLevel) => <Tag color='purple'>{level.toUpperCase()}</Tag>,
@@ -366,7 +368,7 @@ export default function SLAManagementPage() {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='总SLA实例'
+              title={t('sla.totalInstances')}
               value={stats.totalInstances}
               prefix={<ClockCircleOutlined />}
               loading={statsLoading}
@@ -376,7 +378,7 @@ export default function SLAManagementPage() {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='活跃实例'
+              title={t('sla.activeInstances')}
               value={stats.activeInstances}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: '#3f8600' }}
@@ -387,7 +389,7 @@ export default function SLAManagementPage() {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='预警实例'
+              title={t('sla.warningInstances')}
               value={stats.warningInstances}
               prefix={<WarningOutlined />}
               valueStyle={{ color: '#faad14' }}
@@ -398,7 +400,7 @@ export default function SLAManagementPage() {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='违约实例'
+              title={t('sla.breachedInstances')}
               value={stats.breachedInstances}
               prefix={<ExclamationCircleOutlined />}
               valueStyle={{ color: '#cf1322' }}
@@ -411,7 +413,7 @@ export default function SLAManagementPage() {
       {/* SLA合规率 */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12}>
-          <Card title='SLA合规率'>
+          <Card title={t('sla.complianceRate')}>
             <div className='text-center'>
               <Progress
                 type='circle'
@@ -423,25 +425,25 @@ export default function SLAManagementPage() {
                 }}
               />
               <div className='mt-4'>
-                <p className='text-gray-600'>平均解决时间: {stats.averageResolutionTime}分钟</p>
-                <p className='text-gray-600'>违约率: {(stats.breachRate * 100).toFixed(1)}%</p>
+                <p className='text-gray-600'>{t('sla.avgResolutionTime')}: {stats.averageResolutionTime}{t('sla.minutes')}</p>
+                <p className='text-gray-600'>{t('sla.breachRate')}: {(stats.breachRate * 100).toFixed(1)}%</p>
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card title='SLA预警'>
+          <Card title={t('sla.slaWarning')}>
             {stats.warningInstances > 0 ? (
               <Alert
-                message='SLA预警'
-                description={`当前有 ${stats.warningInstances} 个SLA实例处于预警状态，请及时处理。`}
+                message={t('sla.slaWarning')}
+                description={t('sla.slaWarningDescription', { count: stats.warningInstances })}
                 type='warning'
                 showIcon
               />
             ) : (
               <Alert
-                message='SLA状态正常'
-                description='所有SLA实例都在正常范围内。'
+                message={t('sla.slaStatusNormal')}
+                description={t('sla.slaStatusNormalDescription')}
                 type='success'
                 showIcon
               />
@@ -451,7 +453,7 @@ export default function SLAManagementPage() {
       </Row>
 
       {/* SLA定义列表 */}
-      <Card title='SLA定义' extra={<Button onClick={loadSLADefinitions}>刷新</Button>}>
+      <Card title={t('sla.slaDefinitions')} extra={<Button onClick={loadSLADefinitions}>{t('sla.refresh')}</Button>}>
         <Table
           columns={slaColumns}
           dataSource={slaDefinitions}
@@ -469,7 +471,7 @@ export default function SLAManagementPage() {
       </Card>
 
       {/* SLA实例列表 */}
-      <Card title='当前SLA实例'>
+      <Card title={t('sla.currentInstances')}>
         <Table
           columns={instanceColumns}
           dataSource={slaInstances}
@@ -481,7 +483,7 @@ export default function SLAManagementPage() {
 
       {/* SLA创建/编辑模态框 */}
       <Modal
-        title={editingSLA ? '编辑SLA定义' : '创建SLA定义'}
+        title={editingSLA ? t('sla.editSla') : t('sla.createSla')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -493,23 +495,23 @@ export default function SLAManagementPage() {
             <Col span={12}>
               <Form.Item
                 name='name'
-                label='SLA名称'
-                rules={[{ required: true, message: '请输入SLA名称' }]}
+                label={t('sla.name')}
+                rules={[{ required: true, message: t('sla.nameRequired') }]}
               >
-                <Input placeholder='例如：高优先级工单SLA' />
+                <Input placeholder={t('sla.namePlaceholder')} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name='type'
-                label='SLA类型'
-                rules={[{ required: true, message: '请选择SLA类型' }]}
+                label={t('sla.type')}
+                rules={[{ required: true, message: t('sla.typeRequired') }]}
               >
-                <Select placeholder='选择SLA类型'>
-                  <Option value={SLAType.RESPONSE_TIME}>响应时间</Option>
-                  <Option value={SLAType.RESOLUTION_TIME}>解决时间</Option>
-                  <Option value={SLAType.AVAILABILITY}>可用性</Option>
-                  <Option value={SLAType.PERFORMANCE}>性能</Option>
+                <Select placeholder={t('sla.typePlaceholder')}>
+                  <Option value={SLAType.RESPONSE_TIME}>{t('sla.responseTime')}</Option>
+                  <Option value={SLAType.RESOLUTION_TIME}>{t('sla.resolutionTime')}</Option>
+                  <Option value={SLAType.AVAILABILITY}>{t('sla.availability')}</Option>
+                  <Option value={SLAType.PERFORMANCE}>{t('sla.performance')}</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -519,50 +521,50 @@ export default function SLAManagementPage() {
             <Col span={12}>
               <Form.Item
                 name='priority'
-                label='优先级'
-                rules={[{ required: true, message: '请选择优先级' }]}
+                label={t('sla.priority')}
+                rules={[{ required: true, message: t('sla.priorityRequired') }]}
               >
-                <Select placeholder='选择优先级'>
-                  <Option value={SLAPriority.CRITICAL}>关键</Option>
-                  <Option value={SLAPriority.HIGH}>高</Option>
-                  <Option value={SLAPriority.MEDIUM}>中</Option>
-                  <Option value={SLAPriority.LOW}>低</Option>
+                <Select placeholder={t('sla.priorityPlaceholder')}>
+                  <Option value={SLAPriority.CRITICAL}>{t('sla.critical')}</Option>
+                  <Option value={SLAPriority.HIGH}>{t('sla.high')}</Option>
+                  <Option value={SLAPriority.MEDIUM}>{t('sla.medium')}</Option>
+                  <Option value={SLAPriority.LOW}>{t('sla.low')}</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name='targetTime'
-                label='目标时间（分钟）'
-                rules={[{ required: true, message: '请输入目标时间' }]}
+                label={`${t('sla.targetTime')} (${t('sla.minutes')})`}
+                rules={[{ required: true, message: t('sla.targetTimeRequired') }]}
               >
-                <Input type='number' placeholder='例如：120' />
+                <Input type='number' placeholder={t('sla.targetTimePlaceholder')} />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
             name='warningTime'
-            label='预警时间（分钟）'
-            rules={[{ required: true, message: '请输入预警时间' }]}
+            label={`${t('sla.warningTime')} (${t('sla.minutes')})`}
+            rules={[{ required: true, message: t('sla.warningTimeRequired') }]}
           >
-            <Input type='number' placeholder='例如：90' />
+            <Input type='number' placeholder={t('sla.warningTimePlaceholder')} />
           </Form.Item>
 
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='SLA描述信息' />
+          <Form.Item name='description' label={t('sla.description')}>
+            <TextArea rows={3} placeholder={t('sla.descriptionPlaceholder')} />
           </Form.Item>
 
-          <Form.Item name='isDefault' label='设为默认' valuePropName='checked'>
+          <Form.Item name='isDefault' label={t('sla.isDefault')} valuePropName='checked'>
             <Switch />
           </Form.Item>
 
           <Form.Item>
             <Space>
               <Button type='primary' htmlType='submit'>
-                {editingSLA ? '更新' : '创建'}
+                {editingSLA ? t('sla.update') : t('sla.create')}
               </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
+              <Button onClick={() => setModalVisible(false)}>{t('sla.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>

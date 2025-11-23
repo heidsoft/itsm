@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Modal, message } from 'antd';
+import { Modal, message, Tabs } from 'antd';
 import { TicketStats } from '@/components/business/TicketStats';
 import { TicketFilters } from '@/components/business/TicketFilters';
 import { OptimizedTicketList } from '@/components/business/OptimizedTicketList';
 import { TicketModal, TicketTemplateModal } from '@/components/business/TicketModal';
-import { TicketAssociation } from '@/app/components/TicketAssociation';
+import { TicketAssociation } from '@/components/business/TicketAssociation';
 import { SatisfactionDashboard } from '@/components/business/SatisfactionDashboard';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LazyWrapper, LoadingSpinner } from '@/components/common/LazyComponents';
@@ -19,8 +19,12 @@ import {
 } from '@/lib/hooks/useTicketsQuery';
 import { useTicketFilters } from '@/lib/hooks/useTicketFilters';
 import { useTicketStore } from '@/lib/stores/ticket-store';
+import { useI18n } from '@/lib/i18n';
+
+const { TabPane } = Tabs;
 
 export default function TicketsPage() {
+  const { t } = useI18n();
   // 状态管理
   const [pagination, setPagination] = useState({
     current: 1,
@@ -62,8 +66,8 @@ export default function TicketsPage() {
   const updateTicketMutation = useUpdateTicketMutation();
   const batchDeleteMutation = useBatchDeleteTicketsMutation();
 
-  // 计算数据
-  const tickets = ticketsData?.tickets || [];
+  // 计算数据 - 确保tickets始终是数组
+  const tickets = Array.isArray(ticketsData?.tickets) ? ticketsData.tickets : [];
   const stats = statsData || {
     total: 0,
     open: 0,
@@ -98,26 +102,35 @@ export default function TicketsPage() {
 
   const handleBatchDelete = useCallback(async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('Please select tickets to delete');
+      message.warning(t('tickets.deleteConfirmationWarning'));
       return;
     }
 
     Modal.confirm({
-      title: 'Confirm Delete',
-      content: `Are you sure you want to delete the selected ${selectedRowKeys.length} tickets? This action cannot be undone.`,
-      okText: 'Confirm Delete',
+      title: t('tickets.confirmDelete'),
+      content: (
+        <div>
+          <p>{t('tickets.deleteConfirmation', { count: selectedRowKeys.length })}</p>
+          <p>
+            {t('tickets.ticketIds')}: {selectedRowKeys.join(', ')}
+          </p>
+        </div>
+      ),
+      okText: t('tickets.confirmDelete'),
       okType: 'danger',
-      cancelText: 'Cancel',
+      cancelText: t('tickets.cancel'),
       onOk: async () => {
         try {
           await batchDeleteMutation.mutateAsync(selectedRowKeys as string[]);
           setSelectedRowKeys([]);
+          message.success(t('tickets.deleteSuccess'));
         } catch (error) {
           console.error('Delete failed:', error);
+          message.error(t('tickets.deleteFailed'));
         }
       },
     });
-  }, [selectedRowKeys, batchDeleteMutation, setSelectedRowKeys]);
+  }, [selectedRowKeys, batchDeleteMutation, setSelectedRowKeys, t]);
 
   const handleSearch = useCallback(
     (keyword: string) => {
@@ -138,12 +151,12 @@ export default function TicketsPage() {
     // 使用 React Query 的 refetch 优雅地刷新数据
     try {
       await Promise.all([refetchTickets(), refetchStats()]);
-      message.success('数据刷新成功');
+      message.success(t('tickets.refreshSuccess'));
     } catch (error) {
       console.error('Refresh failed:', error);
-      message.error('数据刷新失败，请重试');
+      message.error(t('tickets.refreshFailed'));
     }
-  }, [refetchTickets, refetchStats]);
+  }, [refetchTickets, refetchStats, t]);
 
   const handleModalSubmit = useCallback(
     async (values: any) => {
@@ -188,9 +201,9 @@ export default function TicketsPage() {
       <LoadingEmptyError
         state='error'
         error={{
-          title: 'Loading Failed',
-          description: error?.message || 'Unknown error occurred',
-          actionText: 'Retry',
+          title: t('tickets.loadingFailed'),
+          description: error?.message || t('tickets.unknownError'),
+          actionText: t('tickets.retry'),
           onAction: handleRefresh,
         }}
       />
@@ -201,7 +214,7 @@ export default function TicketsPage() {
     <div className='space-y-4'>
       {/* 统计卡片 - 懒加载 */}
       <LazyWrapper fallback={<LoadingSpinner />}>
-        <TicketStats stats={stats} />
+        <TicketStats stats={stats} loading={statsLoading} />
       </LazyWrapper>
 
       {/* 筛选器 - 懒加载 */}
@@ -215,29 +228,28 @@ export default function TicketsPage() {
         />
       </LazyWrapper>
 
-      {/* 优化的工单列表 */}
-      <OptimizedTicketList
-        tickets={tickets}
-        loading={ticketsLoading}
-        pagination={pagination}
-        selectedRowKeys={selectedRowKeys}
-        onPaginationChange={handlePaginationChange}
-        onRowSelectionChange={handleRowSelectionChange}
-        onEditTicket={handleEditTicket}
-        onViewActivity={handleViewActivity}
-        onCreateTicket={handleCreateTicket}
-        onBatchDelete={handleBatchDelete}
-      />
-
-      {/* 工单关联 - 懒加载 */}
-      <LazyWrapper fallback={<LoadingSpinner />}>
-        <TicketAssociation />
-      </LazyWrapper>
-
-      {/* 满意度仪表板 - 懒加载 */}
-      <LazyWrapper fallback={<LoadingSpinner />}>
-        <SatisfactionDashboard />
-      </LazyWrapper>
+      <Tabs defaultActiveKey="1">
+        <TabPane tab={t('tickets.list')} key="1">
+          <OptimizedTicketList
+            tickets={tickets}
+            loading={ticketsLoading}
+            pagination={pagination}
+            selectedRowKeys={selectedRowKeys}
+            onPaginationChange={handlePaginationChange}
+            onRowSelectionChange={handleRowSelectionChange}
+            onEditTicket={handleEditTicket}
+            onViewActivity={handleViewActivity}
+            onCreateTicket={handleCreateTicket}
+            onBatchDelete={handleBatchDelete}
+          />
+        </TabPane>
+        <TabPane tab={t('tickets.association')} key="2">
+          <TicketAssociation />
+        </TabPane>
+        <TabPane tab={t('tickets.satisfaction')} key="3">
+          <SatisfactionDashboard />
+        </TabPane>
+      </Tabs>
 
       {/* 模态框 */}
       <TicketModal

@@ -29,9 +29,10 @@ export function useI18n() {
   /**
    * 获取翻译文本
    * @param key 翻译键，支持嵌套路径，如 'dashboard.title'
+   * @param params 可选的参数对象，用于替换翻译文本中的占位符，如 {name: 'John'} 会替换 {name}
    */
   const t = useCallback(
-    (key: string): string => {
+    (key: string, params?: Record<string, string | number>): string => {
       const keys = key.split('.');
       let value: any = translations[language];
 
@@ -52,7 +53,17 @@ export function useI18n() {
         }
       }
 
-      return typeof value === 'string' ? value : key;
+      let result = typeof value === 'string' ? value : key;
+      
+      // 替换参数占位符
+      if (params) {
+        Object.keys(params).forEach(paramKey => {
+          const regex = new RegExp(`\\{${paramKey}\\}`, 'g');
+          result = result.replace(regex, String(params[paramKey]));
+        });
+      }
+
+      return result;
     },
     [language]
   );

@@ -33,7 +33,7 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import EnhancedBPMNDesigner from '@/components/charts/EnhancedBPMNDesigner';
+import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 
 const { Header, Content } = Layout;
@@ -537,7 +537,7 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
           <Tabs activeKey={activeTab} onChange={setActiveTab}>
             <TabPane tab='流程设计' key='designer'>
               <div style={{ height: 'calc(100vh - 200px)' }}>
-                <EnhancedBPMNDesigner
+                <BPMNDesigner
                   xml={currentXML}
                   onSave={handleSave}
                   onChange={xml => {

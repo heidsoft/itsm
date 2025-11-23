@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/application"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -13,6 +14,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/conversation"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -21,6 +23,7 @@ import (
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/message"
+	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processdefinition"
@@ -29,12 +32,15 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/processvariable"
+	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/tag"
+	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
@@ -110,6 +116,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			application.Table:             application.ValidColumn,
 			auditlog.Table:                auditlog.ValidColumn,
 			ciattributedefinition.Table:   ciattributedefinition.ValidColumn,
 			cirelationship.Table:          cirelationship.ValidColumn,
@@ -117,6 +124,7 @@ func checkColumn(table, column string) error {
 			change.Table:                  change.ValidColumn,
 			configurationitem.Table:       configurationitem.ValidColumn,
 			conversation.Table:            conversation.ValidColumn,
+			department.Table:              department.ValidColumn,
 			incident.Table:                incident.ValidColumn,
 			incidentalert.Table:           incidentalert.ValidColumn,
 			incidentevent.Table:           incidentevent.ValidColumn,
@@ -125,6 +133,7 @@ func checkColumn(table, column string) error {
 			incidentruleexecution.Table:   incidentruleexecution.ValidColumn,
 			knowledgearticle.Table:        knowledgearticle.ValidColumn,
 			message.Table:                 message.ValidColumn,
+			microservice.Table:            microservice.ValidColumn,
 			notification.Table:            notification.ValidColumn,
 			problem.Table:                 problem.ValidColumn,
 			processdefinition.Table:       processdefinition.ValidColumn,
@@ -133,12 +142,15 @@ func checkColumn(table, column string) error {
 			processinstance.Table:         processinstance.ValidColumn,
 			processtask.Table:             processtask.ValidColumn,
 			processvariable.Table:         processvariable.ValidColumn,
+			project.Table:                 project.ValidColumn,
 			prompttemplate.Table:          prompttemplate.ValidColumn,
 			sladefinition.Table:           sladefinition.ValidColumn,
 			slametric.Table:               slametric.ValidColumn,
 			slaviolation.Table:            slaviolation.ValidColumn,
 			servicecatalog.Table:          servicecatalog.ValidColumn,
 			servicerequest.Table:          servicerequest.ValidColumn,
+			tag.Table:                     tag.ValidColumn,
+			team.Table:                    team.ValidColumn,
 			tenant.Table:                  tenant.ValidColumn,
 			ticket.Table:                  ticket.ValidColumn,
 			ticketcategory.Table:          ticketcategory.ValidColumn,

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/department"
 	"itsm-backend/ent/user"
 	"strings"
 	"time"
@@ -27,6 +28,8 @@ type User struct {
 	Role user.Role `json:"role,omitempty"`
 	// 部门
 	Department string `json:"department,omitempty"`
+	// 部门ID
+	DepartmentID int `json:"department_id,omitempty"`
 	// 电话
 	Phone string `json:"phone,omitempty"`
 	// 密码哈希
@@ -38,8 +41,32 @@ type User struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
+	team_users   *int
 	selectValues sql.SelectValues
+}
+
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
+	// DepartmentRef holds the value of the department_ref edge.
+	DepartmentRef *Department `json:"department_ref,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) DepartmentRefOrErr() (*Department, error) {
+	if e.DepartmentRef != nil {
+		return e.DepartmentRef, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: department.Label}
+	}
+	return nil, &NotLoadedError{edge: "department_ref"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -49,12 +76,14 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldActive:
 			values[i] = new(sql.NullBool)
-		case user.FieldID, user.FieldTenantID:
+		case user.FieldID, user.FieldDepartmentID, user.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldUsername, user.FieldEmail, user.FieldName, user.FieldRole, user.FieldDepartment, user.FieldPhone, user.FieldPasswordHash:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case user.ForeignKeys[0]: // team_users
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -106,6 +135,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Department = value.String
 			}
+		case user.FieldDepartmentID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				u.DepartmentID = int(value.Int64)
+			}
 		case user.FieldPhone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field phone", values[i])
@@ -142,6 +177,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.UpdatedAt = value.Time
 			}
+		case user.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field team_users", value)
+			} else if value.Valid {
+				u.team_users = new(int)
+				*u.team_users = int(value.Int64)
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -153,6 +195,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
+}
+
+// QueryDepartmentRef queries the "department_ref" edge of the User entity.
+func (u *User) QueryDepartmentRef() *DepartmentQuery {
+	return NewUserClient(u.config).QueryDepartmentRef(u)
 }
 
 // Update returns a builder for updating this User.
@@ -192,6 +239,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("department=")
 	builder.WriteString(u.Department)
+	builder.WriteString(", ")
+	builder.WriteString("department_id=")
+	builder.WriteString(fmt.Sprintf("%v", u.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("phone=")
 	builder.WriteString(u.Phone)

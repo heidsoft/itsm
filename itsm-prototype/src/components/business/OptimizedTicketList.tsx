@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useCallback, useState } from 'react';
-import { Button, Space, Tooltip, Dropdown, Badge, Switch } from 'antd';
+import { Button, Space, Tooltip, Dropdown, Badge, Switch, Table } from 'antd';
 import { Download, Plus, AlertTriangle, Settings, Zap } from 'lucide-react';
 import {
   Ticket,
@@ -11,6 +11,7 @@ import {
 } from '../../lib/services/ticket-service';
 import { VirtualizedTicketList } from './VirtualizedTicketList';
 import { LazyWrapper, LoadingSpinner } from '../common/LazyComponents';
+import { TicketListSkeleton } from './TicketListSkeleton';
 
 interface OptimizedTicketListProps {
   tickets: Ticket[];
@@ -57,19 +58,21 @@ export const OptimizedTicketList: React.FC<OptimizedTicketListProps> = React.mem
     // 性能模式状态
     const [performanceMode, setPerformanceMode] = useState(true);
     const [virtualScrollEnabled, setVirtualScrollEnabled] = useState(
-      tickets.length > PERFORMANCE_CONFIG.VIRTUAL_SCROLL_THRESHOLD
+      tickets?.length > PERFORMANCE_CONFIG.VIRTUAL_SCROLL_THRESHOLD
     );
 
     // 自动启用虚拟滚动
     React.useEffect(() => {
-      setVirtualScrollEnabled(tickets.length > PERFORMANCE_CONFIG.VIRTUAL_SCROLL_THRESHOLD);
-    }, [tickets.length]);
+      if (tickets && Array.isArray(tickets)) {
+        setVirtualScrollEnabled(tickets.length > PERFORMANCE_CONFIG.VIRTUAL_SCROLL_THRESHOLD);
+      }
+    }, [tickets]);
 
     // 性能统计
     const performanceStats = useMemo(() => {
       const startTime = performance.now();
       const stats = {
-        totalTickets: tickets.length,
+        totalTickets: tickets?.length || 0,
         selectedTickets: selectedRowKeys.length,
         virtualScrollEnabled,
         performanceMode,
@@ -77,7 +80,7 @@ export const OptimizedTicketList: React.FC<OptimizedTicketListProps> = React.mem
       };
       stats.renderTime = performance.now() - startTime;
       return stats;
-    }, [tickets.length, selectedRowKeys.length, virtualScrollEnabled, performanceMode]);
+    }, [tickets?.length, selectedRowKeys.length, virtualScrollEnabled, performanceMode]);
 
     // 优化的批量删除处理
     const handleBatchDelete = useCallback(() => {
@@ -117,7 +120,7 @@ export const OptimizedTicketList: React.FC<OptimizedTicketListProps> = React.mem
             <div className='text-sm text-blue-700'>
               <span className='font-medium'>Performance Mode:</span>
               <span className='ml-2'>
-                {virtualScrollEnabled ? 'Virtual Scroll' : 'Standard List'} |{tickets.length}{' '}
+                {virtualScrollEnabled ? 'Virtual Scroll' : 'Standard List'} |{tickets?.length || 0}{' '}
                 tickets |{selectedRowKeys.length} selected | Render:{' '}
                 {performanceStats.renderTime.toFixed(2)}ms
               </span>
@@ -182,15 +185,13 @@ export const OptimizedTicketList: React.FC<OptimizedTicketListProps> = React.mem
         <div className='space-y-4'>
           {renderPerformanceInfo()}
           {renderActionBar()}
-          <div className='flex items-center justify-center h-64'>
-            <LoadingSpinner size='large' />
-          </div>
+          <TicketListSkeleton />
         </div>
       );
     }
 
     // 渲染空状态
-    if (tickets.length === 0) {
+    if (!tickets || tickets.length === 0) {
       return (
         <div className='space-y-4'>
           {renderPerformanceInfo()}
@@ -206,6 +207,57 @@ export const OptimizedTicketList: React.FC<OptimizedTicketListProps> = React.mem
         </div>
       );
     }
+    
+    const tableColumns = [
+        {
+          title: 'Ticket Information',
+          dataIndex: 'title',
+          key: 'title',
+          render: (text: string, record: Ticket) => (
+            <div>
+              <div className='font-medium'>{text}</div>
+              <div className='text-sm text-gray-500'>#{record.id} • {record.category}</div>
+            </div>
+          ),
+        },
+        {
+          title: 'Status',
+          dataIndex: 'status',
+          key: 'status',
+        },
+        {
+          title: 'Priority',
+          dataIndex: 'priority',
+          key: 'priority',
+        },
+        {
+          title: 'Type',
+          dataIndex: 'type',
+          key: 'type',
+        },
+        {
+          title: 'Assignee',
+          dataIndex: 'assignee',
+          key: 'assignee',
+          render: (assignee: { name: string }) => assignee?.name || 'Unassigned',
+        },
+        {
+          title: 'Created Time',
+          dataIndex: 'created_at',
+          key: 'created_at',
+          render: (text: string) => new Date(text).toLocaleDateString(),
+        },
+        {
+          title: 'Actions',
+          key: 'actions',
+          render: (_: any, record: Ticket) => (
+            <Space size='small'>
+              <Button type='text' size='small' onClick={() => onEditTicket(record)}>Edit</Button>
+              <Button type='text' size='small' onClick={() => onViewActivity(record)}>View</Button>
+            </Space>
+          ),
+        },
+      ];
 
     return (
       <div className='space-y-4'>
@@ -227,19 +279,19 @@ export const OptimizedTicketList: React.FC<OptimizedTicketListProps> = React.mem
             />
           </LazyWrapper>
         ) : (
-          <div className='bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden'>
-            <div className='p-4 text-center text-gray-500'>
-              Standard list view for {tickets.length} tickets
-              <Button
-                type='link'
-                size='small'
-                onClick={() => setVirtualScrollEnabled(true)}
-                className='ml-2'
-              >
-                Enable Virtual Scroll
-              </Button>
-            </div>
-          </div>
+          <Table
+            columns={tableColumns}
+            dataSource={tickets}
+            rowKey='id'
+            pagination={pagination}
+            onRow={(record) => ({
+              onClick: () => onEditTicket(record),
+            })}
+            rowSelection={{
+                selectedRowKeys,
+                onChange: onRowSelectionChange,
+            }}
+          />
         )}
 
         {/* 分页信息 */}

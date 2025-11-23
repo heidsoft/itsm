@@ -11,12 +11,90 @@ import {
   Report,
   DashboardTemplate
 } from '../../types/dashboard';
+import type {
+  DashboardData,
+  KPIMetric,
+  TicketTrendData,
+  IncidentDistributionData,
+  SLAData,
+  SatisfactionData,
+  QuickAction,
+  RecentActivity
+} from '@/app/(main)/dashboard/types/dashboard.types';
 
 /**
  * 仪表盘API客户端
  * 提供仪表盘数据获取和管理相关的API调用方法
  */
 export class DashboardAPI {
+  /**
+   * 获取仪表盘概览数据
+   * 包括KPI指标、趋势图表、快速操作等所有Dashboard展示数据
+   * @returns Dashboard概览数据
+   */
+  static async getOverview(): Promise<DashboardData> {
+    return httpClient.get<DashboardData>('/api/v1/dashboard/overview');
+  }
+
+  /**
+   * 获取KPI指标数据
+   * @returns KPI指标列表
+   */
+  static async getKPIMetrics(): Promise<KPIMetric[]> {
+    return httpClient.get<KPIMetric[]>('/api/v1/dashboard/kpi-metrics');
+  }
+
+  /**
+   * 获取工单趋势数据
+   * @param days 天数，默认7天
+   * @returns 工单趋势数据
+   */
+  static async getTicketTrend(days: number = 7): Promise<TicketTrendData[]> {
+    return httpClient.get<TicketTrendData[]>('/api/v1/dashboard/ticket-trend', { days });
+  }
+
+  /**
+   * 获取事件分布数据
+   * @returns 事件分布数据
+   */
+  static async getIncidentDistribution(): Promise<IncidentDistributionData[]> {
+    return httpClient.get<IncidentDistributionData[]>('/api/v1/dashboard/incident-distribution');
+  }
+
+  /**
+   * 获取SLA数据
+   * @returns SLA数据列表
+   */
+  static async getSLAData(): Promise<SLAData[]> {
+    return httpClient.get<SLAData[]>('/api/v1/dashboard/sla-data');
+  }
+
+  /**
+   * 获取满意度数据
+   * @param months 月数，默认4个月
+   * @returns 满意度数据
+   */
+  static async getSatisfactionData(months: number = 4): Promise<SatisfactionData[]> {
+    return httpClient.get<SatisfactionData[]>('/api/v1/dashboard/satisfaction-data', { months });
+  }
+
+  /**
+   * 获取快速操作列表
+   * @returns 快速操作列表
+   */
+  static async getQuickActions(): Promise<QuickAction[]> {
+    return httpClient.get<QuickAction[]>('/api/v1/dashboard/quick-actions');
+  }
+
+  /**
+   * 获取最近活动
+   * @param limit 限制数量，默认10条
+   * @returns 最近活动列表
+   */
+  static async getRecentActivities(limit: number = 10): Promise<RecentActivity[]> {
+    return httpClient.get<RecentActivity[]>('/api/v1/dashboard/recent-activities', { limit });
+  }
+
   /**
    * 获取仪表盘配置
    * @param userId 用户ID

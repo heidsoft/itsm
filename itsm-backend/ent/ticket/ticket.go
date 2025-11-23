@@ -34,6 +34,8 @@ const (
 	FieldTemplateID = "template_id"
 	// FieldCategoryID holds the string denoting the category_id field in the database.
 	FieldCategoryID = "category_id"
+	// FieldDepartmentID holds the string denoting the department_id field in the database.
+	FieldDepartmentID = "department_id"
 	// FieldParentTicketID holds the string denoting the parent_ticket_id field in the database.
 	FieldParentTicketID = "parent_ticket_id"
 	// FieldSLADefinitionID holds the string denoting the sla_definition_id field in the database.
@@ -54,6 +56,8 @@ const (
 	EdgeTemplate = "template"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
 	EdgeCategory = "category"
+	// EdgeDepartment holds the string denoting the department edge name in mutations.
+	EdgeDepartment = "department"
 	// EdgeTags holds the string denoting the tags edge name in mutations.
 	EdgeTags = "tags"
 	// EdgeRelatedTickets holds the string denoting the related_tickets edge name in mutations.
@@ -82,6 +86,13 @@ const (
 	CategoryInverseTable = "ticket_categories"
 	// CategoryColumn is the table column denoting the category relation/edge.
 	CategoryColumn = "category_id"
+	// DepartmentTable is the table that holds the department relation/edge.
+	DepartmentTable = "tickets"
+	// DepartmentInverseTable is the table name for the Department entity.
+	// It exists in this package in order to avoid circular dependency with the "department" package.
+	DepartmentInverseTable = "departments"
+	// DepartmentColumn is the table column denoting the department relation/edge.
+	DepartmentColumn = "department_id"
 	// TagsTable is the table that holds the tags relation/edge.
 	TagsTable = "ticket_tags"
 	// TagsInverseTable is the table name for the TicketTag entity.
@@ -133,6 +144,7 @@ var Columns = []string{
 	FieldTenantID,
 	FieldTemplateID,
 	FieldCategoryID,
+	FieldDepartmentID,
 	FieldParentTicketID,
 	FieldSLADefinitionID,
 	FieldSLAResponseDeadline,
@@ -243,6 +255,11 @@ func ByCategoryID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCategoryID, opts...).ToFunc()
 }
 
+// ByDepartmentID orders the results by the department_id field.
+func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
+}
+
 // ByParentTicketID orders the results by the parent_ticket_id field.
 func ByParentTicketID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldParentTicketID, opts...).ToFunc()
@@ -294,6 +311,13 @@ func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
 func ByCategoryField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByDepartmentField orders the results by department field.
+func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -378,6 +402,13 @@ func newCategoryStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CategoryInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
+	)
+}
+func newDepartmentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DepartmentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
 	)
 }
 func newTagsStep() *sqlgraph.Step {

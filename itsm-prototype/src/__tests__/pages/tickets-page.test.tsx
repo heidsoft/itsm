@@ -131,7 +131,7 @@ describe('TicketsPage', () => {
 
   describe('页面渲染', () => {
     it('应该正确渲染工单列表页面', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       // 检查页面标题
@@ -139,7 +139,7 @@ describe('TicketsPage', () => {
     });
 
     it('应该显示加载状态', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       // 加载时应该显示骨架屏或加载指示器
@@ -152,7 +152,7 @@ describe('TicketsPage', () => {
     });
 
     it('应该显示工单统计信息', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -164,7 +164,7 @@ describe('TicketsPage', () => {
 
   describe('工单列表', () => {
     it('应该显示工单列表', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -174,7 +174,7 @@ describe('TicketsPage', () => {
     });
 
     it('应该显示工单编号', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -186,7 +186,7 @@ describe('TicketsPage', () => {
 
   describe('筛选功能', () => {
     it('应该支持按状态筛选', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       const { container } = renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -199,7 +199,7 @@ describe('TicketsPage', () => {
     });
 
     it('应该支持按优先级筛选', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       const { container } = renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -212,7 +212,7 @@ describe('TicketsPage', () => {
     });
 
     it('应该支持搜索', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       const { container } = renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -227,7 +227,7 @@ describe('TicketsPage', () => {
 
   describe('分页功能', () => {
     it('应该显示分页器', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -238,7 +238,7 @@ describe('TicketsPage', () => {
     });
 
     it('应该支持切换页码', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       const { container } = renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -253,7 +253,7 @@ describe('TicketsPage', () => {
 
   describe('刷新功能', () => {
     it('应该支持刷新数据', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       const { container } = renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -274,7 +274,7 @@ describe('TicketsPage', () => {
       const { TicketApi } = require('@/lib/api/ticket-api');
       TicketApi.getTickets.mockRejectedValueOnce(new Error('Network Error'));
 
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -288,7 +288,7 @@ describe('TicketsPage', () => {
       const { TicketApi } = require('@/lib/api/ticket-api');
       TicketApi.getTickets.mockRejectedValueOnce(new Error('Network Error'));
 
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       const { container } = renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -301,7 +301,7 @@ describe('TicketsPage', () => {
 
   describe('权限控制', () => {
     it('应该根据权限显示创建按钮', async () => {
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
@@ -321,7 +321,7 @@ describe('TicketsPage', () => {
         canDeleteTickets: () => false,
       });
 
-      const TicketsPage = (await import('@/app/tickets/page')).default;
+      const TicketsPage = (await import('@/app/(main)/tickets/page')).default;
       renderWithProviders(<TicketsPage />);
 
       await waitFor(() => {
