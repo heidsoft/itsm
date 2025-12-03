@@ -16,14 +16,7 @@ import {
   Col,
   Skeleton,
 } from 'antd';
-import {
-  RefreshCw,
-  Settings,
-  LayoutDashboard,
-  Zap,
-  LineChart,
-  TrendingUp,
-} from 'lucide-react';
+import { RefreshCw, Settings, LayoutDashboard, Zap, LineChart, TrendingUp } from 'lucide-react';
 import { KPICards } from './components/KPICards';
 import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
@@ -210,8 +203,9 @@ export default function DashboardPage() {
 
           <Button
             type='default'
-            icon={<RefreshCw spin={loading} />}
+            icon={<RefreshCw className={loading ? 'animate-spin' : ''} />}
             onClick={refresh}
+            loading={loading}
           >
             刷新
           </Button>

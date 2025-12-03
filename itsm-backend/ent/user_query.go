@@ -4,9 +4,13 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/user"
 	"math"
 
@@ -19,12 +23,15 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx               *QueryContext
-	order             []user.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.User
-	withDepartmentRef *DepartmentQuery
-	withFKs           bool
+	ctx                     *QueryContext
+	order                   []user.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.User
+	withDepartmentRef       *DepartmentQuery
+	withTicketComments      *TicketCommentQuery
+	withTicketAttachments   *TicketAttachmentQuery
+	withTicketNotifications *TicketNotificationQuery
+	withFKs                 bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +83,72 @@ func (uq *UserQuery) QueryDepartmentRef() *DepartmentQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.DepartmentRefTable, user.DepartmentRefColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTicketComments chains the current query on the "ticket_comments" edge.
+func (uq *UserQuery) QueryTicketComments() *TicketCommentQuery {
+	query := (&TicketCommentClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(ticketcomment.Table, ticketcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketCommentsTable, user.TicketCommentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTicketAttachments chains the current query on the "ticket_attachments" edge.
+func (uq *UserQuery) QueryTicketAttachments() *TicketAttachmentQuery {
+	query := (&TicketAttachmentClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(ticketattachment.Table, ticketattachment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketAttachmentsTable, user.TicketAttachmentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTicketNotifications chains the current query on the "ticket_notifications" edge.
+func (uq *UserQuery) QueryTicketNotifications() *TicketNotificationQuery {
+	query := (&TicketNotificationClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketNotificationsTable, user.TicketNotificationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +343,15 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:            uq.config,
-		ctx:               uq.ctx.Clone(),
-		order:             append([]user.OrderOption{}, uq.order...),
-		inters:            append([]Interceptor{}, uq.inters...),
-		predicates:        append([]predicate.User{}, uq.predicates...),
-		withDepartmentRef: uq.withDepartmentRef.Clone(),
+		config:                  uq.config,
+		ctx:                     uq.ctx.Clone(),
+		order:                   append([]user.OrderOption{}, uq.order...),
+		inters:                  append([]Interceptor{}, uq.inters...),
+		predicates:              append([]predicate.User{}, uq.predicates...),
+		withDepartmentRef:       uq.withDepartmentRef.Clone(),
+		withTicketComments:      uq.withTicketComments.Clone(),
+		withTicketAttachments:   uq.withTicketAttachments.Clone(),
+		withTicketNotifications: uq.withTicketNotifications.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -290,6 +366,39 @@ func (uq *UserQuery) WithDepartmentRef(opts ...func(*DepartmentQuery)) *UserQuer
 		opt(query)
 	}
 	uq.withDepartmentRef = query
+	return uq
+}
+
+// WithTicketComments tells the query-builder to eager-load the nodes that are connected to
+// the "ticket_comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTicketComments(opts ...func(*TicketCommentQuery)) *UserQuery {
+	query := (&TicketCommentClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTicketComments = query
+	return uq
+}
+
+// WithTicketAttachments tells the query-builder to eager-load the nodes that are connected to
+// the "ticket_attachments" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTicketAttachments(opts ...func(*TicketAttachmentQuery)) *UserQuery {
+	query := (&TicketAttachmentClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTicketAttachments = query
+	return uq
+}
+
+// WithTicketNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "ticket_notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTicketNotifications(opts ...func(*TicketNotificationQuery)) *UserQuery {
+	query := (&TicketNotificationClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTicketNotifications = query
 	return uq
 }
 
@@ -372,8 +481,11 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [4]bool{
 			uq.withDepartmentRef != nil,
+			uq.withTicketComments != nil,
+			uq.withTicketAttachments != nil,
+			uq.withTicketNotifications != nil,
 		}
 	)
 	if withFKs {
@@ -400,6 +512,29 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if query := uq.withDepartmentRef; query != nil {
 		if err := uq.loadDepartmentRef(ctx, query, nodes, nil,
 			func(n *User, e *Department) { n.Edges.DepartmentRef = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withTicketComments; query != nil {
+		if err := uq.loadTicketComments(ctx, query, nodes,
+			func(n *User) { n.Edges.TicketComments = []*TicketComment{} },
+			func(n *User, e *TicketComment) { n.Edges.TicketComments = append(n.Edges.TicketComments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withTicketAttachments; query != nil {
+		if err := uq.loadTicketAttachments(ctx, query, nodes,
+			func(n *User) { n.Edges.TicketAttachments = []*TicketAttachment{} },
+			func(n *User, e *TicketAttachment) { n.Edges.TicketAttachments = append(n.Edges.TicketAttachments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withTicketNotifications; query != nil {
+		if err := uq.loadTicketNotifications(ctx, query, nodes,
+			func(n *User) { n.Edges.TicketNotifications = []*TicketNotification{} },
+			func(n *User, e *TicketNotification) {
+				n.Edges.TicketNotifications = append(n.Edges.TicketNotifications, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -432,6 +567,96 @@ func (uq *UserQuery) loadDepartmentRef(ctx context.Context, query *DepartmentQue
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadTicketComments(ctx context.Context, query *TicketCommentQuery, nodes []*User, init func(*User), assign func(*User, *TicketComment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketcomment.FieldUserID)
+	}
+	query.Where(predicate.TicketComment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TicketCommentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadTicketAttachments(ctx context.Context, query *TicketAttachmentQuery, nodes []*User, init func(*User), assign func(*User, *TicketAttachment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketattachment.FieldUploadedBy)
+	}
+	query.Where(predicate.TicketAttachment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TicketAttachmentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UploadedBy
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "uploaded_by" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadTicketNotifications(ctx context.Context, query *TicketNotificationQuery, nodes []*User, init func(*User), assign func(*User, *TicketNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketnotification.FieldUserID)
+	}
+	query.Where(predicate.TicketNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TicketNotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

@@ -48,6 +48,14 @@ const (
 	FieldFirstResponseAt = "first_response_at"
 	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
 	FieldResolvedAt = "resolved_at"
+	// FieldRating holds the string denoting the rating field in the database.
+	FieldRating = "rating"
+	// FieldRatingComment holds the string denoting the rating_comment field in the database.
+	FieldRatingComment = "rating_comment"
+	// FieldRatedAt holds the string denoting the rated_at field in the database.
+	FieldRatedAt = "rated_at"
+	// FieldRatedBy holds the string denoting the rated_by field in the database.
+	FieldRatedBy = "rated_by"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -70,6 +78,12 @@ const (
 	EdgeSLADefinition = "sla_definition"
 	// EdgeSLAViolations holds the string denoting the sla_violations edge name in mutations.
 	EdgeSLAViolations = "sla_violations"
+	// EdgeComments holds the string denoting the comments edge name in mutations.
+	EdgeComments = "comments"
+	// EdgeAttachments holds the string denoting the attachments edge name in mutations.
+	EdgeAttachments = "attachments"
+	// EdgeNotifications holds the string denoting the notifications edge name in mutations.
+	EdgeNotifications = "notifications"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -129,6 +143,27 @@ const (
 	SLAViolationsInverseTable = "sla_violations"
 	// SLAViolationsColumn is the table column denoting the sla_violations relation/edge.
 	SLAViolationsColumn = "ticket_id"
+	// CommentsTable is the table that holds the comments relation/edge.
+	CommentsTable = "ticket_comments"
+	// CommentsInverseTable is the table name for the TicketComment entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketcomment" package.
+	CommentsInverseTable = "ticket_comments"
+	// CommentsColumn is the table column denoting the comments relation/edge.
+	CommentsColumn = "ticket_id"
+	// AttachmentsTable is the table that holds the attachments relation/edge.
+	AttachmentsTable = "ticket_attachments"
+	// AttachmentsInverseTable is the table name for the TicketAttachment entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketattachment" package.
+	AttachmentsInverseTable = "ticket_attachments"
+	// AttachmentsColumn is the table column denoting the attachments relation/edge.
+	AttachmentsColumn = "ticket_id"
+	// NotificationsTable is the table that holds the notifications relation/edge.
+	NotificationsTable = "ticket_notifications"
+	// NotificationsInverseTable is the table name for the TicketNotification entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketnotification" package.
+	NotificationsInverseTable = "ticket_notifications"
+	// NotificationsColumn is the table column denoting the notifications relation/edge.
+	NotificationsColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -151,6 +186,10 @@ var Columns = []string{
 	FieldSLAResolutionDeadline,
 	FieldFirstResponseAt,
 	FieldResolvedAt,
+	FieldRating,
+	FieldRatingComment,
+	FieldRatedAt,
+	FieldRatedBy,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -189,6 +228,8 @@ var (
 	RequesterIDValidator func(int) error
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
+	// RatingValidator is a validator for the "rating" field. It is called by the builders before save.
+	RatingValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -288,6 +329,26 @@ func ByFirstResponseAt(opts ...sql.OrderTermOption) OrderOption {
 // ByResolvedAt orders the results by the resolved_at field.
 func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
+}
+
+// ByRating orders the results by the rating field.
+func ByRating(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRating, opts...).ToFunc()
+}
+
+// ByRatingComment orders the results by the rating_comment field.
+func ByRatingComment(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRatingComment, opts...).ToFunc()
+}
+
+// ByRatedAt orders the results by the rated_at field.
+func ByRatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRatedAt, opts...).ToFunc()
+}
+
+// ByRatedBy orders the results by the rated_by field.
+func ByRatedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRatedBy, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -390,6 +451,48 @@ func BySLAViolations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSLAViolationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCommentsCount orders the results by comments count.
+func ByCommentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCommentsStep(), opts...)
+	}
+}
+
+// ByComments orders the results by comments terms.
+func ByComments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCommentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAttachmentsCount orders the results by attachments count.
+func ByAttachmentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAttachmentsStep(), opts...)
+	}
+}
+
+// ByAttachments orders the results by attachments terms.
+func ByAttachments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAttachmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByNotificationsCount orders the results by notifications count.
+func ByNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotificationsStep(), opts...)
+	}
+}
+
+// ByNotifications orders the results by notifications terms.
+func ByNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -451,5 +554,26 @@ func newSLAViolationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SLAViolationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SLAViolationsTable, SLAViolationsColumn),
+	)
+}
+func newCommentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CommentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
+	)
+}
+func newAttachmentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AttachmentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AttachmentsTable, AttachmentsColumn),
+	)
+}
+func newNotificationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotificationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
 	)
 }

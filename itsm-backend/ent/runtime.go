@@ -41,9 +41,15 @@ import (
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketassignmentrule"
+	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/ticketautomationrule"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflow"
@@ -1253,16 +1259,122 @@ func init() {
 	ticketDescTenantID := ticketFields[7].Descriptor()
 	// ticket.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	ticket.TenantIDValidator = ticketDescTenantID.Validators[0].(func(int) error)
+	// ticketDescRating is the schema descriptor for rating field.
+	ticketDescRating := ticketFields[17].Descriptor()
+	// ticket.RatingValidator is a validator for the "rating" field. It is called by the builders before save.
+	ticket.RatingValidator = ticketDescRating.Validators[0].(func(int) error)
 	// ticketDescCreatedAt is the schema descriptor for created_at field.
-	ticketDescCreatedAt := ticketFields[17].Descriptor()
+	ticketDescCreatedAt := ticketFields[21].Descriptor()
 	// ticket.DefaultCreatedAt holds the default value on creation for the created_at field.
 	ticket.DefaultCreatedAt = ticketDescCreatedAt.Default.(func() time.Time)
 	// ticketDescUpdatedAt is the schema descriptor for updated_at field.
-	ticketDescUpdatedAt := ticketFields[18].Descriptor()
+	ticketDescUpdatedAt := ticketFields[22].Descriptor()
 	// ticket.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	ticket.DefaultUpdatedAt = ticketDescUpdatedAt.Default.(func() time.Time)
 	// ticket.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticket.UpdateDefaultUpdatedAt = ticketDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketassignmentruleFields := schema.TicketAssignmentRule{}.Fields()
+	_ = ticketassignmentruleFields
+	// ticketassignmentruleDescName is the schema descriptor for name field.
+	ticketassignmentruleDescName := ticketassignmentruleFields[0].Descriptor()
+	// ticketassignmentrule.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	ticketassignmentrule.NameValidator = ticketassignmentruleDescName.Validators[0].(func(string) error)
+	// ticketassignmentruleDescPriority is the schema descriptor for priority field.
+	ticketassignmentruleDescPriority := ticketassignmentruleFields[2].Descriptor()
+	// ticketassignmentrule.DefaultPriority holds the default value on creation for the priority field.
+	ticketassignmentrule.DefaultPriority = ticketassignmentruleDescPriority.Default.(int)
+	// ticketassignmentruleDescIsActive is the schema descriptor for is_active field.
+	ticketassignmentruleDescIsActive := ticketassignmentruleFields[5].Descriptor()
+	// ticketassignmentrule.DefaultIsActive holds the default value on creation for the is_active field.
+	ticketassignmentrule.DefaultIsActive = ticketassignmentruleDescIsActive.Default.(bool)
+	// ticketassignmentruleDescExecutionCount is the schema descriptor for execution_count field.
+	ticketassignmentruleDescExecutionCount := ticketassignmentruleFields[6].Descriptor()
+	// ticketassignmentrule.DefaultExecutionCount holds the default value on creation for the execution_count field.
+	ticketassignmentrule.DefaultExecutionCount = ticketassignmentruleDescExecutionCount.Default.(int)
+	// ticketassignmentruleDescTenantID is the schema descriptor for tenant_id field.
+	ticketassignmentruleDescTenantID := ticketassignmentruleFields[8].Descriptor()
+	// ticketassignmentrule.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticketassignmentrule.TenantIDValidator = ticketassignmentruleDescTenantID.Validators[0].(func(int) error)
+	// ticketassignmentruleDescCreatedAt is the schema descriptor for created_at field.
+	ticketassignmentruleDescCreatedAt := ticketassignmentruleFields[9].Descriptor()
+	// ticketassignmentrule.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketassignmentrule.DefaultCreatedAt = ticketassignmentruleDescCreatedAt.Default.(func() time.Time)
+	// ticketassignmentruleDescUpdatedAt is the schema descriptor for updated_at field.
+	ticketassignmentruleDescUpdatedAt := ticketassignmentruleFields[10].Descriptor()
+	// ticketassignmentrule.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ticketassignmentrule.DefaultUpdatedAt = ticketassignmentruleDescUpdatedAt.Default.(func() time.Time)
+	// ticketassignmentrule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ticketassignmentrule.UpdateDefaultUpdatedAt = ticketassignmentruleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketattachmentFields := schema.TicketAttachment{}.Fields()
+	_ = ticketattachmentFields
+	// ticketattachmentDescTicketID is the schema descriptor for ticket_id field.
+	ticketattachmentDescTicketID := ticketattachmentFields[0].Descriptor()
+	// ticketattachment.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	ticketattachment.TicketIDValidator = ticketattachmentDescTicketID.Validators[0].(func(int) error)
+	// ticketattachmentDescFileName is the schema descriptor for file_name field.
+	ticketattachmentDescFileName := ticketattachmentFields[1].Descriptor()
+	// ticketattachment.FileNameValidator is a validator for the "file_name" field. It is called by the builders before save.
+	ticketattachment.FileNameValidator = ticketattachmentDescFileName.Validators[0].(func(string) error)
+	// ticketattachmentDescFilePath is the schema descriptor for file_path field.
+	ticketattachmentDescFilePath := ticketattachmentFields[2].Descriptor()
+	// ticketattachment.FilePathValidator is a validator for the "file_path" field. It is called by the builders before save.
+	ticketattachment.FilePathValidator = ticketattachmentDescFilePath.Validators[0].(func(string) error)
+	// ticketattachmentDescFileSize is the schema descriptor for file_size field.
+	ticketattachmentDescFileSize := ticketattachmentFields[4].Descriptor()
+	// ticketattachment.FileSizeValidator is a validator for the "file_size" field. It is called by the builders before save.
+	ticketattachment.FileSizeValidator = ticketattachmentDescFileSize.Validators[0].(func(int) error)
+	// ticketattachmentDescFileType is the schema descriptor for file_type field.
+	ticketattachmentDescFileType := ticketattachmentFields[5].Descriptor()
+	// ticketattachment.FileTypeValidator is a validator for the "file_type" field. It is called by the builders before save.
+	ticketattachment.FileTypeValidator = ticketattachmentDescFileType.Validators[0].(func(string) error)
+	// ticketattachmentDescUploadedBy is the schema descriptor for uploaded_by field.
+	ticketattachmentDescUploadedBy := ticketattachmentFields[7].Descriptor()
+	// ticketattachment.UploadedByValidator is a validator for the "uploaded_by" field. It is called by the builders before save.
+	ticketattachment.UploadedByValidator = ticketattachmentDescUploadedBy.Validators[0].(func(int) error)
+	// ticketattachmentDescTenantID is the schema descriptor for tenant_id field.
+	ticketattachmentDescTenantID := ticketattachmentFields[8].Descriptor()
+	// ticketattachment.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticketattachment.TenantIDValidator = ticketattachmentDescTenantID.Validators[0].(func(int) error)
+	// ticketattachmentDescCreatedAt is the schema descriptor for created_at field.
+	ticketattachmentDescCreatedAt := ticketattachmentFields[9].Descriptor()
+	// ticketattachment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketattachment.DefaultCreatedAt = ticketattachmentDescCreatedAt.Default.(func() time.Time)
+	ticketautomationruleFields := schema.TicketAutomationRule{}.Fields()
+	_ = ticketautomationruleFields
+	// ticketautomationruleDescName is the schema descriptor for name field.
+	ticketautomationruleDescName := ticketautomationruleFields[0].Descriptor()
+	// ticketautomationrule.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	ticketautomationrule.NameValidator = ticketautomationruleDescName.Validators[0].(func(string) error)
+	// ticketautomationruleDescPriority is the schema descriptor for priority field.
+	ticketautomationruleDescPriority := ticketautomationruleFields[2].Descriptor()
+	// ticketautomationrule.DefaultPriority holds the default value on creation for the priority field.
+	ticketautomationrule.DefaultPriority = ticketautomationruleDescPriority.Default.(int)
+	// ticketautomationruleDescIsActive is the schema descriptor for is_active field.
+	ticketautomationruleDescIsActive := ticketautomationruleFields[5].Descriptor()
+	// ticketautomationrule.DefaultIsActive holds the default value on creation for the is_active field.
+	ticketautomationrule.DefaultIsActive = ticketautomationruleDescIsActive.Default.(bool)
+	// ticketautomationruleDescExecutionCount is the schema descriptor for execution_count field.
+	ticketautomationruleDescExecutionCount := ticketautomationruleFields[6].Descriptor()
+	// ticketautomationrule.DefaultExecutionCount holds the default value on creation for the execution_count field.
+	ticketautomationrule.DefaultExecutionCount = ticketautomationruleDescExecutionCount.Default.(int)
+	// ticketautomationruleDescCreatedBy is the schema descriptor for created_by field.
+	ticketautomationruleDescCreatedBy := ticketautomationruleFields[8].Descriptor()
+	// ticketautomationrule.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
+	ticketautomationrule.CreatedByValidator = ticketautomationruleDescCreatedBy.Validators[0].(func(int) error)
+	// ticketautomationruleDescTenantID is the schema descriptor for tenant_id field.
+	ticketautomationruleDescTenantID := ticketautomationruleFields[9].Descriptor()
+	// ticketautomationrule.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticketautomationrule.TenantIDValidator = ticketautomationruleDescTenantID.Validators[0].(func(int) error)
+	// ticketautomationruleDescCreatedAt is the schema descriptor for created_at field.
+	ticketautomationruleDescCreatedAt := ticketautomationruleFields[10].Descriptor()
+	// ticketautomationrule.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketautomationrule.DefaultCreatedAt = ticketautomationruleDescCreatedAt.Default.(func() time.Time)
+	// ticketautomationruleDescUpdatedAt is the schema descriptor for updated_at field.
+	ticketautomationruleDescUpdatedAt := ticketautomationruleFields[11].Descriptor()
+	// ticketautomationrule.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ticketautomationrule.DefaultUpdatedAt = ticketautomationruleDescUpdatedAt.Default.(func() time.Time)
+	// ticketautomationrule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ticketautomationrule.UpdateDefaultUpdatedAt = ticketautomationruleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ticketcategoryFields := schema.TicketCategory{}.Fields()
 	_ = ticketcategoryFields
 	// ticketcategoryDescName is the schema descriptor for name field.
@@ -1299,6 +1411,72 @@ func init() {
 	ticketcategory.DefaultUpdatedAt = ticketcategoryDescUpdatedAt.Default.(func() time.Time)
 	// ticketcategory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ticketcategory.UpdateDefaultUpdatedAt = ticketcategoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketcommentFields := schema.TicketComment{}.Fields()
+	_ = ticketcommentFields
+	// ticketcommentDescTicketID is the schema descriptor for ticket_id field.
+	ticketcommentDescTicketID := ticketcommentFields[0].Descriptor()
+	// ticketcomment.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	ticketcomment.TicketIDValidator = ticketcommentDescTicketID.Validators[0].(func(int) error)
+	// ticketcommentDescUserID is the schema descriptor for user_id field.
+	ticketcommentDescUserID := ticketcommentFields[1].Descriptor()
+	// ticketcomment.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	ticketcomment.UserIDValidator = ticketcommentDescUserID.Validators[0].(func(int) error)
+	// ticketcommentDescContent is the schema descriptor for content field.
+	ticketcommentDescContent := ticketcommentFields[2].Descriptor()
+	// ticketcomment.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	ticketcomment.ContentValidator = ticketcommentDescContent.Validators[0].(func(string) error)
+	// ticketcommentDescIsInternal is the schema descriptor for is_internal field.
+	ticketcommentDescIsInternal := ticketcommentFields[3].Descriptor()
+	// ticketcomment.DefaultIsInternal holds the default value on creation for the is_internal field.
+	ticketcomment.DefaultIsInternal = ticketcommentDescIsInternal.Default.(bool)
+	// ticketcommentDescTenantID is the schema descriptor for tenant_id field.
+	ticketcommentDescTenantID := ticketcommentFields[6].Descriptor()
+	// ticketcomment.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticketcomment.TenantIDValidator = ticketcommentDescTenantID.Validators[0].(func(int) error)
+	// ticketcommentDescCreatedAt is the schema descriptor for created_at field.
+	ticketcommentDescCreatedAt := ticketcommentFields[7].Descriptor()
+	// ticketcomment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketcomment.DefaultCreatedAt = ticketcommentDescCreatedAt.Default.(func() time.Time)
+	// ticketcommentDescUpdatedAt is the schema descriptor for updated_at field.
+	ticketcommentDescUpdatedAt := ticketcommentFields[8].Descriptor()
+	// ticketcomment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ticketcomment.DefaultUpdatedAt = ticketcommentDescUpdatedAt.Default.(func() time.Time)
+	// ticketcomment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ticketcomment.UpdateDefaultUpdatedAt = ticketcommentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketnotificationFields := schema.TicketNotification{}.Fields()
+	_ = ticketnotificationFields
+	// ticketnotificationDescTicketID is the schema descriptor for ticket_id field.
+	ticketnotificationDescTicketID := ticketnotificationFields[0].Descriptor()
+	// ticketnotification.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	ticketnotification.TicketIDValidator = ticketnotificationDescTicketID.Validators[0].(func(int) error)
+	// ticketnotificationDescUserID is the schema descriptor for user_id field.
+	ticketnotificationDescUserID := ticketnotificationFields[1].Descriptor()
+	// ticketnotification.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	ticketnotification.UserIDValidator = ticketnotificationDescUserID.Validators[0].(func(int) error)
+	// ticketnotificationDescType is the schema descriptor for type field.
+	ticketnotificationDescType := ticketnotificationFields[2].Descriptor()
+	// ticketnotification.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	ticketnotification.TypeValidator = ticketnotificationDescType.Validators[0].(func(string) error)
+	// ticketnotificationDescChannel is the schema descriptor for channel field.
+	ticketnotificationDescChannel := ticketnotificationFields[3].Descriptor()
+	// ticketnotification.DefaultChannel holds the default value on creation for the channel field.
+	ticketnotification.DefaultChannel = ticketnotificationDescChannel.Default.(string)
+	// ticketnotificationDescContent is the schema descriptor for content field.
+	ticketnotificationDescContent := ticketnotificationFields[4].Descriptor()
+	// ticketnotification.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	ticketnotification.ContentValidator = ticketnotificationDescContent.Validators[0].(func(string) error)
+	// ticketnotificationDescStatus is the schema descriptor for status field.
+	ticketnotificationDescStatus := ticketnotificationFields[7].Descriptor()
+	// ticketnotification.DefaultStatus holds the default value on creation for the status field.
+	ticketnotification.DefaultStatus = ticketnotificationDescStatus.Default.(string)
+	// ticketnotificationDescTenantID is the schema descriptor for tenant_id field.
+	ticketnotificationDescTenantID := ticketnotificationFields[8].Descriptor()
+	// ticketnotification.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticketnotification.TenantIDValidator = ticketnotificationDescTenantID.Validators[0].(func(int) error)
+	// ticketnotificationDescCreatedAt is the schema descriptor for created_at field.
+	ticketnotificationDescCreatedAt := ticketnotificationFields[9].Descriptor()
+	// ticketnotification.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketnotification.DefaultCreatedAt = ticketnotificationDescCreatedAt.Default.(func() time.Time)
 	tickettagFields := schema.TicketTag{}.Fields()
 	_ = tickettagFields
 	// tickettagDescName is the schema descriptor for name field.
@@ -1359,6 +1537,34 @@ func init() {
 	tickettemplate.DefaultUpdatedAt = tickettemplateDescUpdatedAt.Default.(func() time.Time)
 	// tickettemplate.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	tickettemplate.UpdateDefaultUpdatedAt = tickettemplateDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ticketviewFields := schema.TicketView{}.Fields()
+	_ = ticketviewFields
+	// ticketviewDescName is the schema descriptor for name field.
+	ticketviewDescName := ticketviewFields[0].Descriptor()
+	// ticketview.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	ticketview.NameValidator = ticketviewDescName.Validators[0].(func(string) error)
+	// ticketviewDescIsShared is the schema descriptor for is_shared field.
+	ticketviewDescIsShared := ticketviewFields[6].Descriptor()
+	// ticketview.DefaultIsShared holds the default value on creation for the is_shared field.
+	ticketview.DefaultIsShared = ticketviewDescIsShared.Default.(bool)
+	// ticketviewDescCreatedBy is the schema descriptor for created_by field.
+	ticketviewDescCreatedBy := ticketviewFields[7].Descriptor()
+	// ticketview.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
+	ticketview.CreatedByValidator = ticketviewDescCreatedBy.Validators[0].(func(int) error)
+	// ticketviewDescTenantID is the schema descriptor for tenant_id field.
+	ticketviewDescTenantID := ticketviewFields[8].Descriptor()
+	// ticketview.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ticketview.TenantIDValidator = ticketviewDescTenantID.Validators[0].(func(int) error)
+	// ticketviewDescCreatedAt is the schema descriptor for created_at field.
+	ticketviewDescCreatedAt := ticketviewFields[9].Descriptor()
+	// ticketview.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ticketview.DefaultCreatedAt = ticketviewDescCreatedAt.Default.(func() time.Time)
+	// ticketviewDescUpdatedAt is the schema descriptor for updated_at field.
+	ticketviewDescUpdatedAt := ticketviewFields[10].Descriptor()
+	// ticketview.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ticketview.DefaultUpdatedAt = ticketviewDescUpdatedAt.Default.(func() time.Time)
+	// ticketview.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ticketview.UpdateDefaultUpdatedAt = ticketviewDescUpdatedAt.UpdateDefault.(func() time.Time)
 	toolinvocationFields := schema.ToolInvocation{}.Fields()
 	_ = toolinvocationFields
 	// toolinvocationDescCreatedAt is the schema descriptor for created_at field.

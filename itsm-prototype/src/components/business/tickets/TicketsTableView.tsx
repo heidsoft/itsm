@@ -93,22 +93,42 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: string) => (
+      render: (status: string) => {
+        const statusTextMap: Record<string, string> = {
+          new: '新建',
+          open: '待处理',
+          in_progress: '处理中',
+          pending_approval: '待审批',
+          resolved: '已解决',
+          closed: '已关闭',
+          cancelled: '已取消',
+        };
+        return (
         <Tag color={statusColorMap[status] || 'default'}>
-          {status.replace('_', ' ').toUpperCase()}
+            {statusTextMap[status] || status}
         </Tag>
-      ),
+        );
+      },
     },
     {
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
       width: 90,
-      render: (priority: string) => (
+      render: (priority: string) => {
+        const priorityTextMap: Record<string, string> = {
+          low: '低',
+          medium: '中',
+          high: '高',
+          urgent: '紧急',
+          critical: '紧急',
+        };
+        return (
         <Tag color={priorityColorMap[priority] || 'default'}>
-          {priority.toUpperCase()}
+            {priorityTextMap[priority] || priority}
         </Tag>
-      ),
+        );
+      },
     },
     {
       title: '类型',

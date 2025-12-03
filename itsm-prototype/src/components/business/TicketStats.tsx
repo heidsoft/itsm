@@ -45,7 +45,7 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, colo
           )} rounded-lg flex items-center justify-center shadow-sm`}
           style={{ opacity: 0.9 }}
         >
-          <span className="text-white text-xl">{icon}</span>
+          <span className='text-white text-xl'>{icon}</span>
         </div>
       </div>
     </Card>
@@ -55,53 +55,61 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, colo
 StatCard.displayName = 'StatCard';
 
 const TicketStatsSkeleton: React.FC = () => (
-    <Row gutter={[12, 12]}>
-        {Array.from({ length: 4 }).map((_, index) => (
-            <Col key={index} xs={24} sm={12} md={6} lg={6} xl={6}>
-                <Card className='border-0 shadow-sm' styles={{ body: { padding: '16px' } }}>
-                    <div className='flex items-center justify-between'>
-                        <div>
-                            <Skeleton.Input active style={{ width: '80px', height: '16px' }} />
-                            <Skeleton.Input active style={{ width: '50px', height: '24px', marginTop: '8px' }} />
-                        </div>
-                        <Skeleton.Avatar active size='large' shape='square' />
-                    </div>
-                </Card>
-            </Col>
-        ))}
-    </Row>
+  <Row gutter={[12, 12]}>
+    {Array.from({ length: 4 }).map((_, index) => (
+      <Col key={index} xs={24} sm={12} md={6} lg={6} xl={6}>
+        <Card className='border-0 shadow-sm' styles={{ body: { padding: '16px' } }}>
+          <div className='flex items-center justify-between'>
+            <div>
+              <Skeleton.Input active style={{ width: '80px', height: '16px' }} />
+              <Skeleton.Input active style={{ width: '50px', height: '24px', marginTop: '8px' }} />
+            </div>
+            <Skeleton.Avatar active size='large' shape='square' />
+          </div>
+        </Card>
+      </Col>
+    ))}
+  </Row>
 );
 
 export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats, loading }) => {
-    if (loading) {
-        return <TicketStatsSkeleton />;
-    }
+  if (loading) {
+    return <TicketStatsSkeleton />;
+  }
+
+  // 确保 stats 有默认值
+  const safeStats = stats || {
+    total: 0,
+    open: 0,
+    resolved: 0,
+    highPriority: 0,
+  };
 
   const statCards = [
     {
       title: '总工单数',
-      value: stats.total,
+      value: safeStats.total || 0,
       icon: <FileTextOutlined />,
       color: 'text-blue-600',
       bgColor: 'from-blue-50 to-blue-100',
     },
     {
       title: '待处理',
-      value: stats.open,
+      value: safeStats.open || 0,
       icon: <ClockCircleOutlined />,
       color: 'text-orange-600',
       bgColor: 'from-orange-50 to-orange-100',
     },
     {
       title: '已解决',
-      value: stats.resolved,
+      value: safeStats.resolved || 0,
       icon: <CheckCircleOutlined />,
       color: 'text-green-600',
       bgColor: 'from-green-50 to-green-100',
     },
     {
       title: '高优先级',
-      value: stats.highPriority,
+      value: safeStats.highPriority || 0,
       icon: <ExclamationCircleOutlined />,
       color: 'text-red-600',
       bgColor: 'from-red-50 to-red-100',

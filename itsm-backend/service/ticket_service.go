@@ -16,8 +16,10 @@ import (
 )
 
 type TicketService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client              *ent.Client
+	logger              *zap.SugaredLogger
+	notificationService *TicketNotificationService // 可选的通知服务
+	automationRuleService *TicketAutomationRuleService // 可选的自动化规则服务
 }
 
 func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketService {
@@ -25,6 +27,16 @@ func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketServ
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetNotificationService 设置通知服务（用于依赖注入）
+func (s *TicketService) SetNotificationService(notificationService *TicketNotificationService) {
+	s.notificationService = notificationService
+}
+
+// SetAutomationRuleService 设置自动化规则服务（用于依赖注入）
+func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAutomationRuleService) {
+	s.automationRuleService = automationRuleService
 }
 
 // CreateTicket 创建工单
@@ -52,6 +64,25 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		"priority": req.Priority,
 		"category": req.Category,
 	})
+
+	// 发送通知给处理人
+	if s.notificationService != nil && ticket.AssigneeID > 0 {
+		if err := s.notificationService.NotifyTicketCreated(ctx, ticket); err != nil {
+			s.logger.Warnw("Failed to send ticket created notification", "error", err)
+		}
+	}
+
+	// 执行自动化规则（异步执行，不阻塞工单创建）
+	if s.automationRuleService != nil {
+		go func() {
+			// 使用新的context避免超时影响
+			ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.automationRuleService.ExecuteRulesForTicket(ruleCtx, ticket.ID, tenantID); err != nil {
+				s.logger.Warnw("Failed to execute automation rules", "error", err, "ticket_id", ticket.ID)
+			}
+		}()
+	}
 
 	return ticket, nil
 }
@@ -95,6 +126,18 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 	if err != nil {
 		s.logger.Errorw("Failed to update ticket", "error", err)
 		return nil, fmt.Errorf("failed to update ticket: %w", err)
+	}
+
+	// 执行自动化规则（异步执行，不阻塞工单更新）
+	if s.automationRuleService != nil {
+		go func() {
+			// 使用新的context避免超时影响
+			ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.automationRuleService.ExecuteRulesForTicket(ruleCtx, ticket.ID, tenantID); err != nil {
+				s.logger.Warnw("Failed to execute automation rules", "error", err, "ticket_id", ticket.ID)
+			}
+		}()
 	}
 
 	// 记录审计日志
@@ -397,8 +440,12 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 		"new_status":  "assigned",
 	})
 
-	// 触发通知
-	go s.sendAssignmentNotification(ticketID, assigneeID, assignedBy)
+	// 发送分配通知
+	if s.notificationService != nil {
+		if err := s.notificationService.NotifyTicketAssigned(ctx, ticketID, assigneeID, tenantID); err != nil {
+			s.logger.Warnw("Failed to send assignment notification", "error", err)
+		}
+	}
 
 	return ticket, nil
 }
@@ -466,8 +513,13 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 		"resolved_at": time.Now(),
 	})
 
-	// 发送解决通知
-	go s.sendResolutionNotification(ticketID, ticket.RequesterID, resolvedBy)
+	// 发送状态变更通知
+	if s.notificationService != nil {
+		oldStatus := "in_progress" // 假设之前是进行中状态
+		if err := s.notificationService.NotifyTicketStatusChanged(ctx, ticketID, oldStatus, "resolved", tenantID); err != nil {
+			s.logger.Warnw("Failed to send resolution notification", "error", err)
+		}
+	}
 
 	return ticket, nil
 }
@@ -492,6 +544,14 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, feedback 
 		"feedback":  feedback,
 		"closed_at": time.Now(),
 	})
+
+	// 发送状态变更通知
+	if s.notificationService != nil {
+		oldStatus := ticket.Status
+		if err := s.notificationService.NotifyTicketStatusChanged(ctx, ticketID, oldStatus, "closed", tenantID); err != nil {
+			s.logger.Warnw("Failed to send close notification", "error", err)
+		}
+	}
 
 	return ticket, nil
 }

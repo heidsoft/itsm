@@ -16,6 +16,10 @@ func SetupTicketRoutes(
 	ticketAssignmentController *controller.TicketAssignmentController,
 	ticketCategoryController *controller.TicketCategoryController,
 	knowledgeIntegrationController *controller.KnowledgeIntegrationController,
+	ticketCommentController *controller.TicketCommentController,
+	ticketRatingController *controller.TicketRatingController,
+	ticketViewController *controller.TicketViewController,
+	ticketAutomationRuleController *controller.TicketAutomationRuleController,
 	client *ent.Client,
 ) {
 	// 工单管理路由
@@ -52,6 +56,17 @@ func SetupTicketRoutes(
 		tickets.GET("/assignee/:assignee_id", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketsByAssignee)
 		tickets.GET("/:id/activity", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketActivity)
 
+		// 工单评论路由
+		tickets.GET("/:id/comments", middleware.RequirePermission("ticket", "read"), ticketCommentController.ListTicketComments)
+		tickets.POST("/:id/comments", middleware.RequirePermission("ticket", "update"), ticketCommentController.CreateTicketComment)
+		tickets.PUT("/:id/comments/:comment_id", middleware.RequirePermission("ticket", "update"), ticketCommentController.UpdateTicketComment)
+		tickets.DELETE("/:id/comments/:comment_id", middleware.RequirePermission("ticket", "update"), ticketCommentController.DeleteTicketComment)
+
+		// 工单评分路由
+		tickets.POST("/:id/rating", middleware.RequirePermission("ticket", "update"), ticketRatingController.SubmitRating)
+		tickets.GET("/:id/rating", middleware.RequirePermission("ticket", "read"), ticketRatingController.GetRating)
+		tickets.GET("/rating-stats", middleware.RequirePermission("ticket", "read"), ticketRatingController.GetRatingStats)
+
 		// 知识库集成路由
 		knowledge := tickets.Group("/:id/knowledge")
 		knowledge.Use(middleware.RequirePermission("knowledge", "read"))
@@ -61,6 +76,26 @@ func SetupTicketRoutes(
 			knowledge.GET("/ai-recommendations", knowledgeIntegrationController.GetAIRecommendations)
 			knowledge.GET("/related-articles", knowledgeIntegrationController.GetRelatedArticles)
 			knowledge.GET("/associations", knowledgeIntegrationController.GetKnowledgeAssociations)
+		}
+
+		// 工单视图路由
+		if ticketViewController != nil {
+			tickets.GET("/views", middleware.RequirePermission("ticket", "read"), ticketViewController.ListTicketViews)
+			tickets.POST("/views", middleware.RequirePermission("ticket", "read"), ticketViewController.CreateTicketView)
+			tickets.GET("/views/:id", middleware.RequirePermission("ticket", "read"), ticketViewController.GetTicketView)
+			tickets.PUT("/views/:id", middleware.RequirePermission("ticket", "read"), ticketViewController.UpdateTicketView)
+			tickets.DELETE("/views/:id", middleware.RequirePermission("ticket", "read"), ticketViewController.DeleteTicketView)
+			tickets.POST("/views/:id/share", middleware.RequirePermission("ticket", "read"), ticketViewController.ShareTicketView)
+		}
+
+		// 工单自动化规则路由
+		if ticketAutomationRuleController != nil {
+			tickets.GET("/automation-rules", middleware.RequirePermission("ticket", "read"), ticketAutomationRuleController.ListAutomationRules)
+			tickets.POST("/automation-rules", middleware.RequirePermission("ticket", "admin"), ticketAutomationRuleController.CreateAutomationRule)
+			tickets.GET("/automation-rules/:id", middleware.RequirePermission("ticket", "read"), ticketAutomationRuleController.GetAutomationRule)
+			tickets.PUT("/automation-rules/:id", middleware.RequirePermission("ticket", "admin"), ticketAutomationRuleController.UpdateAutomationRule)
+			tickets.DELETE("/automation-rules/:id", middleware.RequirePermission("ticket", "admin"), ticketAutomationRuleController.DeleteAutomationRule)
+			tickets.POST("/automation-rules/:id/test", middleware.RequirePermission("ticket", "admin"), ticketAutomationRuleController.TestAutomationRule)
 		}
 	}
 

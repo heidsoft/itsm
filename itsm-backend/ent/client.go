@@ -48,9 +48,15 @@ import (
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketassignmentrule"
+	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/ticketautomationrule"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
+	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflow"
@@ -141,12 +147,24 @@ type Client struct {
 	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
+	// TicketAssignmentRule is the client for interacting with the TicketAssignmentRule builders.
+	TicketAssignmentRule *TicketAssignmentRuleClient
+	// TicketAttachment is the client for interacting with the TicketAttachment builders.
+	TicketAttachment *TicketAttachmentClient
+	// TicketAutomationRule is the client for interacting with the TicketAutomationRule builders.
+	TicketAutomationRule *TicketAutomationRuleClient
 	// TicketCategory is the client for interacting with the TicketCategory builders.
 	TicketCategory *TicketCategoryClient
+	// TicketComment is the client for interacting with the TicketComment builders.
+	TicketComment *TicketCommentClient
+	// TicketNotification is the client for interacting with the TicketNotification builders.
+	TicketNotification *TicketNotificationClient
 	// TicketTag is the client for interacting with the TicketTag builders.
 	TicketTag *TicketTagClient
 	// TicketTemplate is the client for interacting with the TicketTemplate builders.
 	TicketTemplate *TicketTemplateClient
+	// TicketView is the client for interacting with the TicketView builders.
+	TicketView *TicketViewClient
 	// ToolInvocation is the client for interacting with the ToolInvocation builders.
 	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
@@ -203,9 +221,15 @@ func (c *Client) init() {
 	c.Team = NewTeamClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
 	c.Ticket = NewTicketClient(c.config)
+	c.TicketAssignmentRule = NewTicketAssignmentRuleClient(c.config)
+	c.TicketAttachment = NewTicketAttachmentClient(c.config)
+	c.TicketAutomationRule = NewTicketAutomationRuleClient(c.config)
 	c.TicketCategory = NewTicketCategoryClient(c.config)
+	c.TicketComment = NewTicketCommentClient(c.config)
+	c.TicketNotification = NewTicketNotificationClient(c.config)
 	c.TicketTag = NewTicketTagClient(c.config)
 	c.TicketTemplate = NewTicketTemplateClient(c.config)
+	c.TicketView = NewTicketViewClient(c.config)
 	c.ToolInvocation = NewToolInvocationClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.Workflow = NewWorkflowClient(c.config)
@@ -339,9 +363,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Team:                    NewTeamClient(cfg),
 		Tenant:                  NewTenantClient(cfg),
 		Ticket:                  NewTicketClient(cfg),
+		TicketAssignmentRule:    NewTicketAssignmentRuleClient(cfg),
+		TicketAttachment:        NewTicketAttachmentClient(cfg),
+		TicketAutomationRule:    NewTicketAutomationRuleClient(cfg),
 		TicketCategory:          NewTicketCategoryClient(cfg),
+		TicketComment:           NewTicketCommentClient(cfg),
+		TicketNotification:      NewTicketNotificationClient(cfg),
 		TicketTag:               NewTicketTagClient(cfg),
 		TicketTemplate:          NewTicketTemplateClient(cfg),
+		TicketView:              NewTicketViewClient(cfg),
 		ToolInvocation:          NewToolInvocationClient(cfg),
 		User:                    NewUserClient(cfg),
 		Workflow:                NewWorkflowClient(cfg),
@@ -402,9 +432,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Team:                    NewTeamClient(cfg),
 		Tenant:                  NewTenantClient(cfg),
 		Ticket:                  NewTicketClient(cfg),
+		TicketAssignmentRule:    NewTicketAssignmentRuleClient(cfg),
+		TicketAttachment:        NewTicketAttachmentClient(cfg),
+		TicketAutomationRule:    NewTicketAutomationRuleClient(cfg),
 		TicketCategory:          NewTicketCategoryClient(cfg),
+		TicketComment:           NewTicketCommentClient(cfg),
+		TicketNotification:      NewTicketNotificationClient(cfg),
 		TicketTag:               NewTicketTagClient(cfg),
 		TicketTemplate:          NewTicketTemplateClient(cfg),
+		TicketView:              NewTicketViewClient(cfg),
 		ToolInvocation:          NewToolInvocationClient(cfg),
 		User:                    NewUserClient(cfg),
 		Workflow:                NewWorkflowClient(cfg),
@@ -446,8 +482,10 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
 		c.Project, c.PromptTemplate, c.SLADefinition, c.SLAMetric, c.SLAViolation,
 		c.ServiceCatalog, c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketCategory, c.TicketTag, c.TicketTemplate, c.ToolInvocation, c.User,
-		c.Workflow, c.WorkflowInstance,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance,
 	} {
 		n.Use(hooks...)
 	}
@@ -465,8 +503,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
 		c.Project, c.PromptTemplate, c.SLADefinition, c.SLAMetric, c.SLAViolation,
 		c.ServiceCatalog, c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketCategory, c.TicketTag, c.TicketTemplate, c.ToolInvocation, c.User,
-		c.Workflow, c.WorkflowInstance,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -549,12 +589,24 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Tenant.mutate(ctx, m)
 	case *TicketMutation:
 		return c.Ticket.mutate(ctx, m)
+	case *TicketAssignmentRuleMutation:
+		return c.TicketAssignmentRule.mutate(ctx, m)
+	case *TicketAttachmentMutation:
+		return c.TicketAttachment.mutate(ctx, m)
+	case *TicketAutomationRuleMutation:
+		return c.TicketAutomationRule.mutate(ctx, m)
 	case *TicketCategoryMutation:
 		return c.TicketCategory.mutate(ctx, m)
+	case *TicketCommentMutation:
+		return c.TicketComment.mutate(ctx, m)
+	case *TicketNotificationMutation:
+		return c.TicketNotification.mutate(ctx, m)
 	case *TicketTagMutation:
 		return c.TicketTag.mutate(ctx, m)
 	case *TicketTemplateMutation:
 		return c.TicketTemplate.mutate(ctx, m)
+	case *TicketViewMutation:
+		return c.TicketView.mutate(ctx, m)
 	case *ToolInvocationMutation:
 		return c.ToolInvocation.mutate(ctx, m)
 	case *UserMutation:
@@ -6280,6 +6332,54 @@ func (c *TicketClient) QuerySLAViolations(t *Ticket) *SLAViolationQuery {
 	return query
 }
 
+// QueryComments queries the comments edge of a Ticket.
+func (c *TicketClient) QueryComments(t *Ticket) *TicketCommentQuery {
+	query := (&TicketCommentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(ticketcomment.Table, ticketcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.CommentsTable, ticket.CommentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttachments queries the attachments edge of a Ticket.
+func (c *TicketClient) QueryAttachments(t *Ticket) *TicketAttachmentQuery {
+	query := (&TicketAttachmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(ticketattachment.Table, ticketattachment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.AttachmentsTable, ticket.AttachmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryNotifications queries the notifications edge of a Ticket.
+func (c *TicketClient) QueryNotifications(t *Ticket) *TicketNotificationQuery {
+	query := (&TicketNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TicketClient) Hooks() []Hook {
 	return c.hooks.Ticket
@@ -6302,6 +6402,453 @@ func (c *TicketClient) mutate(ctx context.Context, m *TicketMutation) (Value, er
 		return (&TicketDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Ticket mutation op: %q", m.Op())
+	}
+}
+
+// TicketAssignmentRuleClient is a client for the TicketAssignmentRule schema.
+type TicketAssignmentRuleClient struct {
+	config
+}
+
+// NewTicketAssignmentRuleClient returns a client for the TicketAssignmentRule from the given config.
+func NewTicketAssignmentRuleClient(c config) *TicketAssignmentRuleClient {
+	return &TicketAssignmentRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ticketassignmentrule.Hooks(f(g(h())))`.
+func (c *TicketAssignmentRuleClient) Use(hooks ...Hook) {
+	c.hooks.TicketAssignmentRule = append(c.hooks.TicketAssignmentRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ticketassignmentrule.Intercept(f(g(h())))`.
+func (c *TicketAssignmentRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketAssignmentRule = append(c.inters.TicketAssignmentRule, interceptors...)
+}
+
+// Create returns a builder for creating a TicketAssignmentRule entity.
+func (c *TicketAssignmentRuleClient) Create() *TicketAssignmentRuleCreate {
+	mutation := newTicketAssignmentRuleMutation(c.config, OpCreate)
+	return &TicketAssignmentRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketAssignmentRule entities.
+func (c *TicketAssignmentRuleClient) CreateBulk(builders ...*TicketAssignmentRuleCreate) *TicketAssignmentRuleCreateBulk {
+	return &TicketAssignmentRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketAssignmentRuleClient) MapCreateBulk(slice any, setFunc func(*TicketAssignmentRuleCreate, int)) *TicketAssignmentRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketAssignmentRuleCreateBulk{err: fmt.Errorf("calling to TicketAssignmentRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketAssignmentRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketAssignmentRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketAssignmentRule.
+func (c *TicketAssignmentRuleClient) Update() *TicketAssignmentRuleUpdate {
+	mutation := newTicketAssignmentRuleMutation(c.config, OpUpdate)
+	return &TicketAssignmentRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketAssignmentRuleClient) UpdateOne(tar *TicketAssignmentRule) *TicketAssignmentRuleUpdateOne {
+	mutation := newTicketAssignmentRuleMutation(c.config, OpUpdateOne, withTicketAssignmentRule(tar))
+	return &TicketAssignmentRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketAssignmentRuleClient) UpdateOneID(id int) *TicketAssignmentRuleUpdateOne {
+	mutation := newTicketAssignmentRuleMutation(c.config, OpUpdateOne, withTicketAssignmentRuleID(id))
+	return &TicketAssignmentRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketAssignmentRule.
+func (c *TicketAssignmentRuleClient) Delete() *TicketAssignmentRuleDelete {
+	mutation := newTicketAssignmentRuleMutation(c.config, OpDelete)
+	return &TicketAssignmentRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketAssignmentRuleClient) DeleteOne(tar *TicketAssignmentRule) *TicketAssignmentRuleDeleteOne {
+	return c.DeleteOneID(tar.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketAssignmentRuleClient) DeleteOneID(id int) *TicketAssignmentRuleDeleteOne {
+	builder := c.Delete().Where(ticketassignmentrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketAssignmentRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketAssignmentRule.
+func (c *TicketAssignmentRuleClient) Query() *TicketAssignmentRuleQuery {
+	return &TicketAssignmentRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketAssignmentRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketAssignmentRule entity by its id.
+func (c *TicketAssignmentRuleClient) Get(ctx context.Context, id int) (*TicketAssignmentRule, error) {
+	return c.Query().Where(ticketassignmentrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketAssignmentRuleClient) GetX(ctx context.Context, id int) *TicketAssignmentRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TicketAssignmentRuleClient) Hooks() []Hook {
+	return c.hooks.TicketAssignmentRule
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketAssignmentRuleClient) Interceptors() []Interceptor {
+	return c.inters.TicketAssignmentRule
+}
+
+func (c *TicketAssignmentRuleClient) mutate(ctx context.Context, m *TicketAssignmentRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketAssignmentRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketAssignmentRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketAssignmentRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketAssignmentRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketAssignmentRule mutation op: %q", m.Op())
+	}
+}
+
+// TicketAttachmentClient is a client for the TicketAttachment schema.
+type TicketAttachmentClient struct {
+	config
+}
+
+// NewTicketAttachmentClient returns a client for the TicketAttachment from the given config.
+func NewTicketAttachmentClient(c config) *TicketAttachmentClient {
+	return &TicketAttachmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ticketattachment.Hooks(f(g(h())))`.
+func (c *TicketAttachmentClient) Use(hooks ...Hook) {
+	c.hooks.TicketAttachment = append(c.hooks.TicketAttachment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ticketattachment.Intercept(f(g(h())))`.
+func (c *TicketAttachmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketAttachment = append(c.inters.TicketAttachment, interceptors...)
+}
+
+// Create returns a builder for creating a TicketAttachment entity.
+func (c *TicketAttachmentClient) Create() *TicketAttachmentCreate {
+	mutation := newTicketAttachmentMutation(c.config, OpCreate)
+	return &TicketAttachmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketAttachment entities.
+func (c *TicketAttachmentClient) CreateBulk(builders ...*TicketAttachmentCreate) *TicketAttachmentCreateBulk {
+	return &TicketAttachmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketAttachmentClient) MapCreateBulk(slice any, setFunc func(*TicketAttachmentCreate, int)) *TicketAttachmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketAttachmentCreateBulk{err: fmt.Errorf("calling to TicketAttachmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketAttachmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketAttachmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketAttachment.
+func (c *TicketAttachmentClient) Update() *TicketAttachmentUpdate {
+	mutation := newTicketAttachmentMutation(c.config, OpUpdate)
+	return &TicketAttachmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketAttachmentClient) UpdateOne(ta *TicketAttachment) *TicketAttachmentUpdateOne {
+	mutation := newTicketAttachmentMutation(c.config, OpUpdateOne, withTicketAttachment(ta))
+	return &TicketAttachmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketAttachmentClient) UpdateOneID(id int) *TicketAttachmentUpdateOne {
+	mutation := newTicketAttachmentMutation(c.config, OpUpdateOne, withTicketAttachmentID(id))
+	return &TicketAttachmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketAttachment.
+func (c *TicketAttachmentClient) Delete() *TicketAttachmentDelete {
+	mutation := newTicketAttachmentMutation(c.config, OpDelete)
+	return &TicketAttachmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketAttachmentClient) DeleteOne(ta *TicketAttachment) *TicketAttachmentDeleteOne {
+	return c.DeleteOneID(ta.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketAttachmentClient) DeleteOneID(id int) *TicketAttachmentDeleteOne {
+	builder := c.Delete().Where(ticketattachment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketAttachmentDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketAttachment.
+func (c *TicketAttachmentClient) Query() *TicketAttachmentQuery {
+	return &TicketAttachmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketAttachment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketAttachment entity by its id.
+func (c *TicketAttachmentClient) Get(ctx context.Context, id int) (*TicketAttachment, error) {
+	return c.Query().Where(ticketattachment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketAttachmentClient) GetX(ctx context.Context, id int) *TicketAttachment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a TicketAttachment.
+func (c *TicketAttachmentClient) QueryTicket(ta *TicketAttachment) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ta.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketattachment.Table, ticketattachment.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketattachment.TicketTable, ticketattachment.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(ta.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUploader queries the uploader edge of a TicketAttachment.
+func (c *TicketAttachmentClient) QueryUploader(ta *TicketAttachment) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ta.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketattachment.Table, ticketattachment.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketattachment.UploaderTable, ticketattachment.UploaderColumn),
+		)
+		fromV = sqlgraph.Neighbors(ta.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TicketAttachmentClient) Hooks() []Hook {
+	return c.hooks.TicketAttachment
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketAttachmentClient) Interceptors() []Interceptor {
+	return c.inters.TicketAttachment
+}
+
+func (c *TicketAttachmentClient) mutate(ctx context.Context, m *TicketAttachmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketAttachmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketAttachmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketAttachmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketAttachmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketAttachment mutation op: %q", m.Op())
+	}
+}
+
+// TicketAutomationRuleClient is a client for the TicketAutomationRule schema.
+type TicketAutomationRuleClient struct {
+	config
+}
+
+// NewTicketAutomationRuleClient returns a client for the TicketAutomationRule from the given config.
+func NewTicketAutomationRuleClient(c config) *TicketAutomationRuleClient {
+	return &TicketAutomationRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ticketautomationrule.Hooks(f(g(h())))`.
+func (c *TicketAutomationRuleClient) Use(hooks ...Hook) {
+	c.hooks.TicketAutomationRule = append(c.hooks.TicketAutomationRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ticketautomationrule.Intercept(f(g(h())))`.
+func (c *TicketAutomationRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketAutomationRule = append(c.inters.TicketAutomationRule, interceptors...)
+}
+
+// Create returns a builder for creating a TicketAutomationRule entity.
+func (c *TicketAutomationRuleClient) Create() *TicketAutomationRuleCreate {
+	mutation := newTicketAutomationRuleMutation(c.config, OpCreate)
+	return &TicketAutomationRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketAutomationRule entities.
+func (c *TicketAutomationRuleClient) CreateBulk(builders ...*TicketAutomationRuleCreate) *TicketAutomationRuleCreateBulk {
+	return &TicketAutomationRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketAutomationRuleClient) MapCreateBulk(slice any, setFunc func(*TicketAutomationRuleCreate, int)) *TicketAutomationRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketAutomationRuleCreateBulk{err: fmt.Errorf("calling to TicketAutomationRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketAutomationRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketAutomationRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketAutomationRule.
+func (c *TicketAutomationRuleClient) Update() *TicketAutomationRuleUpdate {
+	mutation := newTicketAutomationRuleMutation(c.config, OpUpdate)
+	return &TicketAutomationRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketAutomationRuleClient) UpdateOne(tar *TicketAutomationRule) *TicketAutomationRuleUpdateOne {
+	mutation := newTicketAutomationRuleMutation(c.config, OpUpdateOne, withTicketAutomationRule(tar))
+	return &TicketAutomationRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketAutomationRuleClient) UpdateOneID(id int) *TicketAutomationRuleUpdateOne {
+	mutation := newTicketAutomationRuleMutation(c.config, OpUpdateOne, withTicketAutomationRuleID(id))
+	return &TicketAutomationRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketAutomationRule.
+func (c *TicketAutomationRuleClient) Delete() *TicketAutomationRuleDelete {
+	mutation := newTicketAutomationRuleMutation(c.config, OpDelete)
+	return &TicketAutomationRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketAutomationRuleClient) DeleteOne(tar *TicketAutomationRule) *TicketAutomationRuleDeleteOne {
+	return c.DeleteOneID(tar.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketAutomationRuleClient) DeleteOneID(id int) *TicketAutomationRuleDeleteOne {
+	builder := c.Delete().Where(ticketautomationrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketAutomationRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketAutomationRule.
+func (c *TicketAutomationRuleClient) Query() *TicketAutomationRuleQuery {
+	return &TicketAutomationRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketAutomationRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketAutomationRule entity by its id.
+func (c *TicketAutomationRuleClient) Get(ctx context.Context, id int) (*TicketAutomationRule, error) {
+	return c.Query().Where(ticketautomationrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketAutomationRuleClient) GetX(ctx context.Context, id int) *TicketAutomationRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreator queries the creator edge of a TicketAutomationRule.
+func (c *TicketAutomationRuleClient) QueryCreator(tar *TicketAutomationRule) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tar.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketautomationrule.Table, ticketautomationrule.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ticketautomationrule.CreatorTable, ticketautomationrule.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(tar.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TicketAutomationRuleClient) Hooks() []Hook {
+	return c.hooks.TicketAutomationRule
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketAutomationRuleClient) Interceptors() []Interceptor {
+	return c.inters.TicketAutomationRule
+}
+
+func (c *TicketAutomationRuleClient) mutate(ctx context.Context, m *TicketAutomationRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketAutomationRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketAutomationRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketAutomationRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketAutomationRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketAutomationRule mutation op: %q", m.Op())
 	}
 }
 
@@ -6515,6 +7062,336 @@ func (c *TicketCategoryClient) mutate(ctx context.Context, m *TicketCategoryMuta
 		return (&TicketCategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown TicketCategory mutation op: %q", m.Op())
+	}
+}
+
+// TicketCommentClient is a client for the TicketComment schema.
+type TicketCommentClient struct {
+	config
+}
+
+// NewTicketCommentClient returns a client for the TicketComment from the given config.
+func NewTicketCommentClient(c config) *TicketCommentClient {
+	return &TicketCommentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ticketcomment.Hooks(f(g(h())))`.
+func (c *TicketCommentClient) Use(hooks ...Hook) {
+	c.hooks.TicketComment = append(c.hooks.TicketComment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ticketcomment.Intercept(f(g(h())))`.
+func (c *TicketCommentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketComment = append(c.inters.TicketComment, interceptors...)
+}
+
+// Create returns a builder for creating a TicketComment entity.
+func (c *TicketCommentClient) Create() *TicketCommentCreate {
+	mutation := newTicketCommentMutation(c.config, OpCreate)
+	return &TicketCommentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketComment entities.
+func (c *TicketCommentClient) CreateBulk(builders ...*TicketCommentCreate) *TicketCommentCreateBulk {
+	return &TicketCommentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketCommentClient) MapCreateBulk(slice any, setFunc func(*TicketCommentCreate, int)) *TicketCommentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketCommentCreateBulk{err: fmt.Errorf("calling to TicketCommentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketCommentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketCommentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketComment.
+func (c *TicketCommentClient) Update() *TicketCommentUpdate {
+	mutation := newTicketCommentMutation(c.config, OpUpdate)
+	return &TicketCommentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketCommentClient) UpdateOne(tc *TicketComment) *TicketCommentUpdateOne {
+	mutation := newTicketCommentMutation(c.config, OpUpdateOne, withTicketComment(tc))
+	return &TicketCommentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketCommentClient) UpdateOneID(id int) *TicketCommentUpdateOne {
+	mutation := newTicketCommentMutation(c.config, OpUpdateOne, withTicketCommentID(id))
+	return &TicketCommentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketComment.
+func (c *TicketCommentClient) Delete() *TicketCommentDelete {
+	mutation := newTicketCommentMutation(c.config, OpDelete)
+	return &TicketCommentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketCommentClient) DeleteOne(tc *TicketComment) *TicketCommentDeleteOne {
+	return c.DeleteOneID(tc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketCommentClient) DeleteOneID(id int) *TicketCommentDeleteOne {
+	builder := c.Delete().Where(ticketcomment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketCommentDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketComment.
+func (c *TicketCommentClient) Query() *TicketCommentQuery {
+	return &TicketCommentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketComment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketComment entity by its id.
+func (c *TicketCommentClient) Get(ctx context.Context, id int) (*TicketComment, error) {
+	return c.Query().Where(ticketcomment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketCommentClient) GetX(ctx context.Context, id int) *TicketComment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a TicketComment.
+func (c *TicketCommentClient) QueryTicket(tc *TicketComment) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketcomment.Table, ticketcomment.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketcomment.TicketTable, ticketcomment.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(tc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a TicketComment.
+func (c *TicketCommentClient) QueryUser(tc *TicketComment) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketcomment.Table, ticketcomment.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketcomment.UserTable, ticketcomment.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(tc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TicketCommentClient) Hooks() []Hook {
+	return c.hooks.TicketComment
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketCommentClient) Interceptors() []Interceptor {
+	return c.inters.TicketComment
+}
+
+func (c *TicketCommentClient) mutate(ctx context.Context, m *TicketCommentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketCommentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketCommentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketCommentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketCommentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketComment mutation op: %q", m.Op())
+	}
+}
+
+// TicketNotificationClient is a client for the TicketNotification schema.
+type TicketNotificationClient struct {
+	config
+}
+
+// NewTicketNotificationClient returns a client for the TicketNotification from the given config.
+func NewTicketNotificationClient(c config) *TicketNotificationClient {
+	return &TicketNotificationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ticketnotification.Hooks(f(g(h())))`.
+func (c *TicketNotificationClient) Use(hooks ...Hook) {
+	c.hooks.TicketNotification = append(c.hooks.TicketNotification, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ticketnotification.Intercept(f(g(h())))`.
+func (c *TicketNotificationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketNotification = append(c.inters.TicketNotification, interceptors...)
+}
+
+// Create returns a builder for creating a TicketNotification entity.
+func (c *TicketNotificationClient) Create() *TicketNotificationCreate {
+	mutation := newTicketNotificationMutation(c.config, OpCreate)
+	return &TicketNotificationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketNotification entities.
+func (c *TicketNotificationClient) CreateBulk(builders ...*TicketNotificationCreate) *TicketNotificationCreateBulk {
+	return &TicketNotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketNotificationClient) MapCreateBulk(slice any, setFunc func(*TicketNotificationCreate, int)) *TicketNotificationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketNotificationCreateBulk{err: fmt.Errorf("calling to TicketNotificationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketNotificationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketNotificationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketNotification.
+func (c *TicketNotificationClient) Update() *TicketNotificationUpdate {
+	mutation := newTicketNotificationMutation(c.config, OpUpdate)
+	return &TicketNotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketNotificationClient) UpdateOne(tn *TicketNotification) *TicketNotificationUpdateOne {
+	mutation := newTicketNotificationMutation(c.config, OpUpdateOne, withTicketNotification(tn))
+	return &TicketNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketNotificationClient) UpdateOneID(id int) *TicketNotificationUpdateOne {
+	mutation := newTicketNotificationMutation(c.config, OpUpdateOne, withTicketNotificationID(id))
+	return &TicketNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketNotification.
+func (c *TicketNotificationClient) Delete() *TicketNotificationDelete {
+	mutation := newTicketNotificationMutation(c.config, OpDelete)
+	return &TicketNotificationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketNotificationClient) DeleteOne(tn *TicketNotification) *TicketNotificationDeleteOne {
+	return c.DeleteOneID(tn.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketNotificationClient) DeleteOneID(id int) *TicketNotificationDeleteOne {
+	builder := c.Delete().Where(ticketnotification.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketNotificationDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketNotification.
+func (c *TicketNotificationClient) Query() *TicketNotificationQuery {
+	return &TicketNotificationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketNotification},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketNotification entity by its id.
+func (c *TicketNotificationClient) Get(ctx context.Context, id int) (*TicketNotification, error) {
+	return c.Query().Where(ticketnotification.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketNotificationClient) GetX(ctx context.Context, id int) *TicketNotification {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a TicketNotification.
+func (c *TicketNotificationClient) QueryTicket(tn *TicketNotification) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tn.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketnotification.Table, ticketnotification.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketnotification.TicketTable, ticketnotification.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(tn.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a TicketNotification.
+func (c *TicketNotificationClient) QueryUser(tn *TicketNotification) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tn.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketnotification.Table, ticketnotification.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ticketnotification.UserTable, ticketnotification.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(tn.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TicketNotificationClient) Hooks() []Hook {
+	return c.hooks.TicketNotification
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketNotificationClient) Interceptors() []Interceptor {
+	return c.inters.TicketNotification
+}
+
+func (c *TicketNotificationClient) mutate(ctx context.Context, m *TicketNotificationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketNotificationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketNotificationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketNotificationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketNotificationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketNotification mutation op: %q", m.Op())
 	}
 }
 
@@ -6816,6 +7693,155 @@ func (c *TicketTemplateClient) mutate(ctx context.Context, m *TicketTemplateMuta
 	}
 }
 
+// TicketViewClient is a client for the TicketView schema.
+type TicketViewClient struct {
+	config
+}
+
+// NewTicketViewClient returns a client for the TicketView from the given config.
+func NewTicketViewClient(c config) *TicketViewClient {
+	return &TicketViewClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ticketview.Hooks(f(g(h())))`.
+func (c *TicketViewClient) Use(hooks ...Hook) {
+	c.hooks.TicketView = append(c.hooks.TicketView, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ticketview.Intercept(f(g(h())))`.
+func (c *TicketViewClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TicketView = append(c.inters.TicketView, interceptors...)
+}
+
+// Create returns a builder for creating a TicketView entity.
+func (c *TicketViewClient) Create() *TicketViewCreate {
+	mutation := newTicketViewMutation(c.config, OpCreate)
+	return &TicketViewCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TicketView entities.
+func (c *TicketViewClient) CreateBulk(builders ...*TicketViewCreate) *TicketViewCreateBulk {
+	return &TicketViewCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TicketViewClient) MapCreateBulk(slice any, setFunc func(*TicketViewCreate, int)) *TicketViewCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TicketViewCreateBulk{err: fmt.Errorf("calling to TicketViewClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TicketViewCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TicketViewCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TicketView.
+func (c *TicketViewClient) Update() *TicketViewUpdate {
+	mutation := newTicketViewMutation(c.config, OpUpdate)
+	return &TicketViewUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TicketViewClient) UpdateOne(tv *TicketView) *TicketViewUpdateOne {
+	mutation := newTicketViewMutation(c.config, OpUpdateOne, withTicketView(tv))
+	return &TicketViewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TicketViewClient) UpdateOneID(id int) *TicketViewUpdateOne {
+	mutation := newTicketViewMutation(c.config, OpUpdateOne, withTicketViewID(id))
+	return &TicketViewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TicketView.
+func (c *TicketViewClient) Delete() *TicketViewDelete {
+	mutation := newTicketViewMutation(c.config, OpDelete)
+	return &TicketViewDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TicketViewClient) DeleteOne(tv *TicketView) *TicketViewDeleteOne {
+	return c.DeleteOneID(tv.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TicketViewClient) DeleteOneID(id int) *TicketViewDeleteOne {
+	builder := c.Delete().Where(ticketview.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TicketViewDeleteOne{builder}
+}
+
+// Query returns a query builder for TicketView.
+func (c *TicketViewClient) Query() *TicketViewQuery {
+	return &TicketViewQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTicketView},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TicketView entity by its id.
+func (c *TicketViewClient) Get(ctx context.Context, id int) (*TicketView, error) {
+	return c.Query().Where(ticketview.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TicketViewClient) GetX(ctx context.Context, id int) *TicketView {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreator queries the creator edge of a TicketView.
+func (c *TicketViewClient) QueryCreator(tv *TicketView) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tv.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticketview.Table, ticketview.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ticketview.CreatorTable, ticketview.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(tv.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TicketViewClient) Hooks() []Hook {
+	return c.hooks.TicketView
+}
+
+// Interceptors returns the client interceptors.
+func (c *TicketViewClient) Interceptors() []Interceptor {
+	return c.inters.TicketView
+}
+
+func (c *TicketViewClient) mutate(ctx context.Context, m *TicketViewMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TicketViewCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TicketViewUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TicketViewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TicketViewDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TicketView mutation op: %q", m.Op())
+	}
+}
+
 // ToolInvocationClient is a client for the ToolInvocation schema.
 type ToolInvocationClient struct {
 	config
@@ -7082,6 +8108,54 @@ func (c *UserClient) QueryDepartmentRef(u *User) *DepartmentQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.DepartmentRefTable, user.DepartmentRefColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTicketComments queries the ticket_comments edge of a User.
+func (c *UserClient) QueryTicketComments(u *User) *TicketCommentQuery {
+	query := (&TicketCommentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(ticketcomment.Table, ticketcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketCommentsTable, user.TicketCommentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTicketAttachments queries the ticket_attachments edge of a User.
+func (c *UserClient) QueryTicketAttachments(u *User) *TicketAttachmentQuery {
+	query := (&TicketAttachmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(ticketattachment.Table, ticketattachment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketAttachmentsTable, user.TicketAttachmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTicketNotifications queries the ticket_notifications edge of a User.
+func (c *UserClient) QueryTicketNotifications(u *User) *TicketNotificationQuery {
+	query := (&TicketNotificationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketNotificationsTable, user.TicketNotificationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -7438,8 +8512,9 @@ type (
 		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
 		ProcessTask, ProcessVariable, Project, PromptTemplate, SLADefinition,
 		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant,
-		Ticket, TicketCategory, TicketTag, TicketTemplate, ToolInvocation, User,
-		Workflow, WorkflowInstance []ent.Hook
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
 	}
 	inters struct {
 		Application, AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
@@ -7449,7 +8524,8 @@ type (
 		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
 		ProcessTask, ProcessVariable, Project, PromptTemplate, SLADefinition,
 		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant,
-		Ticket, TicketCategory, TicketTag, TicketTemplate, ToolInvocation, User,
-		Workflow, WorkflowInstance []ent.Interceptor
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance []ent.Interceptor
 	}
 )

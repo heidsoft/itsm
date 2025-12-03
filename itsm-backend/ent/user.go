@@ -53,9 +53,15 @@ type User struct {
 type UserEdges struct {
 	// DepartmentRef holds the value of the department_ref edge.
 	DepartmentRef *Department `json:"department_ref,omitempty"`
+	// 工单评论
+	TicketComments []*TicketComment `json:"ticket_comments,omitempty"`
+	// 工单附件
+	TicketAttachments []*TicketAttachment `json:"ticket_attachments,omitempty"`
+	// 工单通知
+	TicketNotifications []*TicketNotification `json:"ticket_notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [4]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -67,6 +73,33 @@ func (e UserEdges) DepartmentRefOrErr() (*Department, error) {
 		return nil, &NotFoundError{label: department.Label}
 	}
 	return nil, &NotLoadedError{edge: "department_ref"}
+}
+
+// TicketCommentsOrErr returns the TicketComments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TicketCommentsOrErr() ([]*TicketComment, error) {
+	if e.loadedTypes[1] {
+		return e.TicketComments, nil
+	}
+	return nil, &NotLoadedError{edge: "ticket_comments"}
+}
+
+// TicketAttachmentsOrErr returns the TicketAttachments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TicketAttachmentsOrErr() ([]*TicketAttachment, error) {
+	if e.loadedTypes[2] {
+		return e.TicketAttachments, nil
+	}
+	return nil, &NotLoadedError{edge: "ticket_attachments"}
+}
+
+// TicketNotificationsOrErr returns the TicketNotifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TicketNotificationsOrErr() ([]*TicketNotification, error) {
+	if e.loadedTypes[3] {
+		return e.TicketNotifications, nil
+	}
+	return nil, &NotLoadedError{edge: "ticket_notifications"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -200,6 +233,21 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryDepartmentRef queries the "department_ref" edge of the User entity.
 func (u *User) QueryDepartmentRef() *DepartmentQuery {
 	return NewUserClient(u.config).QueryDepartmentRef(u)
+}
+
+// QueryTicketComments queries the "ticket_comments" edge of the User entity.
+func (u *User) QueryTicketComments() *TicketCommentQuery {
+	return NewUserClient(u.config).QueryTicketComments(u)
+}
+
+// QueryTicketAttachments queries the "ticket_attachments" edge of the User entity.
+func (u *User) QueryTicketAttachments() *TicketAttachmentQuery {
+	return NewUserClient(u.config).QueryTicketAttachments(u)
+}
+
+// QueryTicketNotifications queries the "ticket_notifications" edge of the User entity.
+func (u *User) QueryTicketNotifications() *TicketNotificationQuery {
+	return NewUserClient(u.config).QueryTicketNotifications(u)
 }
 
 // Update returns a builder for updating this User.

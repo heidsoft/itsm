@@ -4,14 +4,14 @@ import { useState, useCallback, useMemo } from "react";
 import { TicketStatus, TicketPriority, TicketType } from '@/lib/services/ticket-service';
 import { TicketQueryFilters } from "./useTickets";
 
-export interface TicketFilterState {
+export type TicketFilterState = {
   status: "all" | "open" | "in_progress" | "resolved" | "closed";
   priority: "all" | "p1" | "p2" | "p3" | "p4";
   type: "all" | TicketType;
   keyword: string;
   dateStart: string;
   dateEnd: string;
-  sortBy: string;
+  sortBy: 'createdAt_desc' | 'createdAt_asc' | 'priority_desc' | 'priority_asc';
 }
 
 export interface UseTicketFiltersReturn {

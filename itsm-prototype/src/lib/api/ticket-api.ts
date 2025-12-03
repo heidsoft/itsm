@@ -113,72 +113,157 @@ export class TicketApi {
   }
 
   // Get ticket comments
-  static async getTicketComments(id: number): Promise<Array<{
-    id: number;
-    content: string;
-    type: string;
-    created_by: number;
-    created_at: string;
-    author?: {
+  static async getTicketComments(id: number): Promise<{
+    comments: Array<{
       id: number;
-      name: string;
-      username: string;
-    };
-    is_internal: boolean;
-  }>> {
+      ticket_id: number;
+      user_id: number;
+      content: string;
+      is_internal: boolean;
+      mentions: number[];
+      attachments: number[];
+      user?: {
+        id: number;
+        username: string;
+        name: string;
+        email: string;
+        role?: string;
+        department?: string;
+        tenant_id?: number;
+      };
+      created_at: string;
+      updated_at: string;
+    }>;
+    total: number;
+  }> {
     return httpClient.get(`/api/v1/tickets/${id}/comments`);
   }
 
   // Add ticket comment
   static async addTicketComment(id: number, data: {
     content: string;
-    type: 'comment' | 'work_note';
     is_internal?: boolean;
+    mentions?: number[];
+    attachments?: number[];
   }): Promise<{
     id: number;
+    ticket_id: number;
+    user_id: number;
     content: string;
-    type: string;
-    created_by: number;
-    created_at: string;
-    author?: {
-      id: number;
-      name: string;
-      username: string;
-    };
     is_internal: boolean;
+    mentions: number[];
+    attachments: number[];
+    user?: {
+      id: number;
+      username: string;
+      name: string;
+      email: string;
+      role?: string;
+      department?: string;
+      tenant_id?: number;
+    };
+    created_at: string;
+    updated_at: string;
   }> {
     return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
   }
 
-  // Get ticket attachments
-  static async getTicketAttachments(id: number): Promise<Array<{
+  // Update ticket comment
+  static async updateTicketComment(ticketId: number, commentId: number, data: {
+    content?: string;
+    is_internal?: boolean;
+    mentions?: number[];
+  }): Promise<{
     id: number;
-    filename: string;
-    original_name: string;
-    file_size: number;
-    mime_type: string;
-    url: string;
-    uploaded_by: number;
-    uploaded_at: string;
-  }>> {
+    ticket_id: number;
+    user_id: number;
+    content: string;
+    is_internal: boolean;
+    mentions: number[];
+    attachments: number[];
+    user?: {
+      id: number;
+      username: string;
+      name: string;
+      email: string;
+      role?: string;
+      department?: string;
+      tenant_id?: number;
+    };
+    created_at: string;
+    updated_at: string;
+  }> {
+    return httpClient.put(`/api/v1/tickets/${ticketId}/comments/${commentId}`, data);
+  }
+
+  // Delete ticket comment
+  static async deleteTicketComment(ticketId: number, commentId: number): Promise<void> {
+    return httpClient.delete(`/api/v1/tickets/${ticketId}/comments/${commentId}`);
+  }
+
+  // Get ticket attachments
+  static async getTicketAttachments(id: number): Promise<{
+    attachments: Array<{
+      id: number;
+      ticket_id: number;
+      file_name: string;
+      file_path: string;
+      file_url: string;
+      file_size: number;
+      file_type: string;
+      mime_type: string;
+      uploaded_by: number;
+      uploader?: {
+        id: number;
+        username: string;
+        name: string;
+        email: string;
+        role?: string;
+        department?: string;
+        tenant_id?: number;
+      };
+      created_at: string;
+    }>;
+    total: number;
+  }> {
     return httpClient.get(`/api/v1/tickets/${id}/attachments`);
   }
 
   // Upload ticket attachment
-  static async uploadTicketAttachment(id: number, file: File): Promise<{
+  static async uploadTicketAttachment(id: number, file: File, onProgress?: (progress: number) => void): Promise<{
     id: number;
-    filename: string;
-    original_name: string;
+    ticket_id: number;
+    file_name: string;
+    file_path: string;
+    file_url: string;
     file_size: number;
+    file_type: string;
     mime_type: string;
-    url: string;
     uploaded_by: number;
-    uploaded_at: string;
+    uploader?: {
+      id: number;
+      username: string;
+      name: string;
+      email: string;
+    };
+    created_at: string;
   }> {
     const formData = new FormData();
     formData.append('file', file);
     
-    return httpClient.post(`/api/v1/tickets/${id}/attachments`, formData);
+    return httpClient.post(`/api/v1/tickets/${id}/attachments`, formData, {
+      onUploadProgress: onProgress,
+    });
+  }
+
+  // Download ticket attachment
+  static getAttachmentDownloadUrl(ticketId: number, attachmentId: number): string {
+    return `/api/v1/tickets/${ticketId}/attachments/${attachmentId}`;
+  }
+
+  // Preview ticket attachment
+  static getAttachmentPreviewUrl(ticketId: number, attachmentId: number): string {
+    return `/api/v1/tickets/${ticketId}/attachments/${attachmentId}/preview`;
   }
 
   // Delete ticket attachment

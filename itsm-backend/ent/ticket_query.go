@@ -11,7 +11,10 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/workflowinstance"
@@ -39,6 +42,9 @@ type TicketQuery struct {
 	withWorkflowInstances *WorkflowInstanceQuery
 	withSLADefinition     *SLADefinitionQuery
 	withSLAViolations     *SLAViolationQuery
+	withComments          *TicketCommentQuery
+	withAttachments       *TicketAttachmentQuery
+	withNotifications     *TicketNotificationQuery
 	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -274,6 +280,72 @@ func (tq *TicketQuery) QuerySLAViolations() *SLAViolationQuery {
 	return query
 }
 
+// QueryComments chains the current query on the "comments" edge.
+func (tq *TicketQuery) QueryComments() *TicketCommentQuery {
+	query := (&TicketCommentClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(ticketcomment.Table, ticketcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.CommentsTable, ticket.CommentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAttachments chains the current query on the "attachments" edge.
+func (tq *TicketQuery) QueryAttachments() *TicketAttachmentQuery {
+	query := (&TicketAttachmentClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(ticketattachment.Table, ticketattachment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.AttachmentsTable, ticket.AttachmentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNotifications chains the current query on the "notifications" edge.
+func (tq *TicketQuery) QueryNotifications() *TicketNotificationQuery {
+	query := (&TicketNotificationClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Ticket entity from the query.
 // Returns a *NotFoundError when no Ticket was found.
 func (tq *TicketQuery) First(ctx context.Context) (*Ticket, error) {
@@ -475,6 +547,9 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		withWorkflowInstances: tq.withWorkflowInstances.Clone(),
 		withSLADefinition:     tq.withSLADefinition.Clone(),
 		withSLAViolations:     tq.withSLAViolations.Clone(),
+		withComments:          tq.withComments.Clone(),
+		withAttachments:       tq.withAttachments.Clone(),
+		withNotifications:     tq.withNotifications.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -580,6 +655,39 @@ func (tq *TicketQuery) WithSLAViolations(opts ...func(*SLAViolationQuery)) *Tick
 	return tq
 }
 
+// WithComments tells the query-builder to eager-load the nodes that are connected to
+// the "comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithComments(opts ...func(*TicketCommentQuery)) *TicketQuery {
+	query := (&TicketCommentClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withComments = query
+	return tq
+}
+
+// WithAttachments tells the query-builder to eager-load the nodes that are connected to
+// the "attachments" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithAttachments(opts ...func(*TicketAttachmentQuery)) *TicketQuery {
+	query := (&TicketAttachmentClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withAttachments = query
+	return tq
+}
+
+// WithNotifications tells the query-builder to eager-load the nodes that are connected to
+// the "notifications" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithNotifications(opts ...func(*TicketNotificationQuery)) *TicketQuery {
+	query := (&TicketNotificationClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withNotifications = query
+	return tq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -659,7 +767,7 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [9]bool{
+		loadedTypes = [12]bool{
 			tq.withTemplate != nil,
 			tq.withCategory != nil,
 			tq.withDepartment != nil,
@@ -669,6 +777,9 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			tq.withWorkflowInstances != nil,
 			tq.withSLADefinition != nil,
 			tq.withSLAViolations != nil,
+			tq.withComments != nil,
+			tq.withAttachments != nil,
+			tq.withNotifications != nil,
 		}
 	)
 	if withFKs {
@@ -747,6 +858,27 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		if err := tq.loadSLAViolations(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.SLAViolations = []*SLAViolation{} },
 			func(n *Ticket, e *SLAViolation) { n.Edges.SLAViolations = append(n.Edges.SLAViolations, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withComments; query != nil {
+		if err := tq.loadComments(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Comments = []*TicketComment{} },
+			func(n *Ticket, e *TicketComment) { n.Edges.Comments = append(n.Edges.Comments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withAttachments; query != nil {
+		if err := tq.loadAttachments(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Attachments = []*TicketAttachment{} },
+			func(n *Ticket, e *TicketAttachment) { n.Edges.Attachments = append(n.Edges.Attachments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withNotifications; query != nil {
+		if err := tq.loadNotifications(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.Notifications = []*TicketNotification{} },
+			func(n *Ticket, e *TicketNotification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1006,6 +1138,96 @@ func (tq *TicketQuery) loadSLAViolations(ctx context.Context, query *SLAViolatio
 	}
 	query.Where(predicate.SLAViolation(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(ticket.SLAViolationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadComments(ctx context.Context, query *TicketCommentQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketComment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketcomment.FieldTicketID)
+	}
+	query.Where(predicate.TicketComment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.CommentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadAttachments(ctx context.Context, query *TicketAttachmentQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketAttachment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketattachment.FieldTicketID)
+	}
+	query.Where(predicate.TicketAttachment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.AttachmentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadNotifications(ctx context.Context, query *TicketNotificationQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *TicketNotification)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(ticketnotification.FieldTicketID)
+	}
+	query.Where(predicate.TicketNotification(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.NotificationsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

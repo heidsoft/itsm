@@ -11,7 +11,10 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/workflowinstance"
@@ -360,6 +363,100 @@ func (tu *TicketUpdate) ClearResolvedAt() *TicketUpdate {
 	return tu
 }
 
+// SetRating sets the "rating" field.
+func (tu *TicketUpdate) SetRating(i int) *TicketUpdate {
+	tu.mutation.ResetRating()
+	tu.mutation.SetRating(i)
+	return tu
+}
+
+// SetNillableRating sets the "rating" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableRating(i *int) *TicketUpdate {
+	if i != nil {
+		tu.SetRating(*i)
+	}
+	return tu
+}
+
+// AddRating adds i to the "rating" field.
+func (tu *TicketUpdate) AddRating(i int) *TicketUpdate {
+	tu.mutation.AddRating(i)
+	return tu
+}
+
+// ClearRating clears the value of the "rating" field.
+func (tu *TicketUpdate) ClearRating() *TicketUpdate {
+	tu.mutation.ClearRating()
+	return tu
+}
+
+// SetRatingComment sets the "rating_comment" field.
+func (tu *TicketUpdate) SetRatingComment(s string) *TicketUpdate {
+	tu.mutation.SetRatingComment(s)
+	return tu
+}
+
+// SetNillableRatingComment sets the "rating_comment" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableRatingComment(s *string) *TicketUpdate {
+	if s != nil {
+		tu.SetRatingComment(*s)
+	}
+	return tu
+}
+
+// ClearRatingComment clears the value of the "rating_comment" field.
+func (tu *TicketUpdate) ClearRatingComment() *TicketUpdate {
+	tu.mutation.ClearRatingComment()
+	return tu
+}
+
+// SetRatedAt sets the "rated_at" field.
+func (tu *TicketUpdate) SetRatedAt(t time.Time) *TicketUpdate {
+	tu.mutation.SetRatedAt(t)
+	return tu
+}
+
+// SetNillableRatedAt sets the "rated_at" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableRatedAt(t *time.Time) *TicketUpdate {
+	if t != nil {
+		tu.SetRatedAt(*t)
+	}
+	return tu
+}
+
+// ClearRatedAt clears the value of the "rated_at" field.
+func (tu *TicketUpdate) ClearRatedAt() *TicketUpdate {
+	tu.mutation.ClearRatedAt()
+	return tu
+}
+
+// SetRatedBy sets the "rated_by" field.
+func (tu *TicketUpdate) SetRatedBy(i int) *TicketUpdate {
+	tu.mutation.ResetRatedBy()
+	tu.mutation.SetRatedBy(i)
+	return tu
+}
+
+// SetNillableRatedBy sets the "rated_by" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableRatedBy(i *int) *TicketUpdate {
+	if i != nil {
+		tu.SetRatedBy(*i)
+	}
+	return tu
+}
+
+// AddRatedBy adds i to the "rated_by" field.
+func (tu *TicketUpdate) AddRatedBy(i int) *TicketUpdate {
+	tu.mutation.AddRatedBy(i)
+	return tu
+}
+
+// ClearRatedBy clears the value of the "rated_by" field.
+func (tu *TicketUpdate) ClearRatedBy() *TicketUpdate {
+	tu.mutation.ClearRatedBy()
+	return tu
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tu *TicketUpdate) SetCreatedAt(t time.Time) *TicketUpdate {
 	tu.mutation.SetCreatedAt(t)
@@ -463,6 +560,51 @@ func (tu *TicketUpdate) AddSLAViolations(s ...*SLAViolation) *TicketUpdate {
 		ids[i] = s[i].ID
 	}
 	return tu.AddSLAViolationIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the TicketComment entity by IDs.
+func (tu *TicketUpdate) AddCommentIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddCommentIDs(ids...)
+	return tu
+}
+
+// AddComments adds the "comments" edges to the TicketComment entity.
+func (tu *TicketUpdate) AddComments(t ...*TicketComment) *TicketUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddCommentIDs(ids...)
+}
+
+// AddAttachmentIDs adds the "attachments" edge to the TicketAttachment entity by IDs.
+func (tu *TicketUpdate) AddAttachmentIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddAttachmentIDs(ids...)
+	return tu
+}
+
+// AddAttachments adds the "attachments" edges to the TicketAttachment entity.
+func (tu *TicketUpdate) AddAttachments(t ...*TicketAttachment) *TicketUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddAttachmentIDs(ids...)
+}
+
+// AddNotificationIDs adds the "notifications" edge to the TicketNotification entity by IDs.
+func (tu *TicketUpdate) AddNotificationIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddNotificationIDs(ids...)
+	return tu
+}
+
+// AddNotifications adds the "notifications" edges to the TicketNotification entity.
+func (tu *TicketUpdate) AddNotifications(t ...*TicketNotification) *TicketUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddNotificationIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -584,6 +726,69 @@ func (tu *TicketUpdate) RemoveSLAViolations(s ...*SLAViolation) *TicketUpdate {
 	return tu.RemoveSLAViolationIDs(ids...)
 }
 
+// ClearComments clears all "comments" edges to the TicketComment entity.
+func (tu *TicketUpdate) ClearComments() *TicketUpdate {
+	tu.mutation.ClearComments()
+	return tu
+}
+
+// RemoveCommentIDs removes the "comments" edge to TicketComment entities by IDs.
+func (tu *TicketUpdate) RemoveCommentIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveCommentIDs(ids...)
+	return tu
+}
+
+// RemoveComments removes "comments" edges to TicketComment entities.
+func (tu *TicketUpdate) RemoveComments(t ...*TicketComment) *TicketUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveCommentIDs(ids...)
+}
+
+// ClearAttachments clears all "attachments" edges to the TicketAttachment entity.
+func (tu *TicketUpdate) ClearAttachments() *TicketUpdate {
+	tu.mutation.ClearAttachments()
+	return tu
+}
+
+// RemoveAttachmentIDs removes the "attachments" edge to TicketAttachment entities by IDs.
+func (tu *TicketUpdate) RemoveAttachmentIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveAttachmentIDs(ids...)
+	return tu
+}
+
+// RemoveAttachments removes "attachments" edges to TicketAttachment entities.
+func (tu *TicketUpdate) RemoveAttachments(t ...*TicketAttachment) *TicketUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveAttachmentIDs(ids...)
+}
+
+// ClearNotifications clears all "notifications" edges to the TicketNotification entity.
+func (tu *TicketUpdate) ClearNotifications() *TicketUpdate {
+	tu.mutation.ClearNotifications()
+	return tu
+}
+
+// RemoveNotificationIDs removes the "notifications" edge to TicketNotification entities by IDs.
+func (tu *TicketUpdate) RemoveNotificationIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveNotificationIDs(ids...)
+	return tu
+}
+
+// RemoveNotifications removes "notifications" edges to TicketNotification entities.
+func (tu *TicketUpdate) RemoveNotifications(t ...*TicketNotification) *TicketUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveNotificationIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (tu *TicketUpdate) Save(ctx context.Context) (int, error) {
 	tu.defaults()
@@ -640,6 +845,11 @@ func (tu *TicketUpdate) check() error {
 	if v, ok := tu.mutation.TenantID(); ok {
 		if err := ticket.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
+		}
+	}
+	if v, ok := tu.mutation.Rating(); ok {
+		if err := ticket.RatingValidator(v); err != nil {
+			return &ValidationError{Name: "rating", err: fmt.Errorf(`ent: validator failed for field "Ticket.rating": %w`, err)}
 		}
 	}
 	return nil
@@ -719,6 +929,36 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if tu.mutation.ResolvedAtCleared() {
 		_spec.ClearField(ticket.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := tu.mutation.Rating(); ok {
+		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
+	}
+	if value, ok := tu.mutation.AddedRating(); ok {
+		_spec.AddField(ticket.FieldRating, field.TypeInt, value)
+	}
+	if tu.mutation.RatingCleared() {
+		_spec.ClearField(ticket.FieldRating, field.TypeInt)
+	}
+	if value, ok := tu.mutation.RatingComment(); ok {
+		_spec.SetField(ticket.FieldRatingComment, field.TypeString, value)
+	}
+	if tu.mutation.RatingCommentCleared() {
+		_spec.ClearField(ticket.FieldRatingComment, field.TypeString)
+	}
+	if value, ok := tu.mutation.RatedAt(); ok {
+		_spec.SetField(ticket.FieldRatedAt, field.TypeTime, value)
+	}
+	if tu.mutation.RatedAtCleared() {
+		_spec.ClearField(ticket.FieldRatedAt, field.TypeTime)
+	}
+	if value, ok := tu.mutation.RatedBy(); ok {
+		_spec.SetField(ticket.FieldRatedBy, field.TypeInt, value)
+	}
+	if value, ok := tu.mutation.AddedRatedBy(); ok {
+		_spec.AddField(ticket.FieldRatedBy, field.TypeInt, value)
+	}
+	if tu.mutation.RatedByCleared() {
+		_spec.ClearField(ticket.FieldRatedBy, field.TypeInt)
 	}
 	if value, ok := tu.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -1044,6 +1284,141 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !tu.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.AttachmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedAttachmentsIDs(); len(nodes) > 0 && !tu.mutation.AttachmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.AttachmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.NotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedNotificationsIDs(); len(nodes) > 0 && !tu.mutation.NotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.NotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1396,6 +1771,100 @@ func (tuo *TicketUpdateOne) ClearResolvedAt() *TicketUpdateOne {
 	return tuo
 }
 
+// SetRating sets the "rating" field.
+func (tuo *TicketUpdateOne) SetRating(i int) *TicketUpdateOne {
+	tuo.mutation.ResetRating()
+	tuo.mutation.SetRating(i)
+	return tuo
+}
+
+// SetNillableRating sets the "rating" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableRating(i *int) *TicketUpdateOne {
+	if i != nil {
+		tuo.SetRating(*i)
+	}
+	return tuo
+}
+
+// AddRating adds i to the "rating" field.
+func (tuo *TicketUpdateOne) AddRating(i int) *TicketUpdateOne {
+	tuo.mutation.AddRating(i)
+	return tuo
+}
+
+// ClearRating clears the value of the "rating" field.
+func (tuo *TicketUpdateOne) ClearRating() *TicketUpdateOne {
+	tuo.mutation.ClearRating()
+	return tuo
+}
+
+// SetRatingComment sets the "rating_comment" field.
+func (tuo *TicketUpdateOne) SetRatingComment(s string) *TicketUpdateOne {
+	tuo.mutation.SetRatingComment(s)
+	return tuo
+}
+
+// SetNillableRatingComment sets the "rating_comment" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableRatingComment(s *string) *TicketUpdateOne {
+	if s != nil {
+		tuo.SetRatingComment(*s)
+	}
+	return tuo
+}
+
+// ClearRatingComment clears the value of the "rating_comment" field.
+func (tuo *TicketUpdateOne) ClearRatingComment() *TicketUpdateOne {
+	tuo.mutation.ClearRatingComment()
+	return tuo
+}
+
+// SetRatedAt sets the "rated_at" field.
+func (tuo *TicketUpdateOne) SetRatedAt(t time.Time) *TicketUpdateOne {
+	tuo.mutation.SetRatedAt(t)
+	return tuo
+}
+
+// SetNillableRatedAt sets the "rated_at" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableRatedAt(t *time.Time) *TicketUpdateOne {
+	if t != nil {
+		tuo.SetRatedAt(*t)
+	}
+	return tuo
+}
+
+// ClearRatedAt clears the value of the "rated_at" field.
+func (tuo *TicketUpdateOne) ClearRatedAt() *TicketUpdateOne {
+	tuo.mutation.ClearRatedAt()
+	return tuo
+}
+
+// SetRatedBy sets the "rated_by" field.
+func (tuo *TicketUpdateOne) SetRatedBy(i int) *TicketUpdateOne {
+	tuo.mutation.ResetRatedBy()
+	tuo.mutation.SetRatedBy(i)
+	return tuo
+}
+
+// SetNillableRatedBy sets the "rated_by" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableRatedBy(i *int) *TicketUpdateOne {
+	if i != nil {
+		tuo.SetRatedBy(*i)
+	}
+	return tuo
+}
+
+// AddRatedBy adds i to the "rated_by" field.
+func (tuo *TicketUpdateOne) AddRatedBy(i int) *TicketUpdateOne {
+	tuo.mutation.AddRatedBy(i)
+	return tuo
+}
+
+// ClearRatedBy clears the value of the "rated_by" field.
+func (tuo *TicketUpdateOne) ClearRatedBy() *TicketUpdateOne {
+	tuo.mutation.ClearRatedBy()
+	return tuo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tuo *TicketUpdateOne) SetCreatedAt(t time.Time) *TicketUpdateOne {
 	tuo.mutation.SetCreatedAt(t)
@@ -1499,6 +1968,51 @@ func (tuo *TicketUpdateOne) AddSLAViolations(s ...*SLAViolation) *TicketUpdateOn
 		ids[i] = s[i].ID
 	}
 	return tuo.AddSLAViolationIDs(ids...)
+}
+
+// AddCommentIDs adds the "comments" edge to the TicketComment entity by IDs.
+func (tuo *TicketUpdateOne) AddCommentIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddCommentIDs(ids...)
+	return tuo
+}
+
+// AddComments adds the "comments" edges to the TicketComment entity.
+func (tuo *TicketUpdateOne) AddComments(t ...*TicketComment) *TicketUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddCommentIDs(ids...)
+}
+
+// AddAttachmentIDs adds the "attachments" edge to the TicketAttachment entity by IDs.
+func (tuo *TicketUpdateOne) AddAttachmentIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddAttachmentIDs(ids...)
+	return tuo
+}
+
+// AddAttachments adds the "attachments" edges to the TicketAttachment entity.
+func (tuo *TicketUpdateOne) AddAttachments(t ...*TicketAttachment) *TicketUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddAttachmentIDs(ids...)
+}
+
+// AddNotificationIDs adds the "notifications" edge to the TicketNotification entity by IDs.
+func (tuo *TicketUpdateOne) AddNotificationIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddNotificationIDs(ids...)
+	return tuo
+}
+
+// AddNotifications adds the "notifications" edges to the TicketNotification entity.
+func (tuo *TicketUpdateOne) AddNotifications(t ...*TicketNotification) *TicketUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddNotificationIDs(ids...)
 }
 
 // Mutation returns the TicketMutation object of the builder.
@@ -1620,6 +2134,69 @@ func (tuo *TicketUpdateOne) RemoveSLAViolations(s ...*SLAViolation) *TicketUpdat
 	return tuo.RemoveSLAViolationIDs(ids...)
 }
 
+// ClearComments clears all "comments" edges to the TicketComment entity.
+func (tuo *TicketUpdateOne) ClearComments() *TicketUpdateOne {
+	tuo.mutation.ClearComments()
+	return tuo
+}
+
+// RemoveCommentIDs removes the "comments" edge to TicketComment entities by IDs.
+func (tuo *TicketUpdateOne) RemoveCommentIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveCommentIDs(ids...)
+	return tuo
+}
+
+// RemoveComments removes "comments" edges to TicketComment entities.
+func (tuo *TicketUpdateOne) RemoveComments(t ...*TicketComment) *TicketUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveCommentIDs(ids...)
+}
+
+// ClearAttachments clears all "attachments" edges to the TicketAttachment entity.
+func (tuo *TicketUpdateOne) ClearAttachments() *TicketUpdateOne {
+	tuo.mutation.ClearAttachments()
+	return tuo
+}
+
+// RemoveAttachmentIDs removes the "attachments" edge to TicketAttachment entities by IDs.
+func (tuo *TicketUpdateOne) RemoveAttachmentIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveAttachmentIDs(ids...)
+	return tuo
+}
+
+// RemoveAttachments removes "attachments" edges to TicketAttachment entities.
+func (tuo *TicketUpdateOne) RemoveAttachments(t ...*TicketAttachment) *TicketUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveAttachmentIDs(ids...)
+}
+
+// ClearNotifications clears all "notifications" edges to the TicketNotification entity.
+func (tuo *TicketUpdateOne) ClearNotifications() *TicketUpdateOne {
+	tuo.mutation.ClearNotifications()
+	return tuo
+}
+
+// RemoveNotificationIDs removes the "notifications" edge to TicketNotification entities by IDs.
+func (tuo *TicketUpdateOne) RemoveNotificationIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveNotificationIDs(ids...)
+	return tuo
+}
+
+// RemoveNotifications removes "notifications" edges to TicketNotification entities.
+func (tuo *TicketUpdateOne) RemoveNotifications(t ...*TicketNotification) *TicketUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveNotificationIDs(ids...)
+}
+
 // Where appends a list predicates to the TicketUpdate builder.
 func (tuo *TicketUpdateOne) Where(ps ...predicate.Ticket) *TicketUpdateOne {
 	tuo.mutation.Where(ps...)
@@ -1689,6 +2266,11 @@ func (tuo *TicketUpdateOne) check() error {
 	if v, ok := tuo.mutation.TenantID(); ok {
 		if err := ticket.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
+		}
+	}
+	if v, ok := tuo.mutation.Rating(); ok {
+		if err := ticket.RatingValidator(v); err != nil {
+			return &ValidationError{Name: "rating", err: fmt.Errorf(`ent: validator failed for field "Ticket.rating": %w`, err)}
 		}
 	}
 	return nil
@@ -1785,6 +2367,36 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 	}
 	if tuo.mutation.ResolvedAtCleared() {
 		_spec.ClearField(ticket.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := tuo.mutation.Rating(); ok {
+		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
+	}
+	if value, ok := tuo.mutation.AddedRating(); ok {
+		_spec.AddField(ticket.FieldRating, field.TypeInt, value)
+	}
+	if tuo.mutation.RatingCleared() {
+		_spec.ClearField(ticket.FieldRating, field.TypeInt)
+	}
+	if value, ok := tuo.mutation.RatingComment(); ok {
+		_spec.SetField(ticket.FieldRatingComment, field.TypeString, value)
+	}
+	if tuo.mutation.RatingCommentCleared() {
+		_spec.ClearField(ticket.FieldRatingComment, field.TypeString)
+	}
+	if value, ok := tuo.mutation.RatedAt(); ok {
+		_spec.SetField(ticket.FieldRatedAt, field.TypeTime, value)
+	}
+	if tuo.mutation.RatedAtCleared() {
+		_spec.ClearField(ticket.FieldRatedAt, field.TypeTime)
+	}
+	if value, ok := tuo.mutation.RatedBy(); ok {
+		_spec.SetField(ticket.FieldRatedBy, field.TypeInt, value)
+	}
+	if value, ok := tuo.mutation.AddedRatedBy(); ok {
+		_spec.AddField(ticket.FieldRatedBy, field.TypeInt, value)
+	}
+	if tuo.mutation.RatedByCleared() {
+		_spec.ClearField(ticket.FieldRatedBy, field.TypeInt)
 	}
 	if value, ok := tuo.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -2110,6 +2722,141 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !tuo.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.AttachmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedAttachmentsIDs(); len(nodes) > 0 && !tuo.mutation.AttachmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.AttachmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.NotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedNotificationsIDs(); len(nodes) > 0 && !tuo.mutation.NotificationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.NotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

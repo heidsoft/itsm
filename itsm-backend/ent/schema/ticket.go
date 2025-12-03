@@ -68,6 +68,19 @@ func (Ticket) Fields() []ent.Field {
 		field.Time("resolved_at").
 			Comment("解决时间").
 			Optional(),
+		field.Int("rating").
+			Comment("评分（1-5星）").
+			Optional().
+			Range(1, 5),
+		field.Text("rating_comment").
+			Comment("评分评论").
+			Optional(),
+		field.Time("rated_at").
+			Comment("评分时间").
+			Optional(),
+		field.Int("rated_by").
+			Comment("评分人ID").
+			Optional(),
 		field.Time("created_at").
 			Comment("创建时间").
 			Default(time.Now),
@@ -114,5 +127,11 @@ func (Ticket) Edges() []ent.Edge {
 			Comment("SLA定义"),
 		edge.To("sla_violations", SLAViolation.Type).
 			Comment("SLA违规记录"),
+		edge.To("comments", TicketComment.Type).
+			Comment("工单评论"),
+		edge.To("attachments", TicketAttachment.Type).
+			Comment("工单附件"),
+		edge.To("notifications", TicketNotification.Type).
+			Comment("工单通知"),
 	}
 }

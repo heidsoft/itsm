@@ -282,7 +282,76 @@ class HttpClient {
     });
   }
 
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown, config?: { onUploadProgress?: (progress: number) => void }): Promise<T> {
+    // 如果是 FormData，直接传递，不进行 JSON.stringify
+    if (data instanceof FormData) {
+      const url = `${this.baseURL}${endpoint}`;
+      const headers = this.getHeaders();
+      // FormData 上传时，不要设置 Content-Type，让浏览器自动设置（包含 boundary）
+      delete headers['Content-Type'];
+      
+      // 如果支持上传进度，使用 XMLHttpRequest
+      if (config?.onUploadProgress) {
+        return new Promise<T>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable && config.onUploadProgress) {
+              const progress = Math.round((event.loaded * 100) / event.total);
+              config.onUploadProgress(progress);
+            }
+          });
+          
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText) as ApiResponse<T>;
+                if (response.code === 0) {
+                  resolve(response.data);
+                } else {
+                  reject(new Error(response.message || 'Request failed'));
+                }
+              } catch (error) {
+                reject(new Error('Failed to parse response'));
+              }
+            } else {
+              reject(new Error(`HTTP error! status: ${xhr.status}`));
+            }
+          });
+          
+          xhr.addEventListener('error', () => {
+            reject(new Error('Network error'));
+          });
+          
+          xhr.open('POST', url);
+          Object.entries(headers).forEach(([key, value]) => {
+            if (key !== 'Content-Type') {
+              xhr.setRequestHeader(key, value);
+            }
+          });
+          xhr.send(data);
+        });
+      }
+      
+      // 不支持进度时，使用 fetch
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: data,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json() as ApiResponse<T>;
+      if (responseData.code !== 0) {
+        throw new Error(responseData.message || 'Request failed');
+      }
+      
+      return responseData.data;
+    }
+    
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,

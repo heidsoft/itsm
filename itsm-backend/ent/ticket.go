@@ -55,6 +55,14 @@ type Ticket struct {
 	FirstResponseAt time.Time `json:"first_response_at,omitempty"`
 	// 解决时间
 	ResolvedAt time.Time `json:"resolved_at,omitempty"`
+	// 评分（1-5星）
+	Rating int `json:"rating,omitempty"`
+	// 评分评论
+	RatingComment string `json:"rating_comment,omitempty"`
+	// 评分时间
+	RatedAt time.Time `json:"rated_at,omitempty"`
+	// 评分人ID
+	RatedBy int `json:"rated_by,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -86,9 +94,15 @@ type TicketEdges struct {
 	SLADefinition *SLADefinition `json:"sla_definition,omitempty"`
 	// SLA违规记录
 	SLAViolations []*SLAViolation `json:"sla_violations,omitempty"`
+	// 工单评论
+	Comments []*TicketComment `json:"comments,omitempty"`
+	// 工单附件
+	Attachments []*TicketAttachment `json:"attachments,omitempty"`
+	// 工单通知
+	Notifications []*TicketNotification `json:"notifications,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [9]bool
+	loadedTypes [12]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -182,16 +196,43 @@ func (e TicketEdges) SLAViolationsOrErr() ([]*SLAViolation, error) {
 	return nil, &NotLoadedError{edge: "sla_violations"}
 }
 
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) CommentsOrErr() ([]*TicketComment, error) {
+	if e.loadedTypes[9] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
+}
+
+// AttachmentsOrErr returns the Attachments value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) AttachmentsOrErr() ([]*TicketAttachment, error) {
+	if e.loadedTypes[10] {
+		return e.Attachments, nil
+	}
+	return nil, &NotLoadedError{edge: "attachments"}
+}
+
+// NotificationsOrErr returns the Notifications value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) NotificationsOrErr() ([]*TicketNotification, error) {
+	if e.loadedTypes[11] {
+		return e.Notifications, nil
+	}
+	return nil, &NotLoadedError{edge: "notifications"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Ticket) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID:
+		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy:
 			values[i] = new(sql.NullInt64)
-		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber:
+		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldRatingComment:
 			values[i] = new(sql.NullString)
-		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
+		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case ticket.ForeignKeys[0]: // ticket_tag_tickets
 			values[i] = new(sql.NullInt64)
@@ -318,6 +359,30 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.ResolvedAt = value.Time
 			}
+		case ticket.FieldRating:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field rating", values[i])
+			} else if value.Valid {
+				t.Rating = int(value.Int64)
+			}
+		case ticket.FieldRatingComment:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field rating_comment", values[i])
+			} else if value.Valid {
+				t.RatingComment = value.String
+			}
+		case ticket.FieldRatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field rated_at", values[i])
+			} else if value.Valid {
+				t.RatedAt = value.Time
+			}
+		case ticket.FieldRatedBy:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field rated_by", values[i])
+			} else if value.Valid {
+				t.RatedBy = int(value.Int64)
+			}
 		case ticket.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -395,6 +460,21 @@ func (t *Ticket) QuerySLAViolations() *SLAViolationQuery {
 	return NewTicketClient(t.config).QuerySLAViolations(t)
 }
 
+// QueryComments queries the "comments" edge of the Ticket entity.
+func (t *Ticket) QueryComments() *TicketCommentQuery {
+	return NewTicketClient(t.config).QueryComments(t)
+}
+
+// QueryAttachments queries the "attachments" edge of the Ticket entity.
+func (t *Ticket) QueryAttachments() *TicketAttachmentQuery {
+	return NewTicketClient(t.config).QueryAttachments(t)
+}
+
+// QueryNotifications queries the "notifications" edge of the Ticket entity.
+func (t *Ticket) QueryNotifications() *TicketNotificationQuery {
+	return NewTicketClient(t.config).QueryNotifications(t)
+}
+
 // Update returns a builder for updating this Ticket.
 // Note that you need to call Ticket.Unwrap() before calling this method if this Ticket
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -468,6 +548,18 @@ func (t *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
 	builder.WriteString(t.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("rating=")
+	builder.WriteString(fmt.Sprintf("%v", t.Rating))
+	builder.WriteString(", ")
+	builder.WriteString("rating_comment=")
+	builder.WriteString(t.RatingComment)
+	builder.WriteString(", ")
+	builder.WriteString("rated_at=")
+	builder.WriteString(t.RatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("rated_by=")
+	builder.WriteString(fmt.Sprintf("%v", t.RatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(t.CreatedAt.Format(time.ANSIC))

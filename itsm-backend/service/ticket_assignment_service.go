@@ -13,6 +13,7 @@ import (
 // TicketAssignmentService 工单智能分配和路由服务
 type TicketAssignmentService struct {
 	client *ent.Client
+	logger interface{} // 可选：如果需要日志
 }
 
 // NewTicketAssignmentService 创建工单分配服务实例
@@ -173,6 +174,11 @@ func (s *TicketAssignmentService) getAvailableUsers(ctx context.Context, req *As
 	}
 
 	return availableUsers, nil
+}
+
+// CalculateUserScore 计算用户评分（公开方法）
+func (s *TicketAssignmentService) CalculateUserScore(ctx context.Context, user *UserWorkload, req *AssignmentRequest) float64 {
+	return s.calculateUserScore(ctx, user, req)
 }
 
 // calculateUserScore 计算用户评分

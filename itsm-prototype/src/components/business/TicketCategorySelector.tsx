@@ -330,7 +330,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
         filterOption={(input, option) =>
           (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
         }
-        dropdownRender={(menu) => (
+        popupRender={(menu) => (
           <div>
             {menu}
             <div className="p-2 border-t">

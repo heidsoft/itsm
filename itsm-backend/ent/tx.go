@@ -86,12 +86,24 @@ type Tx struct {
 	Tenant *TenantClient
 	// Ticket is the client for interacting with the Ticket builders.
 	Ticket *TicketClient
+	// TicketAssignmentRule is the client for interacting with the TicketAssignmentRule builders.
+	TicketAssignmentRule *TicketAssignmentRuleClient
+	// TicketAttachment is the client for interacting with the TicketAttachment builders.
+	TicketAttachment *TicketAttachmentClient
+	// TicketAutomationRule is the client for interacting with the TicketAutomationRule builders.
+	TicketAutomationRule *TicketAutomationRuleClient
 	// TicketCategory is the client for interacting with the TicketCategory builders.
 	TicketCategory *TicketCategoryClient
+	// TicketComment is the client for interacting with the TicketComment builders.
+	TicketComment *TicketCommentClient
+	// TicketNotification is the client for interacting with the TicketNotification builders.
+	TicketNotification *TicketNotificationClient
 	// TicketTag is the client for interacting with the TicketTag builders.
 	TicketTag *TicketTagClient
 	// TicketTemplate is the client for interacting with the TicketTemplate builders.
 	TicketTemplate *TicketTemplateClient
+	// TicketView is the client for interacting with the TicketView builders.
+	TicketView *TicketViewClient
 	// ToolInvocation is the client for interacting with the ToolInvocation builders.
 	ToolInvocation *ToolInvocationClient
 	// User is the client for interacting with the User builders.
@@ -268,9 +280,15 @@ func (tx *Tx) init() {
 	tx.Team = NewTeamClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.Ticket = NewTicketClient(tx.config)
+	tx.TicketAssignmentRule = NewTicketAssignmentRuleClient(tx.config)
+	tx.TicketAttachment = NewTicketAttachmentClient(tx.config)
+	tx.TicketAutomationRule = NewTicketAutomationRuleClient(tx.config)
 	tx.TicketCategory = NewTicketCategoryClient(tx.config)
+	tx.TicketComment = NewTicketCommentClient(tx.config)
+	tx.TicketNotification = NewTicketNotificationClient(tx.config)
 	tx.TicketTag = NewTicketTagClient(tx.config)
 	tx.TicketTemplate = NewTicketTemplateClient(tx.config)
+	tx.TicketView = NewTicketViewClient(tx.config)
 	tx.ToolInvocation = NewToolInvocationClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Workflow = NewWorkflowClient(tx.config)

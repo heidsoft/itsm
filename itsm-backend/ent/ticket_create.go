@@ -10,7 +10,10 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettemplate"
 	"itsm-backend/ent/workflowinstance"
@@ -233,6 +236,62 @@ func (tc *TicketCreate) SetNillableResolvedAt(t *time.Time) *TicketCreate {
 	return tc
 }
 
+// SetRating sets the "rating" field.
+func (tc *TicketCreate) SetRating(i int) *TicketCreate {
+	tc.mutation.SetRating(i)
+	return tc
+}
+
+// SetNillableRating sets the "rating" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableRating(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetRating(*i)
+	}
+	return tc
+}
+
+// SetRatingComment sets the "rating_comment" field.
+func (tc *TicketCreate) SetRatingComment(s string) *TicketCreate {
+	tc.mutation.SetRatingComment(s)
+	return tc
+}
+
+// SetNillableRatingComment sets the "rating_comment" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableRatingComment(s *string) *TicketCreate {
+	if s != nil {
+		tc.SetRatingComment(*s)
+	}
+	return tc
+}
+
+// SetRatedAt sets the "rated_at" field.
+func (tc *TicketCreate) SetRatedAt(t time.Time) *TicketCreate {
+	tc.mutation.SetRatedAt(t)
+	return tc
+}
+
+// SetNillableRatedAt sets the "rated_at" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableRatedAt(t *time.Time) *TicketCreate {
+	if t != nil {
+		tc.SetRatedAt(*t)
+	}
+	return tc
+}
+
+// SetRatedBy sets the "rated_by" field.
+func (tc *TicketCreate) SetRatedBy(i int) *TicketCreate {
+	tc.mutation.SetRatedBy(i)
+	return tc
+}
+
+// SetNillableRatedBy sets the "rated_by" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableRatedBy(i *int) *TicketCreate {
+	if i != nil {
+		tc.SetRatedBy(*i)
+	}
+	return tc
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (tc *TicketCreate) SetCreatedAt(t time.Time) *TicketCreate {
 	tc.mutation.SetCreatedAt(t)
@@ -346,6 +405,51 @@ func (tc *TicketCreate) AddSLAViolations(s ...*SLAViolation) *TicketCreate {
 	return tc.AddSLAViolationIDs(ids...)
 }
 
+// AddCommentIDs adds the "comments" edge to the TicketComment entity by IDs.
+func (tc *TicketCreate) AddCommentIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddCommentIDs(ids...)
+	return tc
+}
+
+// AddComments adds the "comments" edges to the TicketComment entity.
+func (tc *TicketCreate) AddComments(t ...*TicketComment) *TicketCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddCommentIDs(ids...)
+}
+
+// AddAttachmentIDs adds the "attachments" edge to the TicketAttachment entity by IDs.
+func (tc *TicketCreate) AddAttachmentIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddAttachmentIDs(ids...)
+	return tc
+}
+
+// AddAttachments adds the "attachments" edges to the TicketAttachment entity.
+func (tc *TicketCreate) AddAttachments(t ...*TicketAttachment) *TicketCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddAttachmentIDs(ids...)
+}
+
+// AddNotificationIDs adds the "notifications" edge to the TicketNotification entity by IDs.
+func (tc *TicketCreate) AddNotificationIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddNotificationIDs(ids...)
+	return tc
+}
+
+// AddNotifications adds the "notifications" edges to the TicketNotification entity.
+func (tc *TicketCreate) AddNotifications(t ...*TicketNotification) *TicketCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddNotificationIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tc *TicketCreate) Mutation() *TicketMutation {
 	return tc.mutation
@@ -439,6 +543,11 @@ func (tc *TicketCreate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Ticket.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := tc.mutation.Rating(); ok {
+		if err := ticket.RatingValidator(v); err != nil {
+			return &ValidationError{Name: "rating", err: fmt.Errorf(`ent: validator failed for field "Ticket.rating": %w`, err)}
+		}
+	}
 	if _, ok := tc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Ticket.created_at"`)}
 	}
@@ -518,6 +627,22 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.ResolvedAt(); ok {
 		_spec.SetField(ticket.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
+	}
+	if value, ok := tc.mutation.Rating(); ok {
+		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
+		_node.Rating = value
+	}
+	if value, ok := tc.mutation.RatingComment(); ok {
+		_spec.SetField(ticket.FieldRatingComment, field.TypeString, value)
+		_node.RatingComment = value
+	}
+	if value, ok := tc.mutation.RatedAt(); ok {
+		_spec.SetField(ticket.FieldRatedAt, field.TypeTime, value)
+		_node.RatedAt = value
+	}
+	if value, ok := tc.mutation.RatedBy(); ok {
+		_spec.SetField(ticket.FieldRatedBy, field.TypeInt, value)
+		_node.RatedBy = value
 	}
 	if value, ok := tc.mutation.CreatedAt(); ok {
 		_spec.SetField(ticket.FieldCreatedAt, field.TypeTime, value)
@@ -669,6 +794,54 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.CommentsTable,
+			Columns: []string{ticket.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.AttachmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.AttachmentsTable,
+			Columns: []string{ticket.AttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.NotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.NotificationsTable,
+			Columns: []string{ticket.NotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
