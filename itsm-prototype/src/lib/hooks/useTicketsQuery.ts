@@ -50,12 +50,25 @@ export const useTicketsQuery = (
   return useQuery({
     queryKey: ticketKeys.list(filters, pagination),
     queryFn: async () => {
+      try {
       const response = await ticketService.listTickets({
         page: pagination.current,
         page_size: pagination.pageSize,
         ...filters,
       });
-      return response;
+        // 确保返回的数据结构完整
+        return {
+          tickets: Array.isArray(response?.tickets) ? response.tickets : [],
+          total: response?.total || 0,
+          page: response?.page || pagination.current,
+          page_size: response?.page_size || pagination.pageSize,
+          total_pages: response?.total_pages || 0,
+        };
+      } catch (error) {
+        console.error('Failed to fetch tickets:', error);
+        // 返回默认值而不是抛出错误，让React Query处理
+        throw error;
+      }
     },
     enabled: true,
     staleTime: 2 * 60 * 1000, // 2分钟缓存
@@ -68,13 +81,25 @@ export const useTicketStatsQuery = () => {
   return useQuery({
     queryKey: ticketKeys.stats(),
     queryFn: async () => {
+      try {
       const response = await ticketService.getTicketStats();
+        // 确保所有字段都有默认值
+        return {
+          total: response?.total || 0,
+          open: response?.open || 0,
+          resolved: response?.resolved || 0,
+          highPriority: response?.high_priority || 0,
+        };
+      } catch (error) {
+        console.error('Failed to fetch ticket stats:', error);
+        // 返回默认值
       return {
-        total: response.total,
-        open: response.open,
-        resolved: response.resolved,
-        highPriority: response.high_priority,
+          total: 0,
+          open: 0,
+          resolved: 0,
+          highPriority: 0,
       };
+      }
     },
     staleTime: 1 * 60 * 1000, // 1分钟缓存
     gcTime: 3 * 60 * 1000, // 3分钟垃圾回收

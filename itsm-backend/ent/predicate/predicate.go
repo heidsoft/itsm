@@ -117,14 +117,32 @@ type Tenant func(*sql.Selector)
 // Ticket is the predicate function for ticket builders.
 type Ticket func(*sql.Selector)
 
+// TicketAssignmentRule is the predicate function for ticketassignmentrule builders.
+type TicketAssignmentRule func(*sql.Selector)
+
+// TicketAttachment is the predicate function for ticketattachment builders.
+type TicketAttachment func(*sql.Selector)
+
+// TicketAutomationRule is the predicate function for ticketautomationrule builders.
+type TicketAutomationRule func(*sql.Selector)
+
 // TicketCategory is the predicate function for ticketcategory builders.
 type TicketCategory func(*sql.Selector)
+
+// TicketComment is the predicate function for ticketcomment builders.
+type TicketComment func(*sql.Selector)
+
+// TicketNotification is the predicate function for ticketnotification builders.
+type TicketNotification func(*sql.Selector)
 
 // TicketTag is the predicate function for tickettag builders.
 type TicketTag func(*sql.Selector)
 
 // TicketTemplate is the predicate function for tickettemplate builders.
 type TicketTemplate func(*sql.Selector)
+
+// TicketView is the predicate function for ticketview builders.
+type TicketView func(*sql.Selector)
 
 // ToolInvocation is the predicate function for toolinvocation builders.
 type ToolInvocation func(*sql.Selector)

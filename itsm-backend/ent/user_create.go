@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/user"
 	"time"
 
@@ -166,6 +169,51 @@ func (uc *UserCreate) SetNillableDepartmentRefID(id *int) *UserCreate {
 // SetDepartmentRef sets the "department_ref" edge to the Department entity.
 func (uc *UserCreate) SetDepartmentRef(d *Department) *UserCreate {
 	return uc.SetDepartmentRefID(d.ID)
+}
+
+// AddTicketCommentIDs adds the "ticket_comments" edge to the TicketComment entity by IDs.
+func (uc *UserCreate) AddTicketCommentIDs(ids ...int) *UserCreate {
+	uc.mutation.AddTicketCommentIDs(ids...)
+	return uc
+}
+
+// AddTicketComments adds the "ticket_comments" edges to the TicketComment entity.
+func (uc *UserCreate) AddTicketComments(t ...*TicketComment) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTicketCommentIDs(ids...)
+}
+
+// AddTicketAttachmentIDs adds the "ticket_attachments" edge to the TicketAttachment entity by IDs.
+func (uc *UserCreate) AddTicketAttachmentIDs(ids ...int) *UserCreate {
+	uc.mutation.AddTicketAttachmentIDs(ids...)
+	return uc
+}
+
+// AddTicketAttachments adds the "ticket_attachments" edges to the TicketAttachment entity.
+func (uc *UserCreate) AddTicketAttachments(t ...*TicketAttachment) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTicketAttachmentIDs(ids...)
+}
+
+// AddTicketNotificationIDs adds the "ticket_notifications" edge to the TicketNotification entity by IDs.
+func (uc *UserCreate) AddTicketNotificationIDs(ids ...int) *UserCreate {
+	uc.mutation.AddTicketNotificationIDs(ids...)
+	return uc
+}
+
+// AddTicketNotifications adds the "ticket_notifications" edges to the TicketNotification entity.
+func (uc *UserCreate) AddTicketNotifications(t ...*TicketNotification) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTicketNotificationIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -365,6 +413,54 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.DepartmentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TicketCommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketCommentsTable,
+			Columns: []string{user.TicketCommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TicketAttachmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketAttachmentsTable,
+			Columns: []string{user.TicketAttachmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketattachment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TicketNotificationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TicketNotificationsTable,
+			Columns: []string{user.TicketNotificationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

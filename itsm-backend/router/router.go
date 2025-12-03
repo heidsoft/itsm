@@ -19,8 +19,13 @@ type RouterConfig struct {
 	Client    *ent.Client
 
 	// Controllers
-	TicketController       *controller.TicketController
-	IncidentController     *controller.IncidentController
+	TicketController          *controller.TicketController
+	TicketCommentController   *controller.TicketCommentController
+	TicketAttachmentController *controller.TicketAttachmentController
+	TicketNotificationController *controller.TicketNotificationController
+	TicketRatingController    *controller.TicketRatingController
+	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
+	IncidentController        *controller.IncidentController
 	SLAController          *controller.SLAController
 	AuthController         *controller.AuthController
 	UserController         *controller.UserController
@@ -93,6 +98,48 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.POST("/:id/resolve", config.TicketController.ResolveTicket)
 			tickets.POST("/:id/close", config.TicketController.CloseTicket)
 
+			// 工单评论
+			if config.TicketCommentController != nil {
+				tickets.GET("/:id/comments", config.TicketCommentController.ListTicketComments)
+				tickets.POST("/:id/comments", config.TicketCommentController.CreateTicketComment)
+				tickets.PUT("/:id/comments/:comment_id", config.TicketCommentController.UpdateTicketComment)
+				tickets.DELETE("/:id/comments/:comment_id", config.TicketCommentController.DeleteTicketComment)
+			}
+
+			// 工单附件
+			if config.TicketAttachmentController != nil {
+				tickets.GET("/:id/attachments", config.TicketAttachmentController.ListTicketAttachments)
+				tickets.POST("/:id/attachments", config.TicketAttachmentController.UploadAttachment)
+				tickets.GET("/:id/attachments/:attachment_id", config.TicketAttachmentController.DownloadAttachment)
+				tickets.GET("/:id/attachments/:attachment_id/preview", config.TicketAttachmentController.PreviewAttachment)
+				tickets.DELETE("/:id/attachments/:attachment_id", config.TicketAttachmentController.DeleteAttachment)
+			}
+
+			// 工单通知
+			if config.TicketNotificationController != nil {
+				tickets.GET("/:id/notifications", config.TicketNotificationController.ListTicketNotifications)
+				tickets.POST("/:id/notifications", config.TicketNotificationController.SendTicketNotification)
+			}
+
+			// 工单评分
+			if config.TicketRatingController != nil {
+				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
+				tickets.GET("/:id/rating", config.TicketRatingController.GetRating)
+				tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
+			}
+
+			// 智能分配
+			if config.TicketAssignmentSmartController != nil {
+				tickets.POST("/:id/auto-assign", middleware.RequirePermission("ticket", "assign"), config.TicketAssignmentSmartController.AutoAssign)
+				tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("ticket", "read"), config.TicketAssignmentSmartController.GetAssignRecommendations)
+				tickets.GET("/assignment-rules", middleware.RequirePermission("ticket", "read"), config.TicketAssignmentSmartController.ListAssignmentRules)
+				tickets.POST("/assignment-rules", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.CreateAssignmentRule)
+				tickets.GET("/assignment-rules/:id", middleware.RequirePermission("ticket", "read"), config.TicketAssignmentSmartController.GetAssignmentRule)
+				tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.UpdateAssignmentRule)
+				tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.DeleteAssignmentRule)
+				tickets.POST("/assignment-rules/test", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.TestAssignmentRule)
+			}
+
 			// 工单查询和统计
 			tickets.GET("/search", config.TicketController.SearchTickets)
 			tickets.GET("/stats", config.TicketController.GetTicketStats)
@@ -140,6 +187,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			users.GET("/:id", config.UserController.GetUser)
 			users.PUT("/:id", config.UserController.UpdateUser)
 			users.DELETE("/:id", config.UserController.DeleteUser)
+			// 用户通知偏好
+			if config.TicketNotificationController != nil {
+				users.GET("/:id/notification-preferences", config.TicketNotificationController.GetNotificationPreferences)
+				users.PUT("/:id/notification-preferences", config.TicketNotificationController.UpdateNotificationPreferences)
+			}
+		}
+
+		// 通知管理
+		if config.TicketNotificationController != nil {
+			notifications := tenant.(*gin.RouterGroup).Group("/notifications")
+			{
+				notifications.GET("", config.TicketNotificationController.ListUserNotifications)
+				notifications.PUT("/:id/read", config.TicketNotificationController.MarkNotificationRead)
+				notifications.PUT("/read-all", config.TicketNotificationController.MarkAllNotificationsRead)
+			}
 		}
 
 		// AI功能

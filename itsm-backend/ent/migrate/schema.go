@@ -1174,6 +1174,10 @@ var (
 		{Name: "sla_resolution_deadline", Type: field.TypeTime, Nullable: true},
 		{Name: "first_response_at", Type: field.TypeTime, Nullable: true},
 		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "rating", Type: field.TypeInt, Nullable: true},
+		{Name: "rating_comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "rated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "rated_by", Type: field.TypeInt, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
@@ -1191,39 +1195,124 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tickets_departments_tickets",
-				Columns:    []*schema.Column{TicketsColumns[15]},
+				Columns:    []*schema.Column{TicketsColumns[19]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_definitions_tickets",
-				Columns:    []*schema.Column{TicketsColumns[16]},
+				Columns:    []*schema.Column{TicketsColumns[20]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_tickets_related_tickets",
-				Columns:    []*schema.Column{TicketsColumns[17]},
+				Columns:    []*schema.Column{TicketsColumns[21]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_categories_tickets",
-				Columns:    []*schema.Column{TicketsColumns[18]},
+				Columns:    []*schema.Column{TicketsColumns[22]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[19]},
+				Columns:    []*schema.Column{TicketsColumns[23]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[20]},
+				Columns:    []*schema.Column{TicketsColumns[24]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TicketAssignmentRulesColumns holds the columns for the "ticket_assignment_rules" table.
+	TicketAssignmentRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "conditions", Type: field.TypeJSON, Nullable: true},
+		{Name: "actions", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "execution_count", Type: field.TypeInt, Default: 0},
+		{Name: "last_executed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// TicketAssignmentRulesTable holds the schema information for the "ticket_assignment_rules" table.
+	TicketAssignmentRulesTable = &schema.Table{
+		Name:       "ticket_assignment_rules",
+		Columns:    TicketAssignmentRulesColumns,
+		PrimaryKey: []*schema.Column{TicketAssignmentRulesColumns[0]},
+	}
+	// TicketAttachmentsColumns holds the columns for the "ticket_attachments" table.
+	TicketAttachmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "file_name", Type: field.TypeString},
+		{Name: "file_path", Type: field.TypeString},
+		{Name: "file_url", Type: field.TypeString, Nullable: true},
+		{Name: "file_size", Type: field.TypeInt},
+		{Name: "file_type", Type: field.TypeString},
+		{Name: "mime_type", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "uploaded_by", Type: field.TypeInt},
+	}
+	// TicketAttachmentsTable holds the schema information for the "ticket_attachments" table.
+	TicketAttachmentsTable = &schema.Table{
+		Name:       "ticket_attachments",
+		Columns:    TicketAttachmentsColumns,
+		PrimaryKey: []*schema.Column{TicketAttachmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_attachments_tickets_attachments",
+				Columns:    []*schema.Column{TicketAttachmentsColumns[9]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "ticket_attachments_users_ticket_attachments",
+				Columns:    []*schema.Column{TicketAttachmentsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TicketAutomationRulesColumns holds the columns for the "ticket_automation_rules" table.
+	TicketAutomationRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "conditions", Type: field.TypeJSON, Nullable: true},
+		{Name: "actions", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "execution_count", Type: field.TypeInt, Default: 0},
+		{Name: "last_executed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeInt},
+	}
+	// TicketAutomationRulesTable holds the schema information for the "ticket_automation_rules" table.
+	TicketAutomationRulesTable = &schema.Table{
+		Name:       "ticket_automation_rules",
+		Columns:    TicketAutomationRulesColumns,
+		PrimaryKey: []*schema.Column{TicketAutomationRulesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_automation_rules_users_creator",
+				Columns:    []*schema.Column{TicketAutomationRulesColumns[12]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -1266,6 +1355,73 @@ var (
 				Columns:    []*schema.Column{TicketCategoriesColumns[12]},
 				RefColumns: []*schema.Column{WorkflowsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TicketCommentsColumns holds the columns for the "ticket_comments" table.
+	TicketCommentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "is_internal", Type: field.TypeBool, Default: false},
+		{Name: "mentions", Type: field.TypeJSON, Nullable: true},
+		{Name: "attachments", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// TicketCommentsTable holds the schema information for the "ticket_comments" table.
+	TicketCommentsTable = &schema.Table{
+		Name:       "ticket_comments",
+		Columns:    TicketCommentsColumns,
+		PrimaryKey: []*schema.Column{TicketCommentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_comments_tickets_comments",
+				Columns:    []*schema.Column{TicketCommentsColumns[8]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "ticket_comments_users_ticket_comments",
+				Columns:    []*schema.Column{TicketCommentsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TicketNotificationsColumns holds the columns for the "ticket_notifications" table.
+	TicketNotificationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "type", Type: field.TypeString},
+		{Name: "channel", Type: field.TypeString, Default: "in_app"},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "sent_at", Type: field.TypeTime, Nullable: true},
+		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "ticket_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// TicketNotificationsTable holds the schema information for the "ticket_notifications" table.
+	TicketNotificationsTable = &schema.Table{
+		Name:       "ticket_notifications",
+		Columns:    TicketNotificationsColumns,
+		PrimaryKey: []*schema.Column{TicketNotificationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_notifications_tickets_notifications",
+				Columns:    []*schema.Column{TicketNotificationsColumns[9]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "ticket_notifications_users_ticket_notifications",
+				Columns:    []*schema.Column{TicketNotificationsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -1314,6 +1470,35 @@ var (
 		Name:       "ticket_templates",
 		Columns:    TicketTemplatesColumns,
 		PrimaryKey: []*schema.Column{TicketTemplatesColumns[0]},
+	}
+	// TicketViewsColumns holds the columns for the "ticket_views" table.
+	TicketViewsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "filters", Type: field.TypeJSON, Nullable: true},
+		{Name: "columns", Type: field.TypeJSON, Nullable: true},
+		{Name: "sort_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "group_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_shared", Type: field.TypeBool, Default: false},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeInt},
+	}
+	// TicketViewsTable holds the schema information for the "ticket_views" table.
+	TicketViewsTable = &schema.Table{
+		Name:       "ticket_views",
+		Columns:    TicketViewsColumns,
+		PrimaryKey: []*schema.Column{TicketViewsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ticket_views_users_creator",
+				Columns:    []*schema.Column{TicketViewsColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// ToolInvocationsColumns holds the columns for the "tool_invocations" table.
 	ToolInvocationsColumns = []*schema.Column{
@@ -1637,9 +1822,15 @@ var (
 		TeamsTable,
 		TenantsTable,
 		TicketsTable,
+		TicketAssignmentRulesTable,
+		TicketAttachmentsTable,
+		TicketAutomationRulesTable,
 		TicketCategoriesTable,
+		TicketCommentsTable,
+		TicketNotificationsTable,
 		TicketTagsTable,
 		TicketTemplatesTable,
+		TicketViewsTable,
 		ToolInvocationsTable,
 		UsersTable,
 		WorkflowsTable,
@@ -1672,10 +1863,18 @@ func init() {
 	TicketsTable.ForeignKeys[3].RefTable = TicketCategoriesTable
 	TicketsTable.ForeignKeys[4].RefTable = TicketTagsTable
 	TicketsTable.ForeignKeys[5].RefTable = TicketTemplatesTable
+	TicketAttachmentsTable.ForeignKeys[0].RefTable = TicketsTable
+	TicketAttachmentsTable.ForeignKeys[1].RefTable = UsersTable
+	TicketAutomationRulesTable.ForeignKeys[0].RefTable = UsersTable
 	TicketCategoriesTable.ForeignKeys[0].RefTable = DepartmentsTable
 	TicketCategoriesTable.ForeignKeys[1].RefTable = TicketCategoriesTable
 	TicketCategoriesTable.ForeignKeys[2].RefTable = WorkflowsTable
+	TicketCommentsTable.ForeignKeys[0].RefTable = TicketsTable
+	TicketCommentsTable.ForeignKeys[1].RefTable = UsersTable
+	TicketNotificationsTable.ForeignKeys[0].RefTable = TicketsTable
+	TicketNotificationsTable.ForeignKeys[1].RefTable = UsersTable
 	TicketTagsTable.ForeignKeys[0].RefTable = TicketsTable
+	TicketViewsTable.ForeignKeys[0].RefTable = UsersTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
 	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
 	UsersTable.ForeignKeys[1].RefTable = TeamsTable

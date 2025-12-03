@@ -66,5 +66,11 @@ func (User) Edges() []ent.Edge {
 			Ref("users").
 			Field("department_id").
 			Unique(),
+		edge.To("ticket_comments", TicketComment.Type).
+			Comment("工单评论"),
+		edge.To("ticket_attachments", TicketAttachment.Type).
+			Comment("工单附件"),
+		edge.To("ticket_notifications", TicketNotification.Type).
+			Comment("工单通知"),
 	}
 }

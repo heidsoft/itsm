@@ -110,7 +110,11 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       key: 'status',
       width: 120,
       render: (status: string) => {
-        const config = statusConfig[status];
+        const config = statusConfig[status] || {
+          color: '#666',
+          text: status || t('incidents.unknown'),
+          backgroundColor: '#f5f5f5',
+        };
         return (
           <span
             style={{
@@ -133,7 +137,11 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       key: 'priority',
       width: 100,
       render: (priority: string) => {
-        const config = priorityConfig[priority];
+        const config = priorityConfig[priority] || {
+          color: '#666',
+          text: priority || t('incidents.unknown'),
+          backgroundColor: '#f5f5f5',
+        };
         return (
           <span
             style={{
@@ -161,7 +169,10 @@ export const IncidentList: React.FC<IncidentListProps> = ({
           medium: { color: 'orange', text: t('incidents.impactMedium') },
           high: { color: 'red', text: t('incidents.impactHigh') },
         };
-        const config = impactConfig[impact] || { color: 'default', text: impact };
+        const config = impactConfig[impact] || {
+          color: 'default',
+          text: impact || t('incidents.unknown'),
+        };
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },

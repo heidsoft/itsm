@@ -41,6 +41,12 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeDepartmentRef holds the string denoting the department_ref edge name in mutations.
 	EdgeDepartmentRef = "department_ref"
+	// EdgeTicketComments holds the string denoting the ticket_comments edge name in mutations.
+	EdgeTicketComments = "ticket_comments"
+	// EdgeTicketAttachments holds the string denoting the ticket_attachments edge name in mutations.
+	EdgeTicketAttachments = "ticket_attachments"
+	// EdgeTicketNotifications holds the string denoting the ticket_notifications edge name in mutations.
+	EdgeTicketNotifications = "ticket_notifications"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -50,6 +56,27 @@ const (
 	DepartmentRefInverseTable = "departments"
 	// DepartmentRefColumn is the table column denoting the department_ref relation/edge.
 	DepartmentRefColumn = "department_id"
+	// TicketCommentsTable is the table that holds the ticket_comments relation/edge.
+	TicketCommentsTable = "ticket_comments"
+	// TicketCommentsInverseTable is the table name for the TicketComment entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketcomment" package.
+	TicketCommentsInverseTable = "ticket_comments"
+	// TicketCommentsColumn is the table column denoting the ticket_comments relation/edge.
+	TicketCommentsColumn = "user_id"
+	// TicketAttachmentsTable is the table that holds the ticket_attachments relation/edge.
+	TicketAttachmentsTable = "ticket_attachments"
+	// TicketAttachmentsInverseTable is the table name for the TicketAttachment entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketattachment" package.
+	TicketAttachmentsInverseTable = "ticket_attachments"
+	// TicketAttachmentsColumn is the table column denoting the ticket_attachments relation/edge.
+	TicketAttachmentsColumn = "uploaded_by"
+	// TicketNotificationsTable is the table that holds the ticket_notifications relation/edge.
+	TicketNotificationsTable = "ticket_notifications"
+	// TicketNotificationsInverseTable is the table name for the TicketNotification entity.
+	// It exists in this package in order to avoid circular dependency with the "ticketnotification" package.
+	TicketNotificationsInverseTable = "ticket_notifications"
+	// TicketNotificationsColumn is the table column denoting the ticket_notifications relation/edge.
+	TicketNotificationsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -215,10 +242,73 @@ func ByDepartmentRefField(field string, opts ...sql.OrderTermOption) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newDepartmentRefStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByTicketCommentsCount orders the results by ticket_comments count.
+func ByTicketCommentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketCommentsStep(), opts...)
+	}
+}
+
+// ByTicketComments orders the results by ticket_comments terms.
+func ByTicketComments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketCommentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTicketAttachmentsCount orders the results by ticket_attachments count.
+func ByTicketAttachmentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketAttachmentsStep(), opts...)
+	}
+}
+
+// ByTicketAttachments orders the results by ticket_attachments terms.
+func ByTicketAttachments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketAttachmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTicketNotificationsCount orders the results by ticket_notifications count.
+func ByTicketNotificationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketNotificationsStep(), opts...)
+	}
+}
+
+// ByTicketNotifications orders the results by ticket_notifications terms.
+func ByTicketNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DepartmentRefInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentRefTable, DepartmentRefColumn),
+	)
+}
+func newTicketCommentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketCommentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketCommentsTable, TicketCommentsColumn),
+	)
+}
+func newTicketAttachmentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketAttachmentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketAttachmentsTable, TicketAttachmentsColumn),
+	)
+}
+func newTicketNotificationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketNotificationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TicketNotificationsTable, TicketNotificationsColumn),
 	)
 }

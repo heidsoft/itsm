@@ -140,6 +140,26 @@ func ResolvedAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldResolvedAt, v))
 }
 
+// Rating applies equality check predicate on the "rating" field. It's identical to RatingEQ.
+func Rating(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRating, v))
+}
+
+// RatingComment applies equality check predicate on the "rating_comment" field. It's identical to RatingCommentEQ.
+func RatingComment(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRatingComment, v))
+}
+
+// RatedAt applies equality check predicate on the "rated_at" field. It's identical to RatedAtEQ.
+func RatedAt(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRatedAt, v))
+}
+
+// RatedBy applies equality check predicate on the "rated_by" field. It's identical to RatedByEQ.
+func RatedBy(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRatedBy, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -965,6 +985,231 @@ func ResolvedAtNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldResolvedAt))
 }
 
+// RatingEQ applies the EQ predicate on the "rating" field.
+func RatingEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRating, v))
+}
+
+// RatingNEQ applies the NEQ predicate on the "rating" field.
+func RatingNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldRating, v))
+}
+
+// RatingIn applies the In predicate on the "rating" field.
+func RatingIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldRating, vs...))
+}
+
+// RatingNotIn applies the NotIn predicate on the "rating" field.
+func RatingNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldRating, vs...))
+}
+
+// RatingGT applies the GT predicate on the "rating" field.
+func RatingGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldRating, v))
+}
+
+// RatingGTE applies the GTE predicate on the "rating" field.
+func RatingGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldRating, v))
+}
+
+// RatingLT applies the LT predicate on the "rating" field.
+func RatingLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldRating, v))
+}
+
+// RatingLTE applies the LTE predicate on the "rating" field.
+func RatingLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldRating, v))
+}
+
+// RatingIsNil applies the IsNil predicate on the "rating" field.
+func RatingIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldRating))
+}
+
+// RatingNotNil applies the NotNil predicate on the "rating" field.
+func RatingNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldRating))
+}
+
+// RatingCommentEQ applies the EQ predicate on the "rating_comment" field.
+func RatingCommentEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRatingComment, v))
+}
+
+// RatingCommentNEQ applies the NEQ predicate on the "rating_comment" field.
+func RatingCommentNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldRatingComment, v))
+}
+
+// RatingCommentIn applies the In predicate on the "rating_comment" field.
+func RatingCommentIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldRatingComment, vs...))
+}
+
+// RatingCommentNotIn applies the NotIn predicate on the "rating_comment" field.
+func RatingCommentNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldRatingComment, vs...))
+}
+
+// RatingCommentGT applies the GT predicate on the "rating_comment" field.
+func RatingCommentGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldRatingComment, v))
+}
+
+// RatingCommentGTE applies the GTE predicate on the "rating_comment" field.
+func RatingCommentGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldRatingComment, v))
+}
+
+// RatingCommentLT applies the LT predicate on the "rating_comment" field.
+func RatingCommentLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldRatingComment, v))
+}
+
+// RatingCommentLTE applies the LTE predicate on the "rating_comment" field.
+func RatingCommentLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldRatingComment, v))
+}
+
+// RatingCommentContains applies the Contains predicate on the "rating_comment" field.
+func RatingCommentContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldRatingComment, v))
+}
+
+// RatingCommentHasPrefix applies the HasPrefix predicate on the "rating_comment" field.
+func RatingCommentHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldRatingComment, v))
+}
+
+// RatingCommentHasSuffix applies the HasSuffix predicate on the "rating_comment" field.
+func RatingCommentHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldRatingComment, v))
+}
+
+// RatingCommentIsNil applies the IsNil predicate on the "rating_comment" field.
+func RatingCommentIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldRatingComment))
+}
+
+// RatingCommentNotNil applies the NotNil predicate on the "rating_comment" field.
+func RatingCommentNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldRatingComment))
+}
+
+// RatingCommentEqualFold applies the EqualFold predicate on the "rating_comment" field.
+func RatingCommentEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldRatingComment, v))
+}
+
+// RatingCommentContainsFold applies the ContainsFold predicate on the "rating_comment" field.
+func RatingCommentContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldRatingComment, v))
+}
+
+// RatedAtEQ applies the EQ predicate on the "rated_at" field.
+func RatedAtEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRatedAt, v))
+}
+
+// RatedAtNEQ applies the NEQ predicate on the "rated_at" field.
+func RatedAtNEQ(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldRatedAt, v))
+}
+
+// RatedAtIn applies the In predicate on the "rated_at" field.
+func RatedAtIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldRatedAt, vs...))
+}
+
+// RatedAtNotIn applies the NotIn predicate on the "rated_at" field.
+func RatedAtNotIn(vs ...time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldRatedAt, vs...))
+}
+
+// RatedAtGT applies the GT predicate on the "rated_at" field.
+func RatedAtGT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldRatedAt, v))
+}
+
+// RatedAtGTE applies the GTE predicate on the "rated_at" field.
+func RatedAtGTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldRatedAt, v))
+}
+
+// RatedAtLT applies the LT predicate on the "rated_at" field.
+func RatedAtLT(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldRatedAt, v))
+}
+
+// RatedAtLTE applies the LTE predicate on the "rated_at" field.
+func RatedAtLTE(v time.Time) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldRatedAt, v))
+}
+
+// RatedAtIsNil applies the IsNil predicate on the "rated_at" field.
+func RatedAtIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldRatedAt))
+}
+
+// RatedAtNotNil applies the NotNil predicate on the "rated_at" field.
+func RatedAtNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldRatedAt))
+}
+
+// RatedByEQ applies the EQ predicate on the "rated_by" field.
+func RatedByEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldRatedBy, v))
+}
+
+// RatedByNEQ applies the NEQ predicate on the "rated_by" field.
+func RatedByNEQ(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldRatedBy, v))
+}
+
+// RatedByIn applies the In predicate on the "rated_by" field.
+func RatedByIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldRatedBy, vs...))
+}
+
+// RatedByNotIn applies the NotIn predicate on the "rated_by" field.
+func RatedByNotIn(vs ...int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldRatedBy, vs...))
+}
+
+// RatedByGT applies the GT predicate on the "rated_by" field.
+func RatedByGT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldRatedBy, v))
+}
+
+// RatedByGTE applies the GTE predicate on the "rated_by" field.
+func RatedByGTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldRatedBy, v))
+}
+
+// RatedByLT applies the LT predicate on the "rated_by" field.
+func RatedByLT(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldRatedBy, v))
+}
+
+// RatedByLTE applies the LTE predicate on the "rated_by" field.
+func RatedByLTE(v int) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldRatedBy, v))
+}
+
+// RatedByIsNil applies the IsNil predicate on the "rated_by" field.
+func RatedByIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldRatedBy))
+}
+
+// RatedByNotNil applies the NotNil predicate on the "rated_by" field.
+func RatedByNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldRatedBy))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldCreatedAt, v))
@@ -1244,6 +1489,75 @@ func HasSLAViolations() predicate.Ticket {
 func HasSLAViolationsWith(preds ...predicate.SLAViolation) predicate.Ticket {
 	return predicate.Ticket(func(s *sql.Selector) {
 		step := newSLAViolationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasComments applies the HasEdge predicate on the "comments" edge.
+func HasComments() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCommentsWith applies the HasEdge predicate on the "comments" edge with a given conditions (other predicates).
+func HasCommentsWith(preds ...predicate.TicketComment) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newCommentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAttachments applies the HasEdge predicate on the "attachments" edge.
+func HasAttachments() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AttachmentsTable, AttachmentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAttachmentsWith applies the HasEdge predicate on the "attachments" edge with a given conditions (other predicates).
+func HasAttachmentsWith(preds ...predicate.TicketAttachment) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newAttachmentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasNotifications applies the HasEdge predicate on the "notifications" edge.
+func HasNotifications() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNotificationsWith applies the HasEdge predicate on the "notifications" edge with a given conditions (other predicates).
+func HasNotificationsWith(preds ...predicate.TicketNotification) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newNotificationsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

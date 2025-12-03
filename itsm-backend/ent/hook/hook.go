@@ -452,6 +452,42 @@ func (f TicketFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketMutation", m)
 }
 
+// The TicketAssignmentRuleFunc type is an adapter to allow the use of ordinary
+// function as TicketAssignmentRule mutator.
+type TicketAssignmentRuleFunc func(context.Context, *ent.TicketAssignmentRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketAssignmentRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketAssignmentRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketAssignmentRuleMutation", m)
+}
+
+// The TicketAttachmentFunc type is an adapter to allow the use of ordinary
+// function as TicketAttachment mutator.
+type TicketAttachmentFunc func(context.Context, *ent.TicketAttachmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketAttachmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketAttachmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketAttachmentMutation", m)
+}
+
+// The TicketAutomationRuleFunc type is an adapter to allow the use of ordinary
+// function as TicketAutomationRule mutator.
+type TicketAutomationRuleFunc func(context.Context, *ent.TicketAutomationRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketAutomationRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketAutomationRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketAutomationRuleMutation", m)
+}
+
 // The TicketCategoryFunc type is an adapter to allow the use of ordinary
 // function as TicketCategory mutator.
 type TicketCategoryFunc func(context.Context, *ent.TicketCategoryMutation) (ent.Value, error)
@@ -462,6 +498,30 @@ func (f TicketCategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketCategoryMutation", m)
+}
+
+// The TicketCommentFunc type is an adapter to allow the use of ordinary
+// function as TicketComment mutator.
+type TicketCommentFunc func(context.Context, *ent.TicketCommentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketCommentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketCommentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketCommentMutation", m)
+}
+
+// The TicketNotificationFunc type is an adapter to allow the use of ordinary
+// function as TicketNotification mutator.
+type TicketNotificationFunc func(context.Context, *ent.TicketNotificationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketNotificationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketNotificationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketNotificationMutation", m)
 }
 
 // The TicketTagFunc type is an adapter to allow the use of ordinary
@@ -486,6 +546,18 @@ func (f TicketTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketTemplateMutation", m)
+}
+
+// The TicketViewFunc type is an adapter to allow the use of ordinary
+// function as TicketView mutator.
+type TicketViewFunc func(context.Context, *ent.TicketViewMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TicketViewFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TicketViewMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TicketViewMutation", m)
 }
 
 // The ToolInvocationFunc type is an adapter to allow the use of ordinary

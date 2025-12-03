@@ -723,6 +723,75 @@ func HasDepartmentRefWith(preds ...predicate.Department) predicate.User {
 	})
 }
 
+// HasTicketComments applies the HasEdge predicate on the "ticket_comments" edge.
+func HasTicketComments() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketCommentsTable, TicketCommentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketCommentsWith applies the HasEdge predicate on the "ticket_comments" edge with a given conditions (other predicates).
+func HasTicketCommentsWith(preds ...predicate.TicketComment) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTicketCommentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTicketAttachments applies the HasEdge predicate on the "ticket_attachments" edge.
+func HasTicketAttachments() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketAttachmentsTable, TicketAttachmentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketAttachmentsWith applies the HasEdge predicate on the "ticket_attachments" edge with a given conditions (other predicates).
+func HasTicketAttachmentsWith(preds ...predicate.TicketAttachment) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTicketAttachmentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTicketNotifications applies the HasEdge predicate on the "ticket_notifications" edge.
+func HasTicketNotifications() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TicketNotificationsTable, TicketNotificationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTicketNotificationsWith applies the HasEdge predicate on the "ticket_notifications" edge with a given conditions (other predicates).
+func HasTicketNotificationsWith(preds ...predicate.TicketNotification) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTicketNotificationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

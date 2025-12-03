@@ -84,14 +84,14 @@ export function useThrottle<T>(value: T, limit: number): T {
 
 // ==================== 优化的搜索输入框组件 ====================
 
-interface OptimizedSearchInputProps {
+interface SearchInputProps {
   placeholder?: string;
   onSearch: (value: string) => void;
   loading?: boolean;
   debounceMs?: number;
 }
 
-export const OptimizedSearchInput = memo<OptimizedSearchInputProps>(
+export const SearchInput = memo<SearchInputProps>(
   ({ placeholder = '搜索...', onSearch, loading = false, debounceMs = 300 }) => {
     const [value, setValue] = useState('');
     const debouncedValue = useDebounce(value, debounceMs);
@@ -126,16 +126,16 @@ export const OptimizedSearchInput = memo<OptimizedSearchInputProps>(
   }
 );
 
-OptimizedSearchInput.displayName = 'OptimizedSearchInput';
+SearchInput.displayName = 'SearchInput';
 
 // ==================== 优化的状态标签组件 ====================
 
-interface OptimizedStatusTagProps {
+interface StatusTagProps {
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   size?: 'small' | 'default' | 'large';
 }
 
-export const OptimizedStatusTag = memo<OptimizedStatusTagProps>(({ status, size = 'default' }) => {
+export const StatusTag = memo<StatusTagProps>(({ status, size = 'default' }) => {
   // 使用useMemo缓存状态配置
   const statusConfig = useMemo(() => {
     const configs = {
@@ -154,11 +154,11 @@ export const OptimizedStatusTag = memo<OptimizedStatusTagProps>(({ status, size 
   );
 });
 
-OptimizedStatusTag.displayName = 'OptimizedStatusTag';
+StatusTag.displayName = 'StatusTag';
 
 // ==================== 优化的操作按钮组 ====================
 
-interface OptimizedTicketActionsProps {
+interface TicketActionsProps {
   ticketId: number;
   onEdit: (id: number) => void;
   onView: (id: number) => void;
@@ -166,7 +166,7 @@ interface OptimizedTicketActionsProps {
   permissions?: string[];
 }
 
-export const OptimizedTicketActions = memo<OptimizedTicketActionsProps>(
+export const TicketActions = memo<TicketActionsProps>(
   ({ ticketId, onEdit, onView, onDelete, permissions = [] }) => {
     // 使用useMemo缓存权限检查结果
     const canEdit = useMemo(() => permissions.includes('ticket:edit'), [permissions]);
@@ -197,16 +197,16 @@ export const OptimizedTicketActions = memo<OptimizedTicketActionsProps>(
   }
 );
 
-OptimizedTicketActions.displayName = 'OptimizedTicketActions';
+TicketActions.displayName = 'TicketActions';
 
 // ==================== 优化的过滤器组件 ====================
 
-interface OptimizedTicketFiltersProps {
+interface TicketFiltersPanelProps {
   onFilterChange: (filters: Record<string, any>) => void;
   loading?: boolean;
 }
 
-export const OptimizedTicketFilters = memo<OptimizedTicketFiltersProps>(
+export const TicketFiltersPanel = memo<TicketFiltersPanelProps>(
   ({ onFilterChange, loading = false }) => {
     const [filters, setFilters] = useState({
       status: undefined,
@@ -288,7 +288,7 @@ export const OptimizedTicketFilters = memo<OptimizedTicketFiltersProps>(
   }
 );
 
-OptimizedTicketFilters.displayName = 'OptimizedTicketFilters';
+TicketFiltersPanel.displayName = 'TicketFiltersPanel';
 
 // ==================== 优化的工单列表组件 ====================
 
@@ -302,7 +302,7 @@ interface Ticket {
   updated_at: string;
 }
 
-interface OptimizedTicketListProps {
+interface TicketTableProps {
   tickets: Ticket[];
   loading?: boolean;
   onEdit: (id: number) => void;
@@ -311,7 +311,7 @@ interface OptimizedTicketListProps {
   permissions?: string[];
 }
 
-export const OptimizedTicketList = memo<OptimizedTicketListProps>(
+export const TicketTable = memo<TicketTableProps>(
   ({ tickets, loading = false, onEdit, onView, onDelete, permissions = [] }) => {
     // 使用useMemo缓存列配置
     const columns = useMemo(
@@ -335,7 +335,7 @@ export const OptimizedTicketList = memo<OptimizedTicketListProps>(
           dataIndex: 'status',
           key: 'status',
           width: 100,
-          render: (status: Ticket['status']) => <OptimizedStatusTag status={status} />,
+          render: (status: Ticket['status']) => <StatusTag status={status} />,
           filters: [
             { text: '开放', value: 'open' },
             { text: '处理中', value: 'in_progress' },
@@ -385,7 +385,7 @@ export const OptimizedTicketList = memo<OptimizedTicketListProps>(
           key: 'actions',
           width: 120,
           render: (_: any, record: Ticket) => (
-            <OptimizedTicketActions
+            <TicketActions
               ticketId={record.id}
               onEdit={onEdit}
               onView={onView}
@@ -424,15 +424,15 @@ export const OptimizedTicketList = memo<OptimizedTicketListProps>(
   }
 );
 
-OptimizedTicketList.displayName = 'OptimizedTicketList';
+TicketTable.displayName = 'TicketTable';
 
 // ==================== 优化的工单管理页面 ====================
 
-interface OptimizedTicketManagementPageProps {
+interface TicketManagementViewProps {
   initialTickets?: Ticket[];
 }
 
-export const OptimizedTicketManagementPage = memo<OptimizedTicketManagementPageProps>(
+export const TicketManagementView = memo<TicketManagementViewProps>(
   ({ initialTickets = [] }) => {
     const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
     const [loading, setLoading] = useState(false);
@@ -512,7 +512,7 @@ export const OptimizedTicketManagementPage = memo<OptimizedTicketManagementPageP
 
         <Card>
           <div style={{ marginBottom: 16 }}>
-            <OptimizedSearchInput
+            <SearchInput
               placeholder='搜索工单...'
               onSearch={handleSearch}
               loading={loading}
@@ -520,9 +520,9 @@ export const OptimizedTicketManagementPage = memo<OptimizedTicketManagementPageP
             />
           </div>
 
-          <OptimizedTicketFilters onFilterChange={handleFilterChange} loading={loading} />
+          <TicketFiltersPanel onFilterChange={handleFilterChange} loading={loading} />
 
-          <OptimizedTicketList
+          <TicketTable
             tickets={filteredTickets}
             loading={loading}
             onEdit={handleEdit}
@@ -542,16 +542,16 @@ export const OptimizedTicketManagementPage = memo<OptimizedTicketManagementPageP
   }
 );
 
-OptimizedTicketManagementPage.displayName = 'OptimizedTicketManagementPage';
+TicketManagementView.displayName = 'TicketManagementView';
 
 export default {
   usePerformanceMonitor,
   useDebounce,
   useThrottle,
-  OptimizedSearchInput,
-  OptimizedStatusTag,
-  OptimizedTicketActions,
-  OptimizedTicketFilters,
-  OptimizedTicketList,
-  OptimizedTicketManagementPage,
+  SearchInput,
+  StatusTag,
+  TicketActions,
+  TicketFiltersPanel,
+  TicketTable,
+  TicketManagementView,
 };

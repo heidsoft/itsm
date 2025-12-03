@@ -176,6 +176,30 @@ func main() {
 
 	// 核心控制器
 	ticketController := controller.NewTicketController(ticketService, sugar)
+	// 工单评论服务
+	ticketCommentService := service.NewTicketCommentService(client, sugar)
+	ticketCommentController := controller.NewTicketCommentController(ticketCommentService, sugar)
+	// 工单附件服务
+	ticketAttachmentService := service.NewTicketAttachmentService(client, sugar)
+	ticketAttachmentController := controller.NewTicketAttachmentController(ticketAttachmentService, sugar)
+	// 工单通知服务
+	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
+	ticketNotificationController := controller.NewTicketNotificationController(ticketNotificationService, sugar)
+
+	// 工单评分服务
+	ticketRatingService := service.NewTicketRatingService(client, sugar)
+	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)
+
+	// 工单分配服务
+	ticketAssignmentService := service.NewTicketAssignmentService(client)
+	ticketAssignmentRuleService := service.NewTicketAssignmentRuleService(client, sugar)
+	ticketAssignmentSmartService := service.NewTicketAssignmentSmartService(client, sugar, ticketAssignmentService, ticketAssignmentRuleService)
+	ticketAssignmentSmartController := controller.NewTicketAssignmentSmartController(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar)
+
+	// 设置通知服务的依赖注入
+	ticketService.SetNotificationService(ticketNotificationService)
+	ticketCommentService.SetNotificationService(ticketNotificationService)
+	ticketRatingService.SetNotificationService(ticketNotificationService)
 	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, sugar)
 	slaController := controller.NewSLAController(slaService)
 	userController := controller.NewUserController(userService, sugar)
@@ -206,23 +230,28 @@ func main() {
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
 
 	routerConfig := &router.RouterConfig{
-		JWTSecret:              cfg.JWT.Secret,
-		Logger:                 sugar,
-		Client:                 client,
-		TicketController:       ticketController,
-		IncidentController:     incidentController,
-		SLAController:          slaController,
-		AuthController:         authController,
-		UserController:         userController,
-		AIController:           aiController,
-		AuditLogController:     auditLogController,
-		BPMNWorkflowController: bpmnWorkflowController,
-		DashboardHandler:       dashboardHandler,
-		DepartmentController:   departmentController,
-		ProjectController:      projectController,
-		ApplicationController:  applicationController,
-		TeamController:         teamController,
-		TagController:          tagController,
+		JWTSecret:                    cfg.JWT.Secret,
+		Logger:                       sugar,
+		Client:                       client,
+		TicketController:             ticketController,
+		TicketCommentController:      ticketCommentController,
+		TicketAttachmentController:   ticketAttachmentController,
+		TicketNotificationController: ticketNotificationController,
+		TicketRatingController:       ticketRatingController,
+		TicketAssignmentSmartController: ticketAssignmentSmartController,
+		IncidentController:           incidentController,
+		SLAController:                slaController,
+		AuthController:               authController,
+		UserController:               userController,
+		AIController:                 aiController,
+		AuditLogController:           auditLogController,
+		BPMNWorkflowController:       bpmnWorkflowController,
+		DashboardHandler:             dashboardHandler,
+		DepartmentController:         departmentController,
+		ProjectController:            projectController,
+		ApplicationController:        applicationController,
+		TeamController:               teamController,
+		TagController:                tagController,
 	}
 
 	// SetupRoutes函数配置Gin路由，定义API端点
