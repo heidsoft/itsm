@@ -288,7 +288,7 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
       onCancel={handleCancel}
       footer={null}
       width={800}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="space-y-6">
         {/* 模板下载 */}

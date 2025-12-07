@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"itsm-backend/common"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -99,15 +100,42 @@ type RecentActivity struct {
 	Status      string `json:"status"`
 }
 
+// ResponseTimeDistributionData 响应时间分布数据
+type ResponseTimeDistributionData struct {
+	TimeRange  string  `json:"timeRange"`
+	Count      int     `json:"count"`
+	Percentage float64 `json:"percentage"`
+	AvgTime    float64 `json:"avgTime,omitempty"`
+}
+
+// TeamWorkloadData 团队工作负载数据
+type TeamWorkloadData struct {
+	Assignee        string  `json:"assignee"`
+	TicketCount     int     `json:"ticketCount"`
+	AvgResponseTime float64 `json:"avgResponseTime"`
+	CompletionRate  float64 `json:"completionRate"`
+	ActiveTickets   int     `json:"activeTickets,omitempty"`
+}
+
+// PeakHourData 高峰时段数据
+type PeakHourData struct {
+	Hour            string  `json:"hour"`
+	Count           int     `json:"count"`
+	AvgResponseTime float64 `json:"avgResponseTime,omitempty"`
+}
+
 // DashboardOverview Dashboard概览数据
 type DashboardOverview struct {
-	KPIMetrics            []KPIMetric                `json:"kpiMetrics"`
-	TicketTrend           []TicketTrendData          `json:"ticketTrend"`
-	IncidentDistribution  []IncidentDistributionData `json:"incidentDistribution"`
-	SLAData               []SLAData                  `json:"slaData"`
-	SatisfactionData      []SatisfactionData         `json:"satisfactionData"`
-	QuickActions          []QuickAction              `json:"quickActions"`
-	RecentActivities      []RecentActivity           `json:"recentActivities"`
+	KPIMetrics              []KPIMetric                    `json:"kpiMetrics"`
+	TicketTrend             []TicketTrendData              `json:"ticketTrend"`
+	IncidentDistribution    []IncidentDistributionData    `json:"incidentDistribution"`
+	SLAData                 []SLAData                      `json:"slaData"`
+	SatisfactionData        []SatisfactionData             `json:"satisfactionData"`
+	QuickActions            []QuickAction                  `json:"quickActions"`
+	RecentActivities        []RecentActivity               `json:"recentActivities"`
+	ResponseTimeDistribution []ResponseTimeDistributionData `json:"responseTimeDistribution,omitempty"`
+	TeamWorkload            []TeamWorkloadData             `json:"teamWorkload,omitempty"`
+	PeakHours               []PeakHourData                 `json:"peakHours,omitempty"`
 }
 
 // GetOverview 获取Dashboard概览数据
@@ -144,16 +172,20 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 
 	// 转换为Handler期望的格式
 	overview := DashboardOverview{
-		KPIMetrics:            convertKPIMetrics(overviewData.KPIMetrics),
-		TicketTrend:           convertTicketTrend(overviewData.TicketTrend),
-		IncidentDistribution:  convertIncidentDistribution(overviewData.IncidentDistribution),
-		SLAData:               convertSLAData(overviewData.SLAData),
-		SatisfactionData:     convertSatisfactionData(overviewData.SatisfactionData),
-		QuickActions:         convertQuickActions(overviewData.QuickActions),
-		RecentActivities:     convertRecentActivities(overviewData.RecentActivities),
+		KPIMetrics:              convertKPIMetrics(overviewData.KPIMetrics),
+		TicketTrend:               convertTicketTrend(overviewData.TicketTrend),
+		IncidentDistribution:      convertIncidentDistribution(overviewData.IncidentDistribution),
+		SLAData:                   convertSLAData(overviewData.SLAData),
+		SatisfactionData:           convertSatisfactionData(overviewData.SatisfactionData),
+		QuickActions:               convertQuickActions(overviewData.QuickActions),
+		RecentActivities:          convertRecentActivities(overviewData.RecentActivities),
+		ResponseTimeDistribution:   convertResponseTimeDistribution(overviewData.ResponseTimeDistribution),
+		TeamWorkload:              convertTeamWorkload(overviewData.TeamWorkload),
+		PeakHours:                 convertPeakHours(overviewData.PeakHours),
 	}
 
-	c.JSON(http.StatusOK, overview)
+	// 使用统一的响应格式
+	common.Success(c, overview)
 }
 
 // 转换函数：将Service层的数据结构转换为Handler层的数据结构
@@ -252,6 +284,45 @@ func convertSatisfactionData(satisfactionData []service.SatisfactionData) []Sati
 			Month:     s.Month,
 			Rating:    s.Rating,
 			Responses: s.Responses,
+		}
+	}
+	return result
+}
+
+func convertResponseTimeDistribution(data []service.ResponseTimeDistributionData) []ResponseTimeDistributionData {
+	result := make([]ResponseTimeDistributionData, len(data))
+	for i, d := range data {
+		result[i] = ResponseTimeDistributionData{
+			TimeRange:  d.TimeRange,
+			Count:      d.Count,
+			Percentage: d.Percentage,
+			AvgTime:    d.AvgTime,
+		}
+	}
+	return result
+}
+
+func convertTeamWorkload(data []service.TeamWorkloadData) []TeamWorkloadData {
+	result := make([]TeamWorkloadData, len(data))
+	for i, d := range data {
+		result[i] = TeamWorkloadData{
+			Assignee:        d.Assignee,
+			TicketCount:     d.TicketCount,
+			AvgResponseTime: d.AvgResponseTime,
+			CompletionRate:  d.CompletionRate,
+			ActiveTickets:   d.ActiveTickets,
+		}
+	}
+	return result
+}
+
+func convertPeakHours(data []service.PeakHourData) []PeakHourData {
+	result := make([]PeakHourData, len(data))
+	for i, d := range data {
+		result[i] = PeakHourData{
+			Hour:            d.Hour,
+			Count:           d.Count,
+			AvgResponseTime: d.AvgResponseTime,
 		}
 	}
 	return result

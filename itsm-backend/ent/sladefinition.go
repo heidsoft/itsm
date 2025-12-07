@@ -58,9 +58,11 @@ type SLADefinitionEdges struct {
 	Metrics []*SLAMetric `json:"metrics,omitempty"`
 	// 关联工单
 	Tickets []*Ticket `json:"tickets,omitempty"`
+	// SLA预警规则
+	AlertRules []*SLAAlertRule `json:"alert_rules,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ViolationsOrErr returns the Violations value or an error if the edge
@@ -88,6 +90,15 @@ func (e SLADefinitionEdges) TicketsOrErr() ([]*Ticket, error) {
 		return e.Tickets, nil
 	}
 	return nil, &NotLoadedError{edge: "tickets"}
+}
+
+// AlertRulesOrErr returns the AlertRules value or an error if the edge
+// was not loaded in eager-loading.
+func (e SLADefinitionEdges) AlertRulesOrErr() ([]*SLAAlertRule, error) {
+	if e.loadedTypes[3] {
+		return e.AlertRules, nil
+	}
+	return nil, &NotLoadedError{edge: "alert_rules"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -236,6 +247,11 @@ func (sd *SLADefinition) QueryMetrics() *SLAMetricQuery {
 // QueryTickets queries the "tickets" edge of the SLADefinition entity.
 func (sd *SLADefinition) QueryTickets() *TicketQuery {
 	return NewSLADefinitionClient(sd.config).QueryTickets(sd)
+}
+
+// QueryAlertRules queries the "alert_rules" edge of the SLADefinition entity.
+func (sd *SLADefinition) QueryAlertRules() *SLAAlertRuleQuery {
+	return NewSLADefinitionClient(sd.config).QueryAlertRules(sd)
 }
 
 // Update returns a builder for updating this SLADefinition.

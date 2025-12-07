@@ -7,6 +7,7 @@ import { Plus, FileText, Download, Upload, Settings, MoreHorizontal } from 'luci
 import { TicketStats } from '@/components/business/TicketStats';
 import { TicketFilters } from '@/components/business/TicketFilters';
 import { TicketTable } from '@/components/business/TicketTable';
+import { TicketKanbanBoard } from '@/components/business/TicketKanbanBoard';
 import { TicketModal, TicketTemplateModal } from '@/components/business/TicketModal';
 import { TicketAssociation } from '@/components/business/TicketAssociation';
 import { SatisfactionDashboard } from '@/components/business/SatisfactionDashboard';
@@ -35,6 +36,7 @@ export default function TicketsPage() {
     total: 0,
   });
   const [currentViewId, setCurrentViewId] = useState<number | undefined>();
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [batchConfirmVisible, setBatchConfirmVisible] = useState(false);
   const [batchOperationType, setBatchOperationType] = useState<
     'delete' | 'assign' | 'updateStatus' | 'updatePriority' | 'export' | 'archive'
@@ -115,6 +117,34 @@ export default function TicketsPage() {
   const handleViewActivity = useCallback((ticket: Ticket) => {
     console.log('View activity log:', ticket);
   }, []);
+
+  // 处理看板状态变更
+  const handleKanbanStatusChange = useCallback(
+    async (ticketId: number, newStatus: string) => {
+      try {
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (!ticket) return;
+
+        await updateTicketMutation.mutateAsync({
+          id: String(ticketId),
+          data: { status: newStatus as any },
+        });
+      } catch (error) {
+        console.error('Failed to update ticket status:', error);
+        throw error;
+      }
+    },
+    [tickets, updateTicketMutation]
+  );
+
+  // 处理看板工单点击
+  const handleKanbanTicketClick = useCallback(
+    (ticket: Ticket) => {
+      // 跳转到工单详情页
+      window.location.href = `/tickets/${ticket.id}`;
+    },
+    []
+  );
 
   const handleBatchDelete = useCallback(() => {
     if (selectedRowKeys.length === 0) {
@@ -354,13 +384,14 @@ export default function TicketsPage() {
         <ErrorBoundary>
           <div className='bg-white rounded-lg border border-gray-100 shadow-md'>
             <Tabs
-              defaultActiveKey='1'
+              activeKey={viewMode}
+              onChange={(key) => setViewMode(key as 'table' | 'kanban')}
               type='card'
               size='large'
               items={[
                 {
-                  key: '1',
-                  label: t('tickets.list'),
+                  key: 'table',
+                  label: '表格视图',
                   children: (
                     <ErrorBoundary>
                       <TicketTable
@@ -378,7 +409,25 @@ export default function TicketsPage() {
                   ),
                 },
                 {
-                  key: '2',
+                  key: 'kanban',
+                  label: '看板视图',
+                  children: (
+                    <ErrorBoundary>
+                      <div className='p-4'>
+                        <TicketKanbanBoard
+                          tickets={tickets}
+                          loading={ticketsLoading}
+                          onTicketClick={handleKanbanTicketClick}
+                          onTicketEdit={handleEditTicket}
+                          onTicketStatusChange={handleKanbanStatusChange}
+                          canEdit={true}
+                        />
+                      </div>
+                    </ErrorBoundary>
+                  ),
+                },
+                {
+                  key: 'association',
                   label: t('tickets.association'),
                   children: (
                     <ErrorBoundary>
@@ -387,7 +436,7 @@ export default function TicketsPage() {
                   ),
                 },
                 {
-                  key: '3',
+                  key: 'satisfaction',
                   label: t('tickets.satisfaction'),
                   children: (
                     <ErrorBoundary>

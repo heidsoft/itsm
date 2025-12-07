@@ -9,6 +9,12 @@ import (
 // Application is the predicate function for application builders.
 type Application func(*sql.Selector)
 
+// ApprovalRecord is the predicate function for approvalrecord builders.
+type ApprovalRecord func(*sql.Selector)
+
+// ApprovalWorkflow is the predicate function for approvalworkflow builders.
+type ApprovalWorkflow func(*sql.Selector)
+
 // AuditLog is the predicate function for auditlog builders.
 type AuditLog func(*sql.Selector)
 
@@ -89,6 +95,15 @@ type Project func(*sql.Selector)
 
 // PromptTemplate is the predicate function for prompttemplate builders.
 type PromptTemplate func(*sql.Selector)
+
+// RootCauseAnalysis is the predicate function for rootcauseanalysis builders.
+type RootCauseAnalysis func(*sql.Selector)
+
+// SLAAlertHistory is the predicate function for slaalerthistory builders.
+type SLAAlertHistory func(*sql.Selector)
+
+// SLAAlertRule is the predicate function for slaalertrule builders.
+type SLAAlertRule func(*sql.Selector)
 
 // SLADefinition is the predicate function for sladefinition builders.
 type SLADefinition func(*sql.Selector)

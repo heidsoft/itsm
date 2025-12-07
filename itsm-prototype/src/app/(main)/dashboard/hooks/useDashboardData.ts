@@ -50,8 +50,20 @@ export function useDashboardData() {
     }
   }, [isError, error]);
 
+  // 合并API数据和Mock数据，确保所有字段都有默认值
+  const mergedData = data ? {
+    ...getMockData(), // 先使用Mock数据作为基础
+    ...data, // 然后用API数据覆盖
+    // 确保可选字段有默认值
+    peakHours: data.peakHours || getMockData().peakHours || [],
+    typeDistribution: data.typeDistribution || getMockData().typeDistribution || [],
+    responseTimeDistribution: data.responseTimeDistribution || getMockData().responseTimeDistribution || [],
+    teamWorkload: data.teamWorkload || getMockData().teamWorkload || [],
+    priorityDistribution: data.priorityDistribution || getMockData().priorityDistribution || [],
+  } : getMockData();
+
   return {
-    data: data || getMockData(), // 如果API失败，使用Mock数据
+    data: mergedData,
     loading: isLoading,
     error: error?.message ?? null,
     lastUpdated,

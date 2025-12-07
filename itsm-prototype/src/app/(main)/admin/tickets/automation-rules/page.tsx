@@ -299,7 +299,7 @@ export default function AutomationRulesPage() {
         }}
         footer={null}
         width={1000}
-        destroyOnClose
+        destroyOnHidden
       >
         <AutomationRuleForm
           editingRule={editingRule}

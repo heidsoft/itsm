@@ -36,6 +36,64 @@ var (
 			},
 		},
 	}
+	// ApprovalRecordsColumns holds the columns for the "approval_records" table.
+	ApprovalRecordsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ticket_number", Type: field.TypeString},
+		{Name: "ticket_title", Type: field.TypeString},
+		{Name: "workflow_name", Type: field.TypeString},
+		{Name: "current_level", Type: field.TypeInt, Default: 1},
+		{Name: "total_levels", Type: field.TypeInt, Default: 1},
+		{Name: "approver_id", Type: field.TypeInt},
+		{Name: "approver_name", Type: field.TypeString},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "action", Type: field.TypeString, Nullable: true},
+		{Name: "comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "workflow_id", Type: field.TypeInt},
+		{Name: "ticket_id", Type: field.TypeInt},
+	}
+	// ApprovalRecordsTable holds the schema information for the "approval_records" table.
+	ApprovalRecordsTable = &schema.Table{
+		Name:       "approval_records",
+		Columns:    ApprovalRecordsColumns,
+		PrimaryKey: []*schema.Column{ApprovalRecordsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "approval_records_approval_workflows_approval_records",
+				Columns:    []*schema.Column{ApprovalRecordsColumns[14]},
+				RefColumns: []*schema.Column{ApprovalWorkflowsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "approval_records_tickets_approval_records",
+				Columns:    []*schema.Column{ApprovalRecordsColumns[15]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ApprovalWorkflowsColumns holds the columns for the "approval_workflows" table.
+	ApprovalWorkflowsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "ticket_type", Type: field.TypeString, Nullable: true},
+		{Name: "priority", Type: field.TypeString, Nullable: true},
+		{Name: "nodes", Type: field.TypeJSON},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ApprovalWorkflowsTable holds the schema information for the "approval_workflows" table.
+	ApprovalWorkflowsTable = &schema.Table{
+		Name:       "approval_workflows",
+		Columns:    ApprovalWorkflowsColumns,
+		PrimaryKey: []*schema.Column{ApprovalWorkflowsColumns[0]},
+	}
 	// AuditLogsColumns holds the columns for the "audit_logs" table.
 	AuditLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -983,6 +1041,101 @@ var (
 		Columns:    PromptTemplatesColumns,
 		PrimaryKey: []*schema.Column{PromptTemplatesColumns[0]},
 	}
+	// RootCauseAnalysesColumns holds the columns for the "root_cause_analyses" table.
+	RootCauseAnalysesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ticket_number", Type: field.TypeString},
+		{Name: "ticket_title", Type: field.TypeString},
+		{Name: "analysis_date", Type: field.TypeString},
+		{Name: "root_causes", Type: field.TypeJSON},
+		{Name: "analysis_summary", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "confidence_score", Type: field.TypeFloat64, Default: 0},
+		{Name: "analysis_method", Type: field.TypeString, Default: "automatic"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ticket_id", Type: field.TypeInt},
+	}
+	// RootCauseAnalysesTable holds the schema information for the "root_cause_analyses" table.
+	RootCauseAnalysesTable = &schema.Table{
+		Name:       "root_cause_analyses",
+		Columns:    RootCauseAnalysesColumns,
+		PrimaryKey: []*schema.Column{RootCauseAnalysesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "root_cause_analyses_tickets_root_cause_analyses",
+				Columns:    []*schema.Column{RootCauseAnalysesColumns[11]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// SLAAlertHistoriesColumns holds the columns for the "sla_alert_histories" table.
+	SLAAlertHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ticket_number", Type: field.TypeString},
+		{Name: "ticket_title", Type: field.TypeString},
+		{Name: "alert_rule_name", Type: field.TypeString},
+		{Name: "alert_level", Type: field.TypeString, Default: "warning"},
+		{Name: "threshold_percentage", Type: field.TypeInt, Default: 70},
+		{Name: "actual_percentage", Type: field.TypeFloat64, Default: 0},
+		{Name: "notification_sent", Type: field.TypeBool, Default: false},
+		{Name: "escalation_level", Type: field.TypeInt, Default: 0},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "alert_rule_id", Type: field.TypeInt},
+		{Name: "ticket_id", Type: field.TypeInt},
+	}
+	// SLAAlertHistoriesTable holds the schema information for the "sla_alert_histories" table.
+	SLAAlertHistoriesTable = &schema.Table{
+		Name:       "sla_alert_histories",
+		Columns:    SLAAlertHistoriesColumns,
+		PrimaryKey: []*schema.Column{SLAAlertHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sla_alert_histories_sla_alert_rules_alert_history",
+				Columns:    []*schema.Column{SLAAlertHistoriesColumns[12]},
+				RefColumns: []*schema.Column{SLAAlertRulesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "sla_alert_histories_tickets_sla_alert_history",
+				Columns:    []*schema.Column{SLAAlertHistoriesColumns[13]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// SLAAlertRulesColumns holds the columns for the "sla_alert_rules" table.
+	SLAAlertRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "alert_level", Type: field.TypeString, Default: "warning"},
+		{Name: "threshold_percentage", Type: field.TypeInt, Default: 70},
+		{Name: "notification_channels", Type: field.TypeJSON},
+		{Name: "escalation_enabled", Type: field.TypeBool, Default: false},
+		{Name: "escalation_levels", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "sla_definition_id", Type: field.TypeInt},
+	}
+	// SLAAlertRulesTable holds the schema information for the "sla_alert_rules" table.
+	SLAAlertRulesTable = &schema.Table{
+		Name:       "sla_alert_rules",
+		Columns:    SLAAlertRulesColumns,
+		PrimaryKey: []*schema.Column{SLAAlertRulesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sla_alert_rules_sla_definitions_alert_rules",
+				Columns:    []*schema.Column{SLAAlertRulesColumns[11]},
+				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// SLADefinitionsColumns holds the columns for the "sla_definitions" table.
 	SLADefinitionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1786,6 +1939,8 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ApplicationsTable,
+		ApprovalRecordsTable,
+		ApprovalWorkflowsTable,
 		AuditLogsTable,
 		CiAttributeDefinitionsTable,
 		CiRelationshipsTable,
@@ -1813,6 +1968,9 @@ var (
 		ProcessVariablesTable,
 		ProjectsTable,
 		PromptTemplatesTable,
+		RootCauseAnalysesTable,
+		SLAAlertHistoriesTable,
+		SLAAlertRulesTable,
 		SLADefinitionsTable,
 		SLAMetricsTable,
 		SLAViolationsTable,
@@ -1846,6 +2004,8 @@ var (
 
 func init() {
 	ApplicationsTable.ForeignKeys[0].RefTable = ProjectsTable
+	ApprovalRecordsTable.ForeignKeys[0].RefTable = ApprovalWorkflowsTable
+	ApprovalRecordsTable.ForeignKeys[1].RefTable = TicketsTable
 	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	IncidentAlertsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
@@ -1854,6 +2014,10 @@ func init() {
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	RootCauseAnalysesTable.ForeignKeys[0].RefTable = TicketsTable
+	SLAAlertHistoriesTable.ForeignKeys[0].RefTable = SLAAlertRulesTable
+	SLAAlertHistoriesTable.ForeignKeys[1].RefTable = TicketsTable
+	SLAAlertRulesTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAMetricsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable

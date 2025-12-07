@@ -237,13 +237,16 @@ func (s *DashboardService) stringPtr(str string) *string {
 
 // DashboardOverviewData Dashboard概览数据结构（匹配前端期望格式）
 type DashboardOverviewData struct {
-	KPIMetrics           []KPIMetricData           `json:"kpiMetrics"`
-	TicketTrend          []TicketTrendData         `json:"ticketTrend"`
-	IncidentDistribution []IncidentDistributionData `json:"incidentDistribution"`
-	SLAData              []SLAData                 `json:"slaData"`
-	SatisfactionData     []SatisfactionData         `json:"satisfactionData"`
-	QuickActions         []QuickActionData          `json:"quickActions"`
-	RecentActivities     []RecentActivityData      `json:"recentActivities"`
+	KPIMetrics              []KPIMetricData                `json:"kpiMetrics"`
+	TicketTrend             []TicketTrendData              `json:"ticketTrend"`
+	IncidentDistribution    []IncidentDistributionData     `json:"incidentDistribution"`
+	SLAData                 []SLAData                      `json:"slaData"`
+	SatisfactionData        []SatisfactionData             `json:"satisfactionData"`
+	QuickActions            []QuickActionData              `json:"quickActions"`
+	RecentActivities        []RecentActivityData           `json:"recentActivities"`
+	ResponseTimeDistribution []ResponseTimeDistributionData `json:"responseTimeDistribution,omitempty"`
+	TeamWorkload            []TeamWorkloadData             `json:"teamWorkload,omitempty"`
+	PeakHours               []PeakHourData                 `json:"peakHours,omitempty"`
 }
 
 // KPIMetricData KPI指标数据
@@ -316,6 +319,30 @@ type RecentActivityData struct {
 	Status      string `json:"status"`
 }
 
+// ResponseTimeDistributionData 响应时间分布数据
+type ResponseTimeDistributionData struct {
+	TimeRange  string  `json:"timeRange"`
+	Count      int     `json:"count"`
+	Percentage float64 `json:"percentage"`
+	AvgTime    float64 `json:"avgTime,omitempty"`
+}
+
+// TeamWorkloadData 团队工作负载数据
+type TeamWorkloadData struct {
+	Assignee        string  `json:"assignee"`
+	TicketCount     int     `json:"ticketCount"`
+	AvgResponseTime float64 `json:"avgResponseTime"`
+	CompletionRate  float64 `json:"completionRate"`
+	ActiveTickets   int     `json:"activeTickets,omitempty"`
+}
+
+// PeakHourData 高峰时段数据
+type PeakHourData struct {
+	Hour            string  `json:"hour"`
+	Count           int     `json:"count"`
+	AvgResponseTime float64 `json:"avgResponseTime,omitempty"`
+}
+
 // GetDashboardOverview 获取Dashboard概览数据（匹配前端期望格式）
 func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID int) (*DashboardOverviewData, error) {
 	s.logger.Infow("Getting dashboard overview", "tenant_id", tenantID)
@@ -366,14 +393,41 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 		recentActivities = []RecentActivityData{}
 	}
 
+	// 获取响应时间分布数据
+	responseTimeDistribution, err := s.getResponseTimeDistribution(ctx, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to get response time distribution", "error", err)
+		// 不返回错误，使用空数组
+		responseTimeDistribution = []ResponseTimeDistributionData{}
+	}
+
+	// 获取团队工作负载数据
+	teamWorkload, err := s.getTeamWorkload(ctx, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to get team workload", "error", err)
+		// 不返回错误，使用空数组
+		teamWorkload = []TeamWorkloadData{}
+	}
+
+	// 获取高峰时段数据
+	peakHours, err := s.getPeakHours(ctx, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to get peak hours", "error", err)
+		// 不返回错误，使用空数组
+		peakHours = []PeakHourData{}
+	}
+
 	return &DashboardOverviewData{
-		KPIMetrics:           kpiMetrics,
-		TicketTrend:          ticketTrend,
-		IncidentDistribution: incidentDistribution,
-		SLAData:              slaData,
-		SatisfactionData:     satisfactionData,
-		QuickActions:         quickActions,
-		RecentActivities:     recentActivities,
+		KPIMetrics:              kpiMetrics,
+		TicketTrend:             ticketTrend,
+		IncidentDistribution:    incidentDistribution,
+		SLAData:                 slaData,
+		SatisfactionData:        satisfactionData,
+		QuickActions:            quickActions,
+		RecentActivities:        recentActivities,
+		ResponseTimeDistribution: responseTimeDistribution,
+		TeamWorkload:            teamWorkload,
+		PeakHours:               peakHours,
 	}, nil
 }
 
@@ -769,4 +823,255 @@ func (s *DashboardService) getRecentActivitiesForDashboard(ctx context.Context, 
 	// 简化实现，返回空数组
 	// TODO: 从审计日志或活动日志查询真实数据
 	return []RecentActivityData{}, nil
+}
+
+// getResponseTimeDistribution 获取响应时间分布数据
+func (s *DashboardService) getResponseTimeDistribution(ctx context.Context, tenantID int) ([]ResponseTimeDistributionData, error) {
+	// 获取所有有首次响应时间的工单
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.FirstResponseAtNotNil(),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get tickets for response time distribution", "error", err)
+		return nil, err
+	}
+
+	// 定义时间段
+	timeRanges := []struct {
+		label    string
+		minHours float64
+		maxHours float64
+	}{
+		{"0-1h", 0, 1},
+		{"1-4h", 1, 4},
+		{"4-8h", 4, 8},
+		{">8h", 8, 999999},
+	}
+
+	// 统计每个时间段的工单数
+	rangeCounts := make(map[string]int)
+	rangeTotalTime := make(map[string]float64)
+	totalTickets := len(tickets)
+
+	for _, t := range tickets {
+		if t.FirstResponseAt.IsZero() || t.CreatedAt.IsZero() {
+			continue
+		}
+		responseTime := t.FirstResponseAt.Sub(t.CreatedAt).Hours()
+
+		for _, tr := range timeRanges {
+			if responseTime >= tr.minHours && responseTime < tr.maxHours {
+				rangeCounts[tr.label]++
+				rangeTotalTime[tr.label] += responseTime
+				break
+			}
+		}
+	}
+
+	// 构建结果
+	result := []ResponseTimeDistributionData{}
+	for _, tr := range timeRanges {
+		count := rangeCounts[tr.label]
+		percentage := 0.0
+		avgTime := 0.0
+		if totalTickets > 0 {
+			percentage = float64(count) / float64(totalTickets) * 100
+		}
+		if count > 0 {
+			avgTime = rangeTotalTime[tr.label] / float64(count)
+		}
+
+		result = append(result, ResponseTimeDistributionData{
+			TimeRange:  tr.label,
+			Count:      count,
+			Percentage: percentage,
+			AvgTime:    avgTime,
+		})
+	}
+
+	return result, nil
+}
+
+// getTeamWorkload 获取团队工作负载数据
+func (s *DashboardService) getTeamWorkload(ctx context.Context, tenantID int) ([]TeamWorkloadData, error) {
+	// 获取所有有处理人的工单
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.AssigneeIDNotNil(),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get tickets for team workload", "error", err)
+		return nil, err
+	}
+
+	// 按处理人分组统计
+	assigneeStats := make(map[int]*struct {
+		ticketCount      int
+		totalResponseTime float64
+		responseCount    int
+		completedCount   int
+		activeCount      int
+		assigneeName     string
+	})
+
+	for _, t := range tickets {
+		// AssigneeID 是 int 类型，不是指针，已经通过 AssigneeIDNotNil() 过滤
+		assigneeID := t.AssigneeID
+		if assigneeID == 0 {
+			continue
+		}
+
+		if assigneeStats[assigneeID] == nil {
+			// 获取处理人姓名
+			user, err := s.client.User.Get(ctx, assigneeID)
+			assigneeName := fmt.Sprintf("用户%d", assigneeID)
+			if err == nil && user != nil {
+				if user.Name != "" {
+					assigneeName = user.Name
+				} else if user.Username != "" {
+					assigneeName = user.Username
+				}
+			}
+
+			assigneeStats[assigneeID] = &struct {
+				ticketCount      int
+				totalResponseTime float64
+				responseCount    int
+				completedCount   int
+				activeCount      int
+				assigneeName     string
+			}{
+				assigneeName: assigneeName,
+			}
+		}
+
+		stats := assigneeStats[assigneeID]
+		stats.ticketCount++
+
+		// 计算响应时间
+		if !t.FirstResponseAt.IsZero() && !t.CreatedAt.IsZero() {
+			responseTime := t.FirstResponseAt.Sub(t.CreatedAt).Hours()
+			stats.totalResponseTime += responseTime
+			stats.responseCount++
+		}
+
+		// 统计完成和进行中的工单
+		if t.Status == "closed" || t.Status == "resolved" {
+			stats.completedCount++
+		} else if t.Status == "in_progress" || t.Status == "submitted" {
+			stats.activeCount++
+		}
+	}
+
+	// 构建结果
+	result := []TeamWorkloadData{}
+	for _, stats := range assigneeStats {
+		avgResponseTime := 0.0
+		if stats.responseCount > 0 {
+			avgResponseTime = stats.totalResponseTime / float64(stats.responseCount)
+		}
+
+		completionRate := 0.0
+		if stats.ticketCount > 0 {
+			completionRate = float64(stats.completedCount) / float64(stats.ticketCount) * 100
+		}
+
+		result = append(result, TeamWorkloadData{
+			Assignee:        stats.assigneeName,
+			TicketCount:     stats.ticketCount,
+			AvgResponseTime: avgResponseTime,
+			CompletionRate:  completionRate,
+			ActiveTickets:   stats.activeCount,
+		})
+	}
+
+	// 按工单数排序，取前10个
+	if len(result) > 10 {
+		// 简单排序（按工单数降序）
+		for i := 0; i < len(result)-1; i++ {
+			for j := i + 1; j < len(result); j++ {
+				if result[i].TicketCount < result[j].TicketCount {
+					result[i], result[j] = result[j], result[i]
+				}
+			}
+		}
+		result = result[:10]
+	}
+
+	return result, nil
+}
+
+// getPeakHours 获取高峰时段数据
+func (s *DashboardService) getPeakHours(ctx context.Context, tenantID int) ([]PeakHourData, error) {
+	// 获取最近30天的工单
+	now := time.Now()
+	thirtyDaysAgo := now.AddDate(0, 0, -30)
+
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.CreatedAtGTE(thirtyDaysAgo),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get tickets for peak hours", "error", err)
+		return nil, err
+	}
+
+	// 按小时统计
+	hourStats := make(map[int]*struct {
+		count           int
+		totalResponseTime float64
+		responseCount   int
+	})
+
+	for _, t := range tickets {
+		hour := t.CreatedAt.Hour()
+		if hourStats[hour] == nil {
+			hourStats[hour] = &struct {
+				count           int
+				totalResponseTime float64
+				responseCount   int
+			}{}
+		}
+		hourStats[hour].count++
+
+		// 计算响应时间
+		if !t.FirstResponseAt.IsZero() && !t.CreatedAt.IsZero() {
+			responseTime := t.FirstResponseAt.Sub(t.CreatedAt).Hours()
+			hourStats[hour].totalResponseTime += responseTime
+			hourStats[hour].responseCount++
+		}
+	}
+
+	// 构建结果（24小时）
+	result := []PeakHourData{}
+	for hour := 0; hour < 24; hour++ {
+		stats := hourStats[hour]
+		if stats == nil {
+			stats = &struct {
+				count           int
+				totalResponseTime float64
+				responseCount   int
+			}{}
+		}
+
+		avgResponseTime := 0.0
+		if stats.responseCount > 0 {
+			avgResponseTime = stats.totalResponseTime / float64(stats.responseCount)
+		}
+
+		result = append(result, PeakHourData{
+			Hour:            fmt.Sprintf("%02d", hour),
+			Count:           stats.count,
+			AvgResponseTime: avgResponseTime,
+		})
+	}
+
+	return result, nil
 }

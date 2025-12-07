@@ -6,8 +6,11 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/rootcauseanalysis"
+	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
@@ -45,6 +48,9 @@ type TicketQuery struct {
 	withComments          *TicketCommentQuery
 	withAttachments       *TicketAttachmentQuery
 	withNotifications     *TicketNotificationQuery
+	withSLAAlertHistory   *SLAAlertHistoryQuery
+	withApprovalRecords   *ApprovalRecordQuery
+	withRootCauseAnalyses *RootCauseAnalysisQuery
 	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -346,6 +352,72 @@ func (tq *TicketQuery) QueryNotifications() *TicketNotificationQuery {
 	return query
 }
 
+// QuerySLAAlertHistory chains the current query on the "sla_alert_history" edge.
+func (tq *TicketQuery) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAAlertHistoryTable, ticket.SLAAlertHistoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryApprovalRecords chains the current query on the "approval_records" edge.
+func (tq *TicketQuery) QueryApprovalRecords() *ApprovalRecordQuery {
+	query := (&ApprovalRecordClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(approvalrecord.Table, approvalrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ApprovalRecordsTable, ticket.ApprovalRecordsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRootCauseAnalyses chains the current query on the "root_cause_analyses" edge.
+func (tq *TicketQuery) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
+	query := (&RootCauseAnalysisClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(rootcauseanalysis.Table, rootcauseanalysis.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RootCauseAnalysesTable, ticket.RootCauseAnalysesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Ticket entity from the query.
 // Returns a *NotFoundError when no Ticket was found.
 func (tq *TicketQuery) First(ctx context.Context) (*Ticket, error) {
@@ -550,6 +622,9 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		withComments:          tq.withComments.Clone(),
 		withAttachments:       tq.withAttachments.Clone(),
 		withNotifications:     tq.withNotifications.Clone(),
+		withSLAAlertHistory:   tq.withSLAAlertHistory.Clone(),
+		withApprovalRecords:   tq.withApprovalRecords.Clone(),
+		withRootCauseAnalyses: tq.withRootCauseAnalyses.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -688,6 +763,39 @@ func (tq *TicketQuery) WithNotifications(opts ...func(*TicketNotificationQuery))
 	return tq
 }
 
+// WithSLAAlertHistory tells the query-builder to eager-load the nodes that are connected to
+// the "sla_alert_history" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithSLAAlertHistory(opts ...func(*SLAAlertHistoryQuery)) *TicketQuery {
+	query := (&SLAAlertHistoryClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withSLAAlertHistory = query
+	return tq
+}
+
+// WithApprovalRecords tells the query-builder to eager-load the nodes that are connected to
+// the "approval_records" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithApprovalRecords(opts ...func(*ApprovalRecordQuery)) *TicketQuery {
+	query := (&ApprovalRecordClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withApprovalRecords = query
+	return tq
+}
+
+// WithRootCauseAnalyses tells the query-builder to eager-load the nodes that are connected to
+// the "root_cause_analyses" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithRootCauseAnalyses(opts ...func(*RootCauseAnalysisQuery)) *TicketQuery {
+	query := (&RootCauseAnalysisClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withRootCauseAnalyses = query
+	return tq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -767,7 +875,7 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [12]bool{
+		loadedTypes = [15]bool{
 			tq.withTemplate != nil,
 			tq.withCategory != nil,
 			tq.withDepartment != nil,
@@ -780,6 +888,9 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			tq.withComments != nil,
 			tq.withAttachments != nil,
 			tq.withNotifications != nil,
+			tq.withSLAAlertHistory != nil,
+			tq.withApprovalRecords != nil,
+			tq.withRootCauseAnalyses != nil,
 		}
 	)
 	if withFKs {
@@ -879,6 +990,29 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		if err := tq.loadNotifications(ctx, query, nodes,
 			func(n *Ticket) { n.Edges.Notifications = []*TicketNotification{} },
 			func(n *Ticket, e *TicketNotification) { n.Edges.Notifications = append(n.Edges.Notifications, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withSLAAlertHistory; query != nil {
+		if err := tq.loadSLAAlertHistory(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.SLAAlertHistory = []*SLAAlertHistory{} },
+			func(n *Ticket, e *SLAAlertHistory) { n.Edges.SLAAlertHistory = append(n.Edges.SLAAlertHistory, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withApprovalRecords; query != nil {
+		if err := tq.loadApprovalRecords(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.ApprovalRecords = []*ApprovalRecord{} },
+			func(n *Ticket, e *ApprovalRecord) { n.Edges.ApprovalRecords = append(n.Edges.ApprovalRecords, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withRootCauseAnalyses; query != nil {
+		if err := tq.loadRootCauseAnalyses(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.RootCauseAnalyses = []*RootCauseAnalysis{} },
+			func(n *Ticket, e *RootCauseAnalysis) {
+				n.Edges.RootCauseAnalyses = append(n.Edges.RootCauseAnalyses, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -1228,6 +1362,96 @@ func (tq *TicketQuery) loadNotifications(ctx context.Context, query *TicketNotif
 	}
 	query.Where(predicate.TicketNotification(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(ticket.NotificationsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadSLAAlertHistory(ctx context.Context, query *SLAAlertHistoryQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *SLAAlertHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slaalerthistory.FieldTicketID)
+	}
+	query.Where(predicate.SLAAlertHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.SLAAlertHistoryColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadApprovalRecords(ctx context.Context, query *ApprovalRecordQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *ApprovalRecord)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(approvalrecord.FieldTicketID)
+	}
+	query.Where(predicate.ApprovalRecord(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.ApprovalRecordsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TicketID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadRootCauseAnalyses(ctx context.Context, query *RootCauseAnalysisQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *RootCauseAnalysis)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Ticket)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(rootcauseanalysis.FieldTicketID)
+	}
+	query.Where(predicate.RootCauseAnalysis(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(ticket.RootCauseAnalysesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

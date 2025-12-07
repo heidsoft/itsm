@@ -133,5 +133,11 @@ func (Ticket) Edges() []ent.Edge {
 			Comment("工单附件"),
 		edge.To("notifications", TicketNotification.Type).
 			Comment("工单通知"),
+		edge.To("sla_alert_history", SLAAlertHistory.Type).
+			Comment("SLA预警历史"),
+		edge.To("approval_records", ApprovalRecord.Type).
+			Comment("审批记录"),
+		edge.To("root_cause_analyses", RootCauseAnalysis.Type).
+			Comment("根因分析"),
 	}
 }

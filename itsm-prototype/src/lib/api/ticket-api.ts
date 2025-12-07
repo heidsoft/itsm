@@ -97,6 +97,30 @@ export class TicketApi {
     return httpClient.get<Ticket[]>('/api/v1/tickets/overdue');
   }
 
+  // Get subtasks (child tickets)
+  static async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
+    const response = await httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(`/api/v1/tickets/${parentTicketId}/subtasks`);
+    return (response as any).tickets || (response as any).data || response || [];
+  }
+
+  // Create subtask
+  static async createSubtask(parentTicketId: number, data: Partial<Ticket>): Promise<Ticket> {
+    return httpClient.post<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks`, {
+      ...data,
+      parent_ticket_id: parentTicketId,
+    });
+  }
+
+  // Update subtask
+  static async updateSubtask(parentTicketId: number, subtaskId: number, data: Partial<Ticket>): Promise<Ticket> {
+    return httpClient.patch<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks/${subtaskId}`, data);
+  }
+
+  // Delete subtask
+  static async deleteSubtask(parentTicketId: number, subtaskId: number): Promise<void> {
+    return httpClient.delete(`/api/v1/tickets/${parentTicketId}/subtasks/${subtaskId}`);
+  }
+
   // Get tickets by assignee
   static async getTicketsByAssignee(assigneeId: number): Promise<Ticket[]> {
     return httpClient.get<Ticket[]>(`/api/v1/tickets/assignee/${assigneeId}`);

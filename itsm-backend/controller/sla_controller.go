@@ -2,6 +2,7 @@ package controller
 
 import (
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -12,13 +13,15 @@ import (
 
 // SLAController SLA管理控制器
 type SLAController struct {
-	slaService *service.SLAService
+	slaService      *service.SLAService
+	slaAlertService *service.SLAAlertService
 }
 
 // NewSLAController 创建SLA控制器实例
-func NewSLAController(slaService *service.SLAService) *SLAController {
+func NewSLAController(slaService *service.SLAService, slaAlertService *service.SLAAlertService) *SLAController {
 	return &SLAController{
-		slaService: slaService,
+		slaService:      slaService,
+		slaAlertService: slaAlertService,
 	}
 }
 
@@ -267,4 +270,228 @@ func (c *SLAController) UpdateViolationStatus(ctx *gin.Context) {
 	// TODO: 实现UpdateViolationStatus方法
 	_ = id
 	common.Success(ctx, map[string]string{"message": "违规状态更新成功"})
+}
+
+// GetSLAMonitoring 获取SLA监控数据
+func (c *SLAController) GetSLAMonitoring(ctx *gin.Context) {
+	var req dto.SLAMonitoringRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	// 从JWT获取租户ID
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	// 如果没有提供时间范围，使用默认值（最近30天）
+	if req.StartTime == "" {
+		req.StartTime = time.Now().AddDate(0, 0, -30).Format(time.RFC3339)
+	}
+	if req.EndTime == "" {
+		req.EndTime = time.Now().Format(time.RFC3339)
+	}
+
+	response, err := c.slaService.GetSLAMonitoring(ctx.Request.Context(), &req, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取SLA监控数据失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, response)
+}
+
+// CreateAlertRule 创建SLA预警规则
+func (c *SLAController) CreateAlertRule(ctx *gin.Context) {
+	var req dto.CreateSLAAlertRuleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	response, err := c.slaAlertService.CreateAlertRule(ctx.Request.Context(), &req, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "创建预警规则失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, response)
+}
+
+// UpdateAlertRule 更新SLA预警规则
+func (c *SLAController) UpdateAlertRule(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的预警规则ID: "+err.Error())
+		return
+	}
+
+	var req dto.UpdateSLAAlertRuleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	response, err := c.slaAlertService.UpdateAlertRule(ctx.Request.Context(), id, &req, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "更新预警规则失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, response)
+}
+
+// DeleteAlertRule 删除SLA预警规则
+func (c *SLAController) DeleteAlertRule(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的预警规则ID: "+err.Error())
+		return
+	}
+
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	err = c.slaAlertService.DeleteAlertRule(ctx.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "删除预警规则失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, map[string]string{"message": "预警规则已删除"})
+}
+
+// ListAlertRules 获取SLA预警规则列表
+func (c *SLAController) ListAlertRules(ctx *gin.Context) {
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	filters := make(map[string]interface{})
+	if slaDefinitionIDStr := ctx.Query("sla_definition_id"); slaDefinitionIDStr != "" {
+		if slaDefinitionID, err := strconv.Atoi(slaDefinitionIDStr); err == nil {
+			filters["sla_definition_id"] = slaDefinitionID
+		}
+	}
+	if isActiveStr := ctx.Query("is_active"); isActiveStr != "" {
+		if isActive, err := strconv.ParseBool(isActiveStr); err == nil {
+			filters["is_active"] = isActive
+		}
+	}
+	if alertLevel := ctx.Query("alert_level"); alertLevel != "" {
+		filters["alert_level"] = alertLevel
+	}
+
+	rules, err := c.slaAlertService.ListAlertRules(ctx.Request.Context(), filters, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取预警规则列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, rules)
+}
+
+// GetAlertRule 获取SLA预警规则详情
+func (c *SLAController) GetAlertRule(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "无效的预警规则ID: "+err.Error())
+		return
+	}
+
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	rule, err := c.slaAlertService.GetAlertRule(ctx.Request.Context(), id, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.NotFoundCode, "预警规则不存在: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, rule)
+}
+
+// GetAlertHistory 获取SLA预警历史
+func (c *SLAController) GetAlertHistory(ctx *gin.Context) {
+	var req dto.GetSLAAlertHistoryRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		// 尝试从查询参数获取
+		if slaDefinitionIDStr := ctx.Query("sla_definition_id"); slaDefinitionIDStr != "" {
+			if id, err := strconv.Atoi(slaDefinitionIDStr); err == nil {
+				req.SLADefinitionID = &id
+			}
+		}
+		if alertRuleIDStr := ctx.Query("alert_rule_id"); alertRuleIDStr != "" {
+			if id, err := strconv.Atoi(alertRuleIDStr); err == nil {
+				req.AlertRuleID = &id
+			}
+		}
+		if ticketIDStr := ctx.Query("ticket_id"); ticketIDStr != "" {
+			if id, err := strconv.Atoi(ticketIDStr); err == nil {
+				req.TicketID = &id
+			}
+		}
+		if alertLevel := ctx.Query("alert_level"); alertLevel != "" {
+			req.AlertLevel = &alertLevel
+		}
+		req.StartTime = ctx.DefaultQuery("start_time", "")
+		req.EndTime = ctx.DefaultQuery("end_time", "")
+		req.Page = 1
+		if pageStr := ctx.Query("page"); pageStr != "" {
+			if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+				req.Page = p
+			}
+		}
+		req.PageSize = 20
+		if pageSizeStr := ctx.Query("page_size"); pageSizeStr != "" {
+			if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
+				req.PageSize = ps
+			}
+		}
+	}
+
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	histories, total, err := c.slaAlertService.GetAlertHistory(ctx.Request.Context(), &req, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取预警历史失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, gin.H{
+		"items":     histories,
+		"total":     total,
+		"page":      req.Page,
+		"page_size": req.PageSize,
+	})
 }

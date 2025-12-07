@@ -13,14 +13,16 @@ import (
 )
 
 type TicketController struct {
-	ticketService *service.TicketService
-	logger        *zap.SugaredLogger
+	ticketService         *service.TicketService
+	ticketDependencyService *service.TicketDependencyService
+	logger                 *zap.SugaredLogger
 }
 
-func NewTicketController(ticketService *service.TicketService, logger *zap.SugaredLogger) *TicketController {
+func NewTicketController(ticketService *service.TicketService, ticketDependencyService *service.TicketDependencyService, logger *zap.SugaredLogger) *TicketController {
 	return &TicketController{
-		ticketService: ticketService,
-		logger:        logger,
+		ticketService:          ticketService,
+		ticketDependencyService: ticketDependencyService,
+		logger:                 logger,
 	}
 }
 
@@ -582,4 +584,145 @@ func (tc *TicketController) DeleteTicketTemplate(c *gin.Context) {
 		"message":     "工单模板删除成功",
 		"template_id": id,
 	})
+}
+
+// GetSubtasks 获取子任务列表
+func (tc *TicketController) GetSubtasks(c *gin.Context) {
+	parentID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 查询所有parent_ticket_id等于当前工单ID的工单
+	tickets, err := tc.ticketService.ListTickets(c.Request.Context(), &dto.ListTicketsRequest{
+		ParentTicketID: &parentID,
+	}, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get subtasks", "error", err, "parent_id", parentID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, tickets.Tickets)
+}
+
+// CreateSubtask 创建子任务
+func (tc *TicketController) CreateSubtask(c *gin.Context) {
+	parentID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	var req dto.CreateTicketRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
+
+	// 设置父工单ID和请求者ID
+	req.ParentTicketID = &parentID
+	req.RequesterID = userID
+
+	ticket, err := tc.ticketService.CreateTicket(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to create subtask", "error", err, "parent_id", parentID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, ticket)
+}
+
+// UpdateSubtask 更新子任务
+func (tc *TicketController) UpdateSubtask(c *gin.Context) {
+	parentID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的父工单ID")
+		return
+	}
+
+	subtaskID, err := strconv.Atoi(c.Param("subtask_id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的子任务ID")
+		return
+	}
+
+	var req dto.UpdateTicketRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	req.UserID = c.GetInt("user_id")
+
+	// 验证子任务是否属于指定的父工单
+	ticket, err := tc.ticketService.GetTicket(c.Request.Context(), subtaskID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
+		common.Fail(c, common.NotFoundCode, "子任务不存在")
+		return
+	}
+
+	// 检查parent_ticket_id是否匹配
+	if ticket.ParentTicketID == 0 || ticket.ParentTicketID != parentID {
+		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
+		return
+	}
+
+	updatedTicket, err := tc.ticketService.UpdateTicket(c.Request.Context(), subtaskID, &req, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to update subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, updatedTicket)
+}
+
+// DeleteSubtask 删除子任务
+func (tc *TicketController) DeleteSubtask(c *gin.Context) {
+	parentID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的父工单ID")
+		return
+	}
+
+	subtaskID, err := strconv.Atoi(c.Param("subtask_id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的子任务ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 验证子任务是否属于指定的父工单
+	ticket, err := tc.ticketService.GetTicket(c.Request.Context(), subtaskID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
+		common.Fail(c, common.NotFoundCode, "子任务不存在")
+		return
+	}
+
+	// 检查parent_ticket_id是否匹配
+	if ticket.ParentTicketID == 0 || ticket.ParentTicketID != parentID {
+		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
+		return
+	}
+
+	err = tc.ticketService.DeleteTicket(c.Request.Context(), subtaskID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to delete subtask", "error", err, "subtask_id", subtaskID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{"message": "子任务删除成功"})
 }

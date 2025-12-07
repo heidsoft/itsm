@@ -12,6 +12,8 @@ import (
 	"itsm-backend/ent/migrate"
 
 	"itsm-backend/ent/application"
+	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -39,8 +41,11 @@ import (
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
+	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
@@ -75,6 +80,10 @@ type Client struct {
 	Schema *migrate.Schema
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
+	// ApprovalRecord is the client for interacting with the ApprovalRecord builders.
+	ApprovalRecord *ApprovalRecordClient
+	// ApprovalWorkflow is the client for interacting with the ApprovalWorkflow builders.
+	ApprovalWorkflow *ApprovalWorkflowClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
@@ -129,6 +138,12 @@ type Client struct {
 	Project *ProjectClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
+	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
+	RootCauseAnalysis *RootCauseAnalysisClient
+	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
+	SLAAlertHistory *SLAAlertHistoryClient
+	// SLAAlertRule is the client for interacting with the SLAAlertRule builders.
+	SLAAlertRule *SLAAlertRuleClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
 	SLADefinition *SLADefinitionClient
 	// SLAMetric is the client for interacting with the SLAMetric builders.
@@ -185,6 +200,8 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Application = NewApplicationClient(c.config)
+	c.ApprovalRecord = NewApprovalRecordClient(c.config)
+	c.ApprovalWorkflow = NewApprovalWorkflowClient(c.config)
 	c.AuditLog = NewAuditLogClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
@@ -212,6 +229,9 @@ func (c *Client) init() {
 	c.ProcessVariable = NewProcessVariableClient(c.config)
 	c.Project = NewProjectClient(c.config)
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
+	c.RootCauseAnalysis = NewRootCauseAnalysisClient(c.config)
+	c.SLAAlertHistory = NewSLAAlertHistoryClient(c.config)
+	c.SLAAlertRule = NewSLAAlertRuleClient(c.config)
 	c.SLADefinition = NewSLADefinitionClient(c.config)
 	c.SLAMetric = NewSLAMetricClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
@@ -327,6 +347,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                     ctx,
 		config:                  cfg,
 		Application:             NewApplicationClient(cfg),
+		ApprovalRecord:          NewApprovalRecordClient(cfg),
+		ApprovalWorkflow:        NewApprovalWorkflowClient(cfg),
 		AuditLog:                NewAuditLogClient(cfg),
 		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:          NewCIRelationshipClient(cfg),
@@ -354,6 +376,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProcessVariable:         NewProcessVariableClient(cfg),
 		Project:                 NewProjectClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
+		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
+		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
+		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
 		SLADefinition:           NewSLADefinitionClient(cfg),
 		SLAMetric:               NewSLAMetricClient(cfg),
 		SLAViolation:            NewSLAViolationClient(cfg),
@@ -396,6 +421,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                     ctx,
 		config:                  cfg,
 		Application:             NewApplicationClient(cfg),
+		ApprovalRecord:          NewApprovalRecordClient(cfg),
+		ApprovalWorkflow:        NewApprovalWorkflowClient(cfg),
 		AuditLog:                NewAuditLogClient(cfg),
 		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:          NewCIRelationshipClient(cfg),
@@ -423,6 +450,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProcessVariable:         NewProcessVariableClient(cfg),
 		Project:                 NewProjectClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
+		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
+		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
+		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
 		SLADefinition:           NewSLADefinitionClient(cfg),
 		SLAMetric:               NewSLAMetricClient(cfg),
 		SLAViolation:            NewSLAViolationClient(cfg),
@@ -474,18 +504,19 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Application, c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType,
-		c.Change, c.ConfigurationItem, c.Conversation, c.Department, c.Incident,
-		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.Message, c.Microservice,
-		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.Project, c.PromptTemplate, c.SLADefinition, c.SLAMetric, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance,
+		c.Application, c.ApprovalRecord, c.ApprovalWorkflow, c.AuditLog,
+		c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
+		c.ConfigurationItem, c.Conversation, c.Department, c.Incident, c.IncidentAlert,
+		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
+		c.KnowledgeArticle, c.Message, c.Microservice, c.Notification, c.Problem,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
+		c.PromptTemplate, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
+		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule,
+		c.TicketAttachment, c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
 	} {
 		n.Use(hooks...)
 	}
@@ -495,18 +526,19 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Application, c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType,
-		c.Change, c.ConfigurationItem, c.Conversation, c.Department, c.Incident,
-		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.Message, c.Microservice,
-		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.Project, c.PromptTemplate, c.SLADefinition, c.SLAMetric, c.SLAViolation,
-		c.ServiceCatalog, c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance,
+		c.Application, c.ApprovalRecord, c.ApprovalWorkflow, c.AuditLog,
+		c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
+		c.ConfigurationItem, c.Conversation, c.Department, c.Incident, c.IncidentAlert,
+		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
+		c.KnowledgeArticle, c.Message, c.Microservice, c.Notification, c.Problem,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
+		c.PromptTemplate, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
+		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule,
+		c.TicketAttachment, c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -517,6 +549,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ApplicationMutation:
 		return c.Application.mutate(ctx, m)
+	case *ApprovalRecordMutation:
+		return c.ApprovalRecord.mutate(ctx, m)
+	case *ApprovalWorkflowMutation:
+		return c.ApprovalWorkflow.mutate(ctx, m)
 	case *AuditLogMutation:
 		return c.AuditLog.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
@@ -571,6 +607,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Project.mutate(ctx, m)
 	case *PromptTemplateMutation:
 		return c.PromptTemplate.mutate(ctx, m)
+	case *RootCauseAnalysisMutation:
+		return c.RootCauseAnalysis.mutate(ctx, m)
+	case *SLAAlertHistoryMutation:
+		return c.SLAAlertHistory.mutate(ctx, m)
+	case *SLAAlertRuleMutation:
+		return c.SLAAlertRule.mutate(ctx, m)
 	case *SLADefinitionMutation:
 		return c.SLADefinition.mutate(ctx, m)
 	case *SLAMetricMutation:
@@ -798,6 +840,320 @@ func (c *ApplicationClient) mutate(ctx context.Context, m *ApplicationMutation) 
 		return (&ApplicationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Application mutation op: %q", m.Op())
+	}
+}
+
+// ApprovalRecordClient is a client for the ApprovalRecord schema.
+type ApprovalRecordClient struct {
+	config
+}
+
+// NewApprovalRecordClient returns a client for the ApprovalRecord from the given config.
+func NewApprovalRecordClient(c config) *ApprovalRecordClient {
+	return &ApprovalRecordClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `approvalrecord.Hooks(f(g(h())))`.
+func (c *ApprovalRecordClient) Use(hooks ...Hook) {
+	c.hooks.ApprovalRecord = append(c.hooks.ApprovalRecord, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `approvalrecord.Intercept(f(g(h())))`.
+func (c *ApprovalRecordClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ApprovalRecord = append(c.inters.ApprovalRecord, interceptors...)
+}
+
+// Create returns a builder for creating a ApprovalRecord entity.
+func (c *ApprovalRecordClient) Create() *ApprovalRecordCreate {
+	mutation := newApprovalRecordMutation(c.config, OpCreate)
+	return &ApprovalRecordCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ApprovalRecord entities.
+func (c *ApprovalRecordClient) CreateBulk(builders ...*ApprovalRecordCreate) *ApprovalRecordCreateBulk {
+	return &ApprovalRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ApprovalRecordClient) MapCreateBulk(slice any, setFunc func(*ApprovalRecordCreate, int)) *ApprovalRecordCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ApprovalRecordCreateBulk{err: fmt.Errorf("calling to ApprovalRecordClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ApprovalRecordCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ApprovalRecordCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ApprovalRecord.
+func (c *ApprovalRecordClient) Update() *ApprovalRecordUpdate {
+	mutation := newApprovalRecordMutation(c.config, OpUpdate)
+	return &ApprovalRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ApprovalRecordClient) UpdateOne(ar *ApprovalRecord) *ApprovalRecordUpdateOne {
+	mutation := newApprovalRecordMutation(c.config, OpUpdateOne, withApprovalRecord(ar))
+	return &ApprovalRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ApprovalRecordClient) UpdateOneID(id int) *ApprovalRecordUpdateOne {
+	mutation := newApprovalRecordMutation(c.config, OpUpdateOne, withApprovalRecordID(id))
+	return &ApprovalRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ApprovalRecord.
+func (c *ApprovalRecordClient) Delete() *ApprovalRecordDelete {
+	mutation := newApprovalRecordMutation(c.config, OpDelete)
+	return &ApprovalRecordDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ApprovalRecordClient) DeleteOne(ar *ApprovalRecord) *ApprovalRecordDeleteOne {
+	return c.DeleteOneID(ar.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ApprovalRecordClient) DeleteOneID(id int) *ApprovalRecordDeleteOne {
+	builder := c.Delete().Where(approvalrecord.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ApprovalRecordDeleteOne{builder}
+}
+
+// Query returns a query builder for ApprovalRecord.
+func (c *ApprovalRecordClient) Query() *ApprovalRecordQuery {
+	return &ApprovalRecordQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeApprovalRecord},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ApprovalRecord entity by its id.
+func (c *ApprovalRecordClient) Get(ctx context.Context, id int) (*ApprovalRecord, error) {
+	return c.Query().Where(approvalrecord.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ApprovalRecordClient) GetX(ctx context.Context, id int) *ApprovalRecord {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a ApprovalRecord.
+func (c *ApprovalRecordClient) QueryTicket(ar *ApprovalRecord) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ar.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(approvalrecord.Table, approvalrecord.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, approvalrecord.TicketTable, approvalrecord.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(ar.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWorkflow queries the workflow edge of a ApprovalRecord.
+func (c *ApprovalRecordClient) QueryWorkflow(ar *ApprovalRecord) *ApprovalWorkflowQuery {
+	query := (&ApprovalWorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ar.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(approvalrecord.Table, approvalrecord.FieldID, id),
+			sqlgraph.To(approvalworkflow.Table, approvalworkflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, approvalrecord.WorkflowTable, approvalrecord.WorkflowColumn),
+		)
+		fromV = sqlgraph.Neighbors(ar.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ApprovalRecordClient) Hooks() []Hook {
+	return c.hooks.ApprovalRecord
+}
+
+// Interceptors returns the client interceptors.
+func (c *ApprovalRecordClient) Interceptors() []Interceptor {
+	return c.inters.ApprovalRecord
+}
+
+func (c *ApprovalRecordClient) mutate(ctx context.Context, m *ApprovalRecordMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ApprovalRecordCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ApprovalRecordUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ApprovalRecordUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ApprovalRecordDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ApprovalRecord mutation op: %q", m.Op())
+	}
+}
+
+// ApprovalWorkflowClient is a client for the ApprovalWorkflow schema.
+type ApprovalWorkflowClient struct {
+	config
+}
+
+// NewApprovalWorkflowClient returns a client for the ApprovalWorkflow from the given config.
+func NewApprovalWorkflowClient(c config) *ApprovalWorkflowClient {
+	return &ApprovalWorkflowClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `approvalworkflow.Hooks(f(g(h())))`.
+func (c *ApprovalWorkflowClient) Use(hooks ...Hook) {
+	c.hooks.ApprovalWorkflow = append(c.hooks.ApprovalWorkflow, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `approvalworkflow.Intercept(f(g(h())))`.
+func (c *ApprovalWorkflowClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ApprovalWorkflow = append(c.inters.ApprovalWorkflow, interceptors...)
+}
+
+// Create returns a builder for creating a ApprovalWorkflow entity.
+func (c *ApprovalWorkflowClient) Create() *ApprovalWorkflowCreate {
+	mutation := newApprovalWorkflowMutation(c.config, OpCreate)
+	return &ApprovalWorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ApprovalWorkflow entities.
+func (c *ApprovalWorkflowClient) CreateBulk(builders ...*ApprovalWorkflowCreate) *ApprovalWorkflowCreateBulk {
+	return &ApprovalWorkflowCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ApprovalWorkflowClient) MapCreateBulk(slice any, setFunc func(*ApprovalWorkflowCreate, int)) *ApprovalWorkflowCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ApprovalWorkflowCreateBulk{err: fmt.Errorf("calling to ApprovalWorkflowClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ApprovalWorkflowCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ApprovalWorkflowCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ApprovalWorkflow.
+func (c *ApprovalWorkflowClient) Update() *ApprovalWorkflowUpdate {
+	mutation := newApprovalWorkflowMutation(c.config, OpUpdate)
+	return &ApprovalWorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ApprovalWorkflowClient) UpdateOne(aw *ApprovalWorkflow) *ApprovalWorkflowUpdateOne {
+	mutation := newApprovalWorkflowMutation(c.config, OpUpdateOne, withApprovalWorkflow(aw))
+	return &ApprovalWorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ApprovalWorkflowClient) UpdateOneID(id int) *ApprovalWorkflowUpdateOne {
+	mutation := newApprovalWorkflowMutation(c.config, OpUpdateOne, withApprovalWorkflowID(id))
+	return &ApprovalWorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ApprovalWorkflow.
+func (c *ApprovalWorkflowClient) Delete() *ApprovalWorkflowDelete {
+	mutation := newApprovalWorkflowMutation(c.config, OpDelete)
+	return &ApprovalWorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ApprovalWorkflowClient) DeleteOne(aw *ApprovalWorkflow) *ApprovalWorkflowDeleteOne {
+	return c.DeleteOneID(aw.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ApprovalWorkflowClient) DeleteOneID(id int) *ApprovalWorkflowDeleteOne {
+	builder := c.Delete().Where(approvalworkflow.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ApprovalWorkflowDeleteOne{builder}
+}
+
+// Query returns a query builder for ApprovalWorkflow.
+func (c *ApprovalWorkflowClient) Query() *ApprovalWorkflowQuery {
+	return &ApprovalWorkflowQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeApprovalWorkflow},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ApprovalWorkflow entity by its id.
+func (c *ApprovalWorkflowClient) Get(ctx context.Context, id int) (*ApprovalWorkflow, error) {
+	return c.Query().Where(approvalworkflow.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ApprovalWorkflowClient) GetX(ctx context.Context, id int) *ApprovalWorkflow {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryApprovalRecords queries the approval_records edge of a ApprovalWorkflow.
+func (c *ApprovalWorkflowClient) QueryApprovalRecords(aw *ApprovalWorkflow) *ApprovalRecordQuery {
+	query := (&ApprovalRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := aw.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(approvalworkflow.Table, approvalworkflow.FieldID, id),
+			sqlgraph.To(approvalrecord.Table, approvalrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, approvalworkflow.ApprovalRecordsTable, approvalworkflow.ApprovalRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(aw.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ApprovalWorkflowClient) Hooks() []Hook {
+	return c.hooks.ApprovalWorkflow
+}
+
+// Interceptors returns the client interceptors.
+func (c *ApprovalWorkflowClient) Interceptors() []Interceptor {
+	return c.inters.ApprovalWorkflow
+}
+
+func (c *ApprovalWorkflowClient) mutate(ctx context.Context, m *ApprovalWorkflowMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ApprovalWorkflowCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ApprovalWorkflowUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ApprovalWorkflowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ApprovalWorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ApprovalWorkflow mutation op: %q", m.Op())
 	}
 }
 
@@ -4808,6 +5164,485 @@ func (c *PromptTemplateClient) mutate(ctx context.Context, m *PromptTemplateMuta
 	}
 }
 
+// RootCauseAnalysisClient is a client for the RootCauseAnalysis schema.
+type RootCauseAnalysisClient struct {
+	config
+}
+
+// NewRootCauseAnalysisClient returns a client for the RootCauseAnalysis from the given config.
+func NewRootCauseAnalysisClient(c config) *RootCauseAnalysisClient {
+	return &RootCauseAnalysisClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rootcauseanalysis.Hooks(f(g(h())))`.
+func (c *RootCauseAnalysisClient) Use(hooks ...Hook) {
+	c.hooks.RootCauseAnalysis = append(c.hooks.RootCauseAnalysis, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `rootcauseanalysis.Intercept(f(g(h())))`.
+func (c *RootCauseAnalysisClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RootCauseAnalysis = append(c.inters.RootCauseAnalysis, interceptors...)
+}
+
+// Create returns a builder for creating a RootCauseAnalysis entity.
+func (c *RootCauseAnalysisClient) Create() *RootCauseAnalysisCreate {
+	mutation := newRootCauseAnalysisMutation(c.config, OpCreate)
+	return &RootCauseAnalysisCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RootCauseAnalysis entities.
+func (c *RootCauseAnalysisClient) CreateBulk(builders ...*RootCauseAnalysisCreate) *RootCauseAnalysisCreateBulk {
+	return &RootCauseAnalysisCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RootCauseAnalysisClient) MapCreateBulk(slice any, setFunc func(*RootCauseAnalysisCreate, int)) *RootCauseAnalysisCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RootCauseAnalysisCreateBulk{err: fmt.Errorf("calling to RootCauseAnalysisClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RootCauseAnalysisCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RootCauseAnalysisCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RootCauseAnalysis.
+func (c *RootCauseAnalysisClient) Update() *RootCauseAnalysisUpdate {
+	mutation := newRootCauseAnalysisMutation(c.config, OpUpdate)
+	return &RootCauseAnalysisUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RootCauseAnalysisClient) UpdateOne(rca *RootCauseAnalysis) *RootCauseAnalysisUpdateOne {
+	mutation := newRootCauseAnalysisMutation(c.config, OpUpdateOne, withRootCauseAnalysis(rca))
+	return &RootCauseAnalysisUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RootCauseAnalysisClient) UpdateOneID(id int) *RootCauseAnalysisUpdateOne {
+	mutation := newRootCauseAnalysisMutation(c.config, OpUpdateOne, withRootCauseAnalysisID(id))
+	return &RootCauseAnalysisUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RootCauseAnalysis.
+func (c *RootCauseAnalysisClient) Delete() *RootCauseAnalysisDelete {
+	mutation := newRootCauseAnalysisMutation(c.config, OpDelete)
+	return &RootCauseAnalysisDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RootCauseAnalysisClient) DeleteOne(rca *RootCauseAnalysis) *RootCauseAnalysisDeleteOne {
+	return c.DeleteOneID(rca.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RootCauseAnalysisClient) DeleteOneID(id int) *RootCauseAnalysisDeleteOne {
+	builder := c.Delete().Where(rootcauseanalysis.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RootCauseAnalysisDeleteOne{builder}
+}
+
+// Query returns a query builder for RootCauseAnalysis.
+func (c *RootCauseAnalysisClient) Query() *RootCauseAnalysisQuery {
+	return &RootCauseAnalysisQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRootCauseAnalysis},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RootCauseAnalysis entity by its id.
+func (c *RootCauseAnalysisClient) Get(ctx context.Context, id int) (*RootCauseAnalysis, error) {
+	return c.Query().Where(rootcauseanalysis.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RootCauseAnalysisClient) GetX(ctx context.Context, id int) *RootCauseAnalysis {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a RootCauseAnalysis.
+func (c *RootCauseAnalysisClient) QueryTicket(rca *RootCauseAnalysis) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rca.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(rootcauseanalysis.Table, rootcauseanalysis.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, rootcauseanalysis.TicketTable, rootcauseanalysis.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(rca.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RootCauseAnalysisClient) Hooks() []Hook {
+	return c.hooks.RootCauseAnalysis
+}
+
+// Interceptors returns the client interceptors.
+func (c *RootCauseAnalysisClient) Interceptors() []Interceptor {
+	return c.inters.RootCauseAnalysis
+}
+
+func (c *RootCauseAnalysisClient) mutate(ctx context.Context, m *RootCauseAnalysisMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RootCauseAnalysisCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RootCauseAnalysisUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RootCauseAnalysisUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RootCauseAnalysisDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RootCauseAnalysis mutation op: %q", m.Op())
+	}
+}
+
+// SLAAlertHistoryClient is a client for the SLAAlertHistory schema.
+type SLAAlertHistoryClient struct {
+	config
+}
+
+// NewSLAAlertHistoryClient returns a client for the SLAAlertHistory from the given config.
+func NewSLAAlertHistoryClient(c config) *SLAAlertHistoryClient {
+	return &SLAAlertHistoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slaalerthistory.Hooks(f(g(h())))`.
+func (c *SLAAlertHistoryClient) Use(hooks ...Hook) {
+	c.hooks.SLAAlertHistory = append(c.hooks.SLAAlertHistory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slaalerthistory.Intercept(f(g(h())))`.
+func (c *SLAAlertHistoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAAlertHistory = append(c.inters.SLAAlertHistory, interceptors...)
+}
+
+// Create returns a builder for creating a SLAAlertHistory entity.
+func (c *SLAAlertHistoryClient) Create() *SLAAlertHistoryCreate {
+	mutation := newSLAAlertHistoryMutation(c.config, OpCreate)
+	return &SLAAlertHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAAlertHistory entities.
+func (c *SLAAlertHistoryClient) CreateBulk(builders ...*SLAAlertHistoryCreate) *SLAAlertHistoryCreateBulk {
+	return &SLAAlertHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAAlertHistoryClient) MapCreateBulk(slice any, setFunc func(*SLAAlertHistoryCreate, int)) *SLAAlertHistoryCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAAlertHistoryCreateBulk{err: fmt.Errorf("calling to SLAAlertHistoryClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAAlertHistoryCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAAlertHistoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAAlertHistory.
+func (c *SLAAlertHistoryClient) Update() *SLAAlertHistoryUpdate {
+	mutation := newSLAAlertHistoryMutation(c.config, OpUpdate)
+	return &SLAAlertHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAAlertHistoryClient) UpdateOne(sah *SLAAlertHistory) *SLAAlertHistoryUpdateOne {
+	mutation := newSLAAlertHistoryMutation(c.config, OpUpdateOne, withSLAAlertHistory(sah))
+	return &SLAAlertHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAAlertHistoryClient) UpdateOneID(id int) *SLAAlertHistoryUpdateOne {
+	mutation := newSLAAlertHistoryMutation(c.config, OpUpdateOne, withSLAAlertHistoryID(id))
+	return &SLAAlertHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAAlertHistory.
+func (c *SLAAlertHistoryClient) Delete() *SLAAlertHistoryDelete {
+	mutation := newSLAAlertHistoryMutation(c.config, OpDelete)
+	return &SLAAlertHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAAlertHistoryClient) DeleteOne(sah *SLAAlertHistory) *SLAAlertHistoryDeleteOne {
+	return c.DeleteOneID(sah.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAAlertHistoryClient) DeleteOneID(id int) *SLAAlertHistoryDeleteOne {
+	builder := c.Delete().Where(slaalerthistory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAAlertHistoryDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAAlertHistory.
+func (c *SLAAlertHistoryClient) Query() *SLAAlertHistoryQuery {
+	return &SLAAlertHistoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAAlertHistory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAAlertHistory entity by its id.
+func (c *SLAAlertHistoryClient) Get(ctx context.Context, id int) (*SLAAlertHistory, error) {
+	return c.Query().Where(slaalerthistory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAAlertHistoryClient) GetX(ctx context.Context, id int) *SLAAlertHistory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTicket queries the ticket edge of a SLAAlertHistory.
+func (c *SLAAlertHistoryClient) QueryTicket(sah *SLAAlertHistory) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sah.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaalerthistory.Table, slaalerthistory.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaalerthistory.TicketTable, slaalerthistory.TicketColumn),
+		)
+		fromV = sqlgraph.Neighbors(sah.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAlertRule queries the alert_rule edge of a SLAAlertHistory.
+func (c *SLAAlertHistoryClient) QueryAlertRule(sah *SLAAlertHistory) *SLAAlertRuleQuery {
+	query := (&SLAAlertRuleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sah.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaalerthistory.Table, slaalerthistory.FieldID, id),
+			sqlgraph.To(slaalertrule.Table, slaalertrule.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaalerthistory.AlertRuleTable, slaalerthistory.AlertRuleColumn),
+		)
+		fromV = sqlgraph.Neighbors(sah.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SLAAlertHistoryClient) Hooks() []Hook {
+	return c.hooks.SLAAlertHistory
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAAlertHistoryClient) Interceptors() []Interceptor {
+	return c.inters.SLAAlertHistory
+}
+
+func (c *SLAAlertHistoryClient) mutate(ctx context.Context, m *SLAAlertHistoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAAlertHistoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAAlertHistoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAAlertHistoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAAlertHistoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAAlertHistory mutation op: %q", m.Op())
+	}
+}
+
+// SLAAlertRuleClient is a client for the SLAAlertRule schema.
+type SLAAlertRuleClient struct {
+	config
+}
+
+// NewSLAAlertRuleClient returns a client for the SLAAlertRule from the given config.
+func NewSLAAlertRuleClient(c config) *SLAAlertRuleClient {
+	return &SLAAlertRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slaalertrule.Hooks(f(g(h())))`.
+func (c *SLAAlertRuleClient) Use(hooks ...Hook) {
+	c.hooks.SLAAlertRule = append(c.hooks.SLAAlertRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slaalertrule.Intercept(f(g(h())))`.
+func (c *SLAAlertRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAAlertRule = append(c.inters.SLAAlertRule, interceptors...)
+}
+
+// Create returns a builder for creating a SLAAlertRule entity.
+func (c *SLAAlertRuleClient) Create() *SLAAlertRuleCreate {
+	mutation := newSLAAlertRuleMutation(c.config, OpCreate)
+	return &SLAAlertRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAAlertRule entities.
+func (c *SLAAlertRuleClient) CreateBulk(builders ...*SLAAlertRuleCreate) *SLAAlertRuleCreateBulk {
+	return &SLAAlertRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAAlertRuleClient) MapCreateBulk(slice any, setFunc func(*SLAAlertRuleCreate, int)) *SLAAlertRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAAlertRuleCreateBulk{err: fmt.Errorf("calling to SLAAlertRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAAlertRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAAlertRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAAlertRule.
+func (c *SLAAlertRuleClient) Update() *SLAAlertRuleUpdate {
+	mutation := newSLAAlertRuleMutation(c.config, OpUpdate)
+	return &SLAAlertRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAAlertRuleClient) UpdateOne(sar *SLAAlertRule) *SLAAlertRuleUpdateOne {
+	mutation := newSLAAlertRuleMutation(c.config, OpUpdateOne, withSLAAlertRule(sar))
+	return &SLAAlertRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAAlertRuleClient) UpdateOneID(id int) *SLAAlertRuleUpdateOne {
+	mutation := newSLAAlertRuleMutation(c.config, OpUpdateOne, withSLAAlertRuleID(id))
+	return &SLAAlertRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAAlertRule.
+func (c *SLAAlertRuleClient) Delete() *SLAAlertRuleDelete {
+	mutation := newSLAAlertRuleMutation(c.config, OpDelete)
+	return &SLAAlertRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAAlertRuleClient) DeleteOne(sar *SLAAlertRule) *SLAAlertRuleDeleteOne {
+	return c.DeleteOneID(sar.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAAlertRuleClient) DeleteOneID(id int) *SLAAlertRuleDeleteOne {
+	builder := c.Delete().Where(slaalertrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAAlertRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAAlertRule.
+func (c *SLAAlertRuleClient) Query() *SLAAlertRuleQuery {
+	return &SLAAlertRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAAlertRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAAlertRule entity by its id.
+func (c *SLAAlertRuleClient) Get(ctx context.Context, id int) (*SLAAlertRule, error) {
+	return c.Query().Where(slaalertrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAAlertRuleClient) GetX(ctx context.Context, id int) *SLAAlertRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySLADefinition queries the sla_definition edge of a SLAAlertRule.
+func (c *SLAAlertRuleClient) QuerySLADefinition(sar *SLAAlertRule) *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sar.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaalertrule.Table, slaalertrule.FieldID, id),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slaalertrule.SLADefinitionTable, slaalertrule.SLADefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(sar.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAlertHistory queries the alert_history edge of a SLAAlertRule.
+func (c *SLAAlertRuleClient) QueryAlertHistory(sar *SLAAlertRule) *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sar.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slaalertrule.Table, slaalertrule.FieldID, id),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, slaalertrule.AlertHistoryTable, slaalertrule.AlertHistoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(sar.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SLAAlertRuleClient) Hooks() []Hook {
+	return c.hooks.SLAAlertRule
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAAlertRuleClient) Interceptors() []Interceptor {
+	return c.inters.SLAAlertRule
+}
+
+func (c *SLAAlertRuleClient) mutate(ctx context.Context, m *SLAAlertRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAAlertRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAAlertRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAAlertRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAAlertRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAAlertRule mutation op: %q", m.Op())
+	}
+}
+
 // SLADefinitionClient is a client for the SLADefinition schema.
 type SLADefinitionClient struct {
 	config
@@ -4957,6 +5792,22 @@ func (c *SLADefinitionClient) QueryTickets(sd *SLADefinition) *TicketQuery {
 			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, id),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.TicketsTable, sladefinition.TicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(sd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAlertRules queries the alert_rules edge of a SLADefinition.
+func (c *SLADefinitionClient) QueryAlertRules(sd *SLADefinition) *SLAAlertRuleQuery {
+	query := (&SLAAlertRuleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, id),
+			sqlgraph.To(slaalertrule.Table, slaalertrule.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.AlertRulesTable, sladefinition.AlertRulesColumn),
 		)
 		fromV = sqlgraph.Neighbors(sd.driver.Dialect(), step)
 		return fromV, nil
@@ -6373,6 +7224,54 @@ func (c *TicketClient) QueryNotifications(t *Ticket) *TicketNotificationQuery {
 			sqlgraph.From(ticket.Table, ticket.FieldID, id),
 			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticket.NotificationsTable, ticket.NotificationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySLAAlertHistory queries the sla_alert_history edge of a Ticket.
+func (c *TicketClient) QuerySLAAlertHistory(t *Ticket) *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.SLAAlertHistoryTable, ticket.SLAAlertHistoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryApprovalRecords queries the approval_records edge of a Ticket.
+func (c *TicketClient) QueryApprovalRecords(t *Ticket) *ApprovalRecordQuery {
+	query := (&ApprovalRecordClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(approvalrecord.Table, approvalrecord.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.ApprovalRecordsTable, ticket.ApprovalRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRootCauseAnalyses queries the root_cause_analyses edge of a Ticket.
+func (c *TicketClient) QueryRootCauseAnalyses(t *Ticket) *RootCauseAnalysisQuery {
+	query := (&RootCauseAnalysisClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, id),
+			sqlgraph.To(rootcauseanalysis.Table, rootcauseanalysis.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ticket.RootCauseAnalysesTable, ticket.RootCauseAnalysesColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -8505,27 +9404,29 @@ func (c *WorkflowInstanceClient) mutate(ctx context.Context, m *WorkflowInstance
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Application, AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
-		ConfigurationItem, Conversation, Department, Incident, IncidentAlert,
-		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		KnowledgeArticle, Message, Microservice, Notification, Problem,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, Project, PromptTemplate, SLADefinition,
-		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant,
-		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
+		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
+		CIRelationship, CIType, Change, ConfigurationItem, Conversation, Department,
+		Incident, IncidentAlert, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, KnowledgeArticle, Message, Microservice, Notification,
+		Problem, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, Project, PromptTemplate,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant, Ticket,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
+		ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
 	}
 	inters struct {
-		Application, AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
-		ConfigurationItem, Conversation, Department, Incident, IncidentAlert,
-		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		KnowledgeArticle, Message, Microservice, Notification, Problem,
-		ProcessDefinition, ProcessDeployment, ProcessExecutionHistory, ProcessInstance,
-		ProcessTask, ProcessVariable, Project, PromptTemplate, SLADefinition,
-		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant,
-		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance []ent.Interceptor
+		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
+		CIRelationship, CIType, Change, ConfigurationItem, Conversation, Department,
+		Incident, IncidentAlert, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, KnowledgeArticle, Message, Microservice, Notification,
+		Problem, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, Project, PromptTemplate,
+		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
+		SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant, Ticket,
+		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
+		ToolInvocation, User, Workflow, WorkflowInstance []ent.Interceptor
 	}
 )

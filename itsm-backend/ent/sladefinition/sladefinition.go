@@ -46,6 +46,8 @@ const (
 	EdgeMetrics = "metrics"
 	// EdgeTickets holds the string denoting the tickets edge name in mutations.
 	EdgeTickets = "tickets"
+	// EdgeAlertRules holds the string denoting the alert_rules edge name in mutations.
+	EdgeAlertRules = "alert_rules"
 	// Table holds the table name of the sladefinition in the database.
 	Table = "sla_definitions"
 	// ViolationsTable is the table that holds the violations relation/edge.
@@ -69,6 +71,13 @@ const (
 	TicketsInverseTable = "tickets"
 	// TicketsColumn is the table column denoting the tickets relation/edge.
 	TicketsColumn = "sla_definition_id"
+	// AlertRulesTable is the table that holds the alert_rules relation/edge.
+	AlertRulesTable = "sla_alert_rules"
+	// AlertRulesInverseTable is the table name for the SLAAlertRule entity.
+	// It exists in this package in order to avoid circular dependency with the "slaalertrule" package.
+	AlertRulesInverseTable = "sla_alert_rules"
+	// AlertRulesColumn is the table column denoting the alert_rules relation/edge.
+	AlertRulesColumn = "sla_definition_id"
 )
 
 // Columns holds all SQL columns for sladefinition fields.
@@ -221,6 +230,20 @@ func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAlertRulesCount orders the results by alert_rules count.
+func ByAlertRulesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAlertRulesStep(), opts...)
+	}
+}
+
+// ByAlertRules orders the results by alert_rules terms.
+func ByAlertRules(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAlertRulesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newViolationsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -240,5 +263,12 @@ func newTicketsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
+	)
+}
+func newAlertRulesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AlertRulesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AlertRulesTable, AlertRulesColumn),
 	)
 }

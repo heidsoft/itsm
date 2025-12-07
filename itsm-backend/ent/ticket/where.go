@@ -1566,6 +1566,75 @@ func HasNotificationsWith(preds ...predicate.TicketNotification) predicate.Ticke
 	})
 }
 
+// HasSLAAlertHistory applies the HasEdge predicate on the "sla_alert_history" edge.
+func HasSLAAlertHistory() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSLAAlertHistoryWith applies the HasEdge predicate on the "sla_alert_history" edge with a given conditions (other predicates).
+func HasSLAAlertHistoryWith(preds ...predicate.SLAAlertHistory) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newSLAAlertHistoryStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasApprovalRecords applies the HasEdge predicate on the "approval_records" edge.
+func HasApprovalRecords() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ApprovalRecordsTable, ApprovalRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasApprovalRecordsWith applies the HasEdge predicate on the "approval_records" edge with a given conditions (other predicates).
+func HasApprovalRecordsWith(preds ...predicate.ApprovalRecord) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newApprovalRecordsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRootCauseAnalyses applies the HasEdge predicate on the "root_cause_analyses" edge.
+func HasRootCauseAnalyses() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRootCauseAnalysesWith applies the HasEdge predicate on the "root_cause_analyses" edge with a given conditions (other predicates).
+func HasRootCauseAnalysesWith(preds ...predicate.RootCauseAnalysis) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newRootCauseAnalysesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Ticket) predicate.Ticket {
 	return predicate.Ticket(sql.AndPredicates(predicates...))

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
@@ -208,6 +209,21 @@ func (sdc *SLADefinitionCreate) AddTickets(t ...*Ticket) *SLADefinitionCreate {
 		ids[i] = t[i].ID
 	}
 	return sdc.AddTicketIDs(ids...)
+}
+
+// AddAlertRuleIDs adds the "alert_rules" edge to the SLAAlertRule entity by IDs.
+func (sdc *SLADefinitionCreate) AddAlertRuleIDs(ids ...int) *SLADefinitionCreate {
+	sdc.mutation.AddAlertRuleIDs(ids...)
+	return sdc
+}
+
+// AddAlertRules adds the "alert_rules" edges to the SLAAlertRule entity.
+func (sdc *SLADefinitionCreate) AddAlertRules(s ...*SLAAlertRule) *SLADefinitionCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdc.AddAlertRuleIDs(ids...)
 }
 
 // Mutation returns the SLADefinitionMutation object of the builder.
@@ -429,6 +445,22 @@ func (sdc *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSp
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sdc.mutation.AlertRulesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

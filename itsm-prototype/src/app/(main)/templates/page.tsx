@@ -629,7 +629,7 @@ const TicketTemplatePage: React.FC = () => {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={1000}
-        destroyOnClose
+        destroyOnHidden
       >
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab='基本信息' key='basic'>

@@ -14,6 +14,10 @@ type Tx struct {
 	config
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
+	// ApprovalRecord is the client for interacting with the ApprovalRecord builders.
+	ApprovalRecord *ApprovalRecordClient
+	// ApprovalWorkflow is the client for interacting with the ApprovalWorkflow builders.
+	ApprovalWorkflow *ApprovalWorkflowClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
@@ -68,6 +72,12 @@ type Tx struct {
 	Project *ProjectClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
+	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
+	RootCauseAnalysis *RootCauseAnalysisClient
+	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
+	SLAAlertHistory *SLAAlertHistoryClient
+	// SLAAlertRule is the client for interacting with the SLAAlertRule builders.
+	SLAAlertRule *SLAAlertRuleClient
 	// SLADefinition is the client for interacting with the SLADefinition builders.
 	SLADefinition *SLADefinitionClient
 	// SLAMetric is the client for interacting with the SLAMetric builders.
@@ -244,6 +254,8 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Application = NewApplicationClient(tx.config)
+	tx.ApprovalRecord = NewApprovalRecordClient(tx.config)
+	tx.ApprovalWorkflow = NewApprovalWorkflowClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
@@ -271,6 +283,9 @@ func (tx *Tx) init() {
 	tx.ProcessVariable = NewProcessVariableClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
+	tx.RootCauseAnalysis = NewRootCauseAnalysisClient(tx.config)
+	tx.SLAAlertHistory = NewSLAAlertHistoryClient(tx.config)
+	tx.SLAAlertRule = NewSLAAlertRuleClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
 	tx.SLAMetric = NewSLAMetricClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)

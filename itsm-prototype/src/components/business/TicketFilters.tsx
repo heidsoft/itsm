@@ -6,6 +6,7 @@ import { SearchOutlined, ReloadOutlined, FilterOutlined, ClearOutlined, CloseOut
 import dayjs from 'dayjs';
 import { TicketViewSelector } from './TicketViewSelector';
 import { TicketView } from '@/lib/api/ticket-view-api';
+import { FilterPresetSelector } from './FilterPresetSelector';
 import { debounce } from 'lodash-es';
 
 const { RangePicker } = DatePicker;
@@ -211,10 +212,10 @@ function TicketFilters({
   return (
     <Card className='mb-4' styles={{ body: { padding: '16px' } }} data-testid='ticket-filters'>
       <Space direction='vertical' style={{ width: '100%' }} size='middle'>
-        {/* 视图选择器 */}
-        {onViewChange && (
-          <Row>
-            <Col span={24}>
+        {/* 视图选择器和筛选预设 */}
+        <Row gutter={[12, 12]}>
+          {onViewChange && (
+            <Col xs={24} sm={12} md={8} lg={6}>
               <TicketViewSelector
                 currentViewId={currentViewId}
                 filters={filters}
@@ -222,8 +223,11 @@ function TicketFilters({
                 onFiltersChange={onFilterChange}
               />
             </Col>
-          </Row>
-        )}
+          )}
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <FilterPresetSelector filters={filters} onFiltersChange={onFilterChange} />
+          </Col>
+        </Row>
 
         <Row gutter={[12, 12]} align='middle'>
           {/* 搜索框 */}

@@ -7,15 +7,16 @@ import (
 
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
-	Title       string                 `json:"title" binding:"required,min=2,max=200"`
-	Description string                 `json:"description" binding:"required,min=10,max=5000"`
-	Priority    string                 `json:"priority" binding:"required,oneof=low medium high critical"`
-	Category    string                 `json:"category" binding:"required"`
-	RequesterID int                    `json:"requester_id" binding:"required"`
-	AssigneeID  int                    `json:"assignee_id"`
-	Tags        []string               `json:"tags"`
-	FormFields  map[string]interface{} `json:"form_fields"`
-	Attachments []string               `json:"attachments"`
+	Title          string                 `json:"title" binding:"required,min=2,max=200"`
+	Description    string                 `json:"description" binding:"required,min=10,max=5000"`
+	Priority       string                 `json:"priority" binding:"required,oneof=low medium high critical"`
+	Category       string                 `json:"category" binding:"required"`
+	RequesterID    int                    `json:"requester_id" binding:"required"`
+	AssigneeID     int                    `json:"assignee_id"`
+	ParentTicketID *int                   `json:"parent_ticket_id,omitempty"`
+	Tags           []string              `json:"tags"`
+	FormFields     map[string]interface{} `json:"form_fields"`
+	Attachments    []string               `json:"attachments"`
 }
 
 // UpdateTicketRequest 更新工单请求
@@ -33,19 +34,20 @@ type UpdateTicketRequest struct {
 
 // ListTicketsRequest 获取工单列表请求
 type ListTicketsRequest struct {
-	Page        int        `json:"page" form:"page"`
-	PageSize    int        `json:"page_size" form:"page_size"`
-	Status      string     `json:"status" form:"status"`
-	Priority    string     `json:"priority" form:"priority"`
-	Category    string     `json:"category" form:"category"`
-	AssigneeID  int        `json:"assignee_id" form:"assignee_id"`
-	RequesterID int        `json:"requester_id" form:"requester_id"`
-	Keyword     string     `json:"keyword" form:"keyword"`
-	DateFrom    *time.Time `json:"date_from" form:"date_from"`
-	DateTo      *time.Time `json:"date_to" form:"date_to"`
-	IsOverdue   bool       `json:"is_overdue" form:"is_overdue"`
-	SortBy      string     `json:"sort_by" form:"sort_by"`
-	SortOrder   string     `json:"sort_order" form:"sort_order"`
+	Page          int        `json:"page" form:"page"`
+	PageSize      int        `json:"page_size" form:"page_size"`
+	Status        string     `json:"status" form:"status"`
+	Priority      string     `json:"priority" form:"priority"`
+	Category      string     `json:"category" form:"category"`
+	AssigneeID    int        `json:"assignee_id" form:"assignee_id"`
+	RequesterID   int        `json:"requester_id" form:"requester_id"`
+	ParentTicketID *int      `json:"parent_ticket_id" form:"parent_ticket_id"`
+	Keyword       string     `json:"keyword" form:"keyword"`
+	DateFrom      *time.Time `json:"date_from" form:"date_from"`
+	DateTo        *time.Time `json:"date_to" form:"date_to"`
+	IsOverdue     bool       `json:"is_overdue" form:"is_overdue"`
+	SortBy        string     `json:"sort_by" form:"sort_by"`
+	SortOrder     string     `json:"sort_order" form:"sort_order"`
 }
 
 // TicketResponse 工单响应
