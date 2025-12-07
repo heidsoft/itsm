@@ -1,21 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Space, Pagination, Skeleton } from 'antd';
+import { Button, Space, Pagination } from 'antd';
 import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import { useIncidentsData } from './hooks/useIncidentsData';
 import { IncidentStats } from './components/IncidentStats';
 import { IncidentFilters } from './components/IncidentFilters';
 import { IncidentList } from './components/IncidentList';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { useI18n } from '@/lib/i18n';
-
-const IncidentsPageSkeleton: React.FC = () => (
-  <div>
-    <Skeleton active paragraph={{ rows: 4 }} />
-    <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 24 }} />
-    <Skeleton active paragraph={{ rows: 8 }} style={{ marginTop: 24 }} />
-  </div>
-);
 
 export default function IncidentsPage() {
   const { t } = useI18n();
@@ -38,9 +31,55 @@ export default function IncidentsPage() {
     window.location.href = '/incidents/new';
   };
 
-  if (loading) {
-    return <IncidentsPageSkeleton />;
-  }
+  // 使用统一的 LoadingEmptyError 组件处理加载和空态
+  const renderContent = () => {
+    if (loading) {
+      return <LoadingEmptyError state='loading' loadingText={t('incidents.loading')} />;
+    }
+
+    if (!incidents || incidents.length === 0) {
+      return (
+        <LoadingEmptyError
+          state='empty'
+          empty={{
+            title: t('incidents.emptyTitle') || '暂无事件',
+            description: t('incidents.emptyDescription') || '当前没有事件数据',
+            actionText: t('incidents.create') || '创建事件',
+            onAction: handleCreateIncident,
+            showAction: true,
+          }}
+        />
+      );
+    }
+
+    return (
+      <>
+        <IncidentList
+          incidents={incidents}
+          loading={loading}
+          selectedRowKeys={selectedRowKeys}
+          onSelectedRowKeysChange={setSelectedRowKeys}
+          onEdit={incident => (window.location.href = `/incidents/${incident.id}/edit`)}
+          onView={incident => (window.location.href = `/incidents/${incident.id}`)}
+        />
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={total}
+          showSizeChanger
+          showQuickJumper
+          showTotal={(total, range) =>
+            t('incidents.paginationItems', { start: range[0], end: range[1], total })
+          }
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          style={{ marginTop: 16, textAlign: 'right' }}
+        />
+      </>
+    );
+  };
 
   return (
     <div>
@@ -78,27 +117,7 @@ export default function IncidentsPage() {
             </Button>
           </Space>
         </div>
-        <IncidentList
-          incidents={incidents}
-          loading={loading}
-          selectedRowKeys={selectedRowKeys}
-          onSelectedRowKeysChange={setSelectedRowKeys}
-          onEdit={incident => (window.location.href = `/incidents/${incident.id}/edit`)}
-          onView={incident => (window.location.href = `/incidents/${incident.id}`)}
-        />
-        <Pagination
-          current={currentPage}
-          pageSize={pageSize}
-          total={total}
-          showSizeChanger
-          showQuickJumper
-          showTotal={(total, range) => t('incidents.paginationItems', { start: range[0], end: range[1], total })}
-          onChange={(page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-          }}
-          style={{ marginTop: 16, textAlign: 'right' }}
-        />
+        {renderContent()}
       </div>
     </div>
   );

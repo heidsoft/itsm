@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TicketFilters, { TicketFilterState } from '../TicketFilters';
+import TicketFilters, { TicketFilterState } from '@/components/business/TicketFilters';
 
 describe('TicketFilters 组件', () => {
   const setup = (initial?: Partial<TicketFilterState>) => {

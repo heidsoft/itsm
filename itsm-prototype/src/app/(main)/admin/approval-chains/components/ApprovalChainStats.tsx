@@ -10,7 +10,7 @@ import {
   UserOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { ApprovalChainStats } from '../../../../types/approval-chain';
+import { ApprovalChainStats } from '@/types/approval-chain';
 
 const { Title } = Typography;
 

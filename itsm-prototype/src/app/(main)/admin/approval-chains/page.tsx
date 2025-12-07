@@ -16,12 +16,12 @@ import { httpClient } from '@/lib/api/http-client';
 // import { handleError } from '@/lib/error-handler';
 
 // 临时错误处理函数
-const handleError = (error: unknown, message?: string) => {
-  console.error(message || '操作失败', error);
+const handleError = (error: unknown, errorMessage?: string) => {
+  console.error(errorMessage || '操作失败', error);
   if (error instanceof Error) {
     message.error(error.message);
   } else {
-    message.error(message || '操作失败');
+    message.error(errorMessage || '操作失败');
   }
 };
 

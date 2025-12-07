@@ -26,8 +26,8 @@ import {
   ApprovalStep,
   CreateApprovalChainRequest,
   UpdateApprovalChainRequest,
-} from '../../../../types/approval-chain';
-import { FormField } from '../../../../types/common';
+} from '@/types/approval-chain';
+import { FormField } from '@/types/common';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -72,7 +72,7 @@ export function ApprovalChainModal({
           isActive: editingChain.isActive,
         });
         setSteps(
-          editingChain.steps.map(step => ({
+          editingChain.steps.map((step: ApprovalStep) => ({
             stepOrder: step.stepOrder,
             stepName: step.stepName,
             approverType: step.approverType,

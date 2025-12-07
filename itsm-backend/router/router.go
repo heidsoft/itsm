@@ -46,6 +46,10 @@ type RouterConfig struct {
 	ApplicationController *controller.ApplicationController
 	TeamController        *controller.TeamController
 	TagController         *controller.TagController
+	
+	// Ticket related controllers
+	TicketCategoryController *controller.TicketCategoryController
+	TicketTagController      *controller.TicketTagController
 }
 
 // SetupRoutes 设置路由
@@ -88,6 +92,43 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	{
 		// 租户中间件
 		tenant := auth.Use(middleware.TenantMiddleware(config.Client))
+
+		// 工单分类管理
+		if config.TicketCategoryController != nil {
+			categories := tenant.(*gin.RouterGroup).Group("/ticket-categories")
+			categories.Use(middleware.RequirePermission("ticket_category", "read"))
+			{
+				categories.GET("", config.TicketCategoryController.ListCategories)
+				categories.POST("", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.CreateCategory)
+				categories.GET("/:id", config.TicketCategoryController.GetCategory)
+				categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryController.UpdateCategory)
+				categories.DELETE("/:id", middleware.RequirePermission("ticket_category", "delete"), config.TicketCategoryController.DeleteCategory)
+				categories.GET("/tree", config.TicketCategoryController.GetCategoryTree)
+			}
+		}
+
+		// 工单标签管理
+		if config.TicketTagController != nil {
+			tags := tenant.(*gin.RouterGroup).Group("/ticket-tags")
+			tags.Use(middleware.RequirePermission("ticket_tag", "read"))
+			{
+				tags.GET("", config.TicketTagController.ListTags)
+				tags.POST("", middleware.RequirePermission("ticket_tag", "create"), config.TicketTagController.CreateTag)
+				tags.GET("/:id", config.TicketTagController.GetTag)
+				tags.PUT("/:id", middleware.RequirePermission("ticket_tag", "update"), config.TicketTagController.UpdateTag)
+				tags.DELETE("/:id", middleware.RequirePermission("ticket_tag", "delete"), config.TicketTagController.DeleteTag)
+			}
+		}
+
+		// 工单模板管理
+		templates := tenant.(*gin.RouterGroup).Group("/ticket-templates")
+		templates.Use(middleware.RequirePermission("ticket_template", "read"))
+		{
+			templates.GET("", config.TicketController.GetTicketTemplates)
+			templates.POST("", middleware.RequirePermission("ticket_template", "create"), config.TicketController.CreateTicketTemplate)
+			templates.PUT("/:id", middleware.RequirePermission("ticket_template", "update"), config.TicketController.UpdateTicketTemplate)
+			templates.DELETE("/:id", middleware.RequirePermission("ticket_template", "delete"), config.TicketController.DeleteTicketTemplate)
+		}
 
 		// 工单管理
 		tickets := tenant.(*gin.RouterGroup).Group("/tickets")

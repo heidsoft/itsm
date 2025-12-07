@@ -124,7 +124,15 @@ const PERMISSIONS = [
 ];
 
 export default function RoleManagement() {
-  const [roles, setRoles] = useState<unknown[]>([]);
+  interface RoleItem {
+    id: number;
+    name: string;
+    description?: string;
+    status: string;
+    permissions: string[];
+    created_at?: string;
+  }
+  const [roles, setRoles] = useState<RoleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<any>(null);
@@ -262,10 +270,10 @@ export default function RoleManagement() {
     {
       title: '角色信息',
       key: 'info',
-      render: (_: unknown, record: any) => (
+      render: (_: unknown, record: { name: string; description?: string }) => (
         <div>
-          <div className='font-medium text-gray-900'>{(record as any).name}</div>
-          <div className='text-sm text-gray-500'>{(record as any).description}</div>
+          <div className='font-medium text-gray-900'>{record.name}</div>
+          <div className='text-sm text-gray-500'>{record.description}</div>
         </div>
       ),
     },
@@ -295,7 +303,16 @@ export default function RoleManagement() {
       title: '操作',
       key: 'actions',
       width: 150,
-      render: (_: unknown, record: unknown) => (
+      render: (
+        _: unknown,
+        record: {
+          id: number;
+          name: string;
+          description?: string;
+          status: string;
+          permissions: string[];
+        }
+      ) => (
         <Space size='small'>
           <Tooltip title='编辑'>
             <Button
@@ -305,9 +322,9 @@ export default function RoleManagement() {
                 setSelectedRole(record);
                 // 设置表单值
                 const formValues: Record<string, unknown> = {
-                  name: (record as any).name,
-                  description: (record as any).description,
-                  status: (record as any).status === 'active',
+                  name: record.name,
+                  description: record.description,
+                  status: record.status === 'active',
                 };
 
                 // 设置权限值

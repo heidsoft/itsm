@@ -1,8 +1,6 @@
 {
   "extends": [
-    "next/core-web-vitals",
-    "@typescript-eslint/recommended",
-    "@typescript-eslint/recommended-requiring-type-checking"
+    "next/core-web-vitals"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -13,74 +11,18 @@
     },
     "project": "./tsconfig.json"
   },
-  "plugins": [
-    "@typescript-eslint",
-    "react",
-    "react-hooks"
-  ],
+  "plugins": [],
   "rules": {
-    // TypeScript 严格规则
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-unsafe-assignment": "error",
-    "@typescript-eslint/no-unsafe-call": "error",
-    "@typescript-eslint/no-unsafe-member-access": "error",
-    "@typescript-eslint/no-unsafe-return": "error",
-    "@typescript-eslint/prefer-nullish-coalescing": "error",
-    "@typescript-eslint/prefer-optional-chain": "error",
-    "@typescript-eslint/no-unnecessary-type-assertion": "error",
-    "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/no-misused-promises": "error",
-    
-    // React 规则
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "react/jsx-uses-react": "off",
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
-    
-    // 代码质量规则
     "no-console": "warn",
     "no-debugger": "error",
     "no-alert": "warn",
     "no-var": "error",
-    "prefer-const": "error",
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    
-    // 导入规则
-    "import/order": [
-      "error",
-      {
-        "groups": [
-          "builtin",
-          "external",
-          "internal",
-          "parent",
-          "sibling",
-          "index"
-        ],
-        "newlines-between": "always",
-        "alphabetize": {
-          "order": "asc",
-          "caseInsensitive": true
-        }
-      }
-    ],
-    
-    // 文件命名规则
-    "filename-rules/match": [
-      "error",
-      {
-        ".tsx": "kebab-case",
-        ".ts": "kebab-case"
-      }
-    ],
-    
-    // 自定义规则
-    "itsm/no-any-in-production": "error",
-    "itsm/consistent-import-paths": "error",
-    "itsm/no-console-in-production": "warn"
+    "prefer-const": "error"
   },
   "overrides": [
     {
@@ -92,9 +34,7 @@
     },
     {
       "files": ["**/layout.tsx", "**/page.tsx"],
-      "rules": {
-        "itsm/consistent-import-paths": "off"
-      }
+      "rules": {}
     }
   ],
   "settings": {

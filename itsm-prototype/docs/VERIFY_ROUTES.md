@@ -14,85 +14,95 @@ npm run dev
 打开浏览器并访问以下 URL：
 
 #### ✅ 登录页面
-- **URL**: http://localhost:3000/login
+
+- **URL**: <http://localhost:3000/login>
 - **预期**: 显示登录页面（简洁布局，无 Header/Sidebar）
 - **文件**: `src/app/(auth)/login/page.tsx`
-
-#### ✅ 企业登录
-- **URL**: http://localhost:3000/enterprise-login
-- **预期**: 显示企业登录页面
-- **文件**: `src/app/(auth)/enterprise-login/page.tsx`
 
 ### 3. 验证主应用路由（需要认证）
 
 **注意**: 以下路由需要先登录才能访问
 
 #### ✅ 首页重定向
-- **URL**: http://localhost:3000/
-- **预期**: 
+
+- **URL**: <http://localhost:3000/>
+- **预期**:
   - 未登录 → 重定向到 `/login`
   - 已登录 → 重定向到 `/dashboard`
 
 #### ✅ 仪表盘
-- **URL**: http://localhost:3000/dashboard
+
+- **URL**: <http://localhost:3000/dashboard>
 - **预期**: 显示仪表盘（带 Header + Sidebar）
 - **文件**: `src/app/(main)/dashboard/page.tsx`
 - **布局**: 使用 `(main)/layout.tsx`
 
 #### ✅ 工单管理
-- **列表**: http://localhost:3000/tickets
-- **详情**: http://localhost:3000/tickets/1
-- **创建**: http://localhost:3000/tickets/create
-- **模板**: http://localhost:3000/tickets/templates
+
+- **列表**: <http://localhost:3000/tickets>
+- **详情**: <http://localhost:3000/tickets/1>
+- **创建**: <http://localhost:3000/tickets/create>
+- **模板**: <http://localhost:3000/tickets/templates>
 
 #### ✅ 事件管理
-- **列表**: http://localhost:3000/incidents
-- **详情**: http://localhost:3000/incidents/1
-- **创建**: http://localhost:3000/incidents/new
+
+- **列表**: <http://localhost:3000/incidents>
+- **详情**: <http://localhost:3000/incidents/1>
+- **创建**: <http://localhost:3000/incidents/new>
 
 #### ✅ 问题管理
-- **列表**: http://localhost:3000/problems
-- **详情**: http://localhost:3000/problems/1
-- **创建**: http://localhost:3000/problems/new
+
+- **列表**: <http://localhost:3000/problems>
+- **详情**: <http://localhost:3000/problems/1>
+- **创建**: <http://localhost:3000/problems/new>
 
 #### ✅ 变更管理
-- **列表**: http://localhost:3000/changes
-- **详情**: http://localhost:3000/changes/1
-- **创建**: http://localhost:3000/changes/new
+
+- **列表**: <http://localhost:3000/changes>
+- **详情**: <http://localhost:3000/changes/1>
+- **创建**: <http://localhost:3000/changes/new>
 
 #### ✅ 配置管理 (CMDB)
-- **主页**: http://localhost:3000/cmdb
-- **CI详情**: http://localhost:3000/cmdb/1
+
+- **主页**: <http://localhost:3000/cmdb>
+- **CI详情**: <http://localhost:3000/cmdb/1>
 
 #### ✅ 知识库
-- **主页**: http://localhost:3000/knowledge-base
-- **文章**: http://localhost:3000/knowledge-base/1
-- **创建**: http://localhost:3000/knowledge-base/new
+
+- **主页**: <http://localhost:3000/knowledge-base>
+- **文章**: <http://localhost:3000/knowledge-base/1>
+- **创建**: <http://localhost:3000/knowledge-base/new>
 
 #### ✅ 服务目录
-- **主页**: http://localhost:3000/service-catalog
+
+- **主页**: <http://localhost:3000/service-catalog>
 
 #### ✅ SLA 管理
-- **主页**: http://localhost:3000/sla
-- **仪表盘**: http://localhost:3000/sla-dashboard
+
+- **主页**: <http://localhost:3000/sla>
+- **仪表盘**: <http://localhost:3000/sla-dashboard>
 
 #### ✅ 报告中心
-- **主页**: http://localhost:3000/reports
+
+- **主页**: <http://localhost:3000/reports>
 
 #### ✅ 工作流管理
-- **主页**: http://localhost:3000/workflow
-- **设计器**: http://localhost:3000/workflow/designer
-- **实例**: http://localhost:3000/workflow/instances
+
+- **主页**: <http://localhost:3000/workflow>
+- **设计器**: <http://localhost:3000/workflow/designer>
+- **实例**: <http://localhost:3000/workflow/instances>
 
 #### ✅ 系统管理
-- **主页**: http://localhost:3000/admin
-- **用户**: http://localhost:3000/admin/users
-- **角色**: http://localhost:3000/admin/roles
-- **租户**: http://localhost:3000/admin/tenants
-- **审批链**: http://localhost:3000/admin/approval-chains
+
+- **主页**: <http://localhost:3000/admin>
+- **用户**: <http://localhost:3000/admin/users>
+- **角色**: <http://localhost:3000/admin/roles>
+- **租户**: <http://localhost:3000/admin/tenants>
+- **审批链**: <http://localhost:3000/admin/approval-chains>
 
 #### ✅ 个人中心
-- **主页**: http://localhost:3000/profile
+
+- **主页**: <http://localhost:3000/profile>
 
 ---
 
@@ -101,12 +111,14 @@ npm run dev
 ### 1. 布局检查
 
 #### 认证页面 (`(auth)` 路由组)
+
 - ✅ **无** Header
 - ✅ **无** Sidebar
 - ✅ 全屏布局
 - ✅ 简洁设计
 
 #### 主应用页面 (`(main)` 路由组)
+
 - ✅ **有** Header（顶部导航栏）
 - ✅ **有** Sidebar（左侧菜单）
 - ✅ **有** Footer（底部信息）
@@ -163,10 +175,12 @@ npm run dev
 ### 问题 1: 页面显示 404
 
 **可能原因**:
+
 - 文件路径不正确
 - 文件名不是 `page.tsx`
 
 **检查**:
+
 ```bash
 # 检查文件是否存在
 ls -la src/app/(main)/dashboard/page.tsx
@@ -175,10 +189,12 @@ ls -la src/app/(main)/dashboard/page.tsx
 ### 问题 2: Sidebar 或 Header 不显示
 
 **可能原因**:
+
 - `(main)/layout.tsx` 未生效
 - 组件导入路径错误
 
 **检查**:
+
 ```bash
 # 检查布局文件
 cat src/app/(main)/layout.tsx
@@ -187,10 +203,12 @@ cat src/app/(main)/layout.tsx
 ### 问题 3: 认证重定向不工作
 
 **可能原因**:
+
 - AuthService 未正确导入
 - Cookie/localStorage 未设置
 
 **检查**:
+
 - 打开浏览器控制台
 - 查看 Network 标签
 - 检查 localStorage 是否有 `auth_token`
@@ -202,6 +220,7 @@ cat src/app/(main)/layout.tsx
 **原因**: 这是 Next.js 的 bug 或配置问题
 
 **解决**:
+
 - 确保文件夹名称使用英文括号 `(main)` 而非中文括号
 - 重启开发服务器
 
@@ -212,6 +231,7 @@ cat src/app/(main)/layout.tsx
 完成以下检查后，在 [ ] 中打勾：
 
 ### 基础验证
+
 - [ ] 开发服务器启动成功
 - [ ] `/login` 页面显示正常
 - [ ] `/dashboard` 页面显示正常
@@ -219,16 +239,19 @@ cat src/app/(main)/layout.tsx
 - [ ] Sidebar 显示正常
 
 ### 路由验证
+
 - [ ] 所有主模块页面可访问
 - [ ] 动态路由（如 `/tickets/1`）正常工作
 - [ ] 子路由（如 `/admin/users`）正常工作
 
 ### 布局验证
+
 - [ ] 认证页面使用简洁布局
 - [ ] 主应用页面使用完整布局
 - [ ] 布局切换正常
 
 ### 功能验证
+
 - [ ] 登录流程正常
 - [ ] 退出登录正常
 - [ ] 页面跳转正常
@@ -236,6 +259,7 @@ cat src/app/(main)/layout.tsx
 - [ ] 响应式布局正常
 
 ### 性能验证
+
 - [ ] 页面加载速度正常
 - [ ] 无控制台错误
 - [ ] 无 404 错误
@@ -250,12 +274,11 @@ cat src/app/(main)/layout.tsx
 **分辨率**: _____________
 
 **发现的问题**:
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 **备注**:
-
 
 ---
 
@@ -274,4 +297,3 @@ cat src/app/(main)/layout.tsx
 ---
 
 **准备好了吗？开始验证吧！** 🚀
-

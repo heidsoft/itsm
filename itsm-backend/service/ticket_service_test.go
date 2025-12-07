@@ -2,14 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/user"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,6 +28,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 	// 创建测试租户
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -40,9 +38,10 @@ func TestTicketService_CreateTicket(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -59,8 +58,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 				Title:       "测试工单",
 				Description: "这是一个测试工单的详细描述",
 				Priority:    "medium",
-				Type:        "incident",
-				Source:      "web",
+				Category:    "incident",
 				RequesterID: testUser.ID,
 				FormFields: map[string]interface{}{
 					"category": "hardware",
@@ -76,8 +74,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 				Title:       "",
 				Description: "描述",
 				Priority:    "medium",
-				Type:        "incident",
-				Source:      "web",
+				Category:    "incident",
 				RequesterID: testUser.ID,
 			},
 			tenantID:      testTenant.ID,
@@ -89,8 +86,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 				Title:       "标题",
 				Description: "",
 				Priority:    "medium",
-				Type:        "incident",
-				Source:      "web",
+				Category:    "incident",
 				RequesterID: testUser.ID,
 			},
 			tenantID:      testTenant.ID,
@@ -102,8 +98,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 				Title:       "标题",
 				Description: "描述",
 				Priority:    "invalid",
-				Type:        "incident",
-				Source:      "web",
+				Category:    "incident",
 				RequesterID: testUser.ID,
 			},
 			tenantID:      testTenant.ID,
@@ -125,7 +120,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 				assert.Equal(t, tt.request.Description, response.Description)
 				assert.Equal(t, tt.request.Priority, response.Priority)
 				assert.Equal(t, "open", response.Status) // 默认状态
-				assert.NotEmpty(t, response.IncidentNumber)
+				assert.NotEmpty(t, response.TicketNumber)
 				assert.Equal(t, tt.tenantID, response.TenantID)
 			}
 		})
@@ -147,6 +142,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 	// 创建测试数据
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -155,9 +151,10 @@ func TestTicketService_GetTickets(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -170,9 +167,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 			SetDescription(fmt.Sprintf("测试工单描述 %d", i+1)).
 			SetPriority("medium").
 			SetStatus("open").
-			SetType("incident").
-			SetSource("web").
-			SetIncidentNumber(fmt.Sprintf("INC-%d", i+1)).
+			SetTicketNumber(fmt.Sprintf("TICKET-%d", i+1)).
 			SetRequesterID(testUser.ID).
 			SetTenantID(testTenant.ID).
 			Save(ctx)
@@ -182,14 +177,14 @@ func TestTicketService_GetTickets(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		request       *dto.GetTicketsRequest
+		request       *dto.ListTicketsRequest
 		tenantID      int
 		expectedCount int
 		expectedError bool
 	}{
 		{
 			name: "获取所有工单",
-			request: &dto.GetTicketsRequest{
+			request: &dto.ListTicketsRequest{
 				Page:     1,
 				PageSize: 10,
 			},
@@ -199,7 +194,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 		},
 		{
 			name: "分页查询",
-			request: &dto.GetTicketsRequest{
+			request: &dto.ListTicketsRequest{
 				Page:     1,
 				PageSize: 2,
 			},
@@ -209,7 +204,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 		},
 		{
 			name: "按状态筛选",
-			request: &dto.GetTicketsRequest{
+			request: &dto.ListTicketsRequest{
 				Page:     1,
 				PageSize: 10,
 				Status:   "open",
@@ -220,7 +215,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 		},
 		{
 			name: "按优先级筛选",
-			request: &dto.GetTicketsRequest{
+			request: &dto.ListTicketsRequest{
 				Page:     1,
 				PageSize: 10,
 				Priority: "medium",
@@ -233,7 +228,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := ticketService.GetTickets(ctx, tt.request, tt.tenantID)
+			response, err := ticketService.ListTickets(ctx, tt.request, tt.tenantID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -265,6 +260,7 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 	// 创建测试数据
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -273,9 +269,10 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -285,9 +282,7 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 		SetDescription("测试工单描述").
 		SetPriority("high").
 		SetStatus("open").
-		SetType("incident").
-		SetSource("web").
-		SetIncidentNumber("INC-001").
+		SetTicketNumber("TICKET-001").
 		SetRequesterID(testUser.ID).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
@@ -321,7 +316,7 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ticket, err := ticketService.GetTicketByID(ctx, tt.ticketID, tt.tenantID)
+			ticket, err := ticketService.GetTicket(ctx, tt.ticketID, tt.tenantID)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -352,6 +347,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 	// 创建测试数据
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -360,9 +356,10 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -372,9 +369,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 		SetDescription("原始描述").
 		SetPriority("low").
 		SetStatus("open").
-		SetType("incident").
-		SetSource("web").
-		SetIncidentNumber("INC-001").
+		SetTicketNumber("TICKET-001").
 		SetRequesterID(testUser.ID).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
@@ -432,7 +427,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, updatedTicket)
-				
+
 				if tt.request.Title != "" {
 					assert.Equal(t, tt.request.Title, updatedTicket.Title)
 				}
@@ -465,6 +460,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 	// 创建测试数据
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -473,9 +469,10 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -485,9 +482,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 		SetDescription("待删除工单描述").
 		SetPriority("low").
 		SetStatus("open").
-		SetType("incident").
-		SetSource("web").
-		SetIncidentNumber("INC-001").
+		SetTicketNumber("TICKET-001").
 		SetRequesterID(testUser.ID).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
@@ -521,7 +516,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				
+
 				// 验证工单已被删除
 				_, err := client.Ticket.Get(ctx, tt.ticketID)
 				assert.Error(t, err)
@@ -546,6 +541,7 @@ func TestTicketService_SearchTickets(t *testing.T) {
 	// 创建测试数据
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -554,9 +550,10 @@ func TestTicketService_SearchTickets(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -567,9 +564,7 @@ func TestTicketService_SearchTickets(t *testing.T) {
 		SetDescription("用户无法连接到网络").
 		SetPriority("high").
 		SetStatus("open").
-		SetType("incident").
-		SetSource("web").
-		SetIncidentNumber("INC-001").
+		SetTicketNumber("TICKET-001").
 		SetRequesterID(testUser.ID).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
@@ -580,9 +575,7 @@ func TestTicketService_SearchTickets(t *testing.T) {
 		SetDescription("打印机无法正常工作").
 		SetPriority("medium").
 		SetStatus("open").
-		SetType("incident").
-		SetSource("web").
-		SetIncidentNumber("INC-002").
+		SetTicketNumber("TICKET-002").
 		SetRequesterID(testUser.ID).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
@@ -657,6 +650,7 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 	// 创建测试数据
 	testTenant, _ := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -664,9 +658,10 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 	testUser, _ := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash("hashedpassword").
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 
@@ -674,8 +669,7 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 		Title:       "基准测试工单",
 		Description: "这是一个基准测试工单",
 		Priority:    "medium",
-		Type:        "incident",
-		Source:      "web",
+		Category:    "incident",
 		RequesterID: testUser.ID,
 	}
 

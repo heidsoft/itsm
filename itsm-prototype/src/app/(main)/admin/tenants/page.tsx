@@ -97,9 +97,13 @@ export default function TenantManagement() {
 
       // 计算统计数据
       const total = response.tenants.length;
-      const active = response.tenants.filter(t => t.status === 'active').length;
-      const suspended = response.tenants.filter(t => t.status === 'suspended').length;
-      const trial = response.tenants.filter(t => t.status === 'trial').length;
+      const active = response.tenants.filter(
+        (t: { status: string }) => t.status === 'active'
+      ).length;
+      const suspended = response.tenants.filter(
+        (t: { status: string }) => t.status === 'suspended'
+      ).length;
+      const trial = response.tenants.filter((t: { status: string }) => t.status === 'trial').length;
 
       setStats({
         total,
@@ -162,7 +166,7 @@ export default function TenantManagement() {
     {
       title: '租户信息',
       key: 'info',
-      render: (_: unknown, record: unknown) => (
+      render: (_: unknown, record: { name: string; code: string; domain?: string }) => (
         <div className='flex items-center'>
           <div className='flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center'>
             <Building2 className='h-5 w-5 text-blue-600' />
@@ -170,7 +174,7 @@ export default function TenantManagement() {
           <div className='ml-4'>
             <div className='text-sm font-medium text-gray-900'>{record.name}</div>
             <div className='text-sm text-gray-500'>
-              {record.code} • {record.domain}
+              {record.code} • {record.domain || ''}
             </div>
           </div>
         </div>
@@ -179,7 +183,10 @@ export default function TenantManagement() {
     {
       title: '类型/状态',
       key: 'type-status',
-      render: (_: unknown, record: unknown) => (
+      render: (
+        _: unknown,
+        record: { type: keyof typeof TENANT_TYPES; status: keyof typeof TENANT_STATUS }
+      ) => (
         <div className='space-y-1'>
           <Tag color={TENANT_TYPES[record.type]?.color || 'default'}>
             {TENANT_TYPES[record.type]?.label || record.type}

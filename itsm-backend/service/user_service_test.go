@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
-	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"

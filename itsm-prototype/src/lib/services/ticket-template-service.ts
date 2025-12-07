@@ -55,7 +55,14 @@ class TicketTemplateService {
   // 获取模板列表
   async getTemplates(params: ListTemplatesParams = {}): Promise<TemplateListResponse> {
     try {
-      const response = await httpClient.get<TemplateListResponse>('/api/v1/ticket-templates', { params });
+      // 将params对象转换为查询参数
+      const queryParams: Record<string, unknown> = {};
+      if (params.page) queryParams.page = params.page;
+      if (params.page_size) queryParams.page_size = params.page_size;
+      if (params.category) queryParams.category = params.category;
+      if (params.is_active !== undefined) queryParams.is_active = params.is_active;
+      
+      const response = await httpClient.get<TemplateListResponse>('/api/v1/ticket-templates', queryParams);
       return response;
     } catch (error) {
       console.error('TicketTemplateService.getTemplates error:', error);

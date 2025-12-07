@@ -114,22 +114,19 @@ jest.mock('@/lib/store/unified-auth-store', () => ({
 }));
 
 // Test utilities
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      cacheTime: 0,
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
     },
-  },
-});
+  });
 
 const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 };
 
 describe('DashboardPage', () => {
@@ -216,8 +213,7 @@ describe('DashboardPage', () => {
       await waitFor(() => {
         // 应该有创建工单等快速操作
         expect(
-          screen.queryByText(/创建工单/i) || 
-          screen.queryByText(/Create Ticket/i)
+          screen.queryByText(/创建工单/i) || screen.queryByText(/Create Ticket/i)
         ).toBeTruthy();
       });
     });
@@ -242,8 +238,9 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         // 应该有图表容器
-        const chartContainer = container.querySelector('[data-testid="ticket-trend-chart"]') ||
-                              container.querySelector('.chart-container');
+        const chartContainer =
+          container.querySelector('[data-testid="ticket-trend-chart"]') ||
+          container.querySelector('.chart-container');
         expect(chartContainer).toBeTruthy();
       });
     });
@@ -263,7 +260,9 @@ describe('DashboardPage', () => {
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
-        const priorityChart = container.querySelector('[data-testid="priority-distribution-chart"]');
+        const priorityChart = container.querySelector(
+          '[data-testid="priority-distribution-chart"]'
+        );
         expect(priorityChart).toBeTruthy();
       });
     });
@@ -299,8 +298,9 @@ describe('DashboardPage', () => {
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
-        const autoRefreshSwitch = container.querySelector('[data-testid="auto-refresh-switch"]') ||
-                                  container.querySelector('.ant-switch');
+        const autoRefreshSwitch =
+          container.querySelector('[data-testid="auto-refresh-switch"]') ||
+          container.querySelector('.ant-switch');
         expect(autoRefreshSwitch).toBeTruthy();
       });
     });
@@ -310,8 +310,9 @@ describe('DashboardPage', () => {
       const { container } = renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
-        const refreshButton = container.querySelector('[data-testid="refresh-button"]') ||
-                            container.querySelector('[aria-label*="刷新"]');
+        const refreshButton =
+          container.querySelector('[data-testid="refresh-button"]') ||
+          container.querySelector('[aria-label*="刷新"]');
         if (refreshButton) {
           fireEvent.click(refreshButton);
         }
@@ -324,10 +325,7 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         // 应该显示最后更新时间
-        expect(
-          screen.queryByText(/最后更新/i) || 
-          screen.queryByText(/Last updated/i)
-        ).toBeTruthy();
+        expect(screen.queryByText(/最后更新/i) || screen.queryByText(/Last updated/i)).toBeTruthy();
       });
     });
   });
@@ -354,10 +352,7 @@ describe('DashboardPage', () => {
 
       // 应该显示加载指示器
       await waitFor(() => {
-        expect(
-          screen.queryByText(/加载中/i) || 
-          screen.queryByRole('progressbar')
-        ).toBeTruthy();
+        expect(screen.queryByText(/加载中/i) || screen.queryByRole('progressbar')).toBeTruthy();
       });
     });
   });
@@ -384,9 +379,7 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByText(/错误/i) || 
-          screen.queryByText(/Error/i) ||
-          screen.queryByText(/失败/i)
+          screen.queryByText(/错误/i) || screen.queryByText(/Error/i) || screen.queryByText(/失败/i)
         ).toBeTruthy();
       });
     });
@@ -411,9 +404,10 @@ describe('DashboardPage', () => {
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
-        const reloadButton = screen.queryByText(/重新加载/i) || 
-                           screen.queryByText(/重试/i) ||
-                           screen.queryByText(/Retry/i);
+        const reloadButton =
+          screen.queryByText(/重新加载/i) ||
+          screen.queryByText(/重试/i) ||
+          screen.queryByText(/Retry/i);
         expect(reloadButton).toBeTruthy();
       });
     });
@@ -430,11 +424,11 @@ describe('DashboardPage', () => {
 
       await waitFor(() => {
         // 检查是否有响应式类名
-        const responsiveElements = container.querySelectorAll('[class*="mobile"]') ||
-                                  container.querySelectorAll('[class*="sm:"]');
+        const responsiveElements =
+          container.querySelectorAll('[class*="mobile"]') ||
+          container.querySelectorAll('[class*="sm:"]');
         expect(responsiveElements.length).toBeGreaterThan(0);
       });
     });
   });
 });
-

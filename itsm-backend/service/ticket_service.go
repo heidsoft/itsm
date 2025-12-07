@@ -43,11 +43,19 @@ func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAu
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
+	// 生成工单编号
+	ticketNumber, err := s.generateTicketNumber(ctx, tenantID)
+	if err != nil {
+		s.logger.Errorw("Failed to generate ticket number", "error", err)
+		return nil, fmt.Errorf("failed to generate ticket number: %w", err)
+	}
+
 	createBuilder := s.client.Ticket.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetPriority(req.Priority).
 		SetStatus("submitted").
+		SetTicketNumber(ticketNumber).
 		SetTenantID(tenantID).
 		SetRequesterID(req.RequesterID).
 		SetAssigneeID(req.AssigneeID)
@@ -57,7 +65,33 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		createBuilder = createBuilder.SetParentTicketID(*req.ParentTicketID)
 	}
 
+	// 如果指定了分类ID，设置分类
+	if req.CategoryID != nil && *req.CategoryID > 0 {
+		createBuilder = createBuilder.SetCategoryID(*req.CategoryID)
+	}
+
+	// 如果指定了模板ID，设置模板
+	if req.TemplateID != nil && *req.TemplateID > 0 {
+		createBuilder = createBuilder.SetTemplateID(*req.TemplateID)
+	}
+
 	ticket, err := createBuilder.Save(ctx)
+
+	if err != nil {
+		s.logger.Errorw("Failed to create ticket", "error", err)
+		return nil, fmt.Errorf("failed to create ticket: %w", err)
+	}
+
+	// 如果指定了标签ID，添加标签关联
+	if len(req.TagIDs) > 0 {
+		_, err = ticket.Update().
+			AddTagIDs(req.TagIDs...).
+			Save(ctx)
+		if err != nil {
+			s.logger.Warnw("Failed to add tags to ticket", "error", err, "ticket_id", ticket.ID)
+			// 不返回错误，因为工单已创建成功
+		}
+	}
 
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket", "error", err)
@@ -1104,4 +1138,28 @@ func (s *TicketService) parseExcel(data []byte) ([]map[string]interface{}, error
 	// 这里应该使用Excel库解析Excel文件
 	// 暂时返回空结果
 	return []map[string]interface{}{}, nil
+}
+
+// generateTicketNumber 生成工单编号
+func (s *TicketService) generateTicketNumber(ctx context.Context, tenantID int) (string, error) {
+	// 获取当前年份和月份
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
+	// 查询当月的工单数量
+	count, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.CreatedAtGTE(time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)),
+			ticket.CreatedAtLT(time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC)),
+		).
+		Count(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to count tickets: %w", err)
+	}
+
+	// 生成工单编号格式: TKT-YYYYMM-XXXXXX
+	ticketNumber := fmt.Sprintf("TKT-%04d%02d-%06d", year, month, count+1)
+	return ticketNumber, nil
 }

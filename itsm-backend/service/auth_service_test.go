@@ -3,12 +3,8 @@ package service
 import (
 	"context"
 	"itsm-backend/dto"
-	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/user"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,6 +32,7 @@ func TestAuthService_Login(t *testing.T) {
 	// 创建测试租户
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -48,9 +45,10 @@ func TestAuthService_Login(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash(string(hashedPassword)).
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -115,7 +113,7 @@ func TestAuthService_Login(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
 				assert.NotEmpty(t, response.AccessToken)
-				assert.NotEmpty(t, response.RefreshToken)
+				// RefreshTokenResponse only contains AccessToken
 				assert.Equal(t, tt.expectedUserID, response.User.ID)
 				assert.Equal(t, "testuser", response.User.Username)
 				assert.Equal(t, "test@example.com", response.User.Email)
@@ -140,6 +138,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 	// 创建测试数据
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -148,12 +147,13 @@ func TestAuthService_RefreshToken(t *testing.T) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 	require.NoError(t, err)
 
-	testUser, err := client.User.Create().
+	_, err = client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash(string(hashedPassword)).
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
@@ -203,7 +203,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
 				assert.NotEmpty(t, response.AccessToken)
-				assert.NotEmpty(t, response.RefreshToken)
+				// RefreshTokenResponse only contains AccessToken
 			}
 		})
 	}
@@ -230,8 +230,9 @@ func TestAuthService_GetUserTenants(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	tenant2, err := client.Tenant.Create().
+	_, err = client.Tenant.Create().
 		SetName("Tenant 2").
+		SetCode("tenant2").
 		SetDomain("tenant2.com").
 		SetStatus("active").
 		Save(ctx)
@@ -244,18 +245,19 @@ func TestAuthService_GetUserTenants(t *testing.T) {
 	testUser, err := client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash(string(hashedPassword)).
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(tenant1.ID).
 		Save(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		userID         int
-		expectedError  bool
-		expectedCount  int
+		name          string
+		userID        int
+		expectedError bool
+		expectedCount int
 	}{
 		{
 			name:          "获取用户租户列表",
@@ -307,6 +309,7 @@ func TestAuthService_GetUserInfo(t *testing.T) {
 	// 创建测试租户
 	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -321,9 +324,9 @@ func TestAuthService_GetUserInfo(t *testing.T) {
 		SetEmail("test@example.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetRole("admin").
-		SetStatus("active").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
-		SetDisplayName("Test User").
+		SetName("Test User").
 		SetPhone("13800138000").
 		Save(ctx)
 	require.NoError(t, err)
@@ -359,8 +362,8 @@ func TestAuthService_GetUserInfo(t *testing.T) {
 				assert.Equal(t, "testuser", response.Username)
 				assert.Equal(t, "test@example.com", response.Email)
 				assert.Equal(t, "admin", response.Role)
-				assert.Equal(t, "Test User", response.DisplayName)
-				assert.Equal(t, "13800138000", response.Phone)
+				// UserInfo uses Name instead of DisplayName, and Phone is not in the DTO
+				assert.Equal(t, "Test User", response.Name)
 			}
 		})
 	}
@@ -383,6 +386,7 @@ func BenchmarkAuthService_Login(b *testing.B) {
 	// 创建测试数据
 	testTenant, _ := client.Tenant.Create().
 		SetName("Test Tenant").
+		SetCode("test").
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -391,9 +395,10 @@ func BenchmarkAuthService_Login(b *testing.B) {
 	client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
+		SetName("Test User").
 		SetPasswordHash(string(hashedPassword)).
-		SetRole("user").
-		SetStatus("active").
+		SetRole("end_user").
+		SetActive(true).
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 

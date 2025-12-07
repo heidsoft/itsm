@@ -209,7 +209,7 @@ func main() {
 	// 工单评分服务
 	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)
-	
+
 	// 工单视图服务
 	ticketViewService := service.NewTicketViewService(client, sugar)
 	ticketViewController := controller.NewTicketViewController(ticketViewService, sugar)
@@ -239,6 +239,13 @@ func main() {
 	teamController := controller.NewTeamController(client)
 	tagController := controller.NewTagController(client)
 
+	// 初始化工单分类和标签服务
+	ticketCategoryService := service.NewTicketCategoryService(client)
+	ticketCategoryController := controller.NewTicketCategoryController(ticketCategoryService, sugar)
+	ticketTagService := service.NewTicketTagService(client)
+	// TicketTagController需要*zap.Logger，而sugar是*zap.SugaredLogger
+	ticketTagController := controller.NewTicketTagController(ticketTagService, sugar.Desugar())
+
 	// BPMN工作流
 	processEngine := service.NewCustomProcessEngine(client, sugar)
 	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine)
@@ -255,34 +262,36 @@ func main() {
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
 
 	routerConfig := &router.RouterConfig{
-		JWTSecret:                    cfg.JWT.Secret,
-		Logger:                       sugar,
-		Client:                       client,
-		TicketController:             ticketController,
-		TicketDependencyController:   ticketDependencyController,
-		TicketCommentController:      ticketCommentController,
-		TicketAttachmentController:   ticketAttachmentController,
-		TicketNotificationController: ticketNotificationController,
-		TicketRatingController:       ticketRatingController,
+		JWTSecret:                       cfg.JWT.Secret,
+		Logger:                          sugar,
+		Client:                          client,
+		TicketController:                ticketController,
+		TicketDependencyController:      ticketDependencyController,
+		TicketCommentController:         ticketCommentController,
+		TicketAttachmentController:      ticketAttachmentController,
+		TicketNotificationController:    ticketNotificationController,
+		TicketRatingController:          ticketRatingController,
 		TicketAssignmentSmartController: ticketAssignmentSmartController,
-		TicketViewController:         ticketViewController,
-		IncidentController:           incidentController,
-		SLAController:                slaController,
-		ApprovalController:           approvalController,
-		AnalyticsController:          analyticsController,
-		PredictionController:         predictionController,
-		RootCauseController:          rootCauseController,
-		AuthController:               authController,
-		UserController:               userController,
-		AIController:                 aiController,
-		AuditLogController:           auditLogController,
-		BPMNWorkflowController:       bpmnWorkflowController,
-		DashboardHandler:             dashboardHandler,
-		DepartmentController:         departmentController,
-		ProjectController:            projectController,
-		ApplicationController:        applicationController,
-		TeamController:               teamController,
-		TagController:                tagController,
+		TicketViewController:            ticketViewController,
+		IncidentController:              incidentController,
+		SLAController:                   slaController,
+		ApprovalController:              approvalController,
+		AnalyticsController:             analyticsController,
+		PredictionController:            predictionController,
+		RootCauseController:             rootCauseController,
+		AuthController:                  authController,
+		UserController:                  userController,
+		AIController:                    aiController,
+		AuditLogController:              auditLogController,
+		BPMNWorkflowController:          bpmnWorkflowController,
+		DashboardHandler:                dashboardHandler,
+		DepartmentController:            departmentController,
+		ProjectController:               projectController,
+		ApplicationController:           applicationController,
+		TeamController:                  teamController,
+		TagController:                   tagController,
+		TicketCategoryController:        ticketCategoryController,
+		TicketTagController:             ticketTagController,
 	}
 
 	// SetupRoutes函数配置Gin路由，定义API端点

@@ -133,43 +133,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       // 加载影响分析
       loadImpactAnalysis(deps);
       
-      // 如果API调用失败，使用模拟数据
       if (relations.length === 0) {
-        const mockDependencies: TicketDependency[] = [
-        {
-          id: 1,
-          source_ticket_id: ticket.id,
-          source_ticket_number: ticket.ticket_number || `T-${ticket.id}`,
-          source_ticket_title: ticket.title,
-          target_ticket_id: 1001,
-          target_ticket_number: 'T-2024-001',
-          target_ticket_title: '数据库连接超时',
-          relation_type: TicketRelationType.BLOCKS,
-          dependency_type: 'hard',
-          is_blocking: true,
-          description: '当前工单阻塞了目标工单的进展',
-          created_at: new Date().toISOString(),
-          created_by: 1,
-          created_by_name: '张三',
-        },
-        {
-          id: 2,
-          source_ticket_id: ticket.id,
-          source_ticket_number: ticket.ticket_number || `T-${ticket.id}`,
-          source_ticket_title: ticket.title,
-          target_ticket_id: 1002,
-          target_ticket_number: 'T-2024-002',
-          target_ticket_title: '网络设备故障',
-          relation_type: TicketRelationType.DEPENDS_ON,
-          dependency_type: 'soft',
-          is_blocking: false,
-          description: '当前工单依赖于目标工单的完成',
-          created_at: new Date().toISOString(),
-          created_by: 1,
-          created_by_name: '张三',
-        ];
-        setDependencies(mockDependencies);
-        loadImpactAnalysis(mockDependencies);
       }
     } catch (error) {
       console.error('Failed to load dependencies:', error);
@@ -834,4 +798,3 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     </div>
   );
 };
-

@@ -13,8 +13,8 @@ import {
   PauseCircleOutlined,
   CopyOutlined,
 } from '@ant-design/icons';
-import { ApprovalChain, ApprovalChainFilters } from '../../../../types/approval-chain';
-import { TableColumn, ActionButton } from '../../../../types/common';
+import { ApprovalChain, ApprovalChainFilters } from '@/types/approval-chain';
+import { TableColumn, ActionButton } from '@/types/common';
 
 interface ApprovalChainTableProps {
   dataSource: ApprovalChain[];
@@ -104,7 +104,7 @@ export function ApprovalChainTable({
         key: 'actions',
         title: '操作',
         width: 120,
-        render: (_, record: ApprovalChain) => {
+        render: (_: unknown, record: ApprovalChain) => {
           const menu = (
             <Menu>
               <Menu.Item key='view' icon={<EyeOutlined />} onClick={() => onView(record)}>

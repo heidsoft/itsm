@@ -3,14 +3,16 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import LoginPage from '../page';
-import { authService } from '@/lib/auth';
+import { AuthService } from '@/lib/services/auth-service';
 import { useNotifications } from '@/lib/store/ui-store';
 
 // Mock dependencies
-jest.mock('@/lib/auth', () => ({
-  authService: {
+const mockAuthService = {
     login: jest.fn(),
-  },
+};
+
+jest.mock('@/lib/services/auth-service', () => ({
+  AuthService: mockAuthService,
 }));
 jest.mock('@/lib/store/ui-store');
 jest.mock('next/navigation', () => ({
@@ -22,12 +24,34 @@ jest.mock('next/navigation', () => ({
 
 // Mock Ant Design components with proper types
 jest.mock('antd', () => ({
-  Form: ({ children, onFinish, ...props }: { children: React.ReactNode; onFinish?: (values: Record<string, string>) => void; [key: string]: unknown }) => (
-    <form onSubmit={(e) => { e.preventDefault(); onFinish?.({}); }} {...props}>
+  Form: ({
+    children,
+    onFinish,
+    ...props
+  }: {
+    children: React.ReactNode;
+    onFinish?: (values: Record<string, string>) => void;
+    [key: string]: unknown;
+  }) => (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        onFinish?.({});
+      }}
+      {...props}
+    >
       {children}
     </form>
   ),
-  Input: ({ placeholder, type, ...props }: { placeholder?: string; type?: string; [key: string]: unknown }) => (
+  Input: ({
+    placeholder,
+    type,
+    ...props
+  }: {
+    placeholder?: string;
+    type?: string;
+    [key: string]: unknown;
+  }) => (
     <input 
       placeholder={placeholder} 
       type={type || 'text'} 
@@ -35,42 +59,68 @@ jest.mock('antd', () => ({
       {...props} 
     />
   ),
-  Button: ({ children, loading, htmlType, ...props }: { children: React.ReactNode; loading?: boolean; htmlType?: 'button' | 'submit' | 'reset'; [key: string]: unknown }) => (
-    <button 
-      type={htmlType || 'button'} 
-      disabled={loading}
-      data-testid="login-button"
-      {...props}
-    >
+  Button: ({
+    children,
+    loading,
+    htmlType,
+    ...props
+  }: {
+    children: React.ReactNode;
+    loading?: boolean;
+    htmlType?: 'button' | 'submit' | 'reset';
+    [key: string]: unknown;
+  }) => (
+    <button type={htmlType || 'button'} disabled={loading} data-testid='login-button' {...props}>
       {loading ? 'Loading...' : children}
     </button>
   ),
-  Card: ({ children, title, ...props }: { children: React.ReactNode; title?: string; [key: string]: unknown }) => (
-    <div data-testid="login-card" {...props}>
+  Card: ({
+    children,
+    title,
+    ...props
+  }: {
+    children: React.ReactNode;
+    title?: string;
+    [key: string]: unknown;
+  }) => (
+    <div data-testid='login-card' {...props}>
       {title && <h2>{title}</h2>}
       {children}
     </div>
   ),
   Typography: {
     Title: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-      <h1 data-testid="login-title" {...props}>{children}</h1>
+      <h1 data-testid='login-title' {...props}>
+        {children}
+      </h1>
     ),
-    Text: ({ children, type, ...props }: { children: React.ReactNode; type?: string; [key: string]: unknown }) => (
-      <span data-testid={`text-${type || 'default'}`} {...props}>{children}</span>
+    Text: ({
+      children,
+      type,
+      ...props
+    }: {
+      children: React.ReactNode;
+      type?: string;
+      [key: string]: unknown;
+    }) => (
+      <span data-testid={`text-${type || 'default'}`} {...props}>
+        {children}
+      </span>
     ),
   },
   Space: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div data-testid="space" {...props}>{children}</div>
+    <div data-testid='space' {...props}>
+      {children}
+    </div>
   ),
 }));
 
 // Mock Lucide React icons
 jest.mock('lucide-react', () => ({
-  Lock: () => <div data-testid="lock-icon">Lock</div>,
-  User: () => <div data-testid="user-icon">User</div>,
+  Lock: () => <div data-testid='lock-icon'>Lock</div>,
+  User: () => <div data-testid='user-icon'>User</div>,
 }));
 
-const mockAuthService = authService as jest.Mocked<typeof authService>;
 const mockUseNotifications = useNotifications as jest.MockedFunction<typeof useNotifications>;
 
 describe('LoginPage', () => {
@@ -139,7 +189,7 @@ describe('LoginPage', () => {
       mockAuthService.login = jest.fn().mockResolvedValue({
         success: true,
         user: { id: 1, username: 'testuser' },
-        token: 'mock-token'
+        token: 'mock-token',
       });
 
       render(<LoginPage />);
@@ -159,9 +209,9 @@ describe('LoginPage', () => {
   describe('Authentication Flow', () => {
     it('should show loading state during login', async () => {
       const user = userEvent.setup();
-      mockAuthService.login = jest.fn().mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 100))
-      );
+      mockAuthService.login = jest
+        .fn()
+        .mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
       render(<LoginPage />);
       
@@ -182,7 +232,7 @@ describe('LoginPage', () => {
       mockAuthService.login = jest.fn().mockResolvedValue({
         success: true,
         user: { id: 1, username: 'testuser' },
-        token: 'mock-token'
+        token: 'mock-token',
       });
 
       render(<LoginPage />);

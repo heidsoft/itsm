@@ -10,6 +10,11 @@ import {
   Filter,
   Search,
   Plus,
+  Clock,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal,
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
@@ -30,25 +35,27 @@ import {
   Dropdown,
   Tooltip,
   App,
+  Tag,
 } from 'antd';
-import {
-  ServiceCatalogApi,
-  ServiceCatalog,
-  CreateServiceCatalogRequest,
-  UpdateServiceCatalogRequest,
-} from '@/lib/api/service-catalog-api';
+import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import type {
+  ServiceItem,
+  CreateServiceItemRequest,
+  UpdateServiceItemRequest,
+  ServiceStatus,
+} from '@/types/service-catalog';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const ServiceCatalogManagement = () => {
   const { message } = App.useApp();
-  const [catalogs, setCatalogs] = useState<ServiceCatalog[]>([]);
+  const [catalogs, setCatalogs] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingCatalog, setEditingCatalog] = useState<ServiceCatalog | null>(null);
+  const [editingCatalog, setEditingCatalog] = useState<ServiceItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [form] = Form.useForm();
@@ -65,20 +72,22 @@ const ServiceCatalogManagement = () => {
   const fetchCatalogs = async () => {
     try {
       setLoading(true);
-      const response = await ServiceCatalogApi.getServiceCatalogs({
+      const response = await ServiceCatalogApi.getServices({
         page: 1,
-        size: 100,
+        pageSize: 100,
       });
-      setCatalogs(response.catalogs);
+      setCatalogs(response.services);
 
       // 计算统计数据
-      const enabledCount = response.catalogs.filter(c => c.status === 'enabled').length;
-      const categories = new Set(response.catalogs.map(c => c.category)).size;
+      const enabledCount = response.services.filter(
+        (c: ServiceItem) => c.status === 'published'
+      ).length;
+      const categories = new Set(response.services.map(c => c.category)).size;
 
       setStats({
-        total: response.catalogs.length,
+        total: response.services.length,
         enabled: enabledCount,
-        disabled: response.catalogs.length - enabledCount,
+        disabled: response.services.length - enabledCount,
         categories: categories,
       });
     } catch (error) {
@@ -94,13 +103,16 @@ const ServiceCatalogManagement = () => {
   }, []);
 
   // 处理表单提交
-  const handleSubmit = async (values: CreateServiceCatalogRequest) => {
+  const handleSubmit = async (values: CreateServiceItemRequest) => {
     try {
       if (editingCatalog) {
-        await ServiceCatalogApi.updateServiceCatalog(editingCatalog.id, values);
+        await ServiceCatalogApi.updateService(
+          editingCatalog.id,
+          values as UpdateServiceItemRequest
+        );
         message.success('服务目录更新成功');
       } else {
-        await ServiceCatalogApi.createServiceCatalog(values);
+        await ServiceCatalogApi.createService(values);
         message.success('服务目录创建成功');
       }
       setShowModal(false);
@@ -114,22 +126,22 @@ const ServiceCatalogManagement = () => {
   };
 
   // 编辑服务目录
-  const handleEdit = (catalog: ServiceCatalog) => {
+  const handleEdit = (catalog: ServiceItem) => {
     setEditingCatalog(catalog);
     form.setFieldsValue({
       name: catalog.name,
       category: catalog.category,
-      description: catalog.description,
-      delivery_time: catalog.delivery_time,
+      shortDescription: catalog.shortDescription,
+      fullDescription: catalog.fullDescription,
       status: catalog.status,
     });
     setShowModal(true);
   };
 
   // 删除服务目录
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
-      await ServiceCatalogApi.deleteServiceCatalog(id);
+      await ServiceCatalogApi.deleteService(id.toString());
       message.success('删除成功');
       fetchCatalogs();
     } catch (error) {
@@ -141,7 +153,7 @@ const ServiceCatalogManagement = () => {
   // 批量删除
   const handleBatchDelete = async () => {
     try {
-      await Promise.all(selectedRowKeys.map(id => ServiceCatalogApi.deleteServiceCatalog(id)));
+      await Promise.all(selectedRowKeys.map(id => ServiceCatalogApi.deleteService(id.toString())));
       message.success(`成功删除 ${selectedRowKeys.length} 个服务目录`);
       setSelectedRowKeys([]);
       fetchCatalogs();
@@ -152,22 +164,21 @@ const ServiceCatalogManagement = () => {
   };
 
   // 批量启用/禁用
-  const handleBatchStatusChange = async (status: 'enabled' | 'disabled') => {
+  const handleBatchStatusChange = async (status: 'published' | 'retired') => {
     try {
       await Promise.all(
         selectedRowKeys.map(id => {
-          const catalog = catalogs.find(c => c.id === id);
+          const catalog = catalogs.find(c => c.id === id.toString());
           if (catalog) {
-            return ServiceCatalogApi.updateServiceCatalog(id, {
+            return ServiceCatalogApi.updateService(id.toString(), {
               ...catalog,
-              status,
-            });
+            } as UpdateServiceItemRequest);
           }
           return Promise.resolve();
         })
       );
       message.success(
-        `成功${status === 'enabled' ? '启用' : '禁用'} ${selectedRowKeys.length} 个服务目录`
+        `成功${status === 'published' ? '发布' : '停用'} ${selectedRowKeys.length} 个服务目录`
       );
       setSelectedRowKeys([]);
       fetchCatalogs();
@@ -182,7 +193,7 @@ const ServiceCatalogManagement = () => {
     const matchesSearch =
       catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       catalog.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.description.toLowerCase().includes(searchTerm.toLowerCase());
+      catalog.shortDescription.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = !statusFilter || catalog.status === statusFilter;
     const matchesCategory = !categoryFilter || catalog.category === categoryFilter;
@@ -196,10 +207,10 @@ const ServiceCatalogManagement = () => {
       title: '服务名称',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record: ServiceCatalog) => (
+      render: (name: string, record: ServiceItem) => (
         <div>
           <div className='font-medium text-gray-900'>{name}</div>
-          <div className='text-sm text-gray-500 mt-1'>{record.description}</div>
+          <div className='text-sm text-gray-500 mt-1'>{record.shortDescription}</div>
         </div>
       ),
     },
@@ -215,10 +226,10 @@ const ServiceCatalogManagement = () => {
       dataIndex: 'delivery_time',
       key: 'delivery_time',
       width: 120,
-      render: (time: string) => (
+      render: (_: unknown, record: ServiceItem) => (
         <span className='text-sm flex items-center'>
           <Clock className='w-4 h-4 mr-1' />
-          {time}
+          {record.availability?.responseTime ? `${record.availability.responseTime}小时` : '-'}
         </span>
       ),
     },
@@ -227,18 +238,18 @@ const ServiceCatalogManagement = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: string) => (
+      render: (status: ServiceStatus) => (
         <Tag
-          color={status === 'enabled' ? 'green' : 'red'}
+          color={status === 'published' ? 'green' : status === 'draft' ? 'orange' : 'red'}
           icon={
-            status === 'enabled' ? (
+            status === 'published' ? (
               <CheckCircle className='w-3 h-3' />
             ) : (
               <AlertCircle className='w-3 h-3' />
             )
           }
         >
-          {status === 'enabled' ? '启用' : '禁用'}
+          {status === 'published' ? '已发布' : status === 'draft' ? '草稿' : '已停用'}
         </Tag>
       ),
     },
@@ -255,7 +266,7 @@ const ServiceCatalogManagement = () => {
       title: '操作',
       key: 'action',
       width: 180,
-      render: (record: ServiceCatalog) => (
+      render: (_: unknown, record: ServiceItem) => (
         <Space>
           <Tooltip title='查看详情'>
             <Button type='text' icon={<Eye className='w-4 h-4' />} size='small' />
@@ -285,15 +296,15 @@ const ServiceCatalogManagement = () => {
                   key: 'enable',
                   label: '启用',
                   icon: <CheckCircle className='w-4 h-4' />,
-                  disabled: record.status === 'enabled',
-                  onClick: () => handleBatchStatusChange('enabled'),
+                  disabled: record.status === 'published',
+                  onClick: () => handleBatchStatusChange('published'),
                 },
                 {
                   key: 'disable',
                   label: '禁用',
                   icon: <AlertCircle className='w-4 h-4' />,
-                  disabled: record.status === 'disabled',
-                  onClick: () => handleBatchStatusChange('disabled'),
+                  disabled: record.status === 'retired',
+                  onClick: () => handleBatchStatusChange('retired'),
                 },
                 {
                   type: 'divider' as const,
@@ -438,11 +449,11 @@ const ServiceCatalogManagement = () => {
             </Col>
             <Col>
               <Space>
-                <Button size='small' onClick={() => handleBatchStatusChange('enabled')}>
-                  批量启用
+                <Button size='small' onClick={() => handleBatchStatusChange('published')}>
+                  批量发布
                 </Button>
-                <Button size='small' onClick={() => handleBatchStatusChange('disabled')}>
-                  批量禁用
+                <Button size='small' onClick={() => handleBatchStatusChange('retired')}>
+                  批量停用
                 </Button>
                 <Popconfirm
                   title='确定要删除选中的服务目录吗？'
@@ -472,7 +483,7 @@ const ServiceCatalogManagement = () => {
           loading={loading}
           rowSelection={{
             selectedRowKeys,
-            onChange: setSelectedRowKeys,
+            onChange: keys => setSelectedRowKeys(keys as number[]),
             selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE],
           }}
           pagination={{

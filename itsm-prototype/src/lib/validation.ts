@@ -94,8 +94,8 @@ export interface ValidationRule {
 }
 
 // 字段验证配置
-export interface FieldValidation {
-  [fieldName: string]: ValidationRule[];
+export interface FieldValidation<T extends Record<string, unknown>> {
+  [fieldName: keyof T]: ValidationRule[];
 }
 
 // 验证结果接口
@@ -107,7 +107,6 @@ export interface ValidationResult {
 // 验证器类
 
 export class Validator<T extends Record<string, unknown>> {
-
   private rules: FieldValidation<T> = {};
 
 
@@ -247,10 +246,6 @@ export class Validator<T extends Record<string, unknown>> {
   }
 
 }
-
-
-
-...
 
 
 
@@ -432,14 +427,10 @@ export const useFormValidation = <T extends Record<string, unknown>>(initialData
 
 
 
-...
+// 规范化结束标记移除
 
 
 
 // 字段验证配置
 
-export interface FieldValidation<T> {
-
-  [fieldName: keyof T]: ValidationRule[];
-
-}
+// 已在文件顶部定义 FieldValidation<T>

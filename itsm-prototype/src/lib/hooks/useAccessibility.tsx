@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { message } from 'antd';
 
 /**
@@ -18,7 +18,7 @@ export interface KeyboardShortcut {
 
 /**
  * 键盘快捷键Hook
- * 
+ *
  * @example
  * ```tsx
  * useKeyboardShortcuts([
@@ -35,7 +35,7 @@ export interface KeyboardShortcut {
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      shortcuts.forEach((shortcut) => {
+      shortcuts.forEach(shortcut => {
         const ctrlOrMeta = (shortcut.ctrl && e.ctrlKey) || (shortcut.meta && e.metaKey);
         const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;
         const altMatch = shortcut.alt ? e.altKey : !e.altKey;
@@ -58,7 +58,7 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
     const modifierKey = isMac ? '⌘' : 'Ctrl';
 
     const helpText = shortcuts
-      .map((s) => {
+      .map(s => {
         const keys = [];
         if (s.ctrl || s.meta) keys.push(modifierKey);
         if (s.shift) keys.push('Shift');
@@ -70,8 +70,8 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
 
     message.info({
       content: (
-        <div className="text-left whitespace-pre-line">
-          <div className="font-semibold mb-2">快捷键说明</div>
+        <div className='text-left whitespace-pre-line'>
+          <div className='font-semibold mb-2'>快捷键说明</div>
           {helpText}
         </div>
       ),
@@ -84,9 +84,9 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
 
 /**
  * 焦点陷阱Hook
- * 
+ *
  * 用于模态框等场景，将焦点限制在指定元素内
- * 
+ *
  * @example
  * ```tsx
  * const trapRef = useFocusTrap<HTMLDivElement>(isModalOpen);
@@ -137,9 +137,9 @@ export const useFocusTrap = <T extends HTMLElement>(active: boolean = true) => {
 
 /**
  * 屏幕阅读器公告Hook
- * 
+ *
  * 用于向屏幕阅读器用户公告重要信息
- * 
+ *
  * @example
  * ```tsx
  * const announce = useScreenReaderAnnounce();
@@ -162,7 +162,7 @@ export const useScreenReaderAnnounce = () => {
     announcer.style.width = '1px';
     announcer.style.height = '1px';
     announcer.style.overflow = 'hidden';
-    
+
     document.body.appendChild(announcer);
     announceRef.current = announcer;
 
@@ -192,9 +192,9 @@ export const useScreenReaderAnnounce = () => {
 
 /**
  * 跳过导航链接Hook
- * 
+ *
  * 用于创建"跳到主内容"链接
- * 
+ *
  * @example
  * ```tsx
  * const { SkipLink } = useSkipNavigation('main-content');
@@ -220,7 +220,7 @@ export const useSkipNavigation = (targetId: string) => {
     <a
       href={`#${targetId}`}
       onClick={handleSkip}
-      className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded"
+      className='sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded'
     >
       跳到主内容
     </a>
@@ -231,9 +231,9 @@ export const useSkipNavigation = (targetId: string) => {
 
 /**
  * 焦点可见性Hook
- * 
+ *
  * 检测用户是否使用键盘导航
- * 
+ *
  * @example
  * ```tsx
  * const isKeyboardUser = useFocusVisible();
@@ -261,9 +261,9 @@ export const useFocusVisible = () => {
 
 /**
  * 减少动画偏好检测Hook
- * 
+ *
  * 检测用户是否偏好减少动画
- * 
+ *
  * @example
  * ```tsx
  * const prefersReducedMotion = usePrefersReducedMotion();
@@ -290,17 +290,17 @@ export const usePrefersReducedMotion = () => {
 
 /**
  * ARIA实时区域Hook
- * 
+ *
  * 管理ARIA实时区域的更新
- * 
+ *
  * @example
  * ```tsx
  * const { liveRegionRef, updateLiveRegion } = useAriaLiveRegion();
- * 
+ *
  * useEffect(() => {
  *   updateLiveRegion(`加载了 ${data.length} 条记录`);
  * }, [data]);
- * 
+ *
  * return <div ref={liveRegionRef} />
  * ```
  */
@@ -326,9 +326,6 @@ export const useAriaLiveRegion = (politeness: 'polite' | 'assertive' = 'polite')
   return { liveRegionRef, updateLiveRegion };
 };
 
-// React import for useState
-import React from 'react';
-
 export default {
   useKeyboardShortcuts,
   useFocusTrap,
@@ -338,4 +335,3 @@ export default {
   usePrefersReducedMotion,
   useAriaLiveRegion,
 };
-

@@ -10,6 +10,8 @@ import {
   MemoryStick,
   Settings,
   Shield,
+  Clock,
+  HardDrive,
 } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
@@ -64,7 +66,7 @@ export default function SystemConfiguration() {
       const response = await SystemConfigAPI.getConfigs();
       const configMap: Record<string, unknown> = {};
 
-      response.configs.forEach(item => {
+      response.configs.forEach((item: { key: string; value: unknown }) => {
         configMap[item.key] = item.value;
       });
 
