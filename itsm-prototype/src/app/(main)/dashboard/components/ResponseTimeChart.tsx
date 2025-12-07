@@ -3,6 +3,7 @@
 import React from 'react';
 import { Column } from '@ant-design/charts';
 import { LineChart } from 'lucide-react';
+import { ResponseTimeDistribution } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard';
 
 const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.memo(({ data }) => {

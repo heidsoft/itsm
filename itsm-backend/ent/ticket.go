@@ -100,9 +100,15 @@ type TicketEdges struct {
 	Attachments []*TicketAttachment `json:"attachments,omitempty"`
 	// 工单通知
 	Notifications []*TicketNotification `json:"notifications,omitempty"`
+	// SLA预警历史
+	SLAAlertHistory []*SLAAlertHistory `json:"sla_alert_history,omitempty"`
+	// 审批记录
+	ApprovalRecords []*ApprovalRecord `json:"approval_records,omitempty"`
+	// 根因分析
+	RootCauseAnalyses []*RootCauseAnalysis `json:"root_cause_analyses,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [12]bool
+	loadedTypes [15]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -221,6 +227,33 @@ func (e TicketEdges) NotificationsOrErr() ([]*TicketNotification, error) {
 		return e.Notifications, nil
 	}
 	return nil, &NotLoadedError{edge: "notifications"}
+}
+
+// SLAAlertHistoryOrErr returns the SLAAlertHistory value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) SLAAlertHistoryOrErr() ([]*SLAAlertHistory, error) {
+	if e.loadedTypes[12] {
+		return e.SLAAlertHistory, nil
+	}
+	return nil, &NotLoadedError{edge: "sla_alert_history"}
+}
+
+// ApprovalRecordsOrErr returns the ApprovalRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) ApprovalRecordsOrErr() ([]*ApprovalRecord, error) {
+	if e.loadedTypes[13] {
+		return e.ApprovalRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "approval_records"}
+}
+
+// RootCauseAnalysesOrErr returns the RootCauseAnalyses value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) RootCauseAnalysesOrErr() ([]*RootCauseAnalysis, error) {
+	if e.loadedTypes[14] {
+		return e.RootCauseAnalyses, nil
+	}
+	return nil, &NotLoadedError{edge: "root_cause_analyses"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -473,6 +506,21 @@ func (t *Ticket) QueryAttachments() *TicketAttachmentQuery {
 // QueryNotifications queries the "notifications" edge of the Ticket entity.
 func (t *Ticket) QueryNotifications() *TicketNotificationQuery {
 	return NewTicketClient(t.config).QueryNotifications(t)
+}
+
+// QuerySLAAlertHistory queries the "sla_alert_history" edge of the Ticket entity.
+func (t *Ticket) QuerySLAAlertHistory() *SLAAlertHistoryQuery {
+	return NewTicketClient(t.config).QuerySLAAlertHistory(t)
+}
+
+// QueryApprovalRecords queries the "approval_records" edge of the Ticket entity.
+func (t *Ticket) QueryApprovalRecords() *ApprovalRecordQuery {
+	return NewTicketClient(t.config).QueryApprovalRecords(t)
+}
+
+// QueryRootCauseAnalyses queries the "root_cause_analyses" edge of the Ticket entity.
+func (t *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
+	return NewTicketClient(t.config).QueryRootCauseAnalyses(t)
 }
 
 // Update returns a builder for updating this Ticket.

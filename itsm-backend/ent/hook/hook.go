@@ -20,6 +20,30 @@ func (f ApplicationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApplicationMutation", m)
 }
 
+// The ApprovalRecordFunc type is an adapter to allow the use of ordinary
+// function as ApprovalRecord mutator.
+type ApprovalRecordFunc func(context.Context, *ent.ApprovalRecordMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ApprovalRecordFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ApprovalRecordMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApprovalRecordMutation", m)
+}
+
+// The ApprovalWorkflowFunc type is an adapter to allow the use of ordinary
+// function as ApprovalWorkflow mutator.
+type ApprovalWorkflowFunc func(context.Context, *ent.ApprovalWorkflowMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ApprovalWorkflowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ApprovalWorkflowMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApprovalWorkflowMutation", m)
+}
+
 // The AuditLogFunc type is an adapter to allow the use of ordinary
 // function as AuditLog mutator.
 type AuditLogFunc func(context.Context, *ent.AuditLogMutation) (ent.Value, error)
@@ -342,6 +366,42 @@ func (f PromptTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PromptTemplateMutation", m)
+}
+
+// The RootCauseAnalysisFunc type is an adapter to allow the use of ordinary
+// function as RootCauseAnalysis mutator.
+type RootCauseAnalysisFunc func(context.Context, *ent.RootCauseAnalysisMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RootCauseAnalysisFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RootCauseAnalysisMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RootCauseAnalysisMutation", m)
+}
+
+// The SLAAlertHistoryFunc type is an adapter to allow the use of ordinary
+// function as SLAAlertHistory mutator.
+type SLAAlertHistoryFunc func(context.Context, *ent.SLAAlertHistoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAAlertHistoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAAlertHistoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAAlertHistoryMutation", m)
+}
+
+// The SLAAlertRuleFunc type is an adapter to allow the use of ordinary
+// function as SLAAlertRule mutator.
+type SLAAlertRuleFunc func(context.Context, *ent.SLAAlertRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAAlertRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAAlertRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAAlertRuleMutation", m)
 }
 
 // The SLADefinitionFunc type is an adapter to allow the use of ordinary

@@ -160,12 +160,15 @@ class HttpClient {
       body: config.body,
     };
 
-    console.log('HTTP Client Request:', {
-      url,
-      method: config.method,
-      headers,
-      body: config.body
-    });
+    // 仅在开发环境输出调试日志
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_API === 'true') {
+      console.log('HTTP Client Request:', {
+        url,
+        method: config.method,
+        headers,
+        body: config.body
+      });
+    }
 
     try {
       const controller = new AbortController();
@@ -178,11 +181,14 @@ class HttpClient {
       
       clearTimeout(timeoutId);
       
-      console.log('HTTP Client Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers ? Object.fromEntries(response.headers.entries()) : {}
-      });
+      // 仅在开发环境输出调试日志
+      if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_API === 'true') {
+        console.log('HTTP Client Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers ? Object.fromEntries(response.headers.entries()) : {}
+        });
+      }
       
       // If 401 error, try to refresh token
       if (response.status === 401) {
@@ -231,7 +237,13 @@ class HttpClient {
       }
 
       const responseData = await response.json() as ApiResponse<T>;
-      console.log('HTTP Client Raw Response Data:', responseData);
+      // 仅在开发环境输出调试日志
+      if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_API === 'true') {
+        console.log('HTTP Client Raw Response Data:', responseData);
+        console.log('HTTP Client Response Code:', responseData.code);
+        console.log('HTTP Client Response Message:', responseData.message);
+        console.log('HTTP Client Response Data Type:', typeof responseData.data);
+      }
       
       // Check response code
       if (responseData.code !== 0) {
@@ -242,9 +254,16 @@ class HttpClient {
           code: responseData.code,
           message: errorMessage,
           endpoint,
-          url
+          url,
+          responseData
         });
         throw new Error(errorMessage + suffix);
+      }
+      
+      // 验证data字段存在
+      if (responseData.data === undefined || responseData.data === null) {
+        console.error('API Response data is undefined or null:', responseData);
+        throw new Error('API响应数据为空');
       }
       
       return responseData.data;

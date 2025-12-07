@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/application"
+	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -34,8 +36,11 @@ import (
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
+	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
@@ -123,6 +128,8 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			application.Table:             application.ValidColumn,
+			approvalrecord.Table:          approvalrecord.ValidColumn,
+			approvalworkflow.Table:        approvalworkflow.ValidColumn,
 			auditlog.Table:                auditlog.ValidColumn,
 			ciattributedefinition.Table:   ciattributedefinition.ValidColumn,
 			cirelationship.Table:          cirelationship.ValidColumn,
@@ -150,6 +157,9 @@ func checkColumn(table, column string) error {
 			processvariable.Table:         processvariable.ValidColumn,
 			project.Table:                 project.ValidColumn,
 			prompttemplate.Table:          prompttemplate.ValidColumn,
+			rootcauseanalysis.Table:       rootcauseanalysis.ValidColumn,
+			slaalerthistory.Table:         slaalerthistory.ValidColumn,
+			slaalertrule.Table:            slaalertrule.ValidColumn,
 			sladefinition.Table:           sladefinition.ValidColumn,
 			slametric.Table:               slametric.ValidColumn,
 			slaviolation.Table:            slaviolation.ValidColumn,

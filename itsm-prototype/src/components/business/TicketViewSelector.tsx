@@ -62,10 +62,21 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     setLoading(true);
     try {
       const response = await TicketViewApi.listViews();
-      setViews(response?.views || []);
-    } catch (error) {
+      // 确保 response 和 views 是有效的
+      if (response && Array.isArray(response.views)) {
+        setViews(response.views);
+      } else {
+        setViews([]);
+      }
+    } catch (error: any) {
       console.error('Failed to load views:', error);
-      message.error('加载视图列表失败');
+      // 检查错误信息，如果是"无效的工单ID"，说明可能是API参数问题
+      const errorMessage = error?.message || error?.toString() || '';
+      if (errorMessage.includes('无效的工单ID') || errorMessage.includes('invalid ticket id')) {
+        // 这个错误不应该出现在 listViews 中，可能是后端路由配置问题
+        console.warn('工单视图API返回了意外的错误，可能是后端路由配置问题');
+      }
+      message.error('加载视图列表失败，请稍后重试');
       setViews([]); // 确保 views 始终是数组
     } finally {
       setLoading(false);

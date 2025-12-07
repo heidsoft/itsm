@@ -33,5 +33,6 @@ func (SLADefinition) Edges() []ent.Edge {
 		edge.To("violations", SLAViolation.Type).Comment("SLA违规记录"),
 		edge.To("metrics", SLAMetric.Type).Comment("SLA指标"),
 		edge.To("tickets", Ticket.Type).Comment("关联工单"),
+		edge.To("alert_rules", SLAAlertRule.Type).Comment("SLA预警规则"),
 	}
 }

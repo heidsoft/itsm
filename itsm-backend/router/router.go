@@ -12,22 +12,28 @@ import (
 	"go.uber.org/zap"
 )
 
-// RouterConfig 路由配置
+	// RouterConfig 路由配置
 type RouterConfig struct {
 	JWTSecret string
 	Logger    *zap.SugaredLogger
 	Client    *ent.Client
 
 	// Controllers
-	TicketController          *controller.TicketController
-	TicketCommentController   *controller.TicketCommentController
-	TicketAttachmentController *controller.TicketAttachmentController
-	TicketNotificationController *controller.TicketNotificationController
-	TicketRatingController    *controller.TicketRatingController
-	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
-	IncidentController        *controller.IncidentController
-	SLAController          *controller.SLAController
-	AuthController         *controller.AuthController
+		TicketController          *controller.TicketController
+		TicketDependencyController *controller.TicketDependencyController
+		TicketCommentController   *controller.TicketCommentController
+		TicketAttachmentController *controller.TicketAttachmentController
+		TicketNotificationController *controller.TicketNotificationController
+		TicketRatingController    *controller.TicketRatingController
+		TicketAssignmentSmartController *controller.TicketAssignmentSmartController
+		TicketViewController      *controller.TicketViewController
+		IncidentController        *controller.IncidentController
+		SLAController          *controller.SLAController
+		ApprovalController       *controller.ApprovalController
+		AnalyticsController    *controller.AnalyticsController
+		PredictionController   *controller.PredictionController
+		RootCauseController    *controller.RootCauseController
+		AuthController         *controller.AuthController
 	UserController         *controller.UserController
 	AIController           *controller.AIController
 	AuditLogController     *controller.AuditLogController
@@ -88,6 +94,28 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		{
 			tickets.GET("", config.TicketController.ListTickets)
 			tickets.POST("", config.TicketController.CreateTicket)
+			
+			// 工单视图路由 - 必须在 /:id 之前，避免路由冲突
+			if config.TicketViewController != nil {
+				tickets.GET("/views", middleware.RequirePermission("ticket", "read"), config.TicketViewController.ListTicketViews)
+				tickets.POST("/views", middleware.RequirePermission("ticket", "read"), config.TicketViewController.CreateTicketView)
+				tickets.GET("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.GetTicketView)
+				tickets.PUT("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.UpdateTicketView)
+				tickets.DELETE("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.DeleteTicketView)
+				tickets.POST("/views/:id/share", middleware.RequirePermission("ticket", "read"), config.TicketViewController.ShareTicketView)
+			}
+			
+			// 工单查询和统计 - 必须在 /:id 之前
+			tickets.GET("/search", config.TicketController.SearchTickets)
+			tickets.GET("/stats", config.TicketController.GetTicketStats)
+			tickets.GET("/analytics", config.TicketController.GetTicketAnalytics)
+			tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
+			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
+			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
+			tickets.POST("/export", config.TicketController.ExportTickets)
+			tickets.POST("/import", config.TicketController.ImportTickets)
+			
+			// 工单基础CRUD操作 - 放在最后，避免与其他路由冲突
 			tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
 			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
@@ -125,7 +153,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.TicketRatingController != nil {
 				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
 				tickets.GET("/:id/rating", config.TicketRatingController.GetRating)
-				tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
+				// rating-stats 已在上面定义
 			}
 
 			// 智能分配
@@ -140,18 +168,50 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/assignment-rules/test", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.TestAssignmentRule)
 			}
 
-			// 工单查询和统计
-			tickets.GET("/search", config.TicketController.SearchTickets)
-			tickets.GET("/stats", config.TicketController.GetTicketStats)
-			tickets.GET("/analytics", config.TicketController.GetTicketAnalytics)
-
 			// 批量操作（当前未实现批量更新，避免注册导致编译错误）
-			tickets.POST("/export", config.TicketController.ExportTickets)
-			tickets.POST("/import", config.TicketController.ImportTickets)
+			// 注意：export 和 import 已在上面定义
 
-			// 模板管理
-			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
-			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
+			// 子任务管理
+			tickets.GET("/:id/subtasks", config.TicketController.GetSubtasks)
+			tickets.POST("/:id/subtasks", config.TicketController.CreateSubtask)
+			tickets.PATCH("/:id/subtasks/:subtask_id", config.TicketController.UpdateSubtask)
+			tickets.DELETE("/:id/subtasks/:subtask_id", config.TicketController.DeleteSubtask)
+
+			// 审批流程管理
+			if config.ApprovalController != nil {
+				tickets.POST("/approval/workflows", config.ApprovalController.CreateWorkflow)
+				tickets.GET("/approval/workflows", config.ApprovalController.ListWorkflows)
+				tickets.GET("/approval/workflows/:id", config.ApprovalController.GetWorkflow)
+				tickets.PUT("/approval/workflows/:id", config.ApprovalController.UpdateWorkflow)
+				tickets.DELETE("/approval/workflows/:id", config.ApprovalController.DeleteWorkflow)
+				tickets.GET("/approval/records", config.ApprovalController.GetApprovalRecords)
+				tickets.POST("/approval/submit", config.ApprovalController.SubmitApproval)
+			}
+
+			// 深度数据分析
+			if config.AnalyticsController != nil {
+				tickets.POST("/analytics/deep", config.AnalyticsController.GetDeepAnalytics)
+				tickets.POST("/analytics/export", config.AnalyticsController.ExportAnalytics)
+			}
+
+			// 趋势预测
+			if config.PredictionController != nil {
+				tickets.POST("/prediction/trend", config.PredictionController.GetTrendPrediction)
+				tickets.POST("/prediction/export", config.PredictionController.ExportPredictionReport)
+			}
+
+			// 根因分析
+			if config.RootCauseController != nil {
+				tickets.POST("/:id/root-cause/analyze", config.RootCauseController.AnalyzeTicket)
+				tickets.GET("/:id/root-cause/report", config.RootCauseController.GetAnalysisReport)
+				tickets.POST("/:id/root-cause/:rootCauseId/confirm", config.RootCauseController.ConfirmRootCause)
+				tickets.POST("/:id/root-cause/:rootCauseId/resolve", config.RootCauseController.ResolveRootCause)
+			}
+
+			// 依赖关系影响分析
+			if config.TicketDependencyController != nil {
+				tickets.POST("/:id/dependency-impact", config.TicketDependencyController.AnalyzeDependencyImpact)
+			}
 		}
 
 		// 事件管理
@@ -178,6 +238,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			sla.GET("/metrics", config.SLAController.GetSLAMetrics)
 			sla.GET("/violations", config.SLAController.GetSLAViolations)
 			sla.PUT("/violations/:id", config.SLAController.UpdateViolationStatus)
+			sla.POST("/monitoring", config.SLAController.GetSLAMonitoring)
+
+			// SLA预警规则
+			sla.POST("/alert-rules", config.SLAController.CreateAlertRule)
+			sla.GET("/alert-rules", config.SLAController.ListAlertRules)
+			sla.GET("/alert-rules/:id", config.SLAController.GetAlertRule)
+			sla.PUT("/alert-rules/:id", config.SLAController.UpdateAlertRule)
+			sla.DELETE("/alert-rules/:id", config.SLAController.DeleteAlertRule)
+			sla.POST("/alert-history", config.SLAController.GetAlertHistory)
 		}
 
 		// 用户管理

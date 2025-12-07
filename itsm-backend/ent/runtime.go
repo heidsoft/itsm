@@ -4,6 +4,8 @@ package ent
 
 import (
 	"itsm-backend/ent/application"
+	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -31,9 +33,12 @@ import (
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
+	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
@@ -93,6 +98,84 @@ func init() {
 	application.DefaultUpdatedAt = applicationDescUpdatedAt.Default.(func() time.Time)
 	// application.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	application.UpdateDefaultUpdatedAt = applicationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	approvalrecordFields := schema.ApprovalRecord{}.Fields()
+	_ = approvalrecordFields
+	// approvalrecordDescTicketID is the schema descriptor for ticket_id field.
+	approvalrecordDescTicketID := approvalrecordFields[0].Descriptor()
+	// approvalrecord.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	approvalrecord.TicketIDValidator = approvalrecordDescTicketID.Validators[0].(func(int) error)
+	// approvalrecordDescTicketNumber is the schema descriptor for ticket_number field.
+	approvalrecordDescTicketNumber := approvalrecordFields[1].Descriptor()
+	// approvalrecord.TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
+	approvalrecord.TicketNumberValidator = approvalrecordDescTicketNumber.Validators[0].(func(string) error)
+	// approvalrecordDescTicketTitle is the schema descriptor for ticket_title field.
+	approvalrecordDescTicketTitle := approvalrecordFields[2].Descriptor()
+	// approvalrecord.TicketTitleValidator is a validator for the "ticket_title" field. It is called by the builders before save.
+	approvalrecord.TicketTitleValidator = approvalrecordDescTicketTitle.Validators[0].(func(string) error)
+	// approvalrecordDescWorkflowID is the schema descriptor for workflow_id field.
+	approvalrecordDescWorkflowID := approvalrecordFields[3].Descriptor()
+	// approvalrecord.WorkflowIDValidator is a validator for the "workflow_id" field. It is called by the builders before save.
+	approvalrecord.WorkflowIDValidator = approvalrecordDescWorkflowID.Validators[0].(func(int) error)
+	// approvalrecordDescWorkflowName is the schema descriptor for workflow_name field.
+	approvalrecordDescWorkflowName := approvalrecordFields[4].Descriptor()
+	// approvalrecord.WorkflowNameValidator is a validator for the "workflow_name" field. It is called by the builders before save.
+	approvalrecord.WorkflowNameValidator = approvalrecordDescWorkflowName.Validators[0].(func(string) error)
+	// approvalrecordDescCurrentLevel is the schema descriptor for current_level field.
+	approvalrecordDescCurrentLevel := approvalrecordFields[5].Descriptor()
+	// approvalrecord.DefaultCurrentLevel holds the default value on creation for the current_level field.
+	approvalrecord.DefaultCurrentLevel = approvalrecordDescCurrentLevel.Default.(int)
+	// approvalrecordDescTotalLevels is the schema descriptor for total_levels field.
+	approvalrecordDescTotalLevels := approvalrecordFields[6].Descriptor()
+	// approvalrecord.DefaultTotalLevels holds the default value on creation for the total_levels field.
+	approvalrecord.DefaultTotalLevels = approvalrecordDescTotalLevels.Default.(int)
+	// approvalrecordDescApproverID is the schema descriptor for approver_id field.
+	approvalrecordDescApproverID := approvalrecordFields[7].Descriptor()
+	// approvalrecord.ApproverIDValidator is a validator for the "approver_id" field. It is called by the builders before save.
+	approvalrecord.ApproverIDValidator = approvalrecordDescApproverID.Validators[0].(func(int) error)
+	// approvalrecordDescApproverName is the schema descriptor for approver_name field.
+	approvalrecordDescApproverName := approvalrecordFields[8].Descriptor()
+	// approvalrecord.ApproverNameValidator is a validator for the "approver_name" field. It is called by the builders before save.
+	approvalrecord.ApproverNameValidator = approvalrecordDescApproverName.Validators[0].(func(string) error)
+	// approvalrecordDescStatus is the schema descriptor for status field.
+	approvalrecordDescStatus := approvalrecordFields[9].Descriptor()
+	// approvalrecord.DefaultStatus holds the default value on creation for the status field.
+	approvalrecord.DefaultStatus = approvalrecordDescStatus.Default.(string)
+	// approvalrecordDescTenantID is the schema descriptor for tenant_id field.
+	approvalrecordDescTenantID := approvalrecordFields[12].Descriptor()
+	// approvalrecord.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	approvalrecord.TenantIDValidator = approvalrecordDescTenantID.Validators[0].(func(int) error)
+	// approvalrecordDescCreatedAt is the schema descriptor for created_at field.
+	approvalrecordDescCreatedAt := approvalrecordFields[13].Descriptor()
+	// approvalrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
+	approvalrecord.DefaultCreatedAt = approvalrecordDescCreatedAt.Default.(func() time.Time)
+	approvalworkflowFields := schema.ApprovalWorkflow{}.Fields()
+	_ = approvalworkflowFields
+	// approvalworkflowDescName is the schema descriptor for name field.
+	approvalworkflowDescName := approvalworkflowFields[0].Descriptor()
+	// approvalworkflow.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	approvalworkflow.NameValidator = approvalworkflowDescName.Validators[0].(func(string) error)
+	// approvalworkflowDescNodes is the schema descriptor for nodes field.
+	approvalworkflowDescNodes := approvalworkflowFields[4].Descriptor()
+	// approvalworkflow.DefaultNodes holds the default value on creation for the nodes field.
+	approvalworkflow.DefaultNodes = approvalworkflowDescNodes.Default.([]map[string]interface{})
+	// approvalworkflowDescIsActive is the schema descriptor for is_active field.
+	approvalworkflowDescIsActive := approvalworkflowFields[5].Descriptor()
+	// approvalworkflow.DefaultIsActive holds the default value on creation for the is_active field.
+	approvalworkflow.DefaultIsActive = approvalworkflowDescIsActive.Default.(bool)
+	// approvalworkflowDescTenantID is the schema descriptor for tenant_id field.
+	approvalworkflowDescTenantID := approvalworkflowFields[6].Descriptor()
+	// approvalworkflow.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	approvalworkflow.TenantIDValidator = approvalworkflowDescTenantID.Validators[0].(func(int) error)
+	// approvalworkflowDescCreatedAt is the schema descriptor for created_at field.
+	approvalworkflowDescCreatedAt := approvalworkflowFields[7].Descriptor()
+	// approvalworkflow.DefaultCreatedAt holds the default value on creation for the created_at field.
+	approvalworkflow.DefaultCreatedAt = approvalworkflowDescCreatedAt.Default.(func() time.Time)
+	// approvalworkflowDescUpdatedAt is the schema descriptor for updated_at field.
+	approvalworkflowDescUpdatedAt := approvalworkflowFields[8].Descriptor()
+	// approvalworkflow.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	approvalworkflow.DefaultUpdatedAt = approvalworkflowDescUpdatedAt.Default.(func() time.Time)
+	// approvalworkflow.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	approvalworkflow.UpdateDefaultUpdatedAt = approvalworkflowDescUpdatedAt.UpdateDefault.(func() time.Time)
 	auditlogFields := schema.AuditLog{}.Fields()
 	_ = auditlogFields
 	// auditlogDescCreatedAt is the schema descriptor for created_at field.
@@ -989,6 +1072,176 @@ func init() {
 	prompttemplateDescDescription := prompttemplateFields[5].Descriptor()
 	// prompttemplate.DefaultDescription holds the default value on creation for the description field.
 	prompttemplate.DefaultDescription = prompttemplateDescDescription.Default.(string)
+	rootcauseanalysisFields := schema.RootCauseAnalysis{}.Fields()
+	_ = rootcauseanalysisFields
+	// rootcauseanalysisDescTicketID is the schema descriptor for ticket_id field.
+	rootcauseanalysisDescTicketID := rootcauseanalysisFields[0].Descriptor()
+	// rootcauseanalysis.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	rootcauseanalysis.TicketIDValidator = rootcauseanalysisDescTicketID.Validators[0].(func(int) error)
+	// rootcauseanalysisDescTicketNumber is the schema descriptor for ticket_number field.
+	rootcauseanalysisDescTicketNumber := rootcauseanalysisFields[1].Descriptor()
+	// rootcauseanalysis.TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
+	rootcauseanalysis.TicketNumberValidator = rootcauseanalysisDescTicketNumber.Validators[0].(func(string) error)
+	// rootcauseanalysisDescTicketTitle is the schema descriptor for ticket_title field.
+	rootcauseanalysisDescTicketTitle := rootcauseanalysisFields[2].Descriptor()
+	// rootcauseanalysis.TicketTitleValidator is a validator for the "ticket_title" field. It is called by the builders before save.
+	rootcauseanalysis.TicketTitleValidator = rootcauseanalysisDescTicketTitle.Validators[0].(func(string) error)
+	// rootcauseanalysisDescAnalysisDate is the schema descriptor for analysis_date field.
+	rootcauseanalysisDescAnalysisDate := rootcauseanalysisFields[3].Descriptor()
+	// rootcauseanalysis.AnalysisDateValidator is a validator for the "analysis_date" field. It is called by the builders before save.
+	rootcauseanalysis.AnalysisDateValidator = rootcauseanalysisDescAnalysisDate.Validators[0].(func(string) error)
+	// rootcauseanalysisDescRootCauses is the schema descriptor for root_causes field.
+	rootcauseanalysisDescRootCauses := rootcauseanalysisFields[4].Descriptor()
+	// rootcauseanalysis.DefaultRootCauses holds the default value on creation for the root_causes field.
+	rootcauseanalysis.DefaultRootCauses = rootcauseanalysisDescRootCauses.Default.([]map[string]interface{})
+	// rootcauseanalysisDescConfidenceScore is the schema descriptor for confidence_score field.
+	rootcauseanalysisDescConfidenceScore := rootcauseanalysisFields[6].Descriptor()
+	// rootcauseanalysis.DefaultConfidenceScore holds the default value on creation for the confidence_score field.
+	rootcauseanalysis.DefaultConfidenceScore = rootcauseanalysisDescConfidenceScore.Default.(float64)
+	// rootcauseanalysis.ConfidenceScoreValidator is a validator for the "confidence_score" field. It is called by the builders before save.
+	rootcauseanalysis.ConfidenceScoreValidator = func() func(float64) error {
+		validators := rootcauseanalysisDescConfidenceScore.Validators
+		fns := [...]func(float64) error{
+			validators[0].(func(float64) error),
+			validators[1].(func(float64) error),
+		}
+		return func(confidence_score float64) error {
+			for _, fn := range fns {
+				if err := fn(confidence_score); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// rootcauseanalysisDescAnalysisMethod is the schema descriptor for analysis_method field.
+	rootcauseanalysisDescAnalysisMethod := rootcauseanalysisFields[7].Descriptor()
+	// rootcauseanalysis.DefaultAnalysisMethod holds the default value on creation for the analysis_method field.
+	rootcauseanalysis.DefaultAnalysisMethod = rootcauseanalysisDescAnalysisMethod.Default.(string)
+	// rootcauseanalysisDescTenantID is the schema descriptor for tenant_id field.
+	rootcauseanalysisDescTenantID := rootcauseanalysisFields[8].Descriptor()
+	// rootcauseanalysis.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	rootcauseanalysis.TenantIDValidator = rootcauseanalysisDescTenantID.Validators[0].(func(int) error)
+	// rootcauseanalysisDescCreatedAt is the schema descriptor for created_at field.
+	rootcauseanalysisDescCreatedAt := rootcauseanalysisFields[9].Descriptor()
+	// rootcauseanalysis.DefaultCreatedAt holds the default value on creation for the created_at field.
+	rootcauseanalysis.DefaultCreatedAt = rootcauseanalysisDescCreatedAt.Default.(func() time.Time)
+	// rootcauseanalysisDescUpdatedAt is the schema descriptor for updated_at field.
+	rootcauseanalysisDescUpdatedAt := rootcauseanalysisFields[10].Descriptor()
+	// rootcauseanalysis.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	rootcauseanalysis.DefaultUpdatedAt = rootcauseanalysisDescUpdatedAt.Default.(func() time.Time)
+	// rootcauseanalysis.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	rootcauseanalysis.UpdateDefaultUpdatedAt = rootcauseanalysisDescUpdatedAt.UpdateDefault.(func() time.Time)
+	slaalerthistoryFields := schema.SLAAlertHistory{}.Fields()
+	_ = slaalerthistoryFields
+	// slaalerthistoryDescTicketID is the schema descriptor for ticket_id field.
+	slaalerthistoryDescTicketID := slaalerthistoryFields[0].Descriptor()
+	// slaalerthistory.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
+	slaalerthistory.TicketIDValidator = slaalerthistoryDescTicketID.Validators[0].(func(int) error)
+	// slaalerthistoryDescTicketNumber is the schema descriptor for ticket_number field.
+	slaalerthistoryDescTicketNumber := slaalerthistoryFields[1].Descriptor()
+	// slaalerthistory.TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
+	slaalerthistory.TicketNumberValidator = slaalerthistoryDescTicketNumber.Validators[0].(func(string) error)
+	// slaalerthistoryDescTicketTitle is the schema descriptor for ticket_title field.
+	slaalerthistoryDescTicketTitle := slaalerthistoryFields[2].Descriptor()
+	// slaalerthistory.TicketTitleValidator is a validator for the "ticket_title" field. It is called by the builders before save.
+	slaalerthistory.TicketTitleValidator = slaalerthistoryDescTicketTitle.Validators[0].(func(string) error)
+	// slaalerthistoryDescAlertRuleID is the schema descriptor for alert_rule_id field.
+	slaalerthistoryDescAlertRuleID := slaalerthistoryFields[3].Descriptor()
+	// slaalerthistory.AlertRuleIDValidator is a validator for the "alert_rule_id" field. It is called by the builders before save.
+	slaalerthistory.AlertRuleIDValidator = slaalerthistoryDescAlertRuleID.Validators[0].(func(int) error)
+	// slaalerthistoryDescAlertRuleName is the schema descriptor for alert_rule_name field.
+	slaalerthistoryDescAlertRuleName := slaalerthistoryFields[4].Descriptor()
+	// slaalerthistory.AlertRuleNameValidator is a validator for the "alert_rule_name" field. It is called by the builders before save.
+	slaalerthistory.AlertRuleNameValidator = slaalerthistoryDescAlertRuleName.Validators[0].(func(string) error)
+	// slaalerthistoryDescAlertLevel is the schema descriptor for alert_level field.
+	slaalerthistoryDescAlertLevel := slaalerthistoryFields[5].Descriptor()
+	// slaalerthistory.DefaultAlertLevel holds the default value on creation for the alert_level field.
+	slaalerthistory.DefaultAlertLevel = slaalerthistoryDescAlertLevel.Default.(string)
+	// slaalerthistoryDescThresholdPercentage is the schema descriptor for threshold_percentage field.
+	slaalerthistoryDescThresholdPercentage := slaalerthistoryFields[6].Descriptor()
+	// slaalerthistory.DefaultThresholdPercentage holds the default value on creation for the threshold_percentage field.
+	slaalerthistory.DefaultThresholdPercentage = slaalerthistoryDescThresholdPercentage.Default.(int)
+	// slaalerthistoryDescActualPercentage is the schema descriptor for actual_percentage field.
+	slaalerthistoryDescActualPercentage := slaalerthistoryFields[7].Descriptor()
+	// slaalerthistory.DefaultActualPercentage holds the default value on creation for the actual_percentage field.
+	slaalerthistory.DefaultActualPercentage = slaalerthistoryDescActualPercentage.Default.(float64)
+	// slaalerthistoryDescNotificationSent is the schema descriptor for notification_sent field.
+	slaalerthistoryDescNotificationSent := slaalerthistoryFields[8].Descriptor()
+	// slaalerthistory.DefaultNotificationSent holds the default value on creation for the notification_sent field.
+	slaalerthistory.DefaultNotificationSent = slaalerthistoryDescNotificationSent.Default.(bool)
+	// slaalerthistoryDescEscalationLevel is the schema descriptor for escalation_level field.
+	slaalerthistoryDescEscalationLevel := slaalerthistoryFields[9].Descriptor()
+	// slaalerthistory.DefaultEscalationLevel holds the default value on creation for the escalation_level field.
+	slaalerthistory.DefaultEscalationLevel = slaalerthistoryDescEscalationLevel.Default.(int)
+	// slaalerthistoryDescTenantID is the schema descriptor for tenant_id field.
+	slaalerthistoryDescTenantID := slaalerthistoryFields[10].Descriptor()
+	// slaalerthistory.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	slaalerthistory.TenantIDValidator = slaalerthistoryDescTenantID.Validators[0].(func(int) error)
+	// slaalerthistoryDescCreatedAt is the schema descriptor for created_at field.
+	slaalerthistoryDescCreatedAt := slaalerthistoryFields[11].Descriptor()
+	// slaalerthistory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	slaalerthistory.DefaultCreatedAt = slaalerthistoryDescCreatedAt.Default.(func() time.Time)
+	slaalertruleFields := schema.SLAAlertRule{}.Fields()
+	_ = slaalertruleFields
+	// slaalertruleDescName is the schema descriptor for name field.
+	slaalertruleDescName := slaalertruleFields[0].Descriptor()
+	// slaalertrule.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	slaalertrule.NameValidator = slaalertruleDescName.Validators[0].(func(string) error)
+	// slaalertruleDescSLADefinitionID is the schema descriptor for sla_definition_id field.
+	slaalertruleDescSLADefinitionID := slaalertruleFields[1].Descriptor()
+	// slaalertrule.SLADefinitionIDValidator is a validator for the "sla_definition_id" field. It is called by the builders before save.
+	slaalertrule.SLADefinitionIDValidator = slaalertruleDescSLADefinitionID.Validators[0].(func(int) error)
+	// slaalertruleDescAlertLevel is the schema descriptor for alert_level field.
+	slaalertruleDescAlertLevel := slaalertruleFields[2].Descriptor()
+	// slaalertrule.DefaultAlertLevel holds the default value on creation for the alert_level field.
+	slaalertrule.DefaultAlertLevel = slaalertruleDescAlertLevel.Default.(string)
+	// slaalertruleDescThresholdPercentage is the schema descriptor for threshold_percentage field.
+	slaalertruleDescThresholdPercentage := slaalertruleFields[3].Descriptor()
+	// slaalertrule.DefaultThresholdPercentage holds the default value on creation for the threshold_percentage field.
+	slaalertrule.DefaultThresholdPercentage = slaalertruleDescThresholdPercentage.Default.(int)
+	// slaalertrule.ThresholdPercentageValidator is a validator for the "threshold_percentage" field. It is called by the builders before save.
+	slaalertrule.ThresholdPercentageValidator = func() func(int) error {
+		validators := slaalertruleDescThresholdPercentage.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(threshold_percentage int) error {
+			for _, fn := range fns {
+				if err := fn(threshold_percentage); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// slaalertruleDescNotificationChannels is the schema descriptor for notification_channels field.
+	slaalertruleDescNotificationChannels := slaalertruleFields[4].Descriptor()
+	// slaalertrule.DefaultNotificationChannels holds the default value on creation for the notification_channels field.
+	slaalertrule.DefaultNotificationChannels = slaalertruleDescNotificationChannels.Default.([]string)
+	// slaalertruleDescEscalationEnabled is the schema descriptor for escalation_enabled field.
+	slaalertruleDescEscalationEnabled := slaalertruleFields[5].Descriptor()
+	// slaalertrule.DefaultEscalationEnabled holds the default value on creation for the escalation_enabled field.
+	slaalertrule.DefaultEscalationEnabled = slaalertruleDescEscalationEnabled.Default.(bool)
+	// slaalertruleDescIsActive is the schema descriptor for is_active field.
+	slaalertruleDescIsActive := slaalertruleFields[7].Descriptor()
+	// slaalertrule.DefaultIsActive holds the default value on creation for the is_active field.
+	slaalertrule.DefaultIsActive = slaalertruleDescIsActive.Default.(bool)
+	// slaalertruleDescTenantID is the schema descriptor for tenant_id field.
+	slaalertruleDescTenantID := slaalertruleFields[8].Descriptor()
+	// slaalertrule.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	slaalertrule.TenantIDValidator = slaalertruleDescTenantID.Validators[0].(func(int) error)
+	// slaalertruleDescCreatedAt is the schema descriptor for created_at field.
+	slaalertruleDescCreatedAt := slaalertruleFields[9].Descriptor()
+	// slaalertrule.DefaultCreatedAt holds the default value on creation for the created_at field.
+	slaalertrule.DefaultCreatedAt = slaalertruleDescCreatedAt.Default.(func() time.Time)
+	// slaalertruleDescUpdatedAt is the schema descriptor for updated_at field.
+	slaalertruleDescUpdatedAt := slaalertruleFields[10].Descriptor()
+	// slaalertrule.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	slaalertrule.DefaultUpdatedAt = slaalertruleDescUpdatedAt.Default.(func() time.Time)
+	// slaalertrule.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	slaalertrule.UpdateDefaultUpdatedAt = slaalertruleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	sladefinitionFields := schema.SLADefinition{}.Fields()
 	_ = sladefinitionFields
 	// sladefinitionDescName is the schema descriptor for name field.

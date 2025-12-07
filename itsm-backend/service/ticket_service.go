@@ -43,15 +43,21 @@ func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAu
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
-	ticket, err := s.client.Ticket.Create().
+	createBuilder := s.client.Ticket.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetPriority(req.Priority).
 		SetStatus("submitted").
 		SetTenantID(tenantID).
 		SetRequesterID(req.RequesterID).
-		SetAssigneeID(req.AssigneeID).
-		Save(ctx)
+		SetAssigneeID(req.AssigneeID)
+
+	// 如果指定了父工单ID，设置父工单关系
+	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
+		createBuilder = createBuilder.SetParentTicketID(*req.ParentTicketID)
+	}
+
+	ticket, err := createBuilder.Save(ctx)
 
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket", "error", err)
@@ -175,6 +181,9 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	}
 	if req.RequesterID != 0 {
 		query.Where(ticket.RequesterID(req.RequesterID))
+	}
+	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
+		query.Where(ticket.ParentTicketID(*req.ParentTicketID))
 	}
 
 	// 关键词搜索

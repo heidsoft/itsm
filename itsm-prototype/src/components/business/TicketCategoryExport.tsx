@@ -327,7 +327,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
       onCancel={handleCancel}
       footer={null}
       width={700}
-      destroyOnClose
+      destroyOnHidden
     >
       <div className="space-y-6">
         {/* 导出选项表单 */}

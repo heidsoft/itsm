@@ -170,12 +170,32 @@ func main() {
 
 	// 初始化SLA服务
 	slaService := service.NewSLAService(client, sugar)
+	slaAlertService := service.NewSLAAlertService(client, sugar)
+
+	// 初始化审批流程服务
+	approvalService := service.NewApprovalService(client, sugar)
 
 	// 初始化认证服务
 	authService := service.NewAuthService(client, cfg.JWT.Secret, sugar)
 
+	// 工单依赖关系服务
+	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
+
+	// 数据分析服务
+	analyticsService := service.NewAnalyticsService(client, sugar)
+
+	// 趋势预测服务
+	predictionService := service.NewPredictionService(client, sugar)
+
+	// 根因分析服务
+	rootCauseService := service.NewRootCauseService(client, sugar)
+
 	// 核心控制器
-	ticketController := controller.NewTicketController(ticketService, sugar)
+	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, sugar)
+	ticketDependencyController := controller.NewTicketDependencyController(ticketDependencyService)
+	analyticsController := controller.NewAnalyticsController(analyticsService)
+	predictionController := controller.NewPredictionController(predictionService)
+	rootCauseController := controller.NewRootCauseController(rootCauseService)
 	// 工单评论服务
 	ticketCommentService := service.NewTicketCommentService(client, sugar)
 	ticketCommentController := controller.NewTicketCommentController(ticketCommentService, sugar)
@@ -189,6 +209,10 @@ func main() {
 	// 工单评分服务
 	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)
+	
+	// 工单视图服务
+	ticketViewService := service.NewTicketViewService(client, sugar)
+	ticketViewController := controller.NewTicketViewController(ticketViewService, sugar)
 
 	// 工单分配服务
 	ticketAssignmentService := service.NewTicketAssignmentService(client)
@@ -201,7 +225,8 @@ func main() {
 	ticketCommentService.SetNotificationService(ticketNotificationService)
 	ticketRatingService.SetNotificationService(ticketNotificationService)
 	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, sugar)
-	slaController := controller.NewSLAController(slaService)
+	slaController := controller.NewSLAController(slaService, slaAlertService)
+	approvalController := controller.NewApprovalController(approvalService)
 	userController := controller.NewUserController(userService, sugar)
 	authController := controller.NewAuthController(authService)
 	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
@@ -234,13 +259,19 @@ func main() {
 		Logger:                       sugar,
 		Client:                       client,
 		TicketController:             ticketController,
+		TicketDependencyController:   ticketDependencyController,
 		TicketCommentController:      ticketCommentController,
 		TicketAttachmentController:   ticketAttachmentController,
 		TicketNotificationController: ticketNotificationController,
 		TicketRatingController:       ticketRatingController,
 		TicketAssignmentSmartController: ticketAssignmentSmartController,
+		TicketViewController:         ticketViewController,
 		IncidentController:           incidentController,
 		SLAController:                slaController,
+		ApprovalController:           approvalController,
+		AnalyticsController:          analyticsController,
+		PredictionController:         predictionController,
+		RootCauseController:          rootCauseController,
 		AuthController:               authController,
 		UserController:               userController,
 		AIController:                 aiController,

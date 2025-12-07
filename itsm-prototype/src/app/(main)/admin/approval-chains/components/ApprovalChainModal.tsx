@@ -247,7 +247,7 @@ export function ApprovalChainModal({
       onOk={handleSubmit}
       confirmLoading={loading}
       width={800}
-      destroyOnClose
+      destroyOnHidden
     >
       <Steps current={currentStep} className='mb-6'>
         {stepItems.map((item, index) => (

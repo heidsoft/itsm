@@ -84,6 +84,12 @@ const (
 	EdgeAttachments = "attachments"
 	// EdgeNotifications holds the string denoting the notifications edge name in mutations.
 	EdgeNotifications = "notifications"
+	// EdgeSLAAlertHistory holds the string denoting the sla_alert_history edge name in mutations.
+	EdgeSLAAlertHistory = "sla_alert_history"
+	// EdgeApprovalRecords holds the string denoting the approval_records edge name in mutations.
+	EdgeApprovalRecords = "approval_records"
+	// EdgeRootCauseAnalyses holds the string denoting the root_cause_analyses edge name in mutations.
+	EdgeRootCauseAnalyses = "root_cause_analyses"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -164,6 +170,27 @@ const (
 	NotificationsInverseTable = "ticket_notifications"
 	// NotificationsColumn is the table column denoting the notifications relation/edge.
 	NotificationsColumn = "ticket_id"
+	// SLAAlertHistoryTable is the table that holds the sla_alert_history relation/edge.
+	SLAAlertHistoryTable = "sla_alert_histories"
+	// SLAAlertHistoryInverseTable is the table name for the SLAAlertHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "slaalerthistory" package.
+	SLAAlertHistoryInverseTable = "sla_alert_histories"
+	// SLAAlertHistoryColumn is the table column denoting the sla_alert_history relation/edge.
+	SLAAlertHistoryColumn = "ticket_id"
+	// ApprovalRecordsTable is the table that holds the approval_records relation/edge.
+	ApprovalRecordsTable = "approval_records"
+	// ApprovalRecordsInverseTable is the table name for the ApprovalRecord entity.
+	// It exists in this package in order to avoid circular dependency with the "approvalrecord" package.
+	ApprovalRecordsInverseTable = "approval_records"
+	// ApprovalRecordsColumn is the table column denoting the approval_records relation/edge.
+	ApprovalRecordsColumn = "ticket_id"
+	// RootCauseAnalysesTable is the table that holds the root_cause_analyses relation/edge.
+	RootCauseAnalysesTable = "root_cause_analyses"
+	// RootCauseAnalysesInverseTable is the table name for the RootCauseAnalysis entity.
+	// It exists in this package in order to avoid circular dependency with the "rootcauseanalysis" package.
+	RootCauseAnalysesInverseTable = "root_cause_analyses"
+	// RootCauseAnalysesColumn is the table column denoting the root_cause_analyses relation/edge.
+	RootCauseAnalysesColumn = "ticket_id"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -493,6 +520,48 @@ func ByNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// BySLAAlertHistoryCount orders the results by sla_alert_history count.
+func BySLAAlertHistoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSLAAlertHistoryStep(), opts...)
+	}
+}
+
+// BySLAAlertHistory orders the results by sla_alert_history terms.
+func BySLAAlertHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSLAAlertHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByApprovalRecordsCount orders the results by approval_records count.
+func ByApprovalRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newApprovalRecordsStep(), opts...)
+	}
+}
+
+// ByApprovalRecords orders the results by approval_records terms.
+func ByApprovalRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newApprovalRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRootCauseAnalysesCount orders the results by root_cause_analyses count.
+func ByRootCauseAnalysesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRootCauseAnalysesStep(), opts...)
+	}
+}
+
+// ByRootCauseAnalyses orders the results by root_cause_analyses terms.
+func ByRootCauseAnalyses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRootCauseAnalysesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -575,5 +644,26 @@ func newNotificationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(NotificationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, NotificationsTable, NotificationsColumn),
+	)
+}
+func newSLAAlertHistoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SLAAlertHistoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SLAAlertHistoryTable, SLAAlertHistoryColumn),
+	)
+}
+func newApprovalRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ApprovalRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalRecordsTable, ApprovalRecordsColumn),
+	)
+}
+func newRootCauseAnalysesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RootCauseAnalysesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
 	)
 }

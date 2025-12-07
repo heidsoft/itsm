@@ -130,7 +130,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
       onCancel={onCancel}
       footer={null}
       width={700}
-      destroyOnClose
+      destroyOnHidden
     >
       <Spin spinning={loading}>
         <Space direction="vertical" style={{ width: '100%' }} size="large">

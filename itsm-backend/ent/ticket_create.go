@@ -6,7 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/rootcauseanalysis"
+	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
@@ -450,6 +453,51 @@ func (tc *TicketCreate) AddNotifications(t ...*TicketNotification) *TicketCreate
 	return tc.AddNotificationIDs(ids...)
 }
 
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (tc *TicketCreate) AddSLAAlertHistoryIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddSLAAlertHistoryIDs(ids...)
+	return tc
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (tc *TicketCreate) AddSLAAlertHistory(s ...*SLAAlertHistory) *TicketCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tc.AddSLAAlertHistoryIDs(ids...)
+}
+
+// AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
+func (tc *TicketCreate) AddApprovalRecordIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddApprovalRecordIDs(ids...)
+	return tc
+}
+
+// AddApprovalRecords adds the "approval_records" edges to the ApprovalRecord entity.
+func (tc *TicketCreate) AddApprovalRecords(a ...*ApprovalRecord) *TicketCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tc.AddApprovalRecordIDs(ids...)
+}
+
+// AddRootCauseAnalysisIDs adds the "root_cause_analyses" edge to the RootCauseAnalysis entity by IDs.
+func (tc *TicketCreate) AddRootCauseAnalysisIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddRootCauseAnalysisIDs(ids...)
+	return tc
+}
+
+// AddRootCauseAnalyses adds the "root_cause_analyses" edges to the RootCauseAnalysis entity.
+func (tc *TicketCreate) AddRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tc.AddRootCauseAnalysisIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tc *TicketCreate) Mutation() *TicketMutation {
 	return tc.mutation
@@ -842,6 +890,54 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.RootCauseAnalysesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

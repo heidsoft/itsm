@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
@@ -283,6 +284,21 @@ func (sdu *SLADefinitionUpdate) AddTickets(t ...*Ticket) *SLADefinitionUpdate {
 	return sdu.AddTicketIDs(ids...)
 }
 
+// AddAlertRuleIDs adds the "alert_rules" edge to the SLAAlertRule entity by IDs.
+func (sdu *SLADefinitionUpdate) AddAlertRuleIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.AddAlertRuleIDs(ids...)
+	return sdu
+}
+
+// AddAlertRules adds the "alert_rules" edges to the SLAAlertRule entity.
+func (sdu *SLADefinitionUpdate) AddAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdu.AddAlertRuleIDs(ids...)
+}
+
 // Mutation returns the SLADefinitionMutation object of the builder.
 func (sdu *SLADefinitionUpdate) Mutation() *SLADefinitionMutation {
 	return sdu.mutation
@@ -349,6 +365,27 @@ func (sdu *SLADefinitionUpdate) RemoveTickets(t ...*Ticket) *SLADefinitionUpdate
 		ids[i] = t[i].ID
 	}
 	return sdu.RemoveTicketIDs(ids...)
+}
+
+// ClearAlertRules clears all "alert_rules" edges to the SLAAlertRule entity.
+func (sdu *SLADefinitionUpdate) ClearAlertRules() *SLADefinitionUpdate {
+	sdu.mutation.ClearAlertRules()
+	return sdu
+}
+
+// RemoveAlertRuleIDs removes the "alert_rules" edge to SLAAlertRule entities by IDs.
+func (sdu *SLADefinitionUpdate) RemoveAlertRuleIDs(ids ...int) *SLADefinitionUpdate {
+	sdu.mutation.RemoveAlertRuleIDs(ids...)
+	return sdu
+}
+
+// RemoveAlertRules removes "alert_rules" edges to SLAAlertRule entities.
+func (sdu *SLADefinitionUpdate) RemoveAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sdu.RemoveAlertRuleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -618,6 +655,51 @@ func (sdu *SLADefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if sdu.mutation.AlertRulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.RemovedAlertRulesIDs(); len(nodes) > 0 && !sdu.mutation.AlertRulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sdu.mutation.AlertRulesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -897,6 +979,21 @@ func (sduo *SLADefinitionUpdateOne) AddTickets(t ...*Ticket) *SLADefinitionUpdat
 	return sduo.AddTicketIDs(ids...)
 }
 
+// AddAlertRuleIDs adds the "alert_rules" edge to the SLAAlertRule entity by IDs.
+func (sduo *SLADefinitionUpdateOne) AddAlertRuleIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.AddAlertRuleIDs(ids...)
+	return sduo
+}
+
+// AddAlertRules adds the "alert_rules" edges to the SLAAlertRule entity.
+func (sduo *SLADefinitionUpdateOne) AddAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sduo.AddAlertRuleIDs(ids...)
+}
+
 // Mutation returns the SLADefinitionMutation object of the builder.
 func (sduo *SLADefinitionUpdateOne) Mutation() *SLADefinitionMutation {
 	return sduo.mutation
@@ -963,6 +1060,27 @@ func (sduo *SLADefinitionUpdateOne) RemoveTickets(t ...*Ticket) *SLADefinitionUp
 		ids[i] = t[i].ID
 	}
 	return sduo.RemoveTicketIDs(ids...)
+}
+
+// ClearAlertRules clears all "alert_rules" edges to the SLAAlertRule entity.
+func (sduo *SLADefinitionUpdateOne) ClearAlertRules() *SLADefinitionUpdateOne {
+	sduo.mutation.ClearAlertRules()
+	return sduo
+}
+
+// RemoveAlertRuleIDs removes the "alert_rules" edge to SLAAlertRule entities by IDs.
+func (sduo *SLADefinitionUpdateOne) RemoveAlertRuleIDs(ids ...int) *SLADefinitionUpdateOne {
+	sduo.mutation.RemoveAlertRuleIDs(ids...)
+	return sduo
+}
+
+// RemoveAlertRules removes "alert_rules" edges to SLAAlertRule entities.
+func (sduo *SLADefinitionUpdateOne) RemoveAlertRules(s ...*SLAAlertRule) *SLADefinitionUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return sduo.RemoveAlertRuleIDs(ids...)
 }
 
 // Where appends a list predicates to the SLADefinitionUpdate builder.
@@ -1262,6 +1380,51 @@ func (sduo *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if sduo.mutation.AlertRulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.RemovedAlertRulesIDs(); len(nodes) > 0 && !sduo.mutation.AlertRulesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := sduo.mutation.AlertRulesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.AlertRulesTable,
+			Columns: []string{sladefinition.AlertRulesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

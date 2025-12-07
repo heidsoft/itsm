@@ -19,6 +19,7 @@ import {
   Tooltip,
   Progress,
   Alert,
+  Tabs,
 } from 'antd';
 import {
   PlusOutlined,
@@ -41,6 +42,7 @@ import {
   EscalationLevel,
 } from '@/lib/services/sla-service';
 import { useI18n } from '@/lib/i18n';
+import { SLAAlertSystem } from '@/components/business/SLAAlertSystem';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -470,14 +472,32 @@ export default function SLAManagementPage() {
         />
       </Card>
 
-      {/* SLA实例列表 */}
-      <Card title={t('sla.currentInstances')}>
-        <Table
-          columns={instanceColumns}
-          dataSource={slaInstances}
-          rowKey='id'
-          pagination={false}
-          size='small'
+      {/* SLA管理Tabs */}
+      <Card>
+        <Tabs
+          defaultActiveKey='instances'
+          type='card'
+          size='large'
+          items={[
+            {
+              key: 'instances',
+              label: 'SLA实例',
+              children: (
+                <Table
+                  columns={instanceColumns}
+                  dataSource={slaInstances}
+                  rowKey='id'
+                  pagination={false}
+                  size='small'
+                />
+              ),
+            },
+            {
+              key: 'alerts',
+              label: '预警管理',
+              children: <SLAAlertSystem slaDefinitionId={undefined} />,
+            },
+          ]}
         />
       </Card>
 
@@ -488,7 +508,7 @@ export default function SLAManagementPage() {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout='vertical' onFinish={handleSubmit}>
           <Row gutter={16}>

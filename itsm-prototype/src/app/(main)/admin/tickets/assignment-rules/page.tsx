@@ -309,7 +309,7 @@ export default function AssignmentRulesPage() {
         }}
         footer={null}
         width={900}
-        destroyOnClose
+        destroyOnHidden
       >
         <AssignmentRuleForm
           form={form}

@@ -6,8 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/rootcauseanalysis"
+	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
@@ -607,6 +610,51 @@ func (tu *TicketUpdate) AddNotifications(t ...*TicketNotification) *TicketUpdate
 	return tu.AddNotificationIDs(ids...)
 }
 
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (tu *TicketUpdate) AddSLAAlertHistoryIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddSLAAlertHistoryIDs(ids...)
+	return tu
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (tu *TicketUpdate) AddSLAAlertHistory(s ...*SLAAlertHistory) *TicketUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tu.AddSLAAlertHistoryIDs(ids...)
+}
+
+// AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
+func (tu *TicketUpdate) AddApprovalRecordIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddApprovalRecordIDs(ids...)
+	return tu
+}
+
+// AddApprovalRecords adds the "approval_records" edges to the ApprovalRecord entity.
+func (tu *TicketUpdate) AddApprovalRecords(a ...*ApprovalRecord) *TicketUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tu.AddApprovalRecordIDs(ids...)
+}
+
+// AddRootCauseAnalysisIDs adds the "root_cause_analyses" edge to the RootCauseAnalysis entity by IDs.
+func (tu *TicketUpdate) AddRootCauseAnalysisIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddRootCauseAnalysisIDs(ids...)
+	return tu
+}
+
+// AddRootCauseAnalyses adds the "root_cause_analyses" edges to the RootCauseAnalysis entity.
+func (tu *TicketUpdate) AddRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tu.AddRootCauseAnalysisIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tu *TicketUpdate) Mutation() *TicketMutation {
 	return tu.mutation
@@ -787,6 +835,69 @@ func (tu *TicketUpdate) RemoveNotifications(t ...*TicketNotification) *TicketUpd
 		ids[i] = t[i].ID
 	}
 	return tu.RemoveNotificationIDs(ids...)
+}
+
+// ClearSLAAlertHistory clears all "sla_alert_history" edges to the SLAAlertHistory entity.
+func (tu *TicketUpdate) ClearSLAAlertHistory() *TicketUpdate {
+	tu.mutation.ClearSLAAlertHistory()
+	return tu
+}
+
+// RemoveSLAAlertHistoryIDs removes the "sla_alert_history" edge to SLAAlertHistory entities by IDs.
+func (tu *TicketUpdate) RemoveSLAAlertHistoryIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveSLAAlertHistoryIDs(ids...)
+	return tu
+}
+
+// RemoveSLAAlertHistory removes "sla_alert_history" edges to SLAAlertHistory entities.
+func (tu *TicketUpdate) RemoveSLAAlertHistory(s ...*SLAAlertHistory) *TicketUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tu.RemoveSLAAlertHistoryIDs(ids...)
+}
+
+// ClearApprovalRecords clears all "approval_records" edges to the ApprovalRecord entity.
+func (tu *TicketUpdate) ClearApprovalRecords() *TicketUpdate {
+	tu.mutation.ClearApprovalRecords()
+	return tu
+}
+
+// RemoveApprovalRecordIDs removes the "approval_records" edge to ApprovalRecord entities by IDs.
+func (tu *TicketUpdate) RemoveApprovalRecordIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveApprovalRecordIDs(ids...)
+	return tu
+}
+
+// RemoveApprovalRecords removes "approval_records" edges to ApprovalRecord entities.
+func (tu *TicketUpdate) RemoveApprovalRecords(a ...*ApprovalRecord) *TicketUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tu.RemoveApprovalRecordIDs(ids...)
+}
+
+// ClearRootCauseAnalyses clears all "root_cause_analyses" edges to the RootCauseAnalysis entity.
+func (tu *TicketUpdate) ClearRootCauseAnalyses() *TicketUpdate {
+	tu.mutation.ClearRootCauseAnalyses()
+	return tu
+}
+
+// RemoveRootCauseAnalysisIDs removes the "root_cause_analyses" edge to RootCauseAnalysis entities by IDs.
+func (tu *TicketUpdate) RemoveRootCauseAnalysisIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveRootCauseAnalysisIDs(ids...)
+	return tu
+}
+
+// RemoveRootCauseAnalyses removes "root_cause_analyses" edges to RootCauseAnalysis entities.
+func (tu *TicketUpdate) RemoveRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tu.RemoveRootCauseAnalysisIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1426,6 +1537,141 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedSLAAlertHistoryIDs(); len(nodes) > 0 && !tu.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.ApprovalRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedApprovalRecordsIDs(); len(nodes) > 0 && !tu.mutation.ApprovalRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.RootCauseAnalysesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedRootCauseAnalysesIDs(); len(nodes) > 0 && !tu.mutation.RootCauseAnalysesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RootCauseAnalysesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticket.Label}
@@ -2015,6 +2261,51 @@ func (tuo *TicketUpdateOne) AddNotifications(t ...*TicketNotification) *TicketUp
 	return tuo.AddNotificationIDs(ids...)
 }
 
+// AddSLAAlertHistoryIDs adds the "sla_alert_history" edge to the SLAAlertHistory entity by IDs.
+func (tuo *TicketUpdateOne) AddSLAAlertHistoryIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddSLAAlertHistoryIDs(ids...)
+	return tuo
+}
+
+// AddSLAAlertHistory adds the "sla_alert_history" edges to the SLAAlertHistory entity.
+func (tuo *TicketUpdateOne) AddSLAAlertHistory(s ...*SLAAlertHistory) *TicketUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tuo.AddSLAAlertHistoryIDs(ids...)
+}
+
+// AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
+func (tuo *TicketUpdateOne) AddApprovalRecordIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddApprovalRecordIDs(ids...)
+	return tuo
+}
+
+// AddApprovalRecords adds the "approval_records" edges to the ApprovalRecord entity.
+func (tuo *TicketUpdateOne) AddApprovalRecords(a ...*ApprovalRecord) *TicketUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tuo.AddApprovalRecordIDs(ids...)
+}
+
+// AddRootCauseAnalysisIDs adds the "root_cause_analyses" edge to the RootCauseAnalysis entity by IDs.
+func (tuo *TicketUpdateOne) AddRootCauseAnalysisIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddRootCauseAnalysisIDs(ids...)
+	return tuo
+}
+
+// AddRootCauseAnalyses adds the "root_cause_analyses" edges to the RootCauseAnalysis entity.
+func (tuo *TicketUpdateOne) AddRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tuo.AddRootCauseAnalysisIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tuo *TicketUpdateOne) Mutation() *TicketMutation {
 	return tuo.mutation
@@ -2195,6 +2486,69 @@ func (tuo *TicketUpdateOne) RemoveNotifications(t ...*TicketNotification) *Ticke
 		ids[i] = t[i].ID
 	}
 	return tuo.RemoveNotificationIDs(ids...)
+}
+
+// ClearSLAAlertHistory clears all "sla_alert_history" edges to the SLAAlertHistory entity.
+func (tuo *TicketUpdateOne) ClearSLAAlertHistory() *TicketUpdateOne {
+	tuo.mutation.ClearSLAAlertHistory()
+	return tuo
+}
+
+// RemoveSLAAlertHistoryIDs removes the "sla_alert_history" edge to SLAAlertHistory entities by IDs.
+func (tuo *TicketUpdateOne) RemoveSLAAlertHistoryIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveSLAAlertHistoryIDs(ids...)
+	return tuo
+}
+
+// RemoveSLAAlertHistory removes "sla_alert_history" edges to SLAAlertHistory entities.
+func (tuo *TicketUpdateOne) RemoveSLAAlertHistory(s ...*SLAAlertHistory) *TicketUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return tuo.RemoveSLAAlertHistoryIDs(ids...)
+}
+
+// ClearApprovalRecords clears all "approval_records" edges to the ApprovalRecord entity.
+func (tuo *TicketUpdateOne) ClearApprovalRecords() *TicketUpdateOne {
+	tuo.mutation.ClearApprovalRecords()
+	return tuo
+}
+
+// RemoveApprovalRecordIDs removes the "approval_records" edge to ApprovalRecord entities by IDs.
+func (tuo *TicketUpdateOne) RemoveApprovalRecordIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveApprovalRecordIDs(ids...)
+	return tuo
+}
+
+// RemoveApprovalRecords removes "approval_records" edges to ApprovalRecord entities.
+func (tuo *TicketUpdateOne) RemoveApprovalRecords(a ...*ApprovalRecord) *TicketUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return tuo.RemoveApprovalRecordIDs(ids...)
+}
+
+// ClearRootCauseAnalyses clears all "root_cause_analyses" edges to the RootCauseAnalysis entity.
+func (tuo *TicketUpdateOne) ClearRootCauseAnalyses() *TicketUpdateOne {
+	tuo.mutation.ClearRootCauseAnalyses()
+	return tuo
+}
+
+// RemoveRootCauseAnalysisIDs removes the "root_cause_analyses" edge to RootCauseAnalysis entities by IDs.
+func (tuo *TicketUpdateOne) RemoveRootCauseAnalysisIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveRootCauseAnalysisIDs(ids...)
+	return tuo
+}
+
+// RemoveRootCauseAnalyses removes "root_cause_analyses" edges to RootCauseAnalysis entities.
+func (tuo *TicketUpdateOne) RemoveRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return tuo.RemoveRootCauseAnalysisIDs(ids...)
 }
 
 // Where appends a list predicates to the TicketUpdate builder.
@@ -2857,6 +3211,141 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedSLAAlertHistoryIDs(); len(nodes) > 0 && !tuo.mutation.SLAAlertHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.SLAAlertHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.SLAAlertHistoryTable,
+			Columns: []string{ticket.SLAAlertHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.ApprovalRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedApprovalRecordsIDs(); len(nodes) > 0 && !tuo.mutation.ApprovalRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.ApprovalRecordsTable,
+			Columns: []string{ticket.ApprovalRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.RootCauseAnalysesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedRootCauseAnalysesIDs(); len(nodes) > 0 && !tuo.mutation.RootCauseAnalysesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RootCauseAnalysesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   ticket.RootCauseAnalysesTable,
+			Columns: []string{ticket.RootCauseAnalysesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

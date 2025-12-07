@@ -3,6 +3,7 @@
 import React from 'react';
 import { Column } from '@ant-design/charts';
 import { Users } from 'lucide-react';
+import { TeamWorkload } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard';
 
 const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data }) => {

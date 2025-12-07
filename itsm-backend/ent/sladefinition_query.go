@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
@@ -29,6 +30,7 @@ type SLADefinitionQuery struct {
 	withViolations *SLAViolationQuery
 	withMetrics    *SLAMetricQuery
 	withTickets    *TicketQuery
+	withAlertRules *SLAAlertRuleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -124,6 +126,28 @@ func (sdq *SLADefinitionQuery) QueryTickets() *TicketQuery {
 			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.TicketsTable, sladefinition.TicketsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAlertRules chains the current query on the "alert_rules" edge.
+func (sdq *SLADefinitionQuery) QueryAlertRules() *SLAAlertRuleQuery {
+	query := (&SLAAlertRuleClient{config: sdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
+			sqlgraph.To(slaalertrule.Table, slaalertrule.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.AlertRulesTable, sladefinition.AlertRulesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
 		return fromU, nil
@@ -326,6 +350,7 @@ func (sdq *SLADefinitionQuery) Clone() *SLADefinitionQuery {
 		withViolations: sdq.withViolations.Clone(),
 		withMetrics:    sdq.withMetrics.Clone(),
 		withTickets:    sdq.withTickets.Clone(),
+		withAlertRules: sdq.withAlertRules.Clone(),
 		// clone intermediate query.
 		sql:  sdq.sql.Clone(),
 		path: sdq.path,
@@ -362,6 +387,17 @@ func (sdq *SLADefinitionQuery) WithTickets(opts ...func(*TicketQuery)) *SLADefin
 		opt(query)
 	}
 	sdq.withTickets = query
+	return sdq
+}
+
+// WithAlertRules tells the query-builder to eager-load the nodes that are connected to
+// the "alert_rules" edge. The optional arguments are used to configure the query builder of the edge.
+func (sdq *SLADefinitionQuery) WithAlertRules(opts ...func(*SLAAlertRuleQuery)) *SLADefinitionQuery {
+	query := (&SLAAlertRuleClient{config: sdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	sdq.withAlertRules = query
 	return sdq
 }
 
@@ -443,10 +479,11 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*SLADefinition{}
 		_spec       = sdq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			sdq.withViolations != nil,
 			sdq.withMetrics != nil,
 			sdq.withTickets != nil,
+			sdq.withAlertRules != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -485,6 +522,13 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		if err := sdq.loadTickets(ctx, query, nodes,
 			func(n *SLADefinition) { n.Edges.Tickets = []*Ticket{} },
 			func(n *SLADefinition, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := sdq.withAlertRules; query != nil {
+		if err := sdq.loadAlertRules(ctx, query, nodes,
+			func(n *SLADefinition) { n.Edges.AlertRules = []*SLAAlertRule{} },
+			func(n *SLADefinition, e *SLAAlertRule) { n.Edges.AlertRules = append(n.Edges.AlertRules, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -567,6 +611,36 @@ func (sdq *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQue
 	}
 	query.Where(predicate.Ticket(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(sladefinition.TicketsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SLADefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (sdq *SLADefinitionQuery) loadAlertRules(ctx context.Context, query *SLAAlertRuleQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAAlertRule)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*SLADefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slaalertrule.FieldSLADefinitionID)
+	}
+	query.Where(predicate.SLAAlertRule(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sladefinition.AlertRulesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -13,6 +13,7 @@ import {
   Badge,
   Skeleton,
 } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import {
   BarChartOutlined,
   DownloadOutlined,
@@ -30,6 +31,8 @@ import { SmartSLAMonitor } from '@/components/business/SmartSLAMonitor';
 import { PredictiveAnalytics } from '@/components/business/PredictiveAnalytics';
 import { SatisfactionDashboard } from '@/components/business/SatisfactionDashboard';
 import { TicketAssociation } from '@/components/business/TicketAssociation';
+import { TicketDeepAnalytics } from '@/components/business/TicketDeepAnalytics';
+import { TicketTrendPrediction } from '@/components/business/TicketTrendPrediction';
 import { useReportData } from './hooks/useReportData';
 import { ReportMetrics } from './components/ReportMetrics';
 import { OverviewTab } from './components/OverviewTab';
@@ -70,9 +73,7 @@ export default function ReportsPage() {
           <BarChartOutlined style={{ marginRight: 12, color: '#1890ff' }} />
           {t('reports.title')}
         </Title>
-        <Text type='secondary'>
-          {t('reports.description')}
-        </Text>
+        <Text type='secondary'>{t('reports.description')}</Text>
       </div>
 
       {/* 时间范围选择器 */}
@@ -84,10 +85,12 @@ export default function ReportsPage() {
           </Space>
           <Space>
             <RangePicker
-              value={timeRange}
+              value={timeRange ? [dayjs(timeRange[0]), dayjs(timeRange[1])] : null}
               onChange={dates => {
                 if (dates) {
                   setTimeRange([dates[0]?.toISOString() || '', dates[1]?.toISOString() || '']);
+                } else {
+                  setTimeRange(null);
                 }
               }}
             />
@@ -173,6 +176,26 @@ export default function ReportsPage() {
               </Space>
             ),
             children: <PredictiveAnalytics />,
+          },
+          {
+            key: 'deep-analytics',
+            label: (
+              <Space>
+                <BarChartOutlined />
+                深度数据分析
+              </Space>
+            ),
+            children: <TicketDeepAnalytics />,
+          },
+          {
+            key: 'trend-prediction',
+            label: (
+              <Space>
+                <RiseOutlined />
+                工单趋势预测
+              </Space>
+            ),
+            children: <TicketTrendPrediction />,
           },
           {
             key: 'association',
