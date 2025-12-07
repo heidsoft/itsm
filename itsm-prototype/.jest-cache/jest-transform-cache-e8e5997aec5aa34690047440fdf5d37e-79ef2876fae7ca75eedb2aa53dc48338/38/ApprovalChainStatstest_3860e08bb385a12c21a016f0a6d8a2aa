@@ -1,0 +1,90 @@
+5e0e6abdb0282172dc2cab4918cb7fb1
+/**
+ * 审批链统计组件测试
+ */ "use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+const _jsxruntime = require("react/jsx-runtime");
+const _react = /*#__PURE__*/ _interop_require_default(require("react"));
+const _testutils = require("../../../../../lib/test-utils");
+const _ApprovalChainStats = require("../ApprovalChainStats");
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+describe('ApprovalChainStatsCards', ()=>{
+    const mockStats = {
+        total: 100,
+        active: 80,
+        inactive: 20,
+        totalSteps: 200,
+        avgStepsPerChain: 2.5
+    };
+    it('should render all stat cards correctly', ()=>{
+        (0, _testutils.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_ApprovalChainStats.ApprovalChainStatsCards, {
+            stats: mockStats
+        }));
+        expect(_testutils.screen.getByText('总审批链数')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('100')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('活跃审批链')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('80')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('非活跃审批链')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('20')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('平均步骤数')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('2.5')).toBeInTheDocument();
+    });
+    it('should show loading state', ()=>{
+        (0, _testutils.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_ApprovalChainStats.ApprovalChainStatsCards, {
+            stats: mockStats,
+            loading: true
+        }));
+        // 检查是否有加载状态
+        const cards = _testutils.screen.getAllByRole('img', {
+            hidden: true
+        });
+        expect(cards.length).toBeGreaterThan(0);
+    });
+    it('should display correct icons', ()=>{
+        (0, _testutils.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_ApprovalChainStats.ApprovalChainStatsCards, {
+            stats: mockStats
+        }));
+        // 检查图标是否存在
+        expect(_testutils.screen.getByText('总审批链数')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('活跃审批链')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('非活跃审批链')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('平均步骤数')).toBeInTheDocument();
+    });
+    it('should handle zero values', ()=>{
+        const zeroStats = {
+            total: 0,
+            active: 0,
+            inactive: 0,
+            totalSteps: 0,
+            avgStepsPerChain: 0
+        };
+        (0, _testutils.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_ApprovalChainStats.ApprovalChainStatsCards, {
+            stats: zeroStats
+        }));
+        expect(_testutils.screen.getByText('0')).toBeInTheDocument();
+    });
+    it('should handle large numbers', ()=>{
+        const largeStats = {
+            total: 999999,
+            active: 888888,
+            inactive: 111111,
+            totalSteps: 2000000,
+            avgStepsPerChain: 2.0
+        };
+        (0, _testutils.render)(/*#__PURE__*/ (0, _jsxruntime.jsx)(_ApprovalChainStats.ApprovalChainStatsCards, {
+            stats: largeStats
+        }));
+        expect(_testutils.screen.getByText('999999')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('888888')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('111111')).toBeInTheDocument();
+        expect(_testutils.screen.getByText('2.0')).toBeInTheDocument();
+    });
+});
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwLyhtYWluKS9hZG1pbi9hcHByb3ZhbC1jaGFpbnMvY29tcG9uZW50cy9fX3Rlc3RzX18vQXBwcm92YWxDaGFpblN0YXRzLnRlc3QudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICog5a6h5om56ZO+57uf6K6h57uE5Lu25rWL6K+VXG4gKi9cblxuaW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IHJlbmRlciwgc2NyZWVuIH0gZnJvbSAnLi4vLi4vLi4vLi4vLi4vbGliL3Rlc3QtdXRpbHMnO1xuaW1wb3J0IHsgQXBwcm92YWxDaGFpblN0YXRzQ2FyZHMgfSBmcm9tICcuLi9BcHByb3ZhbENoYWluU3RhdHMnO1xuaW1wb3J0IHsgQXBwcm92YWxDaGFpblN0YXRzIH0gZnJvbSAnLi4vLi4vLi4vLi4vLi4vdHlwZXMvYXBwcm92YWwtY2hhaW4nO1xuXG5kZXNjcmliZSgnQXBwcm92YWxDaGFpblN0YXRzQ2FyZHMnLCAoKSA9PiB7XG4gIGNvbnN0IG1vY2tTdGF0czogQXBwcm92YWxDaGFpblN0YXRzID0ge1xuICAgIHRvdGFsOiAxMDAsXG4gICAgYWN0aXZlOiA4MCxcbiAgICBpbmFjdGl2ZTogMjAsXG4gICAgdG90YWxTdGVwczogMjAwLFxuICAgIGF2Z1N0ZXBzUGVyQ2hhaW46IDIuNSxcbiAgfTtcblxuICBpdCgnc2hvdWxkIHJlbmRlciBhbGwgc3RhdCBjYXJkcyBjb3JyZWN0bHknLCAoKSA9PiB7XG4gICAgcmVuZGVyKDxBcHByb3ZhbENoYWluU3RhdHNDYXJkcyBzdGF0cz17bW9ja1N0YXRzfSAvPik7XG5cbiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgn5oC75a6h5om56ZO+5pWwJykpLnRvQmVJblRoZURvY3VtZW50KCk7XG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJzEwMCcpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ+a0u+i3g+WuoeaJuemTvicpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCc4MCcpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ+mdnua0u+i3g+WuoeaJuemTvicpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCcyMCcpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuXG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ+W5s+Wdh+atpemqpOaVsCcpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCcyLjUnKSkudG9CZUluVGhlRG9jdW1lbnQoKTtcbiAgfSk7XG5cbiAgaXQoJ3Nob3VsZCBzaG93IGxvYWRpbmcgc3RhdGUnLCAoKSA9PiB7XG4gICAgcmVuZGVyKDxBcHByb3ZhbENoYWluU3RhdHNDYXJkcyBzdGF0cz17bW9ja1N0YXRzfSBsb2FkaW5nPXt0cnVlfSAvPik7XG5cbiAgICAvLyDmo4Dmn6XmmK/lkKbmnInliqDovb3nirbmgIFcbiAgICBjb25zdCBjYXJkcyA9IHNjcmVlbi5nZXRBbGxCeVJvbGUoJ2ltZycsIHsgaGlkZGVuOiB0cnVlIH0pO1xuICAgIGV4cGVjdChjYXJkcy5sZW5ndGgpLnRvQmVHcmVhdGVyVGhhbigwKTtcbiAgfSk7XG5cbiAgaXQoJ3Nob3VsZCBkaXNwbGF5IGNvcnJlY3QgaWNvbnMnLCAoKSA9PiB7XG4gICAgcmVuZGVyKDxBcHByb3ZhbENoYWluU3RhdHNDYXJkcyBzdGF0cz17bW9ja1N0YXRzfSAvPik7XG5cbiAgICAvLyDmo4Dmn6Xlm77moIfmmK/lkKblrZjlnKhcbiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgn5oC75a6h5om56ZO+5pWwJykpLnRvQmVJblRoZURvY3VtZW50KCk7XG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJ+a0u+i3g+WuoeaJuemTvicpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCfpnZ7mtLvot4PlrqHmibnpk74nKSkudG9CZUluVGhlRG9jdW1lbnQoKTtcbiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgn5bmz5Z2H5q2l6aqk5pWwJykpLnRvQmVJblRoZURvY3VtZW50KCk7XG4gIH0pO1xuXG4gIGl0KCdzaG91bGQgaGFuZGxlIHplcm8gdmFsdWVzJywgKCkgPT4ge1xuICAgIGNvbnN0IHplcm9TdGF0czogQXBwcm92YWxDaGFpblN0YXRzID0ge1xuICAgICAgdG90YWw6IDAsXG4gICAgICBhY3RpdmU6IDAsXG4gICAgICBpbmFjdGl2ZTogMCxcbiAgICAgIHRvdGFsU3RlcHM6IDAsXG4gICAgICBhdmdTdGVwc1BlckNoYWluOiAwLFxuICAgIH07XG5cbiAgICByZW5kZXIoPEFwcHJvdmFsQ2hhaW5TdGF0c0NhcmRzIHN0YXRzPXt6ZXJvU3RhdHN9IC8+KTtcblxuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCcwJykpLnRvQmVJblRoZURvY3VtZW50KCk7XG4gIH0pO1xuXG4gIGl0KCdzaG91bGQgaGFuZGxlIGxhcmdlIG51bWJlcnMnLCAoKSA9PiB7XG4gICAgY29uc3QgbGFyZ2VTdGF0czogQXBwcm92YWxDaGFpblN0YXRzID0ge1xuICAgICAgdG90YWw6IDk5OTk5OSxcbiAgICAgIGFjdGl2ZTogODg4ODg4LFxuICAgICAgaW5hY3RpdmU6IDExMTExMSxcbiAgICAgIHRvdGFsU3RlcHM6IDIwMDAwMDAsXG4gICAgICBhdmdTdGVwc1BlckNoYWluOiAyLjAsXG4gICAgfTtcblxuICAgIHJlbmRlcig8QXBwcm92YWxDaGFpblN0YXRzQ2FyZHMgc3RhdHM9e2xhcmdlU3RhdHN9IC8+KTtcblxuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCc5OTk5OTknKSkudG9CZUluVGhlRG9jdW1lbnQoKTtcbiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgnODg4ODg4JykpLnRvQmVJblRoZURvY3VtZW50KCk7XG4gICAgZXhwZWN0KHNjcmVlbi5nZXRCeVRleHQoJzExMTExMScpKS50b0JlSW5UaGVEb2N1bWVudCgpO1xuICAgIGV4cGVjdChzY3JlZW4uZ2V0QnlUZXh0KCcyLjAnKSkudG9CZUluVGhlRG9jdW1lbnQoKTtcbiAgfSk7XG59KTtcbiJdLCJuYW1lcyI6WyJkZXNjcmliZSIsIm1vY2tTdGF0cyIsInRvdGFsIiwiYWN0aXZlIiwiaW5hY3RpdmUiLCJ0b3RhbFN0ZXBzIiwiYXZnU3RlcHNQZXJDaGFpbiIsIml0IiwicmVuZGVyIiwiQXBwcm92YWxDaGFpblN0YXRzQ2FyZHMiLCJzdGF0cyIsImV4cGVjdCIsInNjcmVlbiIsImdldEJ5VGV4dCIsInRvQmVJblRoZURvY3VtZW50IiwibG9hZGluZyIsImNhcmRzIiwiZ2V0QWxsQnlSb2xlIiwiaGlkZGVuIiwibGVuZ3RoIiwidG9CZUdyZWF0ZXJUaGFuIiwiemVyb1N0YXRzIiwibGFyZ2VTdGF0cyJdLCJtYXBwaW5ncyI6IkFBQUE7O0NBRUM7Ozs7OzhEQUVpQjsyQkFDYTtvQ0FDUzs7Ozs7O0FBR3hDQSxTQUFTLDJCQUEyQjtJQUNsQyxNQUFNQyxZQUFnQztRQUNwQ0MsT0FBTztRQUNQQyxRQUFRO1FBQ1JDLFVBQVU7UUFDVkMsWUFBWTtRQUNaQyxrQkFBa0I7SUFDcEI7SUFFQUMsR0FBRywwQ0FBMEM7UUFDM0NDLElBQUFBLGlCQUFNLGdCQUFDLHFCQUFDQywyQ0FBdUI7WUFBQ0MsT0FBT1Q7O1FBRXZDVSxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsVUFBVUMsaUJBQWlCO1FBQ25ESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsUUFBUUMsaUJBQWlCO1FBRWpESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsVUFBVUMsaUJBQWlCO1FBQ25ESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsT0FBT0MsaUJBQWlCO1FBRWhESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsV0FBV0MsaUJBQWlCO1FBQ3BESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsT0FBT0MsaUJBQWlCO1FBRWhESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsVUFBVUMsaUJBQWlCO1FBQ25ESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsUUFBUUMsaUJBQWlCO0lBQ25EO0lBRUFQLEdBQUcsNkJBQTZCO1FBQzlCQyxJQUFBQSxpQkFBTSxnQkFBQyxxQkFBQ0MsMkNBQXVCO1lBQUNDLE9BQU9UO1lBQVdjLFNBQVM7O1FBRTNELFlBQVk7UUFDWixNQUFNQyxRQUFRSixpQkFBTSxDQUFDSyxZQUFZLENBQUMsT0FBTztZQUFFQyxRQUFRO1FBQUs7UUFDeERQLE9BQU9LLE1BQU1HLE1BQU0sRUFBRUMsZUFBZSxDQUFDO0lBQ3ZDO0lBRUFiLEdBQUcsZ0NBQWdDO1FBQ2pDQyxJQUFBQSxpQkFBTSxnQkFBQyxxQkFBQ0MsMkNBQXVCO1lBQUNDLE9BQU9UOztRQUV2QyxXQUFXO1FBQ1hVLE9BQU9DLGlCQUFNLENBQUNDLFNBQVMsQ0FBQyxVQUFVQyxpQkFBaUI7UUFDbkRILE9BQU9DLGlCQUFNLENBQUNDLFNBQVMsQ0FBQyxVQUFVQyxpQkFBaUI7UUFDbkRILE9BQU9DLGlCQUFNLENBQUNDLFNBQVMsQ0FBQyxXQUFXQyxpQkFBaUI7UUFDcERILE9BQU9DLGlCQUFNLENBQUNDLFNBQVMsQ0FBQyxVQUFVQyxpQkFBaUI7SUFDckQ7SUFFQVAsR0FBRyw2QkFBNkI7UUFDOUIsTUFBTWMsWUFBZ0M7WUFDcENuQixPQUFPO1lBQ1BDLFFBQVE7WUFDUkMsVUFBVTtZQUNWQyxZQUFZO1lBQ1pDLGtCQUFrQjtRQUNwQjtRQUVBRSxJQUFBQSxpQkFBTSxnQkFBQyxxQkFBQ0MsMkNBQXVCO1lBQUNDLE9BQU9XOztRQUV2Q1YsT0FBT0MsaUJBQU0sQ0FBQ0MsU0FBUyxDQUFDLE1BQU1DLGlCQUFpQjtJQUNqRDtJQUVBUCxHQUFHLCtCQUErQjtRQUNoQyxNQUFNZSxhQUFpQztZQUNyQ3BCLE9BQU87WUFDUEMsUUFBUTtZQUNSQyxVQUFVO1lBQ1ZDLFlBQVk7WUFDWkMsa0JBQWtCO1FBQ3BCO1FBRUFFLElBQUFBLGlCQUFNLGdCQUFDLHFCQUFDQywyQ0FBdUI7WUFBQ0MsT0FBT1k7O1FBRXZDWCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsV0FBV0MsaUJBQWlCO1FBQ3BESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsV0FBV0MsaUJBQWlCO1FBQ3BESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsV0FBV0MsaUJBQWlCO1FBQ3BESCxPQUFPQyxpQkFBTSxDQUFDQyxTQUFTLENBQUMsUUFBUUMsaUJBQWlCO0lBQ25EO0FBQ0YifQ==

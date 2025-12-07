@@ -42,7 +42,7 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 
 interface WorkflowDesignerPageProps {
-  params: { id?: string };
+  params: Promise<{ id?: string }>;
 }
 
 interface WorkflowDefinition {

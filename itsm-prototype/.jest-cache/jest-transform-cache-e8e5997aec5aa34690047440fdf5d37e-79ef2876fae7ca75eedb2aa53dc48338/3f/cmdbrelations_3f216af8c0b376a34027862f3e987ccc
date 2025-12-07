@@ -1,0 +1,333 @@
+09922f58fd05b007709451cde08f0d3d
+// 模拟CMDB关系数据
+"use strict";
+
+/* istanbul ignore next */
+function cov_fo050ed54() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/lib/cmdb-relations.ts";
+  var hash = "e064cc95a0e992c3db558464d8613d9514e25cce";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/lib/cmdb-relations.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 4
+        },
+        end: {
+          line: 10,
+          column: 7
+        }
+      },
+      "2": {
+        start: {
+          line: 7,
+          column: 24
+        },
+        end: {
+          line: 10,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 0
+        },
+        end: {
+          line: 19,
+          column: 3
+        }
+      },
+      "4": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 14,
+          column: 23
+        }
+      },
+      "5": {
+        start: {
+          line: 17,
+          column: 8
+        },
+        end: {
+          line: 17,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 20,
+          column: 16
+        },
+        end: {
+          line: 86,
+          column: 1
+        }
+      },
+      "7": {
+        start: {
+          line: 87,
+          column: 22
+        },
+        end: {
+          line: 116,
+          column: 1
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "_export",
+        decl: {
+          start: {
+            line: 6,
+            column: 9
+          },
+          end: {
+            line: 6,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 30
+          },
+          end: {
+            line: 11,
+            column: 1
+          }
+        },
+        line: 6
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 13,
+            column: 13
+          },
+          end: {
+            line: 13,
+            column: 14
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 24
+          },
+          end: {
+            line: 15,
+            column: 5
+          }
+        },
+        line: 13
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 16,
+            column: 19
+          },
+          end: {
+            line: 16,
+            column: 20
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 30
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        line: 16
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/lib/cmdb-relations.ts"],
+      sourcesContent: ["// \u6A21\u62DFCMDB\u5173\u7CFB\u6570\u636E\nexport interface CI {\n  id: string;\n  name: string;\n  type: string;\n  status: string;\n  business: string;\n  owner: string;\n  location: string;\n  ip: string;\n  cpu: string;\n  memory: string;\n  disk: string;\n}\n\nexport interface Relation {\n  id: string;\n  source: string;\n  target: string;\n  type: string;\n  description: string;\n}\n\nexport const mockCIs: CI[] = [\n  {\n    id: \"CI-ECS-001\",\n    name: \"Web\u670D\u52A1\u5668-\u751F\u4EA7\u73AF\u5883\",\n    type: \"\u4E91\u670D\u52A1\u5668\",\n    status: \"\u8FD0\u884C\u4E2D\",\n    business: \"\u7535\u5546\u5E73\u53F0\",\n    owner: \"\u8FD0\u7EF4\u90E8\",\n    location: \"\u963F\u91CC\u4E91\u534E\u4E1C1\",\n    ip: \"192.168.1.100\",\n    cpu: \"4\u6838\",\n    memory: \"8GB\",\n    disk: \"100GB SSD\",\n  },\n  {\n    id: \"CI-ECS-002\",\n    name: \"\u6570\u636E\u5E93\u670D\u52A1\u5668-\u751F\u4EA7\u73AF\u5883\",\n    type: \"\u4E91\u670D\u52A1\u5668\",\n    status: \"\u8FD0\u884C\u4E2D\",\n    business: \"\u7535\u5546\u5E73\u53F0\",\n    owner: \"\u8FD0\u7EF4\u90E8\",\n    location: \"\u963F\u91CC\u4E91\u534E\u4E1C1\",\n    ip: \"192.168.1.101\",\n    cpu: \"8\u6838\",\n    memory: \"16GB\",\n    disk: \"500GB SSD\",\n  },\n  {\n    id: \"CI-RDS-001\",\n    name: \"MySQL\u4E3B\u5E93\",\n    type: \"\u5173\u7CFB\u578B\u6570\u636E\u5E93\",\n    status: \"\u8FD0\u884C\u4E2D\",\n    business: \"\u7535\u5546\u5E73\u53F0\",\n    owner: \"\u8FD0\u7EF4\u90E8\",\n    location: \"\u963F\u91CC\u4E91\u534E\u4E1C1\",\n    ip: \"192.168.2.100\",\n    cpu: \"4\u6838\",\n    memory: \"16GB\",\n    disk: \"1TB SSD\",\n  },\n  {\n    id: \"CI-LB-001\",\n    name: \"\u8D1F\u8F7D\u5747\u8861\u5668\",\n    type: \"\u7F51\u7EDC\u8BBE\u5907\",\n    status: \"\u8FD0\u884C\u4E2D\",\n    business: \"\u7535\u5546\u5E73\u53F0\",\n    owner: \"\u8FD0\u7EF4\u90E8\",\n    location: \"\u963F\u91CC\u4E91\u534E\u4E1C1\",\n    ip: \"192.168.1.50\",\n    cpu: \"2\u6838\",\n    memory: \"4GB\",\n    disk: \"50GB SSD\",\n  },\n  {\n    id: \"CI-REDIS-001\",\n    name: \"Redis\u7F13\u5B58\",\n    type: \"\u7F13\u5B58\u6570\u636E\u5E93\",\n    status: \"\u8FD0\u884C\u4E2D\",\n    business: \"\u7535\u5546\u5E73\u53F0\",\n    owner: \"\u8FD0\u7EF4\u90E8\",\n    location: \"\u963F\u91CC\u4E91\u534E\u4E1C1\",\n    ip: \"192.168.3.100\",\n    cpu: \"2\u6838\",\n    memory: \"8GB\",\n    disk: \"50GB SSD\",\n  },\n];\n\nexport const mockRelations: Relation[] = [\n  {\n    id: \"REL-001\",\n    source: \"CI-ECS-001\",\n    target: \"CI-LB-001\",\n    type: \"\u4F9D\u8D56\",\n    description: \"Web\u670D\u52A1\u5668\u901A\u8FC7\u8D1F\u8F7D\u5747\u8861\u5668\u5BF9\u5916\u63D0\u4F9B\u670D\u52A1\",\n  },\n  {\n    id: \"REL-002\",\n    source: \"CI-ECS-001\",\n    target: \"CI-RDS-001\",\n    type: \"\u4F9D\u8D56\",\n    description: \"Web\u670D\u52A1\u5668\u8FDE\u63A5\u6570\u636E\u5E93\u670D\u52A1\u5668\u83B7\u53D6\u6570\u636E\",\n  },\n  {\n    id: \"REL-003\",\n    source: \"CI-ECS-001\",\n    target: \"CI-REDIS-001\",\n    type: \"\u4F9D\u8D56\",\n    description: \"Web\u670D\u52A1\u5668\u4F7F\u7528Redis\u7F13\u5B58\u63D0\u5347\u6027\u80FD\",\n  },\n  {\n    id: \"REL-004\",\n    source: \"CI-ECS-002\",\n    target: \"CI-RDS-001\",\n    type: \"\u5BBF\u4E3B\",\n    description: \"\u6570\u636E\u5E93\u8FD0\u884C\u5728\u6570\u636E\u5E93\u670D\u52A1\u5668\u4E0A\",\n  },\n];"],
+      names: ["mockCIs", "mockRelations", "id", "name", "type", "status", "business", "owner", "location", "ip", "cpu", "memory", "disk", "source", "target", "description"],
+      mappings: "AAAA,aAAa;;;;;;;;;;;;IAuBAA,OAAO;eAAPA;;IAoEAC,aAAa;eAAbA;;;AApEN,MAAMD,UAAgB;IAC3B;QACEE,IAAI;QACJC,MAAM;QACNC,MAAM;QACNC,QAAQ;QACRC,UAAU;QACVC,OAAO;QACPC,UAAU;QACVC,IAAI;QACJC,KAAK;QACLC,QAAQ;QACRC,MAAM;IACR;IACA;QACEV,IAAI;QACJC,MAAM;QACNC,MAAM;QACNC,QAAQ;QACRC,UAAU;QACVC,OAAO;QACPC,UAAU;QACVC,IAAI;QACJC,KAAK;QACLC,QAAQ;QACRC,MAAM;IACR;IACA;QACEV,IAAI;QACJC,MAAM;QACNC,MAAM;QACNC,QAAQ;QACRC,UAAU;QACVC,OAAO;QACPC,UAAU;QACVC,IAAI;QACJC,KAAK;QACLC,QAAQ;QACRC,MAAM;IACR;IACA;QACEV,IAAI;QACJC,MAAM;QACNC,MAAM;QACNC,QAAQ;QACRC,UAAU;QACVC,OAAO;QACPC,UAAU;QACVC,IAAI;QACJC,KAAK;QACLC,QAAQ;QACRC,MAAM;IACR;IACA;QACEV,IAAI;QACJC,MAAM;QACNC,MAAM;QACNC,QAAQ;QACRC,UAAU;QACVC,OAAO;QACPC,UAAU;QACVC,IAAI;QACJC,KAAK;QACLC,QAAQ;QACRC,MAAM;IACR;CACD;AAEM,MAAMX,gBAA4B;IACvC;QACEC,IAAI;QACJW,QAAQ;QACRC,QAAQ;QACRV,MAAM;QACNW,aAAa;IACf;IACA;QACEb,IAAI;QACJW,QAAQ;QACRC,QAAQ;QACRV,MAAM;QACNW,aAAa;IACf;IACA;QACEb,IAAI;QACJW,QAAQ;QACRC,QAAQ;QACRV,MAAM;QACNW,aAAa;IACf;IACA;QACEb,IAAI;QACJW,QAAQ;QACRC,QAAQ;QACRV,MAAM;QACNW,aAAa;IACf;CACD"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "e064cc95a0e992c3db558464d8613d9514e25cce"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_fo050ed54 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_fo050ed54();
+cov_fo050ed54().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function _export(target, all) {
+  /* istanbul ignore next */
+  cov_fo050ed54().f[0]++;
+  cov_fo050ed54().s[1]++;
+  for (var name in all) {
+    /* istanbul ignore next */
+    cov_fo050ed54().s[2]++;
+    Object.defineProperty(target, name, {
+      enumerable: true,
+      get: all[name]
+    });
+  }
+}
+/* istanbul ignore next */
+cov_fo050ed54().s[3]++;
+_export(exports, {
+  mockCIs: function () {
+    /* istanbul ignore next */
+    cov_fo050ed54().f[1]++;
+    cov_fo050ed54().s[4]++;
+    return mockCIs;
+  },
+  mockRelations: function () {
+    /* istanbul ignore next */
+    cov_fo050ed54().f[2]++;
+    cov_fo050ed54().s[5]++;
+    return mockRelations;
+  }
+});
+const mockCIs =
+/* istanbul ignore next */
+(cov_fo050ed54().s[6]++, [{
+  id: "CI-ECS-001",
+  name: "Web服务器-生产环境",
+  type: "云服务器",
+  status: "运行中",
+  business: "电商平台",
+  owner: "运维部",
+  location: "阿里云华东1",
+  ip: "192.168.1.100",
+  cpu: "4核",
+  memory: "8GB",
+  disk: "100GB SSD"
+}, {
+  id: "CI-ECS-002",
+  name: "数据库服务器-生产环境",
+  type: "云服务器",
+  status: "运行中",
+  business: "电商平台",
+  owner: "运维部",
+  location: "阿里云华东1",
+  ip: "192.168.1.101",
+  cpu: "8核",
+  memory: "16GB",
+  disk: "500GB SSD"
+}, {
+  id: "CI-RDS-001",
+  name: "MySQL主库",
+  type: "关系型数据库",
+  status: "运行中",
+  business: "电商平台",
+  owner: "运维部",
+  location: "阿里云华东1",
+  ip: "192.168.2.100",
+  cpu: "4核",
+  memory: "16GB",
+  disk: "1TB SSD"
+}, {
+  id: "CI-LB-001",
+  name: "负载均衡器",
+  type: "网络设备",
+  status: "运行中",
+  business: "电商平台",
+  owner: "运维部",
+  location: "阿里云华东1",
+  ip: "192.168.1.50",
+  cpu: "2核",
+  memory: "4GB",
+  disk: "50GB SSD"
+}, {
+  id: "CI-REDIS-001",
+  name: "Redis缓存",
+  type: "缓存数据库",
+  status: "运行中",
+  business: "电商平台",
+  owner: "运维部",
+  location: "阿里云华东1",
+  ip: "192.168.3.100",
+  cpu: "2核",
+  memory: "8GB",
+  disk: "50GB SSD"
+}]);
+const mockRelations =
+/* istanbul ignore next */
+(cov_fo050ed54().s[7]++, [{
+  id: "REL-001",
+  source: "CI-ECS-001",
+  target: "CI-LB-001",
+  type: "依赖",
+  description: "Web服务器通过负载均衡器对外提供服务"
+}, {
+  id: "REL-002",
+  source: "CI-ECS-001",
+  target: "CI-RDS-001",
+  type: "依赖",
+  description: "Web服务器连接数据库服务器获取数据"
+}, {
+  id: "REL-003",
+  source: "CI-ECS-001",
+  target: "CI-REDIS-001",
+  type: "依赖",
+  description: "Web服务器使用Redis缓存提升性能"
+}, {
+  id: "REL-004",
+  source: "CI-ECS-002",
+  target: "CI-RDS-001",
+  type: "宿主",
+  description: "数据库运行在数据库服务器上"
+}]);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfZm8wNTBlZDU0IiwiYWN0dWFsQ292ZXJhZ2UiLCJzIiwibW9ja0NJcyIsImYiLCJtb2NrUmVsYXRpb25zIiwiaWQiLCJuYW1lIiwidHlwZSIsInN0YXR1cyIsImJ1c2luZXNzIiwib3duZXIiLCJsb2NhdGlvbiIsImlwIiwiY3B1IiwibWVtb3J5IiwiZGlzayIsInNvdXJjZSIsInRhcmdldCIsImRlc2NyaXB0aW9uIl0sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tcHJvdG90eXBlL3NyYy9hcHAvbGliL2NtZGItcmVsYXRpb25zLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIOaooeaLn0NNRELlhbPns7vmlbDmja5cbmV4cG9ydCBpbnRlcmZhY2UgQ0kge1xuICBpZDogc3RyaW5nO1xuICBuYW1lOiBzdHJpbmc7XG4gIHR5cGU6IHN0cmluZztcbiAgc3RhdHVzOiBzdHJpbmc7XG4gIGJ1c2luZXNzOiBzdHJpbmc7XG4gIG93bmVyOiBzdHJpbmc7XG4gIGxvY2F0aW9uOiBzdHJpbmc7XG4gIGlwOiBzdHJpbmc7XG4gIGNwdTogc3RyaW5nO1xuICBtZW1vcnk6IHN0cmluZztcbiAgZGlzazogc3RyaW5nO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFJlbGF0aW9uIHtcbiAgaWQ6IHN0cmluZztcbiAgc291cmNlOiBzdHJpbmc7XG4gIHRhcmdldDogc3RyaW5nO1xuICB0eXBlOiBzdHJpbmc7XG4gIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG59XG5cbmV4cG9ydCBjb25zdCBtb2NrQ0lzOiBDSVtdID0gW1xuICB7XG4gICAgaWQ6IFwiQ0ktRUNTLTAwMVwiLFxuICAgIG5hbWU6IFwiV2Vi5pyN5Yqh5ZmoLeeUn+S6p+eOr+Wig1wiLFxuICAgIHR5cGU6IFwi5LqR5pyN5Yqh5ZmoXCIsXG4gICAgc3RhdHVzOiBcIui/kOihjOS4rVwiLFxuICAgIGJ1c2luZXNzOiBcIueUteWVhuW5s+WPsFwiLFxuICAgIG93bmVyOiBcIui/kOe7tOmDqFwiLFxuICAgIGxvY2F0aW9uOiBcIumYv+mHjOS6keWNjuS4nDFcIixcbiAgICBpcDogXCIxOTIuMTY4LjEuMTAwXCIsXG4gICAgY3B1OiBcIjTmoLhcIixcbiAgICBtZW1vcnk6IFwiOEdCXCIsXG4gICAgZGlzazogXCIxMDBHQiBTU0RcIixcbiAgfSxcbiAge1xuICAgIGlkOiBcIkNJLUVDUy0wMDJcIixcbiAgICBuYW1lOiBcIuaVsOaNruW6k+acjeWKoeWZqC3nlJ/kuqfnjq/looNcIixcbiAgICB0eXBlOiBcIuS6keacjeWKoeWZqFwiLFxuICAgIHN0YXR1czogXCLov5DooYzkuK1cIixcbiAgICBidXNpbmVzczogXCLnlLXllYblubPlj7BcIixcbiAgICBvd25lcjogXCLov5Dnu7Tpg6hcIixcbiAgICBsb2NhdGlvbjogXCLpmL/ph4zkupHljY7kuJwxXCIsXG4gICAgaXA6IFwiMTkyLjE2OC4xLjEwMVwiLFxuICAgIGNwdTogXCI45qC4XCIsXG4gICAgbWVtb3J5OiBcIjE2R0JcIixcbiAgICBkaXNrOiBcIjUwMEdCIFNTRFwiLFxuICB9LFxuICB7XG4gICAgaWQ6IFwiQ0ktUkRTLTAwMVwiLFxuICAgIG5hbWU6IFwiTXlTUUzkuLvlupNcIixcbiAgICB0eXBlOiBcIuWFs+ezu+Wei+aVsOaNruW6k1wiLFxuICAgIHN0YXR1czogXCLov5DooYzkuK1cIixcbiAgICBidXNpbmVzczogXCLnlLXllYblubPlj7BcIixcbiAgICBvd25lcjogXCLov5Dnu7Tpg6hcIixcbiAgICBsb2NhdGlvbjogXCLpmL/ph4zkupHljY7kuJwxXCIsXG4gICAgaXA6IFwiMTkyLjE2OC4yLjEwMFwiLFxuICAgIGNwdTogXCI05qC4XCIsXG4gICAgbWVtb3J5OiBcIjE2R0JcIixcbiAgICBkaXNrOiBcIjFUQiBTU0RcIixcbiAgfSxcbiAge1xuICAgIGlkOiBcIkNJLUxCLTAwMVwiLFxuICAgIG5hbWU6IFwi6LSf6L295Z2H6KGh5ZmoXCIsXG4gICAgdHlwZTogXCLnvZHnu5zorr7lpIdcIixcbiAgICBzdGF0dXM6IFwi6L+Q6KGM5LitXCIsXG4gICAgYnVzaW5lc3M6IFwi55S15ZWG5bmz5Y+wXCIsXG4gICAgb3duZXI6IFwi6L+Q57u06YOoXCIsXG4gICAgbG9jYXRpb246IFwi6Zi/6YeM5LqR5Y2O5LicMVwiLFxuICAgIGlwOiBcIjE5Mi4xNjguMS41MFwiLFxuICAgIGNwdTogXCIy5qC4XCIsXG4gICAgbWVtb3J5OiBcIjRHQlwiLFxuICAgIGRpc2s6IFwiNTBHQiBTU0RcIixcbiAgfSxcbiAge1xuICAgIGlkOiBcIkNJLVJFRElTLTAwMVwiLFxuICAgIG5hbWU6IFwiUmVkaXPnvJPlrZhcIixcbiAgICB0eXBlOiBcIue8k+WtmOaVsOaNruW6k1wiLFxuICAgIHN0YXR1czogXCLov5DooYzkuK1cIixcbiAgICBidXNpbmVzczogXCLnlLXllYblubPlj7BcIixcbiAgICBvd25lcjogXCLov5Dnu7Tpg6hcIixcbiAgICBsb2NhdGlvbjogXCLpmL/ph4zkupHljY7kuJwxXCIsXG4gICAgaXA6IFwiMTkyLjE2OC4zLjEwMFwiLFxuICAgIGNwdTogXCIy5qC4XCIsXG4gICAgbWVtb3J5OiBcIjhHQlwiLFxuICAgIGRpc2s6IFwiNTBHQiBTU0RcIixcbiAgfSxcbl07XG5cbmV4cG9ydCBjb25zdCBtb2NrUmVsYXRpb25zOiBSZWxhdGlvbltdID0gW1xuICB7XG4gICAgaWQ6IFwiUkVMLTAwMVwiLFxuICAgIHNvdXJjZTogXCJDSS1FQ1MtMDAxXCIsXG4gICAgdGFyZ2V0OiBcIkNJLUxCLTAwMVwiLFxuICAgIHR5cGU6IFwi5L6d6LWWXCIsXG4gICAgZGVzY3JpcHRpb246IFwiV2Vi5pyN5Yqh5Zmo6YCa6L+H6LSf6L295Z2H6KGh5Zmo5a+55aSW5o+Q5L6b5pyN5YqhXCIsXG4gIH0sXG4gIHtcbiAgICBpZDogXCJSRUwtMDAyXCIsXG4gICAgc291cmNlOiBcIkNJLUVDUy0wMDFcIixcbiAgICB0YXJnZXQ6IFwiQ0ktUkRTLTAwMVwiLFxuICAgIHR5cGU6IFwi5L6d6LWWXCIsXG4gICAgZGVzY3JpcHRpb246IFwiV2Vi5pyN5Yqh5Zmo6L+e5o6l5pWw5o2u5bqT5pyN5Yqh5Zmo6I635Y+W5pWw5o2uXCIsXG4gIH0sXG4gIHtcbiAgICBpZDogXCJSRUwtMDAzXCIsXG4gICAgc291cmNlOiBcIkNJLUVDUy0wMDFcIixcbiAgICB0YXJnZXQ6IFwiQ0ktUkVESVMtMDAxXCIsXG4gICAgdHlwZTogXCLkvp3otZZcIixcbiAgICBkZXNjcmlwdGlvbjogXCJXZWLmnI3liqHlmajkvb/nlKhSZWRpc+e8k+WtmOaPkOWNh+aAp+iDvVwiLFxuICB9LFxuICB7XG4gICAgaWQ6IFwiUkVMLTAwNFwiLFxuICAgIHNvdXJjZTogXCJDSS1FQ1MtMDAyXCIsXG4gICAgdGFyZ2V0OiBcIkNJLVJEUy0wMDFcIixcbiAgICB0eXBlOiBcIuWuv+S4u1wiLFxuICAgIGRlc2NyaXB0aW9uOiBcIuaVsOaNruW6k+i/kOihjOWcqOaVsOaNruW6k+acjeWKoeWZqOS4ilwiLFxuICB9LFxuXTsiXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztJQTJGYTtJQUFBQSxhQUFBLFlBQUFBLENBQUE7TUFBQSxPQUFBQyxjQUFBO0lBQUE7RUFBQTtFQUFBLE9BQUFBLGNBQUE7QUFBQTtBQUFBRCxhQUFBO0FBQUFBLGFBQUEsR0FBQUUsQ0FBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7RUFwRUFDLE9BQU8sV0FBQUEsQ0FBQTtJQUFBO0lBQUFILGFBQUEsR0FBQUksQ0FBQTtJQUFBSixhQUFBLEdBQUFFLENBQUE7V0FBUEMsT0FBQTs7RUFvRUFFLGFBQWEsV0FBQUEsQ0FBQTtJQUFBO0lBQUFMLGFBQUEsR0FBQUksQ0FBQTtJQUFBSixhQUFBLEdBQUFFLENBQUE7V0FBYkcsYUFBQTs7O0FBcEVOLE1BQU1GLE9BQUE7QUFBQTtBQUFBLENBQUFILGFBQUEsR0FBQUUsQ0FBQSxPQUFnQixDQUMzQjtFQUNFSSxFQUFBLEVBQUk7RUFDSkMsSUFBQSxFQUFNO0VBQ05DLElBQUEsRUFBTTtFQUNOQyxNQUFBLEVBQVE7RUFDUkMsUUFBQSxFQUFVO0VBQ1ZDLEtBQUEsRUFBTztFQUNQQyxRQUFBLEVBQVU7RUFDVkMsRUFBQSxFQUFJO0VBQ0pDLEdBQUEsRUFBSztFQUNMQyxNQUFBLEVBQVE7RUFDUkMsSUFBQSxFQUFNO0FBQ1IsR0FDQTtFQUNFVixFQUFBLEVBQUk7RUFDSkMsSUFBQSxFQUFNO0VBQ05DLElBQUEsRUFBTTtFQUNOQyxNQUFBLEVBQVE7RUFDUkMsUUFBQSxFQUFVO0VBQ1ZDLEtBQUEsRUFBTztFQUNQQyxRQUFBLEVBQVU7RUFDVkMsRUFBQSxFQUFJO0VBQ0pDLEdBQUEsRUFBSztFQUNMQyxNQUFBLEVBQVE7RUFDUkMsSUFBQSxFQUFNO0FBQ1IsR0FDQTtFQUNFVixFQUFBLEVBQUk7RUFDSkMsSUFBQSxFQUFNO0VBQ05DLElBQUEsRUFBTTtFQUNOQyxNQUFBLEVBQVE7RUFDUkMsUUFBQSxFQUFVO0VBQ1ZDLEtBQUEsRUFBTztFQUNQQyxRQUFBLEVBQVU7RUFDVkMsRUFBQSxFQUFJO0VBQ0pDLEdBQUEsRUFBSztFQUNMQyxNQUFBLEVBQVE7RUFDUkMsSUFBQSxFQUFNO0FBQ1IsR0FDQTtFQUNFVixFQUFBLEVBQUk7RUFDSkMsSUFBQSxFQUFNO0VBQ05DLElBQUEsRUFBTTtFQUNOQyxNQUFBLEVBQVE7RUFDUkMsUUFBQSxFQUFVO0VBQ1ZDLEtBQUEsRUFBTztFQUNQQyxRQUFBLEVBQVU7RUFDVkMsRUFBQSxFQUFJO0VBQ0pDLEdBQUEsRUFBSztFQUNMQyxNQUFBLEVBQVE7RUFDUkMsSUFBQSxFQUFNO0FBQ1IsR0FDQTtFQUNFVixFQUFBLEVBQUk7RUFDSkMsSUFBQSxFQUFNO0VBQ05DLElBQUEsRUFBTTtFQUNOQyxNQUFBLEVBQVE7RUFDUkMsUUFBQSxFQUFVO0VBQ1ZDLEtBQUEsRUFBTztFQUNQQyxRQUFBLEVBQVU7RUFDVkMsRUFBQSxFQUFJO0VBQ0pDLEdBQUEsRUFBSztFQUNMQyxNQUFBLEVBQVE7RUFDUkMsSUFBQSxFQUFNO0FBQ1IsRUFDRDtBQUVNLE1BQU1YLGFBQUE7QUFBQTtBQUFBLENBQUFMLGFBQUEsR0FBQUUsQ0FBQSxPQUE0QixDQUN2QztFQUNFSSxFQUFBLEVBQUk7RUFDSlcsTUFBQSxFQUFRO0VBQ1JDLE1BQUEsRUFBUTtFQUNSVixJQUFBLEVBQU07RUFDTlcsV0FBQSxFQUFhO0FBQ2YsR0FDQTtFQUNFYixFQUFBLEVBQUk7RUFDSlcsTUFBQSxFQUFRO0VBQ1JDLE1BQUEsRUFBUTtFQUNSVixJQUFBLEVBQU07RUFDTlcsV0FBQSxFQUFhO0FBQ2YsR0FDQTtFQUNFYixFQUFBLEVBQUk7RUFDSlcsTUFBQSxFQUFRO0VBQ1JDLE1BQUEsRUFBUTtFQUNSVixJQUFBLEVBQU07RUFDTlcsV0FBQSxFQUFhO0FBQ2YsR0FDQTtFQUNFYixFQUFBLEVBQUk7RUFDSlcsTUFBQSxFQUFRO0VBQ1JDLE1BQUEsRUFBUTtFQUNSVixJQUFBLEVBQU07RUFDTlcsV0FBQSxFQUFhO0FBQ2YsRUFDRCIsImlnbm9yZUxpc3QiOltdfQ==

@@ -1,0 +1,60 @@
+b36d1f5e7e733e7b247d79eefcf3473b
+// 仪表盘相关类型定义
+"use strict";
+
+/* istanbul ignore next */
+function cov_1miu8ag0cm() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/dashboard/types/dashboard.types.ts";
+  var hash = "6b16c3e78da17756b8032a7e091d8af78496563e";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/dashboard/types/dashboard.types.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/dashboard/types/dashboard.types.ts"],
+      sourcesContent: ["// \u4EEA\u8868\u76D8\u76F8\u5173\u7C7B\u578B\u5B9A\u4E49\n\nexport interface KPIMetric {\n  id: string;\n  title: string;\n  value: number | string;\n  unit?: string;\n  color: string;\n  icon?: React.ReactNode;\n  trend?: 'up' | 'down' | 'stable';\n  change?: number;\n  changeType?: 'increase' | 'decrease' | 'stable';\n  description?: string;\n  target?: number; // \u76EE\u6807\u503C\n  alert?: 'success' | 'warning' | 'error' | null; // \u8B66\u544A\u72B6\u6001\n}\n\n// \u5DE5\u5355\u8D8B\u52BF\u6570\u636E\uFF08\u6269\u5C55\u7248\uFF09\nexport interface TicketTrendData {\n  date: string;\n  open: number;\n  inProgress: number;\n  resolved: number;\n  closed: number;\n  // \u65B0\u589E\uFF1A\u8D8B\u52BF\u5206\u6790\n  newTickets?: number;        // \u65B0\u5EFA\u5DE5\u5355\u6570\n  completedTickets?: number;  // \u5B8C\u6210\u5DE5\u5355\u6570\n  pendingTickets?: number;    // \u5F85\u5904\u7406\u5DE5\u5355\u6570\uFF08\u7D2F\u8BA1\uFF09\n}\n\nexport interface IncidentDistributionData {\n  category: string;\n  count: number;\n  color: string;\n}\n\nexport interface SLAData {\n  service: string;\n  target: number;\n  actual: number;\n}\n\nexport interface SatisfactionData {\n  month: string;\n  rating: number;\n  responses: number;\n}\n\nexport interface QuickAction {\n  id: string;\n  title: string;\n  description: string;\n  path: string;\n  icon?: React.ReactNode;\n  color: string;\n  permission?: string;\n}\n\nexport interface RecentActivity {\n  id: string;\n  type: 'ticket' | 'incident' | 'change' | 'problem';\n  title: string;\n  description: string;\n  user: string;\n  timestamp: string;\n  priority?: 'urgent' | 'high' | 'medium' | 'low';\n  status: string;\n}\n\n// \u65B0\u589E\uFF1A\u5DE5\u5355\u7C7B\u578B\u5206\u5E03\nexport interface TicketTypeDistribution {\n  type: string;           // \u7C7B\u578B\u540D\u79F0\uFF08\u4E8B\u4EF6\u3001\u8BF7\u6C42\u3001\u95EE\u9898\u3001\u53D8\u66F4\uFF09\n  count: number;          // \u6570\u91CF\n  percentage: number;     // \u5360\u6BD4\n  color: string;          // \u989C\u8272\n}\n\n// \u65B0\u589E\uFF1A\u54CD\u5E94\u65F6\u95F4\u5206\u5E03\nexport interface ResponseTimeDistribution {\n  timeRange: string;      // \u65F6\u95F4\u6BB5\uFF080-1h, 1-4h, 4-8h, >8h\uFF09\n  count: number;          // \u5DE5\u5355\u6570\n  percentage: number;     // \u5360\u6BD4\n  avgTime?: number;       // \u8BE5\u65F6\u6BB5\u5E73\u5747\u65F6\u95F4\uFF08\u5C0F\u65F6\uFF09\n}\n\n// \u65B0\u589E\uFF1A\u56E2\u961F\u5DE5\u4F5C\u8D1F\u8F7D\nexport interface TeamWorkload {\n  assignee: string;           // \u5904\u7406\u4EBA\n  ticketCount: number;        // \u5DE5\u5355\u6570\n  avgResponseTime: number;    // \u5E73\u5747\u54CD\u5E94\u65F6\u95F4\uFF08\u5C0F\u65F6\uFF09\n  completionRate: number;     // \u5B8C\u6210\u7387\uFF08%\uFF09\n  activeTickets?: number;     // \u8FDB\u884C\u4E2D\u5DE5\u5355\n}\n\n// \u65B0\u589E\uFF1A\u4F18\u5148\u7EA7\u5206\u5E03\nexport interface PriorityDistribution {\n  priority: string;       // \u4F18\u5148\u7EA7\uFF08\u7D27\u6025\u3001\u9AD8\u3001\u4E2D\u3001\u4F4E\uFF09\n  count: number;          // \u6570\u91CF\n  percentage: number;     // \u5360\u6BD4\n  color: string;          // \u989C\u8272\n}\n\n// \u65B0\u589E\uFF1A\u9AD8\u5CF0\u65F6\u6BB5\u6570\u636E\nexport interface PeakHourData {\n  hour: string;          // \u5C0F\u65F6\uFF080-23\uFF09\n  count: number;         // \u8BE5\u65F6\u6BB5\u521B\u5EFA\u7684\u5DE5\u5355\u6570\n  avgResponseTime?: number; // \u8BE5\u65F6\u6BB5\u5E73\u5747\u54CD\u5E94\u65F6\u95F4\n}\n\n// Dashboard\u603B\u6570\u636E\u7ED3\u6784\uFF08\u6269\u5C55\u7248 - \u4FDD\u6301\u5411\u540E\u517C\u5BB9\uFF09\nexport interface DashboardData {\n  // \u539F\u6709\u6570\u636E\uFF08\u4FDD\u6301\u517C\u5BB9\uFF09\n  kpiMetrics: KPIMetric[];\n  ticketTrend: TicketTrendData[];\n  incidentDistribution: IncidentDistributionData[];\n  slaData: SLAData[];\n  satisfactionData: SatisfactionData[];\n  quickActions: QuickAction[];\n  recentActivities: RecentActivity[];\n  \n  // \u65B0\u589E\uFF1A\u5DE5\u5355\u5206\u6790\u7EF4\u5EA6\n  typeDistribution?: TicketTypeDistribution[];        // \u5DE5\u5355\u7C7B\u578B\u5206\u5E03\n  responseTimeDistribution?: ResponseTimeDistribution[]; // \u54CD\u5E94\u65F6\u95F4\u5206\u5E03\n  teamWorkload?: TeamWorkload[];                      // \u56E2\u961F\u5DE5\u4F5C\u8D1F\u8F7D\n  priorityDistribution?: PriorityDistribution[];      // \u4F18\u5148\u7EA7\u5206\u5E03\n  peakHours?: PeakHourData[];                        // \u9AD8\u5CF0\u65F6\u6BB5\n  \n  // \u5143\u6570\u636E\n  metadata?: {\n    lastUpdated: string;\n    dateRange: { start: string; end: string };\n    totalTickets: number;\n  };\n}\n\n"],
+      names: [],
+      mappings: "AAAA,YAAY"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "6b16c3e78da17756b8032a7e091d8af78496563e"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1miu8ag0cm = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1miu8ag0cm();
+cov_1miu8ag0cm().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tcHJvdG90eXBlL3NyYy9hcHAvKG1haW4pL2Rhc2hib2FyZC90eXBlcy9kYXNoYm9hcmQudHlwZXMudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8g5Luq6KGo55uY55u45YWz57G75Z6L5a6a5LmJXG5cbmV4cG9ydCBpbnRlcmZhY2UgS1BJTWV0cmljIHtcbiAgaWQ6IHN0cmluZztcbiAgdGl0bGU6IHN0cmluZztcbiAgdmFsdWU6IG51bWJlciB8IHN0cmluZztcbiAgdW5pdD86IHN0cmluZztcbiAgY29sb3I6IHN0cmluZztcbiAgaWNvbj86IFJlYWN0LlJlYWN0Tm9kZTtcbiAgdHJlbmQ/OiAndXAnIHwgJ2Rvd24nIHwgJ3N0YWJsZSc7XG4gIGNoYW5nZT86IG51bWJlcjtcbiAgY2hhbmdlVHlwZT86ICdpbmNyZWFzZScgfCAnZGVjcmVhc2UnIHwgJ3N0YWJsZSc7XG4gIGRlc2NyaXB0aW9uPzogc3RyaW5nO1xuICB0YXJnZXQ/OiBudW1iZXI7IC8vIOebruagh+WAvFxuICBhbGVydD86ICdzdWNjZXNzJyB8ICd3YXJuaW5nJyB8ICdlcnJvcicgfCBudWxsOyAvLyDorablkYrnirbmgIFcbn1cblxuLy8g5bel5Y2V6LaL5Yq/5pWw5o2u77yI5omp5bGV54mI77yJXG5leHBvcnQgaW50ZXJmYWNlIFRpY2tldFRyZW5kRGF0YSB7XG4gIGRhdGU6IHN0cmluZztcbiAgb3BlbjogbnVtYmVyO1xuICBpblByb2dyZXNzOiBudW1iZXI7XG4gIHJlc29sdmVkOiBudW1iZXI7XG4gIGNsb3NlZDogbnVtYmVyO1xuICAvLyDmlrDlop7vvJrotovlir/liIbmnpBcbiAgbmV3VGlja2V0cz86IG51bWJlcjsgICAgICAgIC8vIOaWsOW7uuW3peWNleaVsFxuICBjb21wbGV0ZWRUaWNrZXRzPzogbnVtYmVyOyAgLy8g5a6M5oiQ5bel5Y2V5pWwXG4gIHBlbmRpbmdUaWNrZXRzPzogbnVtYmVyOyAgICAvLyDlvoXlpITnkIblt6XljZXmlbDvvIjntK/orqHvvIlcbn1cblxuZXhwb3J0IGludGVyZmFjZSBJbmNpZGVudERpc3RyaWJ1dGlvbkRhdGEge1xuICBjYXRlZ29yeTogc3RyaW5nO1xuICBjb3VudDogbnVtYmVyO1xuICBjb2xvcjogc3RyaW5nO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFNMQURhdGEge1xuICBzZXJ2aWNlOiBzdHJpbmc7XG4gIHRhcmdldDogbnVtYmVyO1xuICBhY3R1YWw6IG51bWJlcjtcbn1cblxuZXhwb3J0IGludGVyZmFjZSBTYXRpc2ZhY3Rpb25EYXRhIHtcbiAgbW9udGg6IHN0cmluZztcbiAgcmF0aW5nOiBudW1iZXI7XG4gIHJlc3BvbnNlczogbnVtYmVyO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFF1aWNrQWN0aW9uIHtcbiAgaWQ6IHN0cmluZztcbiAgdGl0bGU6IHN0cmluZztcbiAgZGVzY3JpcHRpb246IHN0cmluZztcbiAgcGF0aDogc3RyaW5nO1xuICBpY29uPzogUmVhY3QuUmVhY3ROb2RlO1xuICBjb2xvcjogc3RyaW5nO1xuICBwZXJtaXNzaW9uPzogc3RyaW5nO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFJlY2VudEFjdGl2aXR5IHtcbiAgaWQ6IHN0cmluZztcbiAgdHlwZTogJ3RpY2tldCcgfCAnaW5jaWRlbnQnIHwgJ2NoYW5nZScgfCAncHJvYmxlbSc7XG4gIHRpdGxlOiBzdHJpbmc7XG4gIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG4gIHVzZXI6IHN0cmluZztcbiAgdGltZXN0YW1wOiBzdHJpbmc7XG4gIHByaW9yaXR5PzogJ3VyZ2VudCcgfCAnaGlnaCcgfCAnbWVkaXVtJyB8ICdsb3cnO1xuICBzdGF0dXM6IHN0cmluZztcbn1cblxuLy8g5paw5aKe77ya5bel5Y2V57G75Z6L5YiG5biDXG5leHBvcnQgaW50ZXJmYWNlIFRpY2tldFR5cGVEaXN0cmlidXRpb24ge1xuICB0eXBlOiBzdHJpbmc7ICAgICAgICAgICAvLyDnsbvlnovlkI3np7DvvIjkuovku7bjgIHor7fmsYLjgIHpl67popjjgIHlj5jmm7TvvIlcbiAgY291bnQ6IG51bWJlcjsgICAgICAgICAgLy8g5pWw6YePXG4gIHBlcmNlbnRhZ2U6IG51bWJlcjsgICAgIC8vIOWNoOavlFxuICBjb2xvcjogc3RyaW5nOyAgICAgICAgICAvLyDpopzoibJcbn1cblxuLy8g5paw5aKe77ya5ZON5bqU5pe26Ze05YiG5biDXG5leHBvcnQgaW50ZXJmYWNlIFJlc3BvbnNlVGltZURpc3RyaWJ1dGlvbiB7XG4gIHRpbWVSYW5nZTogc3RyaW5nOyAgICAgIC8vIOaXtumXtOaute+8iDAtMWgsIDEtNGgsIDQtOGgsID44aO+8iVxuICBjb3VudDogbnVtYmVyOyAgICAgICAgICAvLyDlt6XljZXmlbBcbiAgcGVyY2VudGFnZTogbnVtYmVyOyAgICAgLy8g5Y2g5q+UXG4gIGF2Z1RpbWU/OiBudW1iZXI7ICAgICAgIC8vIOivpeaXtuauteW5s+Wdh+aXtumXtO+8iOWwj+aXtu+8iVxufVxuXG4vLyDmlrDlop7vvJrlm6LpmJ/lt6XkvZzotJ/ovb1cbmV4cG9ydCBpbnRlcmZhY2UgVGVhbVdvcmtsb2FkIHtcbiAgYXNzaWduZWU6IHN0cmluZzsgICAgICAgICAgIC8vIOWkhOeQhuS6ulxuICB0aWNrZXRDb3VudDogbnVtYmVyOyAgICAgICAgLy8g5bel5Y2V5pWwXG4gIGF2Z1Jlc3BvbnNlVGltZTogbnVtYmVyOyAgICAvLyDlubPlnYflk43lupTml7bpl7TvvIjlsI/ml7bvvIlcbiAgY29tcGxldGlvblJhdGU6IG51bWJlcjsgICAgIC8vIOWujOaIkOeOh++8iCXvvIlcbiAgYWN0aXZlVGlja2V0cz86IG51bWJlcjsgICAgIC8vIOi/m+ihjOS4reW3peWNlVxufVxuXG4vLyDmlrDlop7vvJrkvJjlhYjnuqfliIbluINcbmV4cG9ydCBpbnRlcmZhY2UgUHJpb3JpdHlEaXN0cmlidXRpb24ge1xuICBwcmlvcml0eTogc3RyaW5nOyAgICAgICAvLyDkvJjlhYjnuqfvvIjntKfmgKXjgIHpq5jjgIHkuK3jgIHkvY7vvIlcbiAgY291bnQ6IG51bWJlcjsgICAgICAgICAgLy8g5pWw6YePXG4gIHBlcmNlbnRhZ2U6IG51bWJlcjsgICAgIC8vIOWNoOavlFxuICBjb2xvcjogc3RyaW5nOyAgICAgICAgICAvLyDpopzoibJcbn1cblxuLy8g5paw5aKe77ya6auY5bOw5pe25q615pWw5o2uXG5leHBvcnQgaW50ZXJmYWNlIFBlYWtIb3VyRGF0YSB7XG4gIGhvdXI6IHN0cmluZzsgICAgICAgICAgLy8g5bCP5pe277yIMC0yM++8iVxuICBjb3VudDogbnVtYmVyOyAgICAgICAgIC8vIOivpeaXtuauteWIm+W7uueahOW3peWNleaVsFxuICBhdmdSZXNwb25zZVRpbWU/OiBudW1iZXI7IC8vIOivpeaXtuauteW5s+Wdh+WTjeW6lOaXtumXtFxufVxuXG4vLyBEYXNoYm9hcmTmgLvmlbDmja7nu5PmnoTvvIjmianlsZXniYggLSDkv53mjIHlkJHlkI7lhbzlrrnvvIlcbmV4cG9ydCBpbnRlcmZhY2UgRGFzaGJvYXJkRGF0YSB7XG4gIC8vIOWOn+acieaVsOaNru+8iOS/neaMgeWFvOWuue+8iVxuICBrcGlNZXRyaWNzOiBLUElNZXRyaWNbXTtcbiAgdGlja2V0VHJlbmQ6IFRpY2tldFRyZW5kRGF0YVtdO1xuICBpbmNpZGVudERpc3RyaWJ1dGlvbjogSW5jaWRlbnREaXN0cmlidXRpb25EYXRhW107XG4gIHNsYURhdGE6IFNMQURhdGFbXTtcbiAgc2F0aXNmYWN0aW9uRGF0YTogU2F0aXNmYWN0aW9uRGF0YVtdO1xuICBxdWlja0FjdGlvbnM6IFF1aWNrQWN0aW9uW107XG4gIHJlY2VudEFjdGl2aXRpZXM6IFJlY2VudEFjdGl2aXR5W107XG4gIFxuICAvLyDmlrDlop7vvJrlt6XljZXliIbmnpDnu7TluqZcbiAgdHlwZURpc3RyaWJ1dGlvbj86IFRpY2tldFR5cGVEaXN0cmlidXRpb25bXTsgICAgICAgIC8vIOW3peWNleexu+Wei+WIhuW4g1xuICByZXNwb25zZVRpbWVEaXN0cmlidXRpb24/OiBSZXNwb25zZVRpbWVEaXN0cmlidXRpb25bXTsgLy8g5ZON5bqU5pe26Ze05YiG5biDXG4gIHRlYW1Xb3JrbG9hZD86IFRlYW1Xb3JrbG9hZFtdOyAgICAgICAgICAgICAgICAgICAgICAvLyDlm6LpmJ/lt6XkvZzotJ/ovb1cbiAgcHJpb3JpdHlEaXN0cmlidXRpb24/OiBQcmlvcml0eURpc3RyaWJ1dGlvbltdOyAgICAgIC8vIOS8mOWFiOe6p+WIhuW4g1xuICBwZWFrSG91cnM/OiBQZWFrSG91ckRhdGFbXTsgICAgICAgICAgICAgICAgICAgICAgICAvLyDpq5jls7Dml7bmrrVcbiAgXG4gIC8vIOWFg+aVsOaNrlxuICBtZXRhZGF0YT86IHtcbiAgICBsYXN0VXBkYXRlZDogc3RyaW5nO1xuICAgIGRhdGVSYW5nZTogeyBzdGFydDogc3RyaW5nOyBlbmQ6IHN0cmluZyB9O1xuICAgIHRvdGFsVGlja2V0czogbnVtYmVyO1xuICB9O1xufVxuXG4iXSwibWFwcGluZ3MiOiJBQUFBIiwiaWdub3JlTGlzdCI6W119

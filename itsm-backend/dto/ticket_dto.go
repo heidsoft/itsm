@@ -11,10 +11,13 @@ type CreateTicketRequest struct {
 	Description    string                 `json:"description" binding:"required,min=10,max=5000"`
 	Priority       string                 `json:"priority" binding:"required,oneof=low medium high critical"`
 	Category       string                 `json:"category" binding:"required"`
+	CategoryID     *int                   `json:"category_id,omitempty"`     // 分类ID（优先使用）
+	TemplateID     *int                   `json:"template_id,omitempty"`     // 模板ID
 	RequesterID    int                    `json:"requester_id" binding:"required"`
 	AssigneeID     int                    `json:"assignee_id"`
 	ParentTicketID *int                   `json:"parent_ticket_id,omitempty"`
-	Tags           []string              `json:"tags"`
+	TagIDs         []int                  `json:"tag_ids,omitempty"`          // 标签ID列表
+	Tags           []string               `json:"tags"`                      // 标签名称列表（兼容旧格式）
 	FormFields     map[string]interface{} `json:"form_fields"`
 	Attachments    []string               `json:"attachments"`
 }

@@ -2,21 +2,17 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
-	"itsm-backend/ent/incidentalert"
-	"itsm-backend/ent/incidentevent"
-	"itsm-backend/ent/incidentmetric"
-	"itsm-backend/ent/incidentrule"
-	"itsm-backend/ent/tenant"
-	"itsm-backend/ent/user"
+	"itsm-backend/ent/incidentruleexecution"
 
-	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // 测试辅助函数
@@ -30,22 +26,20 @@ func createTestTenant(ctx context.Context, client *ent.Client) (*ent.Tenant, err
 	return client.Tenant.Create().
 		SetName("测试租户").
 		SetCode("test").
-		SetDescription("测试租户描述").
-		SetIsActive(true).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
+		SetStatus("active").
 		Save(ctx)
 }
 
 func createTestUser(ctx context.Context, client *ent.Client, tenantID int) (*ent.User, error) {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 	return client.User.Create().
 		SetUsername("testuser").
 		SetEmail("test@example.com").
-		SetFullName("测试用户").
-		SetIsActive(true).
+		SetName("测试用户").
+		SetPasswordHash(string(hashedPassword)).
+		SetRole("user").
+		SetActive(true).
 		SetTenantID(tenantID).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
 		Save(ctx)
 }
 
@@ -72,9 +66,9 @@ func TestIncidentService_CreateIncident(t *testing.T) {
 	}
 
 	// 测试创建事件
-		req := &dto.CreateIncidentRequest{
-			Title:       "测试事件",
-			Description: "这是一个测试事件",
+	req := &dto.CreateIncidentRequest{
+		Title:       "测试事件",
+		Description: "这是一个测试事件",
 		Priority:    "high",
 		Severity:    "medium",
 		Category:    "performance",
@@ -398,9 +392,9 @@ func TestIncidentRuleEngine_ExecuteRule(t *testing.T) {
 		}).
 		SetActions([]map[string]interface{}{
 			{
-				"type":    "escalate",
-				"level":   1,
-				"reason":  "优先级较高",
+				"type":   "escalate",
+				"level":  1,
+				"reason": "优先级较高",
 			},
 		}).
 		SetPriority("high").
@@ -592,10 +586,10 @@ func TestIncidentAlertingService_AcknowledgeAlert(t *testing.T) {
 	if updatedAlert.Status != "acknowledged" {
 		t.Errorf("期望状态 acknowledged，实际 %s", updatedAlert.Status)
 	}
-	if updatedAlert.AcknowledgedBy == nil || *updatedAlert.AcknowledgedBy != testUser.ID {
-		t.Errorf("期望确认人ID %d，实际 %v", testUser.ID, updatedAlert.AcknowledgedBy)
+	if updatedAlert.AcknowledgedBy == 0 || updatedAlert.AcknowledgedBy != testUser.ID {
+		t.Errorf("期望确认人ID %d，实际 %d", testUser.ID, updatedAlert.AcknowledgedBy)
 	}
-	if updatedAlert.AcknowledgedAt == nil {
+	if updatedAlert.AcknowledgedAt.IsZero() {
 		t.Error("期望确认时间不为空")
 	}
 

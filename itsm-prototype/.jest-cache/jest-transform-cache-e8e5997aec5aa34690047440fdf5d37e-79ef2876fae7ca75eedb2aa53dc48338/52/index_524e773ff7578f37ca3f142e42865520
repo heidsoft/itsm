@@ -1,0 +1,135 @@
+6ad095fd87c36761df74a7e23aeb88e3
+/**
+ * 工单关联组件导出
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_zs0zx8j7b() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/ticket-relations/index.ts";
+  var hash = "13c6524b0b1f483dfb4d32ad5bd87b6825ef3cf7";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/ticket-relations/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 12,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 10,
+          column: 8
+        },
+        end: {
+          line: 10,
+          column: 44
+        }
+      },
+      "3": {
+        start: {
+          line: 13,
+          column: 23
+        },
+        end: {
+          line: 13,
+          column: 49
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 9,
+            column: 9
+          },
+          end: {
+            line: 9,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 9,
+            column: 20
+          },
+          end: {
+            line: 11,
+            column: 5
+          }
+        },
+        line: 9
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/ticket-relations/index.ts"],
+      sourcesContent: ["/**\n * \u5DE5\u5355\u5173\u8054\u7EC4\u4EF6\u5BFC\u51FA\n */\n\nexport { RelationPanel } from './RelationPanel';\n\nexport type { RelationPanelProps } from './RelationPanel';\n\n"],
+      names: ["RelationPanel"],
+      mappings: "AAAA;;CAEC;;;;+BAEQA;;;eAAAA,4BAAa;;;+BAAQ"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "13c6524b0b1f483dfb4d32ad5bd87b6825ef3cf7"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_zs0zx8j7b = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_zs0zx8j7b();
+cov_zs0zx8j7b().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_zs0zx8j7b().s[1]++;
+Object.defineProperty(exports, "RelationPanel", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_zs0zx8j7b().f[0]++;
+    cov_zs0zx8j7b().s[2]++;
+    return _RelationPanel.RelationPanel;
+  }
+});
+const _RelationPanel =
+/* istanbul ignore next */
+(cov_zs0zx8j7b().s[3]++, require("./RelationPanel"));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfenMweng4ajdiIiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwibmFtZSIsImRlY2wiLCJsb2MiLCJicmFuY2hNYXAiLCJzIiwiZiIsImIiLCJpbnB1dFNvdXJjZU1hcCIsInZlcnNpb24iLCJzb3VyY2VzIiwic291cmNlc0NvbnRlbnQiLCJuYW1lcyIsIm1hcHBpbmdzIiwiX2NvdmVyYWdlU2NoZW1hIiwiY292ZXJhZ2UiLCJhY3R1YWxDb3ZlcmFnZSIsIl9SZWxhdGlvblBhbmVsIiwiUmVsYXRpb25QYW5lbCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvY29tcG9uZW50cy90aWNrZXQtcmVsYXRpb25zL2luZGV4LnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICog5bel5Y2V5YWz6IGU57uE5Lu25a+85Ye6XG4gKi9cblxuZXhwb3J0IHsgUmVsYXRpb25QYW5lbCB9IGZyb20gJy4vUmVsYXRpb25QYW5lbCc7XG5cbmV4cG9ydCB0eXBlIHsgUmVsYXRpb25QYW5lbFByb3BzIH0gZnJvbSAnLi9SZWxhdGlvblBhbmVsJztcblxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7R0FFQzs7QUFBQTtBQUFBLFNBQUFBLGNBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLE1BQUEsT0FBQUMsUUFBQTtFQUFBLElBQUFDLEdBQUE7RUFBQSxJQUFBQyxZQUFBO0lBQUFMLElBQUE7SUFBQU0sWUFBQTtNQUFBO1FBQUFDLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO0lBQUE7SUFBQUUsS0FBQTtNQUFBO1FBQUFDLElBQUE7UUFBQUMsSUFBQTtVQUFBTixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBSyxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFELElBQUE7TUFBQTtJQUFBO0lBQUFPLFNBQUE7SUFBQUMsQ0FBQTtNQUFBO01BQUE7TUFBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLE9BQUE7TUFBQUMsT0FBQTtNQUFBQyxjQUFBO01BQUFDLEtBQUE7TUFBQUMsUUFBQTtJQUFBO0lBQUFDLGVBQUE7SUFBQXhCLElBQUE7RUFBQTtFQUFBLElBQUF5QixRQUFBLEdBQUF4QixNQUFBLENBQUFFLEdBQUEsTUFBQUYsTUFBQSxDQUFBRSxHQUFBO0VBQUEsS0FBQXNCLFFBQUEsQ0FBQTFCLElBQUEsS0FBQTBCLFFBQUEsQ0FBQTFCLElBQUEsRUFBQUMsSUFBQSxLQUFBQSxJQUFBO0lBQUF5QixRQUFBLENBQUExQixJQUFBLElBQUFLLFlBQUE7RUFBQTtFQUFBLElBQUFzQixjQUFBLEdBQUFELFFBQUEsQ0FBQTFCLElBQUE7RUFBQTs7Ozs7Ozs7Ozs7Ozs7OytCQUVROzs7Ozs7V0FBQTRCLGNBQUEsQ0FBQUMsYUFBYTs7Ozs7aUNBQVEiLCJpZ25vcmVMaXN0IjpbXX0=

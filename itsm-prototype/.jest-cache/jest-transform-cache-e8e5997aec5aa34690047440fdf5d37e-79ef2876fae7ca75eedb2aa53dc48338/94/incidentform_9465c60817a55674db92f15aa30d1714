@@ -1,0 +1,41 @@
+5603dc4cab78178134c820605863ae6a
+"use strict";
+
+/* istanbul ignore next */
+function cov_1oweod6uae() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/ui/incident-form.tsx";
+  var hash = "5f447e3cd67914fd8aaad6acae67a3dc78cd1280";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/ui/incident-form.tsx",
+    statementMap: {},
+    fnMap: {},
+    branchMap: {},
+    s: {},
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: [],
+      names: [],
+      mappings: ""
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "5f447e3cd67914fd8aaad6acae67a3dc78cd1280"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1oweod6uae = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1oweod6uae();
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOltdLCJzb3VyY2VzQ29udGVudCI6W10sIm1hcHBpbmdzIjoiIiwiaWdub3JlTGlzdCI6W119

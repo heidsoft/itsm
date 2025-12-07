@@ -1,0 +1,418 @@
+f66273337159bbfe6e89d9e1fd743f86
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_26d8leddwr() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/cmdb/components/TopologyView.tsx";
+  var hash = "e0d593e03eb8010bddde36afd0e611bf3fb07247";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/cmdb/components/TopologyView.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 28
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 15
+        },
+        end: {
+          line: 14,
+          column: 43
+        }
+      },
+      "6": {
+        start: {
+          line: 15,
+          column: 14
+        },
+        end: {
+          line: 15,
+          column: 45
+        }
+      },
+      "7": {
+        start: {
+          line: 17,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 6
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 21
+        },
+        end: {
+          line: 76,
+          column: 1
+        }
+      },
+      "9": {
+        start: {
+          line: 22,
+          column: 18
+        },
+        end: {
+          line: 22,
+          column: 38
+        }
+      },
+      "10": {
+        start: {
+          line: 23,
+          column: 4
+        },
+        end: {
+          line: 75,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 16,
+            column: 9
+          },
+          end: {
+            line: 16,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 16
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 21,
+            column: 21
+          },
+          end: {
+            line: 21,
+            column: 22
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 43
+          },
+          end: {
+            line: 76,
+            column: 1
+          }
+        },
+        line: 21
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 35
+          },
+          end: {
+            line: 17,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 41
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        }],
+        line: 17
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 18
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        }],
+        line: 17
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/cmdb/components/TopologyView.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { BranchesOutlined } from '@ant-design/icons';\nimport { useI18n } from '@/lib/i18n';\n\ninterface TopologyViewProps {\n  cis: any[];\n  relations: any[];\n}\n\nexport const TopologyView: React.FC<TopologyViewProps> = ({ cis, relations }) => {\n    const { t } = useI18n();\n  return (\n    <div style={{ padding: 24 }}>\n      <div\n        style={{\n          height: 600,\n          border: '1px solid #f0f0f0',\n          borderRadius: 8,\n          backgroundColor: '#fafafa',\n          display: 'flex',\n          alignItems: 'center',\n          justifyContent: 'center',\n        }}\n      >\n        <div style={{ textAlign: 'center' }}>\n          <div style={{ fontSize: 48, color: '#1890ff', marginBottom: 16 }}>\n            <BranchesOutlined />\n          </div>\n          <h3>{t('cmdb.topologyViewTitle')}</h3>\n          <p style={{ color: '#666', maxWidth: 400, margin: '0 auto' }}>\n            {t('cmdb.topologyViewDescription')}\n          </p>\n          <div style={{ marginTop: 20, fontSize: 14, color: '#666' }}>\n            {t('cmdb.ciCount', { cisCount: cis.length, relationsCount: relations.length })}\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n};\n"],
+      names: ["TopologyView", "cis", "relations", "t", "useI18n", "div", "style", "padding", "height", "border", "borderRadius", "backgroundColor", "display", "alignItems", "justifyContent", "textAlign", "fontSize", "color", "marginBottom", "BranchesOutlined", "h3", "p", "maxWidth", "margin", "marginTop", "cisCount", "length", "relationsCount"],
+      mappings: "AAAA;;;;;+BAWaA;;;eAAAA;;;;8DATK;uBACe;sBACT;;;;;;AAOjB,MAAMA,eAA4C,CAAC,EAAEC,GAAG,EAAEC,SAAS,EAAE;IACxE,MAAM,EAAEC,CAAC,EAAE,GAAGC,IAAAA,aAAO;IACvB,qBACE,qBAACC;QAAIC,OAAO;YAAEC,SAAS;QAAG;kBACxB,cAAA,qBAACF;YACCC,OAAO;gBACLE,QAAQ;gBACRC,QAAQ;gBACRC,cAAc;gBACdC,iBAAiB;gBACjBC,SAAS;gBACTC,YAAY;gBACZC,gBAAgB;YAClB;sBAEA,cAAA,sBAACT;gBAAIC,OAAO;oBAAES,WAAW;gBAAS;;kCAChC,qBAACV;wBAAIC,OAAO;4BAAEU,UAAU;4BAAIC,OAAO;4BAAWC,cAAc;wBAAG;kCAC7D,cAAA,qBAACC,uBAAgB;;kCAEnB,qBAACC;kCAAIjB,EAAE;;kCACP,qBAACkB;wBAAEf,OAAO;4BAAEW,OAAO;4BAAQK,UAAU;4BAAKC,QAAQ;wBAAS;kCACxDpB,EAAE;;kCAEL,qBAACE;wBAAIC,OAAO;4BAAEkB,WAAW;4BAAIR,UAAU;4BAAIC,OAAO;wBAAO;kCACtDd,EAAE,gBAAgB;4BAAEsB,UAAUxB,IAAIyB,MAAM;4BAAEC,gBAAgBzB,UAAUwB,MAAM;wBAAC;;;;;;AAMxF"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "e0d593e03eb8010bddde36afd0e611bf3fb07247"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_26d8leddwr = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_26d8leddwr();
+cov_26d8leddwr().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_26d8leddwr().s[1]++;
+Object.defineProperty(exports, "TopologyView", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_26d8leddwr().f[0]++;
+    cov_26d8leddwr().s[2]++;
+    return TopologyView;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_26d8leddwr().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_26d8leddwr().s[4]++, _interop_require_default(require("react")));
+const _icons =
+/* istanbul ignore next */
+(cov_26d8leddwr().s[5]++, require("@ant-design/icons"));
+const _i18n =
+/* istanbul ignore next */
+(cov_26d8leddwr().s[6]++, require("../../../../lib/i18n"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_26d8leddwr().f[1]++;
+  cov_26d8leddwr().s[7]++;
+  return /* istanbul ignore next */(cov_26d8leddwr().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_26d8leddwr().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_26d8leddwr().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_26d8leddwr().b[0][1]++, {
+    default: obj
+  });
+}
+/* istanbul ignore next */
+cov_26d8leddwr().s[8]++;
+const TopologyView = ({
+  cis,
+  relations
+}) => {
+  /* istanbul ignore next */
+  cov_26d8leddwr().f[2]++;
+  const {
+    t
+  } =
+  /* istanbul ignore next */
+  (cov_26d8leddwr().s[9]++, (0, _i18n.useI18n)());
+  /* istanbul ignore next */
+  cov_26d8leddwr().s[10]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+    style: {
+      padding: 24
+    },
+    children: /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+      style: {
+        height: 600,
+        border: '1px solid #f0f0f0',
+        borderRadius: 8,
+        backgroundColor: '#fafafa',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      children: /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+        style: {
+          textAlign: 'center'
+        },
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+          style: {
+            fontSize: 48,
+            color: '#1890ff',
+            marginBottom: 16
+          },
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_icons.BranchesOutlined, {})
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)("h3", {
+          children: t('cmdb.topologyViewTitle')
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)("p", {
+          style: {
+            color: '#666',
+            maxWidth: 400,
+            margin: '0 auto'
+          },
+          children: t('cmdb.topologyViewDescription')
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+          style: {
+            marginTop: 20,
+            fontSize: 14,
+            color: '#666'
+          },
+          children: t('cmdb.ciCount', {
+            cisCount: cis.length,
+            relationsCount: relations.length
+          })
+        })]
+      })
+    })
+  });
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJUb3BvbG9neVZpZXciLCJjaXMiLCJyZWxhdGlvbnMiLCJjb3ZfMjZkOGxlZGR3ciIsImYiLCJ0IiwicyIsIl9pMThuIiwidXNlSTE4biIsIl9qc3hydW50aW1lIiwianN4Iiwic3R5bGUiLCJwYWRkaW5nIiwiaGVpZ2h0IiwiYm9yZGVyIiwiYm9yZGVyUmFkaXVzIiwiYmFja2dyb3VuZENvbG9yIiwiZGlzcGxheSIsImFsaWduSXRlbXMiLCJqdXN0aWZ5Q29udGVudCIsImpzeHMiLCJ0ZXh0QWxpZ24iLCJmb250U2l6ZSIsImNvbG9yIiwibWFyZ2luQm90dG9tIiwiX2ljb25zIiwiQnJhbmNoZXNPdXRsaW5lZCIsIm1heFdpZHRoIiwibWFyZ2luIiwibWFyZ2luVG9wIiwiY2lzQ291bnQiLCJsZW5ndGgiLCJyZWxhdGlvbnNDb3VudCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwLyhtYWluKS9jbWRiL2NvbXBvbmVudHMvVG9wb2xvZ3lWaWV3LnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIGNsaWVudCc7XG5cbmltcG9ydCBSZWFjdCBmcm9tICdyZWFjdCc7XG5pbXBvcnQgeyBCcmFuY2hlc091dGxpbmVkIH0gZnJvbSAnQGFudC1kZXNpZ24vaWNvbnMnO1xuaW1wb3J0IHsgdXNlSTE4biB9IGZyb20gJ0AvbGliL2kxOG4nO1xuXG5pbnRlcmZhY2UgVG9wb2xvZ3lWaWV3UHJvcHMge1xuICBjaXM6IGFueVtdO1xuICByZWxhdGlvbnM6IGFueVtdO1xufVxuXG5leHBvcnQgY29uc3QgVG9wb2xvZ3lWaWV3OiBSZWFjdC5GQzxUb3BvbG9neVZpZXdQcm9wcz4gPSAoeyBjaXMsIHJlbGF0aW9ucyB9KSA9PiB7XG4gICAgY29uc3QgeyB0IH0gPSB1c2VJMThuKCk7XG4gIHJldHVybiAoXG4gICAgPGRpdiBzdHlsZT17eyBwYWRkaW5nOiAyNCB9fT5cbiAgICAgIDxkaXZcbiAgICAgICAgc3R5bGU9e3tcbiAgICAgICAgICBoZWlnaHQ6IDYwMCxcbiAgICAgICAgICBib3JkZXI6ICcxcHggc29saWQgI2YwZjBmMCcsXG4gICAgICAgICAgYm9yZGVyUmFkaXVzOiA4LFxuICAgICAgICAgIGJhY2tncm91bmRDb2xvcjogJyNmYWZhZmEnLFxuICAgICAgICAgIGRpc3BsYXk6ICdmbGV4JyxcbiAgICAgICAgICBhbGlnbkl0ZW1zOiAnY2VudGVyJyxcbiAgICAgICAgICBqdXN0aWZ5Q29udGVudDogJ2NlbnRlcicsXG4gICAgICAgIH19XG4gICAgICA+XG4gICAgICAgIDxkaXYgc3R5bGU9e3sgdGV4dEFsaWduOiAnY2VudGVyJyB9fT5cbiAgICAgICAgICA8ZGl2IHN0eWxlPXt7IGZvbnRTaXplOiA0OCwgY29sb3I6ICcjMTg5MGZmJywgbWFyZ2luQm90dG9tOiAxNiB9fT5cbiAgICAgICAgICAgIDxCcmFuY2hlc091dGxpbmVkIC8+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPGgzPnt0KCdjbWRiLnRvcG9sb2d5Vmlld1RpdGxlJyl9PC9oMz5cbiAgICAgICAgICA8cCBzdHlsZT17eyBjb2xvcjogJyM2NjYnLCBtYXhXaWR0aDogNDAwLCBtYXJnaW46ICcwIGF1dG8nIH19PlxuICAgICAgICAgICAge3QoJ2NtZGIudG9wb2xvZ3lWaWV3RGVzY3JpcHRpb24nKX1cbiAgICAgICAgICA8L3A+XG4gICAgICAgICAgPGRpdiBzdHlsZT17eyBtYXJnaW5Ub3A6IDIwLCBmb250U2l6ZTogMTQsIGNvbG9yOiAnIzY2NicgfX0+XG4gICAgICAgICAgICB7dCgnY21kYi5jaUNvdW50JywgeyBjaXNDb3VudDogY2lzLmxlbmd0aCwgcmVsYXRpb25zQ291bnQ6IHJlbGF0aW9ucy5sZW5ndGggfSl9XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59O1xuIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7K0JBV2E7Ozs7OztXQUFBQSxZQUFBOzs7Ozs7Ozt3RUFUSzs7O2tDQUNlOzs7a0NBQ1Q7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBT2pCLE1BQU1BLFlBQUEsR0FBNENBLENBQUM7RUFBRUMsR0FBRztFQUFFQztBQUFTLENBQUU7RUFBQTtFQUFBQyxjQUFBLEdBQUFDLENBQUE7RUFDeEUsTUFBTTtJQUFFQztFQUFDLENBQUU7RUFBQTtFQUFBLENBQUFGLGNBQUEsR0FBQUcsQ0FBQSxPQUFHLElBQUFDLEtBQUEsQ0FBQUMsT0FBTztFQUFBO0VBQUFMLGNBQUEsR0FBQUcsQ0FBQTtFQUN2QixvQkFDRSxJQUFBRyxXQUFBLENBQUFDLEdBQUEsRUFBQztJQUFJQyxLQUFBLEVBQU87TUFBRUMsT0FBQSxFQUFTO0lBQUc7Y0FDeEIsaUJBQUFILFdBQUEsQ0FBQUMsR0FBQSxFQUFDO01BQ0NDLEtBQUEsRUFBTztRQUNMRSxNQUFBLEVBQVE7UUFDUkMsTUFBQSxFQUFRO1FBQ1JDLFlBQUEsRUFBYztRQUNkQyxlQUFBLEVBQWlCO1FBQ2pCQyxPQUFBLEVBQVM7UUFDVEMsVUFBQSxFQUFZO1FBQ1pDLGNBQUEsRUFBZ0I7TUFDbEI7Z0JBRUEsaUJBQUFWLFdBQUEsQ0FBQVcsSUFBQSxFQUFDO1FBQUlULEtBQUEsRUFBTztVQUFFVSxTQUFBLEVBQVc7UUFBUztnQ0FDaEMsSUFBQVosV0FBQSxDQUFBQyxHQUFBLEVBQUM7VUFBSUMsS0FBQSxFQUFPO1lBQUVXLFFBQUEsRUFBVTtZQUFJQyxLQUFBLEVBQU87WUFBV0MsWUFBQSxFQUFjO1VBQUc7b0JBQzdELGlCQUFBZixXQUFBLENBQUFDLEdBQUEsRUFBQ2UsTUFBQSxDQUFBQyxnQkFBZ0I7eUJBRW5CLElBQUFqQixXQUFBLENBQUFDLEdBQUEsRUFBQztvQkFBSUwsQ0FBQSxDQUFFO3lCQUNQLElBQUFJLFdBQUEsQ0FBQUMsR0FBQSxFQUFDO1VBQUVDLEtBQUEsRUFBTztZQUFFWSxLQUFBLEVBQU87WUFBUUksUUFBQSxFQUFVO1lBQUtDLE1BQUEsRUFBUTtVQUFTO29CQUN4RHZCLENBQUEsQ0FBRTt5QkFFTCxJQUFBSSxXQUFBLENBQUFDLEdBQUEsRUFBQztVQUFJQyxLQUFBLEVBQU87WUFBRWtCLFNBQUEsRUFBVztZQUFJUCxRQUFBLEVBQVU7WUFBSUMsS0FBQSxFQUFPO1VBQU87b0JBQ3REbEIsQ0FBQSxDQUFFLGdCQUFnQjtZQUFFeUIsUUFBQSxFQUFVN0IsR0FBQSxDQUFJOEIsTUFBTTtZQUFFQyxjQUFBLEVBQWdCOUIsU0FBQSxDQUFVNkI7VUFBTzs7Ozs7QUFNeEYiLCJpZ25vcmVMaXN0IjpbXX0=

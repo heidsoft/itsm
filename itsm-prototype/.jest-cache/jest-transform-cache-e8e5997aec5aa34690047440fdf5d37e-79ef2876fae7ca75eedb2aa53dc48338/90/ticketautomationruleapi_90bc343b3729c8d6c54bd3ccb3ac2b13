@@ -1,0 +1,410 @@
+571e326887241426156e3ccc5469471a
+/**
+ * 工单自动化规则API
+ * 提供自动化规则的创建、查询、更新、删除和测试功能
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_1mdg1e7nfe() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/lib/api/ticket-automation-rule-api.ts";
+  var hash = "1e84be685b9b02eb450f15d9f923cc6f0a6b7437";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/lib/api/ticket-automation-rule-api.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 8,
+          column: 0
+        },
+        end: {
+          line: 13,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 11,
+          column: 8
+        },
+        end: {
+          line: 11,
+          column: 39
+        }
+      },
+      "3": {
+        start: {
+          line: 14,
+          column: 20
+        },
+        end: {
+          line: 14,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 78
+        }
+      },
+      "5": {
+        start: {
+          line: 24,
+          column: 8
+        },
+        end: {
+          line: 24,
+          column: 88
+        }
+      },
+      "6": {
+        start: {
+          line: 29,
+          column: 8
+        },
+        end: {
+          line: 29,
+          column: 85
+        }
+      },
+      "7": {
+        start: {
+          line: 34,
+          column: 8
+        },
+        end: {
+          line: 34,
+          column: 94
+        }
+      },
+      "8": {
+        start: {
+          line: 39,
+          column: 8
+        },
+        end: {
+          line: 39,
+          column: 91
+        }
+      },
+      "9": {
+        start: {
+          line: 44,
+          column: 8
+        },
+        end: {
+          line: 46,
+          column: 11
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 10,
+            column: 9
+          },
+          end: {
+            line: 10,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 10,
+            column: 20
+          },
+          end: {
+            line: 12,
+            column: 5
+          }
+        },
+        line: 10
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 18,
+            column: 6
+          },
+          end: {
+            line: 18,
+            column: 7
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 31
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        line: 18
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 23,
+            column: 6
+          },
+          end: {
+            line: 23,
+            column: 7
+          }
+        },
+        loc: {
+          start: {
+            line: 23,
+            column: 35
+          },
+          end: {
+            line: 25,
+            column: 5
+          }
+        },
+        line: 23
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 28,
+            column: 6
+          },
+          end: {
+            line: 28,
+            column: 7
+          }
+        },
+        loc: {
+          start: {
+            line: 28,
+            column: 36
+          },
+          end: {
+            line: 30,
+            column: 5
+          }
+        },
+        line: 28
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 33,
+            column: 6
+          },
+          end: {
+            line: 33,
+            column: 7
+          }
+        },
+        loc: {
+          start: {
+            line: 33,
+            column: 44
+          },
+          end: {
+            line: 35,
+            column: 5
+          }
+        },
+        line: 33
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 38,
+            column: 6
+          },
+          end: {
+            line: 38,
+            column: 7
+          }
+        },
+        loc: {
+          start: {
+            line: 38,
+            column: 38
+          },
+          end: {
+            line: 40,
+            column: 5
+          }
+        },
+        line: 38
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 43,
+            column: 6
+          },
+          end: {
+            line: 43,
+            column: 7
+          }
+        },
+        loc: {
+          start: {
+            line: 43,
+            column: 34
+          },
+          end: {
+            line: 47,
+            column: 5
+          }
+        },
+        line: 43
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/lib/api/ticket-automation-rule-api.ts"],
+      sourcesContent: ["/**\n * \u5DE5\u5355\u81EA\u52A8\u5316\u89C4\u5219API\n * \u63D0\u4F9B\u81EA\u52A8\u5316\u89C4\u5219\u7684\u521B\u5EFA\u3001\u67E5\u8BE2\u3001\u66F4\u65B0\u3001\u5220\u9664\u548C\u6D4B\u8BD5\u529F\u80FD\n */\n\nimport { httpClient } from './http-client';\n\nexport interface AutomationRule {\n  id: number;\n  name: string;\n  description?: string;\n  priority: number;\n  conditions: Array<{\n    field: string;\n    operator: string;\n    value: any;\n  }>;\n  actions: Array<{\n    type: string;\n    [key: string]: any;\n  }>;\n  is_active: boolean;\n  execution_count: number;\n  last_executed_at?: string;\n  created_by: number;\n  creator?: {\n    id: number;\n    username: string;\n    name: string;\n    email: string;\n    role: string;\n  };\n  tenant_id: number;\n  created_at: string;\n  updated_at: string;\n}\n\nexport interface CreateAutomationRuleRequest {\n  name: string;\n  description?: string;\n  priority: number;\n  conditions: Array<{\n    field: string;\n    operator: string;\n    value: any;\n  }>;\n  actions: Array<{\n    type: string;\n    [key: string]: any;\n  }>;\n  is_active: boolean;\n}\n\nexport interface UpdateAutomationRuleRequest {\n  name?: string;\n  description?: string;\n  priority?: number;\n  conditions?: Array<{\n    field: string;\n    operator: string;\n    value: any;\n  }>;\n  actions?: Array<{\n    type: string;\n    [key: string]: any;\n  }>;\n  is_active?: boolean;\n}\n\nexport interface TestAutomationRuleRequest {\n  rule_id: number;\n  ticket_id: number;\n}\n\nexport interface TestAutomationRuleResponse {\n  matched: boolean;\n  actions?: string[];\n  reason?: string;\n  error?: string;\n}\n\nexport interface ListAutomationRulesResponse {\n  rules: AutomationRule[];\n  total: number;\n}\n\nexport class TicketAutomationRuleApi {\n  /**\n   * \u83B7\u53D6\u81EA\u52A8\u5316\u89C4\u5219\u5217\u8868\n   */\n  static async listRules(): Promise<ListAutomationRulesResponse> {\n    return httpClient.get<ListAutomationRulesResponse>('/api/v1/tickets/automation-rules');\n  }\n\n  /**\n   * \u83B7\u53D6\u81EA\u52A8\u5316\u89C4\u5219\u8BE6\u60C5\n   */\n  static async getRule(ruleId: number): Promise<AutomationRule> {\n    return httpClient.get<AutomationRule>(`/api/v1/tickets/automation-rules/${ruleId}`);\n  }\n\n  /**\n   * \u521B\u5EFA\u81EA\u52A8\u5316\u89C4\u5219\n   */\n  static async createRule(data: CreateAutomationRuleRequest): Promise<AutomationRule> {\n    return httpClient.post<AutomationRule>('/api/v1/tickets/automation-rules', data);\n  }\n\n  /**\n   * \u66F4\u65B0\u81EA\u52A8\u5316\u89C4\u5219\n   */\n  static async updateRule(ruleId: number, data: UpdateAutomationRuleRequest): Promise<AutomationRule> {\n    return httpClient.put<AutomationRule>(`/api/v1/tickets/automation-rules/${ruleId}`, data);\n  }\n\n  /**\n   * \u5220\u9664\u81EA\u52A8\u5316\u89C4\u5219\n   */\n  static async deleteRule(ruleId: number): Promise<void> {\n    return httpClient.delete(`/api/v1/tickets/automation-rules/${ruleId}`);\n  }\n\n  /**\n   * \u6D4B\u8BD5\u81EA\u52A8\u5316\u89C4\u5219\n   */\n  static async testRule(data: TestAutomationRuleRequest): Promise<TestAutomationRuleResponse> {\n    return httpClient.post<TestAutomationRuleResponse>(`/api/v1/tickets/automation-rules/${data.rule_id}/test`, {\n      ticket_id: data.ticket_id,\n    });\n  }\n}\n\n"],
+      names: ["TicketAutomationRuleApi", "listRules", "httpClient", "get", "getRule", "ruleId", "createRule", "data", "post", "updateRule", "put", "deleteRule", "delete", "testRule", "rule_id", "ticket_id"],
+      mappings: "AAAA;;;CAGC;;;;+BAmFYA;;;eAAAA;;;4BAjFc;AAiFpB,MAAMA;IACX;;GAEC,GACD,aAAaC,YAAkD;QAC7D,OAAOC,sBAAU,CAACC,GAAG,CAA8B;IACrD;IAEA;;GAEC,GACD,aAAaC,QAAQC,MAAc,EAA2B;QAC5D,OAAOH,sBAAU,CAACC,GAAG,CAAiB,CAAC,iCAAiC,EAAEE,QAAQ;IACpF;IAEA;;GAEC,GACD,aAAaC,WAAWC,IAAiC,EAA2B;QAClF,OAAOL,sBAAU,CAACM,IAAI,CAAiB,oCAAoCD;IAC7E;IAEA;;GAEC,GACD,aAAaE,WAAWJ,MAAc,EAAEE,IAAiC,EAA2B;QAClG,OAAOL,sBAAU,CAACQ,GAAG,CAAiB,CAAC,iCAAiC,EAAEL,QAAQ,EAAEE;IACtF;IAEA;;GAEC,GACD,aAAaI,WAAWN,MAAc,EAAiB;QACrD,OAAOH,sBAAU,CAACU,MAAM,CAAC,CAAC,iCAAiC,EAAEP,QAAQ;IACvE;IAEA;;GAEC,GACD,aAAaQ,SAASN,IAA+B,EAAuC;QAC1F,OAAOL,sBAAU,CAACM,IAAI,CAA6B,CAAC,iCAAiC,EAAED,KAAKO,OAAO,CAAC,KAAK,CAAC,EAAE;YAC1GC,WAAWR,KAAKQ,SAAS;QAC3B;IACF;AACF"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "1e84be685b9b02eb450f15d9f923cc6f0a6b7437"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1mdg1e7nfe = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1mdg1e7nfe();
+cov_1mdg1e7nfe().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1mdg1e7nfe().s[1]++;
+Object.defineProperty(exports, "TicketAutomationRuleApi", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[0]++;
+    cov_1mdg1e7nfe().s[2]++;
+    return TicketAutomationRuleApi;
+  }
+});
+const _httpclient =
+/* istanbul ignore next */
+(cov_1mdg1e7nfe().s[3]++, require("./http-client"));
+class TicketAutomationRuleApi {
+  /**
+  * 获取自动化规则列表
+  */
+  static async listRules() {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[1]++;
+    cov_1mdg1e7nfe().s[4]++;
+    return _httpclient.httpClient.get('/api/v1/tickets/automation-rules');
+  }
+  /**
+  * 获取自动化规则详情
+  */
+  static async getRule(ruleId) {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[2]++;
+    cov_1mdg1e7nfe().s[5]++;
+    return _httpclient.httpClient.get(`/api/v1/tickets/automation-rules/${ruleId}`);
+  }
+  /**
+  * 创建自动化规则
+  */
+  static async createRule(data) {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[3]++;
+    cov_1mdg1e7nfe().s[6]++;
+    return _httpclient.httpClient.post('/api/v1/tickets/automation-rules', data);
+  }
+  /**
+  * 更新自动化规则
+  */
+  static async updateRule(ruleId, data) {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[4]++;
+    cov_1mdg1e7nfe().s[7]++;
+    return _httpclient.httpClient.put(`/api/v1/tickets/automation-rules/${ruleId}`, data);
+  }
+  /**
+  * 删除自动化规则
+  */
+  static async deleteRule(ruleId) {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[5]++;
+    cov_1mdg1e7nfe().s[8]++;
+    return _httpclient.httpClient.delete(`/api/v1/tickets/automation-rules/${ruleId}`);
+  }
+  /**
+  * 测试自动化规则
+  */
+  static async testRule(data) {
+    /* istanbul ignore next */
+    cov_1mdg1e7nfe().f[6]++;
+    cov_1mdg1e7nfe().s[9]++;
+    return _httpclient.httpClient.post(`/api/v1/tickets/automation-rules/${data.rule_id}/test`, {
+      ticket_id: data.ticket_id
+    });
+  }
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMW1kZzFlN25mZSIsInBhdGgiLCJoYXNoIiwiZ2xvYmFsIiwiRnVuY3Rpb24iLCJnY3YiLCJjb3ZlcmFnZURhdGEiLCJzdGF0ZW1lbnRNYXAiLCJzdGFydCIsImxpbmUiLCJjb2x1bW4iLCJlbmQiLCJmbk1hcCIsIm5hbWUiLCJkZWNsIiwibG9jIiwiYnJhbmNoTWFwIiwicyIsImYiLCJiIiwiaW5wdXRTb3VyY2VNYXAiLCJ2ZXJzaW9uIiwic291cmNlcyIsInNvdXJjZXNDb250ZW50IiwibmFtZXMiLCJtYXBwaW5ncyIsIl9jb3ZlcmFnZVNjaGVtYSIsImNvdmVyYWdlIiwiYWN0dWFsQ292ZXJhZ2UiLCJUaWNrZXRBdXRvbWF0aW9uUnVsZUFwaSIsImxpc3RSdWxlcyIsIl9odHRwY2xpZW50IiwiaHR0cENsaWVudCIsImdldCIsImdldFJ1bGUiLCJydWxlSWQiLCJjcmVhdGVSdWxlIiwiZGF0YSIsInBvc3QiLCJ1cGRhdGVSdWxlIiwicHV0IiwiZGVsZXRlUnVsZSIsImRlbGV0ZSIsInRlc3RSdWxlIiwicnVsZV9pZCIsInRpY2tldF9pZCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvbGliL2FwaS90aWNrZXQtYXV0b21hdGlvbi1ydWxlLWFwaS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIOW3peWNleiHquWKqOWMluinhOWImUFQSVxuICog5o+Q5L6b6Ieq5Yqo5YyW6KeE5YiZ55qE5Yib5bu644CB5p+l6K+i44CB5pu05paw44CB5Yig6Zmk5ZKM5rWL6K+V5Yqf6IO9XG4gKi9cblxuaW1wb3J0IHsgaHR0cENsaWVudCB9IGZyb20gJy4vaHR0cC1jbGllbnQnO1xuXG5leHBvcnQgaW50ZXJmYWNlIEF1dG9tYXRpb25SdWxlIHtcbiAgaWQ6IG51bWJlcjtcbiAgbmFtZTogc3RyaW5nO1xuICBkZXNjcmlwdGlvbj86IHN0cmluZztcbiAgcHJpb3JpdHk6IG51bWJlcjtcbiAgY29uZGl0aW9uczogQXJyYXk8e1xuICAgIGZpZWxkOiBzdHJpbmc7XG4gICAgb3BlcmF0b3I6IHN0cmluZztcbiAgICB2YWx1ZTogYW55O1xuICB9PjtcbiAgYWN0aW9uczogQXJyYXk8e1xuICAgIHR5cGU6IHN0cmluZztcbiAgICBba2V5OiBzdHJpbmddOiBhbnk7XG4gIH0+O1xuICBpc19hY3RpdmU6IGJvb2xlYW47XG4gIGV4ZWN1dGlvbl9jb3VudDogbnVtYmVyO1xuICBsYXN0X2V4ZWN1dGVkX2F0Pzogc3RyaW5nO1xuICBjcmVhdGVkX2J5OiBudW1iZXI7XG4gIGNyZWF0b3I/OiB7XG4gICAgaWQ6IG51bWJlcjtcbiAgICB1c2VybmFtZTogc3RyaW5nO1xuICAgIG5hbWU6IHN0cmluZztcbiAgICBlbWFpbDogc3RyaW5nO1xuICAgIHJvbGU6IHN0cmluZztcbiAgfTtcbiAgdGVuYW50X2lkOiBudW1iZXI7XG4gIGNyZWF0ZWRfYXQ6IHN0cmluZztcbiAgdXBkYXRlZF9hdDogc3RyaW5nO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIENyZWF0ZUF1dG9tYXRpb25SdWxlUmVxdWVzdCB7XG4gIG5hbWU6IHN0cmluZztcbiAgZGVzY3JpcHRpb24/OiBzdHJpbmc7XG4gIHByaW9yaXR5OiBudW1iZXI7XG4gIGNvbmRpdGlvbnM6IEFycmF5PHtcbiAgICBmaWVsZDogc3RyaW5nO1xuICAgIG9wZXJhdG9yOiBzdHJpbmc7XG4gICAgdmFsdWU6IGFueTtcbiAgfT47XG4gIGFjdGlvbnM6IEFycmF5PHtcbiAgICB0eXBlOiBzdHJpbmc7XG4gICAgW2tleTogc3RyaW5nXTogYW55O1xuICB9PjtcbiAgaXNfYWN0aXZlOiBib29sZWFuO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFVwZGF0ZUF1dG9tYXRpb25SdWxlUmVxdWVzdCB7XG4gIG5hbWU/OiBzdHJpbmc7XG4gIGRlc2NyaXB0aW9uPzogc3RyaW5nO1xuICBwcmlvcml0eT86IG51bWJlcjtcbiAgY29uZGl0aW9ucz86IEFycmF5PHtcbiAgICBmaWVsZDogc3RyaW5nO1xuICAgIG9wZXJhdG9yOiBzdHJpbmc7XG4gICAgdmFsdWU6IGFueTtcbiAgfT47XG4gIGFjdGlvbnM/OiBBcnJheTx7XG4gICAgdHlwZTogc3RyaW5nO1xuICAgIFtrZXk6IHN0cmluZ106IGFueTtcbiAgfT47XG4gIGlzX2FjdGl2ZT86IGJvb2xlYW47XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgVGVzdEF1dG9tYXRpb25SdWxlUmVxdWVzdCB7XG4gIHJ1bGVfaWQ6IG51bWJlcjtcbiAgdGlja2V0X2lkOiBudW1iZXI7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgVGVzdEF1dG9tYXRpb25SdWxlUmVzcG9uc2Uge1xuICBtYXRjaGVkOiBib29sZWFuO1xuICBhY3Rpb25zPzogc3RyaW5nW107XG4gIHJlYXNvbj86IHN0cmluZztcbiAgZXJyb3I/OiBzdHJpbmc7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgTGlzdEF1dG9tYXRpb25SdWxlc1Jlc3BvbnNlIHtcbiAgcnVsZXM6IEF1dG9tYXRpb25SdWxlW107XG4gIHRvdGFsOiBudW1iZXI7XG59XG5cbmV4cG9ydCBjbGFzcyBUaWNrZXRBdXRvbWF0aW9uUnVsZUFwaSB7XG4gIC8qKlxuICAgKiDojrflj5boh6rliqjljJbop4TliJnliJfooahcbiAgICovXG4gIHN0YXRpYyBhc3luYyBsaXN0UnVsZXMoKTogUHJvbWlzZTxMaXN0QXV0b21hdGlvblJ1bGVzUmVzcG9uc2U+IHtcbiAgICByZXR1cm4gaHR0cENsaWVudC5nZXQ8TGlzdEF1dG9tYXRpb25SdWxlc1Jlc3BvbnNlPignL2FwaS92MS90aWNrZXRzL2F1dG9tYXRpb24tcnVsZXMnKTtcbiAgfVxuXG4gIC8qKlxuICAgKiDojrflj5boh6rliqjljJbop4TliJnor6bmg4VcbiAgICovXG4gIHN0YXRpYyBhc3luYyBnZXRSdWxlKHJ1bGVJZDogbnVtYmVyKTogUHJvbWlzZTxBdXRvbWF0aW9uUnVsZT4ge1xuICAgIHJldHVybiBodHRwQ2xpZW50LmdldDxBdXRvbWF0aW9uUnVsZT4oYC9hcGkvdjEvdGlja2V0cy9hdXRvbWF0aW9uLXJ1bGVzLyR7cnVsZUlkfWApO1xuICB9XG5cbiAgLyoqXG4gICAqIOWIm+W7uuiHquWKqOWMluinhOWImVxuICAgKi9cbiAgc3RhdGljIGFzeW5jIGNyZWF0ZVJ1bGUoZGF0YTogQ3JlYXRlQXV0b21hdGlvblJ1bGVSZXF1ZXN0KTogUHJvbWlzZTxBdXRvbWF0aW9uUnVsZT4ge1xuICAgIHJldHVybiBodHRwQ2xpZW50LnBvc3Q8QXV0b21hdGlvblJ1bGU+KCcvYXBpL3YxL3RpY2tldHMvYXV0b21hdGlvbi1ydWxlcycsIGRhdGEpO1xuICB9XG5cbiAgLyoqXG4gICAqIOabtOaWsOiHquWKqOWMluinhOWImVxuICAgKi9cbiAgc3RhdGljIGFzeW5jIHVwZGF0ZVJ1bGUocnVsZUlkOiBudW1iZXIsIGRhdGE6IFVwZGF0ZUF1dG9tYXRpb25SdWxlUmVxdWVzdCk6IFByb21pc2U8QXV0b21hdGlvblJ1bGU+IHtcbiAgICByZXR1cm4gaHR0cENsaWVudC5wdXQ8QXV0b21hdGlvblJ1bGU+KGAvYXBpL3YxL3RpY2tldHMvYXV0b21hdGlvbi1ydWxlcy8ke3J1bGVJZH1gLCBkYXRhKTtcbiAgfVxuXG4gIC8qKlxuICAgKiDliKDpmaToh6rliqjljJbop4TliJlcbiAgICovXG4gIHN0YXRpYyBhc3luYyBkZWxldGVSdWxlKHJ1bGVJZDogbnVtYmVyKTogUHJvbWlzZTx2b2lkPiB7XG4gICAgcmV0dXJuIGh0dHBDbGllbnQuZGVsZXRlKGAvYXBpL3YxL3RpY2tldHMvYXV0b21hdGlvbi1ydWxlcy8ke3J1bGVJZH1gKTtcbiAgfVxuXG4gIC8qKlxuICAgKiDmtYvor5Xoh6rliqjljJbop4TliJlcbiAgICovXG4gIHN0YXRpYyBhc3luYyB0ZXN0UnVsZShkYXRhOiBUZXN0QXV0b21hdGlvblJ1bGVSZXF1ZXN0KTogUHJvbWlzZTxUZXN0QXV0b21hdGlvblJ1bGVSZXNwb25zZT4ge1xuICAgIHJldHVybiBodHRwQ2xpZW50LnBvc3Q8VGVzdEF1dG9tYXRpb25SdWxlUmVzcG9uc2U+KGAvYXBpL3YxL3RpY2tldHMvYXV0b21hdGlvbi1ydWxlcy8ke2RhdGEucnVsZV9pZH0vdGVzdGAsIHtcbiAgICAgIHRpY2tldF9pZDogZGF0YS50aWNrZXRfaWQsXG4gICAgfSk7XG4gIH1cbn1cblxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7O0dBR0M7O0FBQUE7QUFBQSxTQUFBQSxlQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLElBQUE7RUFBQSxJQUFBQyxNQUFBLE9BQUFDLFFBQUE7RUFBQSxJQUFBQyxHQUFBO0VBQUEsSUFBQUMsWUFBQTtJQUFBTCxJQUFBO0lBQUFNLFlBQUE7TUFBQTtRQUFBQyxLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtJQUFBO0lBQUFFLEtBQUE7TUFBQTtRQUFBQyxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7SUFBQTtJQUFBTyxTQUFBO0lBQUFDLENBQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7SUFBQUMsY0FBQTtNQUFBQyxPQUFBO01BQUFDLE9BQUE7TUFBQUMsY0FBQTtNQUFBQyxLQUFBO01BQUFDLFFBQUE7SUFBQTtJQUFBQyxlQUFBO0lBQUF4QixJQUFBO0VBQUE7RUFBQSxJQUFBeUIsUUFBQSxHQUFBeEIsTUFBQSxDQUFBRSxHQUFBLE1BQUFGLE1BQUEsQ0FBQUUsR0FBQTtFQUFBLEtBQUFzQixRQUFBLENBQUExQixJQUFBLEtBQUEwQixRQUFBLENBQUExQixJQUFBLEVBQUFDLElBQUEsS0FBQUEsSUFBQTtJQUFBeUIsUUFBQSxDQUFBMUIsSUFBQSxJQUFBSyxZQUFBO0VBQUE7RUFBQSxJQUFBc0IsY0FBQSxHQUFBRCxRQUFBLENBQUExQixJQUFBO0VBQUE7SUFvRkM7SUFBQUQsY0FBQSxZQUFBQSxDQUFBO01BQUEsT0FBQTRCLGNBQUE7SUFBQTtFQUFBO0VBQUEsT0FBQUEsY0FBQTtBQUFBO0FBQUE1QixjQUFBO0FBQUFBLGNBQUEsR0FBQWlCLENBQUE7Ozs7OzsrQkFEVzs7Ozs7O1dBQUFZLHVCQUFBOzs7OztrQ0FqRmM7QUFpRnBCLE1BQU1BLHVCQUFBO0VBQ1g7OztFQUdBLGFBQWFDLFVBQUEsRUFBa0Q7SUFBQTtJQUFBOUIsY0FBQSxHQUFBa0IsQ0FBQTtJQUFBbEIsY0FBQSxHQUFBaUIsQ0FBQTtJQUM3RCxPQUFPYyxXQUFBLENBQUFDLFVBQVUsQ0FBQ0MsR0FBRyxDQUE4QjtFQUNyRDtFQUVBOzs7RUFHQSxhQUFhQyxRQUFRQyxNQUFjLEVBQTJCO0lBQUE7SUFBQW5DLGNBQUEsR0FBQWtCLENBQUE7SUFBQWxCLGNBQUEsR0FBQWlCLENBQUE7SUFDNUQsT0FBT2MsV0FBQSxDQUFBQyxVQUFVLENBQUNDLEdBQUcsQ0FBaUIsb0NBQW9DRSxNQUFBLEVBQVE7RUFDcEY7RUFFQTs7O0VBR0EsYUFBYUMsV0FBV0MsSUFBaUMsRUFBMkI7SUFBQTtJQUFBckMsY0FBQSxHQUFBa0IsQ0FBQTtJQUFBbEIsY0FBQSxHQUFBaUIsQ0FBQTtJQUNsRixPQUFPYyxXQUFBLENBQUFDLFVBQVUsQ0FBQ00sSUFBSSxDQUFpQixvQ0FBb0NELElBQUE7RUFDN0U7RUFFQTs7O0VBR0EsYUFBYUUsV0FBV0osTUFBYyxFQUFFRSxJQUFpQyxFQUEyQjtJQUFBO0lBQUFyQyxjQUFBLEdBQUFrQixDQUFBO0lBQUFsQixjQUFBLEdBQUFpQixDQUFBO0lBQ2xHLE9BQU9jLFdBQUEsQ0FBQUMsVUFBVSxDQUFDUSxHQUFHLENBQWlCLG9DQUFvQ0wsTUFBQSxFQUFRLEVBQUVFLElBQUE7RUFDdEY7RUFFQTs7O0VBR0EsYUFBYUksV0FBV04sTUFBYyxFQUFpQjtJQUFBO0lBQUFuQyxjQUFBLEdBQUFrQixDQUFBO0lBQUFsQixjQUFBLEdBQUFpQixDQUFBO0lBQ3JELE9BQU9jLFdBQUEsQ0FBQUMsVUFBVSxDQUFDVSxNQUFNLENBQUMsb0NBQW9DUCxNQUFBLEVBQVE7RUFDdkU7RUFFQTs7O0VBR0EsYUFBYVEsU0FBU04sSUFBK0IsRUFBdUM7SUFBQTtJQUFBckMsY0FBQSxHQUFBa0IsQ0FBQTtJQUFBbEIsY0FBQSxHQUFBaUIsQ0FBQTtJQUMxRixPQUFPYyxXQUFBLENBQUFDLFVBQVUsQ0FBQ00sSUFBSSxDQUE2QixvQ0FBb0NELElBQUEsQ0FBS08sT0FBTyxPQUFPLEVBQUU7TUFDMUdDLFNBQUEsRUFBV1IsSUFBQSxDQUFLUTtJQUNsQjtFQUNGO0FBQ0YiLCJpZ25vcmVMaXN0IjpbXX0=

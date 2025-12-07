@@ -1,0 +1,390 @@
+09ad38fdca6df920a9d49fa59fa2a27f
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_2j7k21hbtg() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/reports/service-catalog-usage/page.tsx";
+  var hash = "4dc512f1b329435e0f7e9118f8fe92111b432197";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/reports/service-catalog-usage/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 24
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 26
+        },
+        end: {
+          line: 14,
+          column: 83
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 32
+        },
+        end: {
+          line: 76,
+          column: 1
+        }
+      },
+      "8": {
+        start: {
+          line: 23,
+          column: 4
+        },
+        end: {
+          line: 75,
+          column: 7
+        }
+      },
+      "9": {
+        start: {
+          line: 77,
+          column: 17
+        },
+        end: {
+          line: 77,
+          column: 40
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 20,
+            column: 32
+          },
+          end: {
+            line: 20,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 36
+          },
+          end: {
+            line: 76,
+            column: 1
+          }
+        },
+        line: 20
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/reports/service-catalog-usage/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { ChartPlaceholder } from '@/components/charts/ChartPlaceholder';\n\nconst ServiceCatalogUsagePage = () => {\n  // Data aggregation logic simplified, using placeholder components\n\n  // Color configuration removed, using placeholder components\n\n  return (\n    <div className='p-10 bg-gray-50 min-h-full'>\n      <header className='mb-8'>\n        <h2 className='text-4xl font-bold text-gray-800'>Service Catalog Usage Report</h2>\n        <p className='text-gray-500 mt-1'>This report shows the usage of the service catalog.</p>\n      </header>\n\n      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>\n        <div className='bg-white p-6 rounded-lg shadow-md'>\n          <h3 className='text-xl font-semibold text-gray-800 mb-4'>Requests by Service</h3>\n          <ChartPlaceholder\n            type='pie'\n            title='Requests by Service Type Statistics'\n            description='Shows the distribution of request counts by different service types'\n            height={300}\n          />\n        </div>\n\n        <div className='bg-white p-6 rounded-lg shadow-md'>\n          <h3 className='text-xl font-semibold text-gray-800 mb-4'>Requests by Status</h3>\n          <ChartPlaceholder\n            type='bar'\n            title='Requests by Status Statistics'\n            description='Shows the distribution of request counts by different statuses'\n            height={300}\n          />\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default ServiceCatalogUsagePage;\n"],
+      names: ["ServiceCatalogUsagePage", "div", "className", "header", "h2", "p", "h3", "ChartPlaceholder", "type", "title", "description", "height"],
+      mappings: "AAAA;;;;;+BA0CA;;;eAAA;;;;8DAxCkB;kCACe;;;;;;AAEjC,MAAMA,0BAA0B;IAC9B,kEAAkE;IAElE,4DAA4D;IAE5D,qBACE,sBAACC;QAAIC,WAAU;;0BACb,sBAACC;gBAAOD,WAAU;;kCAChB,qBAACE;wBAAGF,WAAU;kCAAmC;;kCACjD,qBAACG;wBAAEH,WAAU;kCAAqB;;;;0BAGpC,sBAACD;gBAAIC,WAAU;;kCACb,sBAACD;wBAAIC,WAAU;;0CACb,qBAACI;gCAAGJ,WAAU;0CAA2C;;0CACzD,qBAACK,kCAAgB;gCACfC,MAAK;gCACLC,OAAM;gCACNC,aAAY;gCACZC,QAAQ;;;;kCAIZ,sBAACV;wBAAIC,WAAU;;0CACb,qBAACI;gCAAGJ,WAAU;0CAA2C;;0CACzD,qBAACK,kCAAgB;gCACfC,MAAK;gCACLC,OAAM;gCACNC,aAAY;gCACZC,QAAQ;;;;;;;;AAMpB;MAEA,WAAeX"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "4dc512f1b329435e0f7e9118f8fe92111b432197"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2j7k21hbtg = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2j7k21hbtg();
+cov_2j7k21hbtg().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2j7k21hbtg().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_2j7k21hbtg().f[0]++;
+    cov_2j7k21hbtg().s[2]++;
+    return _default;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_2j7k21hbtg().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_2j7k21hbtg().s[4]++, _interop_require_default(require("react")));
+const _ChartPlaceholder =
+/* istanbul ignore next */
+(cov_2j7k21hbtg().s[5]++, require("../../../../components/charts/ChartPlaceholder"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_2j7k21hbtg().f[1]++;
+  cov_2j7k21hbtg().s[6]++;
+  return /* istanbul ignore next */(cov_2j7k21hbtg().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_2j7k21hbtg().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_2j7k21hbtg().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_2j7k21hbtg().b[0][1]++, {
+    default: obj
+  });
+}
+/* istanbul ignore next */
+cov_2j7k21hbtg().s[7]++;
+const ServiceCatalogUsagePage = () => {
+  /* istanbul ignore next */
+  cov_2j7k21hbtg().f[2]++;
+  cov_2j7k21hbtg().s[8]++;
+  // Data aggregation logic simplified, using placeholder components
+  // Color configuration removed, using placeholder components
+  return /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+    className: "p-10 bg-gray-50 min-h-full",
+    children: [/*#__PURE__*/(0, _jsxruntime.jsxs)("header", {
+      className: "mb-8",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h2", {
+        className: "text-4xl font-bold text-gray-800",
+        children: "Service Catalog Usage Report"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)("p", {
+        className: "text-gray-500 mt-1",
+        children: "This report shows the usage of the service catalog."
+      })]
+    }), /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+      className: "grid grid-cols-1 lg:grid-cols-2 gap-8",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+        className: "bg-white p-6 rounded-lg shadow-md",
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h3", {
+          className: "text-xl font-semibold text-gray-800 mb-4",
+          children: "Requests by Service"
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)(_ChartPlaceholder.ChartPlaceholder, {
+          type: "pie",
+          title: "Requests by Service Type Statistics",
+          description: "Shows the distribution of request counts by different service types",
+          height: 300
+        })]
+      }), /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+        className: "bg-white p-6 rounded-lg shadow-md",
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h3", {
+          className: "text-xl font-semibold text-gray-800 mb-4",
+          children: "Requests by Status"
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)(_ChartPlaceholder.ChartPlaceholder, {
+          type: "bar",
+          title: "Requests by Status Statistics",
+          description: "Shows the distribution of request counts by different statuses",
+          height: 300
+        })]
+      })]
+    })]
+  });
+};
+const _default =
+/* istanbul ignore next */
+(cov_2j7k21hbtg().s[9]++, ServiceCatalogUsagePage);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJfZGVmYXVsdCIsIlNlcnZpY2VDYXRhbG9nVXNhZ2VQYWdlIiwiY292XzJqN2syMWhidGciLCJmIiwicyIsIl9qc3hydW50aW1lIiwianN4cyIsImNsYXNzTmFtZSIsImpzeCIsIl9DaGFydFBsYWNlaG9sZGVyIiwiQ2hhcnRQbGFjZWhvbGRlciIsInR5cGUiLCJ0aXRsZSIsImRlc2NyaXB0aW9uIiwiaGVpZ2h0Il0sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tcHJvdG90eXBlL3NyYy9hcHAvKG1haW4pL3JlcG9ydHMvc2VydmljZS1jYXRhbG9nLXVzYWdlL3BhZ2UudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50JztcblxuaW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IENoYXJ0UGxhY2Vob2xkZXIgfSBmcm9tICdAL2NvbXBvbmVudHMvY2hhcnRzL0NoYXJ0UGxhY2Vob2xkZXInO1xuXG5jb25zdCBTZXJ2aWNlQ2F0YWxvZ1VzYWdlUGFnZSA9ICgpID0+IHtcbiAgLy8gRGF0YSBhZ2dyZWdhdGlvbiBsb2dpYyBzaW1wbGlmaWVkLCB1c2luZyBwbGFjZWhvbGRlciBjb21wb25lbnRzXG5cbiAgLy8gQ29sb3IgY29uZmlndXJhdGlvbiByZW1vdmVkLCB1c2luZyBwbGFjZWhvbGRlciBjb21wb25lbnRzXG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT0ncC0xMCBiZy1ncmF5LTUwIG1pbi1oLWZ1bGwnPlxuICAgICAgPGhlYWRlciBjbGFzc05hbWU9J21iLTgnPlxuICAgICAgICA8aDIgY2xhc3NOYW1lPSd0ZXh0LTR4bCBmb250LWJvbGQgdGV4dC1ncmF5LTgwMCc+U2VydmljZSBDYXRhbG9nIFVzYWdlIFJlcG9ydDwvaDI+XG4gICAgICAgIDxwIGNsYXNzTmFtZT0ndGV4dC1ncmF5LTUwMCBtdC0xJz5UaGlzIHJlcG9ydCBzaG93cyB0aGUgdXNhZ2Ugb2YgdGhlIHNlcnZpY2UgY2F0YWxvZy48L3A+XG4gICAgICA8L2hlYWRlcj5cblxuICAgICAgPGRpdiBjbGFzc05hbWU9J2dyaWQgZ3JpZC1jb2xzLTEgbGc6Z3JpZC1jb2xzLTIgZ2FwLTgnPlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT0nYmctd2hpdGUgcC02IHJvdW5kZWQtbGcgc2hhZG93LW1kJz5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPSd0ZXh0LXhsIGZvbnQtc2VtaWJvbGQgdGV4dC1ncmF5LTgwMCBtYi00Jz5SZXF1ZXN0cyBieSBTZXJ2aWNlPC9oMz5cbiAgICAgICAgICA8Q2hhcnRQbGFjZWhvbGRlclxuICAgICAgICAgICAgdHlwZT0ncGllJ1xuICAgICAgICAgICAgdGl0bGU9J1JlcXVlc3RzIGJ5IFNlcnZpY2UgVHlwZSBTdGF0aXN0aWNzJ1xuICAgICAgICAgICAgZGVzY3JpcHRpb249J1Nob3dzIHRoZSBkaXN0cmlidXRpb24gb2YgcmVxdWVzdCBjb3VudHMgYnkgZGlmZmVyZW50IHNlcnZpY2UgdHlwZXMnXG4gICAgICAgICAgICBoZWlnaHQ9ezMwMH1cbiAgICAgICAgICAvPlxuICAgICAgICA8L2Rpdj5cblxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT0nYmctd2hpdGUgcC02IHJvdW5kZWQtbGcgc2hhZG93LW1kJz5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPSd0ZXh0LXhsIGZvbnQtc2VtaWJvbGQgdGV4dC1ncmF5LTgwMCBtYi00Jz5SZXF1ZXN0cyBieSBTdGF0dXM8L2gzPlxuICAgICAgICAgIDxDaGFydFBsYWNlaG9sZGVyXG4gICAgICAgICAgICB0eXBlPSdiYXInXG4gICAgICAgICAgICB0aXRsZT0nUmVxdWVzdHMgYnkgU3RhdHVzIFN0YXRpc3RpY3MnXG4gICAgICAgICAgICBkZXNjcmlwdGlvbj0nU2hvd3MgdGhlIGRpc3RyaWJ1dGlvbiBvZiByZXF1ZXN0IGNvdW50cyBieSBkaWZmZXJlbnQgc3RhdHVzZXMnXG4gICAgICAgICAgICBoZWlnaHQ9ezMwMH1cbiAgICAgICAgICAvPlxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvZGl2PlxuICAgIDwvZGl2PlxuICApO1xufTtcblxuZXhwb3J0IGRlZmF1bHQgU2VydmljZUNhdGFsb2dVc2FnZVBhZ2U7XG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7K0JBMENBOzs7Ozs7V0FBQUEsUUFBQTs7Ozs7Ozs7d0VBeENrQjs7O2tDQUNlOzs7Ozs7Ozs7Ozs7Ozs7OztBQUVqQyxNQUFNQyx1QkFBQSxHQUEwQkEsQ0FBQTtFQUFBO0VBQUFDLGNBQUEsR0FBQUMsQ0FBQTtFQUFBRCxjQUFBLEdBQUFFLENBQUE7RUFDOUI7RUFFQTtFQUVBLG9CQUNFLElBQUFDLFdBQUEsQ0FBQUMsSUFBQSxFQUFDO0lBQUlDLFNBQUEsRUFBVTs0QkFDYixJQUFBRixXQUFBLENBQUFDLElBQUEsRUFBQztNQUFPQyxTQUFBLEVBQVU7OEJBQ2hCLElBQUFGLFdBQUEsQ0FBQUcsR0FBQSxFQUFDO1FBQUdELFNBQUEsRUFBVTtrQkFBbUM7dUJBQ2pELElBQUFGLFdBQUEsQ0FBQUcsR0FBQSxFQUFDO1FBQUVELFNBQUEsRUFBVTtrQkFBcUI7O3FCQUdwQyxJQUFBRixXQUFBLENBQUFDLElBQUEsRUFBQztNQUFJQyxTQUFBLEVBQVU7OEJBQ2IsSUFBQUYsV0FBQSxDQUFBQyxJQUFBLEVBQUM7UUFBSUMsU0FBQSxFQUFVO2dDQUNiLElBQUFGLFdBQUEsQ0FBQUcsR0FBQSxFQUFDO1VBQUdELFNBQUEsRUFBVTtvQkFBMkM7eUJBQ3pELElBQUFGLFdBQUEsQ0FBQUcsR0FBQSxFQUFDQyxpQkFBQSxDQUFBQyxnQkFBZ0I7VUFDZkMsSUFBQSxFQUFLO1VBQ0xDLEtBQUEsRUFBTTtVQUNOQyxXQUFBLEVBQVk7VUFDWkMsTUFBQSxFQUFROzt1QkFJWixJQUFBVCxXQUFBLENBQUFDLElBQUEsRUFBQztRQUFJQyxTQUFBLEVBQVU7Z0NBQ2IsSUFBQUYsV0FBQSxDQUFBRyxHQUFBLEVBQUM7VUFBR0QsU0FBQSxFQUFVO29CQUEyQzt5QkFDekQsSUFBQUYsV0FBQSxDQUFBRyxHQUFBLEVBQUNDLGlCQUFBLENBQUFDLGdCQUFnQjtVQUNmQyxJQUFBLEVBQUs7VUFDTEMsS0FBQSxFQUFNO1VBQ05DLFdBQUEsRUFBWTtVQUNaQyxNQUFBLEVBQVE7Ozs7O0FBTXBCO01BRUFkLFFBQUE7QUFBQTtBQUFBLENBQUFFLGNBQUEsR0FBQUUsQ0FBQSxPQUFlSCx1QkFBQSIsImlnbm9yZUxpc3QiOltdfQ==

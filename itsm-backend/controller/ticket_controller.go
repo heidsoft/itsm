@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 	"strconv"
 	"time"
@@ -13,16 +14,16 @@ import (
 )
 
 type TicketController struct {
-	ticketService         *service.TicketService
+	ticketService           *service.TicketService
 	ticketDependencyService *service.TicketDependencyService
-	logger                 *zap.SugaredLogger
+	logger                  *zap.SugaredLogger
 }
 
 func NewTicketController(ticketService *service.TicketService, ticketDependencyService *service.TicketDependencyService, logger *zap.SugaredLogger) *TicketController {
 	return &TicketController{
-		ticketService:          ticketService,
+		ticketService:           ticketService,
 		ticketDependencyService: ticketDependencyService,
-		logger:                 logger,
+		logger:                  logger,
 	}
 }
 
@@ -36,7 +37,19 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 
 	// 获取租户ID（从中间件注入）
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		// 尝试从TenantContext获取
+		if tenantCtx, ok := middleware.GetTenantContext(c); ok {
+			tenantID = tenantCtx.TenantID
+		}
+	}
 	userID := c.GetInt("user_id")
+	if userID == 0 {
+		// 尝试从中间件获取
+		if uid, err := middleware.GetUserID(c); err == nil {
+			userID = uid
+		}
+	}
 
 	// 设置请求者ID为当前用户
 	req.RequesterID = userID
@@ -472,37 +485,23 @@ func (tc *TicketController) GetTicketAnalytics(c *gin.Context) {
 // GetTicketTemplates 获取工单模板
 func (tc *TicketController) GetTicketTemplates(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		// 尝试从TenantContext获取
+		if tenantCtx, ok := middleware.GetTenantContext(c); ok {
+			tenantID = tenantCtx.TenantID
+		}
+	}
 
-	// 实现获取工单模板功能
-	_, err := tc.ticketService.GetTicketTemplates(c.Request.Context(), tenantID)
+	// 获取真实模板数据
+	templates, err := tc.ticketService.GetTicketTemplates(c.Request.Context(), tenantID)
 	if err != nil {
 		tc.logger.Errorw("Get ticket templates failed", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "获取模板失败: "+err.Error())
 		return
 	}
 
-	// 模拟模板数据
-	mockTemplates := []dto.TicketTemplate{
-		{
-			ID:          1,
-			Name:        "系统故障模板",
-			Description: "用于报告系统故障的标准模板",
-			Category:    "系统问题",
-			Priority:    "high",
-			IsActive:    true,
-		},
-		{
-			ID:          2,
-			Name:        "硬件故障模板",
-			Description: "用于报告硬件故障的标准模板",
-			Category:    "硬件问题",
-			Priority:    "medium",
-			IsActive:    true,
-		},
-	}
-
-	tc.logger.Infow("Get ticket templates successful", "tenant_id", tenantID)
-	common.Success(c, mockTemplates)
+	tc.logger.Infow("Get ticket templates successful", "tenant_id", tenantID, "count", len(templates))
+	common.Success(c, templates)
 }
 
 // CreateTicketTemplate 创建工单模板

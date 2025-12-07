@@ -1,5 +1,5 @@
-import { TicketApi } from '../ticket-api';
-import { DashboardAPI } from '../../../lib/api/dashboard-api';
+import { TicketApi } from '@/lib/api/ticket-api';
+import { DashboardAPI } from '@/lib/api/dashboard-api';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -310,7 +310,7 @@ describe('API Integration Tests', () => {
         new TypeError('Failed to fetch')
       );
 
-      await expect(TicketApi.getTickets()).rejects.toThrow('Failed to fetch');
+      await expect(TicketApi.getTickets()).rejects.toThrow('无法连接到服务器');
     });
   });
 

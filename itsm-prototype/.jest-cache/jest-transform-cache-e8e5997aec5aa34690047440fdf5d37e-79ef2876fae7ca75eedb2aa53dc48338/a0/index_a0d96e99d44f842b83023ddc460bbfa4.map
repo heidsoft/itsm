@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/collaboration/index.ts"],"sourcesContent":["/**\n * 协作组件导出\n */\n\n// 暂时仅导出类型，UI组件将在后续完善\nexport type { } from '@/types/collaboration';\n\n"],"mappings":"AAAA;;GAAA,CAIA","ignoreList":[]}

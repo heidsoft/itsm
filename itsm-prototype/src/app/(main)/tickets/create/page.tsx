@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -18,6 +18,8 @@ import {
   Tag,
   Steps,
   Collapse,
+  Upload,
+  Spin,
 } from 'antd';
 import {
   FileText,
@@ -29,9 +31,15 @@ import {
   CheckCircle,
   Tag as TagIcon,
   ArrowLeft,
+  Upload as UploadIcon,
 } from 'lucide-react';
 import { AIWorkflowAssistant } from '@/components/business/AIWorkflowAssistant';
 import { ticketService, TicketPriority, TicketType } from '@/lib/services/ticket-service';
+import { ticketCategoryService } from '@/lib/services/ticket-category-service';
+import { ticketTemplateService } from '@/lib/services/ticket-template-service';
+import { ticketTagService } from '@/lib/services/ticket-tag-service';
+import type { UploadFile } from 'antd';
+import { httpClient } from '@/lib/api/http-client';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -45,8 +53,11 @@ interface CreateTicketForm {
   priority: TicketPriority;
   type: TicketType;
   category: string;
+  category_id?: number;
+  template_id?: number;
   subcategory?: string;
   tags: string[];
+  tag_ids?: number[];
   attachments: File[];
 }
 
@@ -57,6 +68,22 @@ export default function CreateTicketPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
   const [formData, setFormData] = useState<Partial<CreateTicketForm>>({});
+
+  // API数据状态
+  const [categories, setCategories] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const DEFAULT_CATEGORIES = [
+    { id: -1, name: '网络' },
+    { id: -2, name: '性能' },
+    { id: -3, name: '安全' },
+    { id: -4, name: '存储' },
+    { id: -5, name: '连接' },
+  ];
 
   const steps = [
     {
@@ -75,6 +102,86 @@ export default function CreateTicketPage() {
       content: '确认工单信息并创建',
     },
   ];
+
+  // 加载API数据
+  useEffect(() => {
+    const loadData = async () => {
+      // 加载分类
+      setLoadingCategories(true);
+      try {
+        const categoriesData = await ticketCategoryService.listCategories({
+          page: 1,
+          page_size: 100,
+          is_active: true,
+        });
+        const list = categoriesData.categories || [];
+        setCategories(Array.isArray(list) && list.length > 0 ? list : DEFAULT_CATEGORIES);
+        if (!list || list.length === 0) {
+          message.info('分类列表为空，已使用默认分类');
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        setCategories(DEFAULT_CATEGORIES);
+        message.warning('加载分类失败，使用默认分类');
+      } finally {
+        setLoadingCategories(false);
+      }
+
+      // 加载模板
+      setLoadingTemplates(true);
+      try {
+        const templatesData = await ticketTemplateService.getTemplates({ page: 1, page_size: 100 });
+        // 处理不同的响应格式
+        if (Array.isArray(templatesData)) {
+          setTemplates(templatesData);
+        } else if (
+          templatesData &&
+          typeof templatesData === 'object' &&
+          'templates' in templatesData
+        ) {
+          setTemplates((templatesData as any).templates || []);
+        } else if (templatesData && typeof templatesData === 'object' && 'data' in templatesData) {
+          const data = (templatesData as any).data;
+          setTemplates(Array.isArray(data) ? data : []);
+        } else {
+          setTemplates([]);
+        }
+      } catch (error) {
+        console.error('Failed to load templates:', error);
+        message.warning('加载模板失败');
+      } finally {
+        setLoadingTemplates(false);
+      }
+
+      // 加载标签
+      setLoadingTags(true);
+      try {
+        const tagsData = await ticketTagService.listTags({
+          page: 1,
+          page_size: 100,
+          is_active: true,
+        });
+        setTags(tagsData.tags || []);
+      } catch (error) {
+        console.error('Failed to load tags:', error);
+        message.warning('加载标签失败');
+      } finally {
+        setLoadingTags(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (!loadingCategories && categories && categories.length > 0) {
+      const current = form.getFieldValue('category_id');
+      if (!current) {
+        const first = categories[0];
+        form.setFieldsValue({ category_id: first.id, category: first.name });
+      }
+    }
+  }, [loadingCategories, categories, form]);
 
   const handleAISuggestion = (suggestion: unknown) => {
     setAiSuggestion(suggestion);
@@ -103,24 +210,67 @@ export default function CreateTicketPage() {
   const handleSubmit = async (values: CreateTicketForm) => {
     setLoading(true);
     try {
+      if (!values.category_id && categories && categories.length > 0) {
+        values.category_id = categories[0].id;
+        values.category = categories[0].name;
+      }
+      // 转换标签名称到标签ID
+      const tagIds: number[] = [];
+      if (values.tag_ids && values.tag_ids.length > 0) {
+        tagIds.push(...values.tag_ids);
+      } else if (values.tags && values.tags.length > 0) {
+        // 如果提供的是标签名称，查找对应的ID
+        for (const tagName of values.tags) {
+          const tag = tags.find(t => t.name === tagName);
+          if (tag) {
+            tagIds.push(tag.id);
+          }
+        }
+      }
+
+      // 转换前端格式到后端格式
       const response = await ticketService.createTicket({
         title: values.title,
         description: values.description,
         priority: values.priority,
-        type: values.type,
-        category: values.category,
-        subcategory: values.subcategory,
-        tags: values.tags,
+        category: values.category || values.type, // 使用type作为category的fallback
+        category_id: values.category_id,
+        template_id: values.template_id,
+        tag_ids: tagIds.length > 0 ? tagIds : undefined,
+        assignee_id: undefined, // 后端会自动设置
       });
 
-      message.success(`工单创建成功！工单 ID: ${response.ticket_id}`);
-      router.push(`/tickets/${response.ticket_id}`);
-    } catch (error) {
+      // 如果有附件，上传附件
+      if (fileList.length > 0 && response.id) {
+        try {
+          const uploadPromises = fileList
+            .filter(file => file.originFileObj)
+            .map(file => {
+              const formData = new FormData();
+              formData.append('file', file.originFileObj as File);
+              return httpClient.post(`/api/v1/tickets/${response.id}/attachments`, formData);
+            });
+
+          await Promise.all(uploadPromises);
+          message.success('附件上传成功');
+        } catch (uploadError) {
+          console.error('Failed to upload attachments:', uploadError);
+          message.warning('工单创建成功，但附件上传失败');
+        }
+      }
+
+      message.success(`工单创建成功！工单编号: ${response.ticket_number || response.id}`);
+      router.push(`/tickets/${response.id}`);
+    } catch (error: any) {
       console.error('Failed to create ticket:', error);
-      message.error('工单创建失败，请稍后重试');
+      message.error(error?.message || '工单创建失败，请稍后重试');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileChange = (info: any) => {
+    setFileList(info.fileList);
   };
 
   const nextStep = () => {
@@ -165,11 +315,7 @@ export default function CreateTicketPage() {
                     label='工单标题'
                     rules={[{ required: true, message: '请输入工单标题' }]}
                   >
-                    <Input
-                      placeholder='请简要描述问题...'
-                      size='large'
-                      prefix={<FileText />}
-                    />
+                    <Input placeholder='请简要描述问题...' size='large' prefix={<FileText />} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -224,29 +370,44 @@ export default function CreateTicketPage() {
 
               <Row gutter={16}>
                 <Col span={12}>
-                  <Form.Item
-                    name='category'
-                    label='分类'
-                    rules={[{ required: true, message: '请选择分类' }]}
-                  >
-                    <Select size='large' placeholder='选择问题分类'>
-                      <Option value='system'>系统问题</Option>
-                      <Option value='network'>网络问题</Option>
-                      <Option value='database'>数据库问题</Option>
-                      <Option value='hardware'>硬件问题</Option>
-                      <Option value='software'>软件问题</Option>
-                      <Option value='access'>访问权限</Option>
-                      <Option value='other'>其他</Option>
+                  <Form.Item name='category_id' label='分类'>
+                    <Select
+                      size='large'
+                      placeholder={loadingCategories ? '加载中...' : '选择问题分类'}
+                      loading={loadingCategories}
+                      showSearch
+                      optionFilterProp='label'
+                      onChange={value => {
+                        form.setFieldsValue({ category_id: value });
+                        const selectedCategory = categories.find(c => c.id === value);
+                        if (selectedCategory) {
+                          form.setFieldsValue({ category: selectedCategory.name });
+                        }
+                      }}
+                    >
+                      {categories.map(cat => (
+                        <Option key={cat.id} value={cat.id} label={cat.name}>
+                          {cat.name}
+                        </Option>
+                      ))}
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name='subcategory' label='子分类'>
-                    <Select size='large' placeholder='选择子分类 (可选)'>
-                      <Option value='login'>登录问题</Option>
-                      <Option value='performance'>性能问题</Option>
-                      <Option value='error'>错误消息</Option>
-                      <Option value='configuration'>配置问题</Option>
+                  <Form.Item name='template_id' label='模板 (可选)'>
+                    <Select
+                      size='large'
+                      placeholder={loadingTemplates ? '加载中...' : '选择工单模板'}
+                      loading={loadingTemplates}
+                      showSearch
+                      optionFilterProp='label'
+                      allowClear
+                    >
+                      {templates.map(tpl => (
+                        <Option key={tpl.id} value={tpl.id} label={tpl.name}>
+                          {tpl.name} - {tpl.description || tpl.category}
+                        </Option>
+                      ))}
                     </Select>
                   </Form.Item>
                 </Col>
@@ -254,13 +415,42 @@ export default function CreateTicketPage() {
 
               <Row gutter={16}>
                 <Col span={24}>
-                  <Form.Item name='tags' label='标签'>
+                  <Form.Item name='tag_ids' label='标签'>
                     <Select
-                      mode='tags'
+                      mode='multiple'
                       size='large'
-                      placeholder='添加相关标签'
-                      prefix={<TagIcon />}
-                    />
+                      placeholder={loadingTags ? '加载中...' : '选择相关标签'}
+                      loading={loadingTags}
+                      showSearch
+                      optionFilterProp='label'
+                      allowClear
+                    >
+                      {tags.map(tag => (
+                        <Option key={tag.id} value={tag.id} label={tag.name}>
+                          <Tag color={tag.color}>{tag.name}</Tag>
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item name='attachments' label='附件'>
+                    <Upload
+                      fileList={fileList}
+                      onChange={handleFileChange}
+                      beforeUpload={() => false} // 阻止自动上传
+                      multiple
+                    >
+                      <Button icon={<UploadIcon />} size='large'>
+                        选择文件
+                      </Button>
+                    </Upload>
+                    <div className='text-sm text-gray-500 mt-2'>
+                      支持多个文件上传，单个文件不超过10MB
+                    </div>
                   </Form.Item>
                 </Col>
               </Row>
@@ -402,9 +592,7 @@ export default function CreateTicketPage() {
           <FileText className='mr-3 text-blue-600' />
           创建工单
         </Title>
-        <Text type='secondary'>
-          智能工单创建系统，AI 助手将帮助您优化工单分类和工作流程
-        </Text>
+        <Text type='secondary'>智能工单创建系统，AI 助手将帮助您优化工单分类和工作流程</Text>
       </div>
 
       <Card>
@@ -431,7 +619,10 @@ export default function CreateTicketPage() {
             ) : (
               <Button
                 type='primary'
-                onClick={() => form.submit()}
+                onClick={() => {
+                  const values = form.getFieldsValue(true) as any;
+                  handleSubmit(values);
+                }}
                 loading={loading}
                 icon={<Send />}
                 size='large'

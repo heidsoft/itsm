@@ -1,0 +1,236 @@
+7fd5edd64523524498dfd4d27d69df5a
+/**
+ * 变更分类系统类型定义
+ * 基于ITIL标准的变更分类和评估
+ */ // ==================== 变更类型 ====================
+/**
+ * 变更类型
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_i3x3396yn() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/types/change-classification.ts";
+  var hash = "9573750215d979626004b5c5dfe0914550382ce5";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/types/change-classification.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 8,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 16,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 14,
+          column: 26
+        }
+      },
+      "3": {
+        start: {
+          line: 17,
+          column: 31
+        },
+        end: {
+          line: 23,
+          column: 5
+        }
+      },
+      "4": {
+        start: {
+          line: 18,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 40
+        }
+      },
+      "5": {
+        start: {
+          line: 19,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 36
+        }
+      },
+      "6": {
+        start: {
+          line: 20,
+          column: 4
+        },
+        end: {
+          line: 20,
+          column: 42
+        }
+      },
+      "7": {
+        start: {
+          line: 21,
+          column: 4
+        },
+        end: {
+          line: 21,
+          column: 34
+        }
+      },
+      "8": {
+        start: {
+          line: 22,
+          column: 4
+        },
+        end: {
+          line: 22,
+          column: 22
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 13,
+            column: 9
+          },
+          end: {
+            line: 13,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 20
+          },
+          end: {
+            line: 15,
+            column: 5
+          }
+        },
+        line: 13
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 17,
+            column: 31
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        },
+        loc: {
+          start: {
+            line: 17,
+            column: 52
+          },
+          end: {
+            line: 23,
+            column: 1
+          }
+        },
+        line: 17
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/types/change-classification.ts"],
+      sourcesContent: ["/**\n * \u53D8\u66F4\u5206\u7C7B\u7CFB\u7EDF\u7C7B\u578B\u5B9A\u4E49\n * \u57FA\u4E8EITIL\u6807\u51C6\u7684\u53D8\u66F4\u5206\u7C7B\u548C\u8BC4\u4F30\n */\n\n// ==================== \u53D8\u66F4\u7C7B\u578B ====================\n\n/**\n * \u53D8\u66F4\u7C7B\u578B\n */\nexport enum ChangeType {\n  STANDARD = 'standard',       // \u6807\u51C6\u53D8\u66F4\n  NORMAL = 'normal',           // \u666E\u901A\u53D8\u66F4\n  EMERGENCY = 'emergency',     // \u7D27\u6025\u53D8\u66F4\n  MAJOR = 'major',             // \u91CD\u5927\u53D8\u66F4\n}\n\n/**\n * \u53D8\u66F4\u5206\u7C7B\n */\nexport interface ChangeClassification {\n  id: string;\n  name: string;\n  code: string;\n  type: ChangeType;\n  description?: string;\n  riskLevel: 'low' | 'medium' | 'high' | 'critical';\n  approvalRequired: boolean;\n  cabRequired: boolean;          // Change Advisory Board\n  testingRequired: boolean;\n  backoutPlanRequired: boolean;\n  businessJustificationRequired: boolean;\n  standardDuration?: number;     // \u6807\u51C6\u5DE5\u671F\uFF08\u5C0F\u65F6\uFF09\n  cooldownPeriod?: number;       // \u51B7\u5374\u671F\uFF08\u5C0F\u65F6\uFF09\n  isActive: boolean;\n  createdAt: Date;\n  updatedAt: Date;\n}\n\n// ==================== \u53D8\u66F4\u98CE\u9669\u8BC4\u4F30 ====================\n\n/**\n * \u98CE\u9669\u56E0\u7D20\n */\nexport interface RiskFactor {\n  category: 'technical' | 'business' | 'compliance' | 'operational';\n  factor: string;\n  weight: number;                // \u6743\u91CD\uFF080-100\uFF09\n  value: number;                 // \u8BC4\u5206\uFF080-100\uFF09\n  description: string;\n}\n\n/**\n * \u98CE\u9669\u8BC4\u4F30\u7ED3\u679C\n */\nexport interface RiskAssessment {\n  overallRisk: 'low' | 'medium' | 'high' | 'critical';\n  riskScore: number;             // \u603B\u98CE\u9669\u5206\u6570\uFF080-100\uFF09\n  factors: RiskFactor[];\n  recommendations: string[];\n  assessedBy?: number;\n  assessedByName?: string;\n  assessedAt: Date;\n}\n\n// ==================== \u53D8\u66F4\u5F71\u54CD\u5206\u6790 ====================\n\n/**\n * \u5F71\u54CD\u8303\u56F4\n */\nexport interface ImpactScope {\n  services: string[];            // \u53D7\u5F71\u54CD\u670D\u52A1\n  cis: string[];                 // \u53D7\u5F71\u54CD\u914D\u7F6E\u9879\n  users: number;                 // \u53D7\u5F71\u54CD\u7528\u6237\u6570\n  departments: string[];         // \u53D7\u5F71\u54CD\u90E8\u95E8\n  locations: string[];           // \u53D7\u5F71\u54CD\u4F4D\u7F6E\n  estimatedDowntime?: number;    // \u9884\u8BA1\u505C\u673A\u65F6\u95F4\uFF08\u5206\u949F\uFF09\n}\n\n/**\n * \u5F71\u54CD\u5206\u6790\n */\nexport interface ImpactAnalysis {\n  scope: ImpactScope;\n  businessImpact: 'none' | 'low' | 'medium' | 'high' | 'critical';\n  financialImpact?: number;\n  reputationImpact?: 'none' | 'low' | 'medium' | 'high';\n  complianceImpact?: boolean;\n  analysisNotes?: string;\n  analysedBy?: number;\n  analysedByName?: string;\n  analysedAt: Date;\n}\n\n// ==================== \u53D8\u66F4\u5206\u7C7B\u89C4\u5219 ====================\n\n/**\n * \u5206\u7C7B\u89C4\u5219\u6761\u4EF6\n */\nexport interface ClassificationRuleCondition {\n  field: string;\n  operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'between';\n  value: any;\n}\n\n/**\n * \u5206\u7C7B\u89C4\u5219\n */\nexport interface ClassificationRule {\n  id: string;\n  name: string;\n  priority: number;              // \u89C4\u5219\u4F18\u5148\u7EA7\n  conditions: ClassificationRuleCondition[];\n  resultClassification: string;  // \u5206\u7C7BID\n  enabled: boolean;\n  createdAt: Date;\n  updatedAt: Date;\n}\n\n// ==================== \u53D8\u66F4\u5206\u7C7B\u5EFA\u8BAE ====================\n\n/**\n * \u5206\u7C7B\u5EFA\u8BAE\n */\nexport interface ClassificationSuggestion {\n  changeId: number;\n  currentClassification?: ChangeClassification;\n  suggestedClassification: ChangeClassification;\n  confidence: number;            // \u7F6E\u4FE1\u5EA6\uFF080-100\uFF09\n  reasoning: string;\n  basedOn: 'rules' | 'similarity' | 'risk' | 'impact' | 'historical';\n  riskAssessment?: RiskAssessment;\n  impactAnalysis?: ImpactAnalysis;\n}\n\n// ==================== \u53D8\u66F4\u6A21\u677F ====================\n\n/**\n * \u53D8\u66F4\u6A21\u677F\n */\nexport interface ChangeTemplate {\n  id: string;\n  name: string;\n  classification: ChangeClassification;\n  description?: string;\n  steps: ChangeTemplateStep[];\n  requiredFields: string[];\n  estimatedDuration?: number;\n  riskMitigation?: string;\n  backoutPlan?: string;\n  testingProcedure?: string;\n  isActive: boolean;\n  usageCount: number;\n  createdAt: Date;\n  updatedAt: Date;\n}\n\n/**\n * \u53D8\u66F4\u6A21\u677F\u6B65\u9AA4\n */\nexport interface ChangeTemplateStep {\n  id: string;\n  order: number;\n  title: string;\n  description?: string;\n  expectedDuration?: number;     // \u9884\u8BA1\u65F6\u957F\uFF08\u5206\u949F\uFF09\n  assignedRole?: string;\n  verificationRequired: boolean;\n}\n\n// ==================== \u53D8\u66F4\u5BA1\u6279\u77E9\u9635 ====================\n\n/**\n * \u5BA1\u6279\u7EA7\u522B\n */\nexport interface ApprovalLevel {\n  level: number;\n  name: string;\n  approvers: number[];           // \u5BA1\u6279\u4EBAID\n  requiredApprovals: number;     // \u9700\u8981\u7684\u5BA1\u6279\u6570\u91CF\n  timeoutHours?: number;         // \u8D85\u65F6\u65F6\u95F4\n  escalationTo?: number;         // \u5347\u7EA7\u5230\uFF08\u5BA1\u6279\u4EBAID\uFF09\n}\n\n/**\n * \u5BA1\u6279\u77E9\u9635\n */\nexport interface ApprovalMatrix {\n  classificationId: string;\n  levels: ApprovalLevel[];\n  parallelApproval: boolean;     // \u662F\u5426\u5E76\u884C\u5BA1\u6279\n  autoApproveConditions?: ClassificationRuleCondition[];\n}\n\n// ==================== \u7EDF\u8BA1\u548C\u5206\u6790 ====================\n\n/**\n * \u5206\u7C7B\u7EDF\u8BA1\n */\nexport interface ClassificationStats {\n  classification: ChangeClassification;\n  count: number;\n  successRate: number;           // \u6210\u529F\u7387\uFF08%\uFF09\n  avgDuration: number;           // \u5E73\u5747\u65F6\u957F\uFF08\u5C0F\u65F6\uFF09\n  avgRiskScore: number;\n  failureReasons?: Array<{\n    reason: string;\n    count: number;\n  }>;\n}\n\n/**\n * \u5206\u7C7B\u5206\u6790\n */\nexport interface ClassificationAnalysis {\n  period: {\n    start: Date;\n    end: Date;\n  };\n  byType: Record<ChangeType, ClassificationStats[]>;\n  trends: {\n    date: string;\n    byClassification: Record<string, number>;\n  }[];\n  insights: {\n    type: 'warning' | 'info' | 'success';\n    message: string;\n  }[];\n}\n\n// ==================== API \u8BF7\u6C42/\u54CD\u5E94 ====================\n\n/**\n * \u521B\u5EFA\u5206\u7C7B\u8BF7\u6C42\n */\nexport interface CreateClassificationRequest {\n  name: string;\n  code: string;\n  type: ChangeType;\n  description?: string;\n  riskLevel: 'low' | 'medium' | 'high' | 'critical';\n  approvalRequired: boolean;\n  cabRequired?: boolean;\n  testingRequired?: boolean;\n  backoutPlanRequired?: boolean;\n  businessJustificationRequired?: boolean;\n  standardDuration?: number;\n  cooldownPeriod?: number;\n}\n\n/**\n * \u66F4\u65B0\u5206\u7C7B\u8BF7\u6C42\n */\nexport type UpdateClassificationRequest = Partial<CreateClassificationRequest>;\n\n/**\n * \u98CE\u9669\u8BC4\u4F30\u8BF7\u6C42\n */\nexport interface AssessRiskRequest {\n  changeId: number;\n  factors: Omit<RiskFactor, 'description'>[];\n}\n\n/**\n * \u5F71\u54CD\u5206\u6790\u8BF7\u6C42\n */\nexport interface AnalyzeImpactRequest {\n  changeId: number;\n  scope: ImpactScope;\n  businessImpact: 'none' | 'low' | 'medium' | 'high' | 'critical';\n  financialImpact?: number;\n  analysisNotes?: string;\n}\n\n/**\n * \u5206\u7C7B\u67E5\u8BE2\n */\nexport interface ClassificationQuery {\n  type?: ChangeType;\n  riskLevel?: string;\n  active?: boolean;\n  search?: string;\n  page?: number;\n  pageSize?: number;\n}\n\n/**\n * \u5206\u7C7B\u5386\u53F2\n */\nexport interface ClassificationHistory {\n  id: string;\n  changeId: number;\n  oldClassification?: ChangeClassification;\n  newClassification: ChangeClassification;\n  reason: string;\n  changedBy: number;\n  changedByName: string;\n  changedAt: Date;\n}\n\nexport default ChangeClassification;\n\n"],
+      names: ["ChangeType"],
+      mappings: "AAAA;;;CAGC,GAED,iDAAiD;AAEjD;;CAEC;;;;+BACWA;;;eAAAA;;;AAAL,IAAA,AAAKA,oCAAAA;;;;;WAAAA"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "9573750215d979626004b5c5dfe0914550382ce5"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_i3x3396yn = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_i3x3396yn();
+cov_i3x3396yn().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_i3x3396yn().s[1]++;
+Object.defineProperty(exports, "ChangeType", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_i3x3396yn().f[0]++;
+    cov_i3x3396yn().s[2]++;
+    return ChangeType;
+  }
+});
+var ChangeType =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_i3x3396yn().s[3]++, function (ChangeType) {
+  /* istanbul ignore next */
+  cov_i3x3396yn().f[1]++;
+  cov_i3x3396yn().s[4]++;
+  ChangeType["STANDARD"] = "standard";
+  /* istanbul ignore next */
+  cov_i3x3396yn().s[5]++;
+  ChangeType["NORMAL"] = "normal";
+  /* istanbul ignore next */
+  cov_i3x3396yn().s[6]++;
+  ChangeType["EMERGENCY"] = "emergency";
+  /* istanbul ignore next */
+  cov_i3x3396yn().s[7]++;
+  ChangeType["MAJOR"] = "major";
+  /* istanbul ignore next */
+  cov_i3x3396yn().s[8]++;
+  return ChangeType;
+}({}));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfaTN4MzM5NnluIiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwibmFtZSIsImRlY2wiLCJsb2MiLCJicmFuY2hNYXAiLCJzIiwiZiIsImIiLCJpbnB1dFNvdXJjZU1hcCIsInZlcnNpb24iLCJzb3VyY2VzIiwic291cmNlc0NvbnRlbnQiLCJuYW1lcyIsIm1hcHBpbmdzIiwiX2NvdmVyYWdlU2NoZW1hIiwiY292ZXJhZ2UiLCJhY3R1YWxDb3ZlcmFnZSIsIkNoYW5nZVR5cGUiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1wcm90b3R5cGUvc3JjL3R5cGVzL2NoYW5nZS1jbGFzc2lmaWNhdGlvbi50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIOWPmOabtOWIhuexu+ezu+e7n+exu+Wei+WumuS5iVxuICog5Z+65LqOSVRJTOagh+WHhueahOWPmOabtOWIhuexu+WSjOivhOS8sFxuICovXG5cbi8vID09PT09PT09PT09PT09PT09PT09IOWPmOabtOexu+WeiyA9PT09PT09PT09PT09PT09PT09PVxuXG4vKipcbiAqIOWPmOabtOexu+Wei1xuICovXG5leHBvcnQgZW51bSBDaGFuZ2VUeXBlIHtcbiAgU1RBTkRBUkQgPSAnc3RhbmRhcmQnLCAgICAgICAvLyDmoIflh4blj5jmm7RcbiAgTk9STUFMID0gJ25vcm1hbCcsICAgICAgICAgICAvLyDmma7pgJrlj5jmm7RcbiAgRU1FUkdFTkNZID0gJ2VtZXJnZW5jeScsICAgICAvLyDntKfmgKXlj5jmm7RcbiAgTUFKT1IgPSAnbWFqb3InLCAgICAgICAgICAgICAvLyDph43lpKflj5jmm7Rcbn1cblxuLyoqXG4gKiDlj5jmm7TliIbnsbtcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBDaGFuZ2VDbGFzc2lmaWNhdGlvbiB7XG4gIGlkOiBzdHJpbmc7XG4gIG5hbWU6IHN0cmluZztcbiAgY29kZTogc3RyaW5nO1xuICB0eXBlOiBDaGFuZ2VUeXBlO1xuICBkZXNjcmlwdGlvbj86IHN0cmluZztcbiAgcmlza0xldmVsOiAnbG93JyB8ICdtZWRpdW0nIHwgJ2hpZ2gnIHwgJ2NyaXRpY2FsJztcbiAgYXBwcm92YWxSZXF1aXJlZDogYm9vbGVhbjtcbiAgY2FiUmVxdWlyZWQ6IGJvb2xlYW47ICAgICAgICAgIC8vIENoYW5nZSBBZHZpc29yeSBCb2FyZFxuICB0ZXN0aW5nUmVxdWlyZWQ6IGJvb2xlYW47XG4gIGJhY2tvdXRQbGFuUmVxdWlyZWQ6IGJvb2xlYW47XG4gIGJ1c2luZXNzSnVzdGlmaWNhdGlvblJlcXVpcmVkOiBib29sZWFuO1xuICBzdGFuZGFyZER1cmF0aW9uPzogbnVtYmVyOyAgICAgLy8g5qCH5YeG5bel5pyf77yI5bCP5pe277yJXG4gIGNvb2xkb3duUGVyaW9kPzogbnVtYmVyOyAgICAgICAvLyDlhrfljbTmnJ/vvIjlsI/ml7bvvIlcbiAgaXNBY3RpdmU6IGJvb2xlYW47XG4gIGNyZWF0ZWRBdDogRGF0ZTtcbiAgdXBkYXRlZEF0OiBEYXRlO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDlj5jmm7Tpo47pmanor4TkvLAgPT09PT09PT09PT09PT09PT09PT1cblxuLyoqXG4gKiDpo47pmanlm6DntKBcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBSaXNrRmFjdG9yIHtcbiAgY2F0ZWdvcnk6ICd0ZWNobmljYWwnIHwgJ2J1c2luZXNzJyB8ICdjb21wbGlhbmNlJyB8ICdvcGVyYXRpb25hbCc7XG4gIGZhY3Rvcjogc3RyaW5nO1xuICB3ZWlnaHQ6IG51bWJlcjsgICAgICAgICAgICAgICAgLy8g5p2D6YeN77yIMC0xMDDvvIlcbiAgdmFsdWU6IG51bWJlcjsgICAgICAgICAgICAgICAgIC8vIOivhOWIhu+8iDAtMTAw77yJXG4gIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG59XG5cbi8qKlxuICog6aOO6Zmp6K+E5Lyw57uT5p6cXG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgUmlza0Fzc2Vzc21lbnQge1xuICBvdmVyYWxsUmlzazogJ2xvdycgfCAnbWVkaXVtJyB8ICdoaWdoJyB8ICdjcml0aWNhbCc7XG4gIHJpc2tTY29yZTogbnVtYmVyOyAgICAgICAgICAgICAvLyDmgLvpo47pmanliIbmlbDvvIgwLTEwMO+8iVxuICBmYWN0b3JzOiBSaXNrRmFjdG9yW107XG4gIHJlY29tbWVuZGF0aW9uczogc3RyaW5nW107XG4gIGFzc2Vzc2VkQnk/OiBudW1iZXI7XG4gIGFzc2Vzc2VkQnlOYW1lPzogc3RyaW5nO1xuICBhc3Nlc3NlZEF0OiBEYXRlO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDlj5jmm7TlvbHlk43liIbmnpAgPT09PT09PT09PT09PT09PT09PT1cblxuLyoqXG4gKiDlvbHlk43ojIPlm7RcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBJbXBhY3RTY29wZSB7XG4gIHNlcnZpY2VzOiBzdHJpbmdbXTsgICAgICAgICAgICAvLyDlj5flvbHlk43mnI3liqFcbiAgY2lzOiBzdHJpbmdbXTsgICAgICAgICAgICAgICAgIC8vIOWPl+W9seWTjemFjee9rumhuVxuICB1c2VyczogbnVtYmVyOyAgICAgICAgICAgICAgICAgLy8g5Y+X5b2x5ZON55So5oi35pWwXG4gIGRlcGFydG1lbnRzOiBzdHJpbmdbXTsgICAgICAgICAvLyDlj5flvbHlk43pg6jpl6hcbiAgbG9jYXRpb25zOiBzdHJpbmdbXTsgICAgICAgICAgIC8vIOWPl+W9seWTjeS9jee9rlxuICBlc3RpbWF0ZWREb3dudGltZT86IG51bWJlcjsgICAgLy8g6aKE6K6h5YGc5py65pe26Ze077yI5YiG6ZKf77yJXG59XG5cbi8qKlxuICog5b2x5ZON5YiG5p6QXG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgSW1wYWN0QW5hbHlzaXMge1xuICBzY29wZTogSW1wYWN0U2NvcGU7XG4gIGJ1c2luZXNzSW1wYWN0OiAnbm9uZScgfCAnbG93JyB8ICdtZWRpdW0nIHwgJ2hpZ2gnIHwgJ2NyaXRpY2FsJztcbiAgZmluYW5jaWFsSW1wYWN0PzogbnVtYmVyO1xuICByZXB1dGF0aW9uSW1wYWN0PzogJ25vbmUnIHwgJ2xvdycgfCAnbWVkaXVtJyB8ICdoaWdoJztcbiAgY29tcGxpYW5jZUltcGFjdD86IGJvb2xlYW47XG4gIGFuYWx5c2lzTm90ZXM/OiBzdHJpbmc7XG4gIGFuYWx5c2VkQnk/OiBudW1iZXI7XG4gIGFuYWx5c2VkQnlOYW1lPzogc3RyaW5nO1xuICBhbmFseXNlZEF0OiBEYXRlO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDlj5jmm7TliIbnsbvop4TliJkgPT09PT09PT09PT09PT09PT09PT1cblxuLyoqXG4gKiDliIbnsbvop4TliJnmnaHku7ZcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBDbGFzc2lmaWNhdGlvblJ1bGVDb25kaXRpb24ge1xuICBmaWVsZDogc3RyaW5nO1xuICBvcGVyYXRvcjogJ2VxdWFscycgfCAnY29udGFpbnMnIHwgJ2dyZWF0ZXJfdGhhbicgfCAnbGVzc190aGFuJyB8ICdpbicgfCAnYmV0d2Vlbic7XG4gIHZhbHVlOiBhbnk7XG59XG5cbi8qKlxuICog5YiG57G76KeE5YiZXG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgQ2xhc3NpZmljYXRpb25SdWxlIHtcbiAgaWQ6IHN0cmluZztcbiAgbmFtZTogc3RyaW5nO1xuICBwcmlvcml0eTogbnVtYmVyOyAgICAgICAgICAgICAgLy8g6KeE5YiZ5LyY5YWI57qnXG4gIGNvbmRpdGlvbnM6IENsYXNzaWZpY2F0aW9uUnVsZUNvbmRpdGlvbltdO1xuICByZXN1bHRDbGFzc2lmaWNhdGlvbjogc3RyaW5nOyAgLy8g5YiG57G7SURcbiAgZW5hYmxlZDogYm9vbGVhbjtcbiAgY3JlYXRlZEF0OiBEYXRlO1xuICB1cGRhdGVkQXQ6IERhdGU7XG59XG5cbi8vID09PT09PT09PT09PT09PT09PT09IOWPmOabtOWIhuexu+W7uuiuriA9PT09PT09PT09PT09PT09PT09PVxuXG4vKipcbiAqIOWIhuexu+W7uuiurlxuICovXG5leHBvcnQgaW50ZXJmYWNlIENsYXNzaWZpY2F0aW9uU3VnZ2VzdGlvbiB7XG4gIGNoYW5nZUlkOiBudW1iZXI7XG4gIGN1cnJlbnRDbGFzc2lmaWNhdGlvbj86IENoYW5nZUNsYXNzaWZpY2F0aW9uO1xuICBzdWdnZXN0ZWRDbGFzc2lmaWNhdGlvbjogQ2hhbmdlQ2xhc3NpZmljYXRpb247XG4gIGNvbmZpZGVuY2U6IG51bWJlcjsgICAgICAgICAgICAvLyDnva7kv6HluqbvvIgwLTEwMO+8iVxuICByZWFzb25pbmc6IHN0cmluZztcbiAgYmFzZWRPbjogJ3J1bGVzJyB8ICdzaW1pbGFyaXR5JyB8ICdyaXNrJyB8ICdpbXBhY3QnIHwgJ2hpc3RvcmljYWwnO1xuICByaXNrQXNzZXNzbWVudD86IFJpc2tBc3Nlc3NtZW50O1xuICBpbXBhY3RBbmFseXNpcz86IEltcGFjdEFuYWx5c2lzO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDlj5jmm7TmqKHmnb8gPT09PT09PT09PT09PT09PT09PT1cblxuLyoqXG4gKiDlj5jmm7TmqKHmnb9cbiAqL1xuZXhwb3J0IGludGVyZmFjZSBDaGFuZ2VUZW1wbGF0ZSB7XG4gIGlkOiBzdHJpbmc7XG4gIG5hbWU6IHN0cmluZztcbiAgY2xhc3NpZmljYXRpb246IENoYW5nZUNsYXNzaWZpY2F0aW9uO1xuICBkZXNjcmlwdGlvbj86IHN0cmluZztcbiAgc3RlcHM6IENoYW5nZVRlbXBsYXRlU3RlcFtdO1xuICByZXF1aXJlZEZpZWxkczogc3RyaW5nW107XG4gIGVzdGltYXRlZER1cmF0aW9uPzogbnVtYmVyO1xuICByaXNrTWl0aWdhdGlvbj86IHN0cmluZztcbiAgYmFja291dFBsYW4/OiBzdHJpbmc7XG4gIHRlc3RpbmdQcm9jZWR1cmU/OiBzdHJpbmc7XG4gIGlzQWN0aXZlOiBib29sZWFuO1xuICB1c2FnZUNvdW50OiBudW1iZXI7XG4gIGNyZWF0ZWRBdDogRGF0ZTtcbiAgdXBkYXRlZEF0OiBEYXRlO1xufVxuXG4vKipcbiAqIOWPmOabtOaooeadv+atpemqpFxuICovXG5leHBvcnQgaW50ZXJmYWNlIENoYW5nZVRlbXBsYXRlU3RlcCB7XG4gIGlkOiBzdHJpbmc7XG4gIG9yZGVyOiBudW1iZXI7XG4gIHRpdGxlOiBzdHJpbmc7XG4gIGRlc2NyaXB0aW9uPzogc3RyaW5nO1xuICBleHBlY3RlZER1cmF0aW9uPzogbnVtYmVyOyAgICAgLy8g6aKE6K6h5pe26ZW/77yI5YiG6ZKf77yJXG4gIGFzc2lnbmVkUm9sZT86IHN0cmluZztcbiAgdmVyaWZpY2F0aW9uUmVxdWlyZWQ6IGJvb2xlYW47XG59XG5cbi8vID09PT09PT09PT09PT09PT09PT09IOWPmOabtOWuoeaJueefqemYtSA9PT09PT09PT09PT09PT09PT09PVxuXG4vKipcbiAqIOWuoeaJuee6p+WIq1xuICovXG5leHBvcnQgaW50ZXJmYWNlIEFwcHJvdmFsTGV2ZWwge1xuICBsZXZlbDogbnVtYmVyO1xuICBuYW1lOiBzdHJpbmc7XG4gIGFwcHJvdmVyczogbnVtYmVyW107ICAgICAgICAgICAvLyDlrqHmibnkurpJRFxuICByZXF1aXJlZEFwcHJvdmFsczogbnVtYmVyOyAgICAgLy8g6ZyA6KaB55qE5a6h5om55pWw6YePXG4gIHRpbWVvdXRIb3Vycz86IG51bWJlcjsgICAgICAgICAvLyDotoXml7bml7bpl7RcbiAgZXNjYWxhdGlvblRvPzogbnVtYmVyOyAgICAgICAgIC8vIOWNh+e6p+WIsO+8iOWuoeaJueS6uklE77yJXG59XG5cbi8qKlxuICog5a6h5om555+p6Zi1XG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgQXBwcm92YWxNYXRyaXgge1xuICBjbGFzc2lmaWNhdGlvbklkOiBzdHJpbmc7XG4gIGxldmVsczogQXBwcm92YWxMZXZlbFtdO1xuICBwYXJhbGxlbEFwcHJvdmFsOiBib29sZWFuOyAgICAgLy8g5piv5ZCm5bm26KGM5a6h5om5XG4gIGF1dG9BcHByb3ZlQ29uZGl0aW9ucz86IENsYXNzaWZpY2F0aW9uUnVsZUNvbmRpdGlvbltdO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDnu5/orqHlkozliIbmnpAgPT09PT09PT09PT09PT09PT09PT1cblxuLyoqXG4gKiDliIbnsbvnu5/orqFcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBDbGFzc2lmaWNhdGlvblN0YXRzIHtcbiAgY2xhc3NpZmljYXRpb246IENoYW5nZUNsYXNzaWZpY2F0aW9uO1xuICBjb3VudDogbnVtYmVyO1xuICBzdWNjZXNzUmF0ZTogbnVtYmVyOyAgICAgICAgICAgLy8g5oiQ5Yqf546H77yIJe+8iVxuICBhdmdEdXJhdGlvbjogbnVtYmVyOyAgICAgICAgICAgLy8g5bmz5Z2H5pe26ZW/77yI5bCP5pe277yJXG4gIGF2Z1Jpc2tTY29yZTogbnVtYmVyO1xuICBmYWlsdXJlUmVhc29ucz86IEFycmF5PHtcbiAgICByZWFzb246IHN0cmluZztcbiAgICBjb3VudDogbnVtYmVyO1xuICB9Pjtcbn1cblxuLyoqXG4gKiDliIbnsbvliIbmnpBcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBDbGFzc2lmaWNhdGlvbkFuYWx5c2lzIHtcbiAgcGVyaW9kOiB7XG4gICAgc3RhcnQ6IERhdGU7XG4gICAgZW5kOiBEYXRlO1xuICB9O1xuICBieVR5cGU6IFJlY29yZDxDaGFuZ2VUeXBlLCBDbGFzc2lmaWNhdGlvblN0YXRzW10+O1xuICB0cmVuZHM6IHtcbiAgICBkYXRlOiBzdHJpbmc7XG4gICAgYnlDbGFzc2lmaWNhdGlvbjogUmVjb3JkPHN0cmluZywgbnVtYmVyPjtcbiAgfVtdO1xuICBpbnNpZ2h0czoge1xuICAgIHR5cGU6ICd3YXJuaW5nJyB8ICdpbmZvJyB8ICdzdWNjZXNzJztcbiAgICBtZXNzYWdlOiBzdHJpbmc7XG4gIH1bXTtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0gQVBJIOivt+axgi/lk43lupQgPT09PT09PT09PT09PT09PT09PT1cblxuLyoqXG4gKiDliJvlu7rliIbnsbvor7fmsYJcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBDcmVhdGVDbGFzc2lmaWNhdGlvblJlcXVlc3Qge1xuICBuYW1lOiBzdHJpbmc7XG4gIGNvZGU6IHN0cmluZztcbiAgdHlwZTogQ2hhbmdlVHlwZTtcbiAgZGVzY3JpcHRpb24/OiBzdHJpbmc7XG4gIHJpc2tMZXZlbDogJ2xvdycgfCAnbWVkaXVtJyB8ICdoaWdoJyB8ICdjcml0aWNhbCc7XG4gIGFwcHJvdmFsUmVxdWlyZWQ6IGJvb2xlYW47XG4gIGNhYlJlcXVpcmVkPzogYm9vbGVhbjtcbiAgdGVzdGluZ1JlcXVpcmVkPzogYm9vbGVhbjtcbiAgYmFja291dFBsYW5SZXF1aXJlZD86IGJvb2xlYW47XG4gIGJ1c2luZXNzSnVzdGlmaWNhdGlvblJlcXVpcmVkPzogYm9vbGVhbjtcbiAgc3RhbmRhcmREdXJhdGlvbj86IG51bWJlcjtcbiAgY29vbGRvd25QZXJpb2Q/OiBudW1iZXI7XG59XG5cbi8qKlxuICog5pu05paw5YiG57G76K+35rGCXG4gKi9cbmV4cG9ydCB0eXBlIFVwZGF0ZUNsYXNzaWZpY2F0aW9uUmVxdWVzdCA9IFBhcnRpYWw8Q3JlYXRlQ2xhc3NpZmljYXRpb25SZXF1ZXN0PjtcblxuLyoqXG4gKiDpo47pmanor4TkvLDor7fmsYJcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBBc3Nlc3NSaXNrUmVxdWVzdCB7XG4gIGNoYW5nZUlkOiBudW1iZXI7XG4gIGZhY3RvcnM6IE9taXQ8Umlza0ZhY3RvciwgJ2Rlc2NyaXB0aW9uJz5bXTtcbn1cblxuLyoqXG4gKiDlvbHlk43liIbmnpDor7fmsYJcbiAqL1xuZXhwb3J0IGludGVyZmFjZSBBbmFseXplSW1wYWN0UmVxdWVzdCB7XG4gIGNoYW5nZUlkOiBudW1iZXI7XG4gIHNjb3BlOiBJbXBhY3RTY29wZTtcbiAgYnVzaW5lc3NJbXBhY3Q6ICdub25lJyB8ICdsb3cnIHwgJ21lZGl1bScgfCAnaGlnaCcgfCAnY3JpdGljYWwnO1xuICBmaW5hbmNpYWxJbXBhY3Q/OiBudW1iZXI7XG4gIGFuYWx5c2lzTm90ZXM/OiBzdHJpbmc7XG59XG5cbi8qKlxuICog5YiG57G75p+l6K+iXG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgQ2xhc3NpZmljYXRpb25RdWVyeSB7XG4gIHR5cGU/OiBDaGFuZ2VUeXBlO1xuICByaXNrTGV2ZWw/OiBzdHJpbmc7XG4gIGFjdGl2ZT86IGJvb2xlYW47XG4gIHNlYXJjaD86IHN0cmluZztcbiAgcGFnZT86IG51bWJlcjtcbiAgcGFnZVNpemU/OiBudW1iZXI7XG59XG5cbi8qKlxuICog5YiG57G75Y6G5Y+yXG4gKi9cbmV4cG9ydCBpbnRlcmZhY2UgQ2xhc3NpZmljYXRpb25IaXN0b3J5IHtcbiAgaWQ6IHN0cmluZztcbiAgY2hhbmdlSWQ6IG51bWJlcjtcbiAgb2xkQ2xhc3NpZmljYXRpb24/OiBDaGFuZ2VDbGFzc2lmaWNhdGlvbjtcbiAgbmV3Q2xhc3NpZmljYXRpb246IENoYW5nZUNsYXNzaWZpY2F0aW9uO1xuICByZWFzb246IHN0cmluZztcbiAgY2hhbmdlZEJ5OiBudW1iZXI7XG4gIGNoYW5nZWRCeU5hbWU6IHN0cmluZztcbiAgY2hhbmdlZEF0OiBEYXRlO1xufVxuXG5leHBvcnQgZGVmYXVsdCBDaGFuZ2VDbGFzc2lmaWNhdGlvbjtcblxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7O0dBQUEsQ0FLQTtBQUVBOztHQUVDOztBQUFBO0FBQUEsU0FBQUEsY0FBQTtFQUFBLElBQUFDLElBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsTUFBQSxPQUFBQyxRQUFBO0VBQUEsSUFBQUMsR0FBQTtFQUFBLElBQUFDLFlBQUE7SUFBQUwsSUFBQTtJQUFBTSxZQUFBO01BQUE7UUFBQUMsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO0lBQUE7SUFBQUUsS0FBQTtNQUFBO1FBQUFDLElBQUE7UUFBQUMsSUFBQTtVQUFBTixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBSyxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFELElBQUE7TUFBQTtNQUFBO1FBQUFJLElBQUE7UUFBQUMsSUFBQTtVQUFBTixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBSyxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFELElBQUE7TUFBQTtJQUFBO0lBQUFPLFNBQUE7SUFBQUMsQ0FBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7TUFBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLE9BQUE7TUFBQUMsT0FBQTtNQUFBQyxjQUFBO01BQUFDLEtBQUE7TUFBQUMsUUFBQTtJQUFBO0lBQUFDLGVBQUE7SUFBQXhCLElBQUE7RUFBQTtFQUFBLElBQUF5QixRQUFBLEdBQUF4QixNQUFBLENBQUFFLEdBQUEsTUFBQUYsTUFBQSxDQUFBRSxHQUFBO0VBQUEsS0FBQXNCLFFBQUEsQ0FBQTFCLElBQUEsS0FBQTBCLFFBQUEsQ0FBQTFCLElBQUEsRUFBQUMsSUFBQSxLQUFBQSxJQUFBO0lBQUF5QixRQUFBLENBQUExQixJQUFBLElBQUFLLFlBQUE7RUFBQTtFQUFBLElBQUFzQixjQUFBLEdBQUFELFFBQUEsQ0FBQTFCLElBQUE7RUFBQTs7Ozs7Ozs7Ozs7Ozs7OytCQUNXOzs7Ozs7V0FBQTRCLFVBQUE7OztBQUFMLElBQUFBLFVBQUs7QUFBQTtBQUFBLGNBQUE3QixhQUFBLEdBQUFpQixDQUFBLGlCQUFBWSxVQUFBO0VBQUE7RUFBQTdCLGFBQUEsR0FBQWtCLENBQUE7RUFBQWxCLGFBQUEsR0FBQWlCLENBQUE7Ozs7Ozs7Ozs7Ozs7U0FBQVksVUFBQSIsImlnbm9yZUxpc3QiOltdfQ==

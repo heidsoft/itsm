@@ -33,11 +33,11 @@ func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserContr
 	// 创建logger
 	logger := zaptest.NewLogger(t).Sugar()
 
-	// 创建服务
-	userService := service.NewUserService(client, logger)
+    // 创建服务
+    userService := service.NewUserService(client, logger)
 
 	// 创建控制器
-	userController := NewUserController(userService)
+	userController := NewUserController(userService, logger)
 
 	// 创建路由
 	r := gin.New()
@@ -431,19 +431,19 @@ func TestUserController_SearchUsers(t *testing.T) {
 		{
 			name: "按关键词搜索",
 			request: dto.SearchUsersRequest{
-				Keyword: "test",
-				Page:    1,
-				Limit:   10,
+				Keyword:  "test",
+				TenantID: 0,
+				Limit:    10,
 			},
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
 		},
 		{
-			name: "按部门搜索",
+			name: "按租户搜索",
 			request: dto.SearchUsersRequest{
-				Department: "IT",
-				Page:       1,
-				Limit:      10,
+				Keyword:  "test",
+				TenantID: 1,
+				Limit:    10,
 			},
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
@@ -451,11 +451,12 @@ func TestUserController_SearchUsers(t *testing.T) {
 		{
 			name: "空搜索条件",
 			request: dto.SearchUsersRequest{
-				Page:  1,
-				Limit: 10,
+				Keyword:  "",
+				TenantID: 0,
+				Limit:    10,
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.SuccessCode,
+			expectedStatus: http.StatusBadRequest,
+			expectedCode:   common.ParamErrorCode,
 		},
 	}
 
@@ -617,14 +618,16 @@ func BenchmarkUserController_CreateUser(b *testing.B) {
 	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	// 创建logger
-	logger := zaptest.NewLogger(b).Sugar()
+    // 创建logger
+    logger := zaptest.NewLogger(b).Sugar()
 
 	// 创建服务
 	userService := service.NewUserService(client, logger)
 
+    // 复用基准测试 logger
+
 	// 创建控制器
-	userController := NewUserController(userService)
+	userController := NewUserController(userService, logger)
 
 	// 创建路由
 	r := gin.New()
@@ -675,14 +678,16 @@ func BenchmarkUserController_ListUsers(b *testing.B) {
 	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	// 创建logger
-	logger := zaptest.NewLogger(b).Sugar()
+    // 创建logger
+    logger := zaptest.NewLogger(b).Sugar()
 
 	// 创建服务
 	userService := service.NewUserService(client, logger)
 
+    // 复用基准测试 logger
+
 	// 创建控制器
-	userController := NewUserController(userService)
+	userController := NewUserController(userService, logger)
 
 	// 创建路由
 	r := gin.New()

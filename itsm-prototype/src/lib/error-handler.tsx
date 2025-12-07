@@ -330,8 +330,6 @@ export const useErrorHandler = () => {
 
 import styles from './error-handler.module.css';
 
-...
-
 // 错误边界组件
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> },

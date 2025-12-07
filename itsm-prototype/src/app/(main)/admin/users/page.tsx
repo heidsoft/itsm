@@ -13,7 +13,6 @@ import {
   Upload,
   Eye,
   Key,
-  Tag,
   UserX,
 } from 'lucide-react';
 
@@ -35,6 +34,7 @@ import {
   theme,
   Switch,
   App,
+  Tag,
 } from 'antd';
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;

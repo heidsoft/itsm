@@ -1,0 +1,387 @@
+2c921c22fce134547bf6ff188b584341
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_sto87aanw() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/reports/sla-performance/page.tsx";
+  var hash = "509508361f06e035c5e8c1cd462bc1f57ef46fd6";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/reports/sla-performance/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 36
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 18
+        },
+        end: {
+          line: 14,
+          column: 37
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 13
+        },
+        end: {
+          line: 36,
+          column: 1
+        }
+      },
+      "8": {
+        start: {
+          line: 38,
+          column: 4
+        },
+        end: {
+          line: 92,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "SLAPerformanceReport",
+        decl: {
+          start: {
+            line: 37,
+            column: 9
+          },
+          end: {
+            line: 37,
+            column: 29
+          }
+        },
+        loc: {
+          start: {
+            line: 37,
+            column: 32
+          },
+          end: {
+            line: 93,
+            column: 1
+          }
+        },
+        line: 37
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/reports/sla-performance/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';\n\nconst data = [\n  { name: 'Incident Resolution', breached: 5, met: 95 },\n  { name: 'Service Request Fulfillment', breached: 2, met: 98 },\n  { name: 'Uptime Guarantee', breached: 1, met: 99 },\n];\n\nexport default function SLAPerformanceReport() {\n  return (\n    <div className=\"p-10 bg-gray-50 min-h-full\">\n      <header className=\"mb-8\">\n        <h2 className=\"text-4xl font-bold text-gray-800\">SLA Performance Report</h2>\n        <p className=\"text-gray-500 mt-1\">This report shows the performance of Service Level Agreements (SLAs).</p>\n      </header>\n      <div className=\"bg-white p-6 rounded-lg shadow-md\">\n        <h3 className=\"text-xl font-semibold text-gray-800 mb-4\">SLA Status</h3>\n        <ResponsiveContainer width=\"100%\" height={300}>\n          <BarChart data={data}>\n            <CartesianGrid strokeDasharray=\"3 3\" />\n            <XAxis dataKey=\"name\" />\n            <YAxis />\n            <Tooltip />\n            <Legend />\n            <Bar dataKey=\"met\" stackId=\"a\" fill=\"#82ca9d\" />\n            <Bar dataKey=\"breached\" stackId=\"a\" fill=\"#ffc658\" />\n          </BarChart>\n        </ResponsiveContainer>\n      </div>\n    </div>\n  );\n}"],
+      names: ["SLAPerformanceReport", "data", "name", "breached", "met", "div", "className", "header", "h2", "p", "h3", "ResponsiveContainer", "width", "height", "BarChart", "CartesianGrid", "strokeDasharray", "XAxis", "dataKey", "YAxis", "Tooltip", "Legend", "Bar", "stackId", "fill"],
+      mappings: "AAAA;;;;;+BAWA;;;eAAwBA;;;;8DATN;0BAC+E;;;;;;AAEjG,MAAMC,OAAO;IACX;QAAEC,MAAM;QAAuBC,UAAU;QAAGC,KAAK;IAAG;IACpD;QAAEF,MAAM;QAA+BC,UAAU;QAAGC,KAAK;IAAG;IAC5D;QAAEF,MAAM;QAAoBC,UAAU;QAAGC,KAAK;IAAG;CAClD;AAEc,SAASJ;IACtB,qBACE,sBAACK;QAAIC,WAAU;;0BACb,sBAACC;gBAAOD,WAAU;;kCAChB,qBAACE;wBAAGF,WAAU;kCAAmC;;kCACjD,qBAACG;wBAAEH,WAAU;kCAAqB;;;;0BAEpC,sBAACD;gBAAIC,WAAU;;kCACb,qBAACI;wBAAGJ,WAAU;kCAA2C;;kCACzD,qBAACK,6BAAmB;wBAACC,OAAM;wBAAOC,QAAQ;kCACxC,cAAA,sBAACC,kBAAQ;4BAACb,MAAMA;;8CACd,qBAACc,uBAAa;oCAACC,iBAAgB;;8CAC/B,qBAACC,eAAK;oCAACC,SAAQ;;8CACf,qBAACC,eAAK;8CACN,qBAACC,iBAAO;8CACR,qBAACC,gBAAM;8CACP,qBAACC,aAAG;oCAACJ,SAAQ;oCAAMK,SAAQ;oCAAIC,MAAK;;8CACpC,qBAACF,aAAG;oCAACJ,SAAQ;oCAAWK,SAAQ;oCAAIC,MAAK;;;;;;;;;AAMrD"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "509508361f06e035c5e8c1cd462bc1f57ef46fd6"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_sto87aanw = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_sto87aanw();
+cov_sto87aanw().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_sto87aanw().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_sto87aanw().f[0]++;
+    cov_sto87aanw().s[2]++;
+    return SLAPerformanceReport;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_sto87aanw().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_sto87aanw().s[4]++, _interop_require_default(require("react")));
+const _recharts =
+/* istanbul ignore next */
+(cov_sto87aanw().s[5]++, require("recharts"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_sto87aanw().f[1]++;
+  cov_sto87aanw().s[6]++;
+  return /* istanbul ignore next */(cov_sto87aanw().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_sto87aanw().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_sto87aanw().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_sto87aanw().b[0][1]++, {
+    default: obj
+  });
+}
+const data =
+/* istanbul ignore next */
+(cov_sto87aanw().s[7]++, [{
+  name: 'Incident Resolution',
+  breached: 5,
+  met: 95
+}, {
+  name: 'Service Request Fulfillment',
+  breached: 2,
+  met: 98
+}, {
+  name: 'Uptime Guarantee',
+  breached: 1,
+  met: 99
+}]);
+function SLAPerformanceReport() {
+  /* istanbul ignore next */
+  cov_sto87aanw().f[2]++;
+  cov_sto87aanw().s[8]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+    className: "p-10 bg-gray-50 min-h-full",
+    children: [/*#__PURE__*/(0, _jsxruntime.jsxs)("header", {
+      className: "mb-8",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h2", {
+        className: "text-4xl font-bold text-gray-800",
+        children: "SLA Performance Report"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)("p", {
+        className: "text-gray-500 mt-1",
+        children: "This report shows the performance of Service Level Agreements (SLAs)."
+      })]
+    }), /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+      className: "bg-white p-6 rounded-lg shadow-md",
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)("h3", {
+        className: "text-xl font-semibold text-gray-800 mb-4",
+        children: "SLA Status"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.ResponsiveContainer, {
+        width: "100%",
+        height: 300,
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_recharts.BarChart, {
+          data: data,
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.CartesianGrid, {
+            strokeDasharray: "3 3"
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.XAxis, {
+            dataKey: "name"
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.YAxis, {}), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Tooltip, {}), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Legend, {}), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Bar, {
+            dataKey: "met",
+            stackId: "a",
+            fill: "#82ca9d"
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)(_recharts.Bar, {
+            dataKey: "breached",
+            stackId: "a",
+            fill: "#ffc658"
+          })]
+        })
+      })]
+    })]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJTTEFQZXJmb3JtYW5jZVJlcG9ydCIsImRhdGEiLCJjb3Zfc3RvODdhYW53IiwicyIsIm5hbWUiLCJicmVhY2hlZCIsIm1ldCIsImYiLCJfanN4cnVudGltZSIsImpzeHMiLCJjbGFzc05hbWUiLCJqc3giLCJfcmVjaGFydHMiLCJSZXNwb25zaXZlQ29udGFpbmVyIiwid2lkdGgiLCJoZWlnaHQiLCJCYXJDaGFydCIsIkNhcnRlc2lhbkdyaWQiLCJzdHJva2VEYXNoYXJyYXkiLCJYQXhpcyIsImRhdGFLZXkiLCJZQXhpcyIsIlRvb2x0aXAiLCJMZWdlbmQiLCJCYXIiLCJzdGFja0lkIiwiZmlsbCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwLyhtYWluKS9yZXBvcnRzL3NsYS1wZXJmb3JtYW5jZS9wYWdlLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIGNsaWVudCc7XG5cbmltcG9ydCBSZWFjdCBmcm9tICdyZWFjdCc7XG5pbXBvcnQgeyBCYXJDaGFydCwgQmFyLCBYQXhpcywgWUF4aXMsIENhcnRlc2lhbkdyaWQsIFRvb2x0aXAsIExlZ2VuZCwgUmVzcG9uc2l2ZUNvbnRhaW5lciB9IGZyb20gJ3JlY2hhcnRzJztcblxuY29uc3QgZGF0YSA9IFtcbiAgeyBuYW1lOiAnSW5jaWRlbnQgUmVzb2x1dGlvbicsIGJyZWFjaGVkOiA1LCBtZXQ6IDk1IH0sXG4gIHsgbmFtZTogJ1NlcnZpY2UgUmVxdWVzdCBGdWxmaWxsbWVudCcsIGJyZWFjaGVkOiAyLCBtZXQ6IDk4IH0sXG4gIHsgbmFtZTogJ1VwdGltZSBHdWFyYW50ZWUnLCBicmVhY2hlZDogMSwgbWV0OiA5OSB9LFxuXTtcblxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gU0xBUGVyZm9ybWFuY2VSZXBvcnQoKSB7XG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJwLTEwIGJnLWdyYXktNTAgbWluLWgtZnVsbFwiPlxuICAgICAgPGhlYWRlciBjbGFzc05hbWU9XCJtYi04XCI+XG4gICAgICAgIDxoMiBjbGFzc05hbWU9XCJ0ZXh0LTR4bCBmb250LWJvbGQgdGV4dC1ncmF5LTgwMFwiPlNMQSBQZXJmb3JtYW5jZSBSZXBvcnQ8L2gyPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWdyYXktNTAwIG10LTFcIj5UaGlzIHJlcG9ydCBzaG93cyB0aGUgcGVyZm9ybWFuY2Ugb2YgU2VydmljZSBMZXZlbCBBZ3JlZW1lbnRzIChTTEFzKS48L3A+XG4gICAgICA8L2hlYWRlcj5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctd2hpdGUgcC02IHJvdW5kZWQtbGcgc2hhZG93LW1kXCI+XG4gICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXhsIGZvbnQtc2VtaWJvbGQgdGV4dC1ncmF5LTgwMCBtYi00XCI+U0xBIFN0YXR1czwvaDM+XG4gICAgICAgIDxSZXNwb25zaXZlQ29udGFpbmVyIHdpZHRoPVwiMTAwJVwiIGhlaWdodD17MzAwfT5cbiAgICAgICAgICA8QmFyQ2hhcnQgZGF0YT17ZGF0YX0+XG4gICAgICAgICAgICA8Q2FydGVzaWFuR3JpZCBzdHJva2VEYXNoYXJyYXk9XCIzIDNcIiAvPlxuICAgICAgICAgICAgPFhBeGlzIGRhdGFLZXk9XCJuYW1lXCIgLz5cbiAgICAgICAgICAgIDxZQXhpcyAvPlxuICAgICAgICAgICAgPFRvb2x0aXAgLz5cbiAgICAgICAgICAgIDxMZWdlbmQgLz5cbiAgICAgICAgICAgIDxCYXIgZGF0YUtleT1cIm1ldFwiIHN0YWNrSWQ9XCJhXCIgZmlsbD1cIiM4MmNhOWRcIiAvPlxuICAgICAgICAgICAgPEJhciBkYXRhS2V5PVwiYnJlYWNoZWRcIiBzdGFja0lkPVwiYVwiIGZpbGw9XCIjZmZjNjU4XCIgLz5cbiAgICAgICAgICA8L0JhckNoYXJ0PlxuICAgICAgICA8L1Jlc3BvbnNpdmVDb250YWluZXI+XG4gICAgICA8L2Rpdj5cbiAgICA8L2Rpdj5cbiAg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

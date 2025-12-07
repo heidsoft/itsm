@@ -67,21 +67,20 @@ export interface Ticket {
   custom_fields?: Record<string, unknown>;
 }
 
-// 创建工单请求
+// 创建工单请求（匹配后端DTO格式）
 export interface CreateTicketRequest {
   title: string;
   description: string;
-  priority: TicketPriority;
-  type: TicketType;
+  priority: TicketPriority | string; // 支持字符串格式
   category: string;
-  subcategory?: string;
+  category_id?: number; // 分类ID（优先使用）
+  template_id?: number; // 模板ID
   assignee_id?: number;
-  tags?: string[];
-  source?: string;
-  impact?: string;
-  urgency?: string;
-  business_value?: string;
-  custom_fields?: Record<string, unknown>;
+  parent_ticket_id?: number;
+  tag_ids?: number[]; // 标签ID列表（优先使用）
+  tags?: string[]; // 标签名称列表（兼容旧格式）
+  form_fields?: Record<string, unknown>;
+  attachments?: string[];
 }
 
 // 更新工单请求
@@ -210,8 +209,8 @@ class TicketService {
   }
 
   // 创建工单
-  async createTicket(data: CreateTicketRequest): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.post<{ message: string; ticket_id: number }>(this.baseUrl, data);
+  async createTicket(data: CreateTicketRequest): Promise<Ticket> {
+    return httpClient.post<Ticket>(this.baseUrl, data);
   }
 
   // 更新工单

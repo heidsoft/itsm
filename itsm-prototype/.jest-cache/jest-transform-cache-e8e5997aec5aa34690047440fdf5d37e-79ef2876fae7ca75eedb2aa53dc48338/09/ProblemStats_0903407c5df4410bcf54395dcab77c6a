@@ -1,0 +1,459 @@
+5dd7f22244a19756ce9324e6cd0b2ac5
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_2likijavo() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/problems/components/ProblemStats.tsx";
+  var hash = "420417814e750bde54439ac3d3918058a8845e45";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/problems/components/ProblemStats.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 28
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 14
+        },
+        end: {
+          line: 14,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 15,
+          column: 21
+        },
+        end: {
+          line: 15,
+          column: 44
+        }
+      },
+      "7": {
+        start: {
+          line: 17,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 6
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 21
+        },
+        end: {
+          line: 153,
+          column: 1
+        }
+      },
+      "9": {
+        start: {
+          line: 22,
+          column: 4
+        },
+        end: {
+          line: 152,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 16,
+            column: 9
+          },
+          end: {
+            line: 16,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 16
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 21,
+            column: 21
+          },
+          end: {
+            line: 21,
+            column: 22
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 36
+          },
+          end: {
+            line: 153,
+            column: 1
+          }
+        },
+        line: 21
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 35
+          },
+          end: {
+            line: 17,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 41
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        }],
+        line: 17
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 18
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        }],
+        line: 17
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/problems/components/ProblemStats.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { Card, Col, Row } from 'antd';\nimport { AlertTriangle, RefreshCw } from 'lucide-react';\n\ninterface ProblemStatsProps {\n  metrics: {\n    total: number;\n    open: number;\n    inProgress: number;\n    resolved: number;\n  };\n}\n\nexport const ProblemStats: React.FC<ProblemStatsProps> = ({ metrics }) => {\n  return (\n    <div className='mb-4'>\n      <Row gutter={[12, 12]}>\n        <Col xs={24} sm={12} md={6} lg={6}>\n          <Card\n            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white'\n            styles={{ body: { padding: '16px' } }}\n          >\n            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>\n              <AlertTriangle className='w-5 h-5 text-white' />\n            </div>\n            <div className='text-2xl font-bold mb-1'>{metrics.total}</div>\n            <div className='text-blue-100 font-medium text-xs'>\u603B\u95EE\u9898\u6570</div>\n          </Card>\n        </Col>\n        <Col xs={24} sm={12} md={6} lg={6}>\n          <Card\n            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white'\n            styles={{ body: { padding: '16px' } }}\n          >\n            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>\n              <AlertTriangle className='w-5 h-5 text-white' />\n            </div>\n            <div className='text-2xl font-bold mb-1'>{metrics.open}</div>\n            <div className='text-orange-100 font-medium text-xs'>\u5F85\u5904\u7406</div>\n          </Card>\n        </Col>\n        <Col xs={24} sm={12} md={6} lg={6}>\n          <Card\n            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white'\n            styles={{ body: { padding: '16px' } }}\n          >\n            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>\n              <RefreshCw className='w-5 h-5 text-white' />\n            </div>\n            <div className='text-2xl font-bold mb-1'>{metrics.inProgress}</div>\n            <div className='text-cyan-100 font-medium text-xs'>\u5904\u7406\u4E2D</div>\n          </Card>\n        </Col>\n        <Col xs={24} sm={12} md={6} lg={6}>\n          <Card\n            className='text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white'\n            styles={{ body: { padding: '16px' } }}\n          >\n            <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>\n              <AlertTriangle className='w-5 h-5 text-white' />\n            </div>\n            <div className='text-2xl font-bold mb-1'>{metrics.resolved}</div>\n            <div className='text-green-100 font-medium text-xs'>\u5DF2\u89E3\u51B3</div>\n          </Card>\n        </Col>\n      </Row>\n    </div>\n  );\n};\n"],
+      names: ["ProblemStats", "metrics", "div", "className", "Row", "gutter", "Col", "xs", "sm", "md", "lg", "Card", "styles", "body", "padding", "AlertTriangle", "total", "open", "RefreshCw", "inProgress", "resolved"],
+      mappings: "AAAA;;;;;+BAeaA;;;eAAAA;;;;8DAbK;sBACa;6BACU;;;;;;AAWlC,MAAMA,eAA4C,CAAC,EAAEC,OAAO,EAAE;IACnE,qBACE,qBAACC;QAAIC,WAAU;kBACb,cAAA,sBAACC,SAAG;YAACC,QAAQ;gBAAC;gBAAI;aAAG;;8BACnB,qBAACC,SAAG;oBAACC,IAAI;oBAAIC,IAAI;oBAAIC,IAAI;oBAAGC,IAAI;8BAC9B,cAAA,sBAACC,UAAI;wBACHR,WAAU;wBACVS,QAAQ;4BAAEC,MAAM;gCAAEC,SAAS;4BAAO;wBAAE;;0CAEpC,qBAACZ;gCAAIC,WAAU;0CACb,cAAA,qBAACY,0BAAa;oCAACZ,WAAU;;;0CAE3B,qBAACD;gCAAIC,WAAU;0CAA2BF,QAAQe,KAAK;;0CACvD,qBAACd;gCAAIC,WAAU;0CAAoC;;;;;8BAGvD,qBAACG,SAAG;oBAACC,IAAI;oBAAIC,IAAI;oBAAIC,IAAI;oBAAGC,IAAI;8BAC9B,cAAA,sBAACC,UAAI;wBACHR,WAAU;wBACVS,QAAQ;4BAAEC,MAAM;gCAAEC,SAAS;4BAAO;wBAAE;;0CAEpC,qBAACZ;gCAAIC,WAAU;0CACb,cAAA,qBAACY,0BAAa;oCAACZ,WAAU;;;0CAE3B,qBAACD;gCAAIC,WAAU;0CAA2BF,QAAQgB,IAAI;;0CACtD,qBAACf;gCAAIC,WAAU;0CAAsC;;;;;8BAGzD,qBAACG,SAAG;oBAACC,IAAI;oBAAIC,IAAI;oBAAIC,IAAI;oBAAGC,IAAI;8BAC9B,cAAA,sBAACC,UAAI;wBACHR,WAAU;wBACVS,QAAQ;4BAAEC,MAAM;gCAAEC,SAAS;4BAAO;wBAAE;;0CAEpC,qBAACZ;gCAAIC,WAAU;0CACb,cAAA,qBAACe,sBAAS;oCAACf,WAAU;;;0CAEvB,qBAACD;gCAAIC,WAAU;0CAA2BF,QAAQkB,UAAU;;0CAC5D,qBAACjB;gCAAIC,WAAU;0CAAoC;;;;;8BAGvD,qBAACG,SAAG;oBAACC,IAAI;oBAAIC,IAAI;oBAAIC,IAAI;oBAAGC,IAAI;8BAC9B,cAAA,sBAACC,UAAI;wBACHR,WAAU;wBACVS,QAAQ;4BAAEC,MAAM;gCAAEC,SAAS;4BAAO;wBAAE;;0CAEpC,qBAACZ;gCAAIC,WAAU;0CACb,cAAA,qBAACY,0BAAa;oCAACZ,WAAU;;;0CAE3B,qBAACD;gCAAIC,WAAU;0CAA2BF,QAAQmB,QAAQ;;0CAC1D,qBAAClB;gCAAIC,WAAU;0CAAqC;;;;;;;;AAMhE"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "420417814e750bde54439ac3d3918058a8845e45"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2likijavo = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2likijavo();
+cov_2likijavo().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2likijavo().s[1]++;
+Object.defineProperty(exports, "ProblemStats", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_2likijavo().f[0]++;
+    cov_2likijavo().s[2]++;
+    return ProblemStats;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_2likijavo().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_2likijavo().s[4]++, _interop_require_default(require("react")));
+const _antd =
+/* istanbul ignore next */
+(cov_2likijavo().s[5]++, require("antd"));
+const _lucidereact =
+/* istanbul ignore next */
+(cov_2likijavo().s[6]++, require("lucide-react"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_2likijavo().f[1]++;
+  cov_2likijavo().s[7]++;
+  return /* istanbul ignore next */(cov_2likijavo().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_2likijavo().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_2likijavo().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_2likijavo().b[0][1]++, {
+    default: obj
+  });
+}
+/* istanbul ignore next */
+cov_2likijavo().s[8]++;
+const ProblemStats = ({
+  metrics
+}) => {
+  /* istanbul ignore next */
+  cov_2likijavo().f[2]++;
+  cov_2likijavo().s[9]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+    className: "mb-4",
+    children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Row, {
+      gutter: [12, 12],
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+        xs: 24,
+        sm: 12,
+        md: 6,
+        lg: 6,
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Card, {
+          className: "text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white",
+          styles: {
+            body: {
+              padding: '16px'
+            }
+          },
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.AlertTriangle, {
+              className: "w-5 h-5 text-white"
+            })
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-2xl font-bold mb-1",
+            children: metrics.total
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-blue-100 font-medium text-xs",
+            children: "总问题数"
+          })]
+        })
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+        xs: 24,
+        sm: 12,
+        md: 6,
+        lg: 6,
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Card, {
+          className: "text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white",
+          styles: {
+            body: {
+              padding: '16px'
+            }
+          },
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.AlertTriangle, {
+              className: "w-5 h-5 text-white"
+            })
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-2xl font-bold mb-1",
+            children: metrics.open
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-orange-100 font-medium text-xs",
+            children: "待处理"
+          })]
+        })
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+        xs: 24,
+        sm: 12,
+        md: 6,
+        lg: 6,
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Card, {
+          className: "text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white",
+          styles: {
+            body: {
+              padding: '16px'
+            }
+          },
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.RefreshCw, {
+              className: "w-5 h-5 text-white"
+            })
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-2xl font-bold mb-1",
+            children: metrics.inProgress
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-cyan-100 font-medium text-xs",
+            children: "处理中"
+          })]
+        })
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+        xs: 24,
+        sm: 12,
+        md: 6,
+        lg: 6,
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Card, {
+          className: "text-center hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white",
+          styles: {
+            body: {
+              padding: '16px'
+            }
+          },
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.AlertTriangle, {
+              className: "w-5 h-5 text-white"
+            })
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-2xl font-bold mb-1",
+            children: metrics.resolved
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-green-100 font-medium text-xs",
+            children: "已解决"
+          })]
+        })
+      })]
+    })
+  });
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJQcm9ibGVtU3RhdHMiLCJtZXRyaWNzIiwiY292XzJsaWtpamF2byIsImYiLCJzIiwiX2pzeHJ1bnRpbWUiLCJqc3giLCJjbGFzc05hbWUiLCJqc3hzIiwiX2FudGQiLCJSb3ciLCJndXR0ZXIiLCJDb2wiLCJ4cyIsInNtIiwibWQiLCJsZyIsIkNhcmQiLCJzdHlsZXMiLCJib2R5IiwicGFkZGluZyIsIl9sdWNpZGVyZWFjdCIsIkFsZXJ0VHJpYW5nbGUiLCJ0b3RhbCIsIm9wZW4iLCJSZWZyZXNoQ3ciLCJpblByb2dyZXNzIiwicmVzb2x2ZWQiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1wcm90b3R5cGUvc3JjL2FwcC8obWFpbikvcHJvYmxlbXMvY29tcG9uZW50cy9Qcm9ibGVtU3RhdHMudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50JztcblxuaW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IENhcmQsIENvbCwgUm93IH0gZnJvbSAnYW50ZCc7XG5pbXBvcnQgeyBBbGVydFRyaWFuZ2xlLCBSZWZyZXNoQ3cgfSBmcm9tICdsdWNpZGUtcmVhY3QnO1xuXG5pbnRlcmZhY2UgUHJvYmxlbVN0YXRzUHJvcHMge1xuICBtZXRyaWNzOiB7XG4gICAgdG90YWw6IG51bWJlcjtcbiAgICBvcGVuOiBudW1iZXI7XG4gICAgaW5Qcm9ncmVzczogbnVtYmVyO1xuICAgIHJlc29sdmVkOiBudW1iZXI7XG4gIH07XG59XG5cbmV4cG9ydCBjb25zdCBQcm9ibGVtU3RhdHM6IFJlYWN0LkZDPFByb2JsZW1TdGF0c1Byb3BzPiA9ICh7IG1ldHJpY3MgfSkgPT4ge1xuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPSdtYi00Jz5cbiAgICAgIDxSb3cgZ3V0dGVyPXtbMTIsIDEyXX0+XG4gICAgICAgIDxDb2wgeHM9ezI0fSBzbT17MTJ9IG1kPXs2fSBsZz17Nn0+XG4gICAgICAgICAgPENhcmRcbiAgICAgICAgICAgIGNsYXNzTmFtZT0ndGV4dC1jZW50ZXIgaG92ZXI6c2hhZG93LWxnIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTMwMCBib3JkZXItMCBiZy1ncmFkaWVudC10by1iciBmcm9tLWJsdWUtNTAwIHRvLWJsdWUtNjAwIHRleHQtd2hpdGUnXG4gICAgICAgICAgICBzdHlsZXM9e3sgYm9keTogeyBwYWRkaW5nOiAnMTZweCcgfSB9fVxuICAgICAgICAgID5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd3LTEwIGgtMTAgYmctd2hpdGUvMjAgcm91bmRlZC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBteC1hdXRvIG1iLTMnPlxuICAgICAgICAgICAgICA8QWxlcnRUcmlhbmdsZSBjbGFzc05hbWU9J3ctNSBoLTUgdGV4dC13aGl0ZScgLz5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3RleHQtMnhsIGZvbnQtYm9sZCBtYi0xJz57bWV0cmljcy50b3RhbH08L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LWJsdWUtMTAwIGZvbnQtbWVkaXVtIHRleHQteHMnPuaAu+mXrumimOaVsDwvZGl2PlxuICAgICAgICAgIDwvQ2FyZD5cbiAgICAgICAgPC9Db2w+XG4gICAgICAgIDxDb2wgeHM9ezI0fSBzbT17MTJ9IG1kPXs2fSBsZz17Nn0+XG4gICAgICAgICAgPENhcmRcbiAgICAgICAgICAgIGNsYXNzTmFtZT0ndGV4dC1jZW50ZXIgaG92ZXI6c2hhZG93LWxnIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTMwMCBib3JkZXItMCBiZy1ncmFkaWVudC10by1iciBmcm9tLW9yYW5nZS01MDAgdG8tb3JhbmdlLTYwMCB0ZXh0LXdoaXRlJ1xuICAgICAgICAgICAgc3R5bGVzPXt7IGJvZHk6IHsgcGFkZGluZzogJzE2cHgnIH0gfX1cbiAgICAgICAgICA+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ndy0xMCBoLTEwIGJnLXdoaXRlLzIwIHJvdW5kZWQtbGcgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgbXgtYXV0byBtYi0zJz5cbiAgICAgICAgICAgICAgPEFsZXJ0VHJpYW5nbGUgY2xhc3NOYW1lPSd3LTUgaC01IHRleHQtd2hpdGUnIC8+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LTJ4bCBmb250LWJvbGQgbWItMSc+e21ldHJpY3Mub3Blbn08L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LW9yYW5nZS0xMDAgZm9udC1tZWRpdW0gdGV4dC14cyc+5b6F5aSE55CGPC9kaXY+XG4gICAgICAgICAgPC9DYXJkPlxuICAgICAgICA8L0NvbD5cbiAgICAgICAgPENvbCB4cz17MjR9IHNtPXsxMn0gbWQ9ezZ9IGxnPXs2fT5cbiAgICAgICAgICA8Q2FyZFxuICAgICAgICAgICAgY2xhc3NOYW1lPSd0ZXh0LWNlbnRlciBob3ZlcjpzaGFkb3ctbGcgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMzAwIGJvcmRlci0wIGJnLWdyYWRpZW50LXRvLWJyIGZyb20tY3lhbi01MDAgdG8tY3lhbi02MDAgdGV4dC13aGl0ZSdcbiAgICAgICAgICAgIHN0eWxlcz17eyBib2R5OiB7IHBhZGRpbmc6ICcxNnB4JyB9IH19XG4gICAgICAgICAgPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3ctMTAgaC0xMCBiZy13aGl0ZS8yMCByb3VuZGVkLWxnIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIG14LWF1dG8gbWItMyc+XG4gICAgICAgICAgICAgIDxSZWZyZXNoQ3cgY2xhc3NOYW1lPSd3LTUgaC01IHRleHQtd2hpdGUnIC8+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LTJ4bCBmb250LWJvbGQgbWItMSc+e21ldHJpY3MuaW5Qcm9ncmVzc308L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LWN5YW4tMTAwIGZvbnQtbWVkaXVtIHRleHQteHMnPuWkhOeQhuS4rTwvZGl2PlxuICAgICAgICAgIDwvQ2FyZD5cbiAgICAgICAgPC9Db2w+XG4gICAgICAgIDxDb2wgeHM9ezI0fSBzbT17MTJ9IG1kPXs2fSBsZz17Nn0+XG4gICAgICAgICAgPENhcmRcbiAgICAgICAgICAgIGNsYXNzTmFtZT0ndGV4dC1jZW50ZXIgaG92ZXI6c2hhZG93LWxnIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTMwMCBib3JkZXItMCBiZy1ncmFkaWVudC10by1iciBmcm9tLWdyZWVuLTUwMCB0by1ncmVlbi02MDAgdGV4dC13aGl0ZSdcbiAgICAgICAgICAgIHN0eWxlcz17eyBib2R5OiB7IHBhZGRpbmc6ICcxNnB4JyB9IH19XG4gICAgICAgICAgPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3ctMTAgaC0xMCBiZy13aGl0ZS8yMCByb3VuZGVkLWxnIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIG14LWF1dG8gbWItMyc+XG4gICAgICAgICAgICAgIDxBbGVydFRyaWFuZ2xlIGNsYXNzTmFtZT0ndy01IGgtNSB0ZXh0LXdoaXRlJyAvPlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ndGV4dC0yeGwgZm9udC1ib2xkIG1iLTEnPnttZXRyaWNzLnJlc29sdmVkfTwvZGl2PlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3RleHQtZ3JlZW4tMTAwIGZvbnQtbWVkaXVtIHRleHQteHMnPuW3suino+WGszwvZGl2PlxuICAgICAgICAgIDwvQ2FyZD5cbiAgICAgICAgPC9Db2w+XG4gICAgICA8L1Jvdz5cbiAgICA8L2Rpdj5cbiAgKTtcbn07XG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7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

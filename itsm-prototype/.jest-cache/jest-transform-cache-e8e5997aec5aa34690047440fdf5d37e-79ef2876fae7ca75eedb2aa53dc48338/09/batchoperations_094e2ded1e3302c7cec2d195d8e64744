@@ -1,0 +1,599 @@
+4aa784b6578514247ee59b9e2e3a6b03
+/**
+ * 批量操作类型定义
+ * 支持工单的批量分配、状态更新、字段更新、删除、导出等操作
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_1ieh03uyru() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/types/batch-operations.ts";
+  var hash = "95e28e074020c5f77665785366977eb79bb7439f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/types/batch-operations.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 9,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 7
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 24
+        },
+        end: {
+          line: 12,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 14,
+          column: 0
+        },
+        end: {
+          line: 21,
+          column: 3
+        }
+      },
+      "4": {
+        start: {
+          line: 16,
+          column: 8
+        },
+        end: {
+          line: 16,
+          column: 36
+        }
+      },
+      "5": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 34
+        }
+      },
+      "6": {
+        start: {
+          line: 22,
+          column: 39
+        },
+        end: {
+          line: 37,
+          column: 5
+        }
+      },
+      "7": {
+        start: {
+          line: 23,
+          column: 4
+        },
+        end: {
+          line: 23,
+          column: 44
+        }
+      },
+      "8": {
+        start: {
+          line: 24,
+          column: 4
+        },
+        end: {
+          line: 24,
+          column: 58
+        }
+      },
+      "9": {
+        start: {
+          line: 25,
+          column: 4
+        },
+        end: {
+          line: 25,
+          column: 62
+        }
+      },
+      "10": {
+        start: {
+          line: 26,
+          column: 4
+        },
+        end: {
+          line: 26,
+          column: 54
+        }
+      },
+      "11": {
+        start: {
+          line: 27,
+          column: 4
+        },
+        end: {
+          line: 27,
+          column: 62
+        }
+      },
+      "12": {
+        start: {
+          line: 28,
+          column: 4
+        },
+        end: {
+          line: 28,
+          column: 48
+        }
+      },
+      "13": {
+        start: {
+          line: 29,
+          column: 4
+        },
+        end: {
+          line: 29,
+          column: 54
+        }
+      },
+      "14": {
+        start: {
+          line: 30,
+          column: 4
+        },
+        end: {
+          line: 30,
+          column: 58
+        }
+      },
+      "15": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 31,
+          column: 44
+        }
+      },
+      "16": {
+        start: {
+          line: 32,
+          column: 4
+        },
+        end: {
+          line: 32,
+          column: 46
+        }
+      },
+      "17": {
+        start: {
+          line: 33,
+          column: 4
+        },
+        end: {
+          line: 33,
+          column: 44
+        }
+      },
+      "18": {
+        start: {
+          line: 34,
+          column: 4
+        },
+        end: {
+          line: 34,
+          column: 42
+        }
+      },
+      "19": {
+        start: {
+          line: 35,
+          column: 4
+        },
+        end: {
+          line: 35,
+          column: 44
+        }
+      },
+      "20": {
+        start: {
+          line: 36,
+          column: 4
+        },
+        end: {
+          line: 36,
+          column: 30
+        }
+      },
+      "21": {
+        start: {
+          line: 38,
+          column: 41
+        },
+        end: {
+          line: 46,
+          column: 5
+        }
+      },
+      "22": {
+        start: {
+          line: 39,
+          column: 4
+        },
+        end: {
+          line: 39,
+          column: 48
+        }
+      },
+      "23": {
+        start: {
+          line: 40,
+          column: 4
+        },
+        end: {
+          line: 40,
+          column: 48
+        }
+      },
+      "24": {
+        start: {
+          line: 41,
+          column: 4
+        },
+        end: {
+          line: 41,
+          column: 46
+        }
+      },
+      "25": {
+        start: {
+          line: 42,
+          column: 4
+        },
+        end: {
+          line: 42,
+          column: 52
+        }
+      },
+      "26": {
+        start: {
+          line: 43,
+          column: 4
+        },
+        end: {
+          line: 43,
+          column: 46
+        }
+      },
+      "27": {
+        start: {
+          line: 44,
+          column: 4
+        },
+        end: {
+          line: 44,
+          column: 52
+        }
+      },
+      "28": {
+        start: {
+          line: 45,
+          column: 4
+        },
+        end: {
+          line: 45,
+          column: 32
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "_export",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 30
+          },
+          end: {
+            line: 13,
+            column: 1
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 15,
+            column: 26
+          },
+          end: {
+            line: 15,
+            column: 27
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 37
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 18,
+            column: 24
+          },
+          end: {
+            line: 18,
+            column: 25
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 35
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        line: 18
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 22,
+            column: 39
+          },
+          end: {
+            line: 22,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 68
+          },
+          end: {
+            line: 37,
+            column: 1
+          }
+        },
+        line: 22
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 38,
+            column: 41
+          },
+          end: {
+            line: 38,
+            column: 42
+          }
+        },
+        loc: {
+          start: {
+            line: 38,
+            column: 72
+          },
+          end: {
+            line: 46,
+            column: 1
+          }
+        },
+        line: 38
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/types/batch-operations.ts"],
+      sourcesContent: ["/**\n * \u6279\u91CF\u64CD\u4F5C\u7C7B\u578B\u5B9A\u4E49\n * \u652F\u6301\u5DE5\u5355\u7684\u6279\u91CF\u5206\u914D\u3001\u72B6\u6001\u66F4\u65B0\u3001\u5B57\u6BB5\u66F4\u65B0\u3001\u5220\u9664\u3001\u5BFC\u51FA\u7B49\u64CD\u4F5C\n */\n\nimport type { TicketStatus, TicketPriority, TicketType } from './ticket';\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u7C7B\u578B\u679A\u4E3E ====================\n\nexport enum BatchOperationType {\n  ASSIGN = 'assign',                     // \u6279\u91CF\u5206\u914D\n  UPDATE_STATUS = 'update_status',       // \u6279\u91CF\u72B6\u6001\u66F4\u65B0\n  UPDATE_PRIORITY = 'update_priority',   // \u6279\u91CF\u4F18\u5148\u7EA7\u66F4\u65B0\n  UPDATE_TYPE = 'update_type',           // \u6279\u91CF\u7C7B\u578B\u66F4\u65B0\n  UPDATE_CATEGORY = 'update_category',   // \u6279\u91CF\u5206\u7C7B\u66F4\u65B0\n  ADD_TAGS = 'add_tags',                 // \u6279\u91CF\u6DFB\u52A0\u6807\u7B7E\n  REMOVE_TAGS = 'remove_tags',           // \u6279\u91CF\u5220\u9664\u6807\u7B7E\n  UPDATE_FIELDS = 'update_fields',       // \u6279\u91CF\u66F4\u65B0\u81EA\u5B9A\u4E49\u5B57\u6BB5\n  DELETE = 'delete',                     // \u6279\u91CF\u5220\u9664\n  ARCHIVE = 'archive',                   // \u6279\u91CF\u5F52\u6863\n  EXPORT = 'export',                     // \u6279\u91CF\u5BFC\u51FA\n  CLOSE = 'close',                       // \u6279\u91CF\u5173\u95ED\n  REOPEN = 'reopen',                     // \u6279\u91CF\u91CD\u65B0\u6253\u5F00\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u8BF7\u6C42 ====================\n\nexport interface BatchOperationRequest {\n  operationType: BatchOperationType;\n  ticketIds: number[];                   // \u5DE5\u5355IDs\uFF08\u6700\u591A1000\u4E2A\uFF09\n  data?: BatchOperationData;             // \u64CD\u4F5C\u6570\u636E\n  comment?: string;                      // \u6279\u91CF\u64CD\u4F5C\u8BF4\u660E\n  notifyAssignees?: boolean;             // \u662F\u5426\u901A\u77E5\u5904\u7406\u4EBA\n}\n\nexport interface BatchOperationData {\n  // \u6279\u91CF\u5206\u914D\n  assigneeId?: number;\n  teamId?: number;\n  assignmentRule?: 'round_robin' | 'load_balance' | 'manual';\n  \n  // \u6279\u91CF\u72B6\u6001\u66F4\u65B0\n  status?: TicketStatus;\n  resolution?: string;\n  \n  // \u6279\u91CF\u4F18\u5148\u7EA7\u66F4\u65B0\n  priority?: TicketPriority;\n  \n  // \u6279\u91CF\u7C7B\u578B\u66F4\u65B0\n  type?: TicketType;\n  \n  // \u6279\u91CF\u5206\u7C7B\u66F4\u65B0\n  categoryId?: number;\n  \n  // \u6279\u91CF\u6807\u7B7E\u64CD\u4F5C\n  tags?: string[];\n  \n  // \u6279\u91CF\u5B57\u6BB5\u66F4\u65B0\n  customFields?: Record<string, any>;\n  \n  // \u6279\u91CF\u5BFC\u51FA\n  exportFormat?: 'excel' | 'csv' | 'pdf';\n  exportFields?: string[];\n  includeComments?: boolean;\n  includeAttachments?: boolean;\n  \n  // \u6279\u91CF\u5173\u95ED\n  closureReason?: string;\n  satisfactionRequired?: boolean;\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u54CD\u5E94 ====================\n\nexport interface BatchOperationResponse {\n  operationId: string;                   // \u64CD\u4F5CID\n  operationType: BatchOperationType;\n  totalCount: number;                    // \u603B\u6570\n  successCount: number;                  // \u6210\u529F\u6570\n  failedCount: number;                   // \u5931\u8D25\u6570\n  skippedCount: number;                  // \u8DF3\u8FC7\u6570\n  completedAt?: Date;                    // \u5B8C\u6210\u65F6\u95F4\n  errors: BatchOperationError[];         // \u9519\u8BEF\u5217\u8868\n  warnings: BatchOperationWarning[];     // \u8B66\u544A\u5217\u8868\n  downloadUrl?: string;                  // \u5BFC\u51FA\u6587\u4EF6\u4E0B\u8F7D\u94FE\u63A5\uFF08\u5BFC\u51FA\u64CD\u4F5C\uFF09\n}\n\nexport interface BatchOperationError {\n  ticketId: number;\n  ticketNumber: string;\n  error: string;\n  errorCode?: string;\n  details?: any;\n}\n\nexport interface BatchOperationWarning {\n  ticketId: number;\n  ticketNumber: string;\n  warning: string;\n  details?: any;\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u8FDB\u5EA6 ====================\n\nexport interface BatchOperationProgress {\n  operationId: string;\n  operationType: BatchOperationType;\n  status: BatchOperationStatus;\n  totalCount: number;\n  processedCount: number;\n  successCount: number;\n  failedCount: number;\n  percentage: number;                    // \u767E\u5206\u6BD4\uFF080-100\uFF09\n  startedAt: Date;\n  estimatedCompletionTime?: Date;\n  currentTicket?: {\n    ticketId: number;\n    ticketNumber: string;\n  };\n}\n\nexport enum BatchOperationStatus {\n  PENDING = 'pending',                   // \u7B49\u5F85\u4E2D\n  RUNNING = 'running',                   // \u6267\u884C\u4E2D\n  PAUSED = 'paused',                     // \u5DF2\u6682\u505C\n  COMPLETED = 'completed',               // \u5DF2\u5B8C\u6210\n  FAILED = 'failed',                     // \u5931\u8D25\n  CANCELLED = 'cancelled',               // \u5DF2\u53D6\u6D88\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u65E5\u5FD7 ====================\n\nexport interface BatchOperationLog {\n  id: string;\n  operationId: string;\n  operationType: BatchOperationType;\n  operatorId: number;\n  operatorName: string;\n  ticketIds: number[];\n  totalCount: number;\n  successCount: number;\n  failedCount: number;\n  status: BatchOperationStatus;\n  startedAt: Date;\n  completedAt?: Date;\n  duration?: number;                     // \u8017\u65F6\uFF08\u79D2\uFF09\n  comment?: string;\n  data?: BatchOperationData;\n  errors?: BatchOperationError[];\n}\n\n// ==================== \u6279\u91CF\u9009\u62E9\u914D\u7F6E ====================\n\nexport interface BatchSelectionConfig {\n  maxSelectionCount?: number;            // \u6700\u5927\u9009\u62E9\u6570\u91CF\uFF08\u9ED8\u8BA41000\uFF09\n  allowCrossPage?: boolean;              // \u5141\u8BB8\u8DE8\u9875\u9009\u62E9\n  selectAll?: boolean;                   // \u5168\u9009\uFF08\u6839\u636E\u7B5B\u9009\u6761\u4EF6\uFF09\n  excludeIds?: number[];                 // \u6392\u9664\u7684\u5DE5\u5355IDs\n}\n\n// ==================== \u6279\u91CF\u9A8C\u8BC1 ====================\n\nexport interface BatchOperationValidation {\n  isValid: boolean;\n  canProceed: boolean;\n  errors: ValidationError[];\n  warnings: ValidationWarning[];\n  affectedTickets: {\n    ticketId: number;\n    ticketNumber: string;\n    currentStatus: TicketStatus;\n    willChange: boolean;\n    conflicts?: string[];\n  }[];\n}\n\nexport interface ValidationError {\n  field: string;\n  message: string;\n  severity: 'error' | 'critical';\n  ticketIds?: number[];\n}\n\nexport interface ValidationWarning {\n  field: string;\n  message: string;\n  ticketIds?: number[];\n  canIgnore: boolean;\n}\n\n// ==================== \u6279\u91CF\u5BFC\u51FA\u914D\u7F6E ====================\n\nexport interface BatchExportConfig {\n  format: 'excel' | 'csv' | 'pdf';\n  fields: ExportField[];\n  includeComments: boolean;\n  includeAttachments: boolean;\n  includeHistory: boolean;\n  includeRelations: boolean;\n  groupBy?: 'status' | 'priority' | 'assignee' | 'category';\n  sortBy?: string;\n  sortOrder?: 'asc' | 'desc';\n  fileName?: string;\n}\n\nexport interface ExportField {\n  fieldName: string;\n  fieldLabel: string;\n  includeInExport: boolean;\n  order: number;\n}\n\n// ==================== \u6279\u91CF\u5206\u914D\u89C4\u5219 ====================\n\nexport interface BatchAssignmentRule {\n  type: 'round_robin' | 'load_balance' | 'skill_based' | 'manual';\n  targetUserIds?: number[];\n  targetTeamId?: number;\n  skillTags?: string[];\n  maxWorkload?: number;                  // \u6BCF\u4EBA\u6700\u5927\u5DE5\u4F5C\u8D1F\u8F7D\n  considerCurrentWorkload?: boolean;\n  considerAvailability?: boolean;\n}\n\nexport interface AssignmentResult {\n  ticketId: number;\n  assignedTo: number;\n  assignedToName: string;\n  currentWorkload: number;\n  reason: string;\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u9884\u89C8 ====================\n\nexport interface BatchOperationPreview {\n  operationType: BatchOperationType;\n  affectedCount: number;\n  changes: BatchOperationChange[];\n  estimatedDuration: number;             // \u9884\u8BA1\u8017\u65F6\uFF08\u79D2\uFF09\n  risks: BatchOperationRisk[];\n}\n\nexport interface BatchOperationChange {\n  ticketId: number;\n  ticketNumber: string;\n  field: string;\n  currentValue: any;\n  newValue: any;\n  willAffectSLA: boolean;\n  willTriggerWorkflow: boolean;\n  willSendNotification: boolean;\n}\n\nexport interface BatchOperationRisk {\n  level: 'low' | 'medium' | 'high' | 'critical';\n  description: string;\n  affectedTicketIds: number[];\n  mitigation?: string;\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u7EDF\u8BA1 ====================\n\nexport interface BatchOperationStats {\n  totalOperations: number;\n  operationsByType: Record<BatchOperationType, number>;\n  successRate: number;                   // \u6210\u529F\u7387\uFF08%\uFF09\n  averageDuration: number;               // \u5E73\u5747\u8017\u65F6\uFF08\u79D2\uFF09\n  totalTicketsAffected: number;\n  mostCommonErrors: {\n    error: string;\n    count: number;\n  }[];\n  operationsByUser: {\n    userId: number;\n    username: string;\n    operationCount: number;\n    successRate: number;\n  }[];\n  recentOperations: BatchOperationLog[];\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u6743\u9650 ====================\n\nexport interface BatchOperationPermissions {\n  canBatchAssign: boolean;\n  canBatchUpdateStatus: boolean;\n  canBatchUpdatePriority: boolean;\n  canBatchUpdateFields: boolean;\n  canBatchDelete: boolean;\n  canBatchExport: boolean;\n  canBatchClose: boolean;\n  maxBatchSize: number;                  // \u6700\u5927\u6279\u91CF\u64CD\u4F5C\u6570\u91CF\n  allowedOperations: BatchOperationType[];\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u961F\u5217 ====================\n\nexport interface BatchOperationQueue {\n  queueId: string;\n  operations: QueuedOperation[];\n  status: 'active' | 'paused' | 'completed';\n  createdAt: Date;\n  processedCount: number;\n  remainingCount: number;\n}\n\nexport interface QueuedOperation {\n  id: string;\n  operationType: BatchOperationType;\n  ticketIds: number[];\n  priority: 'low' | 'normal' | 'high';\n  status: 'pending' | 'processing' | 'completed' | 'failed';\n  scheduledAt?: Date;\n  startedAt?: Date;\n  completedAt?: Date;\n}\n\n// ==================== \u6279\u91CF\u64CD\u4F5C\u786E\u8BA4 ====================\n\nexport interface BatchOperationConfirmation {\n  operationType: BatchOperationType;\n  ticketCount: number;\n  requiresConfirmation: boolean;\n  confirmationMessage: string;\n  confirmationLevel: 'low' | 'medium' | 'high';\n  mustTypeConfirmation?: string;         // \u9AD8\u5371\u64CD\u4F5C\u9700\u8981\u8F93\u5165\u7684\u786E\u8BA4\u6587\u672C\n  warnings: string[];\n  estimatedImpact: {\n    affectedUsers: number;\n    affectedTeams: number;\n    slaImpact: number;\n    workflowTriggers: number;\n  };\n}\n\n// ==================== \u5DE5\u5177\u7C7B\u578B ====================\n\nexport type BatchOperationCallback = (progress: BatchOperationProgress) => void;\n\nexport type BatchOperationFilter = (ticketId: number) => boolean;\n\n// ==================== \u5BFC\u51FA\u6240\u6709\u7C7B\u578B ====================\n\nexport default BatchOperationRequest;\n\n"],
+      names: ["BatchOperationStatus", "BatchOperationType"],
+      mappings: "AAAA;;;CAGC;;;;;;;;;;;IAqHWA,oBAAoB;eAApBA;;IA/GAC,kBAAkB;eAAlBA;;;AAAL,IAAA,AAAKA,4CAAAA;;;;;;;;;;;;;;WAAAA;;AA+GL,IAAA,AAAKD,8CAAAA;;;;;;;WAAAA"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "95e28e074020c5f77665785366977eb79bb7439f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1ieh03uyru = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1ieh03uyru();
+cov_1ieh03uyru().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function _export(target, all) {
+  /* istanbul ignore next */
+  cov_1ieh03uyru().f[0]++;
+  cov_1ieh03uyru().s[1]++;
+  for (var name in all) {
+    /* istanbul ignore next */
+    cov_1ieh03uyru().s[2]++;
+    Object.defineProperty(target, name, {
+      enumerable: true,
+      get: all[name]
+    });
+  }
+}
+/* istanbul ignore next */
+cov_1ieh03uyru().s[3]++;
+_export(exports, {
+  BatchOperationStatus: function () {
+    /* istanbul ignore next */
+    cov_1ieh03uyru().f[1]++;
+    cov_1ieh03uyru().s[4]++;
+    return BatchOperationStatus;
+  },
+  BatchOperationType: function () {
+    /* istanbul ignore next */
+    cov_1ieh03uyru().f[2]++;
+    cov_1ieh03uyru().s[5]++;
+    return BatchOperationType;
+  }
+});
+var BatchOperationType =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_1ieh03uyru().s[6]++, function (BatchOperationType) {
+  /* istanbul ignore next */
+  cov_1ieh03uyru().f[3]++;
+  cov_1ieh03uyru().s[7]++;
+  BatchOperationType["ASSIGN"] = "assign";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[8]++;
+  BatchOperationType["UPDATE_STATUS"] = "update_status";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[9]++;
+  BatchOperationType["UPDATE_PRIORITY"] = "update_priority";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[10]++;
+  BatchOperationType["UPDATE_TYPE"] = "update_type";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[11]++;
+  BatchOperationType["UPDATE_CATEGORY"] = "update_category";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[12]++;
+  BatchOperationType["ADD_TAGS"] = "add_tags";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[13]++;
+  BatchOperationType["REMOVE_TAGS"] = "remove_tags";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[14]++;
+  BatchOperationType["UPDATE_FIELDS"] = "update_fields";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[15]++;
+  BatchOperationType["DELETE"] = "delete";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[16]++;
+  BatchOperationType["ARCHIVE"] = "archive";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[17]++;
+  BatchOperationType["EXPORT"] = "export";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[18]++;
+  BatchOperationType["CLOSE"] = "close";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[19]++;
+  BatchOperationType["REOPEN"] = "reopen";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[20]++;
+  return BatchOperationType;
+}({}));
+var BatchOperationStatus =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_1ieh03uyru().s[21]++, function (BatchOperationStatus) {
+  /* istanbul ignore next */
+  cov_1ieh03uyru().f[4]++;
+  cov_1ieh03uyru().s[22]++;
+  BatchOperationStatus["PENDING"] = "pending";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[23]++;
+  BatchOperationStatus["RUNNING"] = "running";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[24]++;
+  BatchOperationStatus["PAUSED"] = "paused";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[25]++;
+  BatchOperationStatus["COMPLETED"] = "completed";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[26]++;
+  BatchOperationStatus["FAILED"] = "failed";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[27]++;
+  BatchOperationStatus["CANCELLED"] = "cancelled";
+  /* istanbul ignore next */
+  cov_1ieh03uyru().s[28]++;
+  return BatchOperationStatus;
+}({}));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMWllaDAzdXlydSIsInBhdGgiLCJoYXNoIiwiZ2xvYmFsIiwiRnVuY3Rpb24iLCJnY3YiLCJjb3ZlcmFnZURhdGEiLCJzdGF0ZW1lbnRNYXAiLCJzdGFydCIsImxpbmUiLCJjb2x1bW4iLCJlbmQiLCJmbk1hcCIsIm5hbWUiLCJkZWNsIiwibG9jIiwiYnJhbmNoTWFwIiwicyIsImYiLCJiIiwiaW5wdXRTb3VyY2VNYXAiLCJ2ZXJzaW9uIiwic291cmNlcyIsInNvdXJjZXNDb250ZW50IiwibmFtZXMiLCJtYXBwaW5ncyIsIl9jb3ZlcmFnZVNjaGVtYSIsImNvdmVyYWdlIiwiYWN0dWFsQ292ZXJhZ2UiLCJCYXRjaE9wZXJhdGlvblN0YXR1cyIsIkJhdGNoT3BlcmF0aW9uVHlwZSJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvdHlwZXMvYmF0Y2gtb3BlcmF0aW9ucy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIOaJuemHj+aTjeS9nOexu+Wei+WumuS5iVxuICog5pSv5oyB5bel5Y2V55qE5om56YeP5YiG6YWN44CB54q25oCB5pu05paw44CB5a2X5q615pu05paw44CB5Yig6Zmk44CB5a+85Ye6562J5pON5L2cXG4gKi9cblxuaW1wb3J0IHR5cGUgeyBUaWNrZXRTdGF0dXMsIFRpY2tldFByaW9yaXR5LCBUaWNrZXRUeXBlIH0gZnJvbSAnLi90aWNrZXQnO1xuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDmibnph4/mk43kvZznsbvlnovmnprkuL4gPT09PT09PT09PT09PT09PT09PT1cblxuZXhwb3J0IGVudW0gQmF0Y2hPcGVyYXRpb25UeXBlIHtcbiAgQVNTSUdOID0gJ2Fzc2lnbicsICAgICAgICAgICAgICAgICAgICAgLy8g5om56YeP5YiG6YWNXG4gIFVQREFURV9TVEFUVVMgPSAndXBkYXRlX3N0YXR1cycsICAgICAgIC8vIOaJuemHj+eKtuaAgeabtOaWsFxuICBVUERBVEVfUFJJT1JJVFkgPSAndXBkYXRlX3ByaW9yaXR5JywgICAvLyDmibnph4/kvJjlhYjnuqfmm7TmlrBcbiAgVVBEQVRFX1RZUEUgPSAndXBkYXRlX3R5cGUnLCAgICAgICAgICAgLy8g5om56YeP57G75Z6L5pu05pawXG4gIFVQREFURV9DQVRFR09SWSA9ICd1cGRhdGVfY2F0ZWdvcnknLCAgIC8vIOaJuemHj+WIhuexu+abtOaWsFxuICBBRERfVEFHUyA9ICdhZGRfdGFncycsICAgICAgICAgICAgICAgICAvLyDmibnph4/mt7vliqDmoIfnrb5cbiAgUkVNT1ZFX1RBR1MgPSAncmVtb3ZlX3RhZ3MnLCAgICAgICAgICAgLy8g5om56YeP5Yig6Zmk5qCH562+XG4gIFVQREFURV9GSUVMRFMgPSAndXBkYXRlX2ZpZWxkcycsICAgICAgIC8vIOaJuemHj+abtOaWsOiHquWumuS5ieWtl+autVxuICBERUxFVEUgPSAnZGVsZXRlJywgICAgICAgICAgICAgICAgICAgICAvLyDmibnph4/liKDpmaRcbiAgQVJDSElWRSA9ICdhcmNoaXZlJywgICAgICAgICAgICAgICAgICAgLy8g5om56YeP5b2S5qGjXG4gIEVYUE9SVCA9ICdleHBvcnQnLCAgICAgICAgICAgICAgICAgICAgIC8vIOaJuemHj+WvvOWHulxuICBDTE9TRSA9ICdjbG9zZScsICAgICAgICAgICAgICAgICAgICAgICAvLyDmibnph4/lhbPpl61cbiAgUkVPUEVOID0gJ3Jlb3BlbicsICAgICAgICAgICAgICAgICAgICAgLy8g5om56YeP6YeN5paw5omT5byAXG59XG5cbi8vID09PT09PT09PT09PT09PT09PT09IOaJuemHj+aTjeS9nOivt+axgiA9PT09PT09PT09PT09PT09PT09PVxuXG5leHBvcnQgaW50ZXJmYWNlIEJhdGNoT3BlcmF0aW9uUmVxdWVzdCB7XG4gIG9wZXJhdGlvblR5cGU6IEJhdGNoT3BlcmF0aW9uVHlwZTtcbiAgdGlja2V0SWRzOiBudW1iZXJbXTsgICAgICAgICAgICAgICAgICAgLy8g5bel5Y2VSURz77yI5pyA5aSaMTAwMOS4qu+8iVxuICBkYXRhPzogQmF0Y2hPcGVyYXRpb25EYXRhOyAgICAgICAgICAgICAvLyDmk43kvZzmlbDmja5cbiAgY29tbWVudD86IHN0cmluZzsgICAgICAgICAgICAgICAgICAgICAgLy8g5om56YeP5pON5L2c6K+05piOXG4gIG5vdGlmeUFzc2lnbmVlcz86IGJvb2xlYW47ICAgICAgICAgICAgIC8vIOaYr+WQpumAmuefpeWkhOeQhuS6ulxufVxuXG5leHBvcnQgaW50ZXJmYWNlIEJhdGNoT3BlcmF0aW9uRGF0YSB7XG4gIC8vIOaJuemHj+WIhumFjVxuICBhc3NpZ25lZUlkPzogbnVtYmVyO1xuICB0ZWFtSWQ/OiBudW1iZXI7XG4gIGFzc2lnbm1lbnRSdWxlPzogJ3JvdW5kX3JvYmluJyB8ICdsb2FkX2JhbGFuY2UnIHwgJ21hbnVhbCc7XG4gIFxuICAvLyDmibnph4/nirbmgIHmm7TmlrBcbiAgc3RhdHVzPzogVGlja2V0U3RhdHVzO1xuICByZXNvbHV0aW9uPzogc3RyaW5nO1xuICBcbiAgLy8g5om56YeP5LyY5YWI57qn5pu05pawXG4gIHByaW9yaXR5PzogVGlja2V0UHJpb3JpdHk7XG4gIFxuICAvLyDmibnph4/nsbvlnovmm7TmlrBcbiAgdHlwZT86IFRpY2tldFR5cGU7XG4gIFxuICAvLyDmibnph4/liIbnsbvmm7TmlrBcbiAgY2F0ZWdvcnlJZD86IG51bWJlcjtcbiAgXG4gIC8vIOaJuemHj+agh+etvuaTjeS9nFxuICB0YWdzPzogc3RyaW5nW107XG4gIFxuICAvLyDmibnph4/lrZfmrrXmm7TmlrBcbiAgY3VzdG9tRmllbGRzPzogUmVjb3JkPHN0cmluZywgYW55PjtcbiAgXG4gIC8vIOaJuemHj+WvvOWHulxuICBleHBvcnRGb3JtYXQ/OiAnZXhjZWwnIHwgJ2NzdicgfCAncGRmJztcbiAgZXhwb3J0RmllbGRzPzogc3RyaW5nW107XG4gIGluY2x1ZGVDb21tZW50cz86IGJvb2xlYW47XG4gIGluY2x1ZGVBdHRhY2htZW50cz86IGJvb2xlYW47XG4gIFxuICAvLyDmibnph4/lhbPpl61cbiAgY2xvc3VyZVJlYXNvbj86IHN0cmluZztcbiAgc2F0aXNmYWN0aW9uUmVxdWlyZWQ/OiBib29sZWFuO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDmibnph4/mk43kvZzlk43lupQgPT09PT09PT09PT09PT09PT09PT1cblxuZXhwb3J0IGludGVyZmFjZSBCYXRjaE9wZXJhdGlvblJlc3BvbnNlIHtcbiAgb3BlcmF0aW9uSWQ6IHN0cmluZzsgICAgICAgICAgICAgICAgICAgLy8g5pON5L2cSURcbiAgb3BlcmF0aW9uVHlwZTogQmF0Y2hPcGVyYXRpb25UeXBlO1xuICB0b3RhbENvdW50OiBudW1iZXI7ICAgICAgICAgICAgICAgICAgICAvLyDmgLvmlbBcbiAgc3VjY2Vzc0NvdW50OiBudW1iZXI7ICAgICAgICAgICAgICAgICAgLy8g5oiQ5Yqf5pWwXG4gIGZhaWxlZENvdW50OiBudW1iZXI7ICAgICAgICAgICAgICAgICAgIC8vIOWksei0peaVsFxuICBza2lwcGVkQ291bnQ6IG51bWJlcjsgICAgICAgICAgICAgICAgICAvLyDot7Pov4fmlbBcbiAgY29tcGxldGVkQXQ/OiBEYXRlOyAgICAgICAgICAgICAgICAgICAgLy8g5a6M5oiQ5pe26Ze0XG4gIGVycm9yczogQmF0Y2hPcGVyYXRpb25FcnJvcltdOyAgICAgICAgIC8vIOmUmeivr+WIl+ihqFxuICB3YXJuaW5nczogQmF0Y2hPcGVyYXRpb25XYXJuaW5nW107ICAgICAvLyDorablkYrliJfooahcbiAgZG93bmxvYWRVcmw/OiBzdHJpbmc7ICAgICAgICAgICAgICAgICAgLy8g5a+85Ye65paH5Lu25LiL6L296ZO+5o6l77yI5a+85Ye65pON5L2c77yJXG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25FcnJvciB7XG4gIHRpY2tldElkOiBudW1iZXI7XG4gIHRpY2tldE51bWJlcjogc3RyaW5nO1xuICBlcnJvcjogc3RyaW5nO1xuICBlcnJvckNvZGU/OiBzdHJpbmc7XG4gIGRldGFpbHM/OiBhbnk7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25XYXJuaW5nIHtcbiAgdGlja2V0SWQ6IG51bWJlcjtcbiAgdGlja2V0TnVtYmVyOiBzdHJpbmc7XG4gIHdhcm5pbmc6IHN0cmluZztcbiAgZGV0YWlscz86IGFueTtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5om56YeP5pON5L2c6L+b5bqmID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25Qcm9ncmVzcyB7XG4gIG9wZXJhdGlvbklkOiBzdHJpbmc7XG4gIG9wZXJhdGlvblR5cGU6IEJhdGNoT3BlcmF0aW9uVHlwZTtcbiAgc3RhdHVzOiBCYXRjaE9wZXJhdGlvblN0YXR1cztcbiAgdG90YWxDb3VudDogbnVtYmVyO1xuICBwcm9jZXNzZWRDb3VudDogbnVtYmVyO1xuICBzdWNjZXNzQ291bnQ6IG51bWJlcjtcbiAgZmFpbGVkQ291bnQ6IG51bWJlcjtcbiAgcGVyY2VudGFnZTogbnVtYmVyOyAgICAgICAgICAgICAgICAgICAgLy8g55m+5YiG5q+U77yIMC0xMDDvvIlcbiAgc3RhcnRlZEF0OiBEYXRlO1xuICBlc3RpbWF0ZWRDb21wbGV0aW9uVGltZT86IERhdGU7XG4gIGN1cnJlbnRUaWNrZXQ/OiB7XG4gICAgdGlja2V0SWQ6IG51bWJlcjtcbiAgICB0aWNrZXROdW1iZXI6IHN0cmluZztcbiAgfTtcbn1cblxuZXhwb3J0IGVudW0gQmF0Y2hPcGVyYXRpb25TdGF0dXMge1xuICBQRU5ESU5HID0gJ3BlbmRpbmcnLCAgICAgICAgICAgICAgICAgICAvLyDnrYnlvoXkuK1cbiAgUlVOTklORyA9ICdydW5uaW5nJywgICAgICAgICAgICAgICAgICAgLy8g5omn6KGM5LitXG4gIFBBVVNFRCA9ICdwYXVzZWQnLCAgICAgICAgICAgICAgICAgICAgIC8vIOW3suaaguWBnFxuICBDT01QTEVURUQgPSAnY29tcGxldGVkJywgICAgICAgICAgICAgICAvLyDlt7LlrozmiJBcbiAgRkFJTEVEID0gJ2ZhaWxlZCcsICAgICAgICAgICAgICAgICAgICAgLy8g5aSx6LSlXG4gIENBTkNFTExFRCA9ICdjYW5jZWxsZWQnLCAgICAgICAgICAgICAgIC8vIOW3suWPlua2iFxufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDmibnph4/mk43kvZzml6Xlv5cgPT09PT09PT09PT09PT09PT09PT1cblxuZXhwb3J0IGludGVyZmFjZSBCYXRjaE9wZXJhdGlvbkxvZyB7XG4gIGlkOiBzdHJpbmc7XG4gIG9wZXJhdGlvbklkOiBzdHJpbmc7XG4gIG9wZXJhdGlvblR5cGU6IEJhdGNoT3BlcmF0aW9uVHlwZTtcbiAgb3BlcmF0b3JJZDogbnVtYmVyO1xuICBvcGVyYXRvck5hbWU6IHN0cmluZztcbiAgdGlja2V0SWRzOiBudW1iZXJbXTtcbiAgdG90YWxDb3VudDogbnVtYmVyO1xuICBzdWNjZXNzQ291bnQ6IG51bWJlcjtcbiAgZmFpbGVkQ291bnQ6IG51bWJlcjtcbiAgc3RhdHVzOiBCYXRjaE9wZXJhdGlvblN0YXR1cztcbiAgc3RhcnRlZEF0OiBEYXRlO1xuICBjb21wbGV0ZWRBdD86IERhdGU7XG4gIGR1cmF0aW9uPzogbnVtYmVyOyAgICAgICAgICAgICAgICAgICAgIC8vIOiAl+aXtu+8iOenku+8iVxuICBjb21tZW50Pzogc3RyaW5nO1xuICBkYXRhPzogQmF0Y2hPcGVyYXRpb25EYXRhO1xuICBlcnJvcnM/OiBCYXRjaE9wZXJhdGlvbkVycm9yW107XG59XG5cbi8vID09PT09PT09PT09PT09PT09PT09IOaJuemHj+mAieaLqemFjee9riA9PT09PT09PT09PT09PT09PT09PVxuXG5leHBvcnQgaW50ZXJmYWNlIEJhdGNoU2VsZWN0aW9uQ29uZmlnIHtcbiAgbWF4U2VsZWN0aW9uQ291bnQ/OiBudW1iZXI7ICAgICAgICAgICAgLy8g5pyA5aSn6YCJ5oup5pWw6YeP77yI6buY6K6kMTAwMO+8iVxuICBhbGxvd0Nyb3NzUGFnZT86IGJvb2xlYW47ICAgICAgICAgICAgICAvLyDlhYHorrjot6jpobXpgInmi6lcbiAgc2VsZWN0QWxsPzogYm9vbGVhbjsgICAgICAgICAgICAgICAgICAgLy8g5YWo6YCJ77yI5qC55o2u562b6YCJ5p2h5Lu277yJXG4gIGV4Y2x1ZGVJZHM/OiBudW1iZXJbXTsgICAgICAgICAgICAgICAgIC8vIOaOkumZpOeahOW3peWNlUlEc1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDmibnph4/pqozor4EgPT09PT09PT09PT09PT09PT09PT1cblxuZXhwb3J0IGludGVyZmFjZSBCYXRjaE9wZXJhdGlvblZhbGlkYXRpb24ge1xuICBpc1ZhbGlkOiBib29sZWFuO1xuICBjYW5Qcm9jZWVkOiBib29sZWFuO1xuICBlcnJvcnM6IFZhbGlkYXRpb25FcnJvcltdO1xuICB3YXJuaW5nczogVmFsaWRhdGlvbldhcm5pbmdbXTtcbiAgYWZmZWN0ZWRUaWNrZXRzOiB7XG4gICAgdGlja2V0SWQ6IG51bWJlcjtcbiAgICB0aWNrZXROdW1iZXI6IHN0cmluZztcbiAgICBjdXJyZW50U3RhdHVzOiBUaWNrZXRTdGF0dXM7XG4gICAgd2lsbENoYW5nZTogYm9vbGVhbjtcbiAgICBjb25mbGljdHM/OiBzdHJpbmdbXTtcbiAgfVtdO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFZhbGlkYXRpb25FcnJvciB7XG4gIGZpZWxkOiBzdHJpbmc7XG4gIG1lc3NhZ2U6IHN0cmluZztcbiAgc2V2ZXJpdHk6ICdlcnJvcicgfCAnY3JpdGljYWwnO1xuICB0aWNrZXRJZHM/OiBudW1iZXJbXTtcbn1cblxuZXhwb3J0IGludGVyZmFjZSBWYWxpZGF0aW9uV2FybmluZyB7XG4gIGZpZWxkOiBzdHJpbmc7XG4gIG1lc3NhZ2U6IHN0cmluZztcbiAgdGlja2V0SWRzPzogbnVtYmVyW107XG4gIGNhbklnbm9yZTogYm9vbGVhbjtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5om56YeP5a+85Ye66YWN572uID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hFeHBvcnRDb25maWcge1xuICBmb3JtYXQ6ICdleGNlbCcgfCAnY3N2JyB8ICdwZGYnO1xuICBmaWVsZHM6IEV4cG9ydEZpZWxkW107XG4gIGluY2x1ZGVDb21tZW50czogYm9vbGVhbjtcbiAgaW5jbHVkZUF0dGFjaG1lbnRzOiBib29sZWFuO1xuICBpbmNsdWRlSGlzdG9yeTogYm9vbGVhbjtcbiAgaW5jbHVkZVJlbGF0aW9uczogYm9vbGVhbjtcbiAgZ3JvdXBCeT86ICdzdGF0dXMnIHwgJ3ByaW9yaXR5JyB8ICdhc3NpZ25lZScgfCAnY2F0ZWdvcnknO1xuICBzb3J0Qnk/OiBzdHJpbmc7XG4gIHNvcnRPcmRlcj86ICdhc2MnIHwgJ2Rlc2MnO1xuICBmaWxlTmFtZT86IHN0cmluZztcbn1cblxuZXhwb3J0IGludGVyZmFjZSBFeHBvcnRGaWVsZCB7XG4gIGZpZWxkTmFtZTogc3RyaW5nO1xuICBmaWVsZExhYmVsOiBzdHJpbmc7XG4gIGluY2x1ZGVJbkV4cG9ydDogYm9vbGVhbjtcbiAgb3JkZXI6IG51bWJlcjtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5om56YeP5YiG6YWN6KeE5YiZID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hBc3NpZ25tZW50UnVsZSB7XG4gIHR5cGU6ICdyb3VuZF9yb2JpbicgfCAnbG9hZF9iYWxhbmNlJyB8ICdza2lsbF9iYXNlZCcgfCAnbWFudWFsJztcbiAgdGFyZ2V0VXNlcklkcz86IG51bWJlcltdO1xuICB0YXJnZXRUZWFtSWQ/OiBudW1iZXI7XG4gIHNraWxsVGFncz86IHN0cmluZ1tdO1xuICBtYXhXb3JrbG9hZD86IG51bWJlcjsgICAgICAgICAgICAgICAgICAvLyDmr4/kurrmnIDlpKflt6XkvZzotJ/ovb1cbiAgY29uc2lkZXJDdXJyZW50V29ya2xvYWQ/OiBib29sZWFuO1xuICBjb25zaWRlckF2YWlsYWJpbGl0eT86IGJvb2xlYW47XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgQXNzaWdubWVudFJlc3VsdCB7XG4gIHRpY2tldElkOiBudW1iZXI7XG4gIGFzc2lnbmVkVG86IG51bWJlcjtcbiAgYXNzaWduZWRUb05hbWU6IHN0cmluZztcbiAgY3VycmVudFdvcmtsb2FkOiBudW1iZXI7XG4gIHJlYXNvbjogc3RyaW5nO1xufVxuXG4vLyA9PT09PT09PT09PT09PT09PT09PSDmibnph4/mk43kvZzpooTop4ggPT09PT09PT09PT09PT09PT09PT1cblxuZXhwb3J0IGludGVyZmFjZSBCYXRjaE9wZXJhdGlvblByZXZpZXcge1xuICBvcGVyYXRpb25UeXBlOiBCYXRjaE9wZXJhdGlvblR5cGU7XG4gIGFmZmVjdGVkQ291bnQ6IG51bWJlcjtcbiAgY2hhbmdlczogQmF0Y2hPcGVyYXRpb25DaGFuZ2VbXTtcbiAgZXN0aW1hdGVkRHVyYXRpb246IG51bWJlcjsgICAgICAgICAgICAgLy8g6aKE6K6h6ICX5pe277yI56eS77yJXG4gIHJpc2tzOiBCYXRjaE9wZXJhdGlvblJpc2tbXTtcbn1cblxuZXhwb3J0IGludGVyZmFjZSBCYXRjaE9wZXJhdGlvbkNoYW5nZSB7XG4gIHRpY2tldElkOiBudW1iZXI7XG4gIHRpY2tldE51bWJlcjogc3RyaW5nO1xuICBmaWVsZDogc3RyaW5nO1xuICBjdXJyZW50VmFsdWU6IGFueTtcbiAgbmV3VmFsdWU6IGFueTtcbiAgd2lsbEFmZmVjdFNMQTogYm9vbGVhbjtcbiAgd2lsbFRyaWdnZXJXb3JrZmxvdzogYm9vbGVhbjtcbiAgd2lsbFNlbmROb3RpZmljYXRpb246IGJvb2xlYW47XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25SaXNrIHtcbiAgbGV2ZWw6ICdsb3cnIHwgJ21lZGl1bScgfCAnaGlnaCcgfCAnY3JpdGljYWwnO1xuICBkZXNjcmlwdGlvbjogc3RyaW5nO1xuICBhZmZlY3RlZFRpY2tldElkczogbnVtYmVyW107XG4gIG1pdGlnYXRpb24/OiBzdHJpbmc7XG59XG5cbi8vID09PT09PT09PT09PT09PT09PT09IOaJuemHj+aTjeS9nOe7n+iuoSA9PT09PT09PT09PT09PT09PT09PVxuXG5leHBvcnQgaW50ZXJmYWNlIEJhdGNoT3BlcmF0aW9uU3RhdHMge1xuICB0b3RhbE9wZXJhdGlvbnM6IG51bWJlcjtcbiAgb3BlcmF0aW9uc0J5VHlwZTogUmVjb3JkPEJhdGNoT3BlcmF0aW9uVHlwZSwgbnVtYmVyPjtcbiAgc3VjY2Vzc1JhdGU6IG51bWJlcjsgICAgICAgICAgICAgICAgICAgLy8g5oiQ5Yqf546H77yIJe+8iVxuICBhdmVyYWdlRHVyYXRpb246IG51bWJlcjsgICAgICAgICAgICAgICAvLyDlubPlnYfogJfml7bvvIjnp5LvvIlcbiAgdG90YWxUaWNrZXRzQWZmZWN0ZWQ6IG51bWJlcjtcbiAgbW9zdENvbW1vbkVycm9yczoge1xuICAgIGVycm9yOiBzdHJpbmc7XG4gICAgY291bnQ6IG51bWJlcjtcbiAgfVtdO1xuICBvcGVyYXRpb25zQnlVc2VyOiB7XG4gICAgdXNlcklkOiBudW1iZXI7XG4gICAgdXNlcm5hbWU6IHN0cmluZztcbiAgICBvcGVyYXRpb25Db3VudDogbnVtYmVyO1xuICAgIHN1Y2Nlc3NSYXRlOiBudW1iZXI7XG4gIH1bXTtcbiAgcmVjZW50T3BlcmF0aW9uczogQmF0Y2hPcGVyYXRpb25Mb2dbXTtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5om56YeP5pON5L2c5p2D6ZmQID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25QZXJtaXNzaW9ucyB7XG4gIGNhbkJhdGNoQXNzaWduOiBib29sZWFuO1xuICBjYW5CYXRjaFVwZGF0ZVN0YXR1czogYm9vbGVhbjtcbiAgY2FuQmF0Y2hVcGRhdGVQcmlvcml0eTogYm9vbGVhbjtcbiAgY2FuQmF0Y2hVcGRhdGVGaWVsZHM6IGJvb2xlYW47XG4gIGNhbkJhdGNoRGVsZXRlOiBib29sZWFuO1xuICBjYW5CYXRjaEV4cG9ydDogYm9vbGVhbjtcbiAgY2FuQmF0Y2hDbG9zZTogYm9vbGVhbjtcbiAgbWF4QmF0Y2hTaXplOiBudW1iZXI7ICAgICAgICAgICAgICAgICAgLy8g5pyA5aSn5om56YeP5pON5L2c5pWw6YePXG4gIGFsbG93ZWRPcGVyYXRpb25zOiBCYXRjaE9wZXJhdGlvblR5cGVbXTtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5om56YeP5pON5L2c6Zif5YiXID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25RdWV1ZSB7XG4gIHF1ZXVlSWQ6IHN0cmluZztcbiAgb3BlcmF0aW9uczogUXVldWVkT3BlcmF0aW9uW107XG4gIHN0YXR1czogJ2FjdGl2ZScgfCAncGF1c2VkJyB8ICdjb21wbGV0ZWQnO1xuICBjcmVhdGVkQXQ6IERhdGU7XG4gIHByb2Nlc3NlZENvdW50OiBudW1iZXI7XG4gIHJlbWFpbmluZ0NvdW50OiBudW1iZXI7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgUXVldWVkT3BlcmF0aW9uIHtcbiAgaWQ6IHN0cmluZztcbiAgb3BlcmF0aW9uVHlwZTogQmF0Y2hPcGVyYXRpb25UeXBlO1xuICB0aWNrZXRJZHM6IG51bWJlcltdO1xuICBwcmlvcml0eTogJ2xvdycgfCAnbm9ybWFsJyB8ICdoaWdoJztcbiAgc3RhdHVzOiAncGVuZGluZycgfCAncHJvY2Vzc2luZycgfCAnY29tcGxldGVkJyB8ICdmYWlsZWQnO1xuICBzY2hlZHVsZWRBdD86IERhdGU7XG4gIHN0YXJ0ZWRBdD86IERhdGU7XG4gIGNvbXBsZXRlZEF0PzogRGF0ZTtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5om56YeP5pON5L2c56Gu6K6kID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25Db25maXJtYXRpb24ge1xuICBvcGVyYXRpb25UeXBlOiBCYXRjaE9wZXJhdGlvblR5cGU7XG4gIHRpY2tldENvdW50OiBudW1iZXI7XG4gIHJlcXVpcmVzQ29uZmlybWF0aW9uOiBib29sZWFuO1xuICBjb25maXJtYXRpb25NZXNzYWdlOiBzdHJpbmc7XG4gIGNvbmZpcm1hdGlvbkxldmVsOiAnbG93JyB8ICdtZWRpdW0nIHwgJ2hpZ2gnO1xuICBtdXN0VHlwZUNvbmZpcm1hdGlvbj86IHN0cmluZzsgICAgICAgICAvLyDpq5jljbHmk43kvZzpnIDopoHovpPlhaXnmoTnoa7orqTmlofmnKxcbiAgd2FybmluZ3M6IHN0cmluZ1tdO1xuICBlc3RpbWF0ZWRJbXBhY3Q6IHtcbiAgICBhZmZlY3RlZFVzZXJzOiBudW1iZXI7XG4gICAgYWZmZWN0ZWRUZWFtczogbnVtYmVyO1xuICAgIHNsYUltcGFjdDogbnVtYmVyO1xuICAgIHdvcmtmbG93VHJpZ2dlcnM6IG51bWJlcjtcbiAgfTtcbn1cblxuLy8gPT09PT09PT09PT09PT09PT09PT0g5bel5YW357G75Z6LID09PT09PT09PT09PT09PT09PT09XG5cbmV4cG9ydCB0eXBlIEJhdGNoT3BlcmF0aW9uQ2FsbGJhY2sgPSAocHJvZ3Jlc3M6IEJhdGNoT3BlcmF0aW9uUHJvZ3Jlc3MpID0+IHZvaWQ7XG5cbmV4cG9ydCB0eXBlIEJhdGNoT3BlcmF0aW9uRmlsdGVyID0gKHRpY2tldElkOiBudW1iZXIpID0+IGJvb2xlYW47XG5cbi8vID09PT09PT09PT09PT09PT09PT09IOWvvOWHuuaJgOacieexu+WeiyA9PT09PT09PT09PT09PT09PT09PVxuXG5leHBvcnQgZGVmYXVsdCBCYXRjaE9wZXJhdGlvblJlcXVlc3Q7XG5cbiJdLCJtYXBwaW5ncyI6IkFBQUE7OztHQUdDOztBQUFBO0FBQUEsU0FBQUEsZUFBQTtFQUFBLElBQUFDLElBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsTUFBQSxPQUFBQyxRQUFBO0VBQUEsSUFBQUMsR0FBQTtFQUFBLElBQUFDLFlBQUE7SUFBQUwsSUFBQTtJQUFBTSxZQUFBO01BQUE7UUFBQUMsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtJQUFBO0lBQUFFLEtBQUE7TUFBQTtRQUFBQyxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7SUFBQTtJQUFBTyxTQUFBO0lBQUFDLENBQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7SUFBQTtJQUFBQyxDQUFBO0lBQUFDLGNBQUE7TUFBQUMsT0FBQTtNQUFBQyxPQUFBO01BQUFDLGNBQUE7TUFBQUMsS0FBQTtNQUFBQyxRQUFBO0lBQUE7SUFBQUMsZUFBQTtJQUFBeEIsSUFBQTtFQUFBO0VBQUEsSUFBQXlCLFFBQUEsR0FBQXhCLE1BQUEsQ0FBQUUsR0FBQSxNQUFBRixNQUFBLENBQUFFLEdBQUE7RUFBQSxLQUFBc0IsUUFBQSxDQUFBMUIsSUFBQSxLQUFBMEIsUUFBQSxDQUFBMUIsSUFBQSxFQUFBQyxJQUFBLEtBQUFBLElBQUE7SUFBQXlCLFFBQUEsQ0FBQTFCLElBQUEsSUFBQUssWUFBQTtFQUFBO0VBQUEsSUFBQXNCLGNBQUEsR0FBQUQsUUFBQSxDQUFBMUIsSUFBQTtFQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztFQXFIVzRCLG9CQUFvQixXQUFBQSxDQUFBO0lBQUE7SUFBQTdCLGNBQUEsR0FBQWtCLENBQUE7SUFBQWxCLGNBQUEsR0FBQWlCLENBQUE7V0FBcEJZLG9CQUFBOztFQS9HQUMsa0JBQWtCLFdBQUFBLENBQUE7SUFBQTtJQUFBOUIsY0FBQSxHQUFBa0IsQ0FBQTtJQUFBbEIsY0FBQSxHQUFBaUIsQ0FBQTtXQUFsQmEsa0JBQUE7OztBQUFMLElBQUFBLGtCQUFLO0FBQUE7QUFBQSxjQUFBOUIsY0FBQSxHQUFBaUIsQ0FBQSxpQkFBQWEsa0JBQUE7RUFBQTtFQUFBOUIsY0FBQSxHQUFBa0IsQ0FBQTtFQUFBbEIsY0FBQSxHQUFBaUIsQ0FBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztTQUFBYSxrQkFBQTs7QUErR0wsSUFBQUQsb0JBQUs7QUFBQTtBQUFBLGNBQUE3QixjQUFBLEdBQUFpQixDQUFBLGtCQUFBWSxvQkFBQTtFQUFBO0VBQUE3QixjQUFBLEdBQUFrQixDQUFBO0VBQUFsQixjQUFBLEdBQUFpQixDQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7O1NBQUFZLG9CQUFBIiwiaWdub3JlTGlzdCI6W119

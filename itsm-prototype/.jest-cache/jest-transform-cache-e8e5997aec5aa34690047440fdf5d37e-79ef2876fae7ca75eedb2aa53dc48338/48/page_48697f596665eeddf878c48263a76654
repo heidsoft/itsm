@@ -1,0 +1,346 @@
+2d561925ca3992006c649d5a34b4e5c0
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_7nt1ygc0x() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/sla-monitor/page.tsx";
+  var hash = "ca08ecfa6557b10181aa22719501f1bee067c0bd";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/sla-monitor/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 30
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 29
+        },
+        end: {
+          line: 14,
+          column: 88
+        }
+      },
+      "6": {
+        start: {
+          line: 15,
+          column: 23
+        },
+        end: {
+          line: 15,
+          column: 74
+        }
+      },
+      "7": {
+        start: {
+          line: 17,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 6
+        }
+      },
+      "8": {
+        start: {
+          line: 22,
+          column: 4
+        },
+        end: {
+          line: 30,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 16,
+            column: 9
+          },
+          end: {
+            line: 16,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 16
+      },
+      "2": {
+        name: "SLAMonitorPage",
+        decl: {
+          start: {
+            line: 21,
+            column: 9
+          },
+          end: {
+            line: 21,
+            column: 23
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 26
+          },
+          end: {
+            line: 31,
+            column: 1
+          }
+        },
+        line: 21
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 35
+          },
+          end: {
+            line: 17,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 41
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        }],
+        line: 17
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 18
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        }],
+        line: 17
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/sla-monitor/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { SLAMonitorDashboard } from '@/components/business/SLAMonitorDashboard';\nimport { ErrorBoundary } from '@/components/common/ErrorBoundary';\n\nexport default function SLAMonitorPage() {\n  return (\n    <ErrorBoundary>\n      <div className='min-h-screen'>\n        <SLAMonitorDashboard autoRefresh={true} refreshInterval={30} />\n      </div>\n    </ErrorBoundary>\n  );\n}\n\n"],
+      names: ["SLAMonitorPage", "ErrorBoundary", "div", "className", "SLAMonitorDashboard", "autoRefresh", "refreshInterval"],
+      mappings: "AAAA;;;;;+BAMA;;;eAAwBA;;;;8DAJN;qCACkB;+BACN;;;;;;AAEf,SAASA;IACtB,qBACE,qBAACC,4BAAa;kBACZ,cAAA,qBAACC;YAAIC,WAAU;sBACb,cAAA,qBAACC,wCAAmB;gBAACC,aAAa;gBAAMC,iBAAiB;;;;AAIjE"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "ca08ecfa6557b10181aa22719501f1bee067c0bd"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_7nt1ygc0x = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_7nt1ygc0x();
+cov_7nt1ygc0x().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_7nt1ygc0x().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_7nt1ygc0x().f[0]++;
+    cov_7nt1ygc0x().s[2]++;
+    return SLAMonitorPage;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_7nt1ygc0x().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_7nt1ygc0x().s[4]++, _interop_require_default(require("react")));
+const _SLAMonitorDashboard =
+/* istanbul ignore next */
+(cov_7nt1ygc0x().s[5]++, require("../../../components/business/SLAMonitorDashboard"));
+const _ErrorBoundary =
+/* istanbul ignore next */
+(cov_7nt1ygc0x().s[6]++, require("../../../components/common/ErrorBoundary"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_7nt1ygc0x().f[1]++;
+  cov_7nt1ygc0x().s[7]++;
+  return /* istanbul ignore next */(cov_7nt1ygc0x().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_7nt1ygc0x().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_7nt1ygc0x().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_7nt1ygc0x().b[0][1]++, {
+    default: obj
+  });
+}
+function SLAMonitorPage() {
+  /* istanbul ignore next */
+  cov_7nt1ygc0x().f[2]++;
+  cov_7nt1ygc0x().s[8]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)(_ErrorBoundary.ErrorBoundary, {
+    children: /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+      className: "min-h-screen",
+      children: /*#__PURE__*/(0, _jsxruntime.jsx)(_SLAMonitorDashboard.SLAMonitorDashboard, {
+        autoRefresh: true,
+        refreshInterval: 30
+      })
+    })
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJTTEFNb25pdG9yUGFnZSIsImNvdl83bnQxeWdjMHgiLCJmIiwicyIsIl9qc3hydW50aW1lIiwianN4IiwiX0Vycm9yQm91bmRhcnkiLCJFcnJvckJvdW5kYXJ5IiwiY2xhc3NOYW1lIiwiX1NMQU1vbml0b3JEYXNoYm9hcmQiLCJTTEFNb25pdG9yRGFzaGJvYXJkIiwiYXV0b1JlZnJlc2giLCJyZWZyZXNoSW50ZXJ2YWwiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1wcm90b3R5cGUvc3JjL2FwcC8obWFpbikvc2xhLW1vbml0b3IvcGFnZS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBjbGllbnQnO1xuXG5pbXBvcnQgUmVhY3QgZnJvbSAncmVhY3QnO1xuaW1wb3J0IHsgU0xBTW9uaXRvckRhc2hib2FyZCB9IGZyb20gJ0AvY29tcG9uZW50cy9idXNpbmVzcy9TTEFNb25pdG9yRGFzaGJvYXJkJztcbmltcG9ydCB7IEVycm9yQm91bmRhcnkgfSBmcm9tICdAL2NvbXBvbmVudHMvY29tbW9uL0Vycm9yQm91bmRhcnknO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTTEFNb25pdG9yUGFnZSgpIHtcbiAgcmV0dXJuIChcbiAgICA8RXJyb3JCb3VuZGFyeT5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPSdtaW4taC1zY3JlZW4nPlxuICAgICAgICA8U0xBTW9uaXRvckRhc2hib2FyZCBhdXRvUmVmcmVzaD17dHJ1ZX0gcmVmcmVzaEludGVydmFsPXszMH0gLz5cbiAgICAgIDwvZGl2PlxuICAgIDwvRXJyb3JCb3VuZGFyeT5cbiAgKTtcbn1cblxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OzsrQkFNQTs7Ozs7O1dBQXdCQSxjQUFBOzs7Ozs7Ozt1RUFKTjs7O2lDQUNrQjs7O2lDQUNOOzs7Ozs7Ozs7Ozs7Ozs7QUFFZixTQUFTQSxlQUFBO0VBQUE7RUFBQUMsYUFBQSxHQUFBQyxDQUFBO0VBQUFELGFBQUEsR0FBQUUsQ0FBQTtFQUN0QixvQkFDRSxJQUFBQyxXQUFBLENBQUFDLEdBQUEsRUFBQ0MsY0FBQSxDQUFBQyxhQUFhO2NBQ1osaUJBQUFILFdBQUEsQ0FBQUMsR0FBQSxFQUFDO01BQUlHLFNBQUEsRUFBVTtnQkFDYixpQkFBQUosV0FBQSxDQUFBQyxHQUFBLEVBQUNJLG9CQUFBLENBQUFDLG1CQUFtQjtRQUFDQyxXQUFBLEVBQWE7UUFBTUMsZUFBQSxFQUFpQjs7OztBQUlqRSIsImlnbm9yZUxpc3QiOltdfQ==

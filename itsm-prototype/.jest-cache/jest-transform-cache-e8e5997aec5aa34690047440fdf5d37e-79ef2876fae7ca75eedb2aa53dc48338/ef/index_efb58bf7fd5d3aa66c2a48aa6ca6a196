@@ -1,0 +1,62 @@
+72b100c2664336eeb886dcbe727c51d3
+/**
+ * 优先级矩阵组件导出
+ */ // UI组件将在后续完善
+"use strict";
+
+/* istanbul ignore next */
+function cov_ypvlvava5() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/priority-matrix/index.ts";
+  var hash = "250e6f1559a56ea832b89a7e32c113dff78468ca";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/priority-matrix/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 3
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/components/priority-matrix/index.ts"],
+      sourcesContent: ["/**\n * \u4F18\u5148\u7EA7\u77E9\u9635\u7EC4\u4EF6\u5BFC\u51FA\n */\n\n// UI\u7EC4\u4EF6\u5C06\u5728\u540E\u7EED\u5B8C\u5584\nexport type { } from '@/types/priority-matrix';\n\n"],
+      names: [],
+      mappings: "AAAA;;CAEC,GAED,aAAa"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "250e6f1559a56ea832b89a7e32c113dff78468ca"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_ypvlvava5 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_ypvlvava5();
+cov_ypvlvava5().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tcHJvdG90eXBlL3NyYy9jb21wb25lbnRzL3ByaW9yaXR5LW1hdHJpeC9pbmRleC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIOS8mOWFiOe6p+efqemYtee7hOS7tuWvvOWHulxuICovXG5cbi8vIFVJ57uE5Lu25bCG5Zyo5ZCO57ut5a6M5ZaEXG5leHBvcnQgdHlwZSB7IH0gZnJvbSAnQC90eXBlcy9wcmlvcml0eS1tYXRyaXgnO1xuXG4iXSwibWFwcGluZ3MiOiJBQUFBOztHQUFBLENBSUEiLCJpZ25vcmVMaXN0IjpbXX0=

@@ -1,0 +1,509 @@
+619a769443dc5529b94cf0191013c661
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_gzq78favq() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/cmdb/components/CreateCIModal.tsx";
+  var hash = "9fb0bc1db02667de43ea7cf7e4cdb2212c3e7da2";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/cmdb/components/CreateCIModal.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 29
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 14
+        },
+        end: {
+          line: 14,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 15,
+          column: 14
+        },
+        end: {
+          line: 15,
+          column: 45
+        }
+      },
+      "7": {
+        start: {
+          line: 17,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 6
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 19
+        },
+        end: {
+          line: 21,
+          column: 31
+        }
+      },
+      "9": {
+        start: {
+          line: 22,
+          column: 22
+        },
+        end: {
+          line: 168,
+          column: 1
+        }
+      },
+      "10": {
+        start: {
+          line: 23,
+          column: 18
+        },
+        end: {
+          line: 23,
+          column: 38
+        }
+      },
+      "11": {
+        start: {
+          line: 24,
+          column: 4
+        },
+        end: {
+          line: 167,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 16,
+            column: 9
+          },
+          end: {
+            line: 16,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 16
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 22,
+            column: 22
+          },
+          end: {
+            line: 22,
+            column: 23
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 64
+          },
+          end: {
+            line: 168,
+            column: 1
+          }
+        },
+        line: 22
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 35
+          },
+          end: {
+            line: 17,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 41
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        }],
+        line: 17
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 18
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        }],
+        line: 17
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/app/(main)/cmdb/components/CreateCIModal.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { Modal, Form, Input, Select, Row, Col, InputNumber } from 'antd';\nimport { useI18n } from '@/lib/i18n';\n\nconst { Option } = Select;\n\ninterface CreateCIModalProps {\n  visible: boolean;\n  onCancel: () => void;\n  onConfirm: () => void;\n  form: any;\n}\n\nexport const CreateCIModal: React.FC<CreateCIModalProps> = ({\n  visible,\n  onCancel,\n  onConfirm,\n  form,\n}) => {\n    const { t } = useI18n();\n  return (\n    <Modal\n      title={t('cmdb.newCI')}\n      open={visible}\n      onCancel={onCancel}\n      onOk={onConfirm}\n      width={700}\n    >\n      <Form form={form} layout='vertical' style={{ marginTop: 20 }}>\n        <Row gutter={24}>\n          <Col span={12}>\n            <Form.Item\n              label={t('cmdb.ciName')}\n              name='name'\n              rules={[{ required: true, message: t('cmdb.ciNameRequired') }]}\n            >\n              <Input placeholder={t('cmdb.ciNamePlaceholder')} />\n            </Form.Item>\n          </Col>\n          <Col span={12}>\n            <Form.Item\n              label={t('cmdb.type')}\n              name='type'\n              rules={[{ required: true, message: t('cmdb.typeRequired') }]}\n            >\n              <Select placeholder={t('cmdb.typePlaceholder')}>\n                <Option value='\u4E91\u670D\u52A1\u5668'>{t('cmdb.cloudServer')}</Option>\n                <Option value='\u7269\u7406\u670D\u52A1\u5668'>{t('cmdb.physicalServer')}</Option>\n                <Option value='\u5173\u7CFB\u578B\u6570\u636E\u5E93'>{t('cmdb.relationalDatabase')}</Option>\n                <Option value='\u5B58\u50A8\u8BBE\u5907'>{t('cmdb.storageDevice')}</Option>\n              </Select>\n            </Form.Item>\n          </Col>\n        </Row>\n\n        <Row gutter={24}>\n          <Col span={12}>\n            <Form.Item label={t('cmdb.cpu')} name='cpu'>\n              <InputNumber\n                placeholder={t('cmdb.cpuPlaceholder')}\n                addonAfter={t('cmdb.cores')}\n                min={1}\n                style={{ width: '100%' }}\n              />\n            </Form.Item>\n          </Col>\n          <Col span={12}>\n            <Form.Item label={t('cmdb.memory')} name='memory'>\n              <InputNumber\n                placeholder={t('cmdb.memoryPlaceholder')}\n                addonAfter={t('cmdb.gb')}\n                min={1}\n                style={{ width: '100%' }}\n              />\n            </Form.Item>\n          </Col>\n        </Row>\n\n        <Row gutter={24}>\n          <Col span={12}>\n            <Form.Item label={t('cmdb.disk')} name='disk'>\n              <InputNumber\n                placeholder={t('cmdb.diskPlaceholder')}\n                addonAfter={t('cmdb.gb')}\n                min={1}\n                style={{ width: '100%' }}\n              />\n            </Form.Item>\n          </Col>\n          <Col span={12}>\n            <Form.Item label={t('cmdb.ipAddress')} name='ip'>\n              <Input placeholder={t('cmdb.ipAddressPlaceholder')} />\n            </Form.Item>\n          </Col>\n        </Row>\n\n        <Form.Item label={t('cmdb.ciDescription')} name='description'>\n          <Input.TextArea placeholder={t('cmdb.ciDescriptionPlaceholder')} rows={4} />\n        </Form.Item>\n      </Form>\n    </Modal>\n  );\n};\n"],
+      names: ["CreateCIModal", "Option", "Select", "visible", "onCancel", "onConfirm", "form", "t", "useI18n", "Modal", "title", "open", "onOk", "width", "Form", "layout", "style", "marginTop", "Row", "gutter", "Col", "span", "Item", "label", "name", "rules", "required", "message", "Input", "placeholder", "value", "InputNumber", "addonAfter", "min", "TextArea", "rows"],
+      mappings: "AAAA;;;;;+BAeaA;;;eAAAA;;;;8DAbK;sBACgD;sBAC1C;;;;;;AAExB,MAAM,EAAEC,MAAM,EAAE,GAAGC,YAAM;AASlB,MAAMF,gBAA8C,CAAC,EAC1DG,OAAO,EACPC,QAAQ,EACRC,SAAS,EACTC,IAAI,EACL;IACG,MAAM,EAAEC,CAAC,EAAE,GAAGC,IAAAA,aAAO;IACvB,qBACE,qBAACC,WAAK;QACJC,OAAOH,EAAE;QACTI,MAAMR;QACNC,UAAUA;QACVQ,MAAMP;QACNQ,OAAO;kBAEP,cAAA,sBAACC,UAAI;YAACR,MAAMA;YAAMS,QAAO;YAAWC,OAAO;gBAAEC,WAAW;YAAG;;8BACzD,sBAACC,SAAG;oBAACC,QAAQ;;sCACX,qBAACC,SAAG;4BAACC,MAAM;sCACT,cAAA,qBAACP,UAAI,CAACQ,IAAI;gCACRC,OAAOhB,EAAE;gCACTiB,MAAK;gCACLC,OAAO;oCAAC;wCAAEC,UAAU;wCAAMC,SAASpB,EAAE;oCAAuB;iCAAE;0CAE9D,cAAA,qBAACqB,WAAK;oCAACC,aAAatB,EAAE;;;;sCAG1B,qBAACa,SAAG;4BAACC,MAAM;sCACT,cAAA,qBAACP,UAAI,CAACQ,IAAI;gCACRC,OAAOhB,EAAE;gCACTiB,MAAK;gCACLC,OAAO;oCAAC;wCAAEC,UAAU;wCAAMC,SAASpB,EAAE;oCAAqB;iCAAE;0CAE5D,cAAA,sBAACL,YAAM;oCAAC2B,aAAatB,EAAE;;sDACrB,qBAACN;4CAAO6B,OAAM;sDAAQvB,EAAE;;sDACxB,qBAACN;4CAAO6B,OAAM;sDAASvB,EAAE;;sDACzB,qBAACN;4CAAO6B,OAAM;sDAAUvB,EAAE;;sDAC1B,qBAACN;4CAAO6B,OAAM;sDAAQvB,EAAE;;;;;;;;8BAMhC,sBAACW,SAAG;oBAACC,QAAQ;;sCACX,qBAACC,SAAG;4BAACC,MAAM;sCACT,cAAA,qBAACP,UAAI,CAACQ,IAAI;gCAACC,OAAOhB,EAAE;gCAAaiB,MAAK;0CACpC,cAAA,qBAACO,iBAAW;oCACVF,aAAatB,EAAE;oCACfyB,YAAYzB,EAAE;oCACd0B,KAAK;oCACLjB,OAAO;wCAAEH,OAAO;oCAAO;;;;sCAI7B,qBAACO,SAAG;4BAACC,MAAM;sCACT,cAAA,qBAACP,UAAI,CAACQ,IAAI;gCAACC,OAAOhB,EAAE;gCAAgBiB,MAAK;0CACvC,cAAA,qBAACO,iBAAW;oCACVF,aAAatB,EAAE;oCACfyB,YAAYzB,EAAE;oCACd0B,KAAK;oCACLjB,OAAO;wCAAEH,OAAO;oCAAO;;;;;;8BAM/B,sBAACK,SAAG;oBAACC,QAAQ;;sCACX,qBAACC,SAAG;4BAACC,MAAM;sCACT,cAAA,qBAACP,UAAI,CAACQ,IAAI;gCAACC,OAAOhB,EAAE;gCAAciB,MAAK;0CACrC,cAAA,qBAACO,iBAAW;oCACVF,aAAatB,EAAE;oCACfyB,YAAYzB,EAAE;oCACd0B,KAAK;oCACLjB,OAAO;wCAAEH,OAAO;oCAAO;;;;sCAI7B,qBAACO,SAAG;4BAACC,MAAM;sCACT,cAAA,qBAACP,UAAI,CAACQ,IAAI;gCAACC,OAAOhB,EAAE;gCAAmBiB,MAAK;0CAC1C,cAAA,qBAACI,WAAK;oCAACC,aAAatB,EAAE;;;;;;8BAK5B,qBAACO,UAAI,CAACQ,IAAI;oBAACC,OAAOhB,EAAE;oBAAuBiB,MAAK;8BAC9C,cAAA,qBAACI,WAAK,CAACM,QAAQ;wBAACL,aAAatB,EAAE;wBAAkC4B,MAAM;;;;;;AAKjF"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "9fb0bc1db02667de43ea7cf7e4cdb2212c3e7da2"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_gzq78favq = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_gzq78favq();
+cov_gzq78favq().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_gzq78favq().s[1]++;
+Object.defineProperty(exports, "CreateCIModal", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_gzq78favq().f[0]++;
+    cov_gzq78favq().s[2]++;
+    return CreateCIModal;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_gzq78favq().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_gzq78favq().s[4]++, _interop_require_default(require("react")));
+const _antd =
+/* istanbul ignore next */
+(cov_gzq78favq().s[5]++, require("antd"));
+const _i18n =
+/* istanbul ignore next */
+(cov_gzq78favq().s[6]++, require("../../../../lib/i18n"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_gzq78favq().f[1]++;
+  cov_gzq78favq().s[7]++;
+  return /* istanbul ignore next */(cov_gzq78favq().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_gzq78favq().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_gzq78favq().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_gzq78favq().b[0][1]++, {
+    default: obj
+  });
+}
+const {
+  Option
+} =
+/* istanbul ignore next */
+(cov_gzq78favq().s[8]++, _antd.Select);
+/* istanbul ignore next */
+cov_gzq78favq().s[9]++;
+const CreateCIModal = ({
+  visible,
+  onCancel,
+  onConfirm,
+  form
+}) => {
+  /* istanbul ignore next */
+  cov_gzq78favq().f[2]++;
+  const {
+    t
+  } =
+  /* istanbul ignore next */
+  (cov_gzq78favq().s[10]++, (0, _i18n.useI18n)());
+  /* istanbul ignore next */
+  cov_gzq78favq().s[11]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Modal, {
+    title: t('cmdb.newCI'),
+    open: visible,
+    onCancel: onCancel,
+    onOk: onConfirm,
+    width: 700,
+    children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Form, {
+      form: form,
+      layout: "vertical",
+      style: {
+        marginTop: 20
+      },
+      children: [/*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Row, {
+        gutter: 24,
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+          span: 12,
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+            label: t('cmdb.ciName'),
+            name: "name",
+            rules: [{
+              required: true,
+              message: t('cmdb.ciNameRequired')
+            }],
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Input, {
+              placeholder: t('cmdb.ciNamePlaceholder')
+            })
+          })
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+          span: 12,
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+            label: t('cmdb.type'),
+            name: "type",
+            rules: [{
+              required: true,
+              message: t('cmdb.typeRequired')
+            }],
+            children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Select, {
+              placeholder: t('cmdb.typePlaceholder'),
+              children: [/*#__PURE__*/(0, _jsxruntime.jsx)(Option, {
+                value: "云服务器",
+                children: t('cmdb.cloudServer')
+              }), /*#__PURE__*/(0, _jsxruntime.jsx)(Option, {
+                value: "物理服务器",
+                children: t('cmdb.physicalServer')
+              }), /*#__PURE__*/(0, _jsxruntime.jsx)(Option, {
+                value: "关系型数据库",
+                children: t('cmdb.relationalDatabase')
+              }), /*#__PURE__*/(0, _jsxruntime.jsx)(Option, {
+                value: "存储设备",
+                children: t('cmdb.storageDevice')
+              })]
+            })
+          })
+        })]
+      }), /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Row, {
+        gutter: 24,
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+          span: 12,
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+            label: t('cmdb.cpu'),
+            name: "cpu",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.InputNumber, {
+              placeholder: t('cmdb.cpuPlaceholder'),
+              addonAfter: t('cmdb.cores'),
+              min: 1,
+              style: {
+                width: '100%'
+              }
+            })
+          })
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+          span: 12,
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+            label: t('cmdb.memory'),
+            name: "memory",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.InputNumber, {
+              placeholder: t('cmdb.memoryPlaceholder'),
+              addonAfter: t('cmdb.gb'),
+              min: 1,
+              style: {
+                width: '100%'
+              }
+            })
+          })
+        })]
+      }), /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Row, {
+        gutter: 24,
+        children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+          span: 12,
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+            label: t('cmdb.disk'),
+            name: "disk",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.InputNumber, {
+              placeholder: t('cmdb.diskPlaceholder'),
+              addonAfter: t('cmdb.gb'),
+              min: 1,
+              style: {
+                width: '100%'
+              }
+            })
+          })
+        }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+          span: 12,
+          children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+            label: t('cmdb.ipAddress'),
+            name: "ip",
+            children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Input, {
+              placeholder: t('cmdb.ipAddressPlaceholder')
+            })
+          })
+        })]
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Form.Item, {
+        label: t('cmdb.ciDescription'),
+        name: "description",
+        children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Input.TextArea, {
+          placeholder: t('cmdb.ciDescriptionPlaceholder'),
+          rows: 4
+        })
+      })]
+    })
+  });
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJDcmVhdGVDSU1vZGFsIiwiT3B0aW9uIiwiY292X2d6cTc4ZmF2cSIsInMiLCJfYW50ZCIsIlNlbGVjdCIsInZpc2libGUiLCJvbkNhbmNlbCIsIm9uQ29uZmlybSIsImZvcm0iLCJmIiwidCIsIl9pMThuIiwidXNlSTE4biIsIl9qc3hydW50aW1lIiwianN4IiwiTW9kYWwiLCJ0aXRsZSIsIm9wZW4iLCJvbk9rIiwid2lkdGgiLCJqc3hzIiwiRm9ybSIsImxheW91dCIsInN0eWxlIiwibWFyZ2luVG9wIiwiUm93IiwiZ3V0dGVyIiwiQ29sIiwic3BhbiIsIkl0ZW0iLCJsYWJlbCIsIm5hbWUiLCJydWxlcyIsInJlcXVpcmVkIiwibWVzc2FnZSIsIklucHV0IiwicGxhY2Vob2xkZXIiLCJ2YWx1ZSIsIklucHV0TnVtYmVyIiwiYWRkb25BZnRlciIsIm1pbiIsIlRleHRBcmVhIiwicm93cyJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLXByb3RvdHlwZS9zcmMvYXBwLyhtYWluKS9jbWRiL2NvbXBvbmVudHMvQ3JlYXRlQ0lNb2RhbC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBjbGllbnQnO1xuXG5pbXBvcnQgUmVhY3QgZnJvbSAncmVhY3QnO1xuaW1wb3J0IHsgTW9kYWwsIEZvcm0sIElucHV0LCBTZWxlY3QsIFJvdywgQ29sLCBJbnB1dE51bWJlciB9IGZyb20gJ2FudGQnO1xuaW1wb3J0IHsgdXNlSTE4biB9IGZyb20gJ0AvbGliL2kxOG4nO1xuXG5jb25zdCB7IE9wdGlvbiB9ID0gU2VsZWN0O1xuXG5pbnRlcmZhY2UgQ3JlYXRlQ0lNb2RhbFByb3BzIHtcbiAgdmlzaWJsZTogYm9vbGVhbjtcbiAgb25DYW5jZWw6ICgpID0+IHZvaWQ7XG4gIG9uQ29uZmlybTogKCkgPT4gdm9pZDtcbiAgZm9ybTogYW55O1xufVxuXG5leHBvcnQgY29uc3QgQ3JlYXRlQ0lNb2RhbDogUmVhY3QuRkM8Q3JlYXRlQ0lNb2RhbFByb3BzPiA9ICh7XG4gIHZpc2libGUsXG4gIG9uQ2FuY2VsLFxuICBvbkNvbmZpcm0sXG4gIGZvcm0sXG59KSA9PiB7XG4gICAgY29uc3QgeyB0IH0gPSB1c2VJMThuKCk7XG4gIHJldHVybiAoXG4gICAgPE1vZGFsXG4gICAgICB0aXRsZT17dCgnY21kYi5uZXdDSScpfVxuICAgICAgb3Blbj17dmlzaWJsZX1cbiAgICAgIG9uQ2FuY2VsPXtvbkNhbmNlbH1cbiAgICAgIG9uT2s9e29uQ29uZmlybX1cbiAgICAgIHdpZHRoPXs3MDB9XG4gICAgPlxuICAgICAgPEZvcm0gZm9ybT17Zm9ybX0gbGF5b3V0PSd2ZXJ0aWNhbCcgc3R5bGU9e3sgbWFyZ2luVG9wOiAyMCB9fT5cbiAgICAgICAgPFJvdyBndXR0ZXI9ezI0fT5cbiAgICAgICAgICA8Q29sIHNwYW49ezEyfT5cbiAgICAgICAgICAgIDxGb3JtLkl0ZW1cbiAgICAgICAgICAgICAgbGFiZWw9e3QoJ2NtZGIuY2lOYW1lJyl9XG4gICAgICAgICAgICAgIG5hbWU9J25hbWUnXG4gICAgICAgICAgICAgIHJ1bGVzPXtbeyByZXF1aXJlZDogdHJ1ZSwgbWVzc2FnZTogdCgnY21kYi5jaU5hbWVSZXF1aXJlZCcpIH1dfVxuICAgICAgICAgICAgPlxuICAgICAgICAgICAgICA8SW5wdXQgcGxhY2Vob2xkZXI9e3QoJ2NtZGIuY2lOYW1lUGxhY2Vob2xkZXInKX0gLz5cbiAgICAgICAgICAgIDwvRm9ybS5JdGVtPlxuICAgICAgICAgIDwvQ29sPlxuICAgICAgICAgIDxDb2wgc3Bhbj17MTJ9PlxuICAgICAgICAgICAgPEZvcm0uSXRlbVxuICAgICAgICAgICAgICBsYWJlbD17dCgnY21kYi50eXBlJyl9XG4gICAgICAgICAgICAgIG5hbWU9J3R5cGUnXG4gICAgICAgICAgICAgIHJ1bGVzPXtbeyByZXF1aXJlZDogdHJ1ZSwgbWVzc2FnZTogdCgnY21kYi50eXBlUmVxdWlyZWQnKSB9XX1cbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPFNlbGVjdCBwbGFjZWhvbGRlcj17dCgnY21kYi50eXBlUGxhY2Vob2xkZXInKX0+XG4gICAgICAgICAgICAgICAgPE9wdGlvbiB2YWx1ZT0n5LqR5pyN5Yqh5ZmoJz57dCgnY21kYi5jbG91ZFNlcnZlcicpfTwvT3B0aW9uPlxuICAgICAgICAgICAgICAgIDxPcHRpb24gdmFsdWU9J+eJqeeQhuacjeWKoeWZqCc+e3QoJ2NtZGIucGh5c2ljYWxTZXJ2ZXInKX08L09wdGlvbj5cbiAgICAgICAgICAgICAgICA8T3B0aW9uIHZhbHVlPSflhbPns7vlnovmlbDmja7lupMnPnt0KCdjbWRiLnJlbGF0aW9uYWxEYXRhYmFzZScpfTwvT3B0aW9uPlxuICAgICAgICAgICAgICAgIDxPcHRpb24gdmFsdWU9J+WtmOWCqOiuvuWkhyc+e3QoJ2NtZGIuc3RvcmFnZURldmljZScpfTwvT3B0aW9uPlxuICAgICAgICAgICAgICA8L1NlbGVjdD5cbiAgICAgICAgICAgIDwvRm9ybS5JdGVtPlxuICAgICAgICAgIDwvQ29sPlxuICAgICAgICA8L1Jvdz5cblxuICAgICAgICA8Um93IGd1dHRlcj17MjR9PlxuICAgICAgICAgIDxDb2wgc3Bhbj17MTJ9PlxuICAgICAgICAgICAgPEZvcm0uSXRlbSBsYWJlbD17dCgnY21kYi5jcHUnKX0gbmFtZT0nY3B1Jz5cbiAgICAgICAgICAgICAgPElucHV0TnVtYmVyXG4gICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9e3QoJ2NtZGIuY3B1UGxhY2Vob2xkZXInKX1cbiAgICAgICAgICAgICAgICBhZGRvbkFmdGVyPXt0KCdjbWRiLmNvcmVzJyl9XG4gICAgICAgICAgICAgICAgbWluPXsxfVxuICAgICAgICAgICAgICAgIHN0eWxlPXt7IHdpZHRoOiAnMTAwJScgfX1cbiAgICAgICAgICAgICAgLz5cbiAgICAgICAgICAgIDwvRm9ybS5JdGVtPlxuICAgICAgICAgIDwvQ29sPlxuICAgICAgICAgIDxDb2wgc3Bhbj17MTJ9PlxuICAgICAgICAgICAgPEZvcm0uSXRlbSBsYWJlbD17dCgnY21kYi5tZW1vcnknKX0gbmFtZT0nbWVtb3J5Jz5cbiAgICAgICAgICAgICAgPElucHV0TnVtYmVyXG4gICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9e3QoJ2NtZGIubWVtb3J5UGxhY2Vob2xkZXInKX1cbiAgICAgICAgICAgICAgICBhZGRvbkFmdGVyPXt0KCdjbWRiLmdiJyl9XG4gICAgICAgICAgICAgICAgbWluPXsxfVxuICAgICAgICAgICAgICAgIHN0eWxlPXt7IHdpZHRoOiAnMTAwJScgfX1cbiAgICAgICAgICAgICAgLz5cbiAgICAgICAgICAgIDwvRm9ybS5JdGVtPlxuICAgICAgICAgIDwvQ29sPlxuICAgICAgICA8L1Jvdz5cblxuICAgICAgICA8Um93IGd1dHRlcj17MjR9PlxuICAgICAgICAgIDxDb2wgc3Bhbj17MTJ9PlxuICAgICAgICAgICAgPEZvcm0uSXRlbSBsYWJlbD17dCgnY21kYi5kaXNrJyl9IG5hbWU9J2Rpc2snPlxuICAgICAgICAgICAgICA8SW5wdXROdW1iZXJcbiAgICAgICAgICAgICAgICBwbGFjZWhvbGRlcj17dCgnY21kYi5kaXNrUGxhY2Vob2xkZXInKX1cbiAgICAgICAgICAgICAgICBhZGRvbkFmdGVyPXt0KCdjbWRiLmdiJyl9XG4gICAgICAgICAgICAgICAgbWluPXsxfVxuICAgICAgICAgICAgICAgIHN0eWxlPXt7IHdpZHRoOiAnMTAwJScgfX1cbiAgICAgICAgICAgICAgLz5cbiAgICAgICAgICAgIDwvRm9ybS5JdGVtPlxuICAgICAgICAgIDwvQ29sPlxuICAgICAgICAgIDxDb2wgc3Bhbj17MTJ9PlxuICAgICAgICAgICAgPEZvcm0uSXRlbSBsYWJlbD17dCgnY21kYi5pcEFkZHJlc3MnKX0gbmFtZT0naXAnPlxuICAgICAgICAgICAgICA8SW5wdXQgcGxhY2Vob2xkZXI9e3QoJ2NtZGIuaXBBZGRyZXNzUGxhY2Vob2xkZXInKX0gLz5cbiAgICAgICAgICAgIDwvRm9ybS5JdGVtPlxuICAgICAgICAgIDwvQ29sPlxuICAgICAgICA8L1Jvdz5cblxuICAgICAgICA8Rm9ybS5JdGVtIGxhYmVsPXt0KCdjbWRiLmNpRGVzY3JpcHRpb24nKX0gbmFtZT0nZGVzY3JpcHRpb24nPlxuICAgICAgICAgIDxJbnB1dC5UZXh0QXJlYSBwbGFjZWhvbGRlcj17dCgnY21kYi5jaURlc2NyaXB0aW9uUGxhY2Vob2xkZXInKX0gcm93cz17NH0gLz5cbiAgICAgICAgPC9Gb3JtLkl0ZW0+XG4gICAgICA8L0Zvcm0+XG4gICAgPC9Nb2RhbD5cbiAgKTtcbn07XG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OytCQWVhOzs7Ozs7V0FBQUEsYUFBQTs7Ozs7Ozs7dUVBYks7OztpQ0FDZ0Q7OztpQ0FDMUM7Ozs7Ozs7Ozs7Ozs7OztBQUV4QixNQUFNO0VBQUVDO0FBQU0sQ0FBRTtBQUFBO0FBQUEsQ0FBQUMsYUFBQSxHQUFBQyxDQUFBLE9BQUdDLEtBQUEsQ0FBQUMsTUFBTTtBQUFBO0FBQUFILGFBQUEsR0FBQUMsQ0FBQTtBQVNsQixNQUFNSCxhQUFBLEdBQThDQSxDQUFDO0VBQzFETSxPQUFPO0VBQ1BDLFFBQVE7RUFDUkMsU0FBUztFQUNUQztBQUFJLENBQ0w7RUFBQTtFQUFBUCxhQUFBLEdBQUFRLENBQUE7RUFDRyxNQUFNO0lBQUVDO0VBQUMsQ0FBRTtFQUFBO0VBQUEsQ0FBQVQsYUFBQSxHQUFBQyxDQUFBLFFBQUcsSUFBQVMsS0FBQSxDQUFBQyxPQUFPO0VBQUE7RUFBQVgsYUFBQSxHQUFBQyxDQUFBO0VBQ3ZCLG9CQUNFLElBQUFXLFdBQUEsQ0FBQUMsR0FBQSxFQUFDWCxLQUFBLENBQUFZLEtBQUs7SUFDSkMsS0FBQSxFQUFPTixDQUFBLENBQUU7SUFDVE8sSUFBQSxFQUFNWixPQUFBO0lBQ05DLFFBQUEsRUFBVUEsUUFBQTtJQUNWWSxJQUFBLEVBQU1YLFNBQUE7SUFDTlksS0FBQSxFQUFPO2NBRVAsaUJBQUFOLFdBQUEsQ0FBQU8sSUFBQSxFQUFDakIsS0FBQSxDQUFBa0IsSUFBSTtNQUFDYixJQUFBLEVBQU1BLElBQUE7TUFBTWMsTUFBQSxFQUFPO01BQVdDLEtBQUEsRUFBTztRQUFFQyxTQUFBLEVBQVc7TUFBRzs4QkFDekQsSUFBQVgsV0FBQSxDQUFBTyxJQUFBLEVBQUNqQixLQUFBLENBQUFzQixHQUFHO1FBQUNDLE1BQUEsRUFBUTtnQ0FDWCxJQUFBYixXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBd0IsR0FBRztVQUFDQyxJQUFBLEVBQU07b0JBQ1QsaUJBQUFmLFdBQUEsQ0FBQUMsR0FBQSxFQUFDWCxLQUFBLENBQUFrQixJQUFJLENBQUNRLElBQUk7WUFDUkMsS0FBQSxFQUFPcEIsQ0FBQSxDQUFFO1lBQ1RxQixJQUFBLEVBQUs7WUFDTEMsS0FBQSxFQUFPLENBQUM7Y0FBRUMsUUFBQSxFQUFVO2NBQU1DLE9BQUEsRUFBU3hCLENBQUEsQ0FBRTtZQUF1QixFQUFFO3NCQUU5RCxpQkFBQUcsV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQWdDLEtBQUs7Y0FBQ0MsV0FBQSxFQUFhMUIsQ0FBQSxDQUFFOzs7eUJBRzFCLElBQUFHLFdBQUEsQ0FBQUMsR0FBQSxFQUFDWCxLQUFBLENBQUF3QixHQUFHO1VBQUNDLElBQUEsRUFBTTtvQkFDVCxpQkFBQWYsV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQWtCLElBQUksQ0FBQ1EsSUFBSTtZQUNSQyxLQUFBLEVBQU9wQixDQUFBLENBQUU7WUFDVHFCLElBQUEsRUFBSztZQUNMQyxLQUFBLEVBQU8sQ0FBQztjQUFFQyxRQUFBLEVBQVU7Y0FBTUMsT0FBQSxFQUFTeEIsQ0FBQSxDQUFFO1lBQXFCLEVBQUU7c0JBRTVELGlCQUFBRyxXQUFBLENBQUFPLElBQUEsRUFBQ2pCLEtBQUEsQ0FBQUMsTUFBTTtjQUFDZ0MsV0FBQSxFQUFhMUIsQ0FBQSxDQUFFO3NDQUNyQixJQUFBRyxXQUFBLENBQUFDLEdBQUEsRUFBQ2QsTUFBQTtnQkFBT3FDLEtBQUEsRUFBTTswQkFBUTNCLENBQUEsQ0FBRTsrQkFDeEIsSUFBQUcsV0FBQSxDQUFBQyxHQUFBLEVBQUNkLE1BQUE7Z0JBQU9xQyxLQUFBLEVBQU07MEJBQVMzQixDQUFBLENBQUU7K0JBQ3pCLElBQUFHLFdBQUEsQ0FBQUMsR0FBQSxFQUFDZCxNQUFBO2dCQUFPcUMsS0FBQSxFQUFNOzBCQUFVM0IsQ0FBQSxDQUFFOytCQUMxQixJQUFBRyxXQUFBLENBQUFDLEdBQUEsRUFBQ2QsTUFBQTtnQkFBT3FDLEtBQUEsRUFBTTswQkFBUTNCLENBQUEsQ0FBRTs7Ozs7dUJBTWhDLElBQUFHLFdBQUEsQ0FBQU8sSUFBQSxFQUFDakIsS0FBQSxDQUFBc0IsR0FBRztRQUFDQyxNQUFBLEVBQVE7Z0NBQ1gsSUFBQWIsV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQXdCLEdBQUc7VUFBQ0MsSUFBQSxFQUFNO29CQUNULGlCQUFBZixXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBa0IsSUFBSSxDQUFDUSxJQUFJO1lBQUNDLEtBQUEsRUFBT3BCLENBQUEsQ0FBRTtZQUFhcUIsSUFBQSxFQUFLO3NCQUNwQyxpQkFBQWxCLFdBQUEsQ0FBQUMsR0FBQSxFQUFDWCxLQUFBLENBQUFtQyxXQUFXO2NBQ1ZGLFdBQUEsRUFBYTFCLENBQUEsQ0FBRTtjQUNmNkIsVUFBQSxFQUFZN0IsQ0FBQSxDQUFFO2NBQ2Q4QixHQUFBLEVBQUs7Y0FDTGpCLEtBQUEsRUFBTztnQkFBRUosS0FBQSxFQUFPO2NBQU87Ozt5QkFJN0IsSUFBQU4sV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQXdCLEdBQUc7VUFBQ0MsSUFBQSxFQUFNO29CQUNULGlCQUFBZixXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBa0IsSUFBSSxDQUFDUSxJQUFJO1lBQUNDLEtBQUEsRUFBT3BCLENBQUEsQ0FBRTtZQUFnQnFCLElBQUEsRUFBSztzQkFDdkMsaUJBQUFsQixXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBbUMsV0FBVztjQUNWRixXQUFBLEVBQWExQixDQUFBLENBQUU7Y0FDZjZCLFVBQUEsRUFBWTdCLENBQUEsQ0FBRTtjQUNkOEIsR0FBQSxFQUFLO2NBQ0xqQixLQUFBLEVBQU87Z0JBQUVKLEtBQUEsRUFBTztjQUFPOzs7O3VCQU0vQixJQUFBTixXQUFBLENBQUFPLElBQUEsRUFBQ2pCLEtBQUEsQ0FBQXNCLEdBQUc7UUFBQ0MsTUFBQSxFQUFRO2dDQUNYLElBQUFiLFdBQUEsQ0FBQUMsR0FBQSxFQUFDWCxLQUFBLENBQUF3QixHQUFHO1VBQUNDLElBQUEsRUFBTTtvQkFDVCxpQkFBQWYsV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQWtCLElBQUksQ0FBQ1EsSUFBSTtZQUFDQyxLQUFBLEVBQU9wQixDQUFBLENBQUU7WUFBY3FCLElBQUEsRUFBSztzQkFDckMsaUJBQUFsQixXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBbUMsV0FBVztjQUNWRixXQUFBLEVBQWExQixDQUFBLENBQUU7Y0FDZjZCLFVBQUEsRUFBWTdCLENBQUEsQ0FBRTtjQUNkOEIsR0FBQSxFQUFLO2NBQ0xqQixLQUFBLEVBQU87Z0JBQUVKLEtBQUEsRUFBTztjQUFPOzs7eUJBSTdCLElBQUFOLFdBQUEsQ0FBQUMsR0FBQSxFQUFDWCxLQUFBLENBQUF3QixHQUFHO1VBQUNDLElBQUEsRUFBTTtvQkFDVCxpQkFBQWYsV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQWtCLElBQUksQ0FBQ1EsSUFBSTtZQUFDQyxLQUFBLEVBQU9wQixDQUFBLENBQUU7WUFBbUJxQixJQUFBLEVBQUs7c0JBQzFDLGlCQUFBbEIsV0FBQSxDQUFBQyxHQUFBLEVBQUNYLEtBQUEsQ0FBQWdDLEtBQUs7Y0FBQ0MsV0FBQSxFQUFhMUIsQ0FBQSxDQUFFOzs7O3VCQUs1QixJQUFBRyxXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBa0IsSUFBSSxDQUFDUSxJQUFJO1FBQUNDLEtBQUEsRUFBT3BCLENBQUEsQ0FBRTtRQUF1QnFCLElBQUEsRUFBSztrQkFDOUMsaUJBQUFsQixXQUFBLENBQUFDLEdBQUEsRUFBQ1gsS0FBQSxDQUFBZ0MsS0FBSyxDQUFDTSxRQUFRO1VBQUNMLFdBQUEsRUFBYTFCLENBQUEsQ0FBRTtVQUFrQ2dDLElBQUEsRUFBTTs7Ozs7QUFLakYiLCJpZ25vcmVMaXN0IjpbXX0=

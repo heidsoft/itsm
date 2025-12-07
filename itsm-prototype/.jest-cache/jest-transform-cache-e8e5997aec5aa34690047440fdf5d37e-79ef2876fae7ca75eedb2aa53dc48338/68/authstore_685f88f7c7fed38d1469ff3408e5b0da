@@ -1,0 +1,365 @@
+79f881d088db967b7d335928d87fabc7
+/**
+ * @deprecated 此文件已被弃用
+ * 请使用 ./unified-auth-store.ts
+ * 为了向后兼容，此文件重新导出统一的 store
+ */ // 重新导出统一的 store
+"use strict";
+
+/* istanbul ignore next */
+function cov_8a99iilty() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/lib/store/auth-store.ts";
+  var hash = "c714f99c23a335e263eb0ee3b4f6ab7683bfb0d6";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/lib/store/auth-store.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 9,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 11,
+          column: 4
+        },
+        end: {
+          line: 14,
+          column: 7
+        }
+      },
+      "2": {
+        start: {
+          line: 11,
+          column: 24
+        },
+        end: {
+          line: 14,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 16,
+          column: 0
+        },
+        end: {
+          line: 32,
+          column: 3
+        }
+      },
+      "4": {
+        start: {
+          line: 18,
+          column: 8
+        },
+        end: {
+          line: 18,
+          column: 45
+        }
+      },
+      "5": {
+        start: {
+          line: 21,
+          column: 8
+        },
+        end: {
+          line: 21,
+          column: 39
+        }
+      },
+      "6": {
+        start: {
+          line: 24,
+          column: 8
+        },
+        end: {
+          line: 24,
+          column: 46
+        }
+      },
+      "7": {
+        start: {
+          line: 27,
+          column: 8
+        },
+        end: {
+          line: 27,
+          column: 48
+        }
+      },
+      "8": {
+        start: {
+          line: 30,
+          column: 8
+        },
+        end: {
+          line: 30,
+          column: 48
+        }
+      },
+      "9": {
+        start: {
+          line: 33,
+          column: 26
+        },
+        end: {
+          line: 33,
+          column: 57
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "_export",
+        decl: {
+          start: {
+            line: 10,
+            column: 9
+          },
+          end: {
+            line: 10,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 10,
+            column: 30
+          },
+          end: {
+            line: 15,
+            column: 1
+          }
+        },
+        line: 10
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 17,
+            column: 17
+          },
+          end: {
+            line: 17,
+            column: 18
+          }
+        },
+        loc: {
+          start: {
+            line: 17,
+            column: 28
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        },
+        line: 17
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 20,
+            column: 11
+          },
+          end: {
+            line: 20,
+            column: 12
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 22
+          },
+          end: {
+            line: 22,
+            column: 5
+          }
+        },
+        line: 20
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 23,
+            column: 18
+          },
+          end: {
+            line: 23,
+            column: 19
+          }
+        },
+        loc: {
+          start: {
+            line: 23,
+            column: 29
+          },
+          end: {
+            line: 25,
+            column: 5
+          }
+        },
+        line: 23
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 26,
+            column: 20
+          },
+          end: {
+            line: 26,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 26,
+            column: 31
+          },
+          end: {
+            line: 28,
+            column: 5
+          }
+        },
+        line: 26
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 29,
+            column: 20
+          },
+          end: {
+            line: 29,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 29,
+            column: 31
+          },
+          end: {
+            line: 31,
+            column: 5
+          }
+        },
+        line: 29
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-prototype/src/lib/store/auth-store.ts"],
+      sourcesContent: ["/**\n * @deprecated \u6B64\u6587\u4EF6\u5DF2\u88AB\u5F03\u7528\n * \u8BF7\u4F7F\u7528 ./unified-auth-store.ts\n * \u4E3A\u4E86\u5411\u540E\u517C\u5BB9\uFF0C\u6B64\u6587\u4EF6\u91CD\u65B0\u5BFC\u51FA\u7EDF\u4E00\u7684 store\n */\n\n// \u91CD\u65B0\u5BFC\u51FA\u7EDF\u4E00\u7684 store\nexport {\n  useAuthStore,\n  useTenantStore,\n  usePermissions,\n  PERMISSIONS,\n  ROLES,\n  type User,\n  type Tenant,\n  type AuthState,\n  type TenantState,\n} from './unified-auth-store';"],
+      names: ["PERMISSIONS", "ROLES", "useAuthStore", "usePermissions", "useTenantStore"],
+      mappings: "AAAA;;;;CAIC,GAED,gBAAgB;;;;;;;;;;;;IAKdA,WAAW;eAAXA,6BAAW;;IACXC,KAAK;eAALA,uBAAK;;IAJLC,YAAY;eAAZA,8BAAY;;IAEZC,cAAc;eAAdA,gCAAc;;IADdC,cAAc;eAAdA,gCAAc;;;kCAQT"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "c714f99c23a335e263eb0ee3b4f6ab7683bfb0d6"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_8a99iilty = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_8a99iilty();
+cov_8a99iilty().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function _export(target, all) {
+  /* istanbul ignore next */
+  cov_8a99iilty().f[0]++;
+  cov_8a99iilty().s[1]++;
+  for (var name in all) {
+    /* istanbul ignore next */
+    cov_8a99iilty().s[2]++;
+    Object.defineProperty(target, name, {
+      enumerable: true,
+      get: all[name]
+    });
+  }
+}
+/* istanbul ignore next */
+cov_8a99iilty().s[3]++;
+_export(exports, {
+  PERMISSIONS: function () {
+    /* istanbul ignore next */
+    cov_8a99iilty().f[1]++;
+    cov_8a99iilty().s[4]++;
+    return _unifiedauthstore.PERMISSIONS;
+  },
+  ROLES: function () {
+    /* istanbul ignore next */
+    cov_8a99iilty().f[2]++;
+    cov_8a99iilty().s[5]++;
+    return _unifiedauthstore.ROLES;
+  },
+  useAuthStore: function () {
+    /* istanbul ignore next */
+    cov_8a99iilty().f[3]++;
+    cov_8a99iilty().s[6]++;
+    return _unifiedauthstore.useAuthStore;
+  },
+  usePermissions: function () {
+    /* istanbul ignore next */
+    cov_8a99iilty().f[4]++;
+    cov_8a99iilty().s[7]++;
+    return _unifiedauthstore.usePermissions;
+  },
+  useTenantStore: function () {
+    /* istanbul ignore next */
+    cov_8a99iilty().f[5]++;
+    cov_8a99iilty().s[8]++;
+    return _unifiedauthstore.useTenantStore;
+  }
+});
+const _unifiedauthstore =
+/* istanbul ignore next */
+(cov_8a99iilty().s[9]++, require("./unified-auth-store"));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJQRVJNSVNTSU9OUyIsImNvdl84YTk5aWlsdHkiLCJmIiwicyIsIl91bmlmaWVkYXV0aHN0b3JlIiwiUk9MRVMiLCJ1c2VBdXRoU3RvcmUiLCJ1c2VQZXJtaXNzaW9ucyIsInVzZVRlbmFudFN0b3JlIl0sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tcHJvdG90eXBlL3NyYy9saWIvc3RvcmUvYXV0aC1zdG9yZS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEBkZXByZWNhdGVkIOatpOaWh+S7tuW3suiiq+W8g+eUqFxuICog6K+35L2/55SoIC4vdW5pZmllZC1hdXRoLXN0b3JlLnRzXG4gKiDkuLrkuoblkJHlkI7lhbzlrrnvvIzmraTmlofku7bph43mlrDlr7zlh7rnu5/kuIDnmoQgc3RvcmVcbiAqL1xuXG4vLyDph43mlrDlr7zlh7rnu5/kuIDnmoQgc3RvcmVcbmV4cG9ydCB7XG4gIHVzZUF1dGhTdG9yZSxcbiAgdXNlVGVuYW50U3RvcmUsXG4gIHVzZVBlcm1pc3Npb25zLFxuICBQRVJNSVNTSU9OUyxcbiAgUk9MRVMsXG4gIHR5cGUgVXNlcixcbiAgdHlwZSBUZW5hbnQsXG4gIHR5cGUgQXV0aFN0YXRlLFxuICB0eXBlIFRlbmFudFN0YXRlLFxufSBmcm9tICcuL3VuaWZpZWQtYXV0aC1zdG9yZSc7Il0sIm1hcHBpbmdzIjoiQUFBQTs7OztHQUFBLENBTUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7RUFLRUEsV0FBVyxXQUFBQSxDQUFBO0lBQUE7SUFBQUMsYUFBQSxHQUFBQyxDQUFBO0lBQUFELGFBQUEsR0FBQUUsQ0FBQTtXQUFYQyxpQkFBQSxDQUFBSixXQUFXOztFQUNYSyxLQUFLLFdBQUFBLENBQUE7SUFBQTtJQUFBSixhQUFBLEdBQUFDLENBQUE7SUFBQUQsYUFBQSxHQUFBRSxDQUFBO1dBQUxDLGlCQUFBLENBQUFDLEtBQUs7O0VBSkxDLFlBQVksV0FBQUEsQ0FBQTtJQUFBO0lBQUFMLGFBQUEsR0FBQUMsQ0FBQTtJQUFBRCxhQUFBLEdBQUFFLENBQUE7V0FBWkMsaUJBQUEsQ0FBQUUsWUFBWTs7RUFFWkMsY0FBYyxXQUFBQSxDQUFBO0lBQUE7SUFBQU4sYUFBQSxHQUFBQyxDQUFBO0lBQUFELGFBQUEsR0FBQUUsQ0FBQTtXQUFkQyxpQkFBQSxDQUFBRyxjQUFjOztFQURkQyxjQUFjLFdBQUFBLENBQUE7SUFBQTtJQUFBUCxhQUFBLEdBQUFDLENBQUE7SUFBQUQsYUFBQSxHQUFBRSxDQUFBO1dBQWRDLGlCQUFBLENBQUFJLGNBQWM7Ozs7O2lDQVFUIiwiaWdub3JlTGlzdCI6W119

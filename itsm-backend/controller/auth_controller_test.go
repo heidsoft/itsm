@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	_ "github.com/mattn/go-sqlite3" // sqlite3 driver for tests
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -15,6 +17,7 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3" // 导入 sqlite3 驱动
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -169,11 +172,11 @@ func TestAuthController_Login(t *testing.T) {
 			// 如果登录成功，验证返回的数据
 			if tt.expectedCode == common.SuccessCode {
 				assert.NotNil(t, response.Data)
-				
+
 				// 将data转换为map以便访问字段
 				data, ok := response.Data.(map[string]interface{})
 				require.True(t, ok)
-				
+
 				// 验证返回的字段
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
@@ -281,11 +284,11 @@ func TestAuthController_RefreshToken(t *testing.T) {
 			// 如果刷新成功，验证返回的数据
 			if tt.expectedCode == common.SuccessCode {
 				assert.NotNil(t, response.Data)
-				
+
 				// 将data转换为map以便访问字段
 				data, ok := response.Data.(map[string]interface{})
 				require.True(t, ok)
-				
+
 				// 验证返回的字段
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
@@ -413,7 +416,7 @@ func TestAuthController_LoginWithInactiveTenant(t *testing.T) {
 
 	// 非活跃租户下的用户应该登录失败
 	assert.Equal(t, common.AuthFailedCode, response.Code)
-	assert.Contains(t, response.Message, "租户已被禁用")
+	assert.Contains(t, response.Message, "租户已被暂停或过期")
 }
 
 func TestAuthController_InvalidJSONRequest(t *testing.T) {

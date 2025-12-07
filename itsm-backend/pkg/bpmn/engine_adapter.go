@@ -13,7 +13,7 @@ type EngineAdapter struct {
 
 // NewEngineAdapter 创建新的引擎适配器
 func NewEngineAdapter() *EngineAdapter {
-	engine := bpmn_engine.New()
+	engine := bpmn_engine.New("itsm-engine")
 	return &EngineAdapter{
 		engine: engine,
 	}
@@ -39,30 +39,34 @@ func (e *EngineAdapter) CreateInstance(processDefinitionKey int64, variables map
 }
 
 // ExportState 导出引擎状态（用于持久化）
+// 注意：lib-bpmn-engine v0.2.4 不提供状态导出功能
+// 如果需要持久化，建议使用数据库存储流程实例状态
 func (e *EngineAdapter) ExportState() []byte {
-	return e.engine.Export()
+	// TODO: 实现状态导出逻辑，可能需要序列化流程实例信息
+	return nil
 }
 
 // RestoreState 恢复引擎状态
+// 注意：lib-bpmn-engine v0.2.4 不提供状态恢复功能
+// 建议从数据库重新加载流程定义并创建新实例
 func (e *EngineAdapter) RestoreState(state []byte) error {
 	if len(state) == 0 {
 		return nil
 	}
-	return e.engine.Load(state)
+	// TODO: 实现状态恢复逻辑
+	return nil
 }
 
 // RegisterTaskHandler 注册任务处理器（用于User Task回调）
-// 实际场景中，User Task通常是等待状态，但我们可以在这里注册Handler来捕获进入Task的事件
 func (e *EngineAdapter) RegisterTaskHandler(taskID string, handler func(job bpmn_engine.ActivatedJob)) {
-	e.engine.NewTaskHandler().Id(taskID).Handler(handler)
+	e.engine.AddTaskHandler(taskID, handler)
 }
 
 // FindProcessInfoByKey 根据Key查找ProcessInfo
+// 注意：需要通过已加载的流程定义来查找
 func (e *EngineAdapter) FindProcessInfoByKey(key string) *bpmn_engine.ProcessInfo {
-	for _, p := range e.engine.GetProcessCache() {
-		if p.BpmnProcessId == key {
-			return &p
-		}
-	}
+	// lib-bpmn-engine 不提供 GetProcessCache 方法
+	// 需要通过其他方式查找，例如从数据库查询已加载的流程定义
+	// TODO: 实现查找逻辑，可能需要维护一个内部的流程定义映射
 	return nil
 }

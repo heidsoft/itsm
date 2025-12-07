@@ -2,18 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { TicketApi } from '@/lib/api/ticket-api';
-import { Ticket, ApiResponse } from '@/lib/api-config';
+import { ticketService } from '@/lib/services/ticket-service';
+import { Ticket } from '@/app/lib/api-config';
 import { TicketDetail } from '@/components/business/TicketDetail';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button, Card, Typography, App, Badge, Tag } from 'antd';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
 
 const TicketDetailPage: React.FC = () => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
+  const { user } = useAuthStore();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,13 +27,8 @@ const TicketDetailPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = (await TicketApi.getTicket(ticketId)) as unknown as ApiResponse<Ticket>;
-
-      if (response.code === 0) {
-        setTicket(response.data);
-      } else {
-        setError(response.message || 'Failed to load ticket');
-      }
+      const data = await ticketService.getTicket(ticketId);
+      setTicket(data as unknown as Ticket);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Network error');
     } finally {
@@ -48,16 +45,9 @@ const TicketDetailPage: React.FC = () => {
   // Handle approval
   const handleApprove = async () => {
     try {
-      const response = (await TicketApi.updateTicket(ticketId, {
-        status: 'approved',
-      })) as unknown as ApiResponse<Ticket>;
-
-      if (response.code === 0) {
-        antMessage.success('批准成功');
-        fetchTicket(); // Refresh data
-      } else {
-        antMessage.error(response.message || '批准失败');
-      }
+      await ticketService.updateTicket(ticketId, { status: 'approved', user_id: user?.id } as any);
+      antMessage.success('批准成功');
+      fetchTicket();
     } catch (error) {
       antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
@@ -66,16 +56,9 @@ const TicketDetailPage: React.FC = () => {
   // Handle rejection
   const handleReject = async () => {
     try {
-      const response = (await TicketApi.updateTicket(ticketId, {
-        status: 'rejected',
-      })) as unknown as ApiResponse<Ticket>;
-
-      if (response.code === 0) {
-        antMessage.success('已拒绝');
-        fetchTicket(); // Refresh data
-      } else {
-        antMessage.error(response.message || '操作失败');
-      }
+      await ticketService.updateTicket(ticketId, { status: 'rejected', user_id: user?.id } as any);
+      antMessage.success('已拒绝');
+      fetchTicket();
     } catch (error) {
       antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
@@ -84,16 +67,9 @@ const TicketDetailPage: React.FC = () => {
   // Handle assignment
   const handleAssign = async (assignee: string) => {
     try {
-      const response = (await TicketApi.updateTicket(ticketId, {
-        assignee_id: parseInt(assignee), // This needs to be handled according to actual situation
-      })) as unknown as ApiResponse<Ticket>;
-
-      if (response.code === 0) {
-        antMessage.success('分配成功');
-        fetchTicket(); // Refresh data
-      } else {
-        antMessage.error(response.message || '分配失败');
-      }
+      await ticketService.updateTicket(ticketId, { assignee_id: parseInt(assignee), user_id: user?.id } as any);
+      antMessage.success('分配成功');
+      fetchTicket();
     } catch (error) {
       antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
@@ -102,17 +78,9 @@ const TicketDetailPage: React.FC = () => {
   // Handle update
   const handleUpdate = async (updates: unknown) => {
     try {
-      const response = (await TicketApi.updateTicket(
-        ticketId,
-        updates as Partial<Ticket>
-      )) as unknown as ApiResponse<Ticket>;
-
-      if (response.code === 0) {
-        antMessage.success('更新成功');
-        fetchTicket(); // Refresh data
-      } else {
-        antMessage.error(response.message || '更新失败');
-      }
+      await ticketService.updateTicket(ticketId, { ...(updates as any), user_id: user?.id } as any);
+      antMessage.success('更新成功');
+      fetchTicket();
     } catch (error) {
       antMessage.error(error instanceof Error ? error.message : '网络错误');
     }
