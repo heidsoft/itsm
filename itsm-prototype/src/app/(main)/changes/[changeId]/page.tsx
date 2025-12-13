@@ -13,9 +13,20 @@ import {
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { changeService, Change } from '@/lib/services/change-service';
+import {
+  changeService,
+  Change,
+  ChangeComment,
+  ChangeApproval,
+  RelatedTicket,
+  AffectedCI,
+} from '@/lib/services/change-service';
 
-const ApprovalStatusBadge = ({ status }) => {
+interface ApprovalStatusBadgeProps {
+  status: '待审批' | '已批准' | '已拒绝';
+}
+
+const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status }) => {
   const colors = {
     待审批: 'bg-yellow-100 text-yellow-800',
     已批准: 'bg-green-100 text-green-800',
@@ -61,7 +72,7 @@ const ChangeDetailPage = () => {
     loadChangeDetail();
   }, [changeId]);
 
-  const updateChangeStatus = async (newStatus, logMessage) => {
+  const updateChangeStatus = async (newStatus: string, logMessage: string) => {
     if (!change) return;
 
     try {
@@ -73,28 +84,38 @@ const ChangeDetailPage = () => {
 
       // 调用API更新状态
       const updatedChange = await changeService.updateChange(numericId, {
-        status: newStatus,
+        status: newStatus as
+          | 'draft'
+          | 'pending'
+          | 'approved'
+          | 'rejected'
+          | 'implementing'
+          | 'completed'
+          | 'cancelled',
       });
 
       // 更新本地状态
+      const existingLogs = change.logs || [];
       setChange({
         ...change,
         ...updatedChange,
-        logs: [...(change.logs || []), `[${new Date().toLocaleString()}] ${logMessage}`],
-      });
+        logs: [...existingLogs, `[${new Date().toLocaleString()}] ${logMessage}`],
+      } as Change);
 
       alert(`变更状态已更新为: ${newStatus}`);
     } catch (error) {
       console.error('更新变更状态失败:', error);
-      alert(`更新状态失败: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      alert(`更新状态失败: ${errorMessage}`);
     }
   };
 
-  const handleApprove = index => {
+  const handleApprove = (index: number) => {
+    if (!change?.approvals) return;
     const updatedApprovals = [...change.approvals];
     updatedApprovals[index] = {
       ...updatedApprovals[index],
-      status: '已批准',
+      status: '已批准' as const,
       approver: '当前用户',
       comment: '已批准',
     };
@@ -106,15 +127,15 @@ const ChangeDetailPage = () => {
     }
   };
 
-  const handleReject = index => {
+  const handleReject = (index: number) => {
     if (!change?.approvals) return;
 
     const comment = prompt('请输入拒绝理由：');
     if (comment) {
-      const updatedApprovals = [...change.approvals];
+      const updatedApprovals = [...(change.approvals || [])];
       updatedApprovals[index] = {
         ...updatedApprovals[index],
-        status: '已拒绝',
+        status: '已拒绝' as const,
         approver: '当前用户',
         comment: comment,
       };
@@ -126,7 +147,7 @@ const ChangeDetailPage = () => {
   };
 
   const handleStartImplementation = () => {
-    if (change.status !== 'approved') {
+    if (!change || change.status !== 'approved') {
       alert('变更未处于已批准状态，无法开始实施。');
       return;
     }
@@ -134,7 +155,7 @@ const ChangeDetailPage = () => {
   };
 
   const handleCompleteImplementation = () => {
-    if (change.status !== 'implementing') {
+    if (!change || change.status !== 'implementing') {
       alert('变更未处于实施中状态，无法完成实施。');
       return;
     }
@@ -145,33 +166,34 @@ const ChangeDetailPage = () => {
   };
 
   const handleCompleteReview = () => {
-    if (change.status !== '已完成') {
+    if (!change || change.status !== 'completed') {
       alert('变更未处于已完成状态，无法进行评审。');
       return;
     }
     const reviewNotes = prompt('请输入评审结果描述：');
     if (reviewNotes) {
-      updateChangeStatus('已评审', `变更评审已完成。结果：${reviewNotes}`);
+      updateChangeStatus('completed', `变更评审已完成。结果：${reviewNotes}`);
     }
   };
 
   const handleAddComment = () => {
-    if (newComment.trim()) {
-      const updatedChange = {
-        ...change,
-        comments: [
-          ...change.comments,
-          {
-            author: '当前用户',
-            timestamp: new Date().toLocaleString(),
-            text: newComment.trim(),
-          },
-        ],
-      };
-      setChange(updatedChange);
-      setNewComment('');
-      // 在真实应用中，这里会调用API保存评论
-    }
+    if (!change || !newComment.trim()) return;
+
+    const existingComments = change.comments || [];
+    const updatedChange: Change = {
+      ...change,
+      comments: [
+        ...existingComments,
+        {
+          author: '当前用户',
+          timestamp: new Date().toLocaleString(),
+          text: newComment.trim(),
+        },
+      ],
+    };
+    setChange(updatedChange);
+    setNewComment('');
+    // 在真实应用中，这里会调用API保存评论
   };
 
   if (!change) {
@@ -194,7 +216,7 @@ const ChangeDetailPage = () => {
             <p className='text-gray-500 mt-1'>变更ID: {changeId}</p>
           </div>
           <div className='flex space-x-4'>
-            {change.status === '已批准' && (
+            {change.status === 'approved' && (
               <button
                 onClick={handleStartImplementation}
                 className='flex items-center bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors'
@@ -203,7 +225,7 @@ const ChangeDetailPage = () => {
                 开始实施
               </button>
             )}
-            {change.status === '实施中' && (
+            {change.status === 'implementing' && (
               <button
                 onClick={handleCompleteImplementation}
                 className='flex items-center bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors'
@@ -212,7 +234,7 @@ const ChangeDetailPage = () => {
                 完成实施
               </button>
             )}
-            {change.status === '已完成' && (
+            {change.status === 'completed' && (
               <button
                 onClick={handleCompleteReview}
                 className='flex items-center bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors'
@@ -255,11 +277,15 @@ const ChangeDetailPage = () => {
 
           <h3 className='text-xl font-semibold text-gray-700 mb-4'>变更日志</h3>
           <div className='space-y-4'>
-            {change.logs.map((log, i) => (
-              <p key={i} className='text-sm text-gray-500 font-mono'>
-                {log}
-              </p>
-            ))}
+            {change.logs && change.logs.length > 0 ? (
+              change.logs.map((log, i) => (
+                <p key={i} className='text-sm text-gray-500 font-mono'>
+                  {log}
+                </p>
+              ))
+            ) : (
+              <p className='text-sm text-gray-500'>暂无日志</p>
+            )}
           </div>
 
           {/* 评论/备注区域 */}
@@ -268,8 +294,8 @@ const ChangeDetailPage = () => {
               <MessageSquare className='w-5 h-5 mr-2' /> 内部评论/备注
             </h3>
             <div className='space-y-4 mb-4'>
-              {change.comments.length > 0 ? (
-                change.comments.map((comment, i) => (
+              {change.comments && change.comments.length > 0 ? (
+                change.comments.map((comment: ChangeComment, i: number) => (
                   <div key={i} className='bg-gray-50 p-3 rounded-lg'>
                     <p className='text-sm font-semibold text-gray-800'>
                       {comment.author}{' '}
@@ -313,7 +339,11 @@ const ChangeDetailPage = () => {
               </div>
               <div className='flex justify-between'>
                 <span>负责人:</span>
-                <span className='font-semibold'>{change.assignee}</span>
+                <span className='font-semibold'>
+                  {typeof change.assignee === 'string'
+                    ? change.assignee
+                    : change.assignee?.name || change.assigneeName || '未分配'}
+                </span>
               </div>
               <div className='flex justify-between'>
                 <span>创建时间:</span>
@@ -333,36 +363,40 @@ const ChangeDetailPage = () => {
           <div className='bg-white p-6 rounded-lg shadow-md'>
             <h3 className='text-xl font-semibold text-gray-700 mb-4'>审批流程</h3>
             <div className='space-y-3'>
-              {change.approvals.map((approval, i) => (
-                <div key={i} className='p-3 bg-gray-50 rounded-lg'>
-                  <div className='flex justify-between items-center mb-1'>
-                    <span className='font-semibold text-gray-700'>{approval.role}</span>
-                    <ApprovalStatusBadge status={approval.status} />
-                  </div>
-                  {approval.approver && (
-                    <p className='text-sm text-gray-600'>审批人: {approval.approver}</p>
-                  )}
-                  {approval.comment && (
-                    <p className='text-sm text-gray-500 italic'>&quot;{approval.comment}&quot;</p>
-                  )}
-                  {approval.status === '待审批' && (
-                    <div className='mt-2 flex space-x-2'>
-                      <button
-                        onClick={() => handleApprove(i)}
-                        className='flex-1 bg-green-500 text-white text-xs py-1 rounded hover:bg-green-600'
-                      >
-                        批准
-                      </button>
-                      <button
-                        onClick={() => handleReject(i)}
-                        className='flex-1 bg-red-500 text-white text-xs py-1 rounded hover:bg-red-600'
-                      >
-                        拒绝
-                      </button>
+              {change.approvals && change.approvals.length > 0 ? (
+                change.approvals.map((approval: ChangeApproval, i: number) => (
+                  <div key={i} className='p-3 bg-gray-50 rounded-lg'>
+                    <div className='flex justify-between items-center mb-1'>
+                      <span className='font-semibold text-gray-700'>{approval.role}</span>
+                      <ApprovalStatusBadge status={approval.status} />
                     </div>
-                  )}
-                </div>
-              ))}
+                    {approval.approver && (
+                      <p className='text-sm text-gray-600'>审批人: {approval.approver}</p>
+                    )}
+                    {approval.comment && (
+                      <p className='text-sm text-gray-500 italic'>&quot;{approval.comment}&quot;</p>
+                    )}
+                    {approval.status === '待审批' && (
+                      <div className='mt-2 flex space-x-2'>
+                        <button
+                          onClick={() => handleApprove(i)}
+                          className='flex-1 bg-green-500 text-white text-xs py-1 rounded hover:bg-green-600'
+                        >
+                          批准
+                        </button>
+                        <button
+                          onClick={() => handleReject(i)}
+                          className='flex-1 bg-red-500 text-white text-xs py-1 rounded hover:bg-red-600'
+                        >
+                          拒绝
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className='text-sm text-gray-500'>暂无审批流程</p>
+              )}
             </div>
           </div>
 
@@ -371,26 +405,35 @@ const ChangeDetailPage = () => {
               <GitMerge className='w-5 h-5 mr-2' /> 关联工单
             </h3>
             <div className='space-y-3'>
-              {change.relatedTickets.length > 0 ? (
-                change.relatedTickets.map(ticket => (
-                  <Link
-                    key={ticket.id}
-                    href={`/${
-                      ticket.type === '事件'
-                        ? 'incidents'
-                        : ticket.type === '问题'
-                        ? 'problems'
-                        : 'changes'
-                    }/${ticket.id}`}
-                    className='block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors'
-                  >
-                    <p className='font-semibold text-blue-700'>
-                      {ticket.id} ({ticket.type})
-                    </p>
-                    <p className='text-sm text-gray-600'>{ticket.title}</p>
-                    <span className='text-xs text-gray-500'>状态: {ticket.status}</span>
-                  </Link>
-                ))
+              {change.relatedTickets && change.relatedTickets.length > 0 ? (
+                change.relatedTickets.map((ticket: RelatedTicket | string) => {
+                  if (typeof ticket === 'string') {
+                    return (
+                      <div key={ticket} className='p-3 bg-blue-50 rounded-lg'>
+                        <p className='font-semibold text-blue-700'>{ticket}</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={typeof ticket.id === 'string' ? ticket.id : String(ticket.id)}
+                      href={`/${
+                        ticket.type === '事件'
+                          ? 'incidents'
+                          : ticket.type === '问题'
+                          ? 'problems'
+                          : 'changes'
+                      }/${ticket.id}`}
+                      className='block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors'
+                    >
+                      <p className='font-semibold text-blue-700'>
+                        {ticket.id} ({ticket.type})
+                      </p>
+                      <p className='text-sm text-gray-600'>{ticket.title}</p>
+                      <span className='text-xs text-gray-500'>状态: {ticket.status}</span>
+                    </Link>
+                  );
+                })
               ) : (
                 <p className='text-sm text-gray-500'>无关联工单。</p>
               )}
@@ -402,19 +445,28 @@ const ChangeDetailPage = () => {
               <AlertTriangle className='w-5 h-5 mr-2' /> 受影响的配置项
             </h3>
             <div className='space-y-3'>
-              {change.affectedCIs.length > 0 ? (
-                change.affectedCIs.map(ci => (
-                  <Link
-                    key={ci.id}
-                    href={`/cmdb/${ci.id}`}
-                    className='block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors'
-                  >
-                    <p className='font-semibold text-blue-700'>
-                      {ci.name} ({ci.type})
-                    </p>
-                    <span className='text-xs text-gray-500'>CI ID: {ci.id}</span>
-                  </Link>
-                ))
+              {change.affectedCIs && change.affectedCIs.length > 0 ? (
+                change.affectedCIs.map((ci: AffectedCI | string) => {
+                  if (typeof ci === 'string') {
+                    return (
+                      <div key={ci} className='p-3 bg-blue-50 rounded-lg'>
+                        <p className='font-semibold text-blue-700'>{ci}</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={typeof ci.id === 'string' ? ci.id : String(ci.id)}
+                      href={`/cmdb/${ci.id}`}
+                      className='block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors'
+                    >
+                      <p className='font-semibold text-blue-700'>
+                        {ci.name} ({ci.type})
+                      </p>
+                      <span className='text-xs text-gray-500'>CI ID: {ci.id}</span>
+                    </Link>
+                  );
+                })
               ) : (
                 <p className='text-sm text-gray-500'>无受影响的配置项。</p>
               )}

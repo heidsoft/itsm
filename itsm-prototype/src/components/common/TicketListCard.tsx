@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, List, Tag, Button, Badge, Dropdown, Menu, Avatar, Space, Tooltip } from 'antd';
 import { MoreHorizontal, Eye, Clock, User } from 'lucide-react';
-import { RecentTicket } from '../../hooks/useDashboardData';
+import { RecentTicket } from '@/hooks/useDashboardData';
 
 interface TicketListCardProps {
   tickets: RecentTicket[];

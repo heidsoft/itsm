@@ -2,7 +2,19 @@
 
 import React from 'react';
 import { Card } from 'antd';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 // 多云资源分布图
 export const ResourceDistributionChart: React.FC = () => {
@@ -47,7 +59,7 @@ export const ResourceHealthPieChart: React.FC = () => {
           outerRadius={100}
           fill='#8884d8'
           dataKey='value'
-          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+          label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.color} />

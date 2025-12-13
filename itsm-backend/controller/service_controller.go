@@ -36,7 +36,7 @@ func NewServiceController(catalogService *service.ServiceCatalogService, request
 // @Success 200 {object} common.Response{data=dto.ServiceCatalogListResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/service-catalogs [get]
+// @Router /api/v1/service-catalogs [get]
 func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 	var req dto.GetServiceCatalogsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -71,7 +71,7 @@ func (sc *ServiceController) GetServiceCatalogs(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/service-requests [post]
+// @Router /api/v1/service-requests [post]
 func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 	var req dto.CreateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -114,7 +114,7 @@ func (sc *ServiceController) CreateServiceRequest(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/service-requests/me [get]
+// @Router /api/v1/service-requests/me [get]
 func (sc *ServiceController) GetUserServiceRequests(c *gin.Context) {
 	var req dto.GetServiceRequestsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -158,7 +158,7 @@ func (sc *ServiceController) GetUserServiceRequests(c *gin.Context) {
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/service-requests/{id} [get]
+// @Router /api/v1/service-requests/{id} [get]
 func (sc *ServiceController) GetServiceRequestByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -196,7 +196,7 @@ func (sc *ServiceController) GetServiceRequestByID(c *gin.Context) {
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/service-requests/{id}/status [put]
+// @Router /api/v1/service-requests/{id}/status [put]
 func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -245,7 +245,7 @@ func (sc *ServiceController) UpdateServiceRequestStatus(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/service-catalogs [post]
+// @Router /api/v1/service-catalogs [post]
 func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 	var req dto.CreateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -282,7 +282,7 @@ func (sc *ServiceController) CreateServiceCatalog(c *gin.Context) {
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/service-catalogs/{id} [put]
+// @Router /api/v1/service-catalogs/{id} [put]
 func (sc *ServiceController) UpdateServiceCatalog(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

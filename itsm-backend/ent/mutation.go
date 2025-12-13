@@ -43944,6 +43944,8 @@ type ServiceRequestMutation struct {
 	op              Op
 	typ             string
 	id              *int
+	tenant_id       *int
+	addtenant_id    *int
 	catalog_id      *int
 	addcatalog_id   *int
 	requester_id    *int
@@ -44054,6 +44056,62 @@ func (m *ServiceRequestMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ServiceRequestMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ServiceRequestMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ServiceRequest entity.
+// If the ServiceRequest object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServiceRequestMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *ServiceRequestMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *ServiceRequestMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ServiceRequestMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
 }
 
 // SetCatalogID sets the "catalog_id" field.
@@ -44359,7 +44417,10 @@ func (m *ServiceRequestMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceRequestMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
+	if m.tenant_id != nil {
+		fields = append(fields, servicerequest.FieldTenantID)
+	}
 	if m.catalog_id != nil {
 		fields = append(fields, servicerequest.FieldCatalogID)
 	}
@@ -44386,6 +44447,8 @@ func (m *ServiceRequestMutation) Fields() []string {
 // schema.
 func (m *ServiceRequestMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case servicerequest.FieldTenantID:
+		return m.TenantID()
 	case servicerequest.FieldCatalogID:
 		return m.CatalogID()
 	case servicerequest.FieldRequesterID:
@@ -44407,6 +44470,8 @@ func (m *ServiceRequestMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ServiceRequestMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case servicerequest.FieldTenantID:
+		return m.OldTenantID(ctx)
 	case servicerequest.FieldCatalogID:
 		return m.OldCatalogID(ctx)
 	case servicerequest.FieldRequesterID:
@@ -44428,6 +44493,13 @@ func (m *ServiceRequestMutation) OldField(ctx context.Context, name string) (ent
 // type.
 func (m *ServiceRequestMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case servicerequest.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
 	case servicerequest.FieldCatalogID:
 		v, ok := value.(int)
 		if !ok {
@@ -44478,6 +44550,9 @@ func (m *ServiceRequestMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ServiceRequestMutation) AddedFields() []string {
 	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, servicerequest.FieldTenantID)
+	}
 	if m.addcatalog_id != nil {
 		fields = append(fields, servicerequest.FieldCatalogID)
 	}
@@ -44492,6 +44567,8 @@ func (m *ServiceRequestMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ServiceRequestMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case servicerequest.FieldTenantID:
+		return m.AddedTenantID()
 	case servicerequest.FieldCatalogID:
 		return m.AddedCatalogID()
 	case servicerequest.FieldRequesterID:
@@ -44505,6 +44582,13 @@ func (m *ServiceRequestMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ServiceRequestMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case servicerequest.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
 	case servicerequest.FieldCatalogID:
 		v, ok := value.(int)
 		if !ok {
@@ -44555,6 +44639,9 @@ func (m *ServiceRequestMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ServiceRequestMutation) ResetField(name string) error {
 	switch name {
+	case servicerequest.FieldTenantID:
+		m.ResetTenantID()
+		return nil
 	case servicerequest.FieldCatalogID:
 		m.ResetCatalogID()
 		return nil

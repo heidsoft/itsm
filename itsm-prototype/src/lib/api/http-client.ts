@@ -1,12 +1,23 @@
 import { API_BASE_URL } from '@/app/lib/api-config';
 import { security } from '@/lib/security';
+import { logger } from '@/lib/env';
 
 // Request configuration interface
-interface RequestConfig {
+export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   headers?: Record<string, string>;
-  body?: string;
+  body?: BodyInit | null;
   timeout?: number;
+}
+
+// Axios-like request config used by some legacy API modules
+export interface AxiosLikeRequestConfig {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  url: string;
+  params?: object;
+  data?: unknown;
+  headers?: Record<string, string>;
+  responseType?: 'json' | 'blob';
 }
 
 // API response interface
@@ -67,7 +78,7 @@ class HttpClient {
 
   setTenantCode(code: string | null) {
     this.tenantCode = code;
-    console.log('HttpClient.setTenantCode:', code);
+    logger.info('HttpClient.setTenantCode:', code);
     if (typeof window !== 'undefined') {
       if (code) {
         localStorage.setItem('current_tenant_code', code);
@@ -88,6 +99,15 @@ class HttpClient {
 
   getAuthToken(): string | null {
     return this.token;
+  }
+
+  // Backward-compat helpers (some legacy code expects these)
+  getToken(): string | null {
+    return this.getAuthToken();
+  }
+
+  getBaseURL(): string {
+    return this.baseURL;
   }
 
   private getHeaders(): Record<string, string> {
@@ -146,13 +166,13 @@ class HttpClient {
       }
       return false;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      logger.error('Token refresh failed:', error);
       return false;
     }
   }
 
-  // Request method using fetch API
-  private async request<T>(endpoint: string, config: RequestConfig): Promise<T> {
+  // Core request method using fetch API (internal)
+  private async requestInternal<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = this.getHeaders();
     const requestConfig: RequestInit = {
@@ -164,7 +184,7 @@ class HttpClient {
       body: config.body,
     };
 
-    console.log('HTTP Client Request:', {
+    logger.debug('HTTP Client Request:', {
       url,
       method: config.method,
       headers,
@@ -173,7 +193,7 @@ class HttpClient {
 
     // 在开发模式下，如果后端服务不可用，使用模拟数据
     if (process.env.NODE_ENV === 'development' && this.baseURL.includes('localhost')) {
-      console.warn('开发模式：正在连接到后端服务，如果后端服务未运行，将显示错误');
+      logger.warn('开发模式：正在连接到后端服务，如果后端服务未运行，将显示错误');
     }
 
     try {
@@ -187,7 +207,7 @@ class HttpClient {
       
       clearTimeout(timeoutId);
       
-      console.log('HTTP Client Response:', {
+      logger.debug('HTTP Client Response:', {
         status: response.status,
         statusText: response.statusText,
         headers: response.headers ? Object.fromEntries(response.headers.entries()) : {}
@@ -212,7 +232,7 @@ class HttpClient {
             throw new Error(`HTTP error! status: ${retryResponse.status}${suffix}`);
           }
           const retryData = await retryResponse.json() as ApiResponse<T>;
-          console.log('HTTP Client Retry Response Data:', retryData);
+          logger.debug('HTTP Client Retry Response Data:', retryData);
           
           // Check response code
           if (retryData.code !== 0) {
@@ -240,7 +260,7 @@ class HttpClient {
       }
 
       const responseData = await response.json() as ApiResponse<T>;
-      console.log('HTTP Client Raw Response Data:', responseData);
+      logger.debug('HTTP Client Raw Response Data:', responseData);
       
       // Check response code
       if (responseData.code !== 0) {
@@ -251,7 +271,7 @@ class HttpClient {
       
       return responseData.data;
     } catch (error: unknown) {
-      console.error('Request failed:', error);
+      logger.error('Request failed:', error);
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error('请求超时，请稍后重试');
@@ -265,11 +285,75 @@ class HttpClient {
     }
   }
 
-  async get<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
+  /**
+   * Unified request method.
+   * Supports:
+   * - request('/path', { method, headers, body })
+   * - request({ method, url, data, headers, responseType })
+   */
+  async request<T = any>(endpoint: string, config?: Partial<RequestConfig>): Promise<T>;
+  async request<T = any>(config: AxiosLikeRequestConfig): Promise<T>;
+  async request<T = any>(
+    arg1: string | AxiosLikeRequestConfig,
+    arg2?: Partial<RequestConfig>
+  ): Promise<T> {
+    // Axios-like style: request({ url, method, data, headers, responseType })
+    if (typeof arg1 === 'object' && arg1 && 'url' in arg1) {
+      const cfg = arg1 as AxiosLikeRequestConfig;
+      const method = cfg.method || 'GET';
+      let endpoint = cfg.url;
+      if (cfg.params) {
+        const qs = new URLSearchParams();
+        Object.entries(cfg.params as Record<string, unknown>).forEach(([k, v]) => {
+          if (v !== undefined && v !== null) qs.append(k, String(v));
+        });
+        const q = qs.toString();
+        if (q) endpoint += (endpoint.includes('?') ? '&' : '?') + q;
+      }
+
+      let body: BodyInit | null | undefined = undefined;
+      if (cfg.data !== undefined) {
+        if (cfg.data instanceof FormData) body = cfg.data;
+        else body = JSON.stringify(cfg.data);
+      }
+
+      const data =
+        cfg.responseType === 'blob'
+          ? // blob passthrough
+            await (async () => {
+              const url = `${this.baseURL}${endpoint}`;
+              const headers = { ...this.getHeaders(), ...(cfg.headers || {}) };
+              if (body instanceof FormData) delete (headers as any)['Content-Type'];
+              else headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+              const res = await fetch(url, { method, headers, body: body as any });
+              if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+              return (await res.blob()) as any;
+            })()
+          : await this.requestInternal<T>(endpoint, {
+              method,
+              headers: cfg.headers,
+              body: body as any,
+            });
+
+      return data as T;
+    }
+
+    // Fetch-like style: request('/path', { ... })
+    const endpoint = arg1 as string;
+    const cfg = arg2 || {};
+    return this.requestInternal<T>(endpoint, {
+      method: cfg.method || 'GET',
+      headers: cfg.headers,
+      body: cfg.body as any,
+      timeout: cfg.timeout,
+    });
+  }
+
+  async get<T>(endpoint: string, params?: object): Promise<T> {
     let url = endpoint;
     if (params) {
       const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
+      Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           searchParams.append(key, String(value));
         }
@@ -277,12 +361,20 @@ class HttpClient {
       url += `?${searchParams.toString()}`;
     }
     
-    return this.request<T>(url, {
+    return this.requestInternal<T>(url, {
       method: 'GET',
     });
   }
 
-  async post<T>(endpoint: string, data?: unknown, config?: { onUploadProgress?: (progress: number) => void }): Promise<T> {
+  async post<T = any>(
+    endpoint: string,
+    data?: unknown,
+    config?: {
+      onUploadProgress?: (progress: number) => void;
+      headers?: Record<string, string>;
+      responseType?: 'json' | 'blob';
+    }
+  ): Promise<T> {
     // 如果是 FormData，直接传递，不进行 JSON.stringify
     if (data instanceof FormData) {
       const url = `${this.baseURL}${endpoint}`;
@@ -336,7 +428,10 @@ class HttpClient {
       // 不支持进度时，使用 fetch
       const response = await fetch(url, {
         method: 'POST',
-        headers,
+        headers: {
+          ...headers,
+          ...(config?.headers || {}),
+        },
         body: data,
       });
       
@@ -344,7 +439,11 @@ class HttpClient {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const responseData = await response.json() as ApiResponse<T>;
+      if (config?.responseType === 'blob') {
+        return (await response.blob()) as any;
+      }
+
+      const responseData = (await response.json()) as ApiResponse<T>;
       if (responseData.code !== 0) {
         throw new Error(responseData.message || 'Request failed');
       }
@@ -352,29 +451,31 @@ class HttpClient {
       return responseData.data;
     }
     
-    return this.request<T>(endpoint, {
+    return this.requestInternal<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
+      headers: config?.headers,
     });
   }
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+    return this.requestInternal<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+    return this.requestInternal<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
+  async delete<T = any>(endpoint: string, data?: unknown): Promise<T> {
+    return this.requestInternal<T>(endpoint, {
       method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 

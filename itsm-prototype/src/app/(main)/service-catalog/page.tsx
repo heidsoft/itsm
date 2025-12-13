@@ -46,12 +46,14 @@ export default function ServiceCatalogPage() {
   const handleCreateServiceConfirm = async () => {
     try {
       const values = await createForm.validateFields();
-      await ServiceCatalogApi.createServiceCatalog({
+      await ServiceCatalogApi.createService({
         name: values.name,
         category: values.category,
-        description: values.description,
-        delivery_time: values.deliveryTime,
-        status: values.status,
+        shortDescription: values.description,
+        availability: {
+          responseTime: values.deliveryTime ? Number(values.deliveryTime) : undefined,
+        },
+        tags: [],
       });
 
       message.success(t('serviceCatalog.createServiceSuccess'));

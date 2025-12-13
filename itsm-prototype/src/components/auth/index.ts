@@ -10,9 +10,4 @@ export type { AuthCardProps } from "./AuthLayout";
 export type { AuthFormProps, AuthFieldConfig, AuthButtonConfig } from "./AuthForm";
 export type { AuthFieldProps, AuthFieldGroupProps } from "./AuthField";
 export type { AuthButtonProps, AuthButtonGroupProps } from "./AuthButton";
-
-// 默认导出
-export { default as AuthLayout } from "./AuthLayout";
-export { default as AuthForm } from "./AuthForm";
-export { default as AuthField } from "./AuthField";
-export { default as AuthButton } from "./AuthButton";
+ 

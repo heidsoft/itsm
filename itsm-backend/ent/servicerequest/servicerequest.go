@@ -13,6 +13,8 @@ const (
 	Label = "service_request"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldTenantID holds the string denoting the tenant_id field in the database.
+	FieldTenantID = "tenant_id"
 	// FieldCatalogID holds the string denoting the catalog_id field in the database.
 	FieldCatalogID = "catalog_id"
 	// FieldRequesterID holds the string denoting the requester_id field in the database.
@@ -32,6 +34,7 @@ const (
 // Columns holds all SQL columns for servicerequest fields.
 var Columns = []string{
 	FieldID,
+	FieldTenantID,
 	FieldCatalogID,
 	FieldRequesterID,
 	FieldStatus,
@@ -51,6 +54,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	TenantIDValidator func(int) error
 	// CatalogIDValidator is a validator for the "catalog_id" field. It is called by the builders before save.
 	CatalogIDValidator func(int) error
 	// RequesterIDValidator is a validator for the "requester_id" field. It is called by the builders before save.
@@ -71,6 +76,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByTenantID orders the results by the tenant_id field.
+func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
 }
 
 // ByCatalogID orders the results by the catalog_id field.

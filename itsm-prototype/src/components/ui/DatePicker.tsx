@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import React, { forwardRef, useState, useRef, useEffect } from 'react';

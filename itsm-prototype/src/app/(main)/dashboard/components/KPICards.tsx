@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { DashboardOutlined } from '@ant-design/icons';
 import { Card, Row, Col, Statistic, Tooltip, Spin, Progress } from 'antd';
 import {
   ArrowUp,
@@ -104,7 +105,8 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
             {/* 简化趋势指示器 */}
             {metric.change !== undefined && (
               <div
-                className={`text-sm font-semibold flex items-center gap-1 ${ // Added flex items-center gap-1
+                className={`text-sm font-semibold flex items-center gap-1 ${
+                  // Added flex items-center gap-1
                   metric.trend === 'up'
                     ? 'text-green-500' // antdTheme.token.colorSuccess
                     : metric.trend === 'down'
@@ -122,7 +124,9 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           {/* 标题 */}
           <div className='mb-3'>
             <Tooltip title={metric.description || metric.title}>
-              <h3 className='text-base font-semibold text-gray-800 leading-tight line-clamp-2'> {/* Changed text size and color */}
+              <h3 className='text-base font-semibold text-gray-800 leading-tight line-clamp-2'>
+                {' '}
+                {/* Changed text size and color */}
                 {metric.title}
               </h3>
             </Tooltip>
@@ -159,7 +163,11 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
                         : '#6b7280', // antdTheme.token.colorTextSecondary
                   }}
                 >
-                  {metric.changeType === 'increase' ? '↑' : metric.changeType === 'decrease' ? '↓' : '—'}{' '}
+                  {metric.changeType === 'increase'
+                    ? '↑'
+                    : metric.changeType === 'decrease'
+                    ? '↓'
+                    : '—'}{' '}
                   {Math.abs(metric.change)}%
                 </span>
               </span>
@@ -239,14 +247,10 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
             <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6} />
           </>
         )}
-        {metrics.length === 5 && (
-          <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6} />
-        )}
+        {metrics.length === 5 && <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6} />}
       </Row>
     </div>
   );
 });
 
 KPICards.displayName = 'KPICards';
-
-

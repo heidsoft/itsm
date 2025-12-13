@@ -26,6 +26,7 @@ func NewServiceRequestService(client *ent.Client, logger *zap.SugaredLogger) *Se
 // CreateServiceRequest 创建服务请求
 func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *dto.CreateServiceRequestRequest, requesterID, tenantID int) (*dto.ServiceRequestResponse, error) {
 	request, err := s.client.ServiceRequest.Create().
+		SetTenantID(tenantID).
 		SetCatalogID(req.CatalogID).
 		SetRequesterID(requesterID).
 		SetReason(req.Reason).
@@ -43,6 +44,7 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 func (s *ServiceRequestService) GetServiceRequest(ctx context.Context, id, tenantID int) (*dto.ServiceRequestResponse, error) {
 	request, err := s.client.ServiceRequest.Query().
 		Where(servicerequest.ID(id)).
+		Where(servicerequest.TenantID(tenantID)).
 		First(ctx)
 
 	if err != nil {
@@ -55,11 +57,16 @@ func (s *ServiceRequestService) GetServiceRequest(ctx context.Context, id, tenan
 
 // ListServiceRequests 获取服务请求列表
 func (s *ServiceRequestService) ListServiceRequests(ctx context.Context, req *dto.GetServiceRequestsRequest, tenantID int) (*dto.ServiceRequestListResponse, error) {
-	query := s.client.ServiceRequest.Query()
+	query := s.client.ServiceRequest.Query().Where(servicerequest.TenantID(tenantID))
 
 	// 添加过滤条件
 	if req.Status != "" {
 		query = query.Where(servicerequest.Status(req.Status))
+	}
+
+	// 仅返回用户自己的请求（req.UserID 由 controller 从认证中间件注入）
+	if req.UserID > 0 {
+		query = query.Where(servicerequest.RequesterID(req.UserID))
 	}
 
 	// 获取总数
@@ -95,7 +102,9 @@ func (s *ServiceRequestService) ListServiceRequests(ctx context.Context, req *dt
 
 // UpdateServiceRequestStatus 更新服务请求状态
 func (s *ServiceRequestService) UpdateServiceRequestStatus(ctx context.Context, id int, status string, tenantID int) error {
-	err := s.client.ServiceRequest.UpdateOneID(id).
+	err := s.client.ServiceRequest.Update().
+		Where(servicerequest.ID(id)).
+		Where(servicerequest.TenantID(tenantID)).
 		SetStatus(status).
 		Exec(ctx)
 

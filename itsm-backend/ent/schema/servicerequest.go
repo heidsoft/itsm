@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/field"
 )
 
@@ -11,6 +12,7 @@ type ServiceRequest struct{ ent.Schema }
 
 func (ServiceRequest) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Int("catalog_id").Comment("服务目录ID").Positive(),
 		field.Int("requester_id").Comment("申请人ID").Positive(),
 		field.String("status").Comment("状态").Default("pending"),
@@ -20,3 +22,10 @@ func (ServiceRequest) Fields() []ent.Field {
 	}
 }
 func (ServiceRequest) Edges() []ent.Edge { return nil }
+
+func (ServiceRequest) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "created_at"),
+		index.Fields("tenant_id", "requester_id", "created_at"),
+	}
+}

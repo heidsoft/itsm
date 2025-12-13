@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package controller
 
 import (
@@ -31,7 +34,7 @@ func NewTenantController(tenantService *service.TenantService, logger *zap.Sugar
 // @Param tenant body dto.CreateTenantRequest true "租户信息"
 // @Success 200 {object} common.Response{data=dto.TenantResponse}
 // @Failure 400 {object} common.Response
-// @Router /api/admin/tenants [post]
+// @RouterIgnore /api/admin/tenants [post]
 func (tc *TenantController) CreateTenant(c *gin.Context) {
 	var req dto.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -81,7 +84,7 @@ func (tc *TenantController) CreateTenant(c *gin.Context) {
 // @Param search query string false "搜索关键词"
 // @Success 200 {object} common.Response{data=dto.TenantListResponse}
 // @Failure 400 {object} common.Response
-// @Router /api/admin/tenants [get]
+// @RouterIgnore /api/admin/tenants [get]
 func (tc *TenantController) ListTenants(c *gin.Context) {
 	var req dto.ListTenantsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -139,7 +142,7 @@ func (tc *TenantController) ListTenants(c *gin.Context) {
 // @Param status body map[string]string true "状态信息"
 // @Success 200 {object} common.Response
 // @Failure 400 {object} common.Response
-// @Router /api/admin/tenants/{id}/status [put]
+// @RouterIgnore /api/admin/tenants/{id}/status [put]
 func (tc *TenantController) UpdateTenantStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

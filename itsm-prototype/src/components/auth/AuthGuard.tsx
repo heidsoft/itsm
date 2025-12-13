@@ -45,7 +45,15 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
               const user = JSON.parse(userInfo);
               // 更新store状态
               const { login } = useAuthStore.getState();
-              login(user, token, { id: 1, name: '默认租户', code: 'default' });
+              login(user, token, {
+                id: 1,
+                name: '默认租户',
+                code: 'default',
+                type: 'trial',
+                status: 'active',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
             } catch (e) {
               console.error('Failed to restore user info:', e);
             }

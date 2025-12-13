@@ -9,6 +9,7 @@ import {
   Form,
   Input,
   Select,
+  Switch,
   message,
   Space,
   Tag,
@@ -599,7 +600,7 @@ const TicketTemplatesPage = () => {
             <p className="text-gray-500 mb-4">
               No matching ticket templates found
             </p>
-            <Button type="primary" onClick={() => setIsModalVisible(true)}>
+            <Button type="primary" onClick={() => setModalVisible(true)}>
               Create First Template
             </Button>
           </div>
@@ -865,7 +866,7 @@ const TicketTemplatesPage = () => {
               <Button type="primary" htmlType="submit">
                 {editingTemplate ? "Update Template" : "Create Template"}
               </Button>
-              <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
+              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>

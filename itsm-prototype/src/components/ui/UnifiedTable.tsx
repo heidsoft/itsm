@@ -23,6 +23,7 @@ import {
   Spin,
   Empty,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
   SearchOutlined,
   FilterOutlined,
@@ -31,13 +32,7 @@ import {
   SettingOutlined,
   MoreOutlined,
 } from '@ant-design/icons';
-import {
-  TableColumn,
-  FilterConfig,
-  SortConfig,
-  ActionButton,
-  PaginationParams,
-} from '../../types/common';
+import { TableColumn, FilterConfig, SortConfig, ActionButton } from '../../types/common';
 import { PaginatedResponse } from '../../types/api';
 import { useDebouncedCallback } from '../../lib/component-utils';
 
@@ -141,9 +136,12 @@ export function UnifiedTable<T extends Record<string, unknown>>({
   const [searchKeyword, setSearchKeyword] = useState('');
 
   // 防抖搜索
-  const debouncedSearch = useDebouncedCallback((keyword: string) => {
-    search?.onSearch(keyword);
-  }, 300);
+  const debouncedSearch = useDebouncedCallback(
+    ((keyword: string) => {
+      search?.onSearch(keyword);
+    }) as any,
+    300
+  );
 
   // 处理搜索
   const handleSearch = useCallback(
@@ -274,7 +272,7 @@ export function UnifiedTable<T extends Record<string, unknown>>({
           <DatePicker
             placeholder={filter.placeholder}
             value={value}
-            onChange={date => handleFilterChange(filter.key, date?.format('YYYY-MM-DD'))}
+            onChange={date => handleFilterChange(filter.key, (date as any)?.format?.('YYYY-MM-DD'))}
             style={{ width: '100%' }}
           />
         );
@@ -283,11 +281,11 @@ export function UnifiedTable<T extends Record<string, unknown>>({
         return (
           <RangePicker
             placeholder={[filter.placeholder || '开始日期', '结束日期']}
-            value={value}
+            value={value as any}
             onChange={dates =>
               handleFilterChange(
                 filter.key,
-                dates?.map(d => d?.format('YYYY-MM-DD'))
+                (dates as any)?.map((d: any) => d?.format?.('YYYY-MM-DD'))
               )
             }
             style={{ width: '100%' }}
@@ -428,7 +426,7 @@ export function UnifiedTable<T extends Record<string, unknown>>({
     return columns.map(col => ({
       ...col,
       title: col.title,
-      dataIndex: col.dataIndex || col.key,
+      dataIndex: (col.dataIndex || col.key) as any,
       key: col.key,
       width: col.width,
       align: col.align,
@@ -447,7 +445,7 @@ export function UnifiedTable<T extends Record<string, unknown>>({
 
       <Table
         dataSource={dataSource}
-        columns={processedColumns}
+        columns={processedColumns as unknown as ColumnsType<T>}
         loading={loading}
         pagination={
           pagination
@@ -461,7 +459,7 @@ export function UnifiedTable<T extends Record<string, unknown>>({
         rowKey={rowKey}
         rowSelection={rowSelection}
         scroll={scroll}
-        expandable={expandable}
+        expandable={expandable as any}
         size={size}
         onChange={handleSortChange}
         locale={{

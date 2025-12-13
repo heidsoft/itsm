@@ -3,10 +3,10 @@
 import React from 'react';
 import { Card, Col, Row } from 'antd';
 import { GitBranch, AlertTriangle } from 'lucide-react';
-import { ChangeStats } from '@/lib/services/change-service';
+import type { ChangeStats as ChangeStatsData } from '@/lib/services/change-service';
 
 interface ChangeStatsProps {
-  stats: ChangeStats;
+  stats: ChangeStatsData;
 }
 
 export const ChangeStats: React.FC<ChangeStatsProps> = ({ stats }) => {

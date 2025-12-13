@@ -1246,6 +1246,7 @@ var (
 	// ServiceRequestsColumns holds the columns for the "service_requests" table.
 	ServiceRequestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "catalog_id", Type: field.TypeInt},
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "status", Type: field.TypeString, Default: "pending"},
@@ -1258,6 +1259,18 @@ var (
 		Name:       "service_requests",
 		Columns:    ServiceRequestsColumns,
 		PrimaryKey: []*schema.Column{ServiceRequestsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "servicerequest_tenant_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[6]},
+			},
+			{
+				Name:    "servicerequest_tenant_id_requester_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[3], ServiceRequestsColumns[6]},
+			},
+		},
 	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{

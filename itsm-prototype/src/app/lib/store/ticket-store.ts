@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { Ticket, TicketStatus, TicketPriority, TicketType } from "../lib/services/ticket-service";
+import { Ticket, TicketStatus, TicketPriority, TicketType } from "@/lib/services/ticket-service";
 
 export interface TicketQueryFilters {
   status?: TicketStatus;
@@ -39,7 +39,7 @@ export interface TicketStore {
   error: string | null;
   
   // UI state
-  selectedRowKeys: string[];
+  selectedRowKeys: Array<string | number>;
   modalVisible: boolean;
   editingTicket: Ticket | null;
   templateModalVisible: boolean;
@@ -55,7 +55,7 @@ export interface TicketStore {
   setError: (error: string | null) => void;
   
   // Actions - UI state
-  setSelectedRowKeys: (keys: string[]) => void;
+  setSelectedRowKeys: (keys: Array<string | number>) => void;
   setModalVisible: (visible: boolean) => void;
   setEditingTicket: (ticket: Ticket | null) => void;
   setTemplateModalVisible: (visible: boolean) => void;
@@ -68,9 +68,9 @@ export interface TicketStore {
   
   // Actions - Ticket operations
   addTicket: (ticket: Ticket) => void;
-  updateTicket: (id: string, updates: Partial<Ticket>) => void;
-  removeTicket: (id: string) => void;
-  removeTickets: (ids: string[]) => void;
+  updateTicket: (id: number, updates: Partial<Ticket>) => void;
+  removeTicket: (id: number) => void;
+  removeTickets: (ids: number[]) => void;
   
   // Actions - Reset
   resetStore: () => void;

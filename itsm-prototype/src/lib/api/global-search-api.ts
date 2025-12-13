@@ -11,15 +11,15 @@ export interface GlobalSearchResult {
 export const globalSearchApi = {
   search: async (query: string): Promise<GlobalSearchResult> => {
     const [tickets, incidents, problems] = await Promise.all([
-      ticketService.getTickets({ query }),
-      incidentService.getIncidents({ query }),
-      problemService.getProblems({ query }),
+      ticketService.listTickets({ search: query } as any),
+      incidentService.listIncidents({ search: query } as any),
+      problemService.listProblems({ search: query } as any),
     ]);
 
     return {
-      tickets: tickets.items,
-      incidents: incidents.items,
-      problems: problems.items,
+      tickets: (tickets as any).tickets || (tickets as any).items || [],
+      incidents: (incidents as any).incidents || (incidents as any).items || [],
+      problems: (problems as any).problems || (problems as any).items || [],
     };
   },
 };

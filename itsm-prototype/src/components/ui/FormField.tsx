@@ -1,6 +1,6 @@
 import React from "react";
-import { FormInput } from "../FormInput";
-import { FormTextarea } from "../FormTextarea";
+import { FormInput } from "../forms/FormInput";
+import { FormTextarea } from "../forms/FormTextarea";
 
 interface FormFieldProps {
   type:
@@ -72,7 +72,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           <FormInput
             label={label}
             value={String(value || '')}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
             className={className}
@@ -83,7 +83,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           <FormTextarea
             label={label}
             value={String(value || '')}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
             className={className}

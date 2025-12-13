@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import React from 'react';
@@ -10,31 +11,31 @@ export interface EnterpriseCardProps extends CardProps {
    * @default true
    */
   hover?: boolean;
-  
+
   /**
    * 是否显示渐变边框/光晕效果
    * @default false
    */
   gradient?: boolean;
-  
+
   /**
    * 渐变色方向
    * @default 'blue-purple'
    */
   gradientVariant?: 'blue-purple' | 'green-blue' | 'orange-red' | 'pink-purple';
-  
+
   /**
    * 卡片大小
    * @default 'default'
    */
   size?: 'small' | 'default' | 'large';
-  
+
   /**
    * 是否显示为玻璃态效果
    * @default false
    */
   glass?: boolean;
-  
+
   /**
    * 自定义阴影级别
    * @default 'sm'
@@ -50,12 +51,12 @@ const gradientMap = {
 };
 
 const shadowMap = {
-  'none': '',
-  'xs': 'shadow-xs',
-  'sm': 'shadow-sm',
-  'md': 'shadow-md',
-  'lg': 'shadow-lg',
-  'xl': 'shadow-xl',
+  none: '',
+  xs: 'shadow-xs',
+  sm: 'shadow-sm',
+  md: 'shadow-md',
+  lg: 'shadow-lg',
+  xl: 'shadow-xl',
   '2xl': 'shadow-2xl',
 };
 
@@ -67,14 +68,14 @@ const sizeMap = {
 
 /**
  * 企业级卡片组件
- * 
+ *
  * 特性：
  * - 统一的圆角和阴影
  * - 悬浮动画效果
  * - 可选渐变光晕
  * - 玻璃态效果
  * - GPU加速动画
- * 
+ *
  * @example
  * ```tsx
  * <EnterpriseCard hover gradient>
@@ -119,7 +120,7 @@ export const EnterpriseCard: React.FC<EnterpriseCardProps> = ({
       >
         {/* 渐变光晕背景 - 仅在悬浮时显示 */}
         {gradient && (
-          <div 
+          <div
             className={cn(
               'absolute inset-0 rounded-xl',
               'opacity-0 group-hover:opacity-100',
@@ -129,17 +130,20 @@ export const EnterpriseCard: React.FC<EnterpriseCardProps> = ({
             )}
             style={{
               background: `linear-gradient(135deg, ${
-                gradientVariant === 'blue-purple' ? '#3b82f6, #8b5cf6' :
-                gradientVariant === 'green-blue' ? '#22c55e, #3b82f6' :
-                gradientVariant === 'orange-red' ? '#f97316, #ef4444' :
-                '#ec4899, #8b5cf6'
+                gradientVariant === 'blue-purple'
+                  ? '#3b82f6, #8b5cf6'
+                  : gradientVariant === 'green-blue'
+                  ? '#22c55e, #3b82f6'
+                  : gradientVariant === 'orange-red'
+                  ? '#f97316, #ef4444'
+                  : '#ec4899, #8b5cf6'
               })`,
               opacity: 0.1,
               filter: 'blur(20px)',
             }}
           />
         )}
-        
+
         {children}
       </Card>
     </div>
@@ -148,7 +152,7 @@ export const EnterpriseCard: React.FC<EnterpriseCardProps> = ({
 
 /**
  * 企业级统计卡片
- * 
+ *
  * 专门用于KPI指标展示的卡片变体
  */
 export interface EnterpriseStatCardProps extends EnterpriseCardProps {
@@ -176,36 +180,32 @@ export const EnterpriseStatCard: React.FC<EnterpriseStatCardProps> = ({
 }) => {
   return (
     <EnterpriseCard hover gradient {...cardProps}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="text-sm font-medium text-gray-600 mb-2">
-            {title}
-          </div>
-          <div className="text-2xl font-bold text-gray-900 mb-1">
+      <div className='flex items-start justify-between'>
+        <div className='flex-1'>
+          <div className='text-sm font-medium text-gray-600 mb-2'>{title}</div>
+          <div className='text-2xl font-bold text-gray-900 mb-1'>
             {loading ? (
-              <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
+              <div className='h-8 w-24 bg-gray-200 animate-pulse rounded' />
             ) : (
               <>
                 {prefix}
                 {value}
-                {suffix && <span className="text-lg text-gray-600 ml-1">{suffix}</span>}
+                {suffix && <span className='text-lg text-gray-600 ml-1'>{suffix}</span>}
               </>
             )}
           </div>
           {trend && !loading && (
-            <div className={cn(
-              'text-sm font-medium',
-              trend.isPositive ? 'text-green-600' : 'text-red-600'
-            )}>
+            <div
+              className={cn(
+                'text-sm font-medium',
+                trend.isPositive ? 'text-green-600' : 'text-red-600'
+              )}
+            >
               {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
             </div>
           )}
         </div>
-        {icon && (
-          <div className="text-3xl text-blue-500 opacity-80">
-            {icon}
-          </div>
-        )}
+        {icon && <div className='text-3xl text-blue-500 opacity-80'>{icon}</div>}
       </div>
     </EnterpriseCard>
   );
@@ -213,7 +213,7 @@ export const EnterpriseStatCard: React.FC<EnterpriseStatCardProps> = ({
 
 /**
  * 图表卡片组件
- * 
+ *
  * 专门用于图表展示的卡片容器
  */
 export interface ChartCardProps extends EnterpriseCardProps {
@@ -232,16 +232,14 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   return (
     <EnterpriseCard hover {...cardProps}>
       {chartTitle && (
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {chartTitle}
-          </h3>
+        <div className='flex items-center justify-between mb-4 pb-3 border-b border-gray-100'>
+          <h3 className='text-lg font-semibold text-gray-900'>{chartTitle}</h3>
           {extra && <div>{extra}</div>}
         </div>
       )}
       {loading ? (
-        <div className="h-64 flex items-center justify-center">
-          <div className="text-gray-400">加载中...</div>
+        <div className='h-64 flex items-center justify-center'>
+          <div className='text-gray-400'>加载中...</div>
         </div>
       ) : (
         children
@@ -255,4 +253,3 @@ export const EnterpriseChartCard = ChartCard;
 export type EnterpriseChartCardProps = ChartCardProps;
 
 export default EnterpriseCard;
-

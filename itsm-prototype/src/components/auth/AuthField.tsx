@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { forwardRef } from "react";
-import { Input, PasswordInput } from "@/components/ui";
-import { theme } from "antd";
-import { cn } from "@/lib/utils";
+import React, { forwardRef } from 'react';
+import { Input, PasswordInput } from '@/components/ui';
+import { theme } from 'antd';
+import { cn } from '@/lib/utils';
 
 const { token } = theme.useToken();
 
@@ -14,7 +14,7 @@ export interface AuthFieldProps {
   /** 字段标签 */
   label?: string;
   /** 字段类型 */
-  type?: "text" | "email" | "password" | "tel" | "url" | "number";
+  type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'number';
   /** 字段名称 */
   name?: string;
   /** 占位符文本 */
@@ -40,7 +40,7 @@ export interface AuthFieldProps {
   /** 成功信息 */
   success?: string;
   /** 字段尺寸 */
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   /** 是否显示密码强度 */
   showPasswordStrength?: boolean;
   /** 是否可清除 */
@@ -73,7 +73,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
   (
     {
       label,
-      type = "text",
+      type = 'text',
       name,
       placeholder,
       value,
@@ -86,7 +86,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
       helpText,
       error,
       success,
-      size = "lg",
+      size = 'lg',
       showPasswordStrength = false,
       clearable = false,
       rules,
@@ -108,10 +108,10 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
     };
 
     // 获取字段状态
-    const getFieldVariant = () => {
-      if (error) return "error";
-      if (success) return "success";
-      return "default";
+    const getFieldVariant = (): 'default' | 'error' | 'success' | 'warning' => {
+      if (error) return 'error';
+      if (success) return 'success';
+      return 'default';
     };
 
     // 渲染标签
@@ -120,16 +120,11 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
 
       return (
         <label
-          className={cn(
-            "block text-sm font-medium mb-2",
-            labelClassName
-          )}
+          className={cn('block text-sm font-medium mb-2', labelClassName)}
           style={{ color: token.colorText }}
         >
           {label}
-          {required && (
-            <span style={{ color: token.colorError, marginLeft: 4 }}>*</span>
-          )}
+          {required && <span style={{ color: token.colorError, marginLeft: 4 }}>*</span>}
         </label>
       );
     };
@@ -139,13 +134,14 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
       if (!helpText && !error && !success) return null;
 
       const text = error || success || helpText;
-      const color = error ? token.colorError : success ? token.colorSuccess : token.colorTextSecondary;
+      const color = error
+        ? token.colorError
+        : success
+        ? token.colorSuccess
+        : token.colorTextSecondary;
 
       return (
-        <p
-          className="mt-1 text-sm"
-          style={{ color }}
-        >
+        <p className='mt-1 text-sm' style={{ color }}>
           {text}
         </p>
       );
@@ -175,27 +171,21 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
         ...props,
       };
 
-      if (type === "password") {
+      if (type === 'password') {
         return (
           <PasswordInput
             {...commonProps}
             showStrength={showPasswordStrength}
-            helpText={helpText}
+            helperText={helpText}
           />
         );
       }
 
-      return (
-        <Input
-          {...commonProps}
-          type={type}
-          helpText={helpText}
-        />
-      );
+      return <Input {...commonProps} type={type} helperText={helpText} />;
     };
 
     return (
-      <div className={cn("w-full", containerClassName)}>
+      <div className={cn('w-full', containerClassName)}>
         {renderLabel()}
         {renderInput()}
         {renderHelpText()}
@@ -204,7 +194,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
   }
 );
 
-AuthField.displayName = "AuthField";
+AuthField.displayName = 'AuthField';
 
 /**
  * 认证字段组组件
@@ -217,7 +207,7 @@ export interface AuthFieldGroupProps {
   /** 字段组描述 */
   description?: string;
   /** 字段间距 */
-  spacing?: "none" | "sm" | "md" | "lg";
+  spacing?: 'none' | 'sm' | 'md' | 'lg';
   /** 是否显示边框 */
   bordered?: boolean;
   /** 自定义类名 */
@@ -228,42 +218,37 @@ export const AuthFieldGroup: React.FC<AuthFieldGroupProps> = ({
   children,
   title,
   description,
-  spacing = "md",
+  spacing = 'md',
   bordered = false,
   className,
 }) => {
   const { token } = theme.useToken();
 
   const spacingClasses = {
-    none: "space-y-0",
-    sm: "space-y-2",
-    md: "space-y-4",
-    lg: "space-y-6",
+    none: 'space-y-0',
+    sm: 'space-y-2',
+    md: 'space-y-4',
+    lg: 'space-y-6',
   };
 
   return (
     <div
       className={cn(
-        "w-full",
+        'w-full',
         spacingClasses[spacing],
-        bordered && "p-4 rounded-lg border",
+        bordered && 'p-4 rounded-lg border',
         className
       )}
       style={bordered ? { borderColor: token.colorBorder } : undefined}
     >
       {(title || description) && (
-        <div className="mb-4">
+        <div className='mb-4'>
           {title && (
-            <h3
-              className="text-lg font-semibold mb-1"
-              style={{ color: token.colorText }}
-            >
+            <h3 className='text-lg font-semibold mb-1' style={{ color: token.colorText }}>
               {title}
             </h3>
           )}
-          {description && (
-            <p style={{ color: token.colorTextSecondary }}>{description}</p>
-          )}
+          {description && <p style={{ color: token.colorTextSecondary }}>{description}</p>}
         </div>
       )}
       {children}

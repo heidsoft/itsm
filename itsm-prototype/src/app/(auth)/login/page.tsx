@@ -20,7 +20,8 @@ import {
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { colors } from '@/lib/design-system/colors';
-import { AuthService } from '@/lib/services/auth-service'; // Import the actual AuthService
+import { AuthService } from '@/lib/services/auth-service';
+import { logger } from '@/lib/env';
 
 const { Text, Title } = Typography;
 
@@ -39,7 +40,7 @@ export default function LoginPage() {
 
   // 处理登录提交
   const handleLogin = async (values: { username: string; password: string }) => {
-    console.log('开始登录:', values);
+    logger.info('开始登录:', values);
     setLoading(true);
     setError('');
 
@@ -47,17 +48,17 @@ export default function LoginPage() {
       const success = await AuthService.login(values.username, values.password);
 
       if (success) {
-        console.log('认证信息已存储，准备跳转');
+        logger.info('认证信息已存储，准备跳转');
         // 跳转到仪表板
         router.push('/dashboard');
-        console.log('已执行跳转命令');
+        logger.info('已执行跳转命令');
       } else {
         // AuthService.login already handles error messages via console.error,
         // but for UI display, we can catch a generic message or specific ones if AuthService throws them.
         setError('登录失败，请检查您的用户名和密码');
       }
     } catch (err) {
-      console.error('登录错误:', err);
+      logger.error('登录错误:', err);
       setError(err instanceof Error ? err.message : '登录失败，请重试');
     } finally {
       setLoading(false);

@@ -649,7 +649,7 @@ func (c *IncidentController) ResolveAlert(ctx *gin.Context) {
 // @Produce json
 // @Param page query int false "页码" default(1)
 // @Param size query int false "每页数量" default(10)
-// @Success 200 {object} common.Response{data=common.PaginatedResponse{items=[]dto.IncidentAlertResponse}}
+// @Success 200 {object} common.Response{data=object{items=[]dto.IncidentAlertResponse,total=int,page=int,pageSize=int}}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/alerts/active [get]

@@ -14,9 +14,9 @@ type CreateIncidentRequest struct {
 	Subcategory         string                 `json:"subcategory" example:"cpu"`
 	ConfigurationItemID *int                   `json:"configuration_item_id" example:"1"`
 	AssigneeID          *int                   `json:"assignee_id" example:"1"`
-	ImpactAnalysis      map[string]interface{} `json:"impact_analysis" example:"{\"affected_users\":100}"`
+	ImpactAnalysis      map[string]interface{} `json:"impact_analysis"`
 	Source              string                 `json:"source" example:"monitoring"`
-	Metadata            map[string]interface{} `json:"metadata" example:"{\"alert_id\":\"alert_001\"}"`
+	Metadata            map[string]interface{} `json:"metadata"`
 	DetectedAt          *time.Time             `json:"detected_at" example:"2024-01-01T00:00:00Z"`
 }
 
@@ -72,11 +72,11 @@ type CreateIncidentEventRequest struct {
 	Description string                 `json:"description" example:"事件状态从new变更为in_progress"`
 	Status      string                 `json:"status" example:"active"`
 	Severity    string                 `json:"severity" example:"medium"`
-	Data        map[string]interface{} `json:"data" example:"{\"old_status\":\"new\",\"new_status\":\"in_progress\"}"`
+	Data        map[string]interface{} `json:"data"`
 	OccurredAt  *time.Time             `json:"occurred_at" example:"2024-01-01T00:00:00Z"`
 	UserID      *int                   `json:"user_id" example:"1"`
 	Source      string                 `json:"source" example:"system"`
-	Metadata    map[string]interface{} `json:"metadata" example:"{\"ip_address\":\"192.168.1.1\"}"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type IncidentEventResponse struct {
@@ -107,7 +107,7 @@ type CreateIncidentAlertRequest struct {
 	Channels    []string               `json:"channels" example:"[\"email\",\"sms\"]"`
 	Recipients  []string               `json:"recipients" example:"[\"manager@company.com\"]"`
 	TriggeredAt *time.Time             `json:"triggered_at" example:"2024-01-01T00:00:00Z"`
-	Metadata    map[string]interface{} `json:"metadata" example:"{\"escalation_level\":1}"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type IncidentAlertResponse struct {
@@ -138,8 +138,8 @@ type CreateIncidentMetricRequest struct {
 	MetricValue float64                `json:"metric_value" binding:"required" example:"2.5"`
 	Unit        string                 `json:"unit" example:"秒"`
 	MeasuredAt  *time.Time             `json:"measured_at" example:"2024-01-01T00:00:00Z"`
-	Tags        map[string]string      `json:"tags" example:"{\"environment\":\"production\"}"`
-	Metadata    map[string]interface{} `json:"metadata" example:"{\"source\":\"monitoring\"}"`
+	Tags        map[string]string      `json:"tags"`
+	Metadata    map[string]interface{} `json:"metadata"`
 }
 
 type IncidentMetricResponse struct {
@@ -162,11 +162,11 @@ type CreateIncidentRuleRequest struct {
 	Name        string                   `json:"name" binding:"required" example:"高优先级事件自动升级"`
 	Description string                   `json:"description" example:"当事件优先级为high或urgent时，自动升级到下一级别"`
 	RuleType    string                   `json:"rule_type" binding:"required" example:"escalation"`
-	Conditions  map[string]interface{}   `json:"conditions" example:"{\"priority\":[\"high\",\"urgent\"]}"`
-	Actions     []map[string]interface{} `json:"actions" example:"[{\"type\":\"escalate\",\"level\":1}]"`
+	Conditions  map[string]interface{}   `json:"conditions"`
+	Actions     []map[string]interface{} `json:"actions"`
 	Priority    string                   `json:"priority" example:"high"`
 	IsActive    bool                     `json:"is_active" example:"true"`
-	Metadata    map[string]interface{}   `json:"metadata" example:"{\"version\":\"1.0\"}"`
+	Metadata    map[string]interface{}   `json:"metadata"`
 }
 
 type UpdateIncidentRuleRequest struct {
@@ -227,7 +227,7 @@ type IncidentEscalationRequest struct {
 	IncidentID      int    `json:"incident_id" binding:"required" example:"1"`
 	EscalationLevel int    `json:"escalation_level" binding:"required" example:"1"`
 	Reason          string `json:"reason" example:"事件处理时间过长"`
-	NotifyUsers     []int  `json:"notify_users" example:"[1,2,3]"`
+	NotifyUsers     []int  `json:"notify_users"`
 	AutoAssign      bool   `json:"auto_assign" example:"true"`
 }
 
@@ -237,7 +237,7 @@ type IncidentEscalationResponse struct {
 	EscalationLevel int       `json:"escalation_level" example:"1"`
 	Reason          string    `json:"reason" example:"事件处理时间过长"`
 	Status          string    `json:"status" example:"active"`
-	NotifiedUsers   []int     `json:"notified_users" example:"[1,2,3]"`
+	NotifiedUsers   []int     `json:"notified_users"`
 	AutoAssigned    bool      `json:"auto_assigned" example:"true"`
 	CreatedAt       time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt       time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`

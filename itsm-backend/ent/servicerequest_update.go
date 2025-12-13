@@ -28,6 +28,27 @@ func (sru *ServiceRequestUpdate) Where(ps ...predicate.ServiceRequest) *ServiceR
 	return sru
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (sru *ServiceRequestUpdate) SetTenantID(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetTenantID()
+	sru.mutation.SetTenantID(i)
+	return sru
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableTenantID(i *int) *ServiceRequestUpdate {
+	if i != nil {
+		sru.SetTenantID(*i)
+	}
+	return sru
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (sru *ServiceRequestUpdate) AddTenantID(i int) *ServiceRequestUpdate {
+	sru.mutation.AddTenantID(i)
+	return sru
+}
+
 // SetCatalogID sets the "catalog_id" field.
 func (sru *ServiceRequestUpdate) SetCatalogID(i int) *ServiceRequestUpdate {
 	sru.mutation.ResetCatalogID()
@@ -167,6 +188,11 @@ func (sru *ServiceRequestUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (sru *ServiceRequestUpdate) check() error {
+	if v, ok := sru.mutation.TenantID(); ok {
+		if err := servicerequest.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.tenant_id": %w`, err)}
+		}
+	}
 	if v, ok := sru.mutation.CatalogID(); ok {
 		if err := servicerequest.CatalogIDValidator(v); err != nil {
 			return &ValidationError{Name: "catalog_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.catalog_id": %w`, err)}
@@ -191,6 +217,12 @@ func (sru *ServiceRequestUpdate) sqlSave(ctx context.Context) (n int, err error)
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := sru.mutation.TenantID(); ok {
+		_spec.SetField(servicerequest.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedTenantID(); ok {
+		_spec.AddField(servicerequest.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := sru.mutation.CatalogID(); ok {
 		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)
@@ -237,6 +269,27 @@ type ServiceRequestUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ServiceRequestMutation
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (sruo *ServiceRequestUpdateOne) SetTenantID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetTenantID()
+	sruo.mutation.SetTenantID(i)
+	return sruo
+}
+
+// SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableTenantID(i *int) *ServiceRequestUpdateOne {
+	if i != nil {
+		sruo.SetTenantID(*i)
+	}
+	return sruo
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (sruo *ServiceRequestUpdateOne) AddTenantID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddTenantID(i)
+	return sruo
 }
 
 // SetCatalogID sets the "catalog_id" field.
@@ -391,6 +444,11 @@ func (sruo *ServiceRequestUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (sruo *ServiceRequestUpdateOne) check() error {
+	if v, ok := sruo.mutation.TenantID(); ok {
+		if err := servicerequest.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.tenant_id": %w`, err)}
+		}
+	}
 	if v, ok := sruo.mutation.CatalogID(); ok {
 		if err := servicerequest.CatalogIDValidator(v); err != nil {
 			return &ValidationError{Name: "catalog_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.catalog_id": %w`, err)}
@@ -432,6 +490,12 @@ func (sruo *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := sruo.mutation.TenantID(); ok {
+		_spec.SetField(servicerequest.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedTenantID(); ok {
+		_spec.AddField(servicerequest.FieldTenantID, field.TypeInt, value)
 	}
 	if value, ok := sruo.mutation.CatalogID(); ok {
 		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)

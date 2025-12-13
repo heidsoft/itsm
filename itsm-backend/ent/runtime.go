@@ -1380,24 +1380,28 @@ func init() {
 	servicecatalog.UpdateDefaultUpdatedAt = servicecatalogDescUpdatedAt.UpdateDefault.(func() time.Time)
 	servicerequestFields := schema.ServiceRequest{}.Fields()
 	_ = servicerequestFields
+	// servicerequestDescTenantID is the schema descriptor for tenant_id field.
+	servicerequestDescTenantID := servicerequestFields[0].Descriptor()
+	// servicerequest.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	servicerequest.TenantIDValidator = servicerequestDescTenantID.Validators[0].(func(int) error)
 	// servicerequestDescCatalogID is the schema descriptor for catalog_id field.
-	servicerequestDescCatalogID := servicerequestFields[0].Descriptor()
+	servicerequestDescCatalogID := servicerequestFields[1].Descriptor()
 	// servicerequest.CatalogIDValidator is a validator for the "catalog_id" field. It is called by the builders before save.
 	servicerequest.CatalogIDValidator = servicerequestDescCatalogID.Validators[0].(func(int) error)
 	// servicerequestDescRequesterID is the schema descriptor for requester_id field.
-	servicerequestDescRequesterID := servicerequestFields[1].Descriptor()
+	servicerequestDescRequesterID := servicerequestFields[2].Descriptor()
 	// servicerequest.RequesterIDValidator is a validator for the "requester_id" field. It is called by the builders before save.
 	servicerequest.RequesterIDValidator = servicerequestDescRequesterID.Validators[0].(func(int) error)
 	// servicerequestDescStatus is the schema descriptor for status field.
-	servicerequestDescStatus := servicerequestFields[2].Descriptor()
+	servicerequestDescStatus := servicerequestFields[3].Descriptor()
 	// servicerequest.DefaultStatus holds the default value on creation for the status field.
 	servicerequest.DefaultStatus = servicerequestDescStatus.Default.(string)
 	// servicerequestDescCreatedAt is the schema descriptor for created_at field.
-	servicerequestDescCreatedAt := servicerequestFields[4].Descriptor()
+	servicerequestDescCreatedAt := servicerequestFields[5].Descriptor()
 	// servicerequest.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequest.DefaultCreatedAt = servicerequestDescCreatedAt.Default.(func() time.Time)
 	// servicerequestDescUpdatedAt is the schema descriptor for updated_at field.
-	servicerequestDescUpdatedAt := servicerequestFields[5].Descriptor()
+	servicerequestDescUpdatedAt := servicerequestFields[6].Descriptor()
 	// servicerequest.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	servicerequest.DefaultUpdatedAt = servicerequestDescUpdatedAt.Default.(func() time.Time)
 	// servicerequest.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

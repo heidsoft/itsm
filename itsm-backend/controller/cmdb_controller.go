@@ -29,7 +29,7 @@ func NewCMDBController(cmdbService *service.CMDBService) *CMDBController {
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/configuration-items [post]
+// @Router /api/v1/cmdb/configuration-items [post]
 func (ctrl *CMDBController) CreateConfigurationItem(c *gin.Context) {
 	var req dto.CreateCIRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -62,7 +62,7 @@ func (ctrl *CMDBController) CreateConfigurationItem(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/configuration-items/{id} [get]
+// @Router /api/v1/cmdb/configuration-items/{id} [get]
 func (ctrl *CMDBController) GetConfigurationItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -106,7 +106,7 @@ func (ctrl *CMDBController) GetConfigurationItem(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ListCIsResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/configuration-items [get]
+// @Router /api/v1/cmdb/configuration-items [get]
 func (ctrl *CMDBController) ListConfigurationItems(c *gin.Context) {
 	var req dto.ListCIsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -150,7 +150,7 @@ func (ctrl *CMDBController) ListConfigurationItems(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/configuration-items/{id} [put]
+// @Router /api/v1/cmdb/configuration-items/{id} [put]
 func (ctrl *CMDBController) UpdateConfigurationItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -194,7 +194,7 @@ func (ctrl *CMDBController) UpdateConfigurationItem(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/configuration-items/{id} [delete]
+// @Router /api/v1/cmdb/configuration-items/{id} [delete]
 func (ctrl *CMDBController) DeleteConfigurationItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -232,7 +232,7 @@ func (ctrl *CMDBController) DeleteConfigurationItem(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CIAttributeDefinitionResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/ci-types/attributes [post]
+// @Router /api/v1/cmdb/ci-types/attributes [post]
 func (ctrl *CMDBController) CreateCIAttributeDefinition(c *gin.Context) {
 	var req dto.CIAttributeDefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -261,7 +261,7 @@ func (ctrl *CMDBController) CreateCIAttributeDefinition(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/ci-types/{id}/attributes [get]
+// @Router /api/v1/cmdb/ci-types/{id}/attributes [get]
 func (ctrl *CMDBController) GetCITypeWithAttributes(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -289,7 +289,7 @@ func (ctrl *CMDBController) GetCITypeWithAttributes(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ValidateCIAttributesResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/ci-attributes/validate [post]
+// @Router /api/v1/cmdb/ci-attributes/validate [post]
 func (ctrl *CMDBController) ValidateCIAttributes(c *gin.Context) {
 	var req dto.ValidateCIAttributesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -322,7 +322,7 @@ func (ctrl *CMDBController) ValidateCIAttributes(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.ListCIsResponse}
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/cmdb/cis/search-by-attributes [post]
+// @Router /api/v1/cmdb/cis/search-by-attributes [post]
 func (ctrl *CMDBController) SearchCIsByAttributes(c *gin.Context) {
 	var req dto.CIAttributeSearchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

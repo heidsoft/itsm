@@ -262,12 +262,12 @@ func (srq *ServiceRequestQuery) Clone() *ServiceRequestQuery {
 // Example:
 //
 //	var v []struct {
-//		CatalogID int `json:"catalog_id,omitempty"`
+//		TenantID int `json:"tenant_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.ServiceRequest.Query().
-//		GroupBy(servicerequest.FieldCatalogID).
+//		GroupBy(servicerequest.FieldTenantID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (srq *ServiceRequestQuery) GroupBy(field string, fields ...string) *ServiceRequestGroupBy {
@@ -285,11 +285,11 @@ func (srq *ServiceRequestQuery) GroupBy(field string, fields ...string) *Service
 // Example:
 //
 //	var v []struct {
-//		CatalogID int `json:"catalog_id,omitempty"`
+//		TenantID int `json:"tenant_id,omitempty"`
 //	}
 //
 //	client.ServiceRequest.Query().
-//		Select(servicerequest.FieldCatalogID).
+//		Select(servicerequest.FieldTenantID).
 //		Scan(ctx, &v)
 func (srq *ServiceRequestQuery) Select(fields ...string) *ServiceRequestSelect {
 	srq.ctx.Fields = append(srq.ctx.Fields, fields...)

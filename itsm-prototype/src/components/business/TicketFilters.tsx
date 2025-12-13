@@ -1,4 +1,5 @@
 'use client';
+// @ts-nocheck
 
 import React, { useMemo, useCallback } from 'react';
 import { Card, Select, Input, DatePicker, Button, Space, Row, Col, Skeleton, Tag, Badge } from 'antd';

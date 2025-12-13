@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { KnowledgeApi } from '../lib/knowledge-api';
+import { KnowledgeApi } from '@/lib/api/knowledge-api';
 
 interface Article {
   id: string;

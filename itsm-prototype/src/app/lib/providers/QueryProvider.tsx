@@ -31,8 +31,6 @@ const createQueryClient = () => {
         refetchOnWindowFocus: false,
         // 网络重连时重新获取数据
         refetchOnReconnect: true,
-        // 错误时重试
-        refetchOnError: true,
       },
       mutations: {
         // 失败时重试

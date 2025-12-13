@@ -5,8 +5,8 @@ class CacheManager {
   set(key: string, data: unknown, ttl: number = 5 * 60 * 1000) {
     // 如果缓存已满，删除最旧的条目
     if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      const firstKey = this.cache.keys().next().value as string | undefined;
+      if (firstKey) this.cache.delete(firstKey);
     }
 
     this.cache.set(key, {

@@ -1,5 +1,31 @@
 import { API_BASE_URL } from '@/app/lib/api-config';
 
+export interface ChangeComment {
+  author: string;
+  timestamp: string;
+  text: string;
+}
+
+export interface ChangeApproval {
+  role: string;
+  status: '待审批' | '已批准' | '已拒绝';
+  approver?: string;
+  comment?: string;
+}
+
+export interface RelatedTicket {
+  id: string | number;
+  type: string;
+  title: string;
+  status: string;
+}
+
+export interface AffectedCI {
+  id: string | number;
+  name: string;
+  type: string;
+}
+
 export interface Change {
   id: number;
   title: string;
@@ -12,6 +38,7 @@ export interface Change {
   riskLevel: 'low' | 'medium' | 'high';
   assigneeId?: number;
   assigneeName?: string;
+  assignee?: string | { id: number; name: string };
   createdBy: number;
   createdByName: string;
   tenantId: number;
@@ -21,8 +48,11 @@ export interface Change {
   actualEndDate?: string;
   implementationPlan: string;
   rollbackPlan: string;
-  affectedCIs?: string[];
-  relatedTickets?: string[];
+  affectedCIs?: string[] | AffectedCI[];
+  relatedTickets?: string[] | RelatedTicket[];
+  logs?: string[];
+  comments?: ChangeComment[];
+  approvals?: ChangeApproval[];
   createdAt: string;
   updatedAt: string;
 }
@@ -69,7 +99,7 @@ export interface ChangeStats {
 }
 
 class ChangeService {
-  private baseUrl = `${API_BASE_URL}/changes`;
+  private baseUrl = `${API_BASE_URL}/api/v1/changes`;
 
   // 获取变更列表
   async getChanges(params: {
@@ -198,7 +228,7 @@ class ChangeService {
   // 健康检查
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${apiConfig.baseUrl}/healthz`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
