@@ -1,16 +1,16 @@
 package middleware
 
 import (
-    "context"
-    "itsm-backend/common"
-    "itsm-backend/ent"
-    "itsm-backend/ent/ticket"
-    "itsm-backend/ent/user"
-    "net/http"
-    "strconv"
-    "strings"
+	"context"
+	"itsm-backend/common"
+	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/user"
+	"net/http"
+	"strconv"
+	"strings"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 // Permission 权限结构
@@ -21,164 +21,223 @@ type Permission struct {
 
 // RolePermissions 角色权限映射
 var RolePermissions = map[string][]Permission{
-    "super_admin": {
-        {Resource: "*", Action: "*"}, // 超级管理员拥有所有权限
-    },
-    "admin": {
-        {Resource: "ticket", Action: "read"},
-        {Resource: "ticket", Action: "write"},
-        {Resource: "ticket", Action: "delete"},
-        {Resource: "ticket", Action: "admin"},
-        {Resource: "notification", Action: "read"},
-        {Resource: "notification", Action: "write"},
-        {Resource: "ticket_category", Action: "read"},
-        {Resource: "ticket_category", Action: "write"},
-        {Resource: "ticket_category", Action: "delete"},
-        {Resource: "ticket_tag", Action: "read"},
-        {Resource: "ticket_tag", Action: "write"},
-        {Resource: "ticket_tag", Action: "delete"},
-        {Resource: "ticket_template", Action: "read"},
-        {Resource: "ticket_template", Action: "write"},
-        {Resource: "ticket_template", Action: "delete"},
-        {Resource: "user", Action: "read"},
-        {Resource: "user", Action: "write"},
-        {Resource: "user", Action: "delete"},
-        {Resource: "dashboard", Action: "read"},
-        {Resource: "dashboard", Action: "admin"},
-        {Resource: "knowledge", Action: "read"},
-        {Resource: "knowledge", Action: "write"},
-        {Resource: "knowledge", Action: "admin"},
-        {Resource: "cmdb", Action: "read"},
-        {Resource: "cmdb", Action: "write"},
-        {Resource: "incident", Action: "read"},
-        {Resource: "incident", Action: "write"},
-        {Resource: "incident", Action: "admin"},
-        // 审计日志权限：仅管理员及以上可读
-        {Resource: "audit_logs", Action: "read"},
-        {Resource: "ai", Action: "read"},
-        {Resource: "ai", Action: "write"},
-    },
-    "manager": {
-        {Resource: "ticket", Action: "read"},
-        {Resource: "ticket", Action: "write"},
-        {Resource: "notification", Action: "read"},
-        {Resource: "notification", Action: "write"},
-        {Resource: "incident", Action: "read"},
-        {Resource: "incident", Action: "write"},
-        {Resource: "dashboard", Action: "read"},
-        {Resource: "knowledge", Action: "read"},
-        {Resource: "cmdb", Action: "read"},
-        {Resource: "user", Action: "read"}, // 经理可查看用户基本信息
-    },
-    "agent": {
-        {Resource: "ticket", Action: "read"},
-        {Resource: "ticket", Action: "write"},
-        {Resource: "notification", Action: "read"},
-        {Resource: "notification", Action: "write"},
-        {Resource: "dashboard", Action: "read"},
-        {Resource: "knowledge", Action: "read"},
-        {Resource: "knowledge", Action: "write"},
-        {Resource: "cmdb", Action: "read"},
-        {Resource: "incident", Action: "read"},
-        {Resource: "incident", Action: "write"},
-    },
-    "technician": {
-        {Resource: "ticket", Action: "read"},
-        {Resource: "ticket", Action: "write"},
-        {Resource: "notification", Action: "read"},
-        {Resource: "knowledge", Action: "read"},
-        {Resource: "cmdb", Action: "read"},
-        {Resource: "incident", Action: "read"},
-        {Resource: "incident", Action: "write"},
-    },
-    "end_user": {
-        {Resource: "ticket", Action: "read"},
-        {Resource: "ticket", Action: "write"}, // 最终用户可以创建和更新自己的工单
-        {Resource: "notification", Action: "read"},
-        {Resource: "notification", Action: "write"},
-        {Resource: "knowledge", Action: "read"},
-        {Resource: "dashboard", Action: "read"},
-        {Resource: "ai", Action: "read"},
-        {Resource: "ai", Action: "write"},
-    },
+	"super_admin": {
+		{Resource: "*", Action: "*"}, // 超级管理员拥有所有权限
+	},
+	"admin": {
+		{Resource: "ticket", Action: "read"},
+		{Resource: "ticket", Action: "write"},
+		{Resource: "ticket", Action: "delete"},
+		{Resource: "ticket", Action: "admin"},
+		{Resource: "notification", Action: "read"},
+		{Resource: "notification", Action: "write"},
+		{Resource: "ticket_category", Action: "read"},
+		{Resource: "ticket_category", Action: "write"},
+		{Resource: "ticket_category", Action: "delete"},
+		{Resource: "ticket_tag", Action: "read"},
+		{Resource: "ticket_tag", Action: "write"},
+		{Resource: "ticket_tag", Action: "delete"},
+		{Resource: "ticket_template", Action: "read"},
+		{Resource: "ticket_template", Action: "write"},
+		{Resource: "ticket_template", Action: "delete"},
+		{Resource: "user", Action: "read"},
+		{Resource: "user", Action: "write"},
+		{Resource: "user", Action: "delete"},
+		{Resource: "dashboard", Action: "read"},
+		{Resource: "dashboard", Action: "admin"},
+		{Resource: "knowledge", Action: "read"},
+		{Resource: "knowledge", Action: "write"},
+		{Resource: "knowledge", Action: "admin"},
+		{Resource: "cmdb", Action: "read"},
+		{Resource: "cmdb", Action: "write"},
+		{Resource: "cmdb", Action: "delete"},
+		{Resource: "incident", Action: "read"},
+		{Resource: "incident", Action: "write"},
+		{Resource: "incident", Action: "admin"},
+		{Resource: "service_catalog", Action: "read"},
+		{Resource: "service_catalog", Action: "write"},
+		{Resource: "service_catalog", Action: "delete"},
+		{Resource: "service_request", Action: "read"},
+		{Resource: "service_request", Action: "write"},
+		{Resource: "change", Action: "read"},
+		{Resource: "change", Action: "write"},
+		{Resource: "change", Action: "delete"},
+		{Resource: "problem", Action: "read"},
+		{Resource: "problem", Action: "write"},
+		{Resource: "problem", Action: "delete"},
+		// 审计日志权限：仅管理员及以上可读
+		{Resource: "audit_logs", Action: "read"},
+		{Resource: "ai", Action: "read"},
+		{Resource: "ai", Action: "write"},
+	},
+	"manager": {
+		{Resource: "ticket", Action: "read"},
+		{Resource: "ticket", Action: "write"},
+		{Resource: "notification", Action: "read"},
+		{Resource: "notification", Action: "write"},
+		{Resource: "incident", Action: "read"},
+		{Resource: "incident", Action: "write"},
+		{Resource: "dashboard", Action: "read"},
+		{Resource: "knowledge", Action: "read"},
+		{Resource: "cmdb", Action: "read"},
+		{Resource: "user", Action: "read"}, // 经理可查看用户基本信息
+		{Resource: "service_catalog", Action: "read"},
+		{Resource: "service_request", Action: "read"},
+		{Resource: "service_request", Action: "write"},
+		{Resource: "change", Action: "read"},
+		{Resource: "problem", Action: "read"},
+	},
+	"agent": {
+		{Resource: "ticket", Action: "read"},
+		{Resource: "ticket", Action: "write"},
+		{Resource: "notification", Action: "read"},
+		{Resource: "notification", Action: "write"},
+		{Resource: "dashboard", Action: "read"},
+		{Resource: "knowledge", Action: "read"},
+		{Resource: "knowledge", Action: "write"},
+		{Resource: "cmdb", Action: "read"},
+		{Resource: "incident", Action: "read"},
+		{Resource: "incident", Action: "write"},
+		{Resource: "service_catalog", Action: "read"},
+		{Resource: "service_request", Action: "read"},
+		{Resource: "service_request", Action: "write"},
+		{Resource: "change", Action: "read"},
+		{Resource: "change", Action: "write"},
+		{Resource: "problem", Action: "read"},
+		{Resource: "problem", Action: "write"},
+	},
+	"technician": {
+		{Resource: "ticket", Action: "read"},
+		{Resource: "ticket", Action: "write"},
+		{Resource: "notification", Action: "read"},
+		{Resource: "knowledge", Action: "read"},
+		{Resource: "cmdb", Action: "read"},
+		{Resource: "incident", Action: "read"},
+		{Resource: "incident", Action: "write"},
+		{Resource: "service_catalog", Action: "read"},
+		{Resource: "service_request", Action: "read"},
+		{Resource: "service_request", Action: "write"},
+	},
+	"end_user": {
+		{Resource: "ticket", Action: "read"},
+		{Resource: "ticket", Action: "write"}, // 最终用户可以创建和更新自己的工单
+		{Resource: "notification", Action: "read"},
+		{Resource: "notification", Action: "write"},
+		{Resource: "knowledge", Action: "read"},
+		{Resource: "dashboard", Action: "read"},
+		{Resource: "ai", Action: "read"},
+		{Resource: "ai", Action: "write"},
+		{Resource: "service_catalog", Action: "read"},
+		{Resource: "service_request", Action: "read"},
+		{Resource: "service_request", Action: "write"},
+	},
 }
 
 // ResourceActionMap 路径到资源和操作的映射
 var ResourceActionMap = map[string]map[string]Permission{
-    "GET": {
-        "/api/v1/tickets":           {Resource: "ticket", Action: "read"},
-        "/api/v1/tickets/*":         {Resource: "ticket", Action: "read"},
-        "/api/v1/notifications":     {Resource: "notification", Action: "read"},
-        "/api/v1/notifications/*":   {Resource: "notification", Action: "read"},
-        "/api/v1/ticket-categories": {Resource: "ticket_category", Action: "read"},
+	"GET": {
+		"/api/v1/tickets":             {Resource: "ticket", Action: "read"},
+		"/api/v1/tickets/*":           {Resource: "ticket", Action: "read"},
+		"/api/v1/notifications":       {Resource: "notification", Action: "read"},
+		"/api/v1/notifications/*":     {Resource: "notification", Action: "read"},
+		"/api/v1/ticket-categories":   {Resource: "ticket_category", Action: "read"},
 		"/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "read"},
-		"/api/v1/ticket-templates":  {Resource: "ticket_template", Action: "read"},
-		"/api/v1/ticket-templates/*": {Resource: "ticket_template", Action: "read"},
-		"/api/v1/ticket-tags":       {Resource: "ticket_tag", Action: "read"},
-		"/api/v1/ticket-tags/*":     {Resource: "ticket_tag", Action: "read"},
-		"/api/v1/users":             {Resource: "user", Action: "read"},
-		"/api/v1/users/*":           {Resource: "user", Action: "read"},
-		"/api/v1/dashboard":         {Resource: "dashboard", Action: "read"},
-		"/api/v1/dashboard/*":       {Resource: "dashboard", Action: "read"},
-		"/api/v1/knowledge":         {Resource: "knowledge", Action: "read"},
-		"/api/v1/knowledge/*":       {Resource: "knowledge", Action: "read"},
-		"/api/v1/cmdb":              {Resource: "cmdb", Action: "read"},
-		"/api/v1/cmdb/*":            {Resource: "cmdb", Action: "read"},
-		"/api/v1/incidents":         {Resource: "incident", Action: "read"},
-		"/api/v1/incidents/*":       {Resource: "incident", Action: "read"},
-		"/api/v1/audit-logs":        {Resource: "audit_logs", Action: "read"},
-		"/api/v1/ai/*":              {Resource: "ai", Action: "read"},
+		"/api/v1/ticket-templates":    {Resource: "ticket_template", Action: "read"},
+		"/api/v1/ticket-templates/*":  {Resource: "ticket_template", Action: "read"},
+		"/api/v1/ticket-tags":         {Resource: "ticket_tag", Action: "read"},
+		"/api/v1/ticket-tags/*":       {Resource: "ticket_tag", Action: "read"},
+		"/api/v1/users":               {Resource: "user", Action: "read"},
+		"/api/v1/users/*":             {Resource: "user", Action: "read"},
+		"/api/v1/dashboard":           {Resource: "dashboard", Action: "read"},
+		"/api/v1/dashboard/*":         {Resource: "dashboard", Action: "read"},
+		"/api/v1/knowledge":           {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge/*":         {Resource: "knowledge", Action: "read"},
+		"/api/v1/cmdb":                {Resource: "cmdb", Action: "read"},
+		"/api/v1/cmdb/*":              {Resource: "cmdb", Action: "read"},
+		"/api/v1/incidents":           {Resource: "incident", Action: "read"},
+		"/api/v1/incidents/*":         {Resource: "incident", Action: "read"},
+		"/api/v1/audit-logs":          {Resource: "audit_logs", Action: "read"},
+		"/api/v1/ai/*":                {Resource: "ai", Action: "read"},
+		"/api/v1/service-catalogs":    {Resource: "service_catalog", Action: "read"},
+		"/api/v1/service-catalogs/*":  {Resource: "service_catalog", Action: "read"},
+		"/api/v1/service-requests":    {Resource: "service_request", Action: "read"},
+		"/api/v1/service-requests/*":  {Resource: "service_request", Action: "read"},
+		"/api/v1/knowledge-articles":  {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "read"},
+		"/api/v1/problems":            {Resource: "problem", Action: "read"},
+		"/api/v1/problems/*":          {Resource: "problem", Action: "read"},
+		"/api/v1/changes":             {Resource: "change", Action: "read"},
+		"/api/v1/changes/*":           {Resource: "change", Action: "read"},
 	},
-    "POST": {
-        "/api/v1/tickets":           {Resource: "ticket", Action: "write"},
-        "/api/v1/tickets/*":         {Resource: "ticket", Action: "write"},
-		"/api/v1/ticket-categories": {Resource: "ticket_category", Action: "write"},
+	"POST": {
+		"/api/v1/tickets":             {Resource: "ticket", Action: "write"},
+		"/api/v1/tickets/*":           {Resource: "ticket", Action: "write"},
+		"/api/v1/ticket-categories":   {Resource: "ticket_category", Action: "write"},
 		"/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "write"},
-		"/api/v1/ticket-templates":  {Resource: "ticket_template", Action: "write"},
-		"/api/v1/ticket-templates/*": {Resource: "ticket_template", Action: "write"},
-		"/api/v1/ticket-tags":       {Resource: "ticket_tag", Action: "write"},
-		"/api/v1/ticket-tags/*":     {Resource: "ticket_tag", Action: "write"},
-		"/api/v1/users":             {Resource: "user", Action: "write"},
-		"/api/v1/knowledge":         {Resource: "knowledge", Action: "write"},
-		"/api/v1/cmdb":              {Resource: "cmdb", Action: "write"},
-		"/api/v1/incidents":         {Resource: "incident", Action: "write"},
-		"/api/v1/ai/*":              {Resource: "ai", Action: "write"},
+		"/api/v1/ticket-templates":    {Resource: "ticket_template", Action: "write"},
+		"/api/v1/ticket-templates/*":  {Resource: "ticket_template", Action: "write"},
+		"/api/v1/ticket-tags":         {Resource: "ticket_tag", Action: "write"},
+		"/api/v1/ticket-tags/*":       {Resource: "ticket_tag", Action: "write"},
+		"/api/v1/users":               {Resource: "user", Action: "write"},
+		"/api/v1/knowledge":           {Resource: "knowledge", Action: "write"},
+		"/api/v1/cmdb":                {Resource: "cmdb", Action: "write"},
+		"/api/v1/incidents":           {Resource: "incident", Action: "write"},
+		"/api/v1/ai/*":                {Resource: "ai", Action: "write"},
+		"/api/v1/service-catalogs":    {Resource: "service_catalog", Action: "write"},
+		"/api/v1/service-catalogs/*":  {Resource: "service_catalog", Action: "write"},
+		"/api/v1/service-requests":    {Resource: "service_request", Action: "write"},
+		"/api/v1/service-requests/*":  {Resource: "service_request", Action: "write"},
+		"/api/v1/knowledge-articles":  {Resource: "knowledge", Action: "write"},
+		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "write"},
+		"/api/v1/problems":            {Resource: "problem", Action: "write"},
+		"/api/v1/problems/*":          {Resource: "problem", Action: "write"},
+		"/api/v1/changes":             {Resource: "change", Action: "write"},
+		"/api/v1/changes/*":           {Resource: "change", Action: "write"},
 	},
-    "PUT": {
-        "/api/v1/tickets/*":         {Resource: "ticket", Action: "write"},
-        "/api/v1/notifications/*":   {Resource: "notification", Action: "write"},
-        "/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "write"},
-		"/api/v1/ticket-templates/*": {Resource: "ticket_template", Action: "write"},
-		"/api/v1/ticket-tags/*":     {Resource: "ticket_tag", Action: "write"},
-		"/api/v1/users/*":           {Resource: "user", Action: "write"},
-		"/api/v1/knowledge/*":       {Resource: "knowledge", Action: "write"},
-		"/api/v1/cmdb/*":            {Resource: "cmdb", Action: "write"},
-		"/api/v1/incidents/*":       {Resource: "incident", Action: "write"},
+	"PUT": {
+		"/api/v1/tickets/*":           {Resource: "ticket", Action: "write"},
+		"/api/v1/notifications/*":     {Resource: "notification", Action: "write"},
+		"/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "write"},
+		"/api/v1/ticket-templates/*":  {Resource: "ticket_template", Action: "write"},
+		"/api/v1/ticket-tags/*":       {Resource: "ticket_tag", Action: "write"},
+		"/api/v1/users/*":             {Resource: "user", Action: "write"},
+		"/api/v1/knowledge/*":         {Resource: "knowledge", Action: "write"},
+		"/api/v1/cmdb/*":              {Resource: "cmdb", Action: "write"},
+		"/api/v1/incidents/*":         {Resource: "incident", Action: "write"},
+		"/api/v1/service-catalogs/*":  {Resource: "service_catalog", Action: "write"},
+		"/api/v1/service-requests/*":  {Resource: "service_request", Action: "write"},
+		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "write"},
+		"/api/v1/problems/*":          {Resource: "problem", Action: "write"},
+		"/api/v1/changes/*":           {Resource: "change", Action: "write"},
 	},
-    "DELETE": {
-        "/api/v1/tickets/*":         {Resource: "ticket", Action: "delete"},
-        "/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "delete"},
-		"/api/v1/ticket-templates/*": {Resource: "ticket_template", Action: "delete"},
-		"/api/v1/ticket-tags/*":     {Resource: "ticket_tag", Action: "delete"},
-		"/api/v1/users/*":           {Resource: "user", Action: "delete"},
-		"/api/v1/knowledge/*":       {Resource: "knowledge", Action: "delete"},
-		"/api/v1/cmdb/*":            {Resource: "cmdb", Action: "delete"},
-		"/api/v1/incidents/*":       {Resource: "incident", Action: "delete"},
+	"DELETE": {
+		"/api/v1/tickets/*":           {Resource: "ticket", Action: "delete"},
+		"/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "delete"},
+		"/api/v1/ticket-templates/*":  {Resource: "ticket_template", Action: "delete"},
+		"/api/v1/ticket-tags/*":       {Resource: "ticket_tag", Action: "delete"},
+		"/api/v1/users/*":             {Resource: "user", Action: "delete"},
+		"/api/v1/knowledge/*":         {Resource: "knowledge", Action: "delete"},
+		"/api/v1/cmdb/*":              {Resource: "cmdb", Action: "delete"},
+		"/api/v1/incidents/*":         {Resource: "incident", Action: "delete"},
+		"/api/v1/service-catalogs/*":  {Resource: "service_catalog", Action: "delete"},
+		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "delete"},
+		"/api/v1/problems/*":          {Resource: "problem", Action: "delete"},
+		"/api/v1/changes/*":           {Resource: "change", Action: "delete"},
 	},
 }
 
 // RBACMiddleware RBAC权限控制中间件
 func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // 将 Ent 客户端放入上下文，供资源级别检查使用（例如工单所有权校验）
-        if client != nil {
-            c.Set("client", client)
-        }
-        // 获取用户信息
-        userIDInterface, exists := c.Get("user_id")
-        if !exists {
-            common.Fail(c, common.AuthFailedCode, "用户未认证")
-            c.Abort()
+	return func(c *gin.Context) {
+		// 将 Ent 客户端放入上下文，供资源级别检查使用（例如工单所有权校验）
+		if client != nil {
+			c.Set("client", client)
+		}
+		// 获取用户信息
+		userIDInterface, exists := c.Get("user_id")
+		if !exists {
+			common.Fail(c, common.AuthFailedCode, "用户未认证")
+			c.Abort()
 			return
 		}
 
@@ -371,78 +430,78 @@ func checkResourceLevelPermission(role, resource, action string, userID int, c *
 
 // checkTicketPermission 检查工单权限
 func checkTicketPermission(role, action string, userID int, c *gin.Context) bool {
-    // 具备全局工单访问权限的角色
-    if role == "admin" || role == "agent" || role == "manager" || role == "technician" {
-        return true
-    }
+	// 具备全局工单访问权限的角色
+	if role == "admin" || role == "agent" || role == "manager" || role == "technician" {
+		return true
+	}
 
-    // 最终用户（end_user）只能访问自己创建的工单
-    if role == "end_user" {
-        // 创建自己的工单：允许 POST /api/v1/tickets
-        if c.Request.Method == "POST" && strings.HasPrefix(c.Request.URL.Path, "/api/v1/tickets") {
-            return true
-        }
-        // 其他操作需要检查工单的请求人是否为当前用户
-        ticketIDStr := c.Param("id")
-        if ticketIDStr != "" {
-            ticketID, err := strconv.Atoi(ticketIDStr)
-            if err != nil {
-                return false
-            }
-            return checkTicketOwnership(ticketID, userID, c)
-        }
-        // 当未提供具体工单ID时，默认拒绝（例如尝试访问他人列表）
-        return false
-    }
+	// 最终用户（end_user）只能访问自己创建的工单
+	if role == "end_user" {
+		// 创建自己的工单：允许 POST /api/v1/tickets
+		if c.Request.Method == "POST" && strings.HasPrefix(c.Request.URL.Path, "/api/v1/tickets") {
+			return true
+		}
+		// 其他操作需要检查工单的请求人是否为当前用户
+		ticketIDStr := c.Param("id")
+		if ticketIDStr != "" {
+			ticketID, err := strconv.Atoi(ticketIDStr)
+			if err != nil {
+				return false
+			}
+			return checkTicketOwnership(ticketID, userID, c)
+		}
+		// 当未提供具体工单ID时，默认拒绝（例如尝试访问他人列表）
+		return false
+	}
 
-    // 其他角色默认允许（已通过资源操作权限检查）
-    return true
+	// 其他角色默认允许（已通过资源操作权限检查）
+	return true
 }
 
 // checkUserPermission 检查用户权限
 func checkUserPermission(role, action string, userID int, c *gin.Context) bool {
-    // 管理员可以访问所有用户
-    if role == "admin" {
-        return true
-    }
-    // 经理可读取所有用户基本信息（仅限 read 操作）
-    if role == "manager" && action == "read" {
-        return true
-    }
+	// 管理员可以访问所有用户
+	if role == "admin" {
+		return true
+	}
+	// 经理可读取所有用户基本信息（仅限 read 操作）
+	if role == "manager" && action == "read" {
+		return true
+	}
 
-    // 其他角色只能访问自己的用户信息
-    targetUserIDStr := c.Param("id")
-    if targetUserIDStr != "" {
-        targetUserID, err := strconv.Atoi(targetUserIDStr)
-        if err != nil {
-            return false
-        }
-        return targetUserID == userID
-    }
+	// 其他角色只能访问自己的用户信息
+	targetUserIDStr := c.Param("id")
+	if targetUserIDStr != "" {
+		targetUserID, err := strconv.Atoi(targetUserIDStr)
+		if err != nil {
+			return false
+		}
+		return targetUserID == userID
+	}
 
-    // 对 /api/v1/users 列表等未指定ID的访问，非管理员/经理默认拒绝
-    return false
+	// 对 /api/v1/users 列表等未指定ID的访问，非管理员/经理默认拒绝
+	return false
 }
 
 // checkTicketOwnership 检查工单所有权
 func checkTicketOwnership(ticketID, userID int, c *gin.Context) bool {
-    // 从上下文中获取Ent客户端
-    clientAny, exists := c.Get("client")
-    if !exists {
-        return false
-    }
-    client, ok := clientAny.(*ent.Client)
-    if !ok || client == nil {
-        return false
-    }
-    // 查询工单并校验请求人
-    t, err := client.Ticket.Query().
-        Where(ticket.ID(ticketID)).
-        Only(context.Background())
-    if err != nil {
-        return false
-    }
-    return t.RequesterID == userID
+	// 从上下文中获取Ent客户端
+	clientAny, exists := c.Get("client")
+	if !exists {
+		return false
+	}
+	client, ok := clientAny.(*ent.Client)
+	if !ok || client == nil {
+		return false
+	}
+	// 查询工单并校验请求人
+	t, err := client.Ticket.Query().
+		Where(ticket.ID(ticketID)).
+		Only(context.Background())
+	if err != nil {
+		return false
+	}
+	return t.RequesterID == userID
 }
 
 // matchPath 匹配路径（支持通配符）

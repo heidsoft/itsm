@@ -28,7 +28,7 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-} from '@ant-design/icons';
+} from 'lucide-react';
 import { TicketNotificationApi, TicketNotification, SendTicketNotificationRequest } from '@/lib/api/ticket-notification-api';
 import { UserSelect } from '@/components/common/UserSelect';
 import { useAuthStore } from '@/lib/store/auth-store';

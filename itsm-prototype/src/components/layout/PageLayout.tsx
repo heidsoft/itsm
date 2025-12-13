@@ -251,7 +251,7 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
       className={cn("w-full", bordered && "border rounded-lg", className)}
       style={{
         maxWidth: layout.content.maxWidth,
-        padding: spacing[padding],
+        padding: (spacing as any)[padding],
         ...(bordered && {
           borderColor: token.colorBorder,
           backgroundColor: token.colorBgContainer,

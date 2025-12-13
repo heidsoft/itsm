@@ -18,6 +18,16 @@ export class AuthService {
     return null;
   }
 
+  // Backward-compatible helpers used by some UI providers
+  static getToken(): string | null {
+    return this.getAccessToken();
+  }
+
+  static getCurrentUser() {
+    const { user } = useAuthStore.getState();
+    return user;
+  }
+
   // 获取refresh token
   static getRefreshToken(): string | null {
     if (typeof window !== 'undefined') {
@@ -175,8 +185,15 @@ export class AuthService {
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
       console.log('AuthService.login - 调用Zustand login方法');
+      const u = data.user as any;
       login(
-        data.user as { id: number; username: string; role: string; email?: string; name?: string },
+        {
+          id: Number(u?.id || 0),
+          username: String(u?.username || username),
+          role: String(u?.role || 'end_user'),
+          email: String(u?.email || ''),
+          name: String(u?.name || u?.full_name || ''),
+        },
         data.access_token,
         { id: 1, name: "默认租户", code: "default" } as Tenant
       );

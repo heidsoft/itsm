@@ -20,7 +20,7 @@ import {
   MessageSquare,
   CheckCircle,
   Clock,
-} from '@ant-design/icons';
+} from 'lucide-react';
 import { TicketRatingApi, TicketRating, SubmitTicketRatingRequest } from '@/lib/api/ticket-rating-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';

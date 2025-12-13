@@ -5,7 +5,17 @@ import { ArrowLeft, CalendarDays, User, Eye } from 'lucide-react';
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 // 模拟知识文章详情数据
-const mockArticleDetail = {
+const mockArticleDetail: Record<
+  string,
+  {
+    title: string;
+    category: string;
+    author: string;
+    publishedDate: string;
+    views: number;
+    content: string;
+  }
+> = {
   'KB-001': {
     title: '如何重置您的域账户密码',
     category: '账号管理',

@@ -5,6 +5,12 @@ import { Column } from '@ant-design/charts';
 import { Smile } from 'lucide-react';
 import { DashboardChartCard } from './DashboardChartCard';
 
+interface SatisfactionData {
+  month: string;
+  rating: number;
+  responses: number;
+}
+
 const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo(({ data }) => {
   const config = {
     data: data.map(item => ({

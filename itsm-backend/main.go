@@ -148,6 +148,17 @@ func main() {
 	// 审计日志服务
 	auditService := service.NewAuditLogService(client, sugar)
 
+	// 服务目录/服务请求
+	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
+	serviceRequestService := service.NewServiceRequestService(client, sugar)
+
+	// CMDB / 知识库 / 问题 / 变更
+	cmdbService := service.NewCMDBService(client, sugar)
+	knowledgeService := service.NewKnowledgeService(client, sugar)
+	problemService := service.NewProblemService(client, sugar)
+	changeService := service.NewChangeService(client, sugar)
+	changeApprovalService := service.NewChangeApprovalService(client, database.GetRawDB(), sugar)
+
 	// 5.1 初始化 LLM/Embedding/VectorStore
 	// LLM/Embedding Provider: use cfg.LLM
 	var embedder service.Embedder
@@ -232,6 +243,16 @@ func main() {
 	aiController := controller.NewAIController(ragService, client, aiTelemetryService)
 	aiController.SetEmbeddingResources(embedder, vectorStore)
 
+	// 服务目录/服务请求控制器
+	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
+
+	// CMDB / 知识库 / 问题 / 变更控制器
+	cmdbController := controller.NewCMDBController(cmdbService)
+	knowledgeController := controller.NewKnowledgeController(knowledgeService, sugar)
+	problemController := controller.NewProblemController(sugar, problemService)
+	changeController := controller.NewChangeController(sugar, changeService)
+	changeApprovalController := controller.NewChangeApprovalController(changeApprovalService, sugar)
+
 	// 初始化部门控制器
 	departmentController := controller.NewDepartmentController(client)
 	projectController := controller.NewProjectController(client)
@@ -292,6 +313,14 @@ func main() {
 		TagController:                   tagController,
 		TicketCategoryController:        ticketCategoryController,
 		TicketTagController:             ticketTagController,
+
+		// Additional controllers
+		ServiceController:        serviceController,
+		CMDBController:           cmdbController,
+		KnowledgeController:      knowledgeController,
+		ProblemController:        problemController,
+		ChangeController:         changeController,
+		ChangeApprovalController: changeApprovalController,
 	}
 
 	// SetupRoutes函数配置Gin路由，定义API端点

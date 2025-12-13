@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package controller
 
 import (
@@ -30,7 +33,7 @@ func NewDashboardController(dashboardService *service.DashboardService, logger *
 // @Success 200 {object} common.Response{data=dto.DashboardResponse}
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/dashboard [get]
+// @RouterIgnore /api/dashboard [get]
 func (dc *DashboardController) GetDashboardData(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
 	if err != nil {
@@ -50,7 +53,7 @@ func (dc *DashboardController) GetDashboardData(c *gin.Context) {
 // @Success 200 {object} common.Response{data=[]dto.DashboardKPIResponse}
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/dashboard/kpis [get]
+// @RouterIgnore /api/dashboard/kpis [get]
 func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
 	if err != nil {
@@ -70,7 +73,7 @@ func (dc *DashboardController) GetKPIMetrics(c *gin.Context) {
 // @Success 200 {object} common.Response{data=[]dto.MultiCloudResourceData}
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/dashboard/resources/distribution [get]
+// @RouterIgnore /api/dashboard/resources/distribution [get]
 func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
 	if err != nil {
@@ -90,7 +93,7 @@ func (dc *DashboardController) GetResourceDistribution(c *gin.Context) {
 // @Success 200 {object} common.Response{data=[]dto.ResourceHealthData}
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
-// @Router /api/dashboard/resources/health [get]
+// @RouterIgnore /api/dashboard/resources/health [get]
 func (dc *DashboardController) GetResourceHealth(c *gin.Context) {
 	dashboardData, err := dc.dashboardService.GetDashboardData(c.Request.Context())
 	if err != nil {

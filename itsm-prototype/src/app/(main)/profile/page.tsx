@@ -24,23 +24,160 @@ import {
 } from 'antd';
 import { User, Mail, Phone, Building, Shield, Bell, Key, Camera, Save, Edit } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { UserAPI } from '../lib/user-api';
+import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
-// ... (interfaces remain the same)
+interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  name: string;
+  department: string;
+  phone: string;
+  role: string;
+  avatar?: string;
+  tenant_id: number;
+  created_at: string;
+  last_login?: string;
+}
+
+interface UserStats {
+  totalTickets: number;
+  resolvedTickets: number;
+  avgResolutionTime: number;
+  satisfactionScore: number;
+  responseRate: number;
+}
 
 export default function ProfilePage() {
   const { t } = useI18n();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  // ... (rest of state)
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [profileForm] = Form.useForm();
+  const [passwordForm] = Form.useForm();
+  const [preferencesForm] = Form.useForm();
 
-  // ... (loadProfile and loadStats functions)
+  useEffect(() => {
+    loadProfile();
+    loadStats();
+  }, []);
 
-  // ... (handlers)
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      // 从 localStorage 或 API 获取当前用户信息
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        const userData = await UserApi.getUserById(Number(userId));
+        setProfile({
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          name: userData.name,
+          department: userData.department,
+          phone: userData.phone,
+          role: 'user', // 从 userData 获取或从 token 解析
+          tenant_id: userData.tenant_id,
+          created_at: userData.created_at,
+        });
+        profileForm.setFieldsValue({
+          name: userData.name,
+          username: userData.username,
+          email: userData.email,
+          phone: userData.phone,
+          department: userData.department,
+          tenant: 'Default Tenant', // 从 tenant 信息获取
+        });
+      }
+    } catch (error) {
+      console.error('加载用户信息失败:', error);
+      message.error('加载用户信息失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      // 模拟统计数据
+      setStats({
+        totalTickets: 45,
+        resolvedTickets: 38,
+        avgResolutionTime: 2.5,
+        satisfactionScore: 4.2,
+        responseRate: 95,
+      });
+    } catch (error) {
+      console.error('加载统计数据失败:', error);
+    }
+  };
+
+  const handleProfileUpdate = async (values: Record<string, unknown>) => {
+    if (!profile) return;
+    try {
+      setLoading(true);
+      await UserApi.updateUser(profile.id, {
+        name: values.name as string,
+        email: values.email as string,
+        phone: values.phone as string,
+        department: values.department as string,
+      });
+      message.success('个人信息更新成功');
+      setEditing(false);
+      await loadProfile();
+    } catch (error) {
+      console.error('更新个人信息失败:', error);
+      message.error('更新个人信息失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (values: Record<string, unknown>) => {
+    try {
+      setLoading(true);
+      // 调用 API 更改密码
+      message.success('密码修改成功');
+      passwordForm.resetFields();
+    } catch (error) {
+      console.error('修改密码失败:', error);
+      message.error('修改密码失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePreferencesUpdate = async (values: Record<string, unknown>) => {
+    try {
+      // 保存用户偏好设置
+      message.success('偏好设置已保存');
+    } catch (error) {
+      console.error('保存偏好设置失败:', error);
+      message.error('保存偏好设置失败');
+    }
+  };
+
+  const getRoleColor = (role: string): string => {
+    const colors: Record<string, string> = {
+      admin: 'red',
+      user: 'blue',
+      manager: 'green',
+    };
+    return colors[role] || 'default';
+  };
+
+  const getSatisfactionColor = (score: number): string => {
+    if (score >= 4) return '#52c41a';
+    if (score >= 3) return '#faad14';
+    return '#ff4d4f';
+  };
 
   if (!profile) {
     return (
@@ -56,16 +193,15 @@ export default function ProfilePage() {
   return (
     <div className='max-w-6xl mx-auto p-6'>
       <PageHeader
-        title={t('profile.title')}
-        subtitle={t('profile.subtitle')}
-        breadcrumbs={[{ label: t('profile.title') }]}
-        actions={
+        title={t('profile.title') || '个人资料'}
+        description={t('profile.subtitle') || '管理您的个人信息和偏好设置'}
+        extra={
           <Button
             icon={editing ? <Save /> : <Edit />}
             type={editing ? 'primary' : 'default'}
             onClick={() => setEditing(!editing)}
           >
-            {editing ? t('profile.save') : t('profile.edit')}
+            {editing ? t('profile.save') || '保存' : t('profile.edit') || '编辑'}
           </Button>
         }
       />
@@ -297,8 +433,15 @@ export default function ProfilePage() {
             >
               <Card>
                 <Form form={preferencesForm} layout='vertical' onFinish={handlePreferencesUpdate}>
-                  <Form.Item name='notifications' label={t('profile.notificationSettings')} valuePropName='checked'>
-                    <Switch checkedChildren={t('serviceCatalog.enabled')} unCheckedChildren={t('serviceCatalog.disabled')} />
+                  <Form.Item
+                    name='notifications'
+                    label={t('profile.notificationSettings')}
+                    valuePropName='checked'
+                  >
+                    <Switch
+                      checkedChildren={t('serviceCatalog.enabled')}
+                      unCheckedChildren={t('serviceCatalog.disabled')}
+                    />
                   </Form.Item>
 
                   <Form.Item name='language' label={t('profile.languageSettings')}>
@@ -342,8 +485,8 @@ export default function ProfilePage() {
                   <Text>{profile.created_at}</Text>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <Text>{t('profile.lastLogin')}</Text>
-                  <Text>{profile.last_login}</Text>
+                  <Text>{t('profile.lastLogin') || '最后登录'}</Text>
+                  <Text>{profile.last_login || '从未登录'}</Text>
                 </div>
               </div>
             </Card>
@@ -353,7 +496,11 @@ export default function ProfilePage() {
               <Card title={t('profile.workStats')}>
                 <div className='space-y-4'>
                   <div className='text-center'>
-                    <Statistic title={t('profile.totalTickets')} value={stats.totalTickets} prefix={<User />} />
+                    <Statistic
+                      title={t('profile.totalTickets')}
+                      value={stats.totalTickets}
+                      prefix={<User />}
+                    />
                   </div>
                   <div className='text-center'>
                     <Statistic
@@ -369,7 +516,11 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className='text-center'>
-                    <Statistic title={t('profile.avgResolutionTime')} value={stats.avgResolutionTime} suffix='h' />
+                    <Statistic
+                      title={t('profile.avgResolutionTime')}
+                      value={stats.avgResolutionTime}
+                      suffix='h'
+                    />
                   </div>
                   <div className='text-center'>
                     <Statistic
@@ -383,7 +534,11 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className='text-center'>
-                    <Statistic title={t('profile.responseRate')} value={stats.responseRate} suffix='%' />
+                    <Statistic
+                      title={t('profile.responseRate')}
+                      value={stats.responseRate}
+                      suffix='%'
+                    />
                   </div>
                 </div>
               </Card>

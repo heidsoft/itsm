@@ -49,30 +49,12 @@ export class TicketCommentApi {
    * 获取工单评论列表
    */
   static async getComments(ticketId: number): Promise<ListTicketCommentsResponse> {
-    const response = await httpClient.get<{
-      code: number;
-      data: ListTicketCommentsResponse;
-    }>(`/api/v1/tickets/${ticketId}/comments`);
-    
-    // 处理响应格式
-    if (response && 'data' in response) {
-      return {
-        comments: Array.isArray(response.data?.comments) ? response.data.comments : [],
-        total: response.data?.total || 0,
-      };
-    }
-    
-    // 如果直接返回数据
-    if (Array.isArray(response)) {
-      return {
-        comments: response,
-        total: response.length,
-      };
-    }
-    
+    const response: any = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
+    const data = response?.data || response;
+    const comments = Array.isArray(data?.comments) ? data.comments : Array.isArray(data) ? data : [];
     return {
-      comments: [],
-      total: 0,
+      comments,
+      total: typeof data?.total === 'number' ? data.total : comments.length,
     };
   }
 

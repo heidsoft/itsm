@@ -153,7 +153,7 @@ export default function DashboardPage() {
         <Button
           type='primary'
           size='large'
-          onClick={refresh}
+          onClick={() => refresh()}
           icon={<RefreshCw />}
           style={{
             height: '44px',
@@ -204,7 +204,7 @@ export default function DashboardPage() {
           <Button
             type='default'
             icon={<RefreshCw className={loading ? 'animate-spin' : ''} />}
-            onClick={refresh}
+            onClick={() => refresh()}
             loading={loading}
           >
             刷新

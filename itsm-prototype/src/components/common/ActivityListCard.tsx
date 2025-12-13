@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, List, Avatar, Typography } from 'antd';
 import { Clock, Activity } from 'lucide-react';
-import { RecentActivity } from '../../hooks/useDashboardData';
+import { RecentActivity } from '@/hooks/useDashboardData';
 
 const { Text } = Typography;
 

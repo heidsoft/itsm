@@ -1,5 +1,28 @@
 import { create } from 'zustand';
-import { TicketAPI, Ticket, ListTicketsRequest, CreateTicketRequest, UpdateTicketRequest } from '../api/ticket-api';
+import { TicketAPI } from '../api/ticket-api';
+import type { Ticket, CreateTicketRequest } from '@/app/lib/api-config';
+
+/**
+ * 说明：
+ * - Ticket 域仅保留一条链路：`TicketAPI`（`src/lib/api/ticket-api.ts`）→ Zustand Store → 页面/组件
+ * - 历史上存在多套实现（如 `src/lib/services/ticket-service.ts`、`src/app/lib/store/ticket-store.ts`），后续将逐步下线
+ */
+
+export type ListTicketsRequest = {
+  page?: number;
+  // 兼容后端/历史接口（不同模块可能用 `page_size` 或 `size`）
+  page_size?: number;
+  size?: number;
+  status?: string;
+  priority?: string;
+  tenant_id?: number;
+  keyword?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  [key: string]: unknown;
+};
+
+export type UpdateTicketRequest = Partial<Ticket> & Record<string, unknown>;
 
 /**
  * 工单列表状态
@@ -105,6 +128,7 @@ export const useTicketListStore = create<TicketListState>((set, get) => ({
     const requestParams = {
       page: state.page,
       page_size: state.pageSize,
+      size: state.pageSize,
       sort_by: state.sortBy,
       sort_order: state.sortOrder,
       ...state.filters,
@@ -113,14 +137,23 @@ export const useTicketListStore = create<TicketListState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.listTickets(requestParams);
-      
+      const response: any = await TicketAPI.getTickets(requestParams as any);
+      const respPageSize =
+        typeof response?.page_size === 'number'
+          ? response.page_size
+          : typeof response?.size === 'number'
+          ? response.size
+          : state.pageSize;
+      const total = typeof response?.total === 'number' ? response.total : 0;
+      const totalPages =
+        typeof response?.total_pages === 'number' ? response.total_pages : Math.max(1, Math.ceil(total / (respPageSize || 20)));
+
       set({
-        tickets: response.tickets,
-        total: response.total,
-        page: response.page,
-        pageSize: response.page_size,
-        totalPages: response.total_pages,
+        tickets: Array.isArray(response?.tickets) ? response.tickets : [],
+        total,
+        page: typeof response?.page === 'number' ? response.page : state.page,
+        pageSize: respPageSize,
+        totalPages,
         loading: false,
       });
     } catch (error) {
@@ -151,12 +184,12 @@ export const useTicketListStore = create<TicketListState>((set, get) => ({
   updateTicket: async (id, data) => {
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.updateTicket(id, data);
+      const updated = await TicketAPI.updateTicket(id, data);
       
       // 更新本地状态
       const state = get();
       const updatedTickets = state.tickets.map(ticket =>
-        ticket.id === id ? response.ticket : ticket
+        ticket.id === id ? updated : ticket
       );
       
       set({ tickets: updatedTickets, loading: false });
@@ -197,7 +230,8 @@ export const useTicketListStore = create<TicketListState>((set, get) => ({
   batchDeleteTickets: async (ids) => {
     try {
       set({ loading: true, error: null });
-      await TicketAPI.batchDeleteTickets(ids);
+      // 统一：底层以 batchUpdateTickets 承载批量动作（delete）
+      await TicketAPI.batchUpdateTickets(ids, 'delete');
       
       // 从本地状态中移除
       const state = get();
@@ -340,8 +374,8 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
   fetchTicket: async (id) => {
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.getTicket(id);
-      set({ ticket: response.ticket, loading: false });
+      const ticket = await TicketAPI.getTicket(id);
+      set({ ticket, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '获取工单详情失败';
       set({ error: errorMessage, loading: false });
@@ -356,8 +390,8 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.updateTicket(state.ticket.id, data);
-      set({ ticket: response.ticket, loading: false });
+      const updated = await TicketAPI.updateTicket(state.ticket.id, data);
+      set({ ticket: updated, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '更新工单失败';
       set({ error: errorMessage, loading: false });
@@ -373,8 +407,8 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.assignTicket(state.ticket.id, { assignee_id: assigneeId, comment });
-      set({ ticket: response.ticket, loading: false });
+      const updated = await TicketAPI.assignTicket(state.ticket.id, { assignee_id: assigneeId, comment } as any);
+      set({ ticket: updated, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '分配工单失败';
       set({ error: errorMessage, loading: false });
@@ -390,12 +424,12 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.escalateTicket(state.ticket.id, {
-        escalation_level: level,
+      const updated = await TicketAPI.escalateTicket(state.ticket.id, {
+        level: String(level),
         reason,
         assignee_id: assigneeId,
-      });
-      set({ ticket: response.ticket, loading: false });
+      } as any);
+      set({ ticket: updated, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '升级工单失败';
       set({ error: errorMessage, loading: false });
@@ -411,11 +445,8 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.resolveTicket(state.ticket.id, {
-        resolution,
-        resolution_category: category,
-      });
-      set({ ticket: response.ticket, loading: false });
+      const updated = await TicketAPI.resolveTicket(state.ticket.id, resolution);
+      set({ ticket: updated, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '解决工单失败';
       set({ error: errorMessage, loading: false });
@@ -431,12 +462,10 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.closeTicket(state.ticket.id, {
-        close_reason: reason,
-        satisfaction_rating: rating,
-        satisfaction_comment: comment,
-      });
-      set({ ticket: response.ticket, loading: false });
+      // `TicketAPI.closeTicket` 目前仅支持简单 feedback/close_notes，先做轻量兼容
+      const feedback = [reason, comment].filter(Boolean).join(' / ');
+      const updated = await TicketAPI.closeTicket(state.ticket.id, feedback || undefined);
+      set({ ticket: updated, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '关闭工单失败';
       set({ error: errorMessage, loading: false });
@@ -452,8 +481,9 @@ export const useTicketDetailStore = create<TicketDetailState>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
-      const response = await TicketAPI.reopenTicket(state.ticket.id, reason);
-      set({ ticket: response.ticket, loading: false });
+      // 兼容：当前 API 层未提供 reopenTicket，先降级为状态回滚
+      const updated = await TicketAPI.updateTicketStatus(state.ticket.id, 'open');
+      set({ ticket: updated, loading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '重新打开工单失败';
       set({ error: errorMessage, loading: false });

@@ -20,6 +20,12 @@ type ServiceRequestCreate struct {
 	hooks    []Hook
 }
 
+// SetTenantID sets the "tenant_id" field.
+func (src *ServiceRequestCreate) SetTenantID(i int) *ServiceRequestCreate {
+	src.mutation.SetTenantID(i)
+	return src
+}
+
 // SetCatalogID sets the "catalog_id" field.
 func (src *ServiceRequestCreate) SetCatalogID(i int) *ServiceRequestCreate {
 	src.mutation.SetCatalogID(i)
@@ -139,6 +145,14 @@ func (src *ServiceRequestCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (src *ServiceRequestCreate) check() error {
+	if _, ok := src.mutation.TenantID(); !ok {
+		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ServiceRequest.tenant_id"`)}
+	}
+	if v, ok := src.mutation.TenantID(); ok {
+		if err := servicerequest.TenantIDValidator(v); err != nil {
+			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequest.tenant_id": %w`, err)}
+		}
+	}
 	if _, ok := src.mutation.CatalogID(); !ok {
 		return &ValidationError{Name: "catalog_id", err: errors.New(`ent: missing required field "ServiceRequest.catalog_id"`)}
 	}
@@ -190,6 +204,10 @@ func (src *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.Create
 		_node = &ServiceRequest{config: src.config}
 		_spec = sqlgraph.NewCreateSpec(servicerequest.Table, sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt))
 	)
+	if value, ok := src.mutation.TenantID(); ok {
+		_spec.SetField(servicerequest.FieldTenantID, field.TypeInt, value)
+		_node.TenantID = value
+	}
 	if value, ok := src.mutation.CatalogID(); ok {
 		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)
 		_node.CatalogID = value

@@ -68,23 +68,47 @@ export class TicketApi {
   }
 
   // Assign ticket
-  static async assignTicket(id: number, assigneeId: number): Promise<Ticket> {
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, { assignee_id: assigneeId });
+  static async assignTicket(
+    id: number,
+    assigneeIdOrData: number | { assignee_id: number; comment?: string }
+  ): Promise<Ticket> {
+    const payload = typeof assigneeIdOrData === 'number' ? { assignee_id: assigneeIdOrData } : assigneeIdOrData;
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, payload);
   }
 
   // Escalate ticket
-  static async escalateTicket(id: number, reason: string): Promise<Ticket> {
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, { reason });
+  static async escalateTicket(
+    id: number,
+    reasonOrData: string | { level: string; reason: string; assignee_id?: number }
+  ): Promise<Ticket> {
+    const payload = typeof reasonOrData === 'string' ? { reason: reasonOrData } : reasonOrData;
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, payload);
   }
 
   // Resolve ticket
-  static async resolveTicket(id: number, resolution: string): Promise<Ticket> {
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, { resolution });
+  static async resolveTicket(
+    id: number,
+    resolutionOrData: string | { solution: string; resolution_code?: string }
+  ): Promise<Ticket> {
+    const payload =
+      typeof resolutionOrData === 'string'
+        ? { resolution: resolutionOrData }
+        : { resolution: resolutionOrData.solution, resolution_code: resolutionOrData.resolution_code };
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, payload);
   }
 
   // Close ticket
-  static async closeTicket(id: number, feedback?: string): Promise<Ticket> {
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, { feedback });
+  static async closeTicket(
+    id: number,
+    feedbackOrData?: string | { close_notes?: string }
+  ): Promise<Ticket> {
+    const payload =
+      typeof feedbackOrData === 'string'
+        ? { feedback: feedbackOrData }
+        : feedbackOrData
+        ? { feedback: feedbackOrData.close_notes }
+        : {};
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, payload);
   }
 
   // Search tickets

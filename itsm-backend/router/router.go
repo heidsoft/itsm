@@ -12,33 +12,33 @@ import (
 	"go.uber.org/zap"
 )
 
-	// RouterConfig 路由配置
+// RouterConfig 路由配置
 type RouterConfig struct {
 	JWTSecret string
 	Logger    *zap.SugaredLogger
 	Client    *ent.Client
 
 	// Controllers
-		TicketController          *controller.TicketController
-		TicketDependencyController *controller.TicketDependencyController
-		TicketCommentController   *controller.TicketCommentController
-		TicketAttachmentController *controller.TicketAttachmentController
-		TicketNotificationController *controller.TicketNotificationController
-		TicketRatingController    *controller.TicketRatingController
-		TicketAssignmentSmartController *controller.TicketAssignmentSmartController
-		TicketViewController      *controller.TicketViewController
-		IncidentController        *controller.IncidentController
-		SLAController          *controller.SLAController
-		ApprovalController       *controller.ApprovalController
-		AnalyticsController    *controller.AnalyticsController
-		PredictionController   *controller.PredictionController
-		RootCauseController    *controller.RootCauseController
-		AuthController         *controller.AuthController
-	UserController         *controller.UserController
-	AIController           *controller.AIController
-	AuditLogController     *controller.AuditLogController
-	BPMNWorkflowController *controller.BPMNWorkflowController
-	DashboardHandler       *handlers.DashboardHandler
+	TicketController                *controller.TicketController
+	TicketDependencyController      *controller.TicketDependencyController
+	TicketCommentController         *controller.TicketCommentController
+	TicketAttachmentController      *controller.TicketAttachmentController
+	TicketNotificationController    *controller.TicketNotificationController
+	TicketRatingController          *controller.TicketRatingController
+	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
+	TicketViewController            *controller.TicketViewController
+	IncidentController              *controller.IncidentController
+	SLAController                   *controller.SLAController
+	ApprovalController              *controller.ApprovalController
+	AnalyticsController             *controller.AnalyticsController
+	PredictionController            *controller.PredictionController
+	RootCauseController             *controller.RootCauseController
+	AuthController                  *controller.AuthController
+	UserController                  *controller.UserController
+	AIController                    *controller.AIController
+	AuditLogController              *controller.AuditLogController
+	BPMNWorkflowController          *controller.BPMNWorkflowController
+	DashboardHandler                *handlers.DashboardHandler
 
 	// New Controllers (uncomment after ent generate)
 	DepartmentController  *controller.DepartmentController
@@ -46,10 +46,18 @@ type RouterConfig struct {
 	ApplicationController *controller.ApplicationController
 	TeamController        *controller.TeamController
 	TagController         *controller.TagController
-	
+
 	// Ticket related controllers
 	TicketCategoryController *controller.TicketCategoryController
 	TicketTagController      *controller.TicketTagController
+
+	// Additional domain controllers
+	ServiceController        *controller.ServiceController
+	CMDBController           *controller.CMDBController
+	KnowledgeController      *controller.KnowledgeController
+	ProblemController        *controller.ProblemController
+	ChangeController         *controller.ChangeController
+	ChangeApprovalController *controller.ChangeApprovalController
 }
 
 // SetupRoutes 设置路由
@@ -135,7 +143,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		{
 			tickets.GET("", config.TicketController.ListTickets)
 			tickets.POST("", config.TicketController.CreateTicket)
-			
+
 			// 工单视图路由 - 必须在 /:id 之前，避免路由冲突
 			if config.TicketViewController != nil {
 				tickets.GET("/views", middleware.RequirePermission("ticket", "read"), config.TicketViewController.ListTicketViews)
@@ -145,7 +153,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.DELETE("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.DeleteTicketView)
 				tickets.POST("/views/:id/share", middleware.RequirePermission("ticket", "read"), config.TicketViewController.ShareTicketView)
 			}
-			
+
 			// 工单查询和统计 - 必须在 /:id 之前
 			tickets.GET("/search", config.TicketController.SearchTickets)
 			tickets.GET("/stats", config.TicketController.GetTicketStats)
@@ -155,7 +163,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
 			tickets.POST("/export", config.TicketController.ExportTickets)
 			tickets.POST("/import", config.TicketController.ImportTickets)
-			
+
 			// 工单基础CRUD操作 - 放在最后，避免与其他路由冲突
 			tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
@@ -407,6 +415,99 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// BPMN 工作流
 		if config.BPMNWorkflowController != nil {
 			config.BPMNWorkflowController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// ==================== Service Catalog & Service Requests ====================
+		if config.ServiceController != nil {
+			// Canonical v1 endpoints
+			tenant.(*gin.RouterGroup).GET("/service-catalogs", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogs)
+			tenant.(*gin.RouterGroup).POST("/service-catalogs", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.CreateServiceCatalog)
+			tenant.(*gin.RouterGroup).GET("/service-catalogs/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogByID)
+			tenant.(*gin.RouterGroup).PUT("/service-catalogs/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.UpdateServiceCatalog)
+			tenant.(*gin.RouterGroup).DELETE("/service-catalogs/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceController.DeleteServiceCatalog)
+
+			tenant.(*gin.RouterGroup).POST("/service-requests", middleware.RequirePermission("service_request", "write"), config.ServiceController.CreateServiceRequest)
+			tenant.(*gin.RouterGroup).GET("/service-requests/me", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetUserServiceRequests)
+			tenant.(*gin.RouterGroup).GET("/service-requests/:id", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetServiceRequestByID)
+			tenant.(*gin.RouterGroup).PUT("/service-requests/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceController.UpdateServiceRequestStatus)
+		}
+
+		// ==================== Knowledge Base ====================
+		if config.KnowledgeController != nil {
+			kb := tenant.(*gin.RouterGroup).Group("/knowledge-articles")
+			{
+				kb.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeController.ListArticles)
+				kb.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeController.CreateArticle)
+				kb.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeController.GetCategories)
+				kb.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeController.GetArticle)
+				kb.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeController.UpdateArticle)
+				kb.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeController.DeleteArticle)
+			}
+		}
+
+		// ==================== CMDB ====================
+		if config.CMDBController != nil {
+			cmdb := tenant.(*gin.RouterGroup).Group("/cmdb")
+			{
+				// canonical (and front-end friendly) aliases
+				cmdb.GET("/cis", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListConfigurationItems)
+				cmdb.POST("/cis", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateConfigurationItem)
+				cmdb.GET("/cis/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetConfigurationItem)
+				cmdb.PUT("/cis/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateConfigurationItem)
+				cmdb.DELETE("/cis/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteConfigurationItem)
+
+				// original naming kept as aliases for backward compatibility
+				cmdb.GET("/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListConfigurationItems)
+				cmdb.POST("/configuration-items", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateConfigurationItem)
+				cmdb.GET("/configuration-items/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetConfigurationItem)
+				cmdb.PUT("/configuration-items/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateConfigurationItem)
+				cmdb.DELETE("/configuration-items/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteConfigurationItem)
+
+				cmdb.POST("/ci-types/attributes", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCIAttributeDefinition)
+				cmdb.GET("/ci-types/:id/attributes", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCITypeWithAttributes)
+				cmdb.POST("/ci-attributes/validate", middleware.RequirePermission("cmdb", "write"), config.CMDBController.ValidateCIAttributes)
+				cmdb.POST("/cis/search-by-attributes", middleware.RequirePermission("cmdb", "read"), config.CMDBController.SearchCIsByAttributes)
+			}
+		}
+
+		// ==================== Problems ====================
+		if config.ProblemController != nil {
+			problems := tenant.(*gin.RouterGroup).Group("/problems")
+			{
+				problems.GET("", middleware.RequirePermission("problem", "read"), config.ProblemController.ListProblems)
+				problems.POST("", middleware.RequirePermission("problem", "write"), config.ProblemController.CreateProblem)
+				problems.GET("/stats", middleware.RequirePermission("problem", "read"), config.ProblemController.GetProblemStats)
+				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemController.GetProblem)
+				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemController.UpdateProblem)
+				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemController.DeleteProblem)
+			}
+		}
+
+		// ==================== Changes ====================
+		if config.ChangeController != nil {
+			changes := tenant.(*gin.RouterGroup).Group("/changes")
+			{
+				changes.GET("", middleware.RequirePermission("change", "read"), config.ChangeController.ListChanges)
+				changes.POST("", middleware.RequirePermission("change", "write"), config.ChangeController.CreateChange)
+				changes.GET("/stats", middleware.RequirePermission("change", "read"), config.ChangeController.GetChangeStats)
+				changes.GET("/:id", middleware.RequirePermission("change", "read"), config.ChangeController.GetChange)
+				changes.PUT("/:id", middleware.RequirePermission("change", "write"), config.ChangeController.UpdateChange)
+				changes.DELETE("/:id", middleware.RequirePermission("change", "delete"), config.ChangeController.DeleteChange)
+				changes.PUT("/:id/status", middleware.RequirePermission("change", "write"), config.ChangeController.UpdateChangeStatus)
+			}
+		}
+
+		if config.ChangeApprovalController != nil {
+			// Approval / risk endpoints (already annotated as /api/v1/changes/*)
+			tenant.(*gin.RouterGroup).POST("/changes/approvals", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeApproval)
+			tenant.(*gin.RouterGroup).PUT("/changes/approvals/:id", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.UpdateChangeApproval)
+			tenant.(*gin.RouterGroup).POST("/changes/approval-workflows", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeApprovalWorkflow)
+			tenant.(*gin.RouterGroup).GET("/changes/:changeId/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeApprovalController.GetChangeApprovalSummary)
+			tenant.(*gin.RouterGroup).POST("/changes/risk-assessments", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeRiskAssessment)
+			tenant.(*gin.RouterGroup).GET("/changes/:changeId/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeApprovalController.GetChangeRiskAssessment)
+			tenant.(*gin.RouterGroup).POST("/changes/implementation-plans", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeImplementationPlan)
+			tenant.(*gin.RouterGroup).POST("/changes/rollback-plans", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeRollbackPlan)
+			tenant.(*gin.RouterGroup).POST("/changes/:changeId/rollback-plans/:rollbackPlanId/execute", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.ExecuteChangeRollback)
 		}
 	}
 }

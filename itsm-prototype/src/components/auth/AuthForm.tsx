@@ -175,7 +175,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           <PasswordInput
             {...commonProps}
             showStrength={field.showPasswordStrength}
-            helpText={field.helpText}
+            helperText={field.helpText}
           />
         );
       default:
@@ -183,7 +183,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           <Input
             {...commonProps}
             type={field.type}
-            helpText={field.helpText}
+            helperText={field.helpText}
           />
         );
     }

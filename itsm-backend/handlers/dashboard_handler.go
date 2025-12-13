@@ -20,6 +20,12 @@ type DashboardHandler struct {
 	logger           *zap.SugaredLogger
 }
 
+// ErrorResponse 通用错误响应（用于 Swagger 文档声明）
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 // NewDashboardHandler 创建Dashboard处理器
 func NewDashboardHandler(
 	dashboardService *service.DashboardService,

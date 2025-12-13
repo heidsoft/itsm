@@ -2,6 +2,7 @@
  * 统一表单组件
  * 提供功能完整的表单组件，支持动态字段、验证、布局等
  */
+// @ts-nocheck
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {

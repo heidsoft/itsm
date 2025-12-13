@@ -3,14 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Clock, ArrowLeft, Info, AlertCircle } from 'lucide-react';
-import { ServiceCatalogApi, ServiceCatalog } from '@/lib/api/service-catalog-api';
+import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import { ServiceItem, ServiceStatus } from '@/types/service-catalog';
 
 const ServiceRequestPage = () => {
   const params = useParams();
   const router = useRouter();
   const serviceId = parseInt(params.serviceId as string);
 
-  const [catalog, setCatalog] = useState<ServiceCatalog | null>(null);
+  const [catalog, setCatalog] = useState<ServiceItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,17 +22,10 @@ const ServiceRequestPage = () => {
     const fetchCatalog = async () => {
       try {
         setLoading(true);
-        // 这里需要后端提供单个服务目录的API，或者从列表中获取
-        const response = await ServiceCatalogApi.getServiceCatalogs({
-          page: 1,
-          size: 100,
-        });
-        const foundCatalog = response.data.catalogs.find(c => c.id === serviceId);
-        if (foundCatalog) {
-          setCatalog(foundCatalog);
-        } else {
-          setError('服务目录不存在');
-        }
+        const response = await ServiceCatalogApi.getServices({ page: 1, pageSize: 100 });
+        const foundCatalog = response.services.find(c => Number(c.id) === serviceId);
+        if (foundCatalog) setCatalog(foundCatalog);
+        else setError('服务目录不存在');
       } catch (err) {
         setError('获取服务目录失败');
         console.error('Failed to fetch catalog:', err);
@@ -53,8 +47,8 @@ const ServiceRequestPage = () => {
     try {
       setSubmitting(true);
       await ServiceCatalogApi.createServiceRequest({
-        catalog_id: catalog.id,
-        reason: reason.trim() || undefined,
+        serviceId: String(catalog.id),
+        formData: { reason: reason.trim() || '' },
       });
 
       alert(`服务请求 "${catalog.name}" 已成功提交！`);
@@ -106,7 +100,7 @@ const ServiceRequestPage = () => {
           返回服务目录
         </button>
         <h2 className='text-4xl font-bold text-gray-800'>服务请求：{catalog.name}</h2>
-        <p className='text-gray-500 mt-1'>{catalog.description}</p>
+        <p className='text-gray-500 mt-1'>{catalog.shortDescription || ''}</p>
       </header>
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
@@ -165,19 +159,21 @@ const ServiceRequestPage = () => {
                 <span className='font-semibold'>预计交付时间:</span>
                 <span className='flex items-center font-bold text-blue-700'>
                   <Clock className='w-4 h-4 mr-1.5' />
-                  {catalog.delivery_time}
+                  {catalog.availability?.responseTime ||
+                    catalog.availability?.resolutionTime ||
+                    '-'}
                 </span>
               </div>
               <div className='flex justify-between'>
                 <span className='font-semibold'>服务状态:</span>
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
-                    catalog.status === 'enabled'
+                    catalog.status === ServiceStatus.PUBLISHED
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}
                 >
-                  {catalog.status === 'enabled' ? '可用' : '不可用'}
+                  {catalog.status === ServiceStatus.PUBLISHED ? '可用' : '不可用'}
                 </span>
               </div>
             </div>

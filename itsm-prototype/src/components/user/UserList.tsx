@@ -40,12 +40,7 @@ import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
-import type { 
-  User, 
-  UserRole, 
-  UserStatus,
-  UserFilters
-} from '@/types/user';
+import type { User, UserRole, UserStatus, UserFilters } from '@/types/user';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -63,7 +58,7 @@ const UserList: React.FC<UserListProps> = ({
   onUserSelect,
 }) => {
   const router = useRouter();
-  
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -77,84 +72,83 @@ const UserList: React.FC<UserListProps> = ({
   const [showFilters, setShowFilters] = useState(false);
 
   // 获取用户列表
-  const fetchUsers = useCallback(async (params?: {
-    page?: number;
-    pageSize?: number;
-    filters?: UserFilters;
-  }) => {
-    try {
-      setLoading(true);
-      // TODO: 实现API调用
-      const mockUsers: User[] = [
-        {
-          id: 1,
-          username: 'admin',
-          email: 'admin@example.com',
-          fullName: '系统管理员',
-          role: 'admin',
-          status: 'active',
-          department: 'IT部门',
-          jobTitle: '系统管理员',
-          permissions: ['*'],
-          groups: [],
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-          preferences: {
-            theme: 'light',
-            language: 'zh-CN',
-            timezone: 'Asia/Shanghai',
-            dateFormat: 'YYYY-MM-DD',
-            timeFormat: '24h',
-            notifications: {
-              email: true,
-              sms: false,
-              inApp: true,
-              desktop: true,
-              ticketAssigned: true,
-              ticketUpdated: true,
-              ticketEscalated: true,
-              ticketResolved: true,
-              slaBreached: true,
-              systemMaintenance: true,
-            },
-            ui: {
-              sidebarCollapsed: false,
-              tablePageSize: 20,
-              defaultView: 'table',
-              showAvatars: true,
-              compactMode: false,
-            },
-            work: {
-              autoAssign: false,
-              defaultPriority: 'medium',
-              workingHours: {
-                start: '09:00',
-                end: '18:00',
-                timezone: 'Asia/Shanghai',
+  const fetchUsers = useCallback(
+    async (params?: { page?: number; pageSize?: number; filters?: UserFilters }) => {
+      try {
+        setLoading(true);
+        // TODO: 实现API调用
+        const mockUsers: User[] = [
+          {
+            id: 1,
+            username: 'admin',
+            email: 'admin@example.com',
+            fullName: '系统管理员',
+            role: 'admin',
+            status: 'active',
+            department: 'IT部门',
+            jobTitle: '系统管理员',
+            permissions: ['*'],
+            groups: [],
+            createdAt: '2024-01-01T00:00:00Z',
+            updatedAt: '2024-01-01T00:00:00Z',
+            preferences: {
+              theme: 'light',
+              language: 'zh-CN',
+              timezone: 'Asia/Shanghai',
+              dateFormat: 'YYYY-MM-DD',
+              timeFormat: '24h',
+              notifications: {
+                email: true,
+                sms: false,
+                inApp: true,
+                desktop: true,
+                ticketAssigned: true,
+                ticketUpdated: true,
+                ticketEscalated: true,
+                ticketResolved: true,
+                slaBreached: true,
+                systemMaintenance: true,
               },
-              workingDays: [1, 2, 3, 4, 5],
+              ui: {
+                sidebarCollapsed: false,
+                tablePageSize: 20,
+                defaultView: 'table',
+                showAvatars: true,
+                compactMode: false,
+              },
+              work: {
+                autoAssign: false,
+                defaultPriority: 'medium',
+                workingHours: {
+                  start: '09:00',
+                  end: '18:00',
+                  timezone: 'Asia/Shanghai',
+                },
+                workingDays: [1, 2, 3, 4, 5],
+              },
             },
+            tenantId: 1,
+            isActive: true,
+            emailVerified: true,
+            phoneVerified: false,
           },
-          tenantId: 1,
-          isActive: true,
-          emailVerified: true,
-          phoneVerified: false,
-        },
-      ];
-      
-      setUsers(mockUsers);
-      setPagination({
-        current: params?.page || 1,
-        pageSize: params?.pageSize || 20,
-        total: mockUsers.length,
-      });
-    } catch (error) {
-      message.error('获取用户列表失败');
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        ];
+
+        setUsers(mockUsers);
+        setPagination({
+          current: params?.page || 1,
+          pageSize: params?.pageSize || 20,
+          total: mockUsers.length,
+        });
+      } catch (error) {
+        message.error('获取用户列表失败');
+        console.error('Failed to fetch users:', error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   // 初始化加载
   useEffect(() => {
@@ -169,7 +163,10 @@ const UserList: React.FC<UserListProps> = ({
   };
 
   // 筛选处理
-  const handleFilterChange = (key: keyof UserFilters, value: string | string[] | undefined) => {
+  const handleFilterChange = (
+    key: keyof UserFilters,
+    value: string | string[] | boolean | undefined
+  ) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     fetchUsers({ page: 1, filters: newFilters });
@@ -183,7 +180,7 @@ const UserList: React.FC<UserListProps> = ({
   };
 
   // 表格分页处理
-  const handleTableChange: TableProps<User>['onChange'] = (paginationInfo) => {
+  const handleTableChange: TableProps<User>['onChange'] = paginationInfo => {
     fetchUsers({
       page: paginationInfo.current,
       pageSize: paginationInfo.pageSize,
@@ -308,7 +305,7 @@ const UserList: React.FC<UserListProps> = ({
       message.warning('请先选择要操作的用户');
       return;
     }
-    
+
     // TODO: 实现批量操作逻辑
     message.info(`批量${action}功能开发中`);
   };
@@ -327,7 +324,7 @@ const UserList: React.FC<UserListProps> = ({
       suspended: { color: 'red', text: '暂停' },
       pending: { color: 'orange', text: '待激活' },
     };
-    
+
     const config = statusConfig[status];
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -341,7 +338,7 @@ const UserList: React.FC<UserListProps> = ({
       technician: { color: 'orange', text: '技术员' },
       end_user: { color: 'default', text: '普通用户' },
     };
-    
+
     const config = roleConfig[role];
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -355,24 +352,18 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'left',
       render: (_, record) => (
         <Space>
-          <Avatar 
-            size="small" 
-            icon={<UserOutlined />} 
-            src={record.avatar}
-          />
+          <Avatar size='small' icon={<UserOutlined />} src={record.avatar} />
           <div>
             <div>
               <Button
-                type="link"
+                type='link'
                 onClick={() => handleViewUser(record)}
                 style={{ padding: 0, height: 'auto' }}
               >
                 {record.fullName}
               </Button>
             </div>
-            <div style={{ fontSize: '12px', color: '#999' }}>
-              @{record.username}
-            </div>
+            <div style={{ fontSize: '12px', color: '#999' }}>@{record.username}</div>
           </div>
         </Space>
       ),
@@ -382,13 +373,13 @@ const UserList: React.FC<UserListProps> = ({
       key: 'contact',
       width: 200,
       render: (_, record) => (
-        <Space direction="vertical" size="small">
-          <Space size="small">
+        <Space direction='vertical' size='small'>
+          <Space size='small'>
             <MailOutlined style={{ color: '#999' }} />
             <span>{record.email}</span>
           </Space>
           {record.phone && (
-            <Space size="small">
+            <Space size='small'>
               <PhoneOutlined style={{ color: '#999' }} />
               <span>{record.phone}</span>
             </Space>
@@ -415,34 +406,35 @@ const UserList: React.FC<UserListProps> = ({
       dataIndex: 'department',
       key: 'department',
       width: 120,
-      render: (text) => text || '-',
+      render: text => text || '-',
     },
     {
       title: '职位',
       dataIndex: 'jobTitle',
       key: 'jobTitle',
       width: 120,
-      render: (text) => text || '-',
+      render: text => text || '-',
     },
     {
       title: '最后登录',
       dataIndex: 'lastLoginAt',
       key: 'lastLoginAt',
       width: 150,
-      render: (text) => text ? (
-        <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')}>
-          {dayjs(text).format('MM-DD HH:mm')}
-        </Tooltip>
-      ) : (
-        <span style={{ color: '#999' }}>从未登录</span>
-      ),
+      render: text =>
+        text ? (
+          <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')}>
+            {dayjs(text).format('MM-DD HH:mm')}
+          </Tooltip>
+        ) : (
+          <span style={{ color: '#999' }}>从未登录</span>
+        ),
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (text) => (
+      render: text => (
         <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')}>
           {dayjs(text).format('MM-DD HH:mm')}
         </Tooltip>
@@ -455,7 +447,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'right',
       render: (_, record) => (
         <Dropdown menu={getActionMenu(record)} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type='text' icon={<MoreOutlined />} />
         </Dropdown>
       ),
     },
@@ -463,49 +455,49 @@ const UserList: React.FC<UserListProps> = ({
 
   // 筛选器组件
   const renderFilters = () => (
-    <Card size="small" style={{ marginBottom: 16 }}>
+    <Card size='small' style={{ marginBottom: 16 }}>
       <Row gutter={[16, 16]}>
         <Col span={6}>
           <Select
-            placeholder="角色"
+            placeholder='角色'
             allowClear
             style={{ width: '100%' }}
             value={filters.role}
-            onChange={(value) => handleFilterChange('role', value)}
+            onChange={value => handleFilterChange('role', value)}
           >
-            <Option value="admin">管理员</Option>
-            <Option value="manager">经理</Option>
-            <Option value="agent">客服</Option>
-            <Option value="technician">技术员</Option>
-            <Option value="end_user">普通用户</Option>
+            <Option value='admin'>管理员</Option>
+            <Option value='manager'>经理</Option>
+            <Option value='agent'>客服</Option>
+            <Option value='technician'>技术员</Option>
+            <Option value='end_user'>普通用户</Option>
           </Select>
         </Col>
         <Col span={6}>
           <Select
-            placeholder="状态"
+            placeholder='状态'
             allowClear
             style={{ width: '100%' }}
             value={filters.status}
-            onChange={(value) => handleFilterChange('status', value)}
+            onChange={value => handleFilterChange('status', value)}
           >
-            <Option value="active">正常</Option>
-            <Option value="inactive">禁用</Option>
-            <Option value="suspended">暂停</Option>
-            <Option value="pending">待激活</Option>
+            <Option value='active'>正常</Option>
+            <Option value='inactive'>禁用</Option>
+            <Option value='suspended'>暂停</Option>
+            <Option value='pending'>待激活</Option>
           </Select>
         </Col>
         <Col span={6}>
           <Select
-            placeholder="部门"
+            placeholder='部门'
             allowClear
             style={{ width: '100%' }}
             value={filters.department}
-            onChange={(value) => handleFilterChange('department', value)}
+            onChange={value => handleFilterChange('department', value)}
           >
-            <Option value="IT部门">IT部门</Option>
-            <Option value="人事部">人事部</Option>
-            <Option value="财务部">财务部</Option>
-            <Option value="市场部">市场部</Option>
+            <Option value='IT部门'>IT部门</Option>
+            <Option value='人事部'>人事部</Option>
+            <Option value='财务部'>财务部</Option>
+            <Option value='市场部'>市场部</Option>
           </Select>
         </Col>
         <Col span={6}>
@@ -513,7 +505,7 @@ const UserList: React.FC<UserListProps> = ({
             <span>仅显示活跃用户:</span>
             <Switch
               checked={filters.isActive}
-              onChange={(checked) => handleFilterChange('isActive', checked)}
+              onChange={checked => handleFilterChange('isActive', checked)}
             />
           </Space>
         </Col>
@@ -530,27 +522,21 @@ const UserList: React.FC<UserListProps> = ({
     <div>
       {showHeader && (
         <Card>
-          <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+          <Row justify='space-between' align='middle' style={{ marginBottom: 16 }}>
             <Col>
               <Space>
                 <Search
-                  placeholder="搜索用户..."
+                  placeholder='搜索用户...'
                   allowClear
                   style={{ width: 300 }}
                   value={searchText}
                   onSearch={handleSearch}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  onChange={e => setSearchText(e.target.value)}
                 />
-                <Button
-                  icon={<FilterOutlined />}
-                  onClick={() => setShowFilters(!showFilters)}
-                >
+                <Button icon={<FilterOutlined />} onClick={() => setShowFilters(!showFilters)}>
                   筛选
                 </Button>
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => fetchUsers()}
-                >
+                <Button icon={<ReloadOutlined />} onClick={() => fetchUsers()}>
                   刷新
                 </Button>
               </Space>
@@ -560,23 +546,16 @@ const UserList: React.FC<UserListProps> = ({
                 {selectedRowKeys.length > 0 && (
                   <>
                     <Badge count={selectedRowKeys.length}>
-                      <Button onClick={() => handleBatchAction('启用')}>
-                        批量启用
-                      </Button>
+                      <Button onClick={() => handleBatchAction('启用')}>批量启用</Button>
                     </Badge>
-                    <Button onClick={() => handleBatchAction('禁用')}>
-                      批量禁用
-                    </Button>
+                    <Button onClick={() => handleBatchAction('禁用')}>批量禁用</Button>
                   </>
                 )}
-                <Button
-                  icon={<ExportOutlined />}
-                  onClick={handleExport}
-                >
+                <Button icon={<ExportOutlined />} onClick={handleExport}>
                   导出
                 </Button>
                 <Button
-                  type="primary"
+                  type='primary'
                   icon={<PlusOutlined />}
                   onClick={() => router.push('/users/new')}
                 >
@@ -595,7 +574,7 @@ const UserList: React.FC<UserListProps> = ({
           rowSelection={embedded ? undefined : rowSelection}
           columns={columns}
           dataSource={users}
-          rowKey="id"
+          rowKey='id'
           loading={loading}
           pagination={{
             current: pagination.current,
@@ -603,8 +582,7 @@ const UserList: React.FC<UserListProps> = ({
             total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
           }}
           onChange={handleTableChange}
           scroll={{ x: 1200 }}

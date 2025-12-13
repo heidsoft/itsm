@@ -3,9 +3,21 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Form, FormProps, FormInstance, message, Alert } from 'antd';
 import { cn } from '@/lib/utils';
-import confetti from 'canvas-confetti';
+// optional dependency; avoid hard TS dependency on missing module
+type ConfettiFn = ((...args: any[]) => any) & { reset?: () => void };
+let confetti: ConfettiFn | null = null;
+if (typeof window !== 'undefined') {
+  // best-effort dynamic import
+  import('canvas-confetti')
+    .then((m: any) => {
+      confetti = (m?.default || m) as ConfettiFn;
+    })
+    .catch(() => {
+      confetti = null;
+    });
+}
 
-export interface SmartFormProps extends FormProps {
+export interface SmartFormProps extends Omit<FormProps, 'autoSave'> {
   /**
    * 是否启用自动保存
    * @default false
@@ -195,7 +207,7 @@ export const SmartForm: React.FC<SmartFormProps> = ({
       await onFinish?.(values);
 
       // 成功动画
-      if (successAnimation) {
+      if (successAnimation && confetti) {
         confetti({
           particleCount: 100,
           spread: 70,
@@ -308,7 +320,7 @@ export const SmartForm: React.FC<SmartFormProps> = ({
         {...props}
       >
         {typeof children === 'function' 
-          ? children({ form, submitting }) 
+          ? (children as any)({ form, submitting }, form) 
           : children}
       </Form>
     </div>

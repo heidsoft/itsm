@@ -1,5 +1,6 @@
 import { API_BASE_URL } from './api-config';
 import { security } from './security';
+import { logger } from '@/lib/env';
 
 // Request configuration interface
 interface RequestConfig {
@@ -67,7 +68,7 @@ class HttpClient {
 
   setTenantCode(code: string | null) {
     this.tenantCode = code;
-    console.log('HttpClient.setTenantCode:', code);
+    logger.info('HttpClient.setTenantCode:', code);
     if (typeof window !== 'undefined') {
       if (code) {
         localStorage.setItem('current_tenant_code', code);
@@ -142,7 +143,7 @@ class HttpClient {
       }
       return false;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      logger.error('Token refresh failed:', error);
       return false;
     }
   }
@@ -162,7 +163,7 @@ class HttpClient {
 
     // 仅在开发环境输出调试日志
     if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_API === 'true') {
-      console.log('HTTP Client Request:', {
+      logger.debug('HTTP Client Request:', {
         url,
         method: config.method,
         headers,
@@ -183,7 +184,7 @@ class HttpClient {
       
       // 仅在开发环境输出调试日志
       if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_API === 'true') {
-        console.log('HTTP Client Response:', {
+        logger.debug('HTTP Client Response:', {
           status: response.status,
           statusText: response.statusText,
           headers: response.headers ? Object.fromEntries(response.headers.entries()) : {}
@@ -209,7 +210,7 @@ class HttpClient {
             throw new Error(`HTTP error! status: ${retryResponse.status}${suffix}`);
           }
           const retryData = await retryResponse.json() as ApiResponse<T>;
-          console.log('HTTP Client Retry Response Data:', retryData);
+          logger.debug('HTTP Client Retry Response Data:', retryData);
           
           // Check response code
           if (retryData.code !== 0) {
@@ -239,10 +240,10 @@ class HttpClient {
       const responseData = await response.json() as ApiResponse<T>;
       // 仅在开发环境输出调试日志
       if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_API === 'true') {
-        console.log('HTTP Client Raw Response Data:', responseData);
-        console.log('HTTP Client Response Code:', responseData.code);
-        console.log('HTTP Client Response Message:', responseData.message);
-        console.log('HTTP Client Response Data Type:', typeof responseData.data);
+        logger.debug('HTTP Client Raw Response Data:', responseData);
+        logger.debug('HTTP Client Response Code:', responseData.code);
+        logger.debug('HTTP Client Response Message:', responseData.message);
+        logger.debug('HTTP Client Response Data Type:', typeof responseData.data);
       }
       
       // Check response code
@@ -250,7 +251,7 @@ class HttpClient {
         const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
         const errorMessage = responseData.message || 'Request failed';
-        console.error('API Error:', {
+        logger.error('API Error:', {
           code: responseData.code,
           message: errorMessage,
           endpoint,
@@ -262,13 +263,13 @@ class HttpClient {
       
       // 验证data字段存在
       if (responseData.data === undefined || responseData.data === null) {
-        console.error('API Response data is undefined or null:', responseData);
+        logger.error('API Response data is undefined or null:', responseData);
         throw new Error('API响应数据为空');
       }
       
       return responseData.data;
     } catch (error: unknown) {
-      console.error('Request failed:', {
+      logger.error('Request failed:', {
         error,
         endpoint,
         url: `${this.baseURL}${endpoint}`,

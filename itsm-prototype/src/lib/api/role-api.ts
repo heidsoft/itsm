@@ -36,6 +36,6 @@ export class RoleAPI {
   // 获取所有权限列表
   static async getPermissions(): Promise<string[]> {
     const response = await httpClient.get<{ permissions: string[] }>('/api/permissions');
-    return response.data.permissions;
+    return response.permissions;
   }
 }

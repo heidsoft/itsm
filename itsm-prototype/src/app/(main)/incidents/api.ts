@@ -1,4 +1,4 @@
-import { IncidentAPI } from "@/app/lib/incident-api";
+import { IncidentAPI } from "@/lib/api/incident-api";
 
 // 重新导出事件管理 API
 export const fetchIncidents = IncidentAPI.listIncidents;

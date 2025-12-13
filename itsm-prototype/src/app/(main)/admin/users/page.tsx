@@ -127,7 +127,7 @@ const UserManagement: React.FC = () => {
   const [passwordForm] = Form.useForm();
 
   // 模拟API调用 - 后续替换为真实API
-  const handleCreateUser = async (values: unknown) => {
+  const handleCreateUser = async (values: Partial<User>) => {
     setLoading(true);
     try {
       // 模拟API延迟
@@ -135,9 +135,9 @@ const UserManagement: React.FC = () => {
 
       const newUser: User = {
         id: Math.max(...users.map(u => u.id)) + 1,
-        username: values.username,
-        email: values.email,
-        name: values.name,
+        username: values.username || '',
+        email: values.email || '',
+        name: values.name || '',
         department: values.department || '',
         phone: values.phone || '',
         active: true,
@@ -162,7 +162,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = async (values: unknown) => {
+  const handleUpdateUser = async (values: Partial<User>) => {
     if (!selectedUser) return;
 
     setLoading(true);
@@ -328,7 +328,7 @@ const UserManagement: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      render: (_, record: User) => (
+      render: (_: unknown, record: User) => (
         <Dropdown
           menu={{
             items: [

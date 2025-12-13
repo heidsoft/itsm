@@ -43,7 +43,7 @@ interface ApiResponse {
   size: number;
 }
 
-import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
+import { serviceRequestAPI } from '@/lib/api/service-request-api';
 import { mockRequestsData } from '@/app/lib/mock-data';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {

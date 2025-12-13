@@ -37,6 +37,7 @@ import {
   Divider,
   Tag,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -67,8 +68,20 @@ const TENANT_TYPES = {
 // 引入租户API
 import { TenantAPI } from '@/lib/api/tenant-api';
 
+type Tenant = {
+  id: number;
+  name: string;
+  code: string;
+  domain?: string;
+  type: keyof typeof TENANT_TYPES;
+  status: keyof typeof TENANT_STATUS;
+  userCount?: number;
+  ticketCount?: number;
+  expires_at?: string;
+};
+
 export default function TenantManagement() {
-  const [tenants, setTenants] = useState<unknown[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
@@ -93,7 +106,7 @@ export default function TenantManagement() {
         type: typeFilter !== 'all' ? typeFilter : undefined,
       });
 
-      setTenants(response.tenants);
+      setTenants(response.tenants as Tenant[]);
 
       // 计算统计数据
       const total = response.tenants.length;
@@ -162,11 +175,11 @@ export default function TenantManagement() {
   };
 
   // 表格列定义
-  const columns = [
+  const columns: ColumnsType<Tenant> = [
     {
       title: '租户信息',
       key: 'info',
-      render: (_: unknown, record: { name: string; code: string; domain?: string }) => (
+      render: (_: unknown, record: Tenant) => (
         <div className='flex items-center'>
           <div className='flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center'>
             <Building2 className='h-5 w-5 text-blue-600' />
@@ -183,10 +196,7 @@ export default function TenantManagement() {
     {
       title: '类型/状态',
       key: 'type-status',
-      render: (
-        _: unknown,
-        record: { type: keyof typeof TENANT_TYPES; status: keyof typeof TENANT_STATUS }
-      ) => (
+      render: (_: unknown, record: Tenant) => (
         <div className='space-y-1'>
           <Tag color={TENANT_TYPES[record.type]?.color || 'default'}>
             {TENANT_TYPES[record.type]?.label || record.type}
@@ -202,7 +212,7 @@ export default function TenantManagement() {
     {
       title: '资源使用',
       key: 'usage',
-      render: (_: unknown, record: unknown) => (
+      render: (_: unknown, record: Tenant) => (
         <div className='space-y-1'>
           <div className='flex items-center'>
             <Users className='w-4 h-4 mr-1 text-gray-400' />
@@ -378,7 +388,7 @@ export default function TenantManagement() {
 
       {/* 租户列表 */}
       <Card className='enterprise-card'>
-        <Table
+        <Table<Tenant>
           columns={columns}
           dataSource={tenants}
           rowKey='id'

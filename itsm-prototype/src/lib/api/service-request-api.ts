@@ -48,6 +48,7 @@ class ServiceRequestAPI {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const tenantCode = typeof window !== 'undefined' ? localStorage.getItem('tenantCode') : null;
     
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
@@ -55,6 +56,7 @@ class ServiceRequestAPI {
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
+          ...(tenantCode && { 'X-Tenant-Code': tenantCode }),
           ...options.headers,
         },
       });
@@ -91,18 +93,18 @@ class ServiceRequestAPI {
     if (params.status && params.status !== 'all') searchParams.append('status', params.status);
 
     return this.request<ServiceRequestListResponse>(
-      `/api/service-requests/me?${searchParams.toString()}`
+      `/api/v1/service-requests/me?${searchParams.toString()}`
     );
   }
 
   // Get service request details
   async getServiceRequestDetails(id: number): Promise<ServiceRequest> {
-    return this.request<ServiceRequest>(`/api/service-requests/${id}`);
+    return this.request<ServiceRequest>(`/api/v1/service-requests/${id}`);
   }
 
   // Create service request
   async createServiceRequest(data: CreateServiceRequestRequest): Promise<ServiceRequest> {
-    return this.request<ServiceRequest>('/api/service-requests', {
+    return this.request<ServiceRequest>('/api/v1/service-requests', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -110,7 +112,7 @@ class ServiceRequestAPI {
 
   // Update service request status (admin operation)
   async updateServiceRequestStatus(id: number, status: string, comment?: string): Promise<ServiceRequest> {
-    return this.request<ServiceRequest>(`/api/service-requests/${id}/status`, {
+    return this.request<ServiceRequest>(`/api/v1/service-requests/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status, comment }),
     });
@@ -118,7 +120,8 @@ class ServiceRequestAPI {
 
   // Health check
   async healthCheck(): Promise<{ status: string }> {
-    return this.request<{ status: string }>('/api/health');
+    // backend exposes public health endpoint under /api/v1/health
+    return this.request<{ status: string }>('/api/v1/health');
   }
 }
 

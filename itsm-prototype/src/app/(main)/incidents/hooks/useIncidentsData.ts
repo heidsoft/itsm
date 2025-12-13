@@ -42,7 +42,7 @@ export const useIncidentsData = () => {
         keyword: filters.keyword,
       });
       setIncidents(response.incidents);
-      setTotal(response.total);
+      setTotal((response as any).total ?? response.incidents?.length ?? 0);
     } catch (error) {
       console.error('Failed to load incidents:', error);
       message.error(t('incidents.loadDataError'));

@@ -14,8 +14,19 @@ import {
 import React, { useState } from 'react';
 import Link from 'next/link';
 
+type ImprovementStatus = '进行中' | '待评估' | '已完成';
+
+interface Improvement {
+  id: string;
+  title: string;
+  status: ImprovementStatus;
+  owner: string;
+  target: string;
+  createdAt: string;
+}
+
 // 模拟改进计划数据
-const mockImprovements = [
+const mockImprovements: Improvement[] = [
   {
     id: 'IMP-001',
     title: '优化云资源申请流程',
@@ -42,14 +53,18 @@ const mockImprovements = [
   },
 ];
 
-const ImprovementStatusBadge = ({ status }) => {
-  const colors = {
+type ImprovementStatus = '进行中' | '待评估' | '已完成';
+
+const ImprovementStatusBadge = ({ status }: { status: ImprovementStatus }) => {
+  const colors: Record<ImprovementStatus, string> = {
     进行中: 'bg-blue-100 text-blue-800',
     待评估: 'bg-yellow-100 text-yellow-800',
     已完成: 'bg-green-100 text-green-800',
   };
   return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status]}`}>{status}</span>
+    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status] || ''}`}>
+      {status}
+    </span>
   );
 };
 

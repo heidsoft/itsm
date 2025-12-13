@@ -17,6 +17,8 @@ type ServiceRequest struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// 租户ID
+	TenantID int `json:"tenant_id,omitempty"`
 	// 服务目录ID
 	CatalogID int `json:"catalog_id,omitempty"`
 	// 申请人ID
@@ -37,7 +39,7 @@ func (*ServiceRequest) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicerequest.FieldID, servicerequest.FieldCatalogID, servicerequest.FieldRequesterID:
+		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldRequesterID:
 			values[i] = new(sql.NullInt64)
 		case servicerequest.FieldStatus, servicerequest.FieldReason:
 			values[i] = new(sql.NullString)
@@ -64,6 +66,12 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			sr.ID = int(value.Int64)
+		case servicerequest.FieldTenantID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+			} else if value.Valid {
+				sr.TenantID = int(value.Int64)
+			}
 		case servicerequest.FieldCatalogID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field catalog_id", values[i])
@@ -136,6 +144,9 @@ func (sr *ServiceRequest) String() string {
 	var builder strings.Builder
 	builder.WriteString("ServiceRequest(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", sr.ID))
+	builder.WriteString("tenant_id=")
+	builder.WriteString(fmt.Sprintf("%v", sr.TenantID))
+	builder.WriteString(", ")
 	builder.WriteString("catalog_id=")
 	builder.WriteString(fmt.Sprintf("%v", sr.CatalogID))
 	builder.WriteString(", ")

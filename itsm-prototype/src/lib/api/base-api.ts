@@ -15,7 +15,10 @@ export abstract class BaseApi {
     params?: P
   ): Promise<PaginationResponse<T>> {
     try {
-      const response = await httpClient.get<PaginationResponse<T>>(endpoint, params);
+      const response = await httpClient.get<PaginationResponse<T>>(
+        endpoint,
+        (params as unknown as Record<string, unknown>) || undefined
+      );
       return response;
     } catch (error) {
       console.error(`BaseApi.getList error for ${endpoint}:`, error);
@@ -123,7 +126,10 @@ export abstract class BaseApi {
     params: P
   ): Promise<PaginationResponse<T>> {
     try {
-      const response = await httpClient.get<PaginationResponse<T>>(`${endpoint}/search`, params);
+      const response = await httpClient.get<PaginationResponse<T>>(
+        `${endpoint}/search`,
+        params as unknown as Record<string, unknown>
+      );
       return response;
     } catch (error) {
       console.error(`BaseApi.search error for ${endpoint}:`, error);
@@ -153,7 +159,7 @@ export abstract class BaseApi {
     format: 'csv' | 'excel' | 'pdf' = 'csv'
   ): Promise<Blob> {
     try {
-      const response = await fetch(`${httpClient.baseURL}${endpoint}/export?format=${format}`, {
+      const response = await fetch(`${httpClient.getBaseURL()}${endpoint}/export?format=${format}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${httpClient.getToken()}`,

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ServiceCatalogApi, ServiceCatalog } from '@/lib/api/service-catalog-api';
+import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import type { ServiceItem } from '@/types/service-catalog';
 
 export const useServiceCatalogData = () => {
-  const [catalogs, setCatalogs] = useState<ServiceCatalog[]>([]);
+  const [catalogs, setCatalogs] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -32,8 +33,8 @@ export const useServiceCatalogData = () => {
   const loadServiceCatalogs = async () => {
     try {
       setLoading(true);
-      const data = await ServiceCatalogApi.getCatalogs();
-      setCatalogs(data);
+      const data = await ServiceCatalogApi.getServices();
+      setCatalogs(data.services || []);
     } catch (error) {
       console.error('加载服务目录失败:', error);
     } finally {
@@ -42,12 +43,14 @@ export const useServiceCatalogData = () => {
   };
 
   const filteredCatalogs = catalogs.filter(catalog => {
+    const desc = (catalog.shortDescription || (catalog as any).description || '').toLowerCase();
     const matchesSearch = searchText
       ? catalog.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        catalog.description.toLowerCase().includes(searchText.toLowerCase())
+        desc.includes(searchText.toLowerCase())
       : true;
-    const matchesCategory = categoryFilter ? catalog.category === categoryFilter : true;
-    const matchesPriority = priorityFilter ? catalog.priority === priorityFilter : true;
+    const categoryLabel = String(catalog.category);
+    const matchesCategory = categoryFilter ? categoryLabel === categoryFilter : true;
+    const matchesPriority = priorityFilter ? (catalog as any).priority === priorityFilter : true;
     return matchesSearch && matchesCategory && matchesPriority;
   });
 

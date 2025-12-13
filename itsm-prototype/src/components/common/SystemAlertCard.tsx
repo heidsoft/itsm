@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, Alert, List, Badge, Button } from 'antd';
 import { AlertTriangle, Bell, X } from 'lucide-react';
-import { SystemAlert } from '../../hooks/useDashboardData';
+import { SystemAlert } from '@/hooks/useDashboardData';
 
 interface SystemAlertCardProps {
   alerts: SystemAlert[];

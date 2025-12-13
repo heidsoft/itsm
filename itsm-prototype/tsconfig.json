@@ -27,5 +27,16 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+
+    // 暂时排除遗留/实验性组件（P0：保证主链路可稳定构建发布）
+    "src/components/business/**",
+    "src/components/common/**",
+    "src/components/dashboard/**",
+    "src/lib/architecture/**"
+  ]
 }

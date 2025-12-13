@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { authService } from '../../auth';
+import AuthService from '@/lib/services/auth-service';
 
 export interface LoginFormProps {
   onSuccess?: () => void;
@@ -51,13 +51,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setError(null);
 
     try {
-      const user = await authService.login({
-        username: formData.username.trim(),
-        password: formData.password,
-        remember_me: formData.remember,
-      });
-
-      if (user) {
+      const ok = await AuthService.login(formData.username.trim(), formData.password);
+      if (ok) {
         onSuccess?.();
         
         // 跳转到指定页面

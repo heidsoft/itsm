@@ -32,7 +32,7 @@ func NewKnowledgeController(knowledgeService *service.KnowledgeService, logger *
 // @Param article body dto.CreateKnowledgeArticleRequest true "文章信息"
 // @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
 // @Failure 400 {object} common.Response
-// @Router /api/knowledge-articles [post]
+// @Router /api/v1/knowledge-articles [post]
 func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 	var req dto.CreateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -81,7 +81,7 @@ func (kc *KnowledgeController) CreateArticle(c *gin.Context) {
 // @Param id path int true "文章ID"
 // @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
 // @Failure 400 {object} common.Response
-// @Router /api/knowledge-articles/{id} [get]
+// @Router /api/v1/knowledge-articles/{id} [get]
 func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -131,7 +131,7 @@ func (kc *KnowledgeController) GetArticle(c *gin.Context) {
 // @Param search query string false "搜索关键词"
 // @Success 200 {object} common.Response{data=dto.KnowledgeArticleListResponse}
 // @Failure 400 {object} common.Response
-// @Router /api/knowledge-articles [get]
+// @Router /api/v1/knowledge-articles [get]
 func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 	var req dto.ListKnowledgeArticlesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -196,7 +196,7 @@ func (kc *KnowledgeController) ListArticles(c *gin.Context) {
 // @Param article body dto.UpdateKnowledgeArticleRequest true "文章信息"
 // @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
 // @Failure 400 {object} common.Response
-// @Router /api/knowledge-articles/{id} [put]
+// @Router /api/v1/knowledge-articles/{id} [put]
 func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -249,7 +249,7 @@ func (kc *KnowledgeController) UpdateArticle(c *gin.Context) {
 // @Param id path int true "文章ID"
 // @Success 200 {object} common.Response
 // @Failure 400 {object} common.Response
-// @Router /api/knowledge-articles/{id} [delete]
+// @Router /api/v1/knowledge-articles/{id} [delete]
 func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -258,7 +258,7 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenantId")
+	tenantID, _ := c.Get("tenant_id")
 
 	err = kc.knowledgeService.DeleteArticle(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
@@ -278,9 +278,9 @@ func (kc *KnowledgeController) DeleteArticle(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} common.Response{data=[]string}
 // @Failure 400 {object} common.Response
-// @Router /api/knowledge-articles/categories [get]
+// @Router /api/v1/knowledge-articles/categories [get]
 func (kc *KnowledgeController) GetCategories(c *gin.Context) {
-	tenantID, _ := c.Get("tenantId")
+	tenantID, _ := c.Get("tenant_id")
 
 	categories, err := kc.knowledgeService.GetCategories(c.Request.Context(), tenantID.(int))
 	if err != nil {
