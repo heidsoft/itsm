@@ -41,9 +41,11 @@ import (
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
+	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
@@ -138,6 +140,8 @@ type Client struct {
 	Project *ProjectClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
+	// ProvisioningTask is the client for interacting with the ProvisioningTask builders.
+	ProvisioningTask *ProvisioningTaskClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -154,6 +158,8 @@ type Client struct {
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
+	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
+	ServiceRequestApproval *ServiceRequestApprovalClient
 	// Tag is the client for interacting with the Tag builders.
 	Tag *TagClient
 	// Team is the client for interacting with the Team builders.
@@ -229,6 +235,7 @@ func (c *Client) init() {
 	c.ProcessVariable = NewProcessVariableClient(c.config)
 	c.Project = NewProjectClient(c.config)
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
+	c.ProvisioningTask = NewProvisioningTaskClient(c.config)
 	c.RootCauseAnalysis = NewRootCauseAnalysisClient(c.config)
 	c.SLAAlertHistory = NewSLAAlertHistoryClient(c.config)
 	c.SLAAlertRule = NewSLAAlertRuleClient(c.config)
@@ -237,6 +244,7 @@ func (c *Client) init() {
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
+	c.ServiceRequestApproval = NewServiceRequestApprovalClient(c.config)
 	c.Tag = NewTagClient(c.config)
 	c.Team = NewTeamClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
@@ -376,6 +384,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProcessVariable:         NewProcessVariableClient(cfg),
 		Project:                 NewProjectClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
+		ProvisioningTask:        NewProvisioningTaskClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
@@ -384,6 +393,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SLAViolation:            NewSLAViolationClient(cfg),
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
+		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
 		Tag:                     NewTagClient(cfg),
 		Team:                    NewTeamClient(cfg),
 		Tenant:                  NewTenantClient(cfg),
@@ -450,6 +460,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProcessVariable:         NewProcessVariableClient(cfg),
 		Project:                 NewProjectClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
+		ProvisioningTask:        NewProvisioningTaskClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
@@ -458,6 +469,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SLAViolation:            NewSLAViolationClient(cfg),
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
+		ServiceRequestApproval:  NewServiceRequestApprovalClient(cfg),
 		Tag:                     NewTagClient(cfg),
 		Team:                    NewTeamClient(cfg),
 		Tenant:                  NewTenantClient(cfg),
@@ -511,12 +523,13 @@ func (c *Client) Use(hooks ...Hook) {
 		c.KnowledgeArticle, c.Message, c.Microservice, c.Notification, c.Problem,
 		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
 		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
-		c.PromptTemplate, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
-		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule,
-		c.TicketAttachment, c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
+		c.PromptTemplate, c.ProvisioningTask, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance,
 	} {
 		n.Use(hooks...)
 	}
@@ -533,12 +546,13 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.KnowledgeArticle, c.Message, c.Microservice, c.Notification, c.Problem,
 		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
 		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
-		c.PromptTemplate, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
-		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule,
-		c.TicketAttachment, c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance,
+		c.PromptTemplate, c.ProvisioningTask, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -607,6 +621,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Project.mutate(ctx, m)
 	case *PromptTemplateMutation:
 		return c.PromptTemplate.mutate(ctx, m)
+	case *ProvisioningTaskMutation:
+		return c.ProvisioningTask.mutate(ctx, m)
 	case *RootCauseAnalysisMutation:
 		return c.RootCauseAnalysis.mutate(ctx, m)
 	case *SLAAlertHistoryMutation:
@@ -623,6 +639,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ServiceCatalog.mutate(ctx, m)
 	case *ServiceRequestMutation:
 		return c.ServiceRequest.mutate(ctx, m)
+	case *ServiceRequestApprovalMutation:
+		return c.ServiceRequestApproval.mutate(ctx, m)
 	case *TagMutation:
 		return c.Tag.mutate(ctx, m)
 	case *TeamMutation:
@@ -5164,6 +5182,139 @@ func (c *PromptTemplateClient) mutate(ctx context.Context, m *PromptTemplateMuta
 	}
 }
 
+// ProvisioningTaskClient is a client for the ProvisioningTask schema.
+type ProvisioningTaskClient struct {
+	config
+}
+
+// NewProvisioningTaskClient returns a client for the ProvisioningTask from the given config.
+func NewProvisioningTaskClient(c config) *ProvisioningTaskClient {
+	return &ProvisioningTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `provisioningtask.Hooks(f(g(h())))`.
+func (c *ProvisioningTaskClient) Use(hooks ...Hook) {
+	c.hooks.ProvisioningTask = append(c.hooks.ProvisioningTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `provisioningtask.Intercept(f(g(h())))`.
+func (c *ProvisioningTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProvisioningTask = append(c.inters.ProvisioningTask, interceptors...)
+}
+
+// Create returns a builder for creating a ProvisioningTask entity.
+func (c *ProvisioningTaskClient) Create() *ProvisioningTaskCreate {
+	mutation := newProvisioningTaskMutation(c.config, OpCreate)
+	return &ProvisioningTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProvisioningTask entities.
+func (c *ProvisioningTaskClient) CreateBulk(builders ...*ProvisioningTaskCreate) *ProvisioningTaskCreateBulk {
+	return &ProvisioningTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProvisioningTaskClient) MapCreateBulk(slice any, setFunc func(*ProvisioningTaskCreate, int)) *ProvisioningTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProvisioningTaskCreateBulk{err: fmt.Errorf("calling to ProvisioningTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProvisioningTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProvisioningTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProvisioningTask.
+func (c *ProvisioningTaskClient) Update() *ProvisioningTaskUpdate {
+	mutation := newProvisioningTaskMutation(c.config, OpUpdate)
+	return &ProvisioningTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProvisioningTaskClient) UpdateOne(pt *ProvisioningTask) *ProvisioningTaskUpdateOne {
+	mutation := newProvisioningTaskMutation(c.config, OpUpdateOne, withProvisioningTask(pt))
+	return &ProvisioningTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProvisioningTaskClient) UpdateOneID(id int) *ProvisioningTaskUpdateOne {
+	mutation := newProvisioningTaskMutation(c.config, OpUpdateOne, withProvisioningTaskID(id))
+	return &ProvisioningTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProvisioningTask.
+func (c *ProvisioningTaskClient) Delete() *ProvisioningTaskDelete {
+	mutation := newProvisioningTaskMutation(c.config, OpDelete)
+	return &ProvisioningTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProvisioningTaskClient) DeleteOne(pt *ProvisioningTask) *ProvisioningTaskDeleteOne {
+	return c.DeleteOneID(pt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProvisioningTaskClient) DeleteOneID(id int) *ProvisioningTaskDeleteOne {
+	builder := c.Delete().Where(provisioningtask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProvisioningTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for ProvisioningTask.
+func (c *ProvisioningTaskClient) Query() *ProvisioningTaskQuery {
+	return &ProvisioningTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProvisioningTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProvisioningTask entity by its id.
+func (c *ProvisioningTaskClient) Get(ctx context.Context, id int) (*ProvisioningTask, error) {
+	return c.Query().Where(provisioningtask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProvisioningTaskClient) GetX(ctx context.Context, id int) *ProvisioningTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ProvisioningTaskClient) Hooks() []Hook {
+	return c.hooks.ProvisioningTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProvisioningTaskClient) Interceptors() []Interceptor {
+	return c.inters.ProvisioningTask
+}
+
+func (c *ProvisioningTaskClient) mutate(ctx context.Context, m *ProvisioningTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProvisioningTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProvisioningTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProvisioningTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProvisioningTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProvisioningTask mutation op: %q", m.Op())
+	}
+}
+
 // RootCauseAnalysisClient is a client for the RootCauseAnalysis schema.
 type RootCauseAnalysisClient struct {
 	config
@@ -6417,6 +6568,139 @@ func (c *ServiceRequestClient) mutate(ctx context.Context, m *ServiceRequestMuta
 		return (&ServiceRequestDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ServiceRequest mutation op: %q", m.Op())
+	}
+}
+
+// ServiceRequestApprovalClient is a client for the ServiceRequestApproval schema.
+type ServiceRequestApprovalClient struct {
+	config
+}
+
+// NewServiceRequestApprovalClient returns a client for the ServiceRequestApproval from the given config.
+func NewServiceRequestApprovalClient(c config) *ServiceRequestApprovalClient {
+	return &ServiceRequestApprovalClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `servicerequestapproval.Hooks(f(g(h())))`.
+func (c *ServiceRequestApprovalClient) Use(hooks ...Hook) {
+	c.hooks.ServiceRequestApproval = append(c.hooks.ServiceRequestApproval, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `servicerequestapproval.Intercept(f(g(h())))`.
+func (c *ServiceRequestApprovalClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ServiceRequestApproval = append(c.inters.ServiceRequestApproval, interceptors...)
+}
+
+// Create returns a builder for creating a ServiceRequestApproval entity.
+func (c *ServiceRequestApprovalClient) Create() *ServiceRequestApprovalCreate {
+	mutation := newServiceRequestApprovalMutation(c.config, OpCreate)
+	return &ServiceRequestApprovalCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ServiceRequestApproval entities.
+func (c *ServiceRequestApprovalClient) CreateBulk(builders ...*ServiceRequestApprovalCreate) *ServiceRequestApprovalCreateBulk {
+	return &ServiceRequestApprovalCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ServiceRequestApprovalClient) MapCreateBulk(slice any, setFunc func(*ServiceRequestApprovalCreate, int)) *ServiceRequestApprovalCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ServiceRequestApprovalCreateBulk{err: fmt.Errorf("calling to ServiceRequestApprovalClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ServiceRequestApprovalCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ServiceRequestApprovalCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ServiceRequestApproval.
+func (c *ServiceRequestApprovalClient) Update() *ServiceRequestApprovalUpdate {
+	mutation := newServiceRequestApprovalMutation(c.config, OpUpdate)
+	return &ServiceRequestApprovalUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ServiceRequestApprovalClient) UpdateOne(sra *ServiceRequestApproval) *ServiceRequestApprovalUpdateOne {
+	mutation := newServiceRequestApprovalMutation(c.config, OpUpdateOne, withServiceRequestApproval(sra))
+	return &ServiceRequestApprovalUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ServiceRequestApprovalClient) UpdateOneID(id int) *ServiceRequestApprovalUpdateOne {
+	mutation := newServiceRequestApprovalMutation(c.config, OpUpdateOne, withServiceRequestApprovalID(id))
+	return &ServiceRequestApprovalUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ServiceRequestApproval.
+func (c *ServiceRequestApprovalClient) Delete() *ServiceRequestApprovalDelete {
+	mutation := newServiceRequestApprovalMutation(c.config, OpDelete)
+	return &ServiceRequestApprovalDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ServiceRequestApprovalClient) DeleteOne(sra *ServiceRequestApproval) *ServiceRequestApprovalDeleteOne {
+	return c.DeleteOneID(sra.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ServiceRequestApprovalClient) DeleteOneID(id int) *ServiceRequestApprovalDeleteOne {
+	builder := c.Delete().Where(servicerequestapproval.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ServiceRequestApprovalDeleteOne{builder}
+}
+
+// Query returns a query builder for ServiceRequestApproval.
+func (c *ServiceRequestApprovalClient) Query() *ServiceRequestApprovalQuery {
+	return &ServiceRequestApprovalQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeServiceRequestApproval},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ServiceRequestApproval entity by its id.
+func (c *ServiceRequestApprovalClient) Get(ctx context.Context, id int) (*ServiceRequestApproval, error) {
+	return c.Query().Where(servicerequestapproval.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ServiceRequestApprovalClient) GetX(ctx context.Context, id int) *ServiceRequestApproval {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ServiceRequestApprovalClient) Hooks() []Hook {
+	return c.hooks.ServiceRequestApproval
+}
+
+// Interceptors returns the client interceptors.
+func (c *ServiceRequestApprovalClient) Interceptors() []Interceptor {
+	return c.inters.ServiceRequestApproval
+}
+
+func (c *ServiceRequestApprovalClient) mutate(ctx context.Context, m *ServiceRequestApprovalMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ServiceRequestApprovalCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ServiceRequestApprovalUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ServiceRequestApprovalUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ServiceRequestApprovalDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ServiceRequestApproval mutation op: %q", m.Op())
 	}
 }
 
@@ -9410,11 +9694,12 @@ type (
 		IncidentRuleExecution, KnowledgeArticle, Message, Microservice, Notification,
 		Problem, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
 		ProcessInstance, ProcessTask, ProcessVariable, Project, PromptTemplate,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant, Ticket,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCategory,
-		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
-		ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
+		ProvisioningTask, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest,
+		ServiceRequestApproval, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Workflow, WorkflowInstance []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
@@ -9423,10 +9708,11 @@ type (
 		IncidentRuleExecution, KnowledgeArticle, Message, Microservice, Notification,
 		Problem, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
 		ProcessInstance, ProcessTask, ProcessVariable, Project, PromptTemplate,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAViolation, ServiceCatalog, ServiceRequest, Tag, Team, Tenant, Ticket,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCategory,
-		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketView,
-		ToolInvocation, User, Workflow, WorkflowInstance []ent.Interceptor
+		ProvisioningTask, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest,
+		ServiceRequestApproval, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Workflow, WorkflowInstance []ent.Interceptor
 	}
 )

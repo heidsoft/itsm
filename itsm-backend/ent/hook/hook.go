@@ -368,6 +368,18 @@ func (f PromptTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PromptTemplateMutation", m)
 }
 
+// The ProvisioningTaskFunc type is an adapter to allow the use of ordinary
+// function as ProvisioningTask mutator.
+type ProvisioningTaskFunc func(context.Context, *ent.ProvisioningTaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProvisioningTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProvisioningTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProvisioningTaskMutation", m)
+}
+
 // The RootCauseAnalysisFunc type is an adapter to allow the use of ordinary
 // function as RootCauseAnalysis mutator.
 type RootCauseAnalysisFunc func(context.Context, *ent.RootCauseAnalysisMutation) (ent.Value, error)
@@ -462,6 +474,18 @@ func (f ServiceRequestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceRequestMutation", m)
+}
+
+// The ServiceRequestApprovalFunc type is an adapter to allow the use of ordinary
+// function as ServiceRequestApproval mutator.
+type ServiceRequestApprovalFunc func(context.Context, *ent.ServiceRequestApprovalMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ServiceRequestApprovalFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ServiceRequestApprovalMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceRequestApprovalMutation", m)
 }
 
 // The TagFunc type is an adapter to allow the use of ordinary

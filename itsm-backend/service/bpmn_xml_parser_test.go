@@ -12,12 +12,13 @@ func TestBPMNParser_ParseXML(t *testing.T) {
 	validXML := `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   id="Definitions_1" 
                   targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_1" name="Sample Process" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="Start"/>
     <bpmn:userTask id="UserTask_1" name="Review Request" assignee="reviewer"/>
-    <bpmn:exclusiveGateway id="Gateway_1" name="Decision" default="Flow_2"/>
+    <bpmn:exclusiveGateway id="Gateway_1" name="Decision" default="Flow_3"/>
     <bpmn:endEvent id="EndEvent_1" name="End"/>
     <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="UserTask_1"/>
     <bpmn:sequenceFlow id="Flow_2" sourceRef="UserTask_1" targetRef="Gateway_1"/>

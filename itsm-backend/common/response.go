@@ -24,6 +24,11 @@ const (
 	NotFoundCode      = 4004
 	BadRequestCode    = 4000
 	InternalErrorCode = 5001
+
+	// Aliases for compatibility
+	NotFoundErrorCode  = NotFoundCode
+	AuthErrorCode      = AuthFailedCode
+	ForbiddenErrorCode = ForbiddenCode
 )
 
 // Success 成功响应
@@ -39,6 +44,8 @@ func Success(c *gin.Context, data interface{}) {
 func Fail(c *gin.Context, code int, message string) {
 	statusCode := http.StatusOK
 	switch code {
+	case ParamErrorCode, ValidationError, BadRequestCode:
+		statusCode = http.StatusBadRequest
 	case AuthFailedCode:
 		statusCode = http.StatusUnauthorized
 	case ForbiddenCode:
@@ -59,6 +66,8 @@ func Fail(c *gin.Context, code int, message string) {
 func FailWithData(c *gin.Context, code int, message string, data interface{}) {
 	statusCode := http.StatusOK
 	switch code {
+	case ParamErrorCode, ValidationError, BadRequestCode:
+		statusCode = http.StatusBadRequest
 	case AuthFailedCode:
 		statusCode = http.StatusUnauthorized
 	case ForbiddenCode:

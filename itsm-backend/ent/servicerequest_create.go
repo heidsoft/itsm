@@ -52,6 +52,20 @@ func (src *ServiceRequestCreate) SetNillableStatus(s *string) *ServiceRequestCre
 	return src
 }
 
+// SetTitle sets the "title" field.
+func (src *ServiceRequestCreate) SetTitle(s string) *ServiceRequestCreate {
+	src.mutation.SetTitle(s)
+	return src
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableTitle(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetTitle(*s)
+	}
+	return src
+}
+
 // SetReason sets the "reason" field.
 func (src *ServiceRequestCreate) SetReason(s string) *ServiceRequestCreate {
 	src.mutation.SetReason(s)
@@ -62,6 +76,130 @@ func (src *ServiceRequestCreate) SetReason(s string) *ServiceRequestCreate {
 func (src *ServiceRequestCreate) SetNillableReason(s *string) *ServiceRequestCreate {
 	if s != nil {
 		src.SetReason(*s)
+	}
+	return src
+}
+
+// SetFormData sets the "form_data" field.
+func (src *ServiceRequestCreate) SetFormData(m map[string]interface{}) *ServiceRequestCreate {
+	src.mutation.SetFormData(m)
+	return src
+}
+
+// SetCostCenter sets the "cost_center" field.
+func (src *ServiceRequestCreate) SetCostCenter(s string) *ServiceRequestCreate {
+	src.mutation.SetCostCenter(s)
+	return src
+}
+
+// SetNillableCostCenter sets the "cost_center" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableCostCenter(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetCostCenter(*s)
+	}
+	return src
+}
+
+// SetDataClassification sets the "data_classification" field.
+func (src *ServiceRequestCreate) SetDataClassification(s string) *ServiceRequestCreate {
+	src.mutation.SetDataClassification(s)
+	return src
+}
+
+// SetNillableDataClassification sets the "data_classification" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableDataClassification(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetDataClassification(*s)
+	}
+	return src
+}
+
+// SetNeedsPublicIP sets the "needs_public_ip" field.
+func (src *ServiceRequestCreate) SetNeedsPublicIP(b bool) *ServiceRequestCreate {
+	src.mutation.SetNeedsPublicIP(b)
+	return src
+}
+
+// SetNillableNeedsPublicIP sets the "needs_public_ip" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableNeedsPublicIP(b *bool) *ServiceRequestCreate {
+	if b != nil {
+		src.SetNeedsPublicIP(*b)
+	}
+	return src
+}
+
+// SetSourceIPWhitelist sets the "source_ip_whitelist" field.
+func (src *ServiceRequestCreate) SetSourceIPWhitelist(s []string) *ServiceRequestCreate {
+	src.mutation.SetSourceIPWhitelist(s)
+	return src
+}
+
+// SetExpireAt sets the "expire_at" field.
+func (src *ServiceRequestCreate) SetExpireAt(t time.Time) *ServiceRequestCreate {
+	src.mutation.SetExpireAt(t)
+	return src
+}
+
+// SetNillableExpireAt sets the "expire_at" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableExpireAt(t *time.Time) *ServiceRequestCreate {
+	if t != nil {
+		src.SetExpireAt(*t)
+	}
+	return src
+}
+
+// SetComplianceAck sets the "compliance_ack" field.
+func (src *ServiceRequestCreate) SetComplianceAck(b bool) *ServiceRequestCreate {
+	src.mutation.SetComplianceAck(b)
+	return src
+}
+
+// SetNillableComplianceAck sets the "compliance_ack" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableComplianceAck(b *bool) *ServiceRequestCreate {
+	if b != nil {
+		src.SetComplianceAck(*b)
+	}
+	return src
+}
+
+// SetCurrentLevel sets the "current_level" field.
+func (src *ServiceRequestCreate) SetCurrentLevel(i int) *ServiceRequestCreate {
+	src.mutation.SetCurrentLevel(i)
+	return src
+}
+
+// SetNillableCurrentLevel sets the "current_level" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableCurrentLevel(i *int) *ServiceRequestCreate {
+	if i != nil {
+		src.SetCurrentLevel(*i)
+	}
+	return src
+}
+
+// SetTotalLevels sets the "total_levels" field.
+func (src *ServiceRequestCreate) SetTotalLevels(i int) *ServiceRequestCreate {
+	src.mutation.SetTotalLevels(i)
+	return src
+}
+
+// SetNillableTotalLevels sets the "total_levels" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableTotalLevels(i *int) *ServiceRequestCreate {
+	if i != nil {
+		src.SetTotalLevels(*i)
+	}
+	return src
+}
+
+// SetLastError sets the "last_error" field.
+func (src *ServiceRequestCreate) SetLastError(s string) *ServiceRequestCreate {
+	src.mutation.SetLastError(s)
+	return src
+}
+
+// SetNillableLastError sets the "last_error" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableLastError(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetLastError(*s)
 	}
 	return src
 }
@@ -133,6 +271,26 @@ func (src *ServiceRequestCreate) defaults() {
 		v := servicerequest.DefaultStatus
 		src.mutation.SetStatus(v)
 	}
+	if _, ok := src.mutation.DataClassification(); !ok {
+		v := servicerequest.DefaultDataClassification
+		src.mutation.SetDataClassification(v)
+	}
+	if _, ok := src.mutation.NeedsPublicIP(); !ok {
+		v := servicerequest.DefaultNeedsPublicIP
+		src.mutation.SetNeedsPublicIP(v)
+	}
+	if _, ok := src.mutation.ComplianceAck(); !ok {
+		v := servicerequest.DefaultComplianceAck
+		src.mutation.SetComplianceAck(v)
+	}
+	if _, ok := src.mutation.CurrentLevel(); !ok {
+		v := servicerequest.DefaultCurrentLevel
+		src.mutation.SetCurrentLevel(v)
+	}
+	if _, ok := src.mutation.TotalLevels(); !ok {
+		v := servicerequest.DefaultTotalLevels
+		src.mutation.SetTotalLevels(v)
+	}
 	if _, ok := src.mutation.CreatedAt(); !ok {
 		v := servicerequest.DefaultCreatedAt()
 		src.mutation.SetCreatedAt(v)
@@ -171,6 +329,21 @@ func (src *ServiceRequestCreate) check() error {
 	}
 	if _, ok := src.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ServiceRequest.status"`)}
+	}
+	if _, ok := src.mutation.DataClassification(); !ok {
+		return &ValidationError{Name: "data_classification", err: errors.New(`ent: missing required field "ServiceRequest.data_classification"`)}
+	}
+	if _, ok := src.mutation.NeedsPublicIP(); !ok {
+		return &ValidationError{Name: "needs_public_ip", err: errors.New(`ent: missing required field "ServiceRequest.needs_public_ip"`)}
+	}
+	if _, ok := src.mutation.ComplianceAck(); !ok {
+		return &ValidationError{Name: "compliance_ack", err: errors.New(`ent: missing required field "ServiceRequest.compliance_ack"`)}
+	}
+	if _, ok := src.mutation.CurrentLevel(); !ok {
+		return &ValidationError{Name: "current_level", err: errors.New(`ent: missing required field "ServiceRequest.current_level"`)}
+	}
+	if _, ok := src.mutation.TotalLevels(); !ok {
+		return &ValidationError{Name: "total_levels", err: errors.New(`ent: missing required field "ServiceRequest.total_levels"`)}
 	}
 	if _, ok := src.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceRequest.created_at"`)}
@@ -220,9 +393,53 @@ func (src *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.Create
 		_spec.SetField(servicerequest.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
+	if value, ok := src.mutation.Title(); ok {
+		_spec.SetField(servicerequest.FieldTitle, field.TypeString, value)
+		_node.Title = value
+	}
 	if value, ok := src.mutation.Reason(); ok {
 		_spec.SetField(servicerequest.FieldReason, field.TypeString, value)
 		_node.Reason = value
+	}
+	if value, ok := src.mutation.FormData(); ok {
+		_spec.SetField(servicerequest.FieldFormData, field.TypeJSON, value)
+		_node.FormData = value
+	}
+	if value, ok := src.mutation.CostCenter(); ok {
+		_spec.SetField(servicerequest.FieldCostCenter, field.TypeString, value)
+		_node.CostCenter = value
+	}
+	if value, ok := src.mutation.DataClassification(); ok {
+		_spec.SetField(servicerequest.FieldDataClassification, field.TypeString, value)
+		_node.DataClassification = value
+	}
+	if value, ok := src.mutation.NeedsPublicIP(); ok {
+		_spec.SetField(servicerequest.FieldNeedsPublicIP, field.TypeBool, value)
+		_node.NeedsPublicIP = value
+	}
+	if value, ok := src.mutation.SourceIPWhitelist(); ok {
+		_spec.SetField(servicerequest.FieldSourceIPWhitelist, field.TypeJSON, value)
+		_node.SourceIPWhitelist = value
+	}
+	if value, ok := src.mutation.ExpireAt(); ok {
+		_spec.SetField(servicerequest.FieldExpireAt, field.TypeTime, value)
+		_node.ExpireAt = value
+	}
+	if value, ok := src.mutation.ComplianceAck(); ok {
+		_spec.SetField(servicerequest.FieldComplianceAck, field.TypeBool, value)
+		_node.ComplianceAck = value
+	}
+	if value, ok := src.mutation.CurrentLevel(); ok {
+		_spec.SetField(servicerequest.FieldCurrentLevel, field.TypeInt, value)
+		_node.CurrentLevel = value
+	}
+	if value, ok := src.mutation.TotalLevels(); ok {
+		_spec.SetField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+		_node.TotalLevels = value
+	}
+	if value, ok := src.mutation.LastError(); ok {
+		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)
+		_node.LastError = value
 	}
 	if value, ok := src.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)

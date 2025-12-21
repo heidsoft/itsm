@@ -111,7 +111,7 @@ func TestAuthController_Login(t *testing.T) {
 				Username: "nonexistent",
 				Password: "password123",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusUnauthorized,
 			expectedCode:   common.AuthFailedCode,
 		},
 		{
@@ -120,7 +120,7 @@ func TestAuthController_Login(t *testing.T) {
 				Username: user.Username,
 				Password: "wrongpassword",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusUnauthorized,
 			expectedCode:   common.AuthFailedCode,
 		},
 		{
@@ -129,7 +129,7 @@ func TestAuthController_Login(t *testing.T) {
 				Username: "",
 				Password: "password123",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 		{
@@ -138,7 +138,7 @@ func TestAuthController_Login(t *testing.T) {
 				Username: user.Username,
 				Password: "",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}
@@ -180,10 +180,15 @@ func TestAuthController_Login(t *testing.T) {
 				// 验证返回的字段
 				assert.NotEmpty(t, data["access_token"])
 				assert.NotEmpty(t, data["refresh_token"])
-				assert.Equal(t, float64(user.ID), data["user_id"])
-				assert.Equal(t, user.Username, data["username"])
-				assert.Equal(t, user.Name, data["name"])
-				assert.Equal(t, float64(tenant.ID), data["tenant_id"])
+				// user / tenant 为对象
+				u, ok := data["user"].(map[string]interface{})
+				require.True(t, ok)
+				assert.Equal(t, float64(user.ID), u["id"])
+				assert.Equal(t, user.Username, u["username"])
+				assert.Equal(t, user.Name, u["name"])
+				ten, ok := data["tenant"].(map[string]interface{})
+				require.True(t, ok)
+				assert.Equal(t, float64(tenant.ID), ten["id"])
 			}
 		})
 	}
@@ -242,7 +247,7 @@ func TestAuthController_RefreshToken(t *testing.T) {
 			request: dto.RefreshTokenRequest{
 				RefreshToken: "invalid_token",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusUnauthorized,
 			expectedCode:   common.AuthFailedCode,
 		},
 		{
@@ -250,7 +255,7 @@ func TestAuthController_RefreshToken(t *testing.T) {
 			request: dto.RefreshTokenRequest{
 				RefreshToken: "",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}
@@ -291,9 +296,7 @@ func TestAuthController_RefreshToken(t *testing.T) {
 
 				// 验证返回的字段
 				assert.NotEmpty(t, data["access_token"])
-				assert.NotEmpty(t, data["refresh_token"])
-				assert.Equal(t, float64(user.ID), data["user_id"])
-				assert.Equal(t, user.Username, data["username"])
+				// RefreshTokenResponse 仅返回 access_token（不做 refresh token 轮换）
 			}
 		})
 	}
@@ -348,7 +351,7 @@ func TestAuthController_LoginWithInactiveUser(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	// 验证响应
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
 	var response common.Response
 	err = json.Unmarshal(w.Body.Bytes(), &response)
@@ -408,7 +411,7 @@ func TestAuthController_LoginWithInactiveTenant(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	// 验证响应
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
 	var response common.Response
 	err = json.Unmarshal(w.Body.Bytes(), &response)
@@ -434,21 +437,21 @@ func TestAuthController_InvalidJSONRequest(t *testing.T) {
 			name:           "登录接口无效JSON",
 			requestBody:    `{"username": "test", "password":}`, // 无效JSON
 			endpoint:       "/api/v1/login",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 		{
 			name:           "刷新令牌接口无效JSON",
 			requestBody:    `{"refresh_token":}`, // 无效JSON
 			endpoint:       "/api/v1/refresh-token",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 		{
 			name:           "登录接口空请求体",
 			requestBody:    "",
 			endpoint:       "/api/v1/login",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}

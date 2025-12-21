@@ -25,6 +25,9 @@ func NewKnowledgeService(client *ent.Client, logger *zap.SugaredLogger) *Knowled
 
 // CreateArticle 创建知识库文章
 func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKnowledgeArticleRequest, tenantID int, authorID int) (*ent.KnowledgeArticle, error) {
+	if strings.TrimSpace(req.Content) == "" {
+		return nil, fmt.Errorf("内容不能为空")
+	}
 	// 将Tags数组转换为字符串
 	tagsStr := ""
 	if len(req.Tags) > 0 {
@@ -85,6 +88,14 @@ func (ks *KnowledgeService) ListArticles(ctx context.Context, req *dto.ListKnowl
 				knowledgearticle.ContentContains(req.Search),
 			),
 		)
+	}
+	// 状态过滤：published/draft（兼容 DTO 中的 Status）
+	if strings.TrimSpace(req.Status) != "" {
+		if strings.ToLower(strings.TrimSpace(req.Status)) == "published" {
+			query = query.Where(knowledgearticle.IsPublished(true))
+		} else if strings.ToLower(strings.TrimSpace(req.Status)) == "draft" {
+			query = query.Where(knowledgearticle.IsPublished(false))
+		}
 	}
 
 	// 获取总数

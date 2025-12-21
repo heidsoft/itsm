@@ -56,5 +56,3 @@ func (TicketAssignmentRule) Fields() []ent.Field {
 func (TicketAssignmentRule) Edges() []ent.Edge {
 	return nil
 }
-
-

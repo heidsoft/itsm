@@ -29,7 +29,7 @@ func (User) Fields() []ent.Field {
             NotEmpty(),
         field.Enum("role").
             Comment("角色").
-            Values("super_admin", "admin", "manager", "agent", "technician", "end_user").
+            Values("super_admin", "admin", "manager", "agent", "technician", "security", "end_user").
             Default("end_user"),
 		field.String("department").
 			Comment("部门").

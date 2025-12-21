@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/servicerequest"
 	"strings"
@@ -25,8 +26,30 @@ type ServiceRequest struct {
 	RequesterID int `json:"requester_id,omitempty"`
 	// 状态
 	Status string `json:"status,omitempty"`
+	// 请求标题
+	Title string `json:"title,omitempty"`
 	// 申请原因
 	Reason string `json:"reason,omitempty"`
+	// 表单数据
+	FormData map[string]interface{} `json:"form_data,omitempty"`
+	// 成本中心
+	CostCenter string `json:"cost_center,omitempty"`
+	// 数据分级：public|internal|confidential
+	DataClassification string `json:"data_classification,omitempty"`
+	// 是否需要公网访问
+	NeedsPublicIP bool `json:"needs_public_ip,omitempty"`
+	// 源IP白名单
+	SourceIPWhitelist []string `json:"source_ip_whitelist,omitempty"`
+	// 到期时间
+	ExpireAt time.Time `json:"expire_at,omitempty"`
+	// 合规条款确认
+	ComplianceAck bool `json:"compliance_ack,omitempty"`
+	// 当前审批级别
+	CurrentLevel int `json:"current_level,omitempty"`
+	// 总审批级别数
+	TotalLevels int `json:"total_levels,omitempty"`
+	// 最近一次错误信息
+	LastError string `json:"last_error,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -39,11 +62,15 @@ func (*ServiceRequest) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldRequesterID:
+		case servicerequest.FieldFormData, servicerequest.FieldSourceIPWhitelist:
+			values[i] = new([]byte)
+		case servicerequest.FieldNeedsPublicIP, servicerequest.FieldComplianceAck:
+			values[i] = new(sql.NullBool)
+		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldRequesterID, servicerequest.FieldCurrentLevel, servicerequest.FieldTotalLevels:
 			values[i] = new(sql.NullInt64)
-		case servicerequest.FieldStatus, servicerequest.FieldReason:
+		case servicerequest.FieldStatus, servicerequest.FieldTitle, servicerequest.FieldReason, servicerequest.FieldCostCenter, servicerequest.FieldDataClassification, servicerequest.FieldLastError:
 			values[i] = new(sql.NullString)
-		case servicerequest.FieldCreatedAt, servicerequest.FieldUpdatedAt:
+		case servicerequest.FieldExpireAt, servicerequest.FieldCreatedAt, servicerequest.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -90,11 +117,81 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sr.Status = value.String
 			}
+		case servicerequest.FieldTitle:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field title", values[i])
+			} else if value.Valid {
+				sr.Title = value.String
+			}
 		case servicerequest.FieldReason:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field reason", values[i])
 			} else if value.Valid {
 				sr.Reason = value.String
+			}
+		case servicerequest.FieldFormData:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field form_data", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sr.FormData); err != nil {
+					return fmt.Errorf("unmarshal field form_data: %w", err)
+				}
+			}
+		case servicerequest.FieldCostCenter:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cost_center", values[i])
+			} else if value.Valid {
+				sr.CostCenter = value.String
+			}
+		case servicerequest.FieldDataClassification:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field data_classification", values[i])
+			} else if value.Valid {
+				sr.DataClassification = value.String
+			}
+		case servicerequest.FieldNeedsPublicIP:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field needs_public_ip", values[i])
+			} else if value.Valid {
+				sr.NeedsPublicIP = value.Bool
+			}
+		case servicerequest.FieldSourceIPWhitelist:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field source_ip_whitelist", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sr.SourceIPWhitelist); err != nil {
+					return fmt.Errorf("unmarshal field source_ip_whitelist: %w", err)
+				}
+			}
+		case servicerequest.FieldExpireAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field expire_at", values[i])
+			} else if value.Valid {
+				sr.ExpireAt = value.Time
+			}
+		case servicerequest.FieldComplianceAck:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field compliance_ack", values[i])
+			} else if value.Valid {
+				sr.ComplianceAck = value.Bool
+			}
+		case servicerequest.FieldCurrentLevel:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field current_level", values[i])
+			} else if value.Valid {
+				sr.CurrentLevel = int(value.Int64)
+			}
+		case servicerequest.FieldTotalLevels:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field total_levels", values[i])
+			} else if value.Valid {
+				sr.TotalLevels = int(value.Int64)
+			}
+		case servicerequest.FieldLastError:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_error", values[i])
+			} else if value.Valid {
+				sr.LastError = value.String
 			}
 		case servicerequest.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -156,8 +253,41 @@ func (sr *ServiceRequest) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(sr.Status)
 	builder.WriteString(", ")
+	builder.WriteString("title=")
+	builder.WriteString(sr.Title)
+	builder.WriteString(", ")
 	builder.WriteString("reason=")
 	builder.WriteString(sr.Reason)
+	builder.WriteString(", ")
+	builder.WriteString("form_data=")
+	builder.WriteString(fmt.Sprintf("%v", sr.FormData))
+	builder.WriteString(", ")
+	builder.WriteString("cost_center=")
+	builder.WriteString(sr.CostCenter)
+	builder.WriteString(", ")
+	builder.WriteString("data_classification=")
+	builder.WriteString(sr.DataClassification)
+	builder.WriteString(", ")
+	builder.WriteString("needs_public_ip=")
+	builder.WriteString(fmt.Sprintf("%v", sr.NeedsPublicIP))
+	builder.WriteString(", ")
+	builder.WriteString("source_ip_whitelist=")
+	builder.WriteString(fmt.Sprintf("%v", sr.SourceIPWhitelist))
+	builder.WriteString(", ")
+	builder.WriteString("expire_at=")
+	builder.WriteString(sr.ExpireAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("compliance_ack=")
+	builder.WriteString(fmt.Sprintf("%v", sr.ComplianceAck))
+	builder.WriteString(", ")
+	builder.WriteString("current_level=")
+	builder.WriteString(fmt.Sprintf("%v", sr.CurrentLevel))
+	builder.WriteString(", ")
+	builder.WriteString("total_levels=")
+	builder.WriteString(fmt.Sprintf("%v", sr.TotalLevels))
+	builder.WriteString(", ")
+	builder.WriteString("last_error=")
+	builder.WriteString(sr.LastError)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(sr.CreatedAt.Format(time.ANSIC))

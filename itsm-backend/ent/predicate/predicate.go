@@ -96,6 +96,9 @@ type Project func(*sql.Selector)
 // PromptTemplate is the predicate function for prompttemplate builders.
 type PromptTemplate func(*sql.Selector)
 
+// ProvisioningTask is the predicate function for provisioningtask builders.
+type ProvisioningTask func(*sql.Selector)
+
 // RootCauseAnalysis is the predicate function for rootcauseanalysis builders.
 type RootCauseAnalysis func(*sql.Selector)
 
@@ -119,6 +122,9 @@ type ServiceCatalog func(*sql.Selector)
 
 // ServiceRequest is the predicate function for servicerequest builders.
 type ServiceRequest func(*sql.Selector)
+
+// ServiceRequestApproval is the predicate function for servicerequestapproval builders.
+type ServiceRequestApproval func(*sql.Selector)
 
 // Tag is the predicate function for tag builders.
 type Tag func(*sql.Selector)

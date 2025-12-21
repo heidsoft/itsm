@@ -195,4 +195,3 @@ func WrapError(err error, code ErrorCode, message string, httpStatus int) *AppEr
 	}
 	return NewAppError(code, message, httpStatus, err)
 }
-

@@ -5,6 +5,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/service"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -43,6 +44,11 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 	user, err := uc.userService.CreateUser(c.Request.Context(), &req)
 	if err != nil {
 		uc.logger.Errorf("创建用户失败: %v", err)
+		// 业务错误：用户名/邮箱重复
+		if strings.Contains(err.Error(), "已存在") {
+			common.Fail(c, common.ParamErrorCode, err.Error())
+			return
+		}
 		common.Fail(c, 5001, "创建用户失败: "+err.Error())
 		return
 	}
@@ -56,7 +62,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		Phone:      user.Phone,
 		Active:     user.Active,
 		TenantID:   user.TenantID,
-    	Role:       string(user.Role),
+		Role:       string(user.Role),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
@@ -127,6 +133,10 @@ func (uc *UserController) GetUser(c *gin.Context) {
 	user, err := uc.userService.GetUserByID(c.Request.Context(), id)
 	if err != nil {
 		uc.logger.Errorf("获取用户详情失败: %v", err)
+		if strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "用户不存在")
+			return
+		}
 		common.Fail(c, 5001, "获取用户详情失败: "+err.Error())
 		return
 	}
@@ -140,7 +150,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 		Phone:      user.Phone,
 		Active:     user.Active,
 		TenantID:   user.TenantID,
-    	Role:       string(user.Role),
+		Role:       string(user.Role),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
@@ -178,6 +188,14 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	user, err := uc.userService.UpdateUser(c.Request.Context(), id, &req)
 	if err != nil {
 		uc.logger.Errorf("更新用户失败: %v", err)
+		if strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "用户不存在")
+			return
+		}
+		if strings.Contains(err.Error(), "已存在") {
+			common.Fail(c, common.ParamErrorCode, err.Error())
+			return
+		}
 		common.Fail(c, 5001, "更新用户失败: "+err.Error())
 		return
 	}
@@ -191,7 +209,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		Phone:      user.Phone,
 		Active:     user.Active,
 		TenantID:   user.TenantID,
-    	Role:       string(user.Role),
+		Role:       string(user.Role),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
@@ -221,6 +239,10 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 	err = uc.userService.DeleteUser(c.Request.Context(), id)
 	if err != nil {
 		uc.logger.Errorf("删除用户失败: %v", err)
+		if strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "用户不存在")
+			return
+		}
 		common.Fail(c, 5001, "删除用户失败: "+err.Error())
 		return
 	}
@@ -258,6 +280,10 @@ func (uc *UserController) ChangeUserStatus(c *gin.Context) {
 	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active)
 	if err != nil {
 		uc.logger.Errorf("更改用户状态失败: %v", err)
+		if strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "用户不存在")
+			return
+		}
 		common.Fail(c, 5001, "更改用户状态失败: "+err.Error())
 		return
 	}
@@ -295,6 +321,10 @@ func (uc *UserController) ResetPassword(c *gin.Context) {
 	err = uc.userService.ResetPassword(c.Request.Context(), id, req.NewPassword)
 	if err != nil {
 		uc.logger.Errorf("重置密码失败: %v", err)
+		if strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "用户不存在")
+			return
+		}
 		common.Fail(c, 5001, "重置密码失败: "+err.Error())
 		return
 	}
@@ -376,9 +406,24 @@ func (uc *UserController) BatchUpdateUsers(c *gin.Context) {
 // @Router /api/v1/users/search [get]
 func (uc *UserController) SearchUsers(c *gin.Context) {
 	var req dto.SearchUsersRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		uc.logger.Errorf("参数绑定失败: %v", err)
-		common.Fail(c, 1001, "参数错误: "+err.Error())
+	// 兼容：测试与部分调用方使用 POST+JSON；也支持 GET+Query
+	if c.Request.Method == "POST" {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			uc.logger.Errorf("参数绑定失败: %v", err)
+			common.Fail(c, 1001, "参数错误: "+err.Error())
+			return
+		}
+	} else {
+		if err := c.ShouldBindQuery(&req); err != nil {
+			uc.logger.Errorf("参数绑定失败: %v", err)
+			common.Fail(c, 1001, "参数错误: "+err.Error())
+			return
+		}
+	}
+
+	// 至少提供一个条件
+	if strings.TrimSpace(req.Keyword) == "" && req.TenantID == 0 {
+		common.Fail(c, 1001, "搜索条件不能为空")
 		return
 	}
 

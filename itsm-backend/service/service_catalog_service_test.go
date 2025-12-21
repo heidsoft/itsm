@@ -27,6 +27,7 @@ func TestServiceCatalogService_GetServiceCatalogs(t *testing.T) {
 		SetDescription("测试服务描述").
 		SetDeliveryTime(3).
 		SetStatus("enabled").
+		SetTenantID(1).
 		Save(ctx)
 
 	assert.NoError(t, err)

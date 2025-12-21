@@ -66,4 +66,3 @@ func (TicketAutomationRule) Edges() []ent.Edge {
 			Comment("创建人"),
 	}
 }
-

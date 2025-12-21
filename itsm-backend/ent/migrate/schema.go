@@ -1041,6 +1041,38 @@ var (
 		Columns:    PromptTemplatesColumns,
 		PrimaryKey: []*schema.Column{PromptTemplatesColumns[0]},
 	}
+	// ProvisioningTasksColumns holds the columns for the "provisioning_tasks" table.
+	ProvisioningTasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "service_request_id", Type: field.TypeInt},
+		{Name: "provider", Type: field.TypeString, Default: "alicloud"},
+		{Name: "resource_type", Type: field.TypeString, Default: "ecs"},
+		{Name: "payload", Type: field.TypeJSON, Nullable: true},
+		{Name: "result", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProvisioningTasksTable holds the schema information for the "provisioning_tasks" table.
+	ProvisioningTasksTable = &schema.Table{
+		Name:       "provisioning_tasks",
+		Columns:    ProvisioningTasksColumns,
+		PrimaryKey: []*schema.Column{ProvisioningTasksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "provisioningtask_tenant_id_service_request_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProvisioningTasksColumns[1], ProvisioningTasksColumns[2]},
+			},
+			{
+				Name:    "provisioningtask_tenant_id_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProvisioningTasksColumns[1], ProvisioningTasksColumns[7], ProvisioningTasksColumns[9]},
+			},
+		},
+	}
 	// RootCauseAnalysesColumns holds the columns for the "root_cause_analyses" table.
 	RootCauseAnalysesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1249,8 +1281,19 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "catalog_id", Type: field.TypeInt},
 		{Name: "requester_id", Type: field.TypeInt},
-		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "status", Type: field.TypeString, Default: "submitted"},
+		{Name: "title", Type: field.TypeString, Nullable: true},
 		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "form_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "cost_center", Type: field.TypeString, Nullable: true},
+		{Name: "data_classification", Type: field.TypeString, Default: "internal"},
+		{Name: "needs_public_ip", Type: field.TypeBool, Default: false},
+		{Name: "source_ip_whitelist", Type: field.TypeJSON, Nullable: true},
+		{Name: "expire_at", Type: field.TypeTime, Nullable: true},
+		{Name: "compliance_ack", Type: field.TypeBool, Default: false},
+		{Name: "current_level", Type: field.TypeInt, Default: 1},
+		{Name: "total_levels", Type: field.TypeInt, Default: 3},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -1263,12 +1306,66 @@ var (
 			{
 				Name:    "servicerequest_tenant_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[6]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[17]},
 			},
 			{
 				Name:    "servicerequest_tenant_id_requester_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[3], ServiceRequestsColumns[6]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[3], ServiceRequestsColumns[17]},
+			},
+			{
+				Name:    "servicerequest_tenant_id_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[4], ServiceRequestsColumns[17]},
+			},
+		},
+	}
+	// ServiceRequestApprovalsColumns holds the columns for the "service_request_approvals" table.
+	ServiceRequestApprovalsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "service_request_id", Type: field.TypeInt},
+		{Name: "level", Type: field.TypeInt},
+		{Name: "step", Type: field.TypeString, Nullable: true},
+		{Name: "node", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "approver_id", Type: field.TypeInt, Nullable: true},
+		{Name: "approver_name", Type: field.TypeString, Nullable: true},
+		{Name: "action", Type: field.TypeString, Nullable: true},
+		{Name: "comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "timeout_hours", Type: field.TypeInt, Default: 24},
+		{Name: "due_at", Type: field.TypeTime, Nullable: true},
+		{Name: "is_escalated", Type: field.TypeBool, Default: false},
+		{Name: "delegated_to_id", Type: field.TypeInt, Nullable: true},
+		{Name: "escalation_reason", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ServiceRequestApprovalsTable holds the schema information for the "service_request_approvals" table.
+	ServiceRequestApprovalsTable = &schema.Table{
+		Name:       "service_request_approvals",
+		Columns:    ServiceRequestApprovalsColumns,
+		PrimaryKey: []*schema.Column{ServiceRequestApprovalsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "servicerequestapproval_tenant_id_service_request_id_level",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestApprovalsColumns[1], ServiceRequestApprovalsColumns[2], ServiceRequestApprovalsColumns[3]},
+			},
+			{
+				Name:    "servicerequestapproval_tenant_id_service_request_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestApprovalsColumns[1], ServiceRequestApprovalsColumns[2], ServiceRequestApprovalsColumns[6]},
+			},
+			{
+				Name:    "servicerequestapproval_due_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestApprovalsColumns[12]},
+			},
+			{
+				Name:    "servicerequestapproval_status_due_at",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestApprovalsColumns[6], ServiceRequestApprovalsColumns[12]},
 			},
 		},
 	}
@@ -1704,7 +1801,7 @@ var (
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"super_admin", "admin", "manager", "agent", "technician", "end_user"}, Default: "end_user"},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"super_admin", "admin", "manager", "agent", "technician", "security", "end_user"}, Default: "end_user"},
 		{Name: "department", Type: field.TypeString, Nullable: true},
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "password_hash", Type: field.TypeString},
@@ -1981,6 +2078,7 @@ var (
 		ProcessVariablesTable,
 		ProjectsTable,
 		PromptTemplatesTable,
+		ProvisioningTasksTable,
 		RootCauseAnalysesTable,
 		SLAAlertHistoriesTable,
 		SLAAlertRulesTable,
@@ -1989,6 +2087,7 @@ var (
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
+		ServiceRequestApprovalsTable,
 		TagsTable,
 		TeamsTable,
 		TenantsTable,

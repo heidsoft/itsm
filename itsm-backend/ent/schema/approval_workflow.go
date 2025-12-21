@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"entgo.io/ent"
-	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 )
 
 // ApprovalWorkflow holds the schema definition for the ApprovalWorkflow entity.
@@ -54,4 +54,3 @@ func (ApprovalWorkflow) Edges() []ent.Edge {
 			Comment("审批记录"),
 	}
 }
-
