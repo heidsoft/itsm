@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"entgo.io/ent"
-	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 )
 
 // SLAAlertHistory holds the schema definition for the SLAAlertHistory entity.
@@ -75,4 +75,3 @@ func (SLAAlertHistory) Edges() []ent.Edge {
 			Comment("关联的预警规则"),
 	}
 }
-

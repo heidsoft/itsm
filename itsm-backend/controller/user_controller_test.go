@@ -33,8 +33,8 @@ func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserContr
 	// 创建logger
 	logger := zaptest.NewLogger(t).Sugar()
 
-    // 创建服务
-    userService := service.NewUserService(client, logger)
+	// 创建服务
+	userService := service.NewUserService(client, logger)
 
 	// 创建控制器
 	userController := NewUserController(userService, logger)
@@ -133,8 +133,8 @@ func TestUserController_CreateUser(t *testing.T) {
 				Password:   "password123",
 				TenantID:   tenant.ID,
 			},
-			expectedStatus: http.StatusOK,
-			expectedCode:   common.InternalErrorCode,
+			expectedStatus: http.StatusBadRequest,
+			expectedCode:   common.ParamErrorCode,
 		},
 		{
 			name: "邮箱格式错误",
@@ -147,7 +147,7 @@ func TestUserController_CreateUser(t *testing.T) {
 				Password:   "password123",
 				TenantID:   tenant.ID,
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 		{
@@ -161,7 +161,7 @@ func TestUserController_CreateUser(t *testing.T) {
 				Password:   "", // 空密码
 				TenantID:   tenant.ID,
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}
@@ -243,7 +243,10 @@ func TestUserController_ListUsers(t *testing.T) {
 			if response.Code == common.SuccessCode {
 				data := response.Data.(map[string]interface{})
 				assert.Contains(t, data, "users")
-				assert.Contains(t, data, "total")
+				// 统一分页结构：data.pagination.total
+				p, ok := data["pagination"].(map[string]interface{})
+				require.True(t, ok)
+				assert.Contains(t, p, "total")
 			}
 		})
 	}
@@ -271,13 +274,13 @@ func TestUserController_GetUser(t *testing.T) {
 		{
 			name:           "获取不存在的用户",
 			userID:         "999",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
 		},
 		{
 			name:           "无效的用户ID",
 			userID:         "invalid",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}
@@ -330,7 +333,7 @@ func TestUserController_UpdateUser(t *testing.T) {
 			request: dto.UpdateUserRequest{
 				Name: "Non-existent User",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
 		},
 		{
@@ -339,7 +342,7 @@ func TestUserController_UpdateUser(t *testing.T) {
 			request: dto.UpdateUserRequest{
 				Name: "Invalid ID User",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}
@@ -387,13 +390,13 @@ func TestUserController_DeleteUser(t *testing.T) {
 		{
 			name:           "删除不存在的用户",
 			userID:         "999",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
 		},
 		{
 			name:           "无效的用户ID",
 			userID:         "invalid",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 	}
@@ -519,7 +522,7 @@ func TestUserController_ChangeUserStatus(t *testing.T) {
 			request: dto.ChangeUserStatusRequest{
 				Active: true,
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
 		},
 	}
@@ -574,7 +577,7 @@ func TestUserController_ResetPassword(t *testing.T) {
 			request: dto.ResetPasswordRequest{
 				NewPassword: "123", // 太短
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 			expectedCode:   common.ParamErrorCode,
 		},
 		{
@@ -583,7 +586,7 @@ func TestUserController_ResetPassword(t *testing.T) {
 			request: dto.ResetPasswordRequest{
 				NewPassword: "newpassword123",
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNotFound,
 			expectedCode:   common.NotFoundCode,
 		},
 	}
@@ -618,13 +621,13 @@ func BenchmarkUserController_CreateUser(b *testing.B) {
 	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-    // 创建logger
-    logger := zaptest.NewLogger(b).Sugar()
+	// 创建logger
+	logger := zaptest.NewLogger(b).Sugar()
 
 	// 创建服务
 	userService := service.NewUserService(client, logger)
 
-    // 复用基准测试 logger
+	// 复用基准测试 logger
 
 	// 创建控制器
 	userController := NewUserController(userService, logger)
@@ -678,13 +681,13 @@ func BenchmarkUserController_ListUsers(b *testing.B) {
 	client := enttest.Open(b, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-    // 创建logger
-    logger := zaptest.NewLogger(b).Sugar()
+	// 创建logger
+	logger := zaptest.NewLogger(b).Sugar()
 
 	// 创建服务
 	userService := service.NewUserService(client, logger)
 
-    // 复用基准测试 logger
+	// 复用基准测试 logger
 
 	// 创建控制器
 	userController := NewUserController(userService, logger)

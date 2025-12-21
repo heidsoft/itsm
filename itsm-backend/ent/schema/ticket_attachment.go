@@ -66,4 +66,3 @@ func (TicketAttachment) Edges() []ent.Edge {
 			Comment("上传人"),
 	}
 }
-

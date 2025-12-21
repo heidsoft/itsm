@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/internal/api"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -52,25 +53,25 @@ func (c *IncidentController) CreateIncident(ctx *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		c.logger.Errorw("Invalid request body", "error", err)
-		common.Fail(ctx, common.ParamErrorCode, "请求参数无效")
+		api.Error(ctx, common.ParamErrorCode, "请求参数无效")
 		return
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
 		c.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+		api.Error(ctx, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
 
 	response, err := c.incidentService.CreateIncident(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Failed to create incident", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "创建事件失败")
+		api.Error(ctx, common.InternalErrorCode, "创建事件失败")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "创建事件成功", response)
+	api.Success(ctx, response)
 }
 
 // GetIncident 获取事件详情
@@ -88,7 +89,7 @@ func (c *IncidentController) GetIncident(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的事件ID")
+		api.Error(ctx, common.ParamErrorCode, "无效的事件ID")
 		return
 	}
 
@@ -398,10 +399,12 @@ func (c *IncidentController) GetIncidentEvents(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 实现GetIncidentEvents方法，使用id和tenantID
-	_ = id
-	_ = tenantID
-	events := []interface{}{}
+	events, err := c.incidentService.GetIncidentEvents(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to get incident events", "error", err, "incident_id", id)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件活动记录失败")
+		return
+	}
 
 	common.SuccessWithMessage(ctx, "获取事件活动记录成功", events)
 }
@@ -432,10 +435,12 @@ func (c *IncidentController) GetIncidentAlerts(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 实现GetIncidentAlerts方法，使用id和tenantID
-	_ = id
-	_ = tenantID
-	alerts := []interface{}{}
+	alerts, err := c.incidentService.GetIncidentAlerts(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to get incident alerts", "error", err, "incident_id", id)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件告警失败")
+		return
+	}
 
 	common.SuccessWithMessage(ctx, "获取事件告警成功", alerts)
 }
@@ -460,10 +465,12 @@ func (c *IncidentController) GetIncidentMetrics(ctx *gin.Context) {
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
-	// TODO: 实现GetIncidentMetrics方法
-	_ = id
-	_ = tenantID
-	metrics := []interface{}{}
+	metrics, err := c.incidentService.GetIncidentMetrics(ctx.Request.Context(), id, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to get incident metrics", "error", err, "incident_id", id)
+		common.Fail(ctx, common.InternalErrorCode, "获取事件指标失败")
+		return
+	}
 
 	common.SuccessWithMessage(ctx, "获取事件指标成功", metrics)
 }

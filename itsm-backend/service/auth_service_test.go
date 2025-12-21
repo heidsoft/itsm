@@ -225,6 +225,7 @@ func TestAuthService_GetUserTenants(t *testing.T) {
 	// 创建多个测试租户
 	tenant1, err := client.Tenant.Create().
 		SetName("Tenant 1").
+		SetCode("tenant1").
 		SetDomain("tenant1.com").
 		SetStatus("active").
 		Save(ctx)

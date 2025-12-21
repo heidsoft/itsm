@@ -19,6 +19,16 @@ func GenerateUUID() string {
 	return uuid.New().String()
 }
 
+// GenerateRequestID 生成请求ID
+func GenerateRequestID() string {
+	return uuid.New().String()
+}
+
+// GetTimestamp 获取当前时间戳字符串
+func GetTimestamp() string {
+	return time.Now().Format("2006-01-02 15:04:05")
+}
+
 // GenerateShortID 生成短ID（8位）
 func GenerateShortID() string {
 	return GenerateUUID()[:8]
@@ -82,7 +92,7 @@ func InSlice(item interface{}, slice interface{}) bool {
 func RemoveDuplicates(slice []string) []string {
 	keys := make(map[string]bool)
 	var result []string
-	
+
 	for _, item := range slice {
 		if !keys[item] {
 			keys[item] = true
@@ -142,13 +152,13 @@ func ParseTime(timeStr string) (time.Time, error) {
 		time.RFC3339,
 		"2006-01-02",
 	}
-	
+
 	for _, layout := range layouts {
 		if t, err := time.Parse(layout, timeStr); err == nil {
 			return t, nil
 		}
 	}
-	
+
 	return time.Time{}, fmt.Errorf("无法解析时间格式: %s", timeStr)
 }
 
@@ -156,7 +166,7 @@ func ParseTime(timeStr string) (time.Time, error) {
 func GetTimeRange(rangeType string) (time.Time, time.Time) {
 	now := time.Now()
 	var start, end time.Time
-	
+
 	switch rangeType {
 	case "today":
 		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
@@ -185,7 +195,7 @@ func GetTimeRange(rangeType string) (time.Time, time.Time) {
 		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		end = start.Add(24 * time.Hour)
 	}
-	
+
 	return start, end
 }
 
@@ -246,7 +256,7 @@ func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
 	}
-	
+
 	v := reflect.ValueOf(value)
 	switch v.Kind() {
 	case reflect.String:

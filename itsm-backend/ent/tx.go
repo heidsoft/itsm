@@ -72,6 +72,8 @@ type Tx struct {
 	Project *ProjectClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
 	PromptTemplate *PromptTemplateClient
+	// ProvisioningTask is the client for interacting with the ProvisioningTask builders.
+	ProvisioningTask *ProvisioningTaskClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -88,6 +90,8 @@ type Tx struct {
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceRequest is the client for interacting with the ServiceRequest builders.
 	ServiceRequest *ServiceRequestClient
+	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
+	ServiceRequestApproval *ServiceRequestApprovalClient
 	// Tag is the client for interacting with the Tag builders.
 	Tag *TagClient
 	// Team is the client for interacting with the Team builders.
@@ -283,6 +287,7 @@ func (tx *Tx) init() {
 	tx.ProcessVariable = NewProcessVariableClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
+	tx.ProvisioningTask = NewProvisioningTaskClient(tx.config)
 	tx.RootCauseAnalysis = NewRootCauseAnalysisClient(tx.config)
 	tx.SLAAlertHistory = NewSLAAlertHistoryClient(tx.config)
 	tx.SLAAlertRule = NewSLAAlertRuleClient(tx.config)
@@ -291,6 +296,7 @@ func (tx *Tx) init() {
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
+	tx.ServiceRequestApproval = NewServiceRequestApprovalClient(tx.config)
 	tx.Tag = NewTagClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)

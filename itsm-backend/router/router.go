@@ -6,6 +6,16 @@ import (
 	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
+	"itsm-backend/internal/domain/ai"
+	"itsm-backend/internal/domain/change"
+	"itsm-backend/internal/domain/cmdb"
+	domainCommon "itsm-backend/internal/domain/common"
+	"itsm-backend/internal/domain/incident"
+	"itsm-backend/internal/domain/knowledge"
+	"itsm-backend/internal/domain/problem"
+	"itsm-backend/internal/domain/service_catalog"
+	"itsm-backend/internal/domain/service_request"
+	"itsm-backend/internal/domain/sla"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -28,24 +38,13 @@ type RouterConfig struct {
 	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
 	TicketViewController            *controller.TicketViewController
 	IncidentController              *controller.IncidentController
-	SLAController                   *controller.SLAController
 	ApprovalController              *controller.ApprovalController
-	AnalyticsController             *controller.AnalyticsController
-	PredictionController            *controller.PredictionController
-	RootCauseController             *controller.RootCauseController
-	AuthController                  *controller.AuthController
-	UserController                  *controller.UserController
-	AIController                    *controller.AIController
-	AuditLogController              *controller.AuditLogController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	DashboardHandler                *handlers.DashboardHandler
 
-	// New Controllers (uncomment after ent generate)
-	DepartmentController  *controller.DepartmentController
+	// Organization & Project
 	ProjectController     *controller.ProjectController
 	ApplicationController *controller.ApplicationController
-	TeamController        *controller.TeamController
-	TagController         *controller.TagController
 
 	// Ticket related controllers
 	TicketCategoryController *controller.TicketCategoryController
@@ -53,11 +52,23 @@ type RouterConfig struct {
 
 	// Additional domain controllers
 	ServiceController        *controller.ServiceController
-	CMDBController           *controller.CMDBController
-	KnowledgeController      *controller.KnowledgeController
 	ProblemController        *controller.ProblemController
 	ChangeController         *controller.ChangeController
 	ChangeApprovalController *controller.ChangeApprovalController
+	ProvisioningController   *controller.ProvisioningController
+
+	// Domain Handlers
+	ServiceCatalogHandler *service_catalog.Handler
+	ServiceRequestHandler *service_request.Handler
+
+	IncidentHandler  *incident.Handler
+	ProblemHandler   *problem.Handler
+	ChangeHandler    *change.Handler
+	CMDBHandler      *cmdb.Handler
+	KnowledgeHandler *knowledge.Handler
+	SLAHandler       *sla.Handler
+	AIHandler        *ai.Handler
+	CommonHandler    *domainCommon.Handler
 }
 
 // SetupRoutes 设置路由
@@ -75,14 +86,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	r.Use(middleware.XSSProtectionMiddleware())
 	r.Use(middleware.RequestSizeMiddleware(10 * 1024 * 1024)) // 10MB限制
 
-	// 审计中间件
-	r.Use(middleware.AuditMiddleware(config.Client))
-
 	// 公共路由（无需认证）
 	public := r.Group("/api/v1")
 	{
-		public.POST("/login", config.AuthController.Login)
-		public.POST("/refresh-token", config.AuthController.RefreshToken)
+		if config.CommonHandler != nil {
+			public.POST("/auth/login", config.CommonHandler.Login)
+		}
 
 		// 系统状态
 		public.GET("/health", func(c *gin.Context) {
@@ -101,10 +110,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// 租户中间件
 		tenant := auth.Use(middleware.TenantMiddleware(config.Client))
 
-		// 工单分类管理
+		// ==================== Ticket Categories & Tags ====================
 		if config.TicketCategoryController != nil {
 			categories := tenant.(*gin.RouterGroup).Group("/ticket-categories")
-			categories.Use(middleware.RequirePermission("ticket_category", "read"))
 			{
 				categories.GET("", config.TicketCategoryController.ListCategories)
 				categories.POST("", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryController.CreateCategory)
@@ -115,10 +123,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-		// 工单标签管理
 		if config.TicketTagController != nil {
 			tags := tenant.(*gin.RouterGroup).Group("/ticket-tags")
-			tags.Use(middleware.RequirePermission("ticket_tag", "read"))
 			{
 				tags.GET("", config.TicketTagController.ListTags)
 				tags.POST("", middleware.RequirePermission("ticket_tag", "create"), config.TicketTagController.CreateTag)
@@ -128,97 +134,25 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
-		// 工单模板管理
-		templates := tenant.(*gin.RouterGroup).Group("/ticket-templates")
-		templates.Use(middleware.RequirePermission("ticket_template", "read"))
-		{
-			templates.GET("", config.TicketController.GetTicketTemplates)
-			templates.POST("", middleware.RequirePermission("ticket_template", "create"), config.TicketController.CreateTicketTemplate)
-			templates.PUT("/:id", middleware.RequirePermission("ticket_template", "update"), config.TicketController.UpdateTicketTemplate)
-			templates.DELETE("/:id", middleware.RequirePermission("ticket_template", "delete"), config.TicketController.DeleteTicketTemplate)
-		}
-
-		// 工单管理
+		// ==================== Tickets ====================
 		tickets := tenant.(*gin.RouterGroup).Group("/tickets")
 		{
 			tickets.GET("", config.TicketController.ListTickets)
 			tickets.POST("", config.TicketController.CreateTicket)
 
-			// 工单视图路由 - 必须在 /:id 之前，避免路由冲突
 			if config.TicketViewController != nil {
-				tickets.GET("/views", middleware.RequirePermission("ticket", "read"), config.TicketViewController.ListTicketViews)
-				tickets.POST("/views", middleware.RequirePermission("ticket", "read"), config.TicketViewController.CreateTicketView)
-				tickets.GET("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.GetTicketView)
-				tickets.PUT("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.UpdateTicketView)
-				tickets.DELETE("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewController.DeleteTicketView)
-				tickets.POST("/views/:id/share", middleware.RequirePermission("ticket", "read"), config.TicketViewController.ShareTicketView)
+				tickets.GET("/views", config.TicketViewController.ListTicketViews)
+				tickets.POST("/views", config.TicketViewController.CreateTicketView)
+				tickets.GET("/views/:id", config.TicketViewController.GetTicketView)
+				tickets.PUT("/views/:id", config.TicketViewController.UpdateTicketView)
+				tickets.DELETE("/views/:id", config.TicketViewController.DeleteTicketView)
 			}
 
-			// 工单查询和统计 - 必须在 /:id 之前
 			tickets.GET("/search", config.TicketController.SearchTickets)
 			tickets.GET("/stats", config.TicketController.GetTicketStats)
-			tickets.GET("/analytics", config.TicketController.GetTicketAnalytics)
-			tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
-			tickets.GET("/templates", config.TicketController.GetTicketTemplates)
-			tickets.POST("/templates", config.TicketController.CreateTicketTemplate)
-			tickets.POST("/export", config.TicketController.ExportTickets)
-			tickets.POST("/import", config.TicketController.ImportTickets)
-
-			// 工单基础CRUD操作 - 放在最后，避免与其他路由冲突
 			tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
 			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
-
-			// 工单操作
-			tickets.POST("/:id/assign", config.TicketController.AssignTicket)
-			tickets.POST("/:id/escalate", config.TicketController.EscalateTicket)
-			tickets.POST("/:id/resolve", config.TicketController.ResolveTicket)
-			tickets.POST("/:id/close", config.TicketController.CloseTicket)
-
-			// 工单评论
-			if config.TicketCommentController != nil {
-				tickets.GET("/:id/comments", config.TicketCommentController.ListTicketComments)
-				tickets.POST("/:id/comments", config.TicketCommentController.CreateTicketComment)
-				tickets.PUT("/:id/comments/:comment_id", config.TicketCommentController.UpdateTicketComment)
-				tickets.DELETE("/:id/comments/:comment_id", config.TicketCommentController.DeleteTicketComment)
-			}
-
-			// 工单附件
-			if config.TicketAttachmentController != nil {
-				tickets.GET("/:id/attachments", config.TicketAttachmentController.ListTicketAttachments)
-				tickets.POST("/:id/attachments", config.TicketAttachmentController.UploadAttachment)
-				tickets.GET("/:id/attachments/:attachment_id", config.TicketAttachmentController.DownloadAttachment)
-				tickets.GET("/:id/attachments/:attachment_id/preview", config.TicketAttachmentController.PreviewAttachment)
-				tickets.DELETE("/:id/attachments/:attachment_id", config.TicketAttachmentController.DeleteAttachment)
-			}
-
-			// 工单通知
-			if config.TicketNotificationController != nil {
-				tickets.GET("/:id/notifications", config.TicketNotificationController.ListTicketNotifications)
-				tickets.POST("/:id/notifications", config.TicketNotificationController.SendTicketNotification)
-			}
-
-			// 工单评分
-			if config.TicketRatingController != nil {
-				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
-				tickets.GET("/:id/rating", config.TicketRatingController.GetRating)
-				// rating-stats 已在上面定义
-			}
-
-			// 智能分配
-			if config.TicketAssignmentSmartController != nil {
-				tickets.POST("/:id/auto-assign", middleware.RequirePermission("ticket", "assign"), config.TicketAssignmentSmartController.AutoAssign)
-				tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("ticket", "read"), config.TicketAssignmentSmartController.GetAssignRecommendations)
-				tickets.GET("/assignment-rules", middleware.RequirePermission("ticket", "read"), config.TicketAssignmentSmartController.ListAssignmentRules)
-				tickets.POST("/assignment-rules", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.CreateAssignmentRule)
-				tickets.GET("/assignment-rules/:id", middleware.RequirePermission("ticket", "read"), config.TicketAssignmentSmartController.GetAssignmentRule)
-				tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.UpdateAssignmentRule)
-				tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.DeleteAssignmentRule)
-				tickets.POST("/assignment-rules/test", middleware.RequirePermission("ticket", "admin"), config.TicketAssignmentSmartController.TestAssignmentRule)
-			}
-
-			// 批量操作（当前未实现批量更新，避免注册导致编译错误）
-			// 注意：export 和 import 已在上面定义
 
 			// 子任务管理
 			tickets.GET("/:id/subtasks", config.TicketController.GetSubtasks)
@@ -228,286 +162,165 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			// 审批流程管理
 			if config.ApprovalController != nil {
-				tickets.POST("/approval/workflows", config.ApprovalController.CreateWorkflow)
-				tickets.GET("/approval/workflows", config.ApprovalController.ListWorkflows)
-				tickets.GET("/approval/workflows/:id", config.ApprovalController.GetWorkflow)
-				tickets.PUT("/approval/workflows/:id", config.ApprovalController.UpdateWorkflow)
-				tickets.DELETE("/approval/workflows/:id", config.ApprovalController.DeleteWorkflow)
-				tickets.GET("/approval/records", config.ApprovalController.GetApprovalRecords)
 				tickets.POST("/approval/submit", config.ApprovalController.SubmitApproval)
-			}
-
-			// 深度数据分析
-			if config.AnalyticsController != nil {
-				tickets.POST("/analytics/deep", config.AnalyticsController.GetDeepAnalytics)
-				tickets.POST("/analytics/export", config.AnalyticsController.ExportAnalytics)
-			}
-
-			// 趋势预测
-			if config.PredictionController != nil {
-				tickets.POST("/prediction/trend", config.PredictionController.GetTrendPrediction)
-				tickets.POST("/prediction/export", config.PredictionController.ExportPredictionReport)
-			}
-
-			// 根因分析
-			if config.RootCauseController != nil {
-				tickets.POST("/:id/root-cause/analyze", config.RootCauseController.AnalyzeTicket)
-				tickets.GET("/:id/root-cause/report", config.RootCauseController.GetAnalysisReport)
-				tickets.POST("/:id/root-cause/:rootCauseId/confirm", config.RootCauseController.ConfirmRootCause)
-				tickets.POST("/:id/root-cause/:rootCauseId/resolve", config.RootCauseController.ResolveRootCause)
-			}
-
-			// 依赖关系影响分析
-			if config.TicketDependencyController != nil {
-				tickets.POST("/:id/dependency-impact", config.TicketDependencyController.AnalyzeDependencyImpact)
+				tickets.GET("/approval/records", config.ApprovalController.GetApprovalRecords)
 			}
 		}
 
-		// 事件管理
-		incidents := tenant.(*gin.RouterGroup).Group("/incidents")
-		{
-			// 控制器方法与现有实现对齐
-			incidents.GET("", config.IncidentController.ListIncidents)
-			incidents.POST("", config.IncidentController.CreateIncident)
-			incidents.GET("/stats", config.IncidentController.GetIncidentStats)
-			incidents.GET("/:id", config.IncidentController.GetIncident)
-			incidents.PUT("/:id", config.IncidentController.UpdateIncident)
-			// incidents.POST("/:id/close", config.IncidentController.CloseIncident) // TODO: 实现CloseIncident方法
-		}
-
-		// SLA管理
-		sla := tenant.(*gin.RouterGroup).Group("/sla")
-		{
-			sla.POST("/definitions", config.SLAController.CreateSLADefinition)
-			sla.GET("/definitions/:id", config.SLAController.GetSLADefinition)
-			sla.PUT("/definitions/:id", config.SLAController.UpdateSLADefinition)
-			sla.DELETE("/definitions/:id", config.SLAController.DeleteSLADefinition)
-			sla.GET("/definitions", config.SLAController.ListSLADefinitions)
-			sla.POST("/compliance/:ticketId", config.SLAController.CheckSLACompliance)
-			sla.GET("/metrics", config.SLAController.GetSLAMetrics)
-			sla.GET("/violations", config.SLAController.GetSLAViolations)
-			sla.PUT("/violations/:id", config.SLAController.UpdateViolationStatus)
-			sla.POST("/monitoring", config.SLAController.GetSLAMonitoring)
-
-			// SLA预警规则
-			sla.POST("/alert-rules", config.SLAController.CreateAlertRule)
-			sla.GET("/alert-rules", config.SLAController.ListAlertRules)
-			sla.GET("/alert-rules/:id", config.SLAController.GetAlertRule)
-			sla.PUT("/alert-rules/:id", config.SLAController.UpdateAlertRule)
-			sla.DELETE("/alert-rules/:id", config.SLAController.DeleteAlertRule)
-			sla.POST("/alert-history", config.SLAController.GetAlertHistory)
-		}
-
-		// 用户管理
-		users := tenant.(*gin.RouterGroup).Group("/users")
-		{
-			users.GET("", config.UserController.ListUsers)
-			users.GET("/:id", config.UserController.GetUser)
-			users.PUT("/:id", config.UserController.UpdateUser)
-			users.DELETE("/:id", config.UserController.DeleteUser)
-			// 用户通知偏好
-			if config.TicketNotificationController != nil {
-				users.GET("/:id/notification-preferences", config.TicketNotificationController.GetNotificationPreferences)
-				users.PUT("/:id/notification-preferences", config.TicketNotificationController.UpdateNotificationPreferences)
-			}
-		}
-
-		// 通知管理
-		if config.TicketNotificationController != nil {
-			notifications := tenant.(*gin.RouterGroup).Group("/notifications")
+		// ==================== Incidents (DDD) ====================
+		if config.IncidentHandler != nil {
+			inc := tenant.(*gin.RouterGroup).Group("/incidents")
 			{
-				notifications.GET("", config.TicketNotificationController.ListUserNotifications)
-				notifications.PUT("/:id/read", config.TicketNotificationController.MarkNotificationRead)
-				notifications.PUT("/read-all", config.TicketNotificationController.MarkAllNotificationsRead)
+				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentHandler.List)
+				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Create)
+				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Get)
+				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
+				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Escalate)
 			}
 		}
 
-		// AI功能
-		ai := tenant.(*gin.RouterGroup).Group("/ai")
-		{
-			ai.POST("/search", config.AIController.Search)
-			ai.POST("/triage", config.AIController.Triage)
-			ai.POST("/summarize", config.AIController.Summarize)
-			ai.POST("/similar-incidents", config.AIController.SimilarIncidents)
-			ai.POST("/chat", config.AIController.Chat)
-			ai.GET("/tools", config.AIController.Tools)
-			ai.POST("/tools/:tool_id/execute", config.AIController.ExecuteTool)
-			ai.POST("/tools/:tool_id/approve", config.AIController.ApproveTool)
-			ai.GET("/tools/invocations/:id", config.AIController.GetToolInvocation)
-			ai.POST("/embed", config.AIController.RunEmbed)
-			ai.POST("/feedback", config.AIController.SaveFeedback)
-			ai.GET("/metrics", config.AIController.GetMetrics)
+		// ==================== Service Catalog & Requests (DDD) ====================
+		if config.ServiceCatalogHandler != nil {
+			sc := tenant.(*gin.RouterGroup).Group("/service-catalogs")
+			{
+				sc.GET("", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
+				sc.POST("", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Create)
+				sc.GET("/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Get)
+				sc.PUT("/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Update)
+				sc.DELETE("/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceCatalogHandler.Delete)
+			}
 		}
 
-		// Dashboard仪表盘
-		dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
-		{
-			// 概览数据
-			dashboard.GET("/overview", config.DashboardHandler.GetOverview)
-
-			// 分项数据
-			dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
-			dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
-			dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)
-			dashboard.GET("/sla-data", config.DashboardHandler.GetSLAData)
-			dashboard.GET("/satisfaction-data", config.DashboardHandler.GetSatisfactionData)
-			dashboard.GET("/quick-actions", config.DashboardHandler.GetQuickActions)
-			dashboard.GET("/recent-activities", config.DashboardHandler.GetRecentActivities)
+		if config.ServiceRequestHandler != nil {
+			sr := tenant.(*gin.RouterGroup).Group("/service-requests")
+			{
+				sr.POST("", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.Create)
+				sr.GET("", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.List)
+				sr.GET("/me", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.List)
+				sr.GET("/approvals/pending", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.ListPending)
+				sr.GET("/:id", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.Get)
+				sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
+			}
 		}
 
-		// 部门管理
-		departments := tenant.(*gin.RouterGroup).Group("/departments")
-		{
-			departments.POST("", config.DepartmentController.CreateDepartment)
-			departments.GET("/tree", config.DepartmentController.GetDepartmentTree)
-			departments.PUT("/:id", config.DepartmentController.UpdateDepartment)
-			departments.DELETE("/:id", config.DepartmentController.DeleteDepartment)
+		// ==================== Problems (DDD) ====================
+		if config.ProblemHandler != nil {
+			problems := tenant.(*gin.RouterGroup).Group("/problems")
+			{
+				problems.GET("", middleware.RequirePermission("problem", "read"), config.ProblemHandler.List)
+				problems.POST("", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Create)
+				problems.GET("/stats", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetStats)
+				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
+				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
+				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
+			}
 		}
 
-		// 团队管理
-		teams := tenant.(*gin.RouterGroup).Group("/teams")
-		{
-			teams.GET("", config.TeamController.ListTeams)
-			teams.POST("", config.TeamController.CreateTeam)
-			teams.PUT("/:id", config.TeamController.UpdateTeam)
-			teams.DELETE("/:id", config.TeamController.DeleteTeam)
-			teams.POST("/members", config.TeamController.AddMember)
+		// ==================== Changes (DDD) ====================
+		if config.ChangeHandler != nil {
+			changes := tenant.(*gin.RouterGroup).Group("/changes")
+			{
+				changes.GET("", middleware.RequirePermission("change", "read"), config.ChangeHandler.ListChanges)
+				changes.POST("", middleware.RequirePermission("change", "write"), config.ChangeHandler.CreateChange)
+				changes.GET("/stats", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetStats)
+				changes.GET("/:id", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetChange)
+				changes.PUT("/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdateChange)
+				changes.POST("/:id/approvals", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitApproval)
+			}
 		}
 
-		// 项目管理
-		projects := tenant.(*gin.RouterGroup).Group("/projects")
-		{
-			projects.GET("", config.ProjectController.ListProjects)
-			projects.POST("", config.ProjectController.CreateProject)
-			projects.PUT("/:id", config.ProjectController.UpdateProject)
-			projects.DELETE("/:id", config.ProjectController.DeleteProject)
+		// ==================== CMDB (DDD) ====================
+		if config.CMDBHandler != nil {
+			cmdbGrp := tenant.(*gin.RouterGroup).Group("/cmdb")
+			{
+				cmdbGrp.GET("/cis", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCIs)
+				cmdbGrp.POST("/cis", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCI)
+				cmdbGrp.GET("/cis/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetCI)
+				cmdbGrp.PUT("/cis/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.UpdateCI)
+				cmdbGrp.DELETE("/cis/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBHandler.DeleteCI)
+				cmdbGrp.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetStats)
+				cmdbGrp.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListTypes)
+			}
 		}
 
-		// 应用管理
-		apps := tenant.(*gin.RouterGroup).Group("/applications")
-		{
-			apps.GET("", config.ApplicationController.ListApplications)
-			apps.POST("", config.ApplicationController.CreateApplication)
-			apps.PUT("/:id", config.ApplicationController.UpdateApplication)
-			apps.DELETE("/:id", config.ApplicationController.DeleteApplication)
-			apps.GET("/microservices", config.ApplicationController.ListMicroservices)
-			apps.POST("/microservices", config.ApplicationController.CreateMicroservice)
-			apps.PUT("/microservices/:id", config.ApplicationController.UpdateMicroservice)
-			apps.DELETE("/microservices/:id", config.ApplicationController.DeleteMicroservice)
+		// ==================== Knowledge Base (DDD) ====================
+		if config.KnowledgeHandler != nil {
+			kb := tenant.(*gin.RouterGroup).Group("/knowledge-articles")
+			{
+				kb.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
+				kb.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
+				kb.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
+				kb.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
+				kb.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
+				kb.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
+			}
 		}
 
-		// 通用标签管理
-		tags := tenant.(*gin.RouterGroup).Group("/tags")
-		{
-			tags.GET("", config.TagController.ListTags)
-			tags.POST("", config.TagController.CreateTag)
-			tags.PUT("/:id", config.TagController.UpdateTag)
-			tags.DELETE("/:id", config.TagController.DeleteTag)
-			tags.POST("/bind", config.TagController.BindTag)
+		// ==================== SLA (DDD) ====================
+		if config.SLAHandler != nil {
+			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
+			{
+				slaGrp.GET("/definitions", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
+				slaGrp.POST("/definitions", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateSLADefinition)
+				slaGrp.GET("/definitions/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)
+				slaGrp.PUT("/definitions/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateSLADefinition)
+				slaGrp.DELETE("/definitions/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteSLADefinition)
+				slaGrp.POST("/alert-rules", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateAlertRule)
+				slaGrp.GET("/alert-rules", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListAlertRules)
+			}
 		}
 
-		// 审计日志（需要具备 audit_logs:read 权限）
-		audit := tenant.(*gin.RouterGroup).Group("/audit-logs")
-		{
-			audit.GET("", middleware.RequirePermission("audit_logs", "read"), config.AuditLogController.ListAuditLogs)
+		// ==================== AI & Analytics (DDD) ====================
+		if config.AIHandler != nil {
+			aiGrp := tenant.(*gin.RouterGroup).Group("/ai")
+			{
+				aiGrp.POST("/chat", config.AIHandler.Chat)
+				aiGrp.POST("/analytics", config.AIHandler.GetDeepAnalytics)
+				aiGrp.POST("/predictions", config.AIHandler.GetTrendPrediction)
+				aiGrp.POST("/tickets/:id/analyze", config.AIHandler.AnalyzeTicket)
+				aiGrp.POST("/feedback", config.AIHandler.SaveFeedback)
+			}
 		}
 
-		// BPMN 工作流
+		// ==================== Common & System (DDD) ====================
+		if config.CommonHandler != nil {
+			// Auth scoped
+			authGrp := tenant.(*gin.RouterGroup).Group("/auth")
+			{
+				authGrp.GET("/me", config.CommonHandler.GetMe)
+			}
+
+			// Users
+			users := tenant.(*gin.RouterGroup).Group("/users")
+			{
+				users.GET("", config.CommonHandler.ListUsers)
+			}
+
+			// Organization
+			org := tenant.(*gin.RouterGroup).Group("/org")
+			{
+				org.GET("/departments/tree", config.CommonHandler.GetDepartmentTree)
+				org.GET("/teams", config.CommonHandler.ListTeams)
+			}
+
+			// System
+			sys := tenant.(*gin.RouterGroup).Group("/system")
+			{
+				sys.GET("/tags", config.CommonHandler.ListTags)
+				sys.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
+			}
+		}
+
+		// ==================== Miscellaneous ====================
 		if config.BPMNWorkflowController != nil {
 			config.BPMNWorkflowController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
-		// ==================== Service Catalog & Service Requests ====================
-		if config.ServiceController != nil {
-			// Canonical v1 endpoints
-			tenant.(*gin.RouterGroup).GET("/service-catalogs", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogs)
-			tenant.(*gin.RouterGroup).POST("/service-catalogs", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.CreateServiceCatalog)
-			tenant.(*gin.RouterGroup).GET("/service-catalogs/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogByID)
-			tenant.(*gin.RouterGroup).PUT("/service-catalogs/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.UpdateServiceCatalog)
-			tenant.(*gin.RouterGroup).DELETE("/service-catalogs/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceController.DeleteServiceCatalog)
-
-			tenant.(*gin.RouterGroup).POST("/service-requests", middleware.RequirePermission("service_request", "write"), config.ServiceController.CreateServiceRequest)
-			tenant.(*gin.RouterGroup).GET("/service-requests/me", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetUserServiceRequests)
-			tenant.(*gin.RouterGroup).GET("/service-requests/:id", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetServiceRequestByID)
-			tenant.(*gin.RouterGroup).PUT("/service-requests/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceController.UpdateServiceRequestStatus)
-		}
-
-		// ==================== Knowledge Base ====================
-		if config.KnowledgeController != nil {
-			kb := tenant.(*gin.RouterGroup).Group("/knowledge-articles")
+		if config.DashboardHandler != nil {
+			dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
 			{
-				kb.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeController.ListArticles)
-				kb.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeController.CreateArticle)
-				kb.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeController.GetCategories)
-				kb.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeController.GetArticle)
-				kb.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeController.UpdateArticle)
-				kb.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeController.DeleteArticle)
+				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
 			}
-		}
-
-		// ==================== CMDB ====================
-		if config.CMDBController != nil {
-			cmdb := tenant.(*gin.RouterGroup).Group("/cmdb")
-			{
-				// canonical (and front-end friendly) aliases
-				cmdb.GET("/cis", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListConfigurationItems)
-				cmdb.POST("/cis", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateConfigurationItem)
-				cmdb.GET("/cis/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetConfigurationItem)
-				cmdb.PUT("/cis/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateConfigurationItem)
-				cmdb.DELETE("/cis/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteConfigurationItem)
-
-				// original naming kept as aliases for backward compatibility
-				cmdb.GET("/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListConfigurationItems)
-				cmdb.POST("/configuration-items", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateConfigurationItem)
-				cmdb.GET("/configuration-items/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetConfigurationItem)
-				cmdb.PUT("/configuration-items/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBController.UpdateConfigurationItem)
-				cmdb.DELETE("/configuration-items/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBController.DeleteConfigurationItem)
-
-				cmdb.POST("/ci-types/attributes", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCIAttributeDefinition)
-				cmdb.GET("/ci-types/:id/attributes", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCITypeWithAttributes)
-				cmdb.POST("/ci-attributes/validate", middleware.RequirePermission("cmdb", "write"), config.CMDBController.ValidateCIAttributes)
-				cmdb.POST("/cis/search-by-attributes", middleware.RequirePermission("cmdb", "read"), config.CMDBController.SearchCIsByAttributes)
-			}
-		}
-
-		// ==================== Problems ====================
-		if config.ProblemController != nil {
-			problems := tenant.(*gin.RouterGroup).Group("/problems")
-			{
-				problems.GET("", middleware.RequirePermission("problem", "read"), config.ProblemController.ListProblems)
-				problems.POST("", middleware.RequirePermission("problem", "write"), config.ProblemController.CreateProblem)
-				problems.GET("/stats", middleware.RequirePermission("problem", "read"), config.ProblemController.GetProblemStats)
-				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemController.GetProblem)
-				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemController.UpdateProblem)
-				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemController.DeleteProblem)
-			}
-		}
-
-		// ==================== Changes ====================
-		if config.ChangeController != nil {
-			changes := tenant.(*gin.RouterGroup).Group("/changes")
-			{
-				changes.GET("", middleware.RequirePermission("change", "read"), config.ChangeController.ListChanges)
-				changes.POST("", middleware.RequirePermission("change", "write"), config.ChangeController.CreateChange)
-				changes.GET("/stats", middleware.RequirePermission("change", "read"), config.ChangeController.GetChangeStats)
-				changes.GET("/:id", middleware.RequirePermission("change", "read"), config.ChangeController.GetChange)
-				changes.PUT("/:id", middleware.RequirePermission("change", "write"), config.ChangeController.UpdateChange)
-				changes.DELETE("/:id", middleware.RequirePermission("change", "delete"), config.ChangeController.DeleteChange)
-				changes.PUT("/:id/status", middleware.RequirePermission("change", "write"), config.ChangeController.UpdateChangeStatus)
-			}
-		}
-
-		if config.ChangeApprovalController != nil {
-			// Approval / risk endpoints (already annotated as /api/v1/changes/*)
-			tenant.(*gin.RouterGroup).POST("/changes/approvals", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeApproval)
-			tenant.(*gin.RouterGroup).PUT("/changes/approvals/:id", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.UpdateChangeApproval)
-			tenant.(*gin.RouterGroup).POST("/changes/approval-workflows", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeApprovalWorkflow)
-			tenant.(*gin.RouterGroup).GET("/changes/:changeId/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeApprovalController.GetChangeApprovalSummary)
-			tenant.(*gin.RouterGroup).POST("/changes/risk-assessments", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeRiskAssessment)
-			tenant.(*gin.RouterGroup).GET("/changes/:changeId/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeApprovalController.GetChangeRiskAssessment)
-			tenant.(*gin.RouterGroup).POST("/changes/implementation-plans", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeImplementationPlan)
-			tenant.(*gin.RouterGroup).POST("/changes/rollback-plans", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.CreateChangeRollbackPlan)
-			tenant.(*gin.RouterGroup).POST("/changes/:changeId/rollback-plans/:rollbackPlanId/execute", middleware.RequirePermission("change", "write"), config.ChangeApprovalController.ExecuteChangeRollback)
 		}
 	}
 }

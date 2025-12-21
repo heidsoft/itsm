@@ -118,6 +118,12 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
 	},
+	"security": {
+		// V0：安全审批只需要查看/处理服务请求（以及读取服务目录用于上下文展示）
+		{Resource: "service_catalog", Action: "read"},
+		{Resource: "service_request", Action: "read"},
+		{Resource: "service_request", Action: "write"},
+	},
 	"end_user": {
 		{Resource: "ticket", Action: "read"},
 		{Resource: "ticket", Action: "write"}, // 最终用户可以创建和更新自己的工单
@@ -162,6 +168,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/service-catalogs/*":  {Resource: "service_catalog", Action: "read"},
 		"/api/v1/service-requests":    {Resource: "service_request", Action: "read"},
 		"/api/v1/service-requests/*":  {Resource: "service_request", Action: "read"},
+		"/api/v1/provisioning-tasks/*": {Resource: "service_request", Action: "read"},
 		"/api/v1/knowledge-articles":  {Resource: "knowledge", Action: "read"},
 		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "read"},
 		"/api/v1/problems":            {Resource: "problem", Action: "read"},
@@ -187,6 +194,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/service-catalogs/*":  {Resource: "service_catalog", Action: "write"},
 		"/api/v1/service-requests":    {Resource: "service_request", Action: "write"},
 		"/api/v1/service-requests/*":  {Resource: "service_request", Action: "write"},
+		"/api/v1/provisioning-tasks/*": {Resource: "service_request", Action: "write"},
 		"/api/v1/knowledge-articles":  {Resource: "knowledge", Action: "write"},
 		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "write"},
 		"/api/v1/problems":            {Resource: "problem", Action: "write"},

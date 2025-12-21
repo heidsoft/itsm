@@ -12,6 +12,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -105,6 +106,26 @@ func (sru *ServiceRequestUpdate) SetNillableStatus(s *string) *ServiceRequestUpd
 	return sru
 }
 
+// SetTitle sets the "title" field.
+func (sru *ServiceRequestUpdate) SetTitle(s string) *ServiceRequestUpdate {
+	sru.mutation.SetTitle(s)
+	return sru
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableTitle(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetTitle(*s)
+	}
+	return sru
+}
+
+// ClearTitle clears the value of the "title" field.
+func (sru *ServiceRequestUpdate) ClearTitle() *ServiceRequestUpdate {
+	sru.mutation.ClearTitle()
+	return sru
+}
+
 // SetReason sets the "reason" field.
 func (sru *ServiceRequestUpdate) SetReason(s string) *ServiceRequestUpdate {
 	sru.mutation.SetReason(s)
@@ -122,6 +143,180 @@ func (sru *ServiceRequestUpdate) SetNillableReason(s *string) *ServiceRequestUpd
 // ClearReason clears the value of the "reason" field.
 func (sru *ServiceRequestUpdate) ClearReason() *ServiceRequestUpdate {
 	sru.mutation.ClearReason()
+	return sru
+}
+
+// SetFormData sets the "form_data" field.
+func (sru *ServiceRequestUpdate) SetFormData(m map[string]interface{}) *ServiceRequestUpdate {
+	sru.mutation.SetFormData(m)
+	return sru
+}
+
+// ClearFormData clears the value of the "form_data" field.
+func (sru *ServiceRequestUpdate) ClearFormData() *ServiceRequestUpdate {
+	sru.mutation.ClearFormData()
+	return sru
+}
+
+// SetCostCenter sets the "cost_center" field.
+func (sru *ServiceRequestUpdate) SetCostCenter(s string) *ServiceRequestUpdate {
+	sru.mutation.SetCostCenter(s)
+	return sru
+}
+
+// SetNillableCostCenter sets the "cost_center" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCostCenter(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetCostCenter(*s)
+	}
+	return sru
+}
+
+// ClearCostCenter clears the value of the "cost_center" field.
+func (sru *ServiceRequestUpdate) ClearCostCenter() *ServiceRequestUpdate {
+	sru.mutation.ClearCostCenter()
+	return sru
+}
+
+// SetDataClassification sets the "data_classification" field.
+func (sru *ServiceRequestUpdate) SetDataClassification(s string) *ServiceRequestUpdate {
+	sru.mutation.SetDataClassification(s)
+	return sru
+}
+
+// SetNillableDataClassification sets the "data_classification" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableDataClassification(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetDataClassification(*s)
+	}
+	return sru
+}
+
+// SetNeedsPublicIP sets the "needs_public_ip" field.
+func (sru *ServiceRequestUpdate) SetNeedsPublicIP(b bool) *ServiceRequestUpdate {
+	sru.mutation.SetNeedsPublicIP(b)
+	return sru
+}
+
+// SetNillableNeedsPublicIP sets the "needs_public_ip" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableNeedsPublicIP(b *bool) *ServiceRequestUpdate {
+	if b != nil {
+		sru.SetNeedsPublicIP(*b)
+	}
+	return sru
+}
+
+// SetSourceIPWhitelist sets the "source_ip_whitelist" field.
+func (sru *ServiceRequestUpdate) SetSourceIPWhitelist(s []string) *ServiceRequestUpdate {
+	sru.mutation.SetSourceIPWhitelist(s)
+	return sru
+}
+
+// AppendSourceIPWhitelist appends s to the "source_ip_whitelist" field.
+func (sru *ServiceRequestUpdate) AppendSourceIPWhitelist(s []string) *ServiceRequestUpdate {
+	sru.mutation.AppendSourceIPWhitelist(s)
+	return sru
+}
+
+// ClearSourceIPWhitelist clears the value of the "source_ip_whitelist" field.
+func (sru *ServiceRequestUpdate) ClearSourceIPWhitelist() *ServiceRequestUpdate {
+	sru.mutation.ClearSourceIPWhitelist()
+	return sru
+}
+
+// SetExpireAt sets the "expire_at" field.
+func (sru *ServiceRequestUpdate) SetExpireAt(t time.Time) *ServiceRequestUpdate {
+	sru.mutation.SetExpireAt(t)
+	return sru
+}
+
+// SetNillableExpireAt sets the "expire_at" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableExpireAt(t *time.Time) *ServiceRequestUpdate {
+	if t != nil {
+		sru.SetExpireAt(*t)
+	}
+	return sru
+}
+
+// ClearExpireAt clears the value of the "expire_at" field.
+func (sru *ServiceRequestUpdate) ClearExpireAt() *ServiceRequestUpdate {
+	sru.mutation.ClearExpireAt()
+	return sru
+}
+
+// SetComplianceAck sets the "compliance_ack" field.
+func (sru *ServiceRequestUpdate) SetComplianceAck(b bool) *ServiceRequestUpdate {
+	sru.mutation.SetComplianceAck(b)
+	return sru
+}
+
+// SetNillableComplianceAck sets the "compliance_ack" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableComplianceAck(b *bool) *ServiceRequestUpdate {
+	if b != nil {
+		sru.SetComplianceAck(*b)
+	}
+	return sru
+}
+
+// SetCurrentLevel sets the "current_level" field.
+func (sru *ServiceRequestUpdate) SetCurrentLevel(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetCurrentLevel()
+	sru.mutation.SetCurrentLevel(i)
+	return sru
+}
+
+// SetNillableCurrentLevel sets the "current_level" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCurrentLevel(i *int) *ServiceRequestUpdate {
+	if i != nil {
+		sru.SetCurrentLevel(*i)
+	}
+	return sru
+}
+
+// AddCurrentLevel adds i to the "current_level" field.
+func (sru *ServiceRequestUpdate) AddCurrentLevel(i int) *ServiceRequestUpdate {
+	sru.mutation.AddCurrentLevel(i)
+	return sru
+}
+
+// SetTotalLevels sets the "total_levels" field.
+func (sru *ServiceRequestUpdate) SetTotalLevels(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetTotalLevels()
+	sru.mutation.SetTotalLevels(i)
+	return sru
+}
+
+// SetNillableTotalLevels sets the "total_levels" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableTotalLevels(i *int) *ServiceRequestUpdate {
+	if i != nil {
+		sru.SetTotalLevels(*i)
+	}
+	return sru
+}
+
+// AddTotalLevels adds i to the "total_levels" field.
+func (sru *ServiceRequestUpdate) AddTotalLevels(i int) *ServiceRequestUpdate {
+	sru.mutation.AddTotalLevels(i)
+	return sru
+}
+
+// SetLastError sets the "last_error" field.
+func (sru *ServiceRequestUpdate) SetLastError(s string) *ServiceRequestUpdate {
+	sru.mutation.SetLastError(s)
+	return sru
+}
+
+// SetNillableLastError sets the "last_error" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableLastError(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetLastError(*s)
+	}
+	return sru
+}
+
+// ClearLastError clears the value of the "last_error" field.
+func (sru *ServiceRequestUpdate) ClearLastError() *ServiceRequestUpdate {
+	sru.mutation.ClearLastError()
 	return sru
 }
 
@@ -239,11 +434,73 @@ func (sru *ServiceRequestUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := sru.mutation.Status(); ok {
 		_spec.SetField(servicerequest.FieldStatus, field.TypeString, value)
 	}
+	if value, ok := sru.mutation.Title(); ok {
+		_spec.SetField(servicerequest.FieldTitle, field.TypeString, value)
+	}
+	if sru.mutation.TitleCleared() {
+		_spec.ClearField(servicerequest.FieldTitle, field.TypeString)
+	}
 	if value, ok := sru.mutation.Reason(); ok {
 		_spec.SetField(servicerequest.FieldReason, field.TypeString, value)
 	}
 	if sru.mutation.ReasonCleared() {
 		_spec.ClearField(servicerequest.FieldReason, field.TypeString)
+	}
+	if value, ok := sru.mutation.FormData(); ok {
+		_spec.SetField(servicerequest.FieldFormData, field.TypeJSON, value)
+	}
+	if sru.mutation.FormDataCleared() {
+		_spec.ClearField(servicerequest.FieldFormData, field.TypeJSON)
+	}
+	if value, ok := sru.mutation.CostCenter(); ok {
+		_spec.SetField(servicerequest.FieldCostCenter, field.TypeString, value)
+	}
+	if sru.mutation.CostCenterCleared() {
+		_spec.ClearField(servicerequest.FieldCostCenter, field.TypeString)
+	}
+	if value, ok := sru.mutation.DataClassification(); ok {
+		_spec.SetField(servicerequest.FieldDataClassification, field.TypeString, value)
+	}
+	if value, ok := sru.mutation.NeedsPublicIP(); ok {
+		_spec.SetField(servicerequest.FieldNeedsPublicIP, field.TypeBool, value)
+	}
+	if value, ok := sru.mutation.SourceIPWhitelist(); ok {
+		_spec.SetField(servicerequest.FieldSourceIPWhitelist, field.TypeJSON, value)
+	}
+	if value, ok := sru.mutation.AppendedSourceIPWhitelist(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicerequest.FieldSourceIPWhitelist, value)
+		})
+	}
+	if sru.mutation.SourceIPWhitelistCleared() {
+		_spec.ClearField(servicerequest.FieldSourceIPWhitelist, field.TypeJSON)
+	}
+	if value, ok := sru.mutation.ExpireAt(); ok {
+		_spec.SetField(servicerequest.FieldExpireAt, field.TypeTime, value)
+	}
+	if sru.mutation.ExpireAtCleared() {
+		_spec.ClearField(servicerequest.FieldExpireAt, field.TypeTime)
+	}
+	if value, ok := sru.mutation.ComplianceAck(); ok {
+		_spec.SetField(servicerequest.FieldComplianceAck, field.TypeBool, value)
+	}
+	if value, ok := sru.mutation.CurrentLevel(); ok {
+		_spec.SetField(servicerequest.FieldCurrentLevel, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedCurrentLevel(); ok {
+		_spec.AddField(servicerequest.FieldCurrentLevel, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.TotalLevels(); ok {
+		_spec.SetField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedTotalLevels(); ok {
+		_spec.AddField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.LastError(); ok {
+		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)
+	}
+	if sru.mutation.LastErrorCleared() {
+		_spec.ClearField(servicerequest.FieldLastError, field.TypeString)
 	}
 	if value, ok := sru.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)
@@ -348,6 +605,26 @@ func (sruo *ServiceRequestUpdateOne) SetNillableStatus(s *string) *ServiceReques
 	return sruo
 }
 
+// SetTitle sets the "title" field.
+func (sruo *ServiceRequestUpdateOne) SetTitle(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetTitle(s)
+	return sruo
+}
+
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableTitle(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetTitle(*s)
+	}
+	return sruo
+}
+
+// ClearTitle clears the value of the "title" field.
+func (sruo *ServiceRequestUpdateOne) ClearTitle() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearTitle()
+	return sruo
+}
+
 // SetReason sets the "reason" field.
 func (sruo *ServiceRequestUpdateOne) SetReason(s string) *ServiceRequestUpdateOne {
 	sruo.mutation.SetReason(s)
@@ -365,6 +642,180 @@ func (sruo *ServiceRequestUpdateOne) SetNillableReason(s *string) *ServiceReques
 // ClearReason clears the value of the "reason" field.
 func (sruo *ServiceRequestUpdateOne) ClearReason() *ServiceRequestUpdateOne {
 	sruo.mutation.ClearReason()
+	return sruo
+}
+
+// SetFormData sets the "form_data" field.
+func (sruo *ServiceRequestUpdateOne) SetFormData(m map[string]interface{}) *ServiceRequestUpdateOne {
+	sruo.mutation.SetFormData(m)
+	return sruo
+}
+
+// ClearFormData clears the value of the "form_data" field.
+func (sruo *ServiceRequestUpdateOne) ClearFormData() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearFormData()
+	return sruo
+}
+
+// SetCostCenter sets the "cost_center" field.
+func (sruo *ServiceRequestUpdateOne) SetCostCenter(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetCostCenter(s)
+	return sruo
+}
+
+// SetNillableCostCenter sets the "cost_center" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCostCenter(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetCostCenter(*s)
+	}
+	return sruo
+}
+
+// ClearCostCenter clears the value of the "cost_center" field.
+func (sruo *ServiceRequestUpdateOne) ClearCostCenter() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearCostCenter()
+	return sruo
+}
+
+// SetDataClassification sets the "data_classification" field.
+func (sruo *ServiceRequestUpdateOne) SetDataClassification(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetDataClassification(s)
+	return sruo
+}
+
+// SetNillableDataClassification sets the "data_classification" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableDataClassification(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetDataClassification(*s)
+	}
+	return sruo
+}
+
+// SetNeedsPublicIP sets the "needs_public_ip" field.
+func (sruo *ServiceRequestUpdateOne) SetNeedsPublicIP(b bool) *ServiceRequestUpdateOne {
+	sruo.mutation.SetNeedsPublicIP(b)
+	return sruo
+}
+
+// SetNillableNeedsPublicIP sets the "needs_public_ip" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableNeedsPublicIP(b *bool) *ServiceRequestUpdateOne {
+	if b != nil {
+		sruo.SetNeedsPublicIP(*b)
+	}
+	return sruo
+}
+
+// SetSourceIPWhitelist sets the "source_ip_whitelist" field.
+func (sruo *ServiceRequestUpdateOne) SetSourceIPWhitelist(s []string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetSourceIPWhitelist(s)
+	return sruo
+}
+
+// AppendSourceIPWhitelist appends s to the "source_ip_whitelist" field.
+func (sruo *ServiceRequestUpdateOne) AppendSourceIPWhitelist(s []string) *ServiceRequestUpdateOne {
+	sruo.mutation.AppendSourceIPWhitelist(s)
+	return sruo
+}
+
+// ClearSourceIPWhitelist clears the value of the "source_ip_whitelist" field.
+func (sruo *ServiceRequestUpdateOne) ClearSourceIPWhitelist() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearSourceIPWhitelist()
+	return sruo
+}
+
+// SetExpireAt sets the "expire_at" field.
+func (sruo *ServiceRequestUpdateOne) SetExpireAt(t time.Time) *ServiceRequestUpdateOne {
+	sruo.mutation.SetExpireAt(t)
+	return sruo
+}
+
+// SetNillableExpireAt sets the "expire_at" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableExpireAt(t *time.Time) *ServiceRequestUpdateOne {
+	if t != nil {
+		sruo.SetExpireAt(*t)
+	}
+	return sruo
+}
+
+// ClearExpireAt clears the value of the "expire_at" field.
+func (sruo *ServiceRequestUpdateOne) ClearExpireAt() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearExpireAt()
+	return sruo
+}
+
+// SetComplianceAck sets the "compliance_ack" field.
+func (sruo *ServiceRequestUpdateOne) SetComplianceAck(b bool) *ServiceRequestUpdateOne {
+	sruo.mutation.SetComplianceAck(b)
+	return sruo
+}
+
+// SetNillableComplianceAck sets the "compliance_ack" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableComplianceAck(b *bool) *ServiceRequestUpdateOne {
+	if b != nil {
+		sruo.SetComplianceAck(*b)
+	}
+	return sruo
+}
+
+// SetCurrentLevel sets the "current_level" field.
+func (sruo *ServiceRequestUpdateOne) SetCurrentLevel(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetCurrentLevel()
+	sruo.mutation.SetCurrentLevel(i)
+	return sruo
+}
+
+// SetNillableCurrentLevel sets the "current_level" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCurrentLevel(i *int) *ServiceRequestUpdateOne {
+	if i != nil {
+		sruo.SetCurrentLevel(*i)
+	}
+	return sruo
+}
+
+// AddCurrentLevel adds i to the "current_level" field.
+func (sruo *ServiceRequestUpdateOne) AddCurrentLevel(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddCurrentLevel(i)
+	return sruo
+}
+
+// SetTotalLevels sets the "total_levels" field.
+func (sruo *ServiceRequestUpdateOne) SetTotalLevels(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetTotalLevels()
+	sruo.mutation.SetTotalLevels(i)
+	return sruo
+}
+
+// SetNillableTotalLevels sets the "total_levels" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableTotalLevels(i *int) *ServiceRequestUpdateOne {
+	if i != nil {
+		sruo.SetTotalLevels(*i)
+	}
+	return sruo
+}
+
+// AddTotalLevels adds i to the "total_levels" field.
+func (sruo *ServiceRequestUpdateOne) AddTotalLevels(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddTotalLevels(i)
+	return sruo
+}
+
+// SetLastError sets the "last_error" field.
+func (sruo *ServiceRequestUpdateOne) SetLastError(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetLastError(s)
+	return sruo
+}
+
+// SetNillableLastError sets the "last_error" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableLastError(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetLastError(*s)
+	}
+	return sruo
+}
+
+// ClearLastError clears the value of the "last_error" field.
+func (sruo *ServiceRequestUpdateOne) ClearLastError() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearLastError()
 	return sruo
 }
 
@@ -512,11 +963,73 @@ func (sruo *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	if value, ok := sruo.mutation.Status(); ok {
 		_spec.SetField(servicerequest.FieldStatus, field.TypeString, value)
 	}
+	if value, ok := sruo.mutation.Title(); ok {
+		_spec.SetField(servicerequest.FieldTitle, field.TypeString, value)
+	}
+	if sruo.mutation.TitleCleared() {
+		_spec.ClearField(servicerequest.FieldTitle, field.TypeString)
+	}
 	if value, ok := sruo.mutation.Reason(); ok {
 		_spec.SetField(servicerequest.FieldReason, field.TypeString, value)
 	}
 	if sruo.mutation.ReasonCleared() {
 		_spec.ClearField(servicerequest.FieldReason, field.TypeString)
+	}
+	if value, ok := sruo.mutation.FormData(); ok {
+		_spec.SetField(servicerequest.FieldFormData, field.TypeJSON, value)
+	}
+	if sruo.mutation.FormDataCleared() {
+		_spec.ClearField(servicerequest.FieldFormData, field.TypeJSON)
+	}
+	if value, ok := sruo.mutation.CostCenter(); ok {
+		_spec.SetField(servicerequest.FieldCostCenter, field.TypeString, value)
+	}
+	if sruo.mutation.CostCenterCleared() {
+		_spec.ClearField(servicerequest.FieldCostCenter, field.TypeString)
+	}
+	if value, ok := sruo.mutation.DataClassification(); ok {
+		_spec.SetField(servicerequest.FieldDataClassification, field.TypeString, value)
+	}
+	if value, ok := sruo.mutation.NeedsPublicIP(); ok {
+		_spec.SetField(servicerequest.FieldNeedsPublicIP, field.TypeBool, value)
+	}
+	if value, ok := sruo.mutation.SourceIPWhitelist(); ok {
+		_spec.SetField(servicerequest.FieldSourceIPWhitelist, field.TypeJSON, value)
+	}
+	if value, ok := sruo.mutation.AppendedSourceIPWhitelist(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicerequest.FieldSourceIPWhitelist, value)
+		})
+	}
+	if sruo.mutation.SourceIPWhitelistCleared() {
+		_spec.ClearField(servicerequest.FieldSourceIPWhitelist, field.TypeJSON)
+	}
+	if value, ok := sruo.mutation.ExpireAt(); ok {
+		_spec.SetField(servicerequest.FieldExpireAt, field.TypeTime, value)
+	}
+	if sruo.mutation.ExpireAtCleared() {
+		_spec.ClearField(servicerequest.FieldExpireAt, field.TypeTime)
+	}
+	if value, ok := sruo.mutation.ComplianceAck(); ok {
+		_spec.SetField(servicerequest.FieldComplianceAck, field.TypeBool, value)
+	}
+	if value, ok := sruo.mutation.CurrentLevel(); ok {
+		_spec.SetField(servicerequest.FieldCurrentLevel, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedCurrentLevel(); ok {
+		_spec.AddField(servicerequest.FieldCurrentLevel, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.TotalLevels(); ok {
+		_spec.SetField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedTotalLevels(); ok {
+		_spec.AddField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.LastError(); ok {
+		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)
+	}
+	if sruo.mutation.LastErrorCleared() {
+		_spec.ClearField(servicerequest.FieldLastError, field.TypeString)
 	}
 	if value, ok := sruo.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequest.FieldCreatedAt, field.TypeTime, value)

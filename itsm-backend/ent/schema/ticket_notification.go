@@ -66,4 +66,3 @@ func (TicketNotification) Edges() []ent.Edge {
 			Comment("接收人"),
 	}
 }
-

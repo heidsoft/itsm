@@ -443,6 +443,13 @@ func (p *BPMNParser) elementExists(process *BPMNProcess, elementID string) bool 
 		}
 	}
 
+	// 检查顺序流（网关默认流引用的是 sequenceFlow 的 id）
+	for _, flow := range process.SequenceFlows {
+		if flow.ID == elementID {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -453,12 +460,7 @@ func (p *BPMNParser) ExtractProcessInfo(definitions *BPMNDefinitions) map[string
 	}
 
 	process := definitions.Processes[0]
-	info := map[string]interface{}{
-		"id":                 process.ID,
-		"name":               process.Name,
-		"processType":        process.ProcessType,
-		"isExecutable":       process.IsExecutable,
-		"isClosed":           process.IsClosed,
+	elements := map[string]interface{}{
 		"startEvents":        len(process.StartEvents),
 		"endEvents":          len(process.EndEvents),
 		"userTasks":          len(process.UserTasks),
@@ -476,6 +478,21 @@ func (p *BPMNParser) ExtractProcessInfo(definitions *BPMNDefinitions) map[string
 		"intermediateEvents": len(process.IntermediateEvents),
 		"dataObjects":        len(process.DataObjects),
 		"dataStores":         len(process.DataStores),
+	}
+	info := map[string]interface{}{
+		"id":                 process.ID,
+		"name":               process.Name,
+		"processType":        process.ProcessType,
+		"isExecutable":       process.IsExecutable,
+		"isClosed":           process.IsClosed,
+		// 向后兼容：保留顶层计数，同时新增 elements 聚合
+		"startEvents":   len(process.StartEvents),
+		"endEvents":     len(process.EndEvents),
+		"userTasks":     len(process.UserTasks),
+		"serviceTasks":  len(process.ServiceTasks),
+		"exclusiveGateways": len(process.ExclusiveGateways),
+		"sequenceFlows": len(process.SequenceFlows),
+		"elements":      elements,
 	}
 
 	return info

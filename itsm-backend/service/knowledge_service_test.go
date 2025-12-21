@@ -426,6 +426,7 @@ func TestKnowledgeService_ListArticles(t *testing.T) {
 			request: &dto.ListKnowledgeArticlesRequest{
 				Page:     1,
 				PageSize: 10,
+				Status:   "published",
 			},
 			expectedCount: 3,
 			expectedError: false,

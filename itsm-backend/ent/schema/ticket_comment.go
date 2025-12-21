@@ -64,4 +64,3 @@ func (TicketComment) Edges() []ent.Edge {
 			Comment("评论人"),
 	}
 }
-

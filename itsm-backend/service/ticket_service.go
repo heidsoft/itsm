@@ -43,6 +43,17 @@ func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAu
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
+	// V0：最小校验（对齐测试与产品规则）
+	if strings.TrimSpace(req.Description) == "" {
+		return nil, fmt.Errorf("描述不能为空")
+	}
+	switch strings.ToLower(strings.TrimSpace(req.Priority)) {
+	case "", "low", "medium", "high", "urgent":
+		// ok（空值交给 schema 默认 medium）
+	default:
+		return nil, fmt.Errorf("无效的优先级")
+	}
+
 	// 生成工单编号
 	ticketNumber, err := s.generateTicketNumber(ctx, tenantID)
 	if err != nil {
@@ -54,7 +65,8 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetPriority(req.Priority).
-		SetStatus("submitted").
+		// 工单默认状态：open（与 schema 默认一致）
+		SetStatus("open").
 		SetTicketNumber(ticketNumber).
 		SetTenantID(tenantID).
 		SetRequesterID(req.RequesterID).
@@ -603,11 +615,16 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, feedback 
 func (s *TicketService) SearchTickets(ctx context.Context, searchTerm string, tenantID int) ([]*ent.Ticket, error) {
 	s.logger.Infow("Searching tickets", "search_term", searchTerm, "tenant_id", tenantID)
 
+	if strings.TrimSpace(searchTerm) == "" {
+		// 空搜索词：返回空结果（避免无条件返回全量）
+		return []*ent.Ticket{}, nil
+	}
+
 	// 构建搜索查询（简化版，实际应使用全文搜索引擎）
 	query := s.client.Ticket.Query().Where(ticket.TenantID(tenantID))
 
 	// 在标题和描述中搜索
-	searchLower := strings.ToLower(searchTerm)
+	searchLower := strings.ToLower(strings.TrimSpace(searchTerm))
 	query = query.Where(
 		ticket.Or(
 			ticket.TitleContains(searchLower),

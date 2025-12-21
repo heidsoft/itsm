@@ -134,13 +134,13 @@ func (c *ChangeApprovalController) CreateChangeApprovalWorkflow(ctx *gin.Context
 // @Description 获取指定变更的审批摘要信息
 // @Tags 变更审批
 // @Produce json
-// @Param changeId path int true "变更ID"
+// @Param id path int true "变更ID"
 // @Success 200 {object} dto.ChangeApprovalSummary
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/v1/changes/{changeId}/approval-summary [get]
+// @Router /api/v1/changes/{id}/approval-summary [get]
 func (c *ChangeApprovalController) GetChangeApprovalSummary(ctx *gin.Context) {
-	changeID, err := strconv.Atoi(ctx.Param("changeId"))
+	changeID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的变更ID")
 		return
@@ -196,13 +196,13 @@ func (c *ChangeApprovalController) CreateChangeRiskAssessment(ctx *gin.Context) 
 // @Description 获取指定变更的风险评估信息
 // @Tags 变更风险评估
 // @Produce json
-// @Param changeId path int true "变更ID"
+// @Param id path int true "变更ID"
 // @Success 200 {object} dto.ChangeRiskAssessmentResponse
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/v1/changes/{changeId}/risk-assessment [get]
+// @Router /api/v1/changes/{id}/risk-assessment [get]
 func (c *ChangeApprovalController) GetChangeRiskAssessment(ctx *gin.Context) {
-	changeID, err := strconv.Atoi(ctx.Param("changeId"))
+	changeID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的变更ID")
 		return
@@ -291,15 +291,15 @@ func (c *ChangeApprovalController) CreateChangeRollbackPlan(ctx *gin.Context) {
 // @Tags 变更回滚计划
 // @Accept json
 // @Produce json
-// @Param changeId path int true "变更ID"
+// @Param id path int true "变更ID"
 // @Param rollbackPlanId path int true "回滚计划ID"
 // @Param request body map[string]interface{} true "回滚执行请求"
 // @Success 200 {object} dto.ChangeRollbackExecutionResponse
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Router /api/v1/changes/{changeId}/rollback-plans/{rollbackPlanId}/execute [post]
+// @Router /api/v1/changes/{id}/rollback-plans/{rollbackPlanId}/execute [post]
 func (c *ChangeApprovalController) ExecuteChangeRollback(ctx *gin.Context) {
-	changeID, err := strconv.Atoi(ctx.Param("changeId"))
+	changeID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的变更ID")
 		return

@@ -21,8 +21,30 @@ const (
 	FieldRequesterID = "requester_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
 	// FieldReason holds the string denoting the reason field in the database.
 	FieldReason = "reason"
+	// FieldFormData holds the string denoting the form_data field in the database.
+	FieldFormData = "form_data"
+	// FieldCostCenter holds the string denoting the cost_center field in the database.
+	FieldCostCenter = "cost_center"
+	// FieldDataClassification holds the string denoting the data_classification field in the database.
+	FieldDataClassification = "data_classification"
+	// FieldNeedsPublicIP holds the string denoting the needs_public_ip field in the database.
+	FieldNeedsPublicIP = "needs_public_ip"
+	// FieldSourceIPWhitelist holds the string denoting the source_ip_whitelist field in the database.
+	FieldSourceIPWhitelist = "source_ip_whitelist"
+	// FieldExpireAt holds the string denoting the expire_at field in the database.
+	FieldExpireAt = "expire_at"
+	// FieldComplianceAck holds the string denoting the compliance_ack field in the database.
+	FieldComplianceAck = "compliance_ack"
+	// FieldCurrentLevel holds the string denoting the current_level field in the database.
+	FieldCurrentLevel = "current_level"
+	// FieldTotalLevels holds the string denoting the total_levels field in the database.
+	FieldTotalLevels = "total_levels"
+	// FieldLastError holds the string denoting the last_error field in the database.
+	FieldLastError = "last_error"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -38,7 +60,18 @@ var Columns = []string{
 	FieldCatalogID,
 	FieldRequesterID,
 	FieldStatus,
+	FieldTitle,
 	FieldReason,
+	FieldFormData,
+	FieldCostCenter,
+	FieldDataClassification,
+	FieldNeedsPublicIP,
+	FieldSourceIPWhitelist,
+	FieldExpireAt,
+	FieldComplianceAck,
+	FieldCurrentLevel,
+	FieldTotalLevels,
+	FieldLastError,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -62,6 +95,16 @@ var (
 	RequesterIDValidator func(int) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultDataClassification holds the default value on creation for the "data_classification" field.
+	DefaultDataClassification string
+	// DefaultNeedsPublicIP holds the default value on creation for the "needs_public_ip" field.
+	DefaultNeedsPublicIP bool
+	// DefaultComplianceAck holds the default value on creation for the "compliance_ack" field.
+	DefaultComplianceAck bool
+	// DefaultCurrentLevel holds the default value on creation for the "current_level" field.
+	DefaultCurrentLevel int
+	// DefaultTotalLevels holds the default value on creation for the "total_levels" field.
+	DefaultTotalLevels int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -98,9 +141,54 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
+// ByTitle orders the results by the title field.
+func ByTitle(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
 // ByReason orders the results by the reason field.
 func ByReason(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReason, opts...).ToFunc()
+}
+
+// ByCostCenter orders the results by the cost_center field.
+func ByCostCenter(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCostCenter, opts...).ToFunc()
+}
+
+// ByDataClassification orders the results by the data_classification field.
+func ByDataClassification(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDataClassification, opts...).ToFunc()
+}
+
+// ByNeedsPublicIP orders the results by the needs_public_ip field.
+func ByNeedsPublicIP(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNeedsPublicIP, opts...).ToFunc()
+}
+
+// ByExpireAt orders the results by the expire_at field.
+func ByExpireAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpireAt, opts...).ToFunc()
+}
+
+// ByComplianceAck orders the results by the compliance_ack field.
+func ByComplianceAck(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldComplianceAck, opts...).ToFunc()
+}
+
+// ByCurrentLevel orders the results by the current_level field.
+func ByCurrentLevel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCurrentLevel, opts...).ToFunc()
+}
+
+// ByTotalLevels orders the results by the total_levels field.
+func ByTotalLevels(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTotalLevels, opts...).ToFunc()
+}
+
+// ByLastError orders the results by the last_error field.
+func ByLastError(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastError, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

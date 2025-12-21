@@ -61,7 +61,7 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	// 检查用户是否激活
 	if !userEntity.Active {
 		s.logger.Warnw("User account is inactive", "user_id", userEntity.ID, "username", req.Username)
-		return nil, fmt.Errorf("用户账号已被禁用")
+		return nil, fmt.Errorf("用户已被禁用")
 	}
 
 	// 检查租户状态
@@ -133,7 +133,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshTokenReq
 	// 检查用户是否激活
 	if !userEntity.Active {
 		s.logger.Warnw("Inactive user trying to refresh token", "user_id", userEntity.ID)
-		return nil, fmt.Errorf("用户账号已被禁用")
+		return nil, fmt.Errorf("用户已被禁用")
 	}
 
     // 生成新的access token（使用数据库角色）

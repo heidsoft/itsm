@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"entgo.io/ent"
-	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
 )
 
 // RootCauseAnalysis holds the schema definition for the RootCauseAnalysis entity.
@@ -66,4 +66,3 @@ func (RootCauseAnalysis) Edges() []ent.Edge {
 			Comment("关联的工单"),
 	}
 }
-

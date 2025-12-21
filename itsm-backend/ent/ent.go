@@ -36,9 +36,11 @@ import (
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
+	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
@@ -157,6 +159,7 @@ func checkColumn(table, column string) error {
 			processvariable.Table:         processvariable.ValidColumn,
 			project.Table:                 project.ValidColumn,
 			prompttemplate.Table:          prompttemplate.ValidColumn,
+			provisioningtask.Table:        provisioningtask.ValidColumn,
 			rootcauseanalysis.Table:       rootcauseanalysis.ValidColumn,
 			slaalerthistory.Table:         slaalerthistory.ValidColumn,
 			slaalertrule.Table:            slaalertrule.ValidColumn,
@@ -165,6 +168,7 @@ func checkColumn(table, column string) error {
 			slaviolation.Table:            slaviolation.ValidColumn,
 			servicecatalog.Table:          servicecatalog.ValidColumn,
 			servicerequest.Table:          servicerequest.ValidColumn,
+			servicerequestapproval.Table:  servicerequestapproval.ValidColumn,
 			tag.Table:                     tag.ValidColumn,
 			team.Table:                    team.ValidColumn,
 			tenant.Table:                  tenant.ValidColumn,

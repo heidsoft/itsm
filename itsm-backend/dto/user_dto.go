@@ -14,7 +14,7 @@ type CreateUserRequest struct {
     Password   string `json:"password" binding:"required,min=6"`
     TenantID   int    `json:"tenant_id" binding:"required,min=1"`
     // 角色，可选；不提供时使用后端默认值（end_user）
-    Role       string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician end_user"`
+    Role       string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user"`
 }
 
 // UpdateUserRequest 更新用户请求
@@ -25,7 +25,7 @@ type UpdateUserRequest struct {
     Department string `json:"department,omitempty"`
     Phone      string `json:"phone,omitempty"`
     // 角色更新，仅管理员有权限更新
-    Role       string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician end_user"`
+    Role       string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager agent technician security end_user"`
 }
 
 // ListUsersRequest 获取用户列表请求
@@ -93,9 +93,9 @@ type BatchUpdateUsersRequest struct {
 
 // SearchUsersRequest 搜索用户请求
 type SearchUsersRequest struct {
-	Keyword  string `form:"keyword" binding:"required,min=1"`
-	TenantID int    `form:"tenant_id"`
-	Limit    int    `form:"limit,default=10" binding:"min=1,max=50"`
+	Keyword  string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
+	TenantID int    `json:"tenant_id" form:"tenant_id"`
+	Limit    int    `json:"limit" form:"limit,default=10" binding:"min=1,max=50"`
 }
 
 // ImportUsersRequest 批量导入用户请求

@@ -74,9 +74,54 @@ func Status(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldStatus, v))
 }
 
+// Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
+func Title(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldTitle, v))
+}
+
 // Reason applies equality check predicate on the "reason" field. It's identical to ReasonEQ.
 func Reason(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldReason, v))
+}
+
+// CostCenter applies equality check predicate on the "cost_center" field. It's identical to CostCenterEQ.
+func CostCenter(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldCostCenter, v))
+}
+
+// DataClassification applies equality check predicate on the "data_classification" field. It's identical to DataClassificationEQ.
+func DataClassification(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldDataClassification, v))
+}
+
+// NeedsPublicIP applies equality check predicate on the "needs_public_ip" field. It's identical to NeedsPublicIPEQ.
+func NeedsPublicIP(v bool) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldNeedsPublicIP, v))
+}
+
+// ExpireAt applies equality check predicate on the "expire_at" field. It's identical to ExpireAtEQ.
+func ExpireAt(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldExpireAt, v))
+}
+
+// ComplianceAck applies equality check predicate on the "compliance_ack" field. It's identical to ComplianceAckEQ.
+func ComplianceAck(v bool) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldComplianceAck, v))
+}
+
+// CurrentLevel applies equality check predicate on the "current_level" field. It's identical to CurrentLevelEQ.
+func CurrentLevel(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldCurrentLevel, v))
+}
+
+// TotalLevels applies equality check predicate on the "total_levels" field. It's identical to TotalLevelsEQ.
+func TotalLevels(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldTotalLevels, v))
+}
+
+// LastError applies equality check predicate on the "last_error" field. It's identical to LastErrorEQ.
+func LastError(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldLastError, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -274,6 +319,81 @@ func StatusContainsFold(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldContainsFold(FieldStatus, v))
 }
 
+// TitleEQ applies the EQ predicate on the "title" field.
+func TitleEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldTitle, v))
+}
+
+// TitleNEQ applies the NEQ predicate on the "title" field.
+func TitleNEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldTitle, v))
+}
+
+// TitleIn applies the In predicate on the "title" field.
+func TitleIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldTitle, vs...))
+}
+
+// TitleNotIn applies the NotIn predicate on the "title" field.
+func TitleNotIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldTitle, vs...))
+}
+
+// TitleGT applies the GT predicate on the "title" field.
+func TitleGT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldTitle, v))
+}
+
+// TitleGTE applies the GTE predicate on the "title" field.
+func TitleGTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldTitle, v))
+}
+
+// TitleLT applies the LT predicate on the "title" field.
+func TitleLT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldTitle, v))
+}
+
+// TitleLTE applies the LTE predicate on the "title" field.
+func TitleLTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldTitle, v))
+}
+
+// TitleContains applies the Contains predicate on the "title" field.
+func TitleContains(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContains(FieldTitle, v))
+}
+
+// TitleHasPrefix applies the HasPrefix predicate on the "title" field.
+func TitleHasPrefix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasPrefix(FieldTitle, v))
+}
+
+// TitleHasSuffix applies the HasSuffix predicate on the "title" field.
+func TitleHasSuffix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasSuffix(FieldTitle, v))
+}
+
+// TitleIsNil applies the IsNil predicate on the "title" field.
+func TitleIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldTitle))
+}
+
+// TitleNotNil applies the NotNil predicate on the "title" field.
+func TitleNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldTitle))
+}
+
+// TitleEqualFold applies the EqualFold predicate on the "title" field.
+func TitleEqualFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEqualFold(FieldTitle, v))
+}
+
+// TitleContainsFold applies the ContainsFold predicate on the "title" field.
+func TitleContainsFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContainsFold(FieldTitle, v))
+}
+
 // ReasonEQ applies the EQ predicate on the "reason" field.
 func ReasonEQ(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldReason, v))
@@ -347,6 +467,391 @@ func ReasonEqualFold(v string) predicate.ServiceRequest {
 // ReasonContainsFold applies the ContainsFold predicate on the "reason" field.
 func ReasonContainsFold(v string) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldContainsFold(FieldReason, v))
+}
+
+// FormDataIsNil applies the IsNil predicate on the "form_data" field.
+func FormDataIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldFormData))
+}
+
+// FormDataNotNil applies the NotNil predicate on the "form_data" field.
+func FormDataNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldFormData))
+}
+
+// CostCenterEQ applies the EQ predicate on the "cost_center" field.
+func CostCenterEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldCostCenter, v))
+}
+
+// CostCenterNEQ applies the NEQ predicate on the "cost_center" field.
+func CostCenterNEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldCostCenter, v))
+}
+
+// CostCenterIn applies the In predicate on the "cost_center" field.
+func CostCenterIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldCostCenter, vs...))
+}
+
+// CostCenterNotIn applies the NotIn predicate on the "cost_center" field.
+func CostCenterNotIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldCostCenter, vs...))
+}
+
+// CostCenterGT applies the GT predicate on the "cost_center" field.
+func CostCenterGT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldCostCenter, v))
+}
+
+// CostCenterGTE applies the GTE predicate on the "cost_center" field.
+func CostCenterGTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldCostCenter, v))
+}
+
+// CostCenterLT applies the LT predicate on the "cost_center" field.
+func CostCenterLT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldCostCenter, v))
+}
+
+// CostCenterLTE applies the LTE predicate on the "cost_center" field.
+func CostCenterLTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldCostCenter, v))
+}
+
+// CostCenterContains applies the Contains predicate on the "cost_center" field.
+func CostCenterContains(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContains(FieldCostCenter, v))
+}
+
+// CostCenterHasPrefix applies the HasPrefix predicate on the "cost_center" field.
+func CostCenterHasPrefix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasPrefix(FieldCostCenter, v))
+}
+
+// CostCenterHasSuffix applies the HasSuffix predicate on the "cost_center" field.
+func CostCenterHasSuffix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasSuffix(FieldCostCenter, v))
+}
+
+// CostCenterIsNil applies the IsNil predicate on the "cost_center" field.
+func CostCenterIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldCostCenter))
+}
+
+// CostCenterNotNil applies the NotNil predicate on the "cost_center" field.
+func CostCenterNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldCostCenter))
+}
+
+// CostCenterEqualFold applies the EqualFold predicate on the "cost_center" field.
+func CostCenterEqualFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEqualFold(FieldCostCenter, v))
+}
+
+// CostCenterContainsFold applies the ContainsFold predicate on the "cost_center" field.
+func CostCenterContainsFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContainsFold(FieldCostCenter, v))
+}
+
+// DataClassificationEQ applies the EQ predicate on the "data_classification" field.
+func DataClassificationEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldDataClassification, v))
+}
+
+// DataClassificationNEQ applies the NEQ predicate on the "data_classification" field.
+func DataClassificationNEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldDataClassification, v))
+}
+
+// DataClassificationIn applies the In predicate on the "data_classification" field.
+func DataClassificationIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldDataClassification, vs...))
+}
+
+// DataClassificationNotIn applies the NotIn predicate on the "data_classification" field.
+func DataClassificationNotIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldDataClassification, vs...))
+}
+
+// DataClassificationGT applies the GT predicate on the "data_classification" field.
+func DataClassificationGT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldDataClassification, v))
+}
+
+// DataClassificationGTE applies the GTE predicate on the "data_classification" field.
+func DataClassificationGTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldDataClassification, v))
+}
+
+// DataClassificationLT applies the LT predicate on the "data_classification" field.
+func DataClassificationLT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldDataClassification, v))
+}
+
+// DataClassificationLTE applies the LTE predicate on the "data_classification" field.
+func DataClassificationLTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldDataClassification, v))
+}
+
+// DataClassificationContains applies the Contains predicate on the "data_classification" field.
+func DataClassificationContains(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContains(FieldDataClassification, v))
+}
+
+// DataClassificationHasPrefix applies the HasPrefix predicate on the "data_classification" field.
+func DataClassificationHasPrefix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasPrefix(FieldDataClassification, v))
+}
+
+// DataClassificationHasSuffix applies the HasSuffix predicate on the "data_classification" field.
+func DataClassificationHasSuffix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasSuffix(FieldDataClassification, v))
+}
+
+// DataClassificationEqualFold applies the EqualFold predicate on the "data_classification" field.
+func DataClassificationEqualFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEqualFold(FieldDataClassification, v))
+}
+
+// DataClassificationContainsFold applies the ContainsFold predicate on the "data_classification" field.
+func DataClassificationContainsFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContainsFold(FieldDataClassification, v))
+}
+
+// NeedsPublicIPEQ applies the EQ predicate on the "needs_public_ip" field.
+func NeedsPublicIPEQ(v bool) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldNeedsPublicIP, v))
+}
+
+// NeedsPublicIPNEQ applies the NEQ predicate on the "needs_public_ip" field.
+func NeedsPublicIPNEQ(v bool) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldNeedsPublicIP, v))
+}
+
+// SourceIPWhitelistIsNil applies the IsNil predicate on the "source_ip_whitelist" field.
+func SourceIPWhitelistIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldSourceIPWhitelist))
+}
+
+// SourceIPWhitelistNotNil applies the NotNil predicate on the "source_ip_whitelist" field.
+func SourceIPWhitelistNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldSourceIPWhitelist))
+}
+
+// ExpireAtEQ applies the EQ predicate on the "expire_at" field.
+func ExpireAtEQ(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldExpireAt, v))
+}
+
+// ExpireAtNEQ applies the NEQ predicate on the "expire_at" field.
+func ExpireAtNEQ(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldExpireAt, v))
+}
+
+// ExpireAtIn applies the In predicate on the "expire_at" field.
+func ExpireAtIn(vs ...time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldExpireAt, vs...))
+}
+
+// ExpireAtNotIn applies the NotIn predicate on the "expire_at" field.
+func ExpireAtNotIn(vs ...time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldExpireAt, vs...))
+}
+
+// ExpireAtGT applies the GT predicate on the "expire_at" field.
+func ExpireAtGT(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldExpireAt, v))
+}
+
+// ExpireAtGTE applies the GTE predicate on the "expire_at" field.
+func ExpireAtGTE(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldExpireAt, v))
+}
+
+// ExpireAtLT applies the LT predicate on the "expire_at" field.
+func ExpireAtLT(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldExpireAt, v))
+}
+
+// ExpireAtLTE applies the LTE predicate on the "expire_at" field.
+func ExpireAtLTE(v time.Time) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldExpireAt, v))
+}
+
+// ExpireAtIsNil applies the IsNil predicate on the "expire_at" field.
+func ExpireAtIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldExpireAt))
+}
+
+// ExpireAtNotNil applies the NotNil predicate on the "expire_at" field.
+func ExpireAtNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldExpireAt))
+}
+
+// ComplianceAckEQ applies the EQ predicate on the "compliance_ack" field.
+func ComplianceAckEQ(v bool) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldComplianceAck, v))
+}
+
+// ComplianceAckNEQ applies the NEQ predicate on the "compliance_ack" field.
+func ComplianceAckNEQ(v bool) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldComplianceAck, v))
+}
+
+// CurrentLevelEQ applies the EQ predicate on the "current_level" field.
+func CurrentLevelEQ(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldCurrentLevel, v))
+}
+
+// CurrentLevelNEQ applies the NEQ predicate on the "current_level" field.
+func CurrentLevelNEQ(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldCurrentLevel, v))
+}
+
+// CurrentLevelIn applies the In predicate on the "current_level" field.
+func CurrentLevelIn(vs ...int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldCurrentLevel, vs...))
+}
+
+// CurrentLevelNotIn applies the NotIn predicate on the "current_level" field.
+func CurrentLevelNotIn(vs ...int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldCurrentLevel, vs...))
+}
+
+// CurrentLevelGT applies the GT predicate on the "current_level" field.
+func CurrentLevelGT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldCurrentLevel, v))
+}
+
+// CurrentLevelGTE applies the GTE predicate on the "current_level" field.
+func CurrentLevelGTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldCurrentLevel, v))
+}
+
+// CurrentLevelLT applies the LT predicate on the "current_level" field.
+func CurrentLevelLT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldCurrentLevel, v))
+}
+
+// CurrentLevelLTE applies the LTE predicate on the "current_level" field.
+func CurrentLevelLTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldCurrentLevel, v))
+}
+
+// TotalLevelsEQ applies the EQ predicate on the "total_levels" field.
+func TotalLevelsEQ(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldTotalLevels, v))
+}
+
+// TotalLevelsNEQ applies the NEQ predicate on the "total_levels" field.
+func TotalLevelsNEQ(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldTotalLevels, v))
+}
+
+// TotalLevelsIn applies the In predicate on the "total_levels" field.
+func TotalLevelsIn(vs ...int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldTotalLevels, vs...))
+}
+
+// TotalLevelsNotIn applies the NotIn predicate on the "total_levels" field.
+func TotalLevelsNotIn(vs ...int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldTotalLevels, vs...))
+}
+
+// TotalLevelsGT applies the GT predicate on the "total_levels" field.
+func TotalLevelsGT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldTotalLevels, v))
+}
+
+// TotalLevelsGTE applies the GTE predicate on the "total_levels" field.
+func TotalLevelsGTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldTotalLevels, v))
+}
+
+// TotalLevelsLT applies the LT predicate on the "total_levels" field.
+func TotalLevelsLT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldTotalLevels, v))
+}
+
+// TotalLevelsLTE applies the LTE predicate on the "total_levels" field.
+func TotalLevelsLTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldTotalLevels, v))
+}
+
+// LastErrorEQ applies the EQ predicate on the "last_error" field.
+func LastErrorEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldLastError, v))
+}
+
+// LastErrorNEQ applies the NEQ predicate on the "last_error" field.
+func LastErrorNEQ(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldLastError, v))
+}
+
+// LastErrorIn applies the In predicate on the "last_error" field.
+func LastErrorIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldLastError, vs...))
+}
+
+// LastErrorNotIn applies the NotIn predicate on the "last_error" field.
+func LastErrorNotIn(vs ...string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldLastError, vs...))
+}
+
+// LastErrorGT applies the GT predicate on the "last_error" field.
+func LastErrorGT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldLastError, v))
+}
+
+// LastErrorGTE applies the GTE predicate on the "last_error" field.
+func LastErrorGTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldLastError, v))
+}
+
+// LastErrorLT applies the LT predicate on the "last_error" field.
+func LastErrorLT(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldLastError, v))
+}
+
+// LastErrorLTE applies the LTE predicate on the "last_error" field.
+func LastErrorLTE(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldLastError, v))
+}
+
+// LastErrorContains applies the Contains predicate on the "last_error" field.
+func LastErrorContains(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContains(FieldLastError, v))
+}
+
+// LastErrorHasPrefix applies the HasPrefix predicate on the "last_error" field.
+func LastErrorHasPrefix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasPrefix(FieldLastError, v))
+}
+
+// LastErrorHasSuffix applies the HasSuffix predicate on the "last_error" field.
+func LastErrorHasSuffix(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldHasSuffix(FieldLastError, v))
+}
+
+// LastErrorIsNil applies the IsNil predicate on the "last_error" field.
+func LastErrorIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldLastError))
+}
+
+// LastErrorNotNil applies the NotNil predicate on the "last_error" field.
+func LastErrorNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldLastError))
+}
+
+// LastErrorEqualFold applies the EqualFold predicate on the "last_error" field.
+func LastErrorEqualFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEqualFold(FieldLastError, v))
+}
+
+// LastErrorContainsFold applies the ContainsFold predicate on the "last_error" field.
+func LastErrorContainsFold(v string) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldContainsFold(FieldLastError, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

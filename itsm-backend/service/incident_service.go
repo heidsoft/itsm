@@ -8,6 +8,9 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/incidentevent"
+	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 
 	"go.uber.org/zap"
@@ -961,4 +964,118 @@ func (s *IncidentService) GetIncidentStats(ctx context.Context, tenantID int) (*
 		MTTA:              mtta,
 		MTTR:              mttr,
 	}, nil
+}
+
+// GetIncidentEvents 获取指定事件的活动记录
+func (s *IncidentService) GetIncidentEvents(ctx context.Context, incidentID int, tenantID int) ([]dto.IncidentEventResponse, error) {
+	s.logger.Infow("Getting incident events", "incident_id", incidentID, "tenant_id", tenantID)
+
+	// 验证事件是否存在且属于该租户
+	incident, err := s.client.Incident.Query().
+		Where(
+			incident.ID(incidentID),
+			incident.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found or not accessible")
+		}
+		return nil, fmt.Errorf("failed to verify incident: %w", err)
+	}
+
+	// 获取事件的活动记录
+	events, err := s.client.IncidentEvent.Query().
+		Where(
+			incidentevent.IncidentIDEQ(incident.ID),
+			incidentevent.TenantIDEQ(tenantID),
+		).
+		Order(ent.Desc("created_at")).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query incident events: %w", err)
+	}
+
+	responses := make([]dto.IncidentEventResponse, len(events))
+	for i, event := range events {
+		responses[i] = *s.toIncidentEventResponse(event)
+	}
+
+	return responses, nil
+}
+
+// GetIncidentAlerts 获取指定事件的告警
+func (s *IncidentService) GetIncidentAlerts(ctx context.Context, incidentID int, tenantID int) ([]dto.IncidentAlertResponse, error) {
+	s.logger.Infow("Getting incident alerts", "incident_id", incidentID, "tenant_id", tenantID)
+
+	// 验证事件是否存在且属于该租户
+	incident, err := s.client.Incident.Query().
+		Where(
+			incident.ID(incidentID),
+			incident.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found or not accessible")
+		}
+		return nil, fmt.Errorf("failed to verify incident: %w", err)
+	}
+
+	// 获取事件的告警
+	alerts, err := s.client.IncidentAlert.Query().
+		Where(
+			incidentalert.IncidentIDEQ(incident.ID),
+			incidentalert.TenantIDEQ(tenantID),
+		).
+		Order(ent.Desc("created_at")).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query incident alerts: %w", err)
+	}
+
+	responses := make([]dto.IncidentAlertResponse, len(alerts))
+	for i, alert := range alerts {
+		responses[i] = *s.toIncidentAlertResponse(alert)
+	}
+
+	return responses, nil
+}
+
+// GetIncidentMetrics 获取指定事件的指标
+func (s *IncidentService) GetIncidentMetrics(ctx context.Context, incidentID int, tenantID int) ([]dto.IncidentMetricResponse, error) {
+	s.logger.Infow("Getting incident metrics", "incident_id", incidentID, "tenant_id", tenantID)
+
+	// 验证事件是否存在且属于该租户
+	incident, err := s.client.Incident.Query().
+		Where(
+			incident.ID(incidentID),
+			incident.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("incident not found or not accessible")
+		}
+		return nil, fmt.Errorf("failed to verify incident: %w", err)
+	}
+
+	// 获取事件的指标
+	metrics, err := s.client.IncidentMetric.Query().
+		Where(
+			incidentmetric.IncidentIDEQ(incident.ID),
+			incidentmetric.TenantIDEQ(tenantID),
+		).
+		Order(ent.Desc("created_at")).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query incident metrics: %w", err)
+	}
+
+	responses := make([]dto.IncidentMetricResponse, len(metrics))
+	for i, metric := range metrics {
+		responses[i] = *s.toIncidentMetricResponse(metric)
+	}
+
+	return responses, nil
 }
