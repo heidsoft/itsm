@@ -75,6 +75,16 @@ func Priority(v string) predicate.ApprovalWorkflow {
 	return predicate.ApprovalWorkflow(sql.FieldEQ(FieldPriority, v))
 }
 
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldEQ(FieldStatus, v))
+}
+
+// CompletedAt applies equality check predicate on the "completed_at" field. It's identical to CompletedAtEQ.
+func CompletedAt(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldEQ(FieldCompletedAt, v))
+}
+
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.ApprovalWorkflow {
 	return predicate.ApprovalWorkflow(sql.FieldEQ(FieldIsActive, v))
@@ -383,6 +393,121 @@ func PriorityEqualFold(v string) predicate.ApprovalWorkflow {
 // PriorityContainsFold applies the ContainsFold predicate on the "priority" field.
 func PriorityContainsFold(v string) predicate.ApprovalWorkflow {
 	return predicate.ApprovalWorkflow(sql.FieldContainsFold(FieldPriority, v))
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldEQ(FieldStatus, v))
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldNEQ(FieldStatus, v))
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldIn(FieldStatus, vs...))
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldGT(FieldStatus, v))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldGTE(FieldStatus, v))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldLT(FieldStatus, v))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldLTE(FieldStatus, v))
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldContains(FieldStatus, v))
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldHasPrefix(FieldStatus, v))
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldHasSuffix(FieldStatus, v))
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldEqualFold(FieldStatus, v))
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// CompletedAtEQ applies the EQ predicate on the "completed_at" field.
+func CompletedAtEQ(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldEQ(FieldCompletedAt, v))
+}
+
+// CompletedAtNEQ applies the NEQ predicate on the "completed_at" field.
+func CompletedAtNEQ(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldNEQ(FieldCompletedAt, v))
+}
+
+// CompletedAtIn applies the In predicate on the "completed_at" field.
+func CompletedAtIn(vs ...time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldIn(FieldCompletedAt, vs...))
+}
+
+// CompletedAtNotIn applies the NotIn predicate on the "completed_at" field.
+func CompletedAtNotIn(vs ...time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldNotIn(FieldCompletedAt, vs...))
+}
+
+// CompletedAtGT applies the GT predicate on the "completed_at" field.
+func CompletedAtGT(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldGT(FieldCompletedAt, v))
+}
+
+// CompletedAtGTE applies the GTE predicate on the "completed_at" field.
+func CompletedAtGTE(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldGTE(FieldCompletedAt, v))
+}
+
+// CompletedAtLT applies the LT predicate on the "completed_at" field.
+func CompletedAtLT(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldLT(FieldCompletedAt, v))
+}
+
+// CompletedAtLTE applies the LTE predicate on the "completed_at" field.
+func CompletedAtLTE(v time.Time) predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldLTE(FieldCompletedAt, v))
+}
+
+// CompletedAtIsNil applies the IsNil predicate on the "completed_at" field.
+func CompletedAtIsNil() predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldIsNull(FieldCompletedAt))
+}
+
+// CompletedAtNotNil applies the NotNil predicate on the "completed_at" field.
+func CompletedAtNotNil() predicate.ApprovalWorkflow {
+	return predicate.ApprovalWorkflow(sql.FieldNotNull(FieldCompletedAt))
 }
 
 // IsActiveEQ applies the EQ predicate on the "is_active" field.

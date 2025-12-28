@@ -75,6 +75,34 @@ func (awc *ApprovalWorkflowCreate) SetNodes(m []map[string]interface{}) *Approva
 	return awc
 }
 
+// SetStatus sets the "status" field.
+func (awc *ApprovalWorkflowCreate) SetStatus(s string) *ApprovalWorkflowCreate {
+	awc.mutation.SetStatus(s)
+	return awc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (awc *ApprovalWorkflowCreate) SetNillableStatus(s *string) *ApprovalWorkflowCreate {
+	if s != nil {
+		awc.SetStatus(*s)
+	}
+	return awc
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (awc *ApprovalWorkflowCreate) SetCompletedAt(t time.Time) *ApprovalWorkflowCreate {
+	awc.mutation.SetCompletedAt(t)
+	return awc
+}
+
+// SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
+func (awc *ApprovalWorkflowCreate) SetNillableCompletedAt(t *time.Time) *ApprovalWorkflowCreate {
+	if t != nil {
+		awc.SetCompletedAt(*t)
+	}
+	return awc
+}
+
 // SetIsActive sets the "is_active" field.
 func (awc *ApprovalWorkflowCreate) SetIsActive(b bool) *ApprovalWorkflowCreate {
 	awc.mutation.SetIsActive(b)
@@ -177,6 +205,10 @@ func (awc *ApprovalWorkflowCreate) defaults() {
 		v := approvalworkflow.DefaultNodes
 		awc.mutation.SetNodes(v)
 	}
+	if _, ok := awc.mutation.Status(); !ok {
+		v := approvalworkflow.DefaultStatus
+		awc.mutation.SetStatus(v)
+	}
 	if _, ok := awc.mutation.IsActive(); !ok {
 		v := approvalworkflow.DefaultIsActive
 		awc.mutation.SetIsActive(v)
@@ -203,6 +235,9 @@ func (awc *ApprovalWorkflowCreate) check() error {
 	}
 	if _, ok := awc.mutation.Nodes(); !ok {
 		return &ValidationError{Name: "nodes", err: errors.New(`ent: missing required field "ApprovalWorkflow.nodes"`)}
+	}
+	if _, ok := awc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ApprovalWorkflow.status"`)}
 	}
 	if _, ok := awc.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ApprovalWorkflow.is_active"`)}
@@ -266,6 +301,14 @@ func (awc *ApprovalWorkflowCreate) createSpec() (*ApprovalWorkflow, *sqlgraph.Cr
 	if value, ok := awc.mutation.Nodes(); ok {
 		_spec.SetField(approvalworkflow.FieldNodes, field.TypeJSON, value)
 		_node.Nodes = value
+	}
+	if value, ok := awc.mutation.Status(); ok {
+		_spec.SetField(approvalworkflow.FieldStatus, field.TypeString, value)
+		_node.Status = value
+	}
+	if value, ok := awc.mutation.CompletedAt(); ok {
+		_spec.SetField(approvalworkflow.FieldCompletedAt, field.TypeTime, value)
+		_node.CompletedAt = &value
 	}
 	if value, ok := awc.mutation.IsActive(); ok {
 		_spec.SetField(approvalworkflow.FieldIsActive, field.TypeBool, value)

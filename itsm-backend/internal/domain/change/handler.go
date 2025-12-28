@@ -107,6 +107,61 @@ func (h *Handler) GetChange(c *gin.Context) {
 	common.Success(c, toDTO(res))
 }
 
+// GetApprovalSummary handles GET /api/v1/changes/:id/approval-summary
+func (h *Handler) GetApprovalSummary(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	summary, err := h.svc.GetApprovalSummary(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, summary)
+}
+
+// GetRiskAssessment handles GET /api/v1/changes/:id/risk-assessment
+func (h *Handler) GetRiskAssessment(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid change id")
+		return
+	}
+
+	ra, err := h.svc.GetRisk(c.Request.Context(), id)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if ra == nil {
+		common.Success(c, nil)
+		return
+	}
+
+	common.Success(c, dto.ChangeRiskAssessment{
+		ID:                 ra.ID,
+		ChangeID:           ra.ChangeID,
+		RiskLevel:          dto.ChangeRisk(ra.RiskLevel),
+		RiskDescription:    ra.RiskDescription,
+		ImpactAnalysis:     ra.ImpactAnalysis,
+		MitigationMeasures: ra.MitigationMeasures,
+		ContingencyPlan:    ra.ContingencyPlan,
+		RiskOwner:          ra.RiskOwner,
+		RiskReviewDate:     ra.RiskReviewDate,
+		CreatedAt:          ra.CreatedAt,
+		UpdatedAt:          ra.UpdatedAt,
+	})
+}
+
 // ListChanges handles GET /api/v1/changes
 func (h *Handler) ListChanges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))

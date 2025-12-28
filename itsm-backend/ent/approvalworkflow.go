@@ -28,6 +28,10 @@ type ApprovalWorkflow struct {
 	Priority string `json:"priority,omitempty"`
 	// 审批节点配置
 	Nodes []map[string]interface{} `json:"nodes,omitempty"`
+	// 状态: pending, approved, rejected, returned, cancelled
+	Status string `json:"status,omitempty"`
+	// 完成时间
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
 	// 是否启用
 	IsActive bool `json:"is_active,omitempty"`
 	// 租户ID
@@ -71,9 +75,9 @@ func (*ApprovalWorkflow) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case approvalworkflow.FieldID, approvalworkflow.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case approvalworkflow.FieldName, approvalworkflow.FieldDescription, approvalworkflow.FieldTicketType, approvalworkflow.FieldPriority:
+		case approvalworkflow.FieldName, approvalworkflow.FieldDescription, approvalworkflow.FieldTicketType, approvalworkflow.FieldPriority, approvalworkflow.FieldStatus:
 			values[i] = new(sql.NullString)
-		case approvalworkflow.FieldCreatedAt, approvalworkflow.FieldUpdatedAt:
+		case approvalworkflow.FieldCompletedAt, approvalworkflow.FieldCreatedAt, approvalworkflow.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -127,6 +131,19 @@ func (aw *ApprovalWorkflow) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &aw.Nodes); err != nil {
 					return fmt.Errorf("unmarshal field nodes: %w", err)
 				}
+			}
+		case approvalworkflow.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				aw.Status = value.String
+			}
+		case approvalworkflow.FieldCompletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field completed_at", values[i])
+			} else if value.Valid {
+				aw.CompletedAt = new(time.Time)
+				*aw.CompletedAt = value.Time
 			}
 		case approvalworkflow.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -207,6 +224,14 @@ func (aw *ApprovalWorkflow) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("nodes=")
 	builder.WriteString(fmt.Sprintf("%v", aw.Nodes))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(aw.Status)
+	builder.WriteString(", ")
+	if v := aw.CompletedAt; v != nil {
+		builder.WriteString("completed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", aw.IsActive))

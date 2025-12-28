@@ -32,6 +32,10 @@ const (
 	FieldApproverID = "approver_id"
 	// FieldApproverName holds the string denoting the approver_name field in the database.
 	FieldApproverName = "approver_name"
+	// FieldStepOrder holds the string denoting the step_order field in the database.
+	FieldStepOrder = "step_order"
+	// FieldDueDate holds the string denoting the due_date field in the database.
+	FieldDueDate = "due_date"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldAction holds the string denoting the action field in the database.
@@ -78,6 +82,8 @@ var Columns = []string{
 	FieldTotalLevels,
 	FieldApproverID,
 	FieldApproverName,
+	FieldStepOrder,
+	FieldDueDate,
 	FieldStatus,
 	FieldAction,
 	FieldComment,
@@ -115,6 +121,8 @@ var (
 	ApproverIDValidator func(int) error
 	// ApproverNameValidator is a validator for the "approver_name" field. It is called by the builders before save.
 	ApproverNameValidator func(string) error
+	// DefaultStepOrder holds the default value on creation for the "step_order" field.
+	DefaultStepOrder int
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -174,6 +182,16 @@ func ByApproverID(opts ...sql.OrderTermOption) OrderOption {
 // ByApproverName orders the results by the approver_name field.
 func ByApproverName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldApproverName, opts...).ToFunc()
+}
+
+// ByStepOrder orders the results by the step_order field.
+func ByStepOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStepOrder, opts...).ToFunc()
+}
+
+// ByDueDate orders the results by the due_date field.
+func ByDueDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDueDate, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

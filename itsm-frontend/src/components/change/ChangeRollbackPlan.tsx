@@ -276,7 +276,6 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
             删除
           </Button>
         ),
-      ),
     },
   ];
 

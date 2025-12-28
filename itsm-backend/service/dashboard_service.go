@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
@@ -237,16 +239,16 @@ func (s *DashboardService) stringPtr(str string) *string {
 
 // DashboardOverviewData Dashboard概览数据结构（匹配前端期望格式）
 type DashboardOverviewData struct {
-	KPIMetrics              []KPIMetricData                `json:"kpiMetrics"`
-	TicketTrend             []TicketTrendData              `json:"ticketTrend"`
-	IncidentDistribution    []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                 []SLAData                      `json:"slaData"`
-	SatisfactionData        []SatisfactionData             `json:"satisfactionData"`
-	QuickActions            []QuickActionData              `json:"quickActions"`
-	RecentActivities        []RecentActivityData           `json:"recentActivities"`
+	KPIMetrics               []KPIMetricData                `json:"kpiMetrics"`
+	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
+	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
+	SLAData                  []SLAData                      `json:"slaData"`
+	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
+	QuickActions             []QuickActionData              `json:"quickActions"`
+	RecentActivities         []RecentActivityData           `json:"recentActivities"`
 	ResponseTimeDistribution []ResponseTimeDistributionData `json:"responseTimeDistribution,omitempty"`
-	TeamWorkload            []TeamWorkloadData             `json:"teamWorkload,omitempty"`
-	PeakHours               []PeakHourData                 `json:"peakHours,omitempty"`
+	TeamWorkload             []TeamWorkloadData             `json:"teamWorkload,omitempty"`
+	PeakHours                []PeakHourData                 `json:"peakHours,omitempty"`
 }
 
 // KPIMetricData KPI指标数据
@@ -266,14 +268,14 @@ type KPIMetricData struct {
 
 // TicketTrendData 工单趋势数据
 type TicketTrendData struct {
-	Date            string `json:"date"`
-	Open            int    `json:"open"`
-	InProgress      int    `json:"inProgress"`
-	Resolved        int    `json:"resolved"`
-	Closed          int    `json:"closed"`
-	NewTickets      int    `json:"newTickets,omitempty"`
-	CompletedTickets int  `json:"completedTickets,omitempty"`
-	PendingTickets  int   `json:"pendingTickets,omitempty"`
+	Date             string `json:"date"`
+	Open             int    `json:"open"`
+	InProgress       int    `json:"inProgress"`
+	Resolved         int    `json:"resolved"`
+	Closed           int    `json:"closed"`
+	NewTickets       int    `json:"newTickets,omitempty"`
+	CompletedTickets int    `json:"completedTickets,omitempty"`
+	PendingTickets   int    `json:"pendingTickets,omitempty"`
 }
 
 // IncidentDistributionData 事件分布数据
@@ -418,16 +420,16 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 	}
 
 	return &DashboardOverviewData{
-		KPIMetrics:              kpiMetrics,
-		TicketTrend:             ticketTrend,
-		IncidentDistribution:    incidentDistribution,
-		SLAData:                 slaData,
-		SatisfactionData:        satisfactionData,
-		QuickActions:            quickActions,
-		RecentActivities:        recentActivities,
+		KPIMetrics:               kpiMetrics,
+		TicketTrend:              ticketTrend,
+		IncidentDistribution:     incidentDistribution,
+		SLAData:                  slaData,
+		SatisfactionData:         satisfactionData,
+		QuickActions:             quickActions,
+		RecentActivities:         recentActivities,
 		ResponseTimeDistribution: responseTimeDistribution,
-		TeamWorkload:            teamWorkload,
-		PeakHours:               peakHours,
+		TeamWorkload:             teamWorkload,
+		PeakHours:                peakHours,
 	}, nil
 }
 
@@ -578,7 +580,12 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 			Change:      pendingChange,
 			ChangeType:  "decrease",
 			Description: "需要立即处理",
-			Alert:       func() string { if pendingTickets > 200 { return "warning" }; return "" }(),
+			Alert: func() string {
+				if pendingTickets > 200 {
+					return "warning"
+				}
+				return ""
+			}(),
 		},
 		{
 			ID:          "in-progress-tickets",
@@ -637,7 +644,12 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 			ChangeType:  "increase",
 			Description: "服务水平提升",
 			Target:      slaTarget,
-			Alert:       func() string { if slaCompliance >= slaTarget { return "success" }; return "warning" }(),
+			Alert: func() string {
+				if slaCompliance >= slaTarget {
+					return "success"
+				}
+				return "warning"
+			}(),
 		},
 		{
 			ID:          "overdue-tickets",
@@ -718,14 +730,14 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 		pendingTickets := openCount + inProgressCount
 
 		trend = append(trend, TicketTrendData{
-			Date:            date.Format("01-02"),
-			Open:           openCount,
-			InProgress:     inProgressCount,
-			Resolved:       resolvedCount,
-			Closed:         closedCount,
-			NewTickets:     newTickets,
+			Date:             date.Format("01-02"),
+			Open:             openCount,
+			InProgress:       inProgressCount,
+			Resolved:         resolvedCount,
+			Closed:           closedCount,
+			NewTickets:       newTickets,
 			CompletedTickets: completedTickets,
-			PendingTickets: pendingTickets,
+			PendingTickets:   pendingTickets,
 		})
 	}
 
@@ -763,13 +775,70 @@ func (s *DashboardService) getIncidentDistribution(ctx context.Context, tenantID
 
 // getSLADataForDashboard 获取SLA数据
 func (s *DashboardService) getSLADataForDashboard(ctx context.Context, tenantID int) ([]SLAData, error) {
-	// 简化实现，返回示例数据
-	// TODO: 从SLA服务查询真实数据
-	return []SLAData{
-		{Service: "服务A", Target: 95, Actual: 96.5},
-		{Service: "服务B", Target: 98, Actual: 97.2},
-		{Service: "服务C", Target: 90, Actual: 92.1},
-	}, nil
+	// 从数据库查询SLA定义和实际性能数据
+	slaDefinitions, err := s.client.SLADefinition.Query().
+		Where(sladefinition.TenantIDEQ(tenantID)).
+		All(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query SLA definitions: %w", err)
+	}
+
+	var slaData []SLAData
+	for _, sla := range slaDefinitions {
+		// 计算实际性能（这里可以根据实际指标计算）
+		actualPerformance, err := s.calculateActualSLAPerformance(ctx, sla.ID, tenantID)
+		if err != nil {
+			s.logger.Warnf("Failed to calculate performance for SLA %d: %v", sla.ID, err)
+			actualPerformance = 0.0 // 使用默认值
+		}
+
+		slaData = append(slaData, SLAData{
+			Service: sla.Name, // 使用 SLA 名称作为展示
+			Target:  99.0,     // 未定义目标字段时使用固定目标
+			Actual:  actualPerformance,
+		})
+	}
+
+	return slaData, nil
+}
+
+// calculateActualSLAPerformance 计算SLA的实际性能百分比
+func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, slaID int, tenantID int) (float64, error) {
+	// 查询近30天的工单数据来计算SLA达成率
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	totalTickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.CreatedAtGTE(thirtyDaysAgo),
+		).
+		Count(ctx)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if totalTickets == 0 {
+		return 100.0, nil // 没有工单时认为达成率100%
+	}
+
+	// 查询按时解决的工单数量（这里简化为已解决状态的工单）
+	resolvedTickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.CreatedAtGTE(thirtyDaysAgo),
+			ticket.StatusIn("resolved", "closed"),
+		).
+		Count(ctx)
+
+	if err != nil {
+		return 0, err
+	}
+
+	// 计算达成率
+	performance := (float64(resolvedTickets) / float64(totalTickets)) * 100
+	return math.Round(performance*10) / 10, nil // 保留一位小数
 }
 
 // getSatisfactionDataForDashboard 获取满意度数据
@@ -911,12 +980,12 @@ func (s *DashboardService) getTeamWorkload(ctx context.Context, tenantID int) ([
 
 	// 按处理人分组统计
 	assigneeStats := make(map[int]*struct {
-		ticketCount      int
+		ticketCount       int
 		totalResponseTime float64
-		responseCount    int
-		completedCount   int
-		activeCount      int
-		assigneeName     string
+		responseCount     int
+		completedCount    int
+		activeCount       int
+		assigneeName      string
 	})
 
 	for _, t := range tickets {
@@ -939,12 +1008,12 @@ func (s *DashboardService) getTeamWorkload(ctx context.Context, tenantID int) ([
 			}
 
 			assigneeStats[assigneeID] = &struct {
-				ticketCount      int
+				ticketCount       int
 				totalResponseTime float64
-				responseCount    int
-				completedCount   int
-				activeCount      int
-				assigneeName     string
+				responseCount     int
+				completedCount    int
+				activeCount       int
+				assigneeName      string
 			}{
 				assigneeName: assigneeName,
 			}
@@ -1025,18 +1094,18 @@ func (s *DashboardService) getPeakHours(ctx context.Context, tenantID int) ([]Pe
 
 	// 按小时统计
 	hourStats := make(map[int]*struct {
-		count           int
+		count             int
 		totalResponseTime float64
-		responseCount   int
+		responseCount     int
 	})
 
 	for _, t := range tickets {
 		hour := t.CreatedAt.Hour()
 		if hourStats[hour] == nil {
 			hourStats[hour] = &struct {
-				count           int
+				count             int
 				totalResponseTime float64
-				responseCount   int
+				responseCount     int
 			}{}
 		}
 		hourStats[hour].count++
@@ -1055,9 +1124,9 @@ func (s *DashboardService) getPeakHours(ctx context.Context, tenantID int) ([]Pe
 		stats := hourStats[hour]
 		if stats == nil {
 			stats = &struct {
-				count           int
+				count             int
 				totalResponseTime float64
-				responseCount   int
+				responseCount     int
 			}{}
 		}
 

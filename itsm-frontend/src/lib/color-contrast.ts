@@ -88,7 +88,7 @@ export const getAccessibilityRecommendation = (
   let alternative: { foreground?: string; background?: string } | undefined;
   
   if (!passes) {
-    recommendation = `对比度 ${ratio.toFixed(2):1} 不符合WCAG 2.1 AA标准(需要≥4.5:1)`;
+    recommendation = `对比度 ${ratio.toFixed(2)} 不符合WCAG 2.1 AA标准(需要≥4.5:1)`;
     
     // 提供颜色建议
     const brightnessRatio = getContrastRatio(foreground, '#ffffff');

@@ -210,6 +210,9 @@ func NewApplication() *Application {
 
 	// 7. 设置路由
 	r := gin.Default()
+	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
+		sugar.Warnw("failed to set trusted proxies, falling back to default", "error", err)
+	}
 	routerConfig := &router.RouterConfig{
 		JWTSecret:                       cfg.JWT.Secret,
 		Logger:                          sugar,

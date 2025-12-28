@@ -116,6 +116,40 @@ func (awu *ApprovalWorkflowUpdate) AppendNodes(m []map[string]interface{}) *Appr
 	return awu
 }
 
+// SetStatus sets the "status" field.
+func (awu *ApprovalWorkflowUpdate) SetStatus(s string) *ApprovalWorkflowUpdate {
+	awu.mutation.SetStatus(s)
+	return awu
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (awu *ApprovalWorkflowUpdate) SetNillableStatus(s *string) *ApprovalWorkflowUpdate {
+	if s != nil {
+		awu.SetStatus(*s)
+	}
+	return awu
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (awu *ApprovalWorkflowUpdate) SetCompletedAt(t time.Time) *ApprovalWorkflowUpdate {
+	awu.mutation.SetCompletedAt(t)
+	return awu
+}
+
+// SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
+func (awu *ApprovalWorkflowUpdate) SetNillableCompletedAt(t *time.Time) *ApprovalWorkflowUpdate {
+	if t != nil {
+		awu.SetCompletedAt(*t)
+	}
+	return awu
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (awu *ApprovalWorkflowUpdate) ClearCompletedAt() *ApprovalWorkflowUpdate {
+	awu.mutation.ClearCompletedAt()
+	return awu
+}
+
 // SetIsActive sets the "is_active" field.
 func (awu *ApprovalWorkflowUpdate) SetIsActive(b bool) *ApprovalWorkflowUpdate {
 	awu.mutation.SetIsActive(b)
@@ -304,6 +338,15 @@ func (awu *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (n int, err erro
 			sqljson.Append(u, approvalworkflow.FieldNodes, value)
 		})
 	}
+	if value, ok := awu.mutation.Status(); ok {
+		_spec.SetField(approvalworkflow.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := awu.mutation.CompletedAt(); ok {
+		_spec.SetField(approvalworkflow.FieldCompletedAt, field.TypeTime, value)
+	}
+	if awu.mutation.CompletedAtCleared() {
+		_spec.ClearField(approvalworkflow.FieldCompletedAt, field.TypeTime)
+	}
 	if value, ok := awu.mutation.IsActive(); ok {
 		_spec.SetField(approvalworkflow.FieldIsActive, field.TypeBool, value)
 	}
@@ -467,6 +510,40 @@ func (awuo *ApprovalWorkflowUpdateOne) SetNodes(m []map[string]interface{}) *App
 // AppendNodes appends m to the "nodes" field.
 func (awuo *ApprovalWorkflowUpdateOne) AppendNodes(m []map[string]interface{}) *ApprovalWorkflowUpdateOne {
 	awuo.mutation.AppendNodes(m)
+	return awuo
+}
+
+// SetStatus sets the "status" field.
+func (awuo *ApprovalWorkflowUpdateOne) SetStatus(s string) *ApprovalWorkflowUpdateOne {
+	awuo.mutation.SetStatus(s)
+	return awuo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (awuo *ApprovalWorkflowUpdateOne) SetNillableStatus(s *string) *ApprovalWorkflowUpdateOne {
+	if s != nil {
+		awuo.SetStatus(*s)
+	}
+	return awuo
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (awuo *ApprovalWorkflowUpdateOne) SetCompletedAt(t time.Time) *ApprovalWorkflowUpdateOne {
+	awuo.mutation.SetCompletedAt(t)
+	return awuo
+}
+
+// SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
+func (awuo *ApprovalWorkflowUpdateOne) SetNillableCompletedAt(t *time.Time) *ApprovalWorkflowUpdateOne {
+	if t != nil {
+		awuo.SetCompletedAt(*t)
+	}
+	return awuo
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (awuo *ApprovalWorkflowUpdateOne) ClearCompletedAt() *ApprovalWorkflowUpdateOne {
+	awuo.mutation.ClearCompletedAt()
 	return awuo
 }
 
@@ -687,6 +764,15 @@ func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Appr
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, approvalworkflow.FieldNodes, value)
 		})
+	}
+	if value, ok := awuo.mutation.Status(); ok {
+		_spec.SetField(approvalworkflow.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := awuo.mutation.CompletedAt(); ok {
+		_spec.SetField(approvalworkflow.FieldCompletedAt, field.TypeTime, value)
+	}
+	if awuo.mutation.CompletedAtCleared() {
+		_spec.ClearField(approvalworkflow.FieldCompletedAt, field.TypeTime)
 	}
 	if value, ok := awuo.mutation.IsActive(); ok {
 		_spec.SetField(approvalworkflow.FieldIsActive, field.TypeBool, value)

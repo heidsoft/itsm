@@ -29,6 +29,7 @@ Thumbs.db
 /bin/
 /pkg/
 /vendor/
+itsm-backend/.gocache/
 
 # Go 工作空间文件
 go.work

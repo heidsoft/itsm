@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	enttenant "itsm-backend/ent/tenant"
 	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
@@ -30,7 +31,20 @@ func NewService(repo Repository, jwtSecret string, logger *zap.SugaredLogger, cl
 
 // Auth
 
-func (s *Service) Login(ctx context.Context, username, password string, tenantID int) (*AuthResult, error) {
+func (s *Service) Login(ctx context.Context, username, password string, tenantID int, tenantCode string) (*AuthResult, error) {
+	// Resolve tenant
+	if tenantID == 0 && tenantCode != "" {
+		t, err := s.client.Tenant.Query().Where(enttenant.CodeEQ(tenantCode)).First(ctx)
+		if err == nil {
+			tenantID = t.ID
+		}
+	}
+	if tenantID == 0 {
+		// fallback to default tenant if exists
+		if t, err := s.client.Tenant.Query().Where(enttenant.CodeEQ("default")).First(ctx); err == nil {
+			tenantID = t.ID
+		}
+	}
 	u, err := s.repo.GetUserByUsername(ctx, username, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid credentials")
@@ -66,6 +80,35 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         u,
+	}, nil
+}
+
+func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthResult, error) {
+	claims, err := middleware.ValidateRefreshToken(refreshToken, s.jwtSecret)
+	if err != nil {
+		return nil, fmt.Errorf("invalid refresh token")
+	}
+
+	user, err := s.repo.GetUserByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// regenerate tokens
+	accessToken, err := middleware.GenerateAccessToken(user.ID, user.Username, user.Role, user.TenantID, s.jwtSecret, 15*time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	newRefresh, err := middleware.GenerateRefreshToken(user.ID, s.jwtSecret, 7*24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResult{
+		AccessToken:  accessToken,
+		RefreshToken: newRefresh,
+		User:         user,
 	}, nil
 }
 

@@ -24,6 +24,10 @@ const (
 	FieldPriority = "priority"
 	// FieldNodes holds the string denoting the nodes field in the database.
 	FieldNodes = "nodes"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldCompletedAt holds the string denoting the completed_at field in the database.
+	FieldCompletedAt = "completed_at"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
@@ -53,6 +57,8 @@ var Columns = []string{
 	FieldTicketType,
 	FieldPriority,
 	FieldNodes,
+	FieldStatus,
+	FieldCompletedAt,
 	FieldIsActive,
 	FieldTenantID,
 	FieldCreatedAt,
@@ -74,6 +80,8 @@ var (
 	NameValidator func(string) error
 	// DefaultNodes holds the default value on creation for the "nodes" field.
 	DefaultNodes []map[string]interface{}
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
@@ -112,6 +120,16 @@ func ByTicketType(opts ...sql.OrderTermOption) OrderOption {
 // ByPriority orders the results by the priority field.
 func ByPriority(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPriority, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByCompletedAt orders the results by the completed_at field.
+func ByCompletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCompletedAt, opts...).ToFunc()
 }
 
 // ByIsActive orders the results by the is_active field.

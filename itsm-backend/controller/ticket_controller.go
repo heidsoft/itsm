@@ -196,9 +196,7 @@ func (tc *TicketController) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		AssigneeID int `json:"assignee_id" binding:"required"`
-	}
+	var req dto.AssignTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
@@ -225,9 +223,7 @@ func (tc *TicketController) EscalateTicket(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Reason string `json:"reason" binding:"required"`
-	}
+	var req dto.EscalateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
@@ -254,9 +250,7 @@ func (tc *TicketController) ResolveTicket(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Resolution string `json:"resolution" binding:"required"`
-	}
+	var req dto.ResolveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
@@ -283,9 +277,7 @@ func (tc *TicketController) CloseTicket(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Feedback string `json:"feedback"`
-	}
+	var req dto.CloseTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return

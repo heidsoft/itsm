@@ -17,7 +17,7 @@ export class CommonApi {
      * 获取当前用户信息
      */
     static async getMe(): Promise<User> {
-        return httpClient.get<User>('/api/v1/users/me');
+        return httpClient.get<User>('/api/v1/auth/me');
     }
 
     /**

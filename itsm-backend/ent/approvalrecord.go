@@ -37,6 +37,10 @@ type ApprovalRecord struct {
 	ApproverID int `json:"approver_id,omitempty"`
 	// 审批人姓名
 	ApproverName string `json:"approver_name,omitempty"`
+	// 节点顺序
+	StepOrder int `json:"step_order,omitempty"`
+	// 到期时间
+	DueDate *time.Time `json:"due_date,omitempty"`
 	// 状态: pending, approved, rejected, delegated, timeout
 	Status string `json:"status,omitempty"`
 	// 操作: approve, reject, delegate
@@ -93,11 +97,11 @@ func (*ApprovalRecord) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case approvalrecord.FieldID, approvalrecord.FieldTicketID, approvalrecord.FieldWorkflowID, approvalrecord.FieldCurrentLevel, approvalrecord.FieldTotalLevels, approvalrecord.FieldApproverID, approvalrecord.FieldTenantID:
+		case approvalrecord.FieldID, approvalrecord.FieldTicketID, approvalrecord.FieldWorkflowID, approvalrecord.FieldCurrentLevel, approvalrecord.FieldTotalLevels, approvalrecord.FieldApproverID, approvalrecord.FieldStepOrder, approvalrecord.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case approvalrecord.FieldTicketNumber, approvalrecord.FieldTicketTitle, approvalrecord.FieldWorkflowName, approvalrecord.FieldApproverName, approvalrecord.FieldStatus, approvalrecord.FieldAction, approvalrecord.FieldComment:
 			values[i] = new(sql.NullString)
-		case approvalrecord.FieldCreatedAt, approvalrecord.FieldProcessedAt:
+		case approvalrecord.FieldDueDate, approvalrecord.FieldCreatedAt, approvalrecord.FieldProcessedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -173,6 +177,19 @@ func (ar *ApprovalRecord) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field approver_name", values[i])
 			} else if value.Valid {
 				ar.ApproverName = value.String
+			}
+		case approvalrecord.FieldStepOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field step_order", values[i])
+			} else if value.Valid {
+				ar.StepOrder = int(value.Int64)
+			}
+		case approvalrecord.FieldDueDate:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field due_date", values[i])
+			} else if value.Valid {
+				ar.DueDate = new(time.Time)
+				*ar.DueDate = value.Time
 			}
 		case approvalrecord.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -282,6 +299,14 @@ func (ar *ApprovalRecord) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("approver_name=")
 	builder.WriteString(ar.ApproverName)
+	builder.WriteString(", ")
+	builder.WriteString("step_order=")
+	builder.WriteString(fmt.Sprintf("%v", ar.StepOrder))
+	builder.WriteString(", ")
+	if v := ar.DueDate; v != nil {
+		builder.WriteString("due_date=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(ar.Status)

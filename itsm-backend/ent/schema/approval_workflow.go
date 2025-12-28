@@ -31,6 +31,13 @@ func (ApprovalWorkflow) Fields() []ent.Field {
 		field.JSON("nodes", []map[string]interface{}{}).
 			Comment("审批节点配置").
 			Default([]map[string]interface{}{}),
+		field.String("status").
+			Comment("状态: pending, approved, rejected, returned, cancelled").
+			Default("pending"),
+		field.Time("completed_at").
+			Comment("完成时间").
+			Optional().
+			Nillable(),
 		field.Bool("is_active").
 			Comment("是否启用").
 			Default(true),

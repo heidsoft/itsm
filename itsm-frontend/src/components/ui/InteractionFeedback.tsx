@@ -378,48 +378,51 @@ export const useConfirmActions = () => {
 export const useOperationFeedback = () => {
   const { showSuccess, showError, showWarning, showInfo } = useInteractionFeedback();
   
-  const handleOperation = useCallback(async <T>(
-    operation: () => Promise<T>,
-    options: {
-      successMessage?: string;
-      errorMessage?: string;
-      warningMessage?: string;
-      infoMessage?: string;
-      onSuccess?: (result: T) => void;
-      onError?: (error: Error) => void;
-      showLoading?: boolean;
-    } = {}
-  ): Promise<T | null> => {
-    const {
-      successMessage = '操作成功',
-      errorMessage = '操作失败，请重试',
-      warningMessage,
-      infoMessage,
-      onSuccess,
-      onError,
-      showLoading = true,
-    } = options;
+  const handleOperation = useCallback(
+    async <T>(
+      operation: () => Promise<T>,
+      options: {
+        successMessage?: string;
+        errorMessage?: string;
+        warningMessage?: string;
+        infoMessage?: string;
+        onSuccess?: (result: T) => void;
+        onError?: (error: Error) => void;
+        showLoading?: boolean;
+      } = {}
+    ): Promise<T | null> => {
+      const {
+        successMessage = '操作成功',
+        errorMessage = '操作失败，请重试',
+        warningMessage,
+        infoMessage,
+        onSuccess,
+        onError,
+        showLoading = true,
+      } = options;
 
-    if (showLoading) {
-      infoMessage && showInfo(infoMessage);
-    }
-
-    try {
-      const result = await operation();
-      if (successMessage) showSuccess(successMessage);
-      onSuccess?.(result);
-      return result;
-    } catch (error) {
-      const err = error as Error;
-      if (warningMessage) {
-        showWarning(warningMessage);
-      } else {
-        showError(`${errorMessage}: ${err.message}`);
+      if (showLoading) {
+        infoMessage && showInfo(infoMessage);
       }
-      onError?.(err);
-      return null;
-    }
-  }, [showSuccess, showError, showWarning, showInfo]);
+
+      try {
+        const result = await operation();
+        if (successMessage) showSuccess(successMessage);
+        onSuccess?.(result);
+        return result;
+      } catch (error) {
+        const err = error as Error;
+        if (warningMessage) {
+          showWarning(warningMessage);
+        } else {
+          showError(`${errorMessage}: ${err.message}`);
+        }
+        onError?.(err);
+        return null;
+      }
+    },
+    [showSuccess, showError, showWarning, showInfo]
+  );
 
   return {
     handleOperation,

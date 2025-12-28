@@ -138,16 +138,20 @@ func init() {
 	approvalrecordDescApproverName := approvalrecordFields[8].Descriptor()
 	// approvalrecord.ApproverNameValidator is a validator for the "approver_name" field. It is called by the builders before save.
 	approvalrecord.ApproverNameValidator = approvalrecordDescApproverName.Validators[0].(func(string) error)
+	// approvalrecordDescStepOrder is the schema descriptor for step_order field.
+	approvalrecordDescStepOrder := approvalrecordFields[9].Descriptor()
+	// approvalrecord.DefaultStepOrder holds the default value on creation for the step_order field.
+	approvalrecord.DefaultStepOrder = approvalrecordDescStepOrder.Default.(int)
 	// approvalrecordDescStatus is the schema descriptor for status field.
-	approvalrecordDescStatus := approvalrecordFields[9].Descriptor()
+	approvalrecordDescStatus := approvalrecordFields[11].Descriptor()
 	// approvalrecord.DefaultStatus holds the default value on creation for the status field.
 	approvalrecord.DefaultStatus = approvalrecordDescStatus.Default.(string)
 	// approvalrecordDescTenantID is the schema descriptor for tenant_id field.
-	approvalrecordDescTenantID := approvalrecordFields[12].Descriptor()
+	approvalrecordDescTenantID := approvalrecordFields[14].Descriptor()
 	// approvalrecord.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	approvalrecord.TenantIDValidator = approvalrecordDescTenantID.Validators[0].(func(int) error)
 	// approvalrecordDescCreatedAt is the schema descriptor for created_at field.
-	approvalrecordDescCreatedAt := approvalrecordFields[13].Descriptor()
+	approvalrecordDescCreatedAt := approvalrecordFields[15].Descriptor()
 	// approvalrecord.DefaultCreatedAt holds the default value on creation for the created_at field.
 	approvalrecord.DefaultCreatedAt = approvalrecordDescCreatedAt.Default.(func() time.Time)
 	approvalworkflowFields := schema.ApprovalWorkflow{}.Fields()
@@ -160,20 +164,24 @@ func init() {
 	approvalworkflowDescNodes := approvalworkflowFields[4].Descriptor()
 	// approvalworkflow.DefaultNodes holds the default value on creation for the nodes field.
 	approvalworkflow.DefaultNodes = approvalworkflowDescNodes.Default.([]map[string]interface{})
+	// approvalworkflowDescStatus is the schema descriptor for status field.
+	approvalworkflowDescStatus := approvalworkflowFields[5].Descriptor()
+	// approvalworkflow.DefaultStatus holds the default value on creation for the status field.
+	approvalworkflow.DefaultStatus = approvalworkflowDescStatus.Default.(string)
 	// approvalworkflowDescIsActive is the schema descriptor for is_active field.
-	approvalworkflowDescIsActive := approvalworkflowFields[5].Descriptor()
+	approvalworkflowDescIsActive := approvalworkflowFields[7].Descriptor()
 	// approvalworkflow.DefaultIsActive holds the default value on creation for the is_active field.
 	approvalworkflow.DefaultIsActive = approvalworkflowDescIsActive.Default.(bool)
 	// approvalworkflowDescTenantID is the schema descriptor for tenant_id field.
-	approvalworkflowDescTenantID := approvalworkflowFields[6].Descriptor()
+	approvalworkflowDescTenantID := approvalworkflowFields[8].Descriptor()
 	// approvalworkflow.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	approvalworkflow.TenantIDValidator = approvalworkflowDescTenantID.Validators[0].(func(int) error)
 	// approvalworkflowDescCreatedAt is the schema descriptor for created_at field.
-	approvalworkflowDescCreatedAt := approvalworkflowFields[7].Descriptor()
+	approvalworkflowDescCreatedAt := approvalworkflowFields[9].Descriptor()
 	// approvalworkflow.DefaultCreatedAt holds the default value on creation for the created_at field.
 	approvalworkflow.DefaultCreatedAt = approvalworkflowDescCreatedAt.Default.(func() time.Time)
 	// approvalworkflowDescUpdatedAt is the schema descriptor for updated_at field.
-	approvalworkflowDescUpdatedAt := approvalworkflowFields[8].Descriptor()
+	approvalworkflowDescUpdatedAt := approvalworkflowFields[10].Descriptor()
 	// approvalworkflow.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	approvalworkflow.DefaultUpdatedAt = approvalworkflowDescUpdatedAt.Default.(func() time.Time)
 	// approvalworkflow.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

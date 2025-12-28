@@ -43,6 +43,13 @@ func (ApprovalRecord) Fields() []ent.Field {
 		field.String("approver_name").
 			Comment("审批人姓名").
 			NotEmpty(),
+		field.Int("step_order").
+			Comment("节点顺序").
+			Default(1),
+		field.Time("due_date").
+			Comment("到期时间").
+			Optional().
+			Nillable(),
 		field.String("status").
 			Comment("状态: pending, approved, rejected, delegated, timeout").
 			Default("pending"),

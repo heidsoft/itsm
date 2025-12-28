@@ -92,6 +92,34 @@ func (arc *ApprovalRecordCreate) SetApproverName(s string) *ApprovalRecordCreate
 	return arc
 }
 
+// SetStepOrder sets the "step_order" field.
+func (arc *ApprovalRecordCreate) SetStepOrder(i int) *ApprovalRecordCreate {
+	arc.mutation.SetStepOrder(i)
+	return arc
+}
+
+// SetNillableStepOrder sets the "step_order" field if the given value is not nil.
+func (arc *ApprovalRecordCreate) SetNillableStepOrder(i *int) *ApprovalRecordCreate {
+	if i != nil {
+		arc.SetStepOrder(*i)
+	}
+	return arc
+}
+
+// SetDueDate sets the "due_date" field.
+func (arc *ApprovalRecordCreate) SetDueDate(t time.Time) *ApprovalRecordCreate {
+	arc.mutation.SetDueDate(t)
+	return arc
+}
+
+// SetNillableDueDate sets the "due_date" field if the given value is not nil.
+func (arc *ApprovalRecordCreate) SetNillableDueDate(t *time.Time) *ApprovalRecordCreate {
+	if t != nil {
+		arc.SetDueDate(*t)
+	}
+	return arc
+}
+
 // SetStatus sets the "status" field.
 func (arc *ApprovalRecordCreate) SetStatus(s string) *ApprovalRecordCreate {
 	arc.mutation.SetStatus(s)
@@ -221,6 +249,10 @@ func (arc *ApprovalRecordCreate) defaults() {
 		v := approvalrecord.DefaultTotalLevels
 		arc.mutation.SetTotalLevels(v)
 	}
+	if _, ok := arc.mutation.StepOrder(); !ok {
+		v := approvalrecord.DefaultStepOrder
+		arc.mutation.SetStepOrder(v)
+	}
 	if _, ok := arc.mutation.Status(); !ok {
 		v := approvalrecord.DefaultStatus
 		arc.mutation.SetStatus(v)
@@ -295,6 +327,9 @@ func (arc *ApprovalRecordCreate) check() error {
 			return &ValidationError{Name: "approver_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_name": %w`, err)}
 		}
 	}
+	if _, ok := arc.mutation.StepOrder(); !ok {
+		return &ValidationError{Name: "step_order", err: errors.New(`ent: missing required field "ApprovalRecord.step_order"`)}
+	}
 	if _, ok := arc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ApprovalRecord.status"`)}
 	}
@@ -368,6 +403,14 @@ func (arc *ApprovalRecordCreate) createSpec() (*ApprovalRecord, *sqlgraph.Create
 	if value, ok := arc.mutation.ApproverName(); ok {
 		_spec.SetField(approvalrecord.FieldApproverName, field.TypeString, value)
 		_node.ApproverName = value
+	}
+	if value, ok := arc.mutation.StepOrder(); ok {
+		_spec.SetField(approvalrecord.FieldStepOrder, field.TypeInt, value)
+		_node.StepOrder = value
+	}
+	if value, ok := arc.mutation.DueDate(); ok {
+		_spec.SetField(approvalrecord.FieldDueDate, field.TypeTime, value)
+		_node.DueDate = &value
 	}
 	if value, ok := arc.mutation.Status(); ok {
 		_spec.SetField(approvalrecord.FieldStatus, field.TypeString, value)

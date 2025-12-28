@@ -8,9 +8,10 @@ export interface KnowledgeArticle {
     content: string;
     category: string;
     tags: string[];
-    author_id: number;
+    status: string;
+    author: string;
+    views?: number;
     tenant_id: number;
-    is_published: boolean;
     created_at: string;
     updated_at: string;
 }
