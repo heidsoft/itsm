@@ -168,7 +168,7 @@ export class AuthService {
         access_token: string;
         refresh_token: string;
         user: unknown;
-      }>('/api/v1/login', {
+      }>('/api/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           username,

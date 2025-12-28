@@ -1319,6 +1319,9 @@ type ApprovalRecordMutation struct {
 	approver_id      *int
 	addapprover_id   *int
 	approver_name    *string
+	step_order       *int
+	addstep_order    *int
+	due_date         *time.Time
 	status           *string
 	action           *string
 	comment          *string
@@ -1818,6 +1821,111 @@ func (m *ApprovalRecordMutation) ResetApproverName() {
 	m.approver_name = nil
 }
 
+// SetStepOrder sets the "step_order" field.
+func (m *ApprovalRecordMutation) SetStepOrder(i int) {
+	m.step_order = &i
+	m.addstep_order = nil
+}
+
+// StepOrder returns the value of the "step_order" field in the mutation.
+func (m *ApprovalRecordMutation) StepOrder() (r int, exists bool) {
+	v := m.step_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStepOrder returns the old "step_order" field's value of the ApprovalRecord entity.
+// If the ApprovalRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApprovalRecordMutation) OldStepOrder(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStepOrder is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStepOrder requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStepOrder: %w", err)
+	}
+	return oldValue.StepOrder, nil
+}
+
+// AddStepOrder adds i to the "step_order" field.
+func (m *ApprovalRecordMutation) AddStepOrder(i int) {
+	if m.addstep_order != nil {
+		*m.addstep_order += i
+	} else {
+		m.addstep_order = &i
+	}
+}
+
+// AddedStepOrder returns the value that was added to the "step_order" field in this mutation.
+func (m *ApprovalRecordMutation) AddedStepOrder() (r int, exists bool) {
+	v := m.addstep_order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetStepOrder resets all changes to the "step_order" field.
+func (m *ApprovalRecordMutation) ResetStepOrder() {
+	m.step_order = nil
+	m.addstep_order = nil
+}
+
+// SetDueDate sets the "due_date" field.
+func (m *ApprovalRecordMutation) SetDueDate(t time.Time) {
+	m.due_date = &t
+}
+
+// DueDate returns the value of the "due_date" field in the mutation.
+func (m *ApprovalRecordMutation) DueDate() (r time.Time, exists bool) {
+	v := m.due_date
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDueDate returns the old "due_date" field's value of the ApprovalRecord entity.
+// If the ApprovalRecord object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApprovalRecordMutation) OldDueDate(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDueDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDueDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDueDate: %w", err)
+	}
+	return oldValue.DueDate, nil
+}
+
+// ClearDueDate clears the value of the "due_date" field.
+func (m *ApprovalRecordMutation) ClearDueDate() {
+	m.due_date = nil
+	m.clearedFields[approvalrecord.FieldDueDate] = struct{}{}
+}
+
+// DueDateCleared returns if the "due_date" field was cleared in this mutation.
+func (m *ApprovalRecordMutation) DueDateCleared() bool {
+	_, ok := m.clearedFields[approvalrecord.FieldDueDate]
+	return ok
+}
+
+// ResetDueDate resets all changes to the "due_date" field.
+func (m *ApprovalRecordMutation) ResetDueDate() {
+	m.due_date = nil
+	delete(m.clearedFields, approvalrecord.FieldDueDate)
+}
+
 // SetStatus sets the "status" field.
 func (m *ApprovalRecordMutation) SetStatus(s string) {
 	m.status = &s
@@ -2181,7 +2289,7 @@ func (m *ApprovalRecordMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApprovalRecordMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 17)
 	if m.ticket != nil {
 		fields = append(fields, approvalrecord.FieldTicketID)
 	}
@@ -2208,6 +2316,12 @@ func (m *ApprovalRecordMutation) Fields() []string {
 	}
 	if m.approver_name != nil {
 		fields = append(fields, approvalrecord.FieldApproverName)
+	}
+	if m.step_order != nil {
+		fields = append(fields, approvalrecord.FieldStepOrder)
+	}
+	if m.due_date != nil {
+		fields = append(fields, approvalrecord.FieldDueDate)
 	}
 	if m.status != nil {
 		fields = append(fields, approvalrecord.FieldStatus)
@@ -2253,6 +2367,10 @@ func (m *ApprovalRecordMutation) Field(name string) (ent.Value, bool) {
 		return m.ApproverID()
 	case approvalrecord.FieldApproverName:
 		return m.ApproverName()
+	case approvalrecord.FieldStepOrder:
+		return m.StepOrder()
+	case approvalrecord.FieldDueDate:
+		return m.DueDate()
 	case approvalrecord.FieldStatus:
 		return m.Status()
 	case approvalrecord.FieldAction:
@@ -2292,6 +2410,10 @@ func (m *ApprovalRecordMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldApproverID(ctx)
 	case approvalrecord.FieldApproverName:
 		return m.OldApproverName(ctx)
+	case approvalrecord.FieldStepOrder:
+		return m.OldStepOrder(ctx)
+	case approvalrecord.FieldDueDate:
+		return m.OldDueDate(ctx)
 	case approvalrecord.FieldStatus:
 		return m.OldStatus(ctx)
 	case approvalrecord.FieldAction:
@@ -2376,6 +2498,20 @@ func (m *ApprovalRecordMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetApproverName(v)
 		return nil
+	case approvalrecord.FieldStepOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStepOrder(v)
+		return nil
+	case approvalrecord.FieldDueDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDueDate(v)
+		return nil
 	case approvalrecord.FieldStatus:
 		v, ok := value.(string)
 		if !ok {
@@ -2435,6 +2571,9 @@ func (m *ApprovalRecordMutation) AddedFields() []string {
 	if m.addapprover_id != nil {
 		fields = append(fields, approvalrecord.FieldApproverID)
 	}
+	if m.addstep_order != nil {
+		fields = append(fields, approvalrecord.FieldStepOrder)
+	}
 	if m.addtenant_id != nil {
 		fields = append(fields, approvalrecord.FieldTenantID)
 	}
@@ -2452,6 +2591,8 @@ func (m *ApprovalRecordMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedTotalLevels()
 	case approvalrecord.FieldApproverID:
 		return m.AddedApproverID()
+	case approvalrecord.FieldStepOrder:
+		return m.AddedStepOrder()
 	case approvalrecord.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -2484,6 +2625,13 @@ func (m *ApprovalRecordMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddApproverID(v)
 		return nil
+	case approvalrecord.FieldStepOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddStepOrder(v)
+		return nil
 	case approvalrecord.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -2499,6 +2647,9 @@ func (m *ApprovalRecordMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *ApprovalRecordMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(approvalrecord.FieldDueDate) {
+		fields = append(fields, approvalrecord.FieldDueDate)
+	}
 	if m.FieldCleared(approvalrecord.FieldAction) {
 		fields = append(fields, approvalrecord.FieldAction)
 	}
@@ -2522,6 +2673,9 @@ func (m *ApprovalRecordMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ApprovalRecordMutation) ClearField(name string) error {
 	switch name {
+	case approvalrecord.FieldDueDate:
+		m.ClearDueDate()
+		return nil
 	case approvalrecord.FieldAction:
 		m.ClearAction()
 		return nil
@@ -2565,6 +2719,12 @@ func (m *ApprovalRecordMutation) ResetField(name string) error {
 		return nil
 	case approvalrecord.FieldApproverName:
 		m.ResetApproverName()
+		return nil
+	case approvalrecord.FieldStepOrder:
+		m.ResetStepOrder()
+		return nil
+	case approvalrecord.FieldDueDate:
+		m.ResetDueDate()
 		return nil
 	case approvalrecord.FieldStatus:
 		m.ResetStatus()
@@ -2692,6 +2852,8 @@ type ApprovalWorkflowMutation struct {
 	priority                *string
 	nodes                   *[]map[string]interface{}
 	appendnodes             []map[string]interface{}
+	status                  *string
+	completed_at            *time.Time
 	is_active               *bool
 	tenant_id               *int
 	addtenant_id            *int
@@ -3038,6 +3200,91 @@ func (m *ApprovalWorkflowMutation) ResetNodes() {
 	m.appendnodes = nil
 }
 
+// SetStatus sets the "status" field.
+func (m *ApprovalWorkflowMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ApprovalWorkflowMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ApprovalWorkflow entity.
+// If the ApprovalWorkflow object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApprovalWorkflowMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ApprovalWorkflowMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (m *ApprovalWorkflowMutation) SetCompletedAt(t time.Time) {
+	m.completed_at = &t
+}
+
+// CompletedAt returns the value of the "completed_at" field in the mutation.
+func (m *ApprovalWorkflowMutation) CompletedAt() (r time.Time, exists bool) {
+	v := m.completed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompletedAt returns the old "completed_at" field's value of the ApprovalWorkflow entity.
+// If the ApprovalWorkflow object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ApprovalWorkflowMutation) OldCompletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCompletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCompletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompletedAt: %w", err)
+	}
+	return oldValue.CompletedAt, nil
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (m *ApprovalWorkflowMutation) ClearCompletedAt() {
+	m.completed_at = nil
+	m.clearedFields[approvalworkflow.FieldCompletedAt] = struct{}{}
+}
+
+// CompletedAtCleared returns if the "completed_at" field was cleared in this mutation.
+func (m *ApprovalWorkflowMutation) CompletedAtCleared() bool {
+	_, ok := m.clearedFields[approvalworkflow.FieldCompletedAt]
+	return ok
+}
+
+// ResetCompletedAt resets all changes to the "completed_at" field.
+func (m *ApprovalWorkflowMutation) ResetCompletedAt() {
+	m.completed_at = nil
+	delete(m.clearedFields, approvalworkflow.FieldCompletedAt)
+}
+
 // SetIsActive sets the "is_active" field.
 func (m *ApprovalWorkflowMutation) SetIsActive(b bool) {
 	m.is_active = &b
@@ -3290,7 +3537,7 @@ func (m *ApprovalWorkflowMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApprovalWorkflowMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 11)
 	if m.name != nil {
 		fields = append(fields, approvalworkflow.FieldName)
 	}
@@ -3305,6 +3552,12 @@ func (m *ApprovalWorkflowMutation) Fields() []string {
 	}
 	if m.nodes != nil {
 		fields = append(fields, approvalworkflow.FieldNodes)
+	}
+	if m.status != nil {
+		fields = append(fields, approvalworkflow.FieldStatus)
+	}
+	if m.completed_at != nil {
+		fields = append(fields, approvalworkflow.FieldCompletedAt)
 	}
 	if m.is_active != nil {
 		fields = append(fields, approvalworkflow.FieldIsActive)
@@ -3336,6 +3589,10 @@ func (m *ApprovalWorkflowMutation) Field(name string) (ent.Value, bool) {
 		return m.Priority()
 	case approvalworkflow.FieldNodes:
 		return m.Nodes()
+	case approvalworkflow.FieldStatus:
+		return m.Status()
+	case approvalworkflow.FieldCompletedAt:
+		return m.CompletedAt()
 	case approvalworkflow.FieldIsActive:
 		return m.IsActive()
 	case approvalworkflow.FieldTenantID:
@@ -3363,6 +3620,10 @@ func (m *ApprovalWorkflowMutation) OldField(ctx context.Context, name string) (e
 		return m.OldPriority(ctx)
 	case approvalworkflow.FieldNodes:
 		return m.OldNodes(ctx)
+	case approvalworkflow.FieldStatus:
+		return m.OldStatus(ctx)
+	case approvalworkflow.FieldCompletedAt:
+		return m.OldCompletedAt(ctx)
 	case approvalworkflow.FieldIsActive:
 		return m.OldIsActive(ctx)
 	case approvalworkflow.FieldTenantID:
@@ -3414,6 +3675,20 @@ func (m *ApprovalWorkflowMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetNodes(v)
+		return nil
+	case approvalworkflow.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case approvalworkflow.FieldCompletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompletedAt(v)
 		return nil
 	case approvalworkflow.FieldIsActive:
 		v, ok := value.(bool)
@@ -3497,6 +3772,9 @@ func (m *ApprovalWorkflowMutation) ClearedFields() []string {
 	if m.FieldCleared(approvalworkflow.FieldPriority) {
 		fields = append(fields, approvalworkflow.FieldPriority)
 	}
+	if m.FieldCleared(approvalworkflow.FieldCompletedAt) {
+		fields = append(fields, approvalworkflow.FieldCompletedAt)
+	}
 	return fields
 }
 
@@ -3520,6 +3798,9 @@ func (m *ApprovalWorkflowMutation) ClearField(name string) error {
 	case approvalworkflow.FieldPriority:
 		m.ClearPriority()
 		return nil
+	case approvalworkflow.FieldCompletedAt:
+		m.ClearCompletedAt()
+		return nil
 	}
 	return fmt.Errorf("unknown ApprovalWorkflow nullable field %s", name)
 }
@@ -3542,6 +3823,12 @@ func (m *ApprovalWorkflowMutation) ResetField(name string) error {
 		return nil
 	case approvalworkflow.FieldNodes:
 		m.ResetNodes()
+		return nil
+	case approvalworkflow.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case approvalworkflow.FieldCompletedAt:
+		m.ResetCompletedAt()
 		return nil
 	case approvalworkflow.FieldIsActive:
 		m.ResetIsActive()

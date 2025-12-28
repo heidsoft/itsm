@@ -106,8 +106,32 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 		return nil, fmt.Errorf("获取问题列表失败: %v", err)
 	}
 
+	// map ent -> dto
+	dtoProblems := make([]dto.ProblemResponse, 0, len(problems))
+	for _, p := range problems {
+		item := dto.ProblemResponse{
+			ID:          p.ID,
+			Title:       p.Title,
+			Description: p.Description,
+			Status:      p.Status,
+			Priority:    p.Priority,
+			Category:    p.Category,
+			RootCause:   p.RootCause,
+			Impact:      p.Impact,
+			CreatedBy:   p.CreatedBy,
+			TenantID:    p.TenantID,
+			CreatedAt:   p.CreatedAt,
+			UpdatedAt:   p.UpdatedAt,
+		}
+		if p.AssigneeID != 0 {
+			val := p.AssigneeID
+			item.AssigneeID = &val
+		}
+		dtoProblems = append(dtoProblems, item)
+	}
+
 	return &dto.ListProblemsResponse{
-		Problems: problems,
+		Problems: dtoProblems,
 		Total:    total,
 		Page:     page,
 		PageSize: pageSize,

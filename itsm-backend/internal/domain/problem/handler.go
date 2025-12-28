@@ -22,24 +22,8 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemDetailResponse {
 	if p == nil {
 		return nil
 	}
-	// We need to map Domain Problem to Ent Problem for the existing DTO...
-	// Or define new DTOs. The existing DTO uses `*ent.Problem`.
-	// For compatibility and DDD, we should probably have clean DTOs, but let's try to map to what the DTO expects or update DTO.
-	// The `dto.ListProblemsResponse` expects `[]*ent.Problem`.
-	// This is leaky. Ideally DTO should not depend on Ent.
-	// But `ent.Problem` is just a struct.
-	// Let's create a helper to map Domain -> Ent struct (just as a data carrier) or suggested fix: Update DTO to use a neutral struct.
-	// Given we are refactoring, updating DTO is better, but might break other things?
-	// `problem_service.go` (legacy) used `ent.Problem`.
-	// Let's use `ent.Problem` for now to satisfy the existing DTO definition, or better, change the response format to standard JSON map if DTO represents `ent`.
 
-	// Actually, look at `dto/problem_dto.go`:
-	// type ProblemDetailResponse struct { Problem *ent.Problem }
-	// This is very coupled.
-	// I will return a map or a new anonymous struct for now to decouple, OR construct an `ent.Problem`.
-	// Constructing `ent.Problem` is safe as it's just a struct.
-
-	ep := &ent.Problem{
+	resp := dto.ProblemResponse{
 		ID:          p.ID,
 		Title:       p.Title,
 		Description: p.Description,
@@ -54,10 +38,10 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemDetailResponse {
 		UpdatedAt:   p.UpdatedAt,
 	}
 	if p.AssigneeID != nil {
-		ep.AssigneeID = *p.AssigneeID
+		resp.AssigneeID = p.AssigneeID
 	}
 
-	return &dto.ProblemDetailResponse{Problem: ep}
+	return &dto.ProblemDetailResponse{Problem: resp}
 }
 
 func (h *Handler) Create(c *gin.Context) {
@@ -144,9 +128,9 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	// Map to DTO response
-	var entProblems []*ent.Problem
+	var dtoProblems []dto.ProblemResponse
 	for _, p := range list {
-		ep := &ent.Problem{
+		item := dto.ProblemResponse{
 			ID:          p.ID,
 			Title:       p.Title,
 			Description: p.Description,
@@ -161,13 +145,13 @@ func (h *Handler) List(c *gin.Context) {
 			UpdatedAt:   p.UpdatedAt,
 		}
 		if p.AssigneeID != nil {
-			ep.AssigneeID = *p.AssigneeID
+			item.AssigneeID = p.AssigneeID
 		}
-		entProblems = append(entProblems, ep)
+		dtoProblems = append(dtoProblems, item)
 	}
 
 	common.Success(c, &dto.ListProblemsResponse{
-		Problems: entProblems,
+		Problems: dtoProblems,
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,

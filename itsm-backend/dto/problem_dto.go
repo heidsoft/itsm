@@ -1,9 +1,6 @@
 package dto
 
-import (
-	"itsm-backend/ent"
-	"time"
-)
+import "time"
 
 // CreateProblemRequest 创建问题请求
 type CreateProblemRequest struct {
@@ -41,12 +38,29 @@ type ListProblemsRequest struct {
 	SortOrder string     `json:"sort_order" form:"sort_order"`
 }
 
+// ProblemResponse 问题响应
+type ProblemResponse struct {
+	ID          int       `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"`
+	Priority    string    `json:"priority"`
+	Category    string    `json:"category"`
+	RootCause   string    `json:"root_cause"`
+	Impact      string    `json:"impact"`
+	AssigneeID  *int      `json:"assignee_id,omitempty"`
+	CreatedBy   int       `json:"created_by"`
+	TenantID    int       `json:"tenant_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 // ListProblemsResponse 问题列表响应
 type ListProblemsResponse struct {
-	Problems []*ent.Problem `json:"problems"`
-	Total    int            `json:"total"`
-	Page     int            `json:"page"`
-	PageSize int            `json:"page_size"`
+	Problems []ProblemResponse `json:"problems"`
+	Total    int               `json:"total"`
+	Page     int               `json:"page"`
+	PageSize int               `json:"page_size"`
 }
 
 // ProblemStatsResponse 问题统计响应
@@ -61,5 +75,5 @@ type ProblemStatsResponse struct {
 
 // ProblemDetailResponse 问题详情响应
 type ProblemDetailResponse struct {
-	Problem *ent.Problem `json:"problem"`
+	Problem ProblemResponse `json:"problem"`
 }

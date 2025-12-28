@@ -91,6 +91,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	{
 		if config.CommonHandler != nil {
 			public.POST("/auth/login", config.CommonHandler.Login)
+			public.POST("/refresh-token", config.CommonHandler.RefreshToken)
 		}
 
 		// 系统状态
@@ -153,12 +154,30 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
 			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
+			tickets.POST("/:id/assign", config.TicketController.AssignTicket)
+			tickets.POST("/:id/resolve", config.TicketController.ResolveTicket)
+			tickets.POST("/:id/close", config.TicketController.CloseTicket)
 
 			// 子任务管理
 			tickets.GET("/:id/subtasks", config.TicketController.GetSubtasks)
 			tickets.POST("/:id/subtasks", config.TicketController.CreateSubtask)
 			tickets.PATCH("/:id/subtasks/:subtask_id", config.TicketController.UpdateSubtask)
 			tickets.DELETE("/:id/subtasks/:subtask_id", config.TicketController.DeleteSubtask)
+
+			// 评论
+			if config.TicketCommentController != nil {
+				tickets.GET("/:id/comments", config.TicketCommentController.ListTicketComments)
+				tickets.POST("/:id/comments", config.TicketCommentController.CreateTicketComment)
+				tickets.PUT("/:id/comments/:comment_id", config.TicketCommentController.UpdateTicketComment)
+				tickets.DELETE("/:id/comments/:comment_id", config.TicketCommentController.DeleteTicketComment)
+			}
+
+			// 附件
+			if config.TicketAttachmentController != nil {
+				tickets.GET("/:id/attachments", config.TicketAttachmentController.ListTicketAttachments)
+				tickets.POST("/:id/attachments", config.TicketAttachmentController.UploadAttachment)
+				tickets.DELETE("/:id/attachments/:attachment_id", config.TicketAttachmentController.DeleteAttachment)
+			}
 
 			// 审批流程管理
 			if config.ApprovalController != nil {
@@ -226,6 +245,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.GET("/:id", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetChange)
 				changes.PUT("/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdateChange)
 				changes.POST("/:id/approvals", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitApproval)
+				changes.GET("/:id/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovalSummary)
+				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
 			}
 		}
 

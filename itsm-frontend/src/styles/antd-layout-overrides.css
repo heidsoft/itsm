@@ -10,25 +10,17 @@
   background: #f5f5f5;
 }
 
-/* ========== Header 顶部导航 (Ant Design 标准: 64px) ========== */
+/* ========== Header 顶部导航 (与自定义 Header 样式一致) ========== */
 .ant-layout-header {
-  height: 64px !important;            /* 标准高度: 48+8n, n=2 */
-  line-height: 64px !important;
-  padding: 0 24px !important;          /* 标准内边距 */
+  height: 56px !important;
+  line-height: 56px !important;
+  padding: 0 16px !important;
   background: #fff !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
   position: sticky;
   top: 0;
   z-index: 10;
   display: flex;
   align-items: center;
-}
-
-/* Header 响应式 */
-@media (max-width: 768px) {
-  .ant-layout-header {
-    padding: 0 16px !important;
-  }
 }
 
 /* ========== Sider 侧边导航 (Ant Design 标准: 200px/80px) ========== */
@@ -38,10 +30,10 @@
 
 /* Sider 展开状态 */
 .ant-layout-sider:not(.ant-layout-sider-collapsed) {
-  flex: 0 0 200px !important;          /* 标准宽度: 200+8n, n=0 */
-  max-width: 200px !important;
-  min-width: 200px !important;
-  width: 200px !important;
+  flex: 0 0 256px !important;
+  max-width: 256px !important;
+  min-width: 256px !important;
+  width: 256px !important;
 }
 
 /* Sider 收起状态 */
@@ -64,21 +56,15 @@
 
 /* ========== Content 内容区 ========== */
 .ant-layout-content {
-  margin: 24px 24px 24px 224px !important;  /* 24px + 200px */
-  padding: 24px !important;
-  min-height: calc(100vh - 64px);
-  background: #fff;
-  border-radius: 8px;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: calc(100vh - 56px);
+  background: transparent !important;
+  border-radius: 0;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Content - Sider收起状态 */
-.ant-layout-has-sider.sider-collapsed .ant-layout-content {
-  margin-left: 96px !important;        /* 16px + 80px */
-  margin: 16px !important;
-  margin-left: 96px !important;
-  padding: 16px !important;
-}
+/* Content - 由 layout 内联样式控制，不在此处强制 */
 
 /* ========== Menu 菜单 ========== */
 .ant-menu-inline {
@@ -150,16 +136,10 @@
 /* Tablet (768px - 991px) */
 @media (max-width: 991px) {
   .ant-layout-sider:not(.ant-layout-sider-collapsed) {
-    flex: 0 0 200px !important;
-    max-width: 200px !important;
-    min-width: 200px !important;
-    width: 200px !important;
-  }
-  
-  .ant-layout-content {
-    margin: 16px !important;
-    margin-left: 96px !important;      /* 强制收起状态 */
-    padding: 16px !important;
+    flex: 0 0 256px !important;
+    max-width: 256px !important;
+    min-width: 256px !important;
+    width: 256px !important;
   }
 }
 
@@ -189,9 +169,8 @@
   }
   
   .ant-layout-content {
-    margin: 8px !important;
-    padding: 12px !important;
-    margin-left: 8px !important;
+    margin: 0;
+    padding: 0;
   }
   
   /* 隐藏面包屑 */
@@ -271,4 +250,3 @@
 .ant-menu-item-selected::before {
   transform: translateZ(0);
 }
-

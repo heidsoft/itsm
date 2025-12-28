@@ -93,14 +93,23 @@ export class ServiceRequestApi {
      * 但 Router 中 `ServiceRequestHandler.List` 只是调用 `service.List` (generic filter)。
      * 我似乎**漏掉**了暴露 `ListPendingApprovals` 的 endpoint!
      * 这是一个后端遗漏。
-     * 
-     * 暂时在前端实现这个方法，标记为 TODO 需修复后端。
-     * 或者复用 List 接口，但 List 接口目前的 filter 逻辑可能不支持“基于角色的待办查询”。
      */
     static async getPendingApprovals(query?: ServiceRequestQuery): Promise<ServiceRequestListResponse> {
-        // TODO: 后端目前可能不支持专门的 "pending approvals" 路由，
-        // 或者需要通过 filter status + user role 来实现。
-        // 暂时尝试调用 List，但可能需要后端补充 /pending 路由。
-        return this.getServiceRequests(query);
+        const params: Record<string, any> = {
+            page: query?.page ?? 1,
+            size: query?.size ?? 10,
+        };
+
+        if (query?.status) {
+            params.status = query.status;
+        }
+
+        const resp = await httpClient.get<any>(`${BASE_URL}/approvals/pending`, params);
+        return {
+            requests: resp.requests || [],
+            total: resp.total || 0,
+            page: resp.page || params.page,
+            size: resp.size || params.size,
+        };
     }
 }

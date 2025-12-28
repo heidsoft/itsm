@@ -21,16 +21,35 @@ func NewHandler(svc *Service) *Handler {
 
 func (h *Handler) Login(c *gin.Context) {
 	var req struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-		TenantID int    `json:"tenant_id"`
+		Username   string `json:"username" binding:"required"`
+		Password   string `json:"password" binding:"required"`
+		TenantID   int    `json:"tenant_id"`
+		TenantCode string `json:"tenant_code"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	res, err := h.svc.Login(c.Request.Context(), req.Username, req.Password, req.TenantID)
+	res, err := h.svc.Login(c.Request.Context(), req.Username, req.Password, req.TenantID, req.TenantCode)
+	if err != nil {
+		common.Fail(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	common.Success(c, res)
+}
+
+func (h *Handler) RefreshToken(c *gin.Context) {
+	var req struct {
+		RefreshToken string `json:"refresh_token" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	res, err := h.svc.RefreshToken(c.Request.Context(), req.RefreshToken)
 	if err != nil {
 		common.Fail(c, http.StatusUnauthorized, err.Error())
 		return

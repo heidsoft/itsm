@@ -7,8 +7,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/approvalworkflow"
 
 	"go.uber.org/zap"
 )
@@ -40,7 +40,7 @@ func (s *ApprovalService) CreateWorkflow(ctx context.Context, req *dto.CreateApp
 			"approval_mode":  node.ApprovalMode,
 			"allow_reject":   node.AllowReject,
 			"allow_delegate": node.AllowDelegate,
-			"reject_action": node.RejectAction,
+			"reject_action":  node.RejectAction,
 		}
 		if node.MinimumApprovals != nil {
 			nodeMap["minimum_approvals"] = *node.MinimumApprovals
@@ -130,7 +130,7 @@ func (s *ApprovalService) UpdateWorkflow(ctx context.Context, id int, req *dto.U
 				"approval_mode":  node.ApprovalMode,
 				"allow_reject":   node.AllowReject,
 				"allow_delegate": node.AllowDelegate,
-				"reject_action": node.RejectAction,
+				"reject_action":  node.RejectAction,
 			}
 			if node.MinimumApprovals != nil {
 				nodeMap["minimum_approvals"] = *node.MinimumApprovals
@@ -335,7 +335,7 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, acti
 	s.logger.Infow("Submitting approval", "record_id", recordID, "action", action, "tenant_id", tenantID)
 
 	// 获取审批记录
-	_, err := s.client.ApprovalRecord.Query().
+	approvalRecord, err := s.client.ApprovalRecord.Query().
 		Where(
 			approvalrecord.IDEQ(recordID),
 			approvalrecord.TenantIDEQ(tenantID),
@@ -362,10 +362,132 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, acti
 		return fmt.Errorf("failed to update approval record: %w", err)
 	}
 
-	// TODO: 处理审批后的逻辑
-	// - 如果批准，检查是否需要进入下一级
-	// - 如果拒绝，根据reject_action处理
-	// - 如果委托，创建新的审批记录
+	// 处理审批后的逻辑
+	switch action {
+	case "approve":
+		if err := s.handleApprovalApproved(ctx, approvalRecord); err != nil {
+			s.logger.Errorw("Failed to handle approved action", "error", err)
+			return fmt.Errorf("failed to handle approved action: %w", err)
+		}
+	case "reject":
+		rejectAction := "terminate" // 默认拒绝动作，可以从参数中获取
+		if err := s.handleApprovalRejected(ctx, approvalRecord, rejectAction); err != nil {
+			s.logger.Errorw("Failed to handle rejected action", "error", err)
+			return fmt.Errorf("failed to handle rejected action: %w", err)
+		}
+	case "delegate":
+		if delegateToUserID != nil {
+			if err := s.handleApprovalDelegated(ctx, approvalRecord, *delegateToUserID); err != nil {
+				s.logger.Errorw("Failed to handle delegated action", "error", err)
+				return fmt.Errorf("failed to handle delegated action: %w", err)
+			}
+		} else {
+			return fmt.Errorf("delegate_to_user_id is required for delegation")
+		}
+	}
+
+	return nil
+}
+
+// handleApprovalApproved 处理审批通过
+func (s *ApprovalService) handleApprovalApproved(ctx context.Context, record *ent.ApprovalRecord) error {
+	// 检查是否还有其他待审批的记录在同一个审批工作流中
+	remainingApprovals, err := s.client.ApprovalRecord.Query().
+		Where(
+			approvalrecord.WorkflowIDEQ(record.WorkflowID),
+			approvalrecord.StatusEQ("pending"),
+		).
+		Count(ctx)
+
+	if err != nil {
+		return fmt.Errorf("failed to count remaining approvals: %w", err)
+	}
+
+	// 如果没有剩余的待审批项，标记整个工作流为完成
+	if remainingApprovals == 0 {
+		_, err := s.client.ApprovalWorkflow.UpdateOneID(record.WorkflowID).
+			SetStatus("approved").
+			SetCompletedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update workflow status: %w", err)
+		}
+
+		// 可以在这里触发后续的业务逻辑，比如通知相关人员等
+		s.logger.Infow("Approval workflow completed", "workflowID", record.WorkflowID)
+	}
+
+	return nil
+}
+
+// handleApprovalRejected 处理审批拒绝
+func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *ent.ApprovalRecord, rejectAction string) error {
+	// 根据拒绝动作处理
+	switch rejectAction {
+	case "terminate":
+		// 终止整个工作流
+		_, err := s.client.ApprovalWorkflow.UpdateOneID(record.WorkflowID).
+			SetStatus("rejected").
+			SetCompletedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update workflow status to rejected: %w", err)
+		}
+
+		// 取消同一工作流中的其他待审批项
+		_, err = s.client.ApprovalRecord.Update().
+			Where(
+				approvalrecord.WorkflowIDEQ(record.WorkflowID),
+				approvalrecord.StatusEQ("pending"),
+			).
+			SetStatus("cancelled").
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to cancel remaining approvals: %w", err)
+		}
+
+	case "return_to_submitter":
+		// 返回给提交人
+		_, err := s.client.ApprovalWorkflow.UpdateOneID(record.WorkflowID).
+			SetStatus("returned").
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update workflow status to returned: %w", err)
+		}
+
+	default:
+		// 默认行为：终止工作流
+		return s.handleApprovalRejected(ctx, record, "terminate")
+	}
+
+	return nil
+}
+
+// handleApprovalDelegated 处理审批委托
+func (s *ApprovalService) handleApprovalDelegated(ctx context.Context, record *ent.ApprovalRecord, delegateTo int) error {
+	// 创建新的审批记录给被委托人
+	_, err := s.client.ApprovalRecord.Create().
+		SetWorkflowID(record.WorkflowID).
+		SetWorkflowName(record.WorkflowName).
+		SetTicketID(record.TicketID).
+		SetTicketNumber(record.TicketNumber).
+		SetTicketTitle(record.TicketTitle).
+		SetCurrentLevel(record.CurrentLevel).
+		SetTotalLevels(record.TotalLevels).
+		SetApproverID(delegateTo).
+		SetApproverName(record.ApproverName).
+		SetStepOrder(record.StepOrder).
+		SetStatus("pending").
+		SetNillableDueDate(record.DueDate).
+		SetTenantID(record.TenantID).
+		Save(ctx)
+
+	if err != nil {
+		return fmt.Errorf("failed to create delegated approval record: %w", err)
+	}
+
+	// 可以在这里发送通知给被委托人
+	s.logger.Infow("Approval delegated", "originalApprover", record.ApproverID, "delegateTo", delegateTo)
 
 	return nil
 }
@@ -456,18 +578,18 @@ func (s *ApprovalService) toWorkflowResponse(workflow *ent.ApprovalWorkflow) *dt
 
 func (s *ApprovalService) toRecordResponse(record *ent.ApprovalRecord) *dto.ApprovalRecordResponse {
 	response := &dto.ApprovalRecordResponse{
-		ID:            record.ID,
-		TicketID:      record.TicketID,
-		TicketNumber:  record.TicketNumber,
-		TicketTitle:   record.TicketTitle,
-		WorkflowID:    record.WorkflowID,
-		WorkflowName:  record.WorkflowName,
-		CurrentLevel:  record.CurrentLevel,
-		TotalLevels:   record.TotalLevels,
-		ApproverID:    record.ApproverID,
-		ApproverName:  record.ApproverName,
-		Status:        record.Status,
-		CreatedAt:     record.CreatedAt,
+		ID:           record.ID,
+		TicketID:     record.TicketID,
+		TicketNumber: record.TicketNumber,
+		TicketTitle:  record.TicketTitle,
+		WorkflowID:   record.WorkflowID,
+		WorkflowName: record.WorkflowName,
+		CurrentLevel: record.CurrentLevel,
+		TotalLevels:  record.TotalLevels,
+		ApproverID:   record.ApproverID,
+		ApproverName: record.ApproverName,
+		Status:       record.Status,
+		CreatedAt:    record.CreatedAt,
 	}
 
 	if record.Action != "" {
@@ -482,4 +604,3 @@ func (s *ApprovalService) toRecordResponse(record *ent.ApprovalRecord) *dto.Appr
 
 	return response
 }
-

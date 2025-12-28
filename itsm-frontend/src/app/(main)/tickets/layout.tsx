@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
-import { Outlet } from 'next/navigation';
+import React, { PropsWithChildren } from 'react';
 import { Breadcrumb } from 'antd';
 import Link from 'next/link';
 import { HomeOutlined } from '@ant-design/icons';
 
-const TicketLayout: React.FC = () => {
+const TicketLayout: React.FC<PropsWithChildren> = ({ children }) => {
   const breadcrumbItems = [
     {
       title: (
@@ -34,7 +33,7 @@ const TicketLayout: React.FC = () => {
       </div>
 
       {/* 页面内容 */}
-      <Outlet />
+      {children}
     </div>
   );
 };

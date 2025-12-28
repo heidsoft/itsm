@@ -39,6 +39,23 @@
 @import '../components/ui/animations.css';
 @import '../components/ui/typography.css';
 
+/* 主内容区域：移除页面内居中约束，贴合侧边栏与顶部布局 */
+.main-content {
+  width: 100%;
+}
+
+.main-content .mx-auto {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.main-content .max-w-7xl,
+.main-content .max-w-6xl,
+.main-content .max-w-5xl,
+.main-content .max-w-4xl {
+  max-width: 100% !important;
+}
+
 /* 设计系统 - 全局CSS变量 */
 :root {
   /* 主色调 - 增强对比度 */

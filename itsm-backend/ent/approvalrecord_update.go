@@ -177,6 +177,47 @@ func (aru *ApprovalRecordUpdate) SetNillableApproverName(s *string) *ApprovalRec
 	return aru
 }
 
+// SetStepOrder sets the "step_order" field.
+func (aru *ApprovalRecordUpdate) SetStepOrder(i int) *ApprovalRecordUpdate {
+	aru.mutation.ResetStepOrder()
+	aru.mutation.SetStepOrder(i)
+	return aru
+}
+
+// SetNillableStepOrder sets the "step_order" field if the given value is not nil.
+func (aru *ApprovalRecordUpdate) SetNillableStepOrder(i *int) *ApprovalRecordUpdate {
+	if i != nil {
+		aru.SetStepOrder(*i)
+	}
+	return aru
+}
+
+// AddStepOrder adds i to the "step_order" field.
+func (aru *ApprovalRecordUpdate) AddStepOrder(i int) *ApprovalRecordUpdate {
+	aru.mutation.AddStepOrder(i)
+	return aru
+}
+
+// SetDueDate sets the "due_date" field.
+func (aru *ApprovalRecordUpdate) SetDueDate(t time.Time) *ApprovalRecordUpdate {
+	aru.mutation.SetDueDate(t)
+	return aru
+}
+
+// SetNillableDueDate sets the "due_date" field if the given value is not nil.
+func (aru *ApprovalRecordUpdate) SetNillableDueDate(t *time.Time) *ApprovalRecordUpdate {
+	if t != nil {
+		aru.SetDueDate(*t)
+	}
+	return aru
+}
+
+// ClearDueDate clears the value of the "due_date" field.
+func (aru *ApprovalRecordUpdate) ClearDueDate() *ApprovalRecordUpdate {
+	aru.mutation.ClearDueDate()
+	return aru
+}
+
 // SetStatus sets the "status" field.
 func (aru *ApprovalRecordUpdate) SetStatus(s string) *ApprovalRecordUpdate {
 	aru.mutation.SetStatus(s)
@@ -433,6 +474,18 @@ func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := aru.mutation.ApproverName(); ok {
 		_spec.SetField(approvalrecord.FieldApproverName, field.TypeString, value)
 	}
+	if value, ok := aru.mutation.StepOrder(); ok {
+		_spec.SetField(approvalrecord.FieldStepOrder, field.TypeInt, value)
+	}
+	if value, ok := aru.mutation.AddedStepOrder(); ok {
+		_spec.AddField(approvalrecord.FieldStepOrder, field.TypeInt, value)
+	}
+	if value, ok := aru.mutation.DueDate(); ok {
+		_spec.SetField(approvalrecord.FieldDueDate, field.TypeTime, value)
+	}
+	if aru.mutation.DueDateCleared() {
+		_spec.ClearField(approvalrecord.FieldDueDate, field.TypeTime)
+	}
 	if value, ok := aru.mutation.Status(); ok {
 		_spec.SetField(approvalrecord.FieldStatus, field.TypeString, value)
 	}
@@ -685,6 +738,47 @@ func (aruo *ApprovalRecordUpdateOne) SetNillableApproverName(s *string) *Approva
 	if s != nil {
 		aruo.SetApproverName(*s)
 	}
+	return aruo
+}
+
+// SetStepOrder sets the "step_order" field.
+func (aruo *ApprovalRecordUpdateOne) SetStepOrder(i int) *ApprovalRecordUpdateOne {
+	aruo.mutation.ResetStepOrder()
+	aruo.mutation.SetStepOrder(i)
+	return aruo
+}
+
+// SetNillableStepOrder sets the "step_order" field if the given value is not nil.
+func (aruo *ApprovalRecordUpdateOne) SetNillableStepOrder(i *int) *ApprovalRecordUpdateOne {
+	if i != nil {
+		aruo.SetStepOrder(*i)
+	}
+	return aruo
+}
+
+// AddStepOrder adds i to the "step_order" field.
+func (aruo *ApprovalRecordUpdateOne) AddStepOrder(i int) *ApprovalRecordUpdateOne {
+	aruo.mutation.AddStepOrder(i)
+	return aruo
+}
+
+// SetDueDate sets the "due_date" field.
+func (aruo *ApprovalRecordUpdateOne) SetDueDate(t time.Time) *ApprovalRecordUpdateOne {
+	aruo.mutation.SetDueDate(t)
+	return aruo
+}
+
+// SetNillableDueDate sets the "due_date" field if the given value is not nil.
+func (aruo *ApprovalRecordUpdateOne) SetNillableDueDate(t *time.Time) *ApprovalRecordUpdateOne {
+	if t != nil {
+		aruo.SetDueDate(*t)
+	}
+	return aruo
+}
+
+// ClearDueDate clears the value of the "due_date" field.
+func (aruo *ApprovalRecordUpdateOne) ClearDueDate() *ApprovalRecordUpdateOne {
+	aruo.mutation.ClearDueDate()
 	return aruo
 }
 
@@ -973,6 +1067,18 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 	}
 	if value, ok := aruo.mutation.ApproverName(); ok {
 		_spec.SetField(approvalrecord.FieldApproverName, field.TypeString, value)
+	}
+	if value, ok := aruo.mutation.StepOrder(); ok {
+		_spec.SetField(approvalrecord.FieldStepOrder, field.TypeInt, value)
+	}
+	if value, ok := aruo.mutation.AddedStepOrder(); ok {
+		_spec.AddField(approvalrecord.FieldStepOrder, field.TypeInt, value)
+	}
+	if value, ok := aruo.mutation.DueDate(); ok {
+		_spec.SetField(approvalrecord.FieldDueDate, field.TypeTime, value)
+	}
+	if aruo.mutation.DueDateCleared() {
+		_spec.ClearField(approvalrecord.FieldDueDate, field.TypeTime)
 	}
 	if value, ok := aruo.mutation.Status(); ok {
 		_spec.SetField(approvalrecord.FieldStatus, field.TypeString, value)

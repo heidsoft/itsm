@@ -17,7 +17,6 @@ import TicketKanban from '@/components/ticket/TicketKanban';
 import TicketAdvancedSearch from '@/components/ticket/TicketAdvancedSearch';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 export default function TicketsPage() {
   const router = useRouter();
@@ -74,7 +73,7 @@ export default function TicketsPage() {
     <div className='min-h-screen bg-gray-50'>
       {/* 页面头部 */}
       <div className='bg-white border-b border-gray-200'>
-        <div className='max-w-7xl mx-auto px-6 py-4'>
+        <div className='w-full px-6 py-4'>
           <div className='flex items-center justify-between'>
             <div>
               <Title level={2} style={{ marginBottom: 0 }}>
@@ -149,7 +148,7 @@ export default function TicketsPage() {
       {/* 高级搜索面板 */}
       {showAdvancedSearch && (
         <div className='bg-gray-50 border-b border-gray-200'>
-          <div className='max-w-7xl mx-auto px-6 py-4'>
+          <div className='w-full px-6 py-4'>
             <TicketAdvancedSearch
               onSearch={handleAdvancedSearch}
               onReset={handleSearchReset}
@@ -159,7 +158,7 @@ export default function TicketsPage() {
       )}
 
       {/* 主内容区域 */}
-      <div className='max-w-7xl mx-auto px-6 py-6'>
+      <div className='w-full px-6 py-6'>
         {/* 功能提示 */}
         <Alert
           message="🎉 工单管理功能已全面升级"
@@ -176,35 +175,36 @@ export default function TicketsPage() {
           onChange={handleTabChange}
           size="large"
           className="mb-6"
-        >
-          <TabPane 
-            tab={
-              <span>
-                <TableOutlined />
-                列表视图
-              </span>
-            } 
-            key="list" 
-          />
-          <TabPane 
-            tab={
-              <span>
-                <AppstoreOutlined />
-                看板视图
-              </span>
-            } 
-            key="kanban" 
-          />
-          <TabPane 
-            tab={
-              <span>
-                <BarChartOutlined />
-                数据分析
-              </span>
-            } 
-            key="analytics" 
-          />
-        </Tabs>
+          items={[
+            {
+              key: 'list',
+              label: (
+                <span>
+                  <TableOutlined />
+                  列表视图
+                </span>
+              ),
+            },
+            {
+              key: 'kanban',
+              label: (
+                <span>
+                  <AppstoreOutlined />
+                  看板视图
+                </span>
+              ),
+            },
+            {
+              key: 'analytics',
+              label: (
+                <span>
+                  <BarChartOutlined />
+                  数据分析
+                </span>
+              ),
+            },
+          ]}
+        />
 
         {/* 标签页内容 */}
         {activeTab === 'list' && (
@@ -260,5 +260,3 @@ export default function TicketsPage() {
     </div>
   );
 }
-
-

@@ -100,6 +100,16 @@ func ApproverName(v string) predicate.ApprovalRecord {
 	return predicate.ApprovalRecord(sql.FieldEQ(FieldApproverName, v))
 }
 
+// StepOrder applies equality check predicate on the "step_order" field. It's identical to StepOrderEQ.
+func StepOrder(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldEQ(FieldStepOrder, v))
+}
+
+// DueDate applies equality check predicate on the "due_date" field. It's identical to DueDateEQ.
+func DueDate(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldEQ(FieldDueDate, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.ApprovalRecord {
 	return predicate.ApprovalRecord(sql.FieldEQ(FieldStatus, v))
@@ -548,6 +558,96 @@ func ApproverNameEqualFold(v string) predicate.ApprovalRecord {
 // ApproverNameContainsFold applies the ContainsFold predicate on the "approver_name" field.
 func ApproverNameContainsFold(v string) predicate.ApprovalRecord {
 	return predicate.ApprovalRecord(sql.FieldContainsFold(FieldApproverName, v))
+}
+
+// StepOrderEQ applies the EQ predicate on the "step_order" field.
+func StepOrderEQ(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldEQ(FieldStepOrder, v))
+}
+
+// StepOrderNEQ applies the NEQ predicate on the "step_order" field.
+func StepOrderNEQ(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldNEQ(FieldStepOrder, v))
+}
+
+// StepOrderIn applies the In predicate on the "step_order" field.
+func StepOrderIn(vs ...int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldIn(FieldStepOrder, vs...))
+}
+
+// StepOrderNotIn applies the NotIn predicate on the "step_order" field.
+func StepOrderNotIn(vs ...int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldNotIn(FieldStepOrder, vs...))
+}
+
+// StepOrderGT applies the GT predicate on the "step_order" field.
+func StepOrderGT(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldGT(FieldStepOrder, v))
+}
+
+// StepOrderGTE applies the GTE predicate on the "step_order" field.
+func StepOrderGTE(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldGTE(FieldStepOrder, v))
+}
+
+// StepOrderLT applies the LT predicate on the "step_order" field.
+func StepOrderLT(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldLT(FieldStepOrder, v))
+}
+
+// StepOrderLTE applies the LTE predicate on the "step_order" field.
+func StepOrderLTE(v int) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldLTE(FieldStepOrder, v))
+}
+
+// DueDateEQ applies the EQ predicate on the "due_date" field.
+func DueDateEQ(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldEQ(FieldDueDate, v))
+}
+
+// DueDateNEQ applies the NEQ predicate on the "due_date" field.
+func DueDateNEQ(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldNEQ(FieldDueDate, v))
+}
+
+// DueDateIn applies the In predicate on the "due_date" field.
+func DueDateIn(vs ...time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldIn(FieldDueDate, vs...))
+}
+
+// DueDateNotIn applies the NotIn predicate on the "due_date" field.
+func DueDateNotIn(vs ...time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldNotIn(FieldDueDate, vs...))
+}
+
+// DueDateGT applies the GT predicate on the "due_date" field.
+func DueDateGT(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldGT(FieldDueDate, v))
+}
+
+// DueDateGTE applies the GTE predicate on the "due_date" field.
+func DueDateGTE(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldGTE(FieldDueDate, v))
+}
+
+// DueDateLT applies the LT predicate on the "due_date" field.
+func DueDateLT(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldLT(FieldDueDate, v))
+}
+
+// DueDateLTE applies the LTE predicate on the "due_date" field.
+func DueDateLTE(v time.Time) predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldLTE(FieldDueDate, v))
+}
+
+// DueDateIsNil applies the IsNil predicate on the "due_date" field.
+func DueDateIsNil() predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldIsNull(FieldDueDate))
+}
+
+// DueDateNotNil applies the NotNil predicate on the "due_date" field.
+func DueDateNotNil() predicate.ApprovalRecord {
+	return predicate.ApprovalRecord(sql.FieldNotNull(FieldDueDate))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

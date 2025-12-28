@@ -34,7 +34,7 @@ import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
-import { TicketAPI } from '@/lib/api/ticket-api';
+import { TicketApi } from '@/lib/api/ticket-api';
 import type { Ticket } from '@/app/lib/api-config';
 import { useTicketListStore } from '@/lib/stores/ticket-store';
 import TicketBatchOperations from './TicketBatchOperations';
@@ -114,12 +114,14 @@ const TicketList: React.FC<TicketListProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
+  const initialFiltersRef = React.useRef(initialFilters);
 
   // 初始化加载
   useEffect(() => {
-    const mergedFilters = { ...initialFilters, ...filters };
-    fetchTickets(mergedFilters);
-  }, [fetchTickets, initialFilters, filters]);
+    fetchTickets({ ...initialFiltersRef.current });
+    // 后续数据刷新由事件处理函数触发，避免依赖函数引用变化造成重复循环
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 搜索处理
   const handleSearch = useCallback(
@@ -208,7 +210,7 @@ const TicketList: React.FC<TicketListProps> = ({
   // 导出数据
   const handleExport = useCallback(async () => {
     try {
-      const blob = await TicketAPI.exportTickets({ format: 'excel', filters });
+      const blob = await TicketApi.exportTickets({ format: 'excel', filters });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

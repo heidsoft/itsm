@@ -23,6 +23,7 @@ export default function MainLayout({
 }>) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -41,7 +42,9 @@ export default function MainLayout({
   // 响应式布局：在移动端自动折叠侧边栏
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
         setCollapsed(true);
       }
     };
@@ -53,7 +56,7 @@ export default function MainLayout({
 
   // 在移动端，点击内容区域时折叠侧边栏
   const handleContentClick = () => {
-    if (window.innerWidth < 768 && !collapsed) {
+    if (isMobile && !collapsed) {
       setCollapsed(true);
     }
   };
@@ -63,22 +66,27 @@ export default function MainLayout({
     return null;
   }
 
+  // 根据官方布局模式，使用单一容器控制侧边栏占位
   return (
     <ConfigProvider locale={zhCN}>
       <App>
-        <Layout style={{ minHeight: '100vh' }}>
+        <Layout
+          style={{
+            minHeight: '100vh',
+            background: '#f5f7fb',
+            paddingLeft: isMobile
+              ? 0
+              : collapsed
+                ? LAYOUT_CONFIG.sider.collapsedWidth
+                : LAYOUT_CONFIG.sider.width,
+            transition: 'padding-left 0.2s ease',
+          }}
+        >
           {/* 侧边栏 */}
           <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
-          {/* 主内容区域 */}
-          <Layout
-            style={{
-              marginLeft: collapsed
-                ? LAYOUT_CONFIG.sider.collapsedWidth
-                : LAYOUT_CONFIG.sider.width,
-              transition: 'margin-left 0.2s',
-            }}
-          >
+          {/* 主区域 */}
+          <Layout style={{ background: '#f5f7fb', minHeight: '100vh' }}>
             {/* 顶部导航栏 */}
             <Header collapsed={collapsed} onCollapse={setCollapsed} showBreadcrumb={true} />
 
@@ -86,15 +94,23 @@ export default function MainLayout({
             <Content
               onClick={handleContentClick}
               style={{
-                margin: '16px',
-                padding: '24px',
-                background: '#ffffff',
-                borderRadius: '8px',
-                minHeight: 'calc(100vh - 56px - 32px)', // 减去 header 高度和 margin
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                background: '#f5f7fb',
+                minHeight: LAYOUT_CONFIG.content.minHeight,
+                boxShadow: 'none',
+                width: 'auto',
+                minWidth: 0,
+                maxWidth: '100%',
+                overflowX: 'hidden',
               }}
             >
-              {children}
+              <div
+                className='main-content'
+                style={{
+                  padding: isMobile ? `${LAYOUT_CONFIG.content.paddingMobile}px` : '16px',
+                }}
+              >
+                {children}
+              </div>
             </Content>
 
             {/* 页脚（可选） */}
@@ -110,23 +126,23 @@ export default function MainLayout({
               ITSM Platform ©{new Date().getFullYear()} - IT服务管理平台
             </footer>
           </Layout>
-
-          {/* 移动端遮罩层 */}
-          {!collapsed && window.innerWidth < 768 && (
-            <div
-              onClick={() => setCollapsed(true)}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.45)',
-                zIndex: LAYOUT_CONFIG.zIndex.sider - 1,
-              }}
-            />
-          )}
         </Layout>
+
+        {/* 移动端遮罩层 */}
+        {!collapsed && isMobile && (
+          <div
+            onClick={() => setCollapsed(true)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              zIndex: LAYOUT_CONFIG.zIndex.sider - 1,
+            }}
+          />
+        )}
       </App>
     </ConfigProvider>
   );
