@@ -18,8 +18,42 @@ git filter-branch --force --index-filter \
 # 清理 node_modules 中的大文件
 echo "清理 node_modules 大文件..."
 git filter-branch --force --index-filter \
-  'git rm -r --cached --ignore-unmatch itsm-prototype/node_modules' \
+  'git rm -r --cached --ignore-unmatch itsm-frontend/node_modules' \
   --prune-empty --tag-name-filter cat -- --all
+
+# 清理 .jest-cache 中的大文件
+echo "清理 .jest-cache 大文件..."
+git filter-branch --force --index-filter \
+  'git rm -r --cached --ignore-unmatch itsm-frontend/.jest-cache' \
+  --prune-empty --tag-name-filter cat -- --all
+
+# 清理 .next 中的大文件
+echo "清理 .next 大文件..."
+git filter-branch --force --index-filter \
+  'git rm -r --cached --ignore-unmatch itsm-frontend/.next' \
+  --prune-empty --tag-name-filter cat -- --all
+
+
+# 清理 itsm-backend/.gocache 中的大文件
+echo "清理 itsm-backend/.gocache 大文件..."
+git filter-branch --force --index-filter \
+  'git rm -r --cached --ignore-unmatch itsm-backend/.gocache' \
+  --prune-empty --tag-name-filter cat -- --all
+
+
+# 清理 itsm-backend/.gomodcache 中的大文件
+echo "清理 itsm-backend/.gomodcache 大文件..."
+git filter-branch --force --index-filter \
+  'git rm -r --cached --ignore-unmatch itsm-backend/.gomodcache' \
+  --prune-empty --tag-name-filter cat -- --all
+
+# 清理 itsm-backend/.gopath 中的大文件
+echo "清理 itsm-backend/.gopath 大文件..."
+git filter-branch --force --index-filter \
+  'git rm -r --cached --ignore-unmatch itsm-backend/.gopath' \
+  --prune-empty --tag-name-filter cat -- --all
+
+
 
 # 清理引用
 echo "清理引用..."
