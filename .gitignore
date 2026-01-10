@@ -70,10 +70,16 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # Next.js 相关
-itsm-prototype/.next/
-itsm-prototype/out/
-itsm-prototype/build/
-itsm-prototype/dist/
+itsm-frontend/.next/
+itsm-frontend/out/
+itsm-frontend/build/
+itsm-frontend/dist/
+itsm-frontend/.next/
+itsm-frontend/.jest-cache/
+itsm-frontend/playwright-report/
+itsm-frontend/coverage/
+itsm-frontend/node_modules/
+
 
 # 依赖锁定文件（可选择性提交）
 # package-lock.json
