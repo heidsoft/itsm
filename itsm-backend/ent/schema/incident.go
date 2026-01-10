@@ -110,5 +110,8 @@ func (Incident) Edges() []ent.Edge {
 		edge.From("parent_incident", Incident.Type).
 			Ref("related_incidents").
 			Comment("父事件"),
+		edge.From("configuration_items", ConfigurationItem.Type).
+			Ref("incidents").
+			Comment("关联的配置项"),
 	}
 }

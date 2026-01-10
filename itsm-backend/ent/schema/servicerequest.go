@@ -14,6 +14,7 @@ func (ServiceRequest) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Int("catalog_id").Comment("服务目录ID").Positive(),
+		field.Int("ci_id").Comment("关联CI ID").Optional(),
 		field.Int("requester_id").Comment("申请人ID").Positive(),
 		field.String("status").Comment("状态").Default("submitted"),
 		field.String("title").Comment("请求标题").Optional(),
@@ -44,5 +45,6 @@ func (ServiceRequest) Indexes() []ent.Index {
 		index.Fields("tenant_id", "created_at"),
 		index.Fields("tenant_id", "requester_id", "created_at"),
 		index.Fields("tenant_id", "status", "created_at"),
+		index.Fields("tenant_id", "ci_id"),
 	}
 }

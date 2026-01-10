@@ -38,6 +38,8 @@ export class ServiceCatalogApi {
             status: ServiceCatalogApi.toFrontendStatus(raw?.status),
             shortDescription: String(raw?.description || ''),
             fullDescription: String(raw?.description || ''),
+            ciTypeId: typeof raw?.ci_type_id === 'number' ? raw.ci_type_id : undefined,
+            cloudServiceId: typeof raw?.cloud_service_id === 'number' ? raw.cloud_service_id : undefined,
             tags: [],
             requiresApproval: true,
             createdBy: 0,
@@ -98,6 +100,8 @@ export class ServiceCatalogApi {
             name: request.name,
             category: String(request.category),
             description: request.shortDescription || request.fullDescription || '',
+            ci_type_id: request.ciTypeId,
+            cloud_service_id: request.cloudServiceId,
             delivery_time: String(request.availability?.responseTime ?? request.availability?.resolutionTime ?? 1),
             status: ServiceCatalogApi.toBackendStatus(request.status) || 'enabled',
         };
@@ -121,6 +125,8 @@ export class ServiceCatalogApi {
         if (request.status !== undefined) {
             payload.status = ServiceCatalogApi.toBackendStatus(request.status);
         }
+        if (request.ciTypeId !== undefined) payload.ci_type_id = request.ciTypeId;
+        if (request.cloudServiceId !== undefined) payload.cloud_service_id = request.cloudServiceId;
 
         const resp = await httpClient.put<any>(`/api/v1/service-catalogs/${id}`, payload);
         return ServiceCatalogApi.toServiceItem(resp);

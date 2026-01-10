@@ -175,9 +175,10 @@ const WorkflowVersionsPage = () => {
     setCompareModalVisible(true);
   };
 
-  const handleDeleteVersion = async () => {
+  const handleDeleteVersion = async (versionId: number) => {
     try {
       // 模拟删除
+      void versionId;
       message.success("版本删除成功");
       loadVersions();
     } catch {
@@ -266,8 +267,8 @@ const WorkflowVersionsPage = () => {
       width: 120,
       render: (record: WorkflowVersion) => (
         <div className="text-sm">
-          <div>元素: {record.metadata?.elements_count || 0}</div>
-          <div>连接: {record.metadata?.connections_count || 0}</div>
+          <div>元素: {Number(record.metadata?.elements_count ?? 0)}</div>
+          <div>连接: {Number(record.metadata?.connections_count ?? 0)}</div>
         </div>
       ),
     },

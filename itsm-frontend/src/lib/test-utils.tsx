@@ -7,7 +7,7 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ConfigProvider } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactElement } from 'react';
-import antdTheme from '@/app/lib/antd-theme';
+import antdTheme from '@/lib/antd-theme';
 
 // 创建测试用的QueryClient
 export const createTestQueryClient = () =>
@@ -15,7 +15,7 @@ export const createTestQueryClient = () =>
     defaultOptions: {
       queries: {
         retry: false,
-        cacheTime: 0,
+        gcTime: 0,
       },
       mutations: {
         retry: false,

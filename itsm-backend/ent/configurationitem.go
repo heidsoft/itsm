@@ -3,7 +3,10 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/configurationitem"
 	"strings"
 	"time"
@@ -17,31 +20,151 @@ type ConfigurationItem struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// 配置项名称
+	// CI名称
 	Name string `json:"name,omitempty"`
-	// 配置项描述
-	Description string `json:"description,omitempty"`
-	// 配置项类型
-	Type string `json:"type,omitempty"`
-	// 状态
+	// CI类型ID
+	CiTypeID int `json:"ci_type_id,omitempty"`
+	// CI类型
+	CiType string `json:"ci_type,omitempty"`
+	// 运行状态
 	Status string `json:"status,omitempty"`
-	// 位置
-	Location string `json:"location,omitempty"`
+	// 环境
+	Environment string `json:"environment,omitempty"`
+	// 重要性级别
+	Criticality string `json:"criticality,omitempty"`
+	// 资产标签
+	AssetTag string `json:"asset_tag,omitempty"`
 	// 序列号
 	SerialNumber string `json:"serial_number,omitempty"`
 	// 型号
 	Model string `json:"model,omitempty"`
 	// 厂商
 	Vendor string `json:"vendor,omitempty"`
-	// CI类型ID
-	CiTypeID int `json:"ci_type_id,omitempty"`
+	// 位置
+	Location string `json:"location,omitempty"`
+	// 分配给
+	AssignedTo string `json:"assigned_to,omitempty"`
+	// 拥有者
+	OwnedBy string `json:"owned_by,omitempty"`
+	// 发现源
+	DiscoverySource string `json:"discovery_source,omitempty"`
+	// 最后发现时间
+	LastDiscovered time.Time `json:"last_discovered,omitempty"`
+	// 数据来源（manual/discovery/import）
+	Source string `json:"source,omitempty"`
+	// 扩展属性
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	// 云厂商
+	CloudProvider string `json:"cloud_provider,omitempty"`
+	// 云账号ID
+	CloudAccountID string `json:"cloud_account_id,omitempty"`
+	// 云Region
+	CloudRegion string `json:"cloud_region,omitempty"`
+	// 云Zone
+	CloudZone string `json:"cloud_zone,omitempty"`
+	// 云资源ID
+	CloudResourceID string `json:"cloud_resource_id,omitempty"`
+	// 云资源类型
+	CloudResourceType string `json:"cloud_resource_type,omitempty"`
+	// 云资源元数据
+	CloudMetadata map[string]interface{} `json:"cloud_metadata,omitempty"`
+	// 云资源标签
+	CloudTags map[string]interface{} `json:"cloud_tags,omitempty"`
+	// 云资源监控指标
+	CloudMetrics map[string]interface{} `json:"cloud_metrics,omitempty"`
+	// 云资源同步时间
+	CloudSyncTime time.Time `json:"cloud_sync_time,omitempty"`
+	// 云资源同步状态
+	CloudSyncStatus string `json:"cloud_sync_status,omitempty"`
+	// 云资源引用ID
+	CloudResourceRefID int `json:"cloud_resource_ref_id,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ConfigurationItemQuery when eager-loading is set.
+	Edges        ConfigurationItemEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ConfigurationItemEdges holds the relations/edges for other nodes in the graph.
+type ConfigurationItemEdges struct {
+	// CiTypeRef holds the value of the ci_type_ref edge.
+	CiTypeRef *CIType `json:"ci_type_ref,omitempty"`
+	// CloudResourceRef holds the value of the cloud_resource_ref edge.
+	CloudResourceRef *CloudResource `json:"cloud_resource_ref,omitempty"`
+	// Tickets holds the value of the tickets edge.
+	Tickets []*Ticket `json:"tickets,omitempty"`
+	// Incidents holds the value of the incidents edge.
+	Incidents []*Incident `json:"incidents,omitempty"`
+	// ParentRelations holds the value of the parent_relations edge.
+	ParentRelations []*CIRelationship `json:"parent_relations,omitempty"`
+	// ChildRelations holds the value of the child_relations edge.
+	ChildRelations []*CIRelationship `json:"child_relations,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [6]bool
+}
+
+// CiTypeRefOrErr returns the CiTypeRef value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ConfigurationItemEdges) CiTypeRefOrErr() (*CIType, error) {
+	if e.CiTypeRef != nil {
+		return e.CiTypeRef, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: citype.Label}
+	}
+	return nil, &NotLoadedError{edge: "ci_type_ref"}
+}
+
+// CloudResourceRefOrErr returns the CloudResourceRef value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ConfigurationItemEdges) CloudResourceRefOrErr() (*CloudResource, error) {
+	if e.CloudResourceRef != nil {
+		return e.CloudResourceRef, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: cloudresource.Label}
+	}
+	return nil, &NotLoadedError{edge: "cloud_resource_ref"}
+}
+
+// TicketsOrErr returns the Tickets value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) TicketsOrErr() ([]*Ticket, error) {
+	if e.loadedTypes[2] {
+		return e.Tickets, nil
+	}
+	return nil, &NotLoadedError{edge: "tickets"}
+}
+
+// IncidentsOrErr returns the Incidents value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) IncidentsOrErr() ([]*Incident, error) {
+	if e.loadedTypes[3] {
+		return e.Incidents, nil
+	}
+	return nil, &NotLoadedError{edge: "incidents"}
+}
+
+// ParentRelationsOrErr returns the ParentRelations value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) ParentRelationsOrErr() ([]*CIRelationship, error) {
+	if e.loadedTypes[4] {
+		return e.ParentRelations, nil
+	}
+	return nil, &NotLoadedError{edge: "parent_relations"}
+}
+
+// ChildRelationsOrErr returns the ChildRelations value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) ChildRelationsOrErr() ([]*CIRelationship, error) {
+	if e.loadedTypes[5] {
+		return e.ChildRelations, nil
+	}
+	return nil, &NotLoadedError{edge: "child_relations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -49,11 +172,13 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldTenantID:
+		case configurationitem.FieldAttributes, configurationitem.FieldCloudMetadata, configurationitem.FieldCloudTags, configurationitem.FieldCloudMetrics:
+			values[i] = new([]byte)
+		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldType, configurationitem.FieldStatus, configurationitem.FieldLocation, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor:
+		case configurationitem.FieldName, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus:
 			values[i] = new(sql.NullString)
-		case configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
+		case configurationitem.FieldLastDiscovered, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -82,17 +207,17 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				ci.Name = value.String
 			}
-		case configurationitem.FieldDescription:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field description", values[i])
+		case configurationitem.FieldCiTypeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
 			} else if value.Valid {
-				ci.Description = value.String
+				ci.CiTypeID = int(value.Int64)
 			}
-		case configurationitem.FieldType:
+		case configurationitem.FieldCiType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[i])
+				return fmt.Errorf("unexpected type %T for field ci_type", values[i])
 			} else if value.Valid {
-				ci.Type = value.String
+				ci.CiType = value.String
 			}
 		case configurationitem.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -100,11 +225,23 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				ci.Status = value.String
 			}
-		case configurationitem.FieldLocation:
+		case configurationitem.FieldEnvironment:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field location", values[i])
+				return fmt.Errorf("unexpected type %T for field environment", values[i])
 			} else if value.Valid {
-				ci.Location = value.String
+				ci.Environment = value.String
+			}
+		case configurationitem.FieldCriticality:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field criticality", values[i])
+			} else if value.Valid {
+				ci.Criticality = value.String
+			}
+		case configurationitem.FieldAssetTag:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field asset_tag", values[i])
+			} else if value.Valid {
+				ci.AssetTag = value.String
 			}
 		case configurationitem.FieldSerialNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -124,11 +261,127 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			} else if value.Valid {
 				ci.Vendor = value.String
 			}
-		case configurationitem.FieldCiTypeID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
+		case configurationitem.FieldLocation:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field location", values[i])
 			} else if value.Valid {
-				ci.CiTypeID = int(value.Int64)
+				ci.Location = value.String
+			}
+		case configurationitem.FieldAssignedTo:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field assigned_to", values[i])
+			} else if value.Valid {
+				ci.AssignedTo = value.String
+			}
+		case configurationitem.FieldOwnedBy:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field owned_by", values[i])
+			} else if value.Valid {
+				ci.OwnedBy = value.String
+			}
+		case configurationitem.FieldDiscoverySource:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field discovery_source", values[i])
+			} else if value.Valid {
+				ci.DiscoverySource = value.String
+			}
+		case configurationitem.FieldLastDiscovered:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_discovered", values[i])
+			} else if value.Valid {
+				ci.LastDiscovered = value.Time
+			}
+		case configurationitem.FieldSource:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field source", values[i])
+			} else if value.Valid {
+				ci.Source = value.String
+			}
+		case configurationitem.FieldAttributes:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field attributes", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ci.Attributes); err != nil {
+					return fmt.Errorf("unmarshal field attributes: %w", err)
+				}
+			}
+		case configurationitem.FieldCloudProvider:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_provider", values[i])
+			} else if value.Valid {
+				ci.CloudProvider = value.String
+			}
+		case configurationitem.FieldCloudAccountID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_account_id", values[i])
+			} else if value.Valid {
+				ci.CloudAccountID = value.String
+			}
+		case configurationitem.FieldCloudRegion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_region", values[i])
+			} else if value.Valid {
+				ci.CloudRegion = value.String
+			}
+		case configurationitem.FieldCloudZone:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_zone", values[i])
+			} else if value.Valid {
+				ci.CloudZone = value.String
+			}
+		case configurationitem.FieldCloudResourceID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_resource_id", values[i])
+			} else if value.Valid {
+				ci.CloudResourceID = value.String
+			}
+		case configurationitem.FieldCloudResourceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_resource_type", values[i])
+			} else if value.Valid {
+				ci.CloudResourceType = value.String
+			}
+		case configurationitem.FieldCloudMetadata:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_metadata", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ci.CloudMetadata); err != nil {
+					return fmt.Errorf("unmarshal field cloud_metadata: %w", err)
+				}
+			}
+		case configurationitem.FieldCloudTags:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_tags", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ci.CloudTags); err != nil {
+					return fmt.Errorf("unmarshal field cloud_tags: %w", err)
+				}
+			}
+		case configurationitem.FieldCloudMetrics:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_metrics", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &ci.CloudMetrics); err != nil {
+					return fmt.Errorf("unmarshal field cloud_metrics: %w", err)
+				}
+			}
+		case configurationitem.FieldCloudSyncTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_sync_time", values[i])
+			} else if value.Valid {
+				ci.CloudSyncTime = value.Time
+			}
+		case configurationitem.FieldCloudSyncStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_sync_status", values[i])
+			} else if value.Valid {
+				ci.CloudSyncStatus = value.String
+			}
+		case configurationitem.FieldCloudResourceRefID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_resource_ref_id", values[i])
+			} else if value.Valid {
+				ci.CloudResourceRefID = int(value.Int64)
 			}
 		case configurationitem.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -161,6 +414,36 @@ func (ci *ConfigurationItem) Value(name string) (ent.Value, error) {
 	return ci.selectValues.Get(name)
 }
 
+// QueryCiTypeRef queries the "ci_type_ref" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryCiTypeRef() *CITypeQuery {
+	return NewConfigurationItemClient(ci.config).QueryCiTypeRef(ci)
+}
+
+// QueryCloudResourceRef queries the "cloud_resource_ref" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryCloudResourceRef() *CloudResourceQuery {
+	return NewConfigurationItemClient(ci.config).QueryCloudResourceRef(ci)
+}
+
+// QueryTickets queries the "tickets" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryTickets() *TicketQuery {
+	return NewConfigurationItemClient(ci.config).QueryTickets(ci)
+}
+
+// QueryIncidents queries the "incidents" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryIncidents() *IncidentQuery {
+	return NewConfigurationItemClient(ci.config).QueryIncidents(ci)
+}
+
+// QueryParentRelations queries the "parent_relations" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryParentRelations() *CIRelationshipQuery {
+	return NewConfigurationItemClient(ci.config).QueryParentRelations(ci)
+}
+
+// QueryChildRelations queries the "child_relations" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryChildRelations() *CIRelationshipQuery {
+	return NewConfigurationItemClient(ci.config).QueryChildRelations(ci)
+}
+
 // Update returns a builder for updating this ConfigurationItem.
 // Note that you need to call ConfigurationItem.Unwrap() before calling this method if this ConfigurationItem
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -187,17 +470,23 @@ func (ci *ConfigurationItem) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(ci.Name)
 	builder.WriteString(", ")
-	builder.WriteString("description=")
-	builder.WriteString(ci.Description)
+	builder.WriteString("ci_type_id=")
+	builder.WriteString(fmt.Sprintf("%v", ci.CiTypeID))
 	builder.WriteString(", ")
-	builder.WriteString("type=")
-	builder.WriteString(ci.Type)
+	builder.WriteString("ci_type=")
+	builder.WriteString(ci.CiType)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(ci.Status)
 	builder.WriteString(", ")
-	builder.WriteString("location=")
-	builder.WriteString(ci.Location)
+	builder.WriteString("environment=")
+	builder.WriteString(ci.Environment)
+	builder.WriteString(", ")
+	builder.WriteString("criticality=")
+	builder.WriteString(ci.Criticality)
+	builder.WriteString(", ")
+	builder.WriteString("asset_tag=")
+	builder.WriteString(ci.AssetTag)
 	builder.WriteString(", ")
 	builder.WriteString("serial_number=")
 	builder.WriteString(ci.SerialNumber)
@@ -208,8 +497,62 @@ func (ci *ConfigurationItem) String() string {
 	builder.WriteString("vendor=")
 	builder.WriteString(ci.Vendor)
 	builder.WriteString(", ")
-	builder.WriteString("ci_type_id=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CiTypeID))
+	builder.WriteString("location=")
+	builder.WriteString(ci.Location)
+	builder.WriteString(", ")
+	builder.WriteString("assigned_to=")
+	builder.WriteString(ci.AssignedTo)
+	builder.WriteString(", ")
+	builder.WriteString("owned_by=")
+	builder.WriteString(ci.OwnedBy)
+	builder.WriteString(", ")
+	builder.WriteString("discovery_source=")
+	builder.WriteString(ci.DiscoverySource)
+	builder.WriteString(", ")
+	builder.WriteString("last_discovered=")
+	builder.WriteString(ci.LastDiscovered.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("source=")
+	builder.WriteString(ci.Source)
+	builder.WriteString(", ")
+	builder.WriteString("attributes=")
+	builder.WriteString(fmt.Sprintf("%v", ci.Attributes))
+	builder.WriteString(", ")
+	builder.WriteString("cloud_provider=")
+	builder.WriteString(ci.CloudProvider)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_account_id=")
+	builder.WriteString(ci.CloudAccountID)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_region=")
+	builder.WriteString(ci.CloudRegion)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_zone=")
+	builder.WriteString(ci.CloudZone)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_resource_id=")
+	builder.WriteString(ci.CloudResourceID)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_resource_type=")
+	builder.WriteString(ci.CloudResourceType)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_metadata=")
+	builder.WriteString(fmt.Sprintf("%v", ci.CloudMetadata))
+	builder.WriteString(", ")
+	builder.WriteString("cloud_tags=")
+	builder.WriteString(fmt.Sprintf("%v", ci.CloudTags))
+	builder.WriteString(", ")
+	builder.WriteString("cloud_metrics=")
+	builder.WriteString(fmt.Sprintf("%v", ci.CloudMetrics))
+	builder.WriteString(", ")
+	builder.WriteString("cloud_sync_time=")
+	builder.WriteString(ci.CloudSyncTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("cloud_sync_status=")
+	builder.WriteString(ci.CloudSyncStatus)
+	builder.WriteString(", ")
+	builder.WriteString("cloud_resource_ref_id=")
+	builder.WriteString(fmt.Sprintf("%v", ci.CloudResourceRefID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", ci.TenantID))

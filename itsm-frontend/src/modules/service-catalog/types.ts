@@ -7,6 +7,8 @@ export interface ServiceItem {
     status: ServiceStatus;
     shortDescription: string;
     fullDescription?: string;
+    ciTypeId?: number;
+    cloudServiceId?: number;
 
     // Visuals
     icon?: string;
@@ -103,6 +105,8 @@ export interface CreateServiceItemRequest {
     category: ServiceCategory;
     shortDescription: string;
     fullDescription?: string;
+    ciTypeId?: number;
+    cloudServiceId?: number;
     icon?: string;
     provider?: string;
     owner?: number;

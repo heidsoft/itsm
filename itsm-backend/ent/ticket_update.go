@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/rootcauseanalysis"
@@ -655,6 +656,21 @@ func (tu *TicketUpdate) AddRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketUpd
 	return tu.AddRootCauseAnalysisIDs(ids...)
 }
 
+// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
+func (tu *TicketUpdate) AddConfigurationItemIDs(ids ...int) *TicketUpdate {
+	tu.mutation.AddConfigurationItemIDs(ids...)
+	return tu
+}
+
+// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
+func (tu *TicketUpdate) AddConfigurationItems(c ...*ConfigurationItem) *TicketUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tu.AddConfigurationItemIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tu *TicketUpdate) Mutation() *TicketMutation {
 	return tu.mutation
@@ -898,6 +914,27 @@ func (tu *TicketUpdate) RemoveRootCauseAnalyses(r ...*RootCauseAnalysis) *Ticket
 		ids[i] = r[i].ID
 	}
 	return tu.RemoveRootCauseAnalysisIDs(ids...)
+}
+
+// ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
+func (tu *TicketUpdate) ClearConfigurationItems() *TicketUpdate {
+	tu.mutation.ClearConfigurationItems()
+	return tu
+}
+
+// RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
+func (tu *TicketUpdate) RemoveConfigurationItemIDs(ids ...int) *TicketUpdate {
+	tu.mutation.RemoveConfigurationItemIDs(ids...)
+	return tu
+}
+
+// RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
+func (tu *TicketUpdate) RemoveConfigurationItems(c ...*ConfigurationItem) *TicketUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tu.RemoveConfigurationItemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1672,6 +1709,51 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !tu.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticket.Label}
@@ -2306,6 +2388,21 @@ func (tuo *TicketUpdateOne) AddRootCauseAnalyses(r ...*RootCauseAnalysis) *Ticke
 	return tuo.AddRootCauseAnalysisIDs(ids...)
 }
 
+// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
+func (tuo *TicketUpdateOne) AddConfigurationItemIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.AddConfigurationItemIDs(ids...)
+	return tuo
+}
+
+// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
+func (tuo *TicketUpdateOne) AddConfigurationItems(c ...*ConfigurationItem) *TicketUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tuo.AddConfigurationItemIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tuo *TicketUpdateOne) Mutation() *TicketMutation {
 	return tuo.mutation
@@ -2549,6 +2646,27 @@ func (tuo *TicketUpdateOne) RemoveRootCauseAnalyses(r ...*RootCauseAnalysis) *Ti
 		ids[i] = r[i].ID
 	}
 	return tuo.RemoveRootCauseAnalysisIDs(ids...)
+}
+
+// ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
+func (tuo *TicketUpdateOne) ClearConfigurationItems() *TicketUpdateOne {
+	tuo.mutation.ClearConfigurationItems()
+	return tuo
+}
+
+// RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
+func (tuo *TicketUpdateOne) RemoveConfigurationItemIDs(ids ...int) *TicketUpdateOne {
+	tuo.mutation.RemoveConfigurationItemIDs(ids...)
+	return tuo
+}
+
+// RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
+func (tuo *TicketUpdateOne) RemoveConfigurationItems(c ...*ConfigurationItem) *TicketUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tuo.RemoveConfigurationItemIDs(ids...)
 }
 
 // Where appends a list predicates to the TicketUpdate builder.
@@ -3346,6 +3464,51 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !tuo.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

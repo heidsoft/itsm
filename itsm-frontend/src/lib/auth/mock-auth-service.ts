@@ -3,7 +3,6 @@
  */
 
 import { useAuthStore, User } from '../store/auth-store';
-import { LoginRequest, LoginResponse, RefreshTokenResponse, ChangePasswordRequest } from './auth-service';
 import {
   STORAGE_KEYS,
   clearAuthStorage,
@@ -11,6 +10,30 @@ import {
   setAccessToken,
   setRefreshToken,
 } from './token-storage';
+
+interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+interface LoginResponse {
+  user: User;
+  token: string;
+  refresh_token: string;
+  expires_in: number;
+}
+
+interface RefreshTokenResponse {
+  token: string;
+  refresh_token: string;
+  expires_in: number;
+}
+
+interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
 
 // 模拟用户数据
 const MOCK_USERS = [
@@ -20,6 +43,7 @@ const MOCK_USERS = [
     password: 'admin123',
     email: 'admin@itsm.com',
     full_name: '系统管理员',
+    name: '系统管理员',
     role: 'admin',
     status: 'active',
     avatar: '',
@@ -33,6 +57,7 @@ const MOCK_USERS = [
     password: 'user123',
     email: 'user@itsm.com',
     full_name: '普通用户',
+    name: '普通用户',
     role: 'user',
     status: 'active',
     avatar: '',

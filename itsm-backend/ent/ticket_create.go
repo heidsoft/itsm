@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/slaalerthistory"
@@ -498,6 +499,21 @@ func (tc *TicketCreate) AddRootCauseAnalyses(r ...*RootCauseAnalysis) *TicketCre
 	return tc.AddRootCauseAnalysisIDs(ids...)
 }
 
+// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
+func (tc *TicketCreate) AddConfigurationItemIDs(ids ...int) *TicketCreate {
+	tc.mutation.AddConfigurationItemIDs(ids...)
+	return tc
+}
+
+// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
+func (tc *TicketCreate) AddConfigurationItems(c ...*ConfigurationItem) *TicketCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return tc.AddConfigurationItemIDs(ids...)
+}
+
 // Mutation returns the TicketMutation object of the builder.
 func (tc *TicketCreate) Mutation() *TicketMutation {
 	return tc.mutation
@@ -938,6 +954,22 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   ticket.ConfigurationItemsTable,
+			Columns: ticket.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

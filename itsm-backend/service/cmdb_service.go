@@ -2,255 +2,169 @@ package service
 
 import (
 	"context"
-	"fmt"
 
-	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/ciattributedefinition"
-	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
-
-	"go.uber.org/zap"
+	"itsm-backend/ent/cirelationship"
 )
 
 type CMDBService struct {
 	client *ent.Client
-	logger *zap.SugaredLogger
 }
 
-func NewCMDBService(client *ent.Client, logger *zap.SugaredLogger) *CMDBService {
-	return &CMDBService{
-		client: client,
-		logger: logger,
-	}
+func NewCMDBService(client *ent.Client) *CMDBService {
+	return &CMDBService{client: client}
 }
 
 // CreateCI 创建配置项
-func (s *CMDBService) CreateCI(ctx context.Context, req *dto.CreateCIRequest) (*dto.CIResponse, error) {
-	ci, err := s.client.ConfigurationItem.Create().
+func (s *CMDBService) CreateCI(ctx context.Context, req *CreateCIRequest) (*ent.ConfigurationItem, error) {
+	create := s.client.ConfigurationItem.
+		Create().
 		SetName(req.Name).
-		SetCiTypeID(req.CITypeID).
-		SetDescription(req.Description).
+		SetCiType(req.CiType).
 		SetStatus(req.Status).
-		SetTenantID(req.TenantID).
-		Save(ctx)
-
-	if err != nil {
-		s.logger.Errorf("Failed to create CI: %v", err)
-		return nil, err
+		SetEnvironment(req.Environment).
+		SetCriticality(req.Criticality).
+		SetTenantID(1) // 默认租户ID
+	
+	if req.AssetTag != nil {
+		create = create.SetAssetTag(*req.AssetTag)
 	}
-
-	return &dto.CIResponse{
-		ID:          ci.ID,
-		Name:        ci.Name,
-		CITypeID:    ci.CiTypeID,
-		Description: ci.Description,
-		Status:      ci.Status,
-		TenantID:    ci.TenantID,
-		CreatedAt:   ci.CreatedAt,
-		UpdatedAt:   ci.UpdatedAt,
-	}, nil
+	if req.SerialNumber != nil {
+		create = create.SetSerialNumber(*req.SerialNumber)
+	}
+	if req.Location != nil {
+		create = create.SetLocation(*req.Location)
+	}
+	if req.AssignedTo != nil {
+		create = create.SetAssignedTo(*req.AssignedTo)
+	}
+	if req.OwnedBy != nil {
+		create = create.SetOwnedBy(*req.OwnedBy)
+	}
+	if req.DiscoverySource != nil {
+		create = create.SetDiscoverySource(*req.DiscoverySource)
+	}
+	if req.Attributes != nil {
+		create = create.SetAttributes(*req.Attributes)
+	}
+	
+	return create.Save(ctx)
 }
 
-// GetCI 获取配置项详情
-func (s *CMDBService) GetCI(ctx context.Context, id int, tenantID int) (*dto.CIResponse, error) {
-	ci, err := s.client.ConfigurationItem.Query().
-		Where(
-			configurationitem.ID(id),
-			configurationitem.TenantID(tenantID),
-		).
-		First(ctx)
-
-	if err != nil {
-		s.logger.Errorf("Failed to get CI: %v", err)
-		return nil, err
-	}
-
-	return &dto.CIResponse{
-		ID:          ci.ID,
-		Name:        ci.Name,
-		CITypeID:    ci.CiTypeID,
-		Description: ci.Description,
-		Status:      ci.Status,
-		TenantID:    ci.TenantID,
-		CreatedAt:   ci.CreatedAt,
-		UpdatedAt:   ci.UpdatedAt,
-	}, nil
+// GetCI 获取配置项
+func (s *CMDBService) GetCI(ctx context.Context, id int) (*ent.ConfigurationItem, error) {
+	return s.client.ConfigurationItem.
+		Query().
+		Where(configurationitem.ID(id)).
+		WithParentRelations().
+		WithChildRelations().
+		Only(ctx)
 }
 
-// ListCIs 获取配置项列表
-func (s *CMDBService) ListCIs(ctx context.Context, req *dto.ListCIsRequest) (*dto.ListCIsResponse, error) {
-	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantID(req.TenantID))
-
-	// 添加过滤条件
-	if req.CITypeID != 0 {
-		query = query.Where(configurationitem.CiTypeID(req.CITypeID))
+// ListCIs 列出配置项
+func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.ConfigurationItem, error) {
+	query := s.client.ConfigurationItem.Query()
+	
+	if req.CiType != "" {
+		query = query.Where(configurationitem.CiType(req.CiType))
 	}
-
 	if req.Status != "" {
 		query = query.Where(configurationitem.Status(req.Status))
 	}
-
-	// 分页
-	if req.Limit > 0 {
-		query = query.Limit(req.Limit)
+	if req.Environment != "" {
+		query = query.Where(configurationitem.Environment(req.Environment))
 	}
-	if req.Offset > 0 {
-		query = query.Offset(req.Offset)
-	}
-
-	cis, err := query.All(ctx)
-	if err != nil {
-		s.logger.Errorf("Failed to list CIs: %v", err)
-		return nil, err
-	}
-
-	// 转换为响应格式
-	var ciResponses []*dto.CIResponse
-	for _, ci := range cis {
-		ciResponses = append(ciResponses, &dto.CIResponse{
-			ID:          ci.ID,
-			Name:        ci.Name,
-			CITypeID:    ci.CiTypeID,
-			Description: ci.Description,
-			Status:      ci.Status,
-			TenantID:    ci.TenantID,
-			CreatedAt:   ci.CreatedAt,
-			UpdatedAt:   ci.UpdatedAt,
-		})
-	}
-
-	return &dto.ListCIsResponse{
-		CIs:   ciResponses,
-		Total: len(ciResponses),
-	}, nil
-}
-
-// UpdateCI 更新配置项
-func (s *CMDBService) UpdateCI(ctx context.Context, id int, req *dto.UpdateCIRequest) (*dto.CIResponse, error) {
-	update := s.client.ConfigurationItem.UpdateOneID(id)
-
-	if req.Name != "" {
-		update = update.SetName(req.Name)
-	}
-	if req.Description != "" {
-		update = update.SetDescription(req.Description)
-	}
-	if req.Status != "" {
-		update = update.SetStatus(req.Status)
-	}
-
-	ci, err := update.Save(ctx)
-	if err != nil {
-		s.logger.Errorf("Failed to update CI: %v", err)
-		return nil, err
-	}
-
-	return &dto.CIResponse{
-		ID:          ci.ID,
-		Name:        ci.Name,
-		CITypeID:    ci.CiTypeID,
-		Description: ci.Description,
-		Status:      ci.Status,
-		TenantID:    ci.TenantID,
-		CreatedAt:   ci.CreatedAt,
-		UpdatedAt:   ci.UpdatedAt,
-	}, nil
-}
-
-// DeleteCI 删除配置项
-func (s *CMDBService) DeleteCI(ctx context.Context, id int, tenantID int) error {
-	err := s.client.ConfigurationItem.DeleteOneID(id).
-		Where(configurationitem.TenantID(tenantID)).
-		Exec(ctx)
-
-	if err != nil {
-		s.logger.Errorf("Failed to delete CI: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-// CreateCIAttributeDefinition 创建CI属性定义
-func (s *CMDBService) CreateCIAttributeDefinition(ctx context.Context, req *dto.CIAttributeDefinitionRequest, tenantID int) (*dto.CIAttributeDefinitionResponse, error) {
-	attrDef, err := s.client.CIAttributeDefinition.Create().
-		SetName(req.Name).
-		SetDisplayName(req.DisplayName).
-		SetType(req.DataType).
-		SetRequired(req.IsRequired).
-		SetUnique(req.IsUnique).
-		SetDefaultValue(req.DefaultValue).
-		SetValidationRules(fmt.Sprintf("%v", req.ValidationRules)).
-		SetCiTypeID(req.CITypeID).
-		SetTenantID(tenantID).
-		Save(ctx)
-
-	if err != nil {
-		s.logger.Errorf("Failed to create CI attribute definition: %v", err)
-		return nil, err
-	}
-
-	return s.convertToAttributeDefinitionResponse(attrDef), nil
-}
-
-// GetCITypeWithAttributes 获取CI类型及其属性定义
-func (s *CMDBService) GetCITypeWithAttributes(ctx context.Context, ciTypeID int, tenantID int) (*dto.CITypeWithAttributesResponse, error) {
-	ciType, err := s.client.CIType.Query().
-		Where(citype.ID(ciTypeID), citype.TenantID(tenantID)).
-		First(ctx)
-
-	if err != nil {
-		s.logger.Errorf("Failed to get CI type: %v", err)
-		return nil, err
-	}
-
-	// 获取属性定义
-	attrDefs, err := s.client.CIAttributeDefinition.Query().
-		Where(ciattributedefinition.CiTypeID(ciTypeID)).
+	
+	return query.
+		Offset(req.Offset).
+		Limit(req.Limit).
 		All(ctx)
-
-	if err != nil {
-		s.logger.Errorf("Failed to get attribute definitions: %v", err)
-		return nil, err
-	}
-
-	// 转换为响应格式
-	var attrDefResponses []dto.CIAttributeDefinitionResponse
-	for _, attrDef := range attrDefs {
-		attrDefResponses = append(attrDefResponses, *s.convertToAttributeDefinitionResponse(attrDef))
-	}
-
-	return &dto.CITypeWithAttributesResponse{
-		ID:                   ciType.ID,
-		Name:                 ciType.Name,
-		DisplayName:          ciType.Name,
-		Description:          ciType.Description,
-		Icon:                 ciType.Icon,
-		IsActive:             ciType.IsActive,
-		AttributeDefinitions: attrDefResponses,
-		CreatedAt:            ciType.CreatedAt,
-		UpdatedAt:            ciType.UpdatedAt,
-	}, nil
 }
 
-// convertToAttributeDefinitionResponse 转换为属性定义响应
-func (s *CMDBService) convertToAttributeDefinitionResponse(attr *ent.CIAttributeDefinition) *dto.CIAttributeDefinitionResponse {
-	return &dto.CIAttributeDefinitionResponse{
-		ID:              attr.ID,
-		Name:            attr.Name,
-		DisplayName:     attr.DisplayName,
-		Description:     "", // 简化处理，因为schema中没有Description字段
-		DataType:        attr.Type,
-		IsRequired:      attr.Required,
-		IsUnique:        attr.Unique,
-		DefaultValue:    attr.DefaultValue,
-		ValidationRules: map[string]interface{}{}, // 简化处理
-		IsActive:        attr.IsActive,
-		CITypeID:        attr.CiTypeID,
-		TenantID:        attr.TenantID,
-		CreatedAt:       attr.CreatedAt,
-		UpdatedAt:       attr.UpdatedAt,
+// CreateRelationship 创建CI关系
+func (s *CMDBService) CreateRelationship(ctx context.Context, req *CreateRelationshipRequest) (*ent.CIRelationship, error) {
+	create := s.client.CIRelationship.
+		Create().
+		SetType(req.Type).
+		SetParentID(req.ParentID).
+		SetChildID(req.ChildID)
+	
+	if req.Description != nil {
+		create = create.SetDescription(*req.Description)
 	}
+	
+	return create.Save(ctx)
+}
+
+// GetCITopology 获取CI拓扑
+func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*CITopology, error) {
+	ci, err := s.GetCI(ctx, ciID)
+	if err != nil {
+		return nil, err
+	}
+	
+	topology := &CITopology{
+		CI: ci,
+		Children: make([]*CITopology, 0),
+	}
+	
+	if depth > 0 {
+		children, err := s.client.CIRelationship.
+			Query().
+			Where(cirelationship.ParentID(ciID)).
+			WithChild().
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		
+		for _, rel := range children {
+			if rel.Edges.Child != nil {
+				childTopology, err := s.GetCITopology(ctx, rel.Edges.Child.ID, depth-1)
+				if err != nil {
+					continue
+				}
+				topology.Children = append(topology.Children, childTopology)
+			}
+		}
+	}
+	
+	return topology, nil
+}
+
+// 请求结构体
+type CreateCIRequest struct {
+	Name            string                 `json:"name"`
+	CiType          string                 `json:"ci_type"`
+	Status          string                 `json:"status"`
+	Environment     string                 `json:"environment"`
+	Criticality     string                 `json:"criticality"`
+	AssetTag        *string                `json:"asset_tag,omitempty"`
+	SerialNumber    *string                `json:"serial_number,omitempty"`
+	Location        *string                `json:"location,omitempty"`
+	AssignedTo      *string                `json:"assigned_to,omitempty"`
+	OwnedBy         *string                `json:"owned_by,omitempty"`
+	DiscoverySource *string                `json:"discovery_source,omitempty"`
+	Attributes      *map[string]interface{} `json:"attributes,omitempty"`
+}
+
+type ListCIsRequest struct {
+	CiType      string `json:"ci_type,omitempty"`
+	Status      string `json:"status,omitempty"`
+	Environment string `json:"environment,omitempty"`
+	Offset      int    `json:"offset"`
+	Limit       int    `json:"limit"`
+}
+
+type CreateRelationshipRequest struct {
+	ParentID    int     `json:"parent_id"`
+	ChildID     int     `json:"child_id"`
+	Type        string  `json:"type"`
+	Description *string `json:"description,omitempty"`
+}
+
+type CITopology struct {
+	CI       *ent.ConfigurationItem `json:"ci"`
+	Children []*CITopology          `json:"children"`
 }

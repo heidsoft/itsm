@@ -3,6 +3,8 @@
  * Form Validation Utilities
  */
 
+export type ValidationRule = (value: unknown) => string | undefined;
+
 // 邮箱验证
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -228,4 +230,3 @@ export const validateFields = (
 
   return { isValid, errors };
 };
-

@@ -14,9 +14,15 @@ import (
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/cloudaccount"
+	"itsm-backend/ent/cloudresource"
+	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/discoveryjob"
+	"itsm-backend/ent/discoveryresult"
+	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -37,6 +43,7 @@ import (
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
+	"itsm-backend/ent/relationshiptype"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -137,9 +144,15 @@ func checkColumn(table, column string) error {
 			cirelationship.Table:          cirelationship.ValidColumn,
 			citype.Table:                  citype.ValidColumn,
 			change.Table:                  change.ValidColumn,
+			cloudaccount.Table:            cloudaccount.ValidColumn,
+			cloudresource.Table:           cloudresource.ValidColumn,
+			cloudservice.Table:            cloudservice.ValidColumn,
 			configurationitem.Table:       configurationitem.ValidColumn,
 			conversation.Table:            conversation.ValidColumn,
 			department.Table:              department.ValidColumn,
+			discoveryjob.Table:            discoveryjob.ValidColumn,
+			discoveryresult.Table:         discoveryresult.ValidColumn,
+			discoverysource.Table:         discoverysource.ValidColumn,
 			incident.Table:                incident.ValidColumn,
 			incidentalert.Table:           incidentalert.ValidColumn,
 			incidentevent.Table:           incidentevent.ValidColumn,
@@ -160,6 +173,7 @@ func checkColumn(table, column string) error {
 			project.Table:                 project.ValidColumn,
 			prompttemplate.Table:          prompttemplate.ValidColumn,
 			provisioningtask.Table:        provisioningtask.ValidColumn,
+			relationshiptype.Table:        relationshiptype.ValidColumn,
 			rootcauseanalysis.Table:       rootcauseanalysis.ValidColumn,
 			slaalerthistory.Table:         slaalerthistory.ValidColumn,
 			slaalertrule.Table:            slaalertrule.ValidColumn,

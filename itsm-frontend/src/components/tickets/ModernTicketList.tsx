@@ -9,7 +9,7 @@ import {
   EmptyState 
 } from '../layout/ResponsiveLayout';
 import { useModernTicketStore, useModernTicketSelectors } from '@/lib/stores/modern-ticket-store';
-import { ticketUtils } from '@/lib/api/ticket';
+import { ticketUtils, type TicketSummary, type TicketStatus, type TicketPriority } from '@/lib/api/ticket';
 import { cn } from '@/lib/utils';
 
 interface TicketFiltersProps {
@@ -22,7 +22,7 @@ function TicketFilters({ onFilterChange }: TicketFiltersProps) {
   
   const activeFiltersCount = getActiveFiltersCount();
 
-  const statusOptions = [
+  const statusOptions: Array<{ value: TicketStatus; label: string; color: string }> = [
     { value: 'new', label: '新建', color: 'blue' },
     { value: 'open', label: '开放', color: 'cyan' },
     { value: 'in_progress', label: '处理中', color: 'orange' },
@@ -32,7 +32,7 @@ function TicketFilters({ onFilterChange }: TicketFiltersProps) {
     { value: 'cancelled', label: '已取消', color: 'red' },
   ];
 
-  const priorityOptions = [
+  const priorityOptions: Array<{ value: TicketPriority; label: string; color: string }> = [
     { value: 'low', label: '低', color: 'green' },
     { value: 'normal', label: '普通', color: 'blue' },
     { value: 'high', label: '高', color: 'orange' },
@@ -40,7 +40,7 @@ function TicketFilters({ onFilterChange }: TicketFiltersProps) {
     { value: 'critical', label: '关键', color: 'purple' },
   ];
 
-  const handleStatusChange = (status: string, checked: boolean) => {
+  const handleStatusChange = (status: TicketStatus, checked: boolean) => {
     const currentStatus = filters.status || [];
     const newStatus = checked 
       ? [...currentStatus, status]
@@ -49,7 +49,7 @@ function TicketFilters({ onFilterChange }: TicketFiltersProps) {
     setFilters({ status: newStatus.length > 0 ? newStatus : undefined });
   };
 
-  const handlePriorityChange = (priority: string, checked: boolean) => {
+  const handlePriorityChange = (priority: TicketPriority, checked: boolean) => {
     const currentPriority = filters.priority || [];
     const newPriority = checked
       ? [...currentPriority, priority]
@@ -171,7 +171,7 @@ function TicketFilters({ onFilterChange }: TicketFiltersProps) {
 }
 
 interface TicketCardProps {
-  ticket: any;
+  ticket: TicketSummary;
   selected?: boolean;
   onSelect?: (selected: boolean) => void;
   onClick?: () => void;

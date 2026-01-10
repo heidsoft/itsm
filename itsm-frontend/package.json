@@ -23,6 +23,7 @@
   "dependencies": {
     "@ant-design/charts": "^2.6.2",
     "@ant-design/pro-components": "^2.8.10",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@bpmn-io/element-template-chooser": "^2.0.0",
     "@bpmn-io/properties-panel": "^3.31.0",
     "@hello-pangea/dnd": "^18.0.1",
@@ -37,8 +38,8 @@
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.525.0",
     "next": "15.3.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-intersection-observer": "^9.16.0",
     "react-window": "^2.2.1",
     "react-window-infinite-loader": "^2.0.0",
@@ -56,8 +57,8 @@
     "@testing-library/user-event": "^14.5.1",
     "@types/jest": "^29.5.8",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
     "eslint": "^9",
@@ -68,6 +69,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "jest-junit": "^16.0.0",
     "jest-watch-typeahead": "^2.2.2",
+    "@playwright/test": "^1.41.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

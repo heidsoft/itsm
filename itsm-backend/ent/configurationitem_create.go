@@ -6,7 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/citype"
+	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/ticket"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -26,30 +31,22 @@ func (cic *ConfigurationItemCreate) SetName(s string) *ConfigurationItemCreate {
 	return cic
 }
 
-// SetDescription sets the "description" field.
-func (cic *ConfigurationItemCreate) SetDescription(s string) *ConfigurationItemCreate {
-	cic.mutation.SetDescription(s)
+// SetCiTypeID sets the "ci_type_id" field.
+func (cic *ConfigurationItemCreate) SetCiTypeID(i int) *ConfigurationItemCreate {
+	cic.mutation.SetCiTypeID(i)
 	return cic
 }
 
-// SetNillableDescription sets the "description" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableDescription(s *string) *ConfigurationItemCreate {
+// SetCiType sets the "ci_type" field.
+func (cic *ConfigurationItemCreate) SetCiType(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCiType(s)
+	return cic
+}
+
+// SetNillableCiType sets the "ci_type" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCiType(s *string) *ConfigurationItemCreate {
 	if s != nil {
-		cic.SetDescription(*s)
-	}
-	return cic
-}
-
-// SetType sets the "type" field.
-func (cic *ConfigurationItemCreate) SetType(s string) *ConfigurationItemCreate {
-	cic.mutation.SetType(s)
-	return cic
-}
-
-// SetNillableType sets the "type" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableType(s *string) *ConfigurationItemCreate {
-	if s != nil {
-		cic.SetType(*s)
+		cic.SetCiType(*s)
 	}
 	return cic
 }
@@ -68,16 +65,44 @@ func (cic *ConfigurationItemCreate) SetNillableStatus(s *string) *ConfigurationI
 	return cic
 }
 
-// SetLocation sets the "location" field.
-func (cic *ConfigurationItemCreate) SetLocation(s string) *ConfigurationItemCreate {
-	cic.mutation.SetLocation(s)
+// SetEnvironment sets the "environment" field.
+func (cic *ConfigurationItemCreate) SetEnvironment(s string) *ConfigurationItemCreate {
+	cic.mutation.SetEnvironment(s)
 	return cic
 }
 
-// SetNillableLocation sets the "location" field if the given value is not nil.
-func (cic *ConfigurationItemCreate) SetNillableLocation(s *string) *ConfigurationItemCreate {
+// SetNillableEnvironment sets the "environment" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableEnvironment(s *string) *ConfigurationItemCreate {
 	if s != nil {
-		cic.SetLocation(*s)
+		cic.SetEnvironment(*s)
+	}
+	return cic
+}
+
+// SetCriticality sets the "criticality" field.
+func (cic *ConfigurationItemCreate) SetCriticality(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCriticality(s)
+	return cic
+}
+
+// SetNillableCriticality sets the "criticality" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCriticality(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCriticality(*s)
+	}
+	return cic
+}
+
+// SetAssetTag sets the "asset_tag" field.
+func (cic *ConfigurationItemCreate) SetAssetTag(s string) *ConfigurationItemCreate {
+	cic.mutation.SetAssetTag(s)
+	return cic
+}
+
+// SetNillableAssetTag sets the "asset_tag" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableAssetTag(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetAssetTag(*s)
 	}
 	return cic
 }
@@ -124,9 +149,237 @@ func (cic *ConfigurationItemCreate) SetNillableVendor(s *string) *ConfigurationI
 	return cic
 }
 
-// SetCiTypeID sets the "ci_type_id" field.
-func (cic *ConfigurationItemCreate) SetCiTypeID(i int) *ConfigurationItemCreate {
-	cic.mutation.SetCiTypeID(i)
+// SetLocation sets the "location" field.
+func (cic *ConfigurationItemCreate) SetLocation(s string) *ConfigurationItemCreate {
+	cic.mutation.SetLocation(s)
+	return cic
+}
+
+// SetNillableLocation sets the "location" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableLocation(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetLocation(*s)
+	}
+	return cic
+}
+
+// SetAssignedTo sets the "assigned_to" field.
+func (cic *ConfigurationItemCreate) SetAssignedTo(s string) *ConfigurationItemCreate {
+	cic.mutation.SetAssignedTo(s)
+	return cic
+}
+
+// SetNillableAssignedTo sets the "assigned_to" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableAssignedTo(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetAssignedTo(*s)
+	}
+	return cic
+}
+
+// SetOwnedBy sets the "owned_by" field.
+func (cic *ConfigurationItemCreate) SetOwnedBy(s string) *ConfigurationItemCreate {
+	cic.mutation.SetOwnedBy(s)
+	return cic
+}
+
+// SetNillableOwnedBy sets the "owned_by" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableOwnedBy(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetOwnedBy(*s)
+	}
+	return cic
+}
+
+// SetDiscoverySource sets the "discovery_source" field.
+func (cic *ConfigurationItemCreate) SetDiscoverySource(s string) *ConfigurationItemCreate {
+	cic.mutation.SetDiscoverySource(s)
+	return cic
+}
+
+// SetNillableDiscoverySource sets the "discovery_source" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableDiscoverySource(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetDiscoverySource(*s)
+	}
+	return cic
+}
+
+// SetLastDiscovered sets the "last_discovered" field.
+func (cic *ConfigurationItemCreate) SetLastDiscovered(t time.Time) *ConfigurationItemCreate {
+	cic.mutation.SetLastDiscovered(t)
+	return cic
+}
+
+// SetNillableLastDiscovered sets the "last_discovered" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableLastDiscovered(t *time.Time) *ConfigurationItemCreate {
+	if t != nil {
+		cic.SetLastDiscovered(*t)
+	}
+	return cic
+}
+
+// SetSource sets the "source" field.
+func (cic *ConfigurationItemCreate) SetSource(s string) *ConfigurationItemCreate {
+	cic.mutation.SetSource(s)
+	return cic
+}
+
+// SetNillableSource sets the "source" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableSource(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetSource(*s)
+	}
+	return cic
+}
+
+// SetAttributes sets the "attributes" field.
+func (cic *ConfigurationItemCreate) SetAttributes(m map[string]interface{}) *ConfigurationItemCreate {
+	cic.mutation.SetAttributes(m)
+	return cic
+}
+
+// SetCloudProvider sets the "cloud_provider" field.
+func (cic *ConfigurationItemCreate) SetCloudProvider(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudProvider(s)
+	return cic
+}
+
+// SetNillableCloudProvider sets the "cloud_provider" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudProvider(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudProvider(*s)
+	}
+	return cic
+}
+
+// SetCloudAccountID sets the "cloud_account_id" field.
+func (cic *ConfigurationItemCreate) SetCloudAccountID(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudAccountID(s)
+	return cic
+}
+
+// SetNillableCloudAccountID sets the "cloud_account_id" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudAccountID(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudAccountID(*s)
+	}
+	return cic
+}
+
+// SetCloudRegion sets the "cloud_region" field.
+func (cic *ConfigurationItemCreate) SetCloudRegion(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudRegion(s)
+	return cic
+}
+
+// SetNillableCloudRegion sets the "cloud_region" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudRegion(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudRegion(*s)
+	}
+	return cic
+}
+
+// SetCloudZone sets the "cloud_zone" field.
+func (cic *ConfigurationItemCreate) SetCloudZone(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudZone(s)
+	return cic
+}
+
+// SetNillableCloudZone sets the "cloud_zone" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudZone(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudZone(*s)
+	}
+	return cic
+}
+
+// SetCloudResourceID sets the "cloud_resource_id" field.
+func (cic *ConfigurationItemCreate) SetCloudResourceID(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudResourceID(s)
+	return cic
+}
+
+// SetNillableCloudResourceID sets the "cloud_resource_id" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudResourceID(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudResourceID(*s)
+	}
+	return cic
+}
+
+// SetCloudResourceType sets the "cloud_resource_type" field.
+func (cic *ConfigurationItemCreate) SetCloudResourceType(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudResourceType(s)
+	return cic
+}
+
+// SetNillableCloudResourceType sets the "cloud_resource_type" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudResourceType(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudResourceType(*s)
+	}
+	return cic
+}
+
+// SetCloudMetadata sets the "cloud_metadata" field.
+func (cic *ConfigurationItemCreate) SetCloudMetadata(m map[string]interface{}) *ConfigurationItemCreate {
+	cic.mutation.SetCloudMetadata(m)
+	return cic
+}
+
+// SetCloudTags sets the "cloud_tags" field.
+func (cic *ConfigurationItemCreate) SetCloudTags(m map[string]interface{}) *ConfigurationItemCreate {
+	cic.mutation.SetCloudTags(m)
+	return cic
+}
+
+// SetCloudMetrics sets the "cloud_metrics" field.
+func (cic *ConfigurationItemCreate) SetCloudMetrics(m map[string]interface{}) *ConfigurationItemCreate {
+	cic.mutation.SetCloudMetrics(m)
+	return cic
+}
+
+// SetCloudSyncTime sets the "cloud_sync_time" field.
+func (cic *ConfigurationItemCreate) SetCloudSyncTime(t time.Time) *ConfigurationItemCreate {
+	cic.mutation.SetCloudSyncTime(t)
+	return cic
+}
+
+// SetNillableCloudSyncTime sets the "cloud_sync_time" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudSyncTime(t *time.Time) *ConfigurationItemCreate {
+	if t != nil {
+		cic.SetCloudSyncTime(*t)
+	}
+	return cic
+}
+
+// SetCloudSyncStatus sets the "cloud_sync_status" field.
+func (cic *ConfigurationItemCreate) SetCloudSyncStatus(s string) *ConfigurationItemCreate {
+	cic.mutation.SetCloudSyncStatus(s)
+	return cic
+}
+
+// SetNillableCloudSyncStatus sets the "cloud_sync_status" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudSyncStatus(s *string) *ConfigurationItemCreate {
+	if s != nil {
+		cic.SetCloudSyncStatus(*s)
+	}
+	return cic
+}
+
+// SetCloudResourceRefID sets the "cloud_resource_ref_id" field.
+func (cic *ConfigurationItemCreate) SetCloudResourceRefID(i int) *ConfigurationItemCreate {
+	cic.mutation.SetCloudResourceRefID(i)
+	return cic
+}
+
+// SetNillableCloudResourceRefID sets the "cloud_resource_ref_id" field if the given value is not nil.
+func (cic *ConfigurationItemCreate) SetNillableCloudResourceRefID(i *int) *ConfigurationItemCreate {
+	if i != nil {
+		cic.SetCloudResourceRefID(*i)
+	}
 	return cic
 }
 
@@ -164,6 +417,82 @@ func (cic *ConfigurationItemCreate) SetNillableUpdatedAt(t *time.Time) *Configur
 	return cic
 }
 
+// SetCiTypeRefID sets the "ci_type_ref" edge to the CIType entity by ID.
+func (cic *ConfigurationItemCreate) SetCiTypeRefID(id int) *ConfigurationItemCreate {
+	cic.mutation.SetCiTypeRefID(id)
+	return cic
+}
+
+// SetCiTypeRef sets the "ci_type_ref" edge to the CIType entity.
+func (cic *ConfigurationItemCreate) SetCiTypeRef(c *CIType) *ConfigurationItemCreate {
+	return cic.SetCiTypeRefID(c.ID)
+}
+
+// SetCloudResourceRef sets the "cloud_resource_ref" edge to the CloudResource entity.
+func (cic *ConfigurationItemCreate) SetCloudResourceRef(c *CloudResource) *ConfigurationItemCreate {
+	return cic.SetCloudResourceRefID(c.ID)
+}
+
+// AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
+func (cic *ConfigurationItemCreate) AddTicketIDs(ids ...int) *ConfigurationItemCreate {
+	cic.mutation.AddTicketIDs(ids...)
+	return cic
+}
+
+// AddTickets adds the "tickets" edges to the Ticket entity.
+func (cic *ConfigurationItemCreate) AddTickets(t ...*Ticket) *ConfigurationItemCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return cic.AddTicketIDs(ids...)
+}
+
+// AddIncidentIDs adds the "incidents" edge to the Incident entity by IDs.
+func (cic *ConfigurationItemCreate) AddIncidentIDs(ids ...int) *ConfigurationItemCreate {
+	cic.mutation.AddIncidentIDs(ids...)
+	return cic
+}
+
+// AddIncidents adds the "incidents" edges to the Incident entity.
+func (cic *ConfigurationItemCreate) AddIncidents(i ...*Incident) *ConfigurationItemCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return cic.AddIncidentIDs(ids...)
+}
+
+// AddParentRelationIDs adds the "parent_relations" edge to the CIRelationship entity by IDs.
+func (cic *ConfigurationItemCreate) AddParentRelationIDs(ids ...int) *ConfigurationItemCreate {
+	cic.mutation.AddParentRelationIDs(ids...)
+	return cic
+}
+
+// AddParentRelations adds the "parent_relations" edges to the CIRelationship entity.
+func (cic *ConfigurationItemCreate) AddParentRelations(c ...*CIRelationship) *ConfigurationItemCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return cic.AddParentRelationIDs(ids...)
+}
+
+// AddChildRelationIDs adds the "child_relations" edge to the CIRelationship entity by IDs.
+func (cic *ConfigurationItemCreate) AddChildRelationIDs(ids ...int) *ConfigurationItemCreate {
+	cic.mutation.AddChildRelationIDs(ids...)
+	return cic
+}
+
+// AddChildRelations adds the "child_relations" edges to the CIRelationship entity.
+func (cic *ConfigurationItemCreate) AddChildRelations(c ...*CIRelationship) *ConfigurationItemCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return cic.AddChildRelationIDs(ids...)
+}
+
 // Mutation returns the ConfigurationItemMutation object of the builder.
 func (cic *ConfigurationItemCreate) Mutation() *ConfigurationItemMutation {
 	return cic.mutation
@@ -199,9 +528,21 @@ func (cic *ConfigurationItemCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cic *ConfigurationItemCreate) defaults() {
+	if _, ok := cic.mutation.CiType(); !ok {
+		v := configurationitem.DefaultCiType
+		cic.mutation.SetCiType(v)
+	}
 	if _, ok := cic.mutation.Status(); !ok {
 		v := configurationitem.DefaultStatus
 		cic.mutation.SetStatus(v)
+	}
+	if _, ok := cic.mutation.Environment(); !ok {
+		v := configurationitem.DefaultEnvironment
+		cic.mutation.SetEnvironment(v)
+	}
+	if _, ok := cic.mutation.Criticality(); !ok {
+		v := configurationitem.DefaultCriticality
+		cic.mutation.SetCriticality(v)
 	}
 	if _, ok := cic.mutation.CreatedAt(); !ok {
 		v := configurationitem.DefaultCreatedAt()
@@ -223,9 +564,6 @@ func (cic *ConfigurationItemCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.name": %w`, err)}
 		}
 	}
-	if _, ok := cic.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ConfigurationItem.status"`)}
-	}
 	if _, ok := cic.mutation.CiTypeID(); !ok {
 		return &ValidationError{Name: "ci_type_id", err: errors.New(`ent: missing required field "ConfigurationItem.ci_type_id"`)}
 	}
@@ -233,6 +571,18 @@ func (cic *ConfigurationItemCreate) check() error {
 		if err := configurationitem.CiTypeIDValidator(v); err != nil {
 			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "ConfigurationItem.ci_type_id": %w`, err)}
 		}
+	}
+	if _, ok := cic.mutation.CiType(); !ok {
+		return &ValidationError{Name: "ci_type", err: errors.New(`ent: missing required field "ConfigurationItem.ci_type"`)}
+	}
+	if _, ok := cic.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ConfigurationItem.status"`)}
+	}
+	if _, ok := cic.mutation.Environment(); !ok {
+		return &ValidationError{Name: "environment", err: errors.New(`ent: missing required field "ConfigurationItem.environment"`)}
+	}
+	if _, ok := cic.mutation.Criticality(); !ok {
+		return &ValidationError{Name: "criticality", err: errors.New(`ent: missing required field "ConfigurationItem.criticality"`)}
 	}
 	if _, ok := cic.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ConfigurationItem.tenant_id"`)}
@@ -247,6 +597,9 @@ func (cic *ConfigurationItemCreate) check() error {
 	}
 	if _, ok := cic.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ConfigurationItem.updated_at"`)}
+	}
+	if len(cic.mutation.CiTypeRefIDs()) == 0 {
+		return &ValidationError{Name: "ci_type_ref", err: errors.New(`ent: missing required edge "ConfigurationItem.ci_type_ref"`)}
 	}
 	return nil
 }
@@ -278,21 +631,25 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := cic.mutation.Description(); ok {
-		_spec.SetField(configurationitem.FieldDescription, field.TypeString, value)
-		_node.Description = value
-	}
-	if value, ok := cic.mutation.GetType(); ok {
-		_spec.SetField(configurationitem.FieldType, field.TypeString, value)
-		_node.Type = value
+	if value, ok := cic.mutation.CiType(); ok {
+		_spec.SetField(configurationitem.FieldCiType, field.TypeString, value)
+		_node.CiType = value
 	}
 	if value, ok := cic.mutation.Status(); ok {
 		_spec.SetField(configurationitem.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := cic.mutation.Location(); ok {
-		_spec.SetField(configurationitem.FieldLocation, field.TypeString, value)
-		_node.Location = value
+	if value, ok := cic.mutation.Environment(); ok {
+		_spec.SetField(configurationitem.FieldEnvironment, field.TypeString, value)
+		_node.Environment = value
+	}
+	if value, ok := cic.mutation.Criticality(); ok {
+		_spec.SetField(configurationitem.FieldCriticality, field.TypeString, value)
+		_node.Criticality = value
+	}
+	if value, ok := cic.mutation.AssetTag(); ok {
+		_spec.SetField(configurationitem.FieldAssetTag, field.TypeString, value)
+		_node.AssetTag = value
 	}
 	if value, ok := cic.mutation.SerialNumber(); ok {
 		_spec.SetField(configurationitem.FieldSerialNumber, field.TypeString, value)
@@ -306,9 +663,77 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 		_spec.SetField(configurationitem.FieldVendor, field.TypeString, value)
 		_node.Vendor = value
 	}
-	if value, ok := cic.mutation.CiTypeID(); ok {
-		_spec.SetField(configurationitem.FieldCiTypeID, field.TypeInt, value)
-		_node.CiTypeID = value
+	if value, ok := cic.mutation.Location(); ok {
+		_spec.SetField(configurationitem.FieldLocation, field.TypeString, value)
+		_node.Location = value
+	}
+	if value, ok := cic.mutation.AssignedTo(); ok {
+		_spec.SetField(configurationitem.FieldAssignedTo, field.TypeString, value)
+		_node.AssignedTo = value
+	}
+	if value, ok := cic.mutation.OwnedBy(); ok {
+		_spec.SetField(configurationitem.FieldOwnedBy, field.TypeString, value)
+		_node.OwnedBy = value
+	}
+	if value, ok := cic.mutation.DiscoverySource(); ok {
+		_spec.SetField(configurationitem.FieldDiscoverySource, field.TypeString, value)
+		_node.DiscoverySource = value
+	}
+	if value, ok := cic.mutation.LastDiscovered(); ok {
+		_spec.SetField(configurationitem.FieldLastDiscovered, field.TypeTime, value)
+		_node.LastDiscovered = value
+	}
+	if value, ok := cic.mutation.Source(); ok {
+		_spec.SetField(configurationitem.FieldSource, field.TypeString, value)
+		_node.Source = value
+	}
+	if value, ok := cic.mutation.Attributes(); ok {
+		_spec.SetField(configurationitem.FieldAttributes, field.TypeJSON, value)
+		_node.Attributes = value
+	}
+	if value, ok := cic.mutation.CloudProvider(); ok {
+		_spec.SetField(configurationitem.FieldCloudProvider, field.TypeString, value)
+		_node.CloudProvider = value
+	}
+	if value, ok := cic.mutation.CloudAccountID(); ok {
+		_spec.SetField(configurationitem.FieldCloudAccountID, field.TypeString, value)
+		_node.CloudAccountID = value
+	}
+	if value, ok := cic.mutation.CloudRegion(); ok {
+		_spec.SetField(configurationitem.FieldCloudRegion, field.TypeString, value)
+		_node.CloudRegion = value
+	}
+	if value, ok := cic.mutation.CloudZone(); ok {
+		_spec.SetField(configurationitem.FieldCloudZone, field.TypeString, value)
+		_node.CloudZone = value
+	}
+	if value, ok := cic.mutation.CloudResourceID(); ok {
+		_spec.SetField(configurationitem.FieldCloudResourceID, field.TypeString, value)
+		_node.CloudResourceID = value
+	}
+	if value, ok := cic.mutation.CloudResourceType(); ok {
+		_spec.SetField(configurationitem.FieldCloudResourceType, field.TypeString, value)
+		_node.CloudResourceType = value
+	}
+	if value, ok := cic.mutation.CloudMetadata(); ok {
+		_spec.SetField(configurationitem.FieldCloudMetadata, field.TypeJSON, value)
+		_node.CloudMetadata = value
+	}
+	if value, ok := cic.mutation.CloudTags(); ok {
+		_spec.SetField(configurationitem.FieldCloudTags, field.TypeJSON, value)
+		_node.CloudTags = value
+	}
+	if value, ok := cic.mutation.CloudMetrics(); ok {
+		_spec.SetField(configurationitem.FieldCloudMetrics, field.TypeJSON, value)
+		_node.CloudMetrics = value
+	}
+	if value, ok := cic.mutation.CloudSyncTime(); ok {
+		_spec.SetField(configurationitem.FieldCloudSyncTime, field.TypeTime, value)
+		_node.CloudSyncTime = value
+	}
+	if value, ok := cic.mutation.CloudSyncStatus(); ok {
+		_spec.SetField(configurationitem.FieldCloudSyncStatus, field.TypeString, value)
+		_node.CloudSyncStatus = value
 	}
 	if value, ok := cic.mutation.TenantID(); ok {
 		_spec.SetField(configurationitem.FieldTenantID, field.TypeInt, value)
@@ -321,6 +746,104 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 	if value, ok := cic.mutation.UpdatedAt(); ok {
 		_spec.SetField(configurationitem.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := cic.mutation.CiTypeRefIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   configurationitem.CiTypeRefTable,
+			Columns: []string{configurationitem.CiTypeRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CiTypeID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cic.mutation.CloudResourceRefIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   configurationitem.CloudResourceRefTable,
+			Columns: []string{configurationitem.CloudResourceRefColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cloudresource.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CloudResourceRefID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cic.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.TicketsTable,
+			Columns: configurationitem.TicketsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cic.mutation.IncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   configurationitem.IncidentsTable,
+			Columns: configurationitem.IncidentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cic.mutation.ParentRelationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.ParentRelationsTable,
+			Columns: []string{configurationitem.ParentRelationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cic.mutation.ChildRelationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   configurationitem.ChildRelationsTable,
+			Columns: []string{configurationitem.ChildRelationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

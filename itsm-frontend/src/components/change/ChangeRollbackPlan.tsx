@@ -265,8 +265,8 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       title: '操作',
       key: 'actions',
       width: 80,
-      render: (_: any, record: RollbackStep, index: number) => (
-        !readOnly && (
+      render: (_: any, record: RollbackStep, index: number) =>
+        !readOnly ? (
           <Button
             type="text"
             danger
@@ -275,7 +275,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           >
             删除
           </Button>
-        ),
+        ) : null,
     },
   ];
 

@@ -2,7 +2,7 @@
  * 知识库 React Query Hooks
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tantml:react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import type {
@@ -190,7 +190,7 @@ export function useUpdateArticleMutation() {
       id: string;
       data: Parameters<typeof KnowledgeBaseApi.updateArticle>[1];
     }) => KnowledgeBaseApi.updateArticle(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (_data: unknown, variables: { id: string; data: Parameters<typeof KnowledgeBaseApi.updateArticle>[1] }) => {
       message.success('文章已更新');
       queryClient.invalidateQueries({
         queryKey: KNOWLEDGE_BASE_KEYS.articleDetail(variables.id),
@@ -228,7 +228,7 @@ export function usePublishArticleMutation() {
       id: string;
       request?: Parameters<typeof KnowledgeBaseApi.publishArticle>[1];
     }) => KnowledgeBaseApi.publishArticle(id, request),
-    onSuccess: (_, variables) => {
+    onSuccess: (_data: unknown, variables: { id: string; request?: Parameters<typeof KnowledgeBaseApi.publishArticle>[1] }) => {
       message.success('文章已发布');
       queryClient.invalidateQueries({
         queryKey: KNOWLEDGE_BASE_KEYS.articleDetail(variables.id),
@@ -252,7 +252,7 @@ export function useAddCommentMutation() {
       content: string;
       parentId?: string;
     }) => KnowledgeBaseApi.addComment(articleId, content, parentId),
-    onSuccess: (_, variables) => {
+    onSuccess: (_data: unknown, variables: { articleId: string; content: string; parentId?: string }) => {
       message.success('评论已添加');
       queryClient.invalidateQueries({
         queryKey: KNOWLEDGE_BASE_KEYS.articleComments(variables.articleId),
@@ -265,7 +265,7 @@ export function useLikeArticleMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (articleId: string) => KnowledgeBaseApi.likeArticle(articleId),
-    onSuccess: (_, articleId) => {
+    onSuccess: (_data: unknown, articleId: string) => {
       queryClient.invalidateQueries({
         queryKey: KNOWLEDGE_BASE_KEYS.articleDetail(articleId),
       });
@@ -303,7 +303,7 @@ export function useSubmitForReviewMutation() {
       articleId: string;
       reviewerId?: number;
     }) => KnowledgeBaseApi.submitForReview(articleId, reviewerId),
-    onSuccess: (_, variables) => {
+    onSuccess: (_data: unknown, variables: { articleId: string; reviewerId?: number }) => {
       message.success('已提交审核');
       queryClient.invalidateQueries({
         queryKey: KNOWLEDGE_BASE_KEYS.articleDetail(variables.articleId),
@@ -322,7 +322,7 @@ export function useReviewArticleMutation() {
       articleId: string;
       request: Parameters<typeof KnowledgeBaseApi.reviewArticle>[1];
     }) => KnowledgeBaseApi.reviewArticle(articleId, request),
-    onSuccess: (_, variables) => {
+    onSuccess: (_data: unknown, variables: { articleId: string; request: Parameters<typeof KnowledgeBaseApi.reviewArticle>[1] }) => {
       message.success('审核已完成');
       queryClient.invalidateQueries({
         queryKey: KNOWLEDGE_BASE_KEYS.articleDetail(variables.articleId),
@@ -359,4 +359,3 @@ export default {
   useSubmitForReviewMutation,
   useReviewArticleMutation,
 };
-

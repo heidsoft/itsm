@@ -48,7 +48,10 @@ type RouterConfig struct {
 
 	// Ticket related controllers
 	TicketCategoryController *controller.TicketCategoryController
-	TicketTagController      *controller.TicketTagController
+
+	// CMDB Controllers
+	CMDBController      *controller.CMDBController
+	TicketTagController *controller.TicketTagController
 
 	// Additional domain controllers
 	ServiceController        *controller.ServiceController
@@ -261,6 +264,29 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				cmdbGrp.DELETE("/cis/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBHandler.DeleteCI)
 				cmdbGrp.GET("/stats", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetStats)
 				cmdbGrp.GET("/types", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListTypes)
+				cmdbGrp.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetReconciliation)
+				cmdbGrp.GET("/relationship-types", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListRelationshipTypes)
+				cmdbGrp.GET("/cloud-services", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudServices)
+				cmdbGrp.POST("/cloud-services", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCloudService)
+				cmdbGrp.GET("/cloud-accounts", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudAccounts)
+				cmdbGrp.POST("/cloud-accounts", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCloudAccount)
+				cmdbGrp.GET("/cloud-resources", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudResources)
+				cmdbGrp.GET("/discovery-sources", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoverySources)
+				cmdbGrp.POST("/discovery-sources", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoverySource)
+				cmdbGrp.POST("/discovery/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoveryJob)
+				cmdbGrp.GET("/discovery/results", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoveryResults)
+			}
+		}
+
+		// CMDB 新控制器路由
+		if config.CMDBController != nil {
+			cmdb := tenant.(*gin.RouterGroup).Group("/configuration-items")
+			{
+				cmdb.GET("", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIs)
+				cmdb.POST("", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCI)
+				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
+				cmdb.GET("/:id/topology", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCITopology)
+				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateRelationship)
 			}
 		}
 

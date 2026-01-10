@@ -79,7 +79,7 @@ func NewApplication() *Application {
 	approvalService := service.NewApprovalService(client, sugar)
 	serviceRequestService := service.NewServiceRequestService(client, sugar, approvalService)
 
-	cmdbService := service.NewCMDBService(client, sugar)
+	cmdbService := service.NewCMDBService(client)
 	problemService := service.NewProblemService(client, sugar)
 	changeService := service.NewChangeService(client, sugar)
 	changeApprovalService := service.NewChangeApprovalService(client, database.GetRawDB(), sugar)
@@ -163,9 +163,14 @@ func NewApplication() *Application {
 	scService := service_catalog.NewService(scRepo, sugar)
 	scHandler := service_catalog.NewHandler(scService)
 
+	// Domain: CMDB (DDD)
+	cmdbRepo := cmdb.NewEntRepository(client)
+	cmdbServiceDomain := cmdb.NewService(cmdbRepo, sugar)
+	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
+
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
-	srService := service_request.NewService(srRepo, scRepo, sugar)
+	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, sugar)
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)
@@ -183,10 +188,8 @@ func NewApplication() *Application {
 	changeServiceDomain := change.NewService(changeRepo, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
 
-	// Domain: CMDB (DDD)
-	cmdbRepo := cmdb.NewEntRepository(client)
-	cmdbServiceDomain := cmdb.NewService(cmdbRepo, sugar)
-	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
+	// CMDB Controller (新增)
+	cmdbController := controller.NewCMDBController(service.NewCMDBService(client))
 
 	// Domain: Knowledge (DDD)
 	knowledgeRepo := knowledge.NewEntRepository(client)
@@ -233,6 +236,9 @@ func NewApplication() *Application {
 		ApplicationController:           applicationController,
 		TicketCategoryController:        ticketCategoryController,
 		TicketTagController:             ticketTagController,
+
+		// CMDB Controller (新增)
+		CMDBController: cmdbController,
 
 		// Additional controllers
 		ServiceController:        serviceController,

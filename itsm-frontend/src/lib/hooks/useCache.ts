@@ -19,7 +19,9 @@ class CacheManager {
     // 如果缓存已满，删除最旧的条目
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
     }
 
     this.cache.set(key, {
@@ -39,12 +41,12 @@ class CacheManager {
       return null;
     }
 
-    return entry.data;
+    return entry.data as T;
   }
 
   getStale<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    return entry ? entry.data : null;
+    return entry ? (entry.data as T) : null;
   }
 
   isStale(key: string): boolean {

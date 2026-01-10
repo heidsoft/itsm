@@ -53,8 +53,6 @@ const mockImprovements: Improvement[] = [
   },
 ];
 
-type ImprovementStatus = '进行中' | '待评估' | '已完成';
-
 const ImprovementStatusBadge = ({ status }: { status: ImprovementStatus }) => {
   const colors: Record<ImprovementStatus, string> = {
     进行中: 'bg-blue-100 text-blue-800',

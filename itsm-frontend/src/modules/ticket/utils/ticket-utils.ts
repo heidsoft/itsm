@@ -5,7 +5,8 @@
  * 提供可复用的业务逻辑和数据处理函数
  */
 
-import { Ticket, TicketStatus, TicketPriority, TicketType, User, Comment, Activity } from './types/ticket-types';
+import { TicketStatus, TicketPriority, TicketType } from '../types/ticket-types';
+import type { Ticket, User, Comment, Activity } from '../types/ticket-types';
 
 // ==================== 状态管理工具 ====================
 
@@ -17,17 +18,20 @@ export class StateUtils {
    * 深度合并对象
    */
   static deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-    const result = { ...target };
+    const result = { ...target } as T;
     
     for (const key in source) {
       if (source.hasOwnProperty(key)) {
-        const sourceValue = source[key];
-        const targetValue = result[key];
+        const sourceValue = source[key as keyof T];
+        const targetValue = result[key as keyof T];
         
         if (this.isObject(sourceValue) && this.isObject(targetValue)) {
-          result[key] = this.deepMerge(targetValue, sourceValue);
+          result[key as keyof T] = this.deepMerge(
+            targetValue as Record<string, any>,
+            sourceValue as Record<string, any>
+          ) as T[keyof T];
         } else {
-          result[key] = sourceValue;
+          result[key as keyof T] = sourceValue as T[keyof T];
         }
       }
     }
@@ -45,7 +49,7 @@ export class StateUtils {
   /**
    * 创建状态更新函数
    */
-  static createStateUpdater<T>(setState: (updater: (state: T) => T) => void) {
+  static createStateUpdater<T extends Record<string, any>>(setState: (updater: (state: T) => T) => void) {
     return (updates: Partial<T>) => {
       setState(state => this.deepMerge(state, updates));
     };

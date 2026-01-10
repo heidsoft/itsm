@@ -224,7 +224,7 @@ const initialTicketDetailState: TicketDetailState = {
 
 // ==================== 状态配置 ====================
 
-const ticketListConfig: StateConfig = {
+export const ticketListConfig: StateConfig = {
   name: 'ticket-list-store',
   type: 'persistent',
   persist: true,
@@ -233,7 +233,7 @@ const ticketListConfig: StateConfig = {
   version: '1.0.0',
 };
 
-const ticketDetailConfig: StateConfig = {
+export const ticketDetailConfig: StateConfig = {
   name: 'ticket-detail-store',
   type: 'client',
   persist: false,
@@ -792,10 +792,10 @@ export const useTicketDetailStore = create<TicketDetailState>()(
 // ==================== 状态管理器注册 ====================
 
 // 注册工单列表状态管理器
-stateManagerFactory.createClientState('ticket-list-store', ticketListConfig, initialTicketListState);
+stateManagerFactory.createClientState(ticketListConfig, initialTicketListState);
 
 // 注册工单详情状态管理器
-stateManagerFactory.createClientState('ticket-detail-store', ticketDetailConfig, initialTicketDetailState);
+stateManagerFactory.createClientState(ticketDetailConfig, initialTicketDetailState);
 
 // ==================== 导出 ====================
 

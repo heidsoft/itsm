@@ -241,7 +241,10 @@ export class ChangeApi {
     start_date?: string;
     end_date?: string;
   }): Promise<Blob> {
-    return httpClient.get('/api/v1/changes/export', params, {
+    return httpClient.request<Blob>({
+      url: '/api/v1/changes/export',
+      method: 'GET',
+      params,
       responseType: 'blob',
     });
   }

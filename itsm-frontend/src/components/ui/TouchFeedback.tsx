@@ -100,7 +100,7 @@ export const TouchFeedback: React.FC<TouchFeedbackProps> = ({
   };
 
   // 计算两点距离
-  const getDistance = (touches: TouchList): number => {
+  const getDistance = (touches: TouchList | React.TouchList): number => {
     if (touches.length < 2) return 0;
     
     const touch1 = touches[0];

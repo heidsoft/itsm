@@ -523,47 +523,6 @@ export interface Notification extends BaseEntity {
   metadata?: Record<string, any>;
 }
 
-// ==================== 导出类型 ====================
-
-export type {
-  BaseEntity,
-  PaginationResponse,
-  ApiResponse,
-  ErrorResponse,
-  User,
-  UserRole,
-  UserStatus,
-  TicketStatus,
-  TicketPriority,
-  TicketType,
-  Ticket,
-  UserGroup,
-  SLA,
-  SLAStatus,
-  BusinessHours,
-  EscalationRule,
-  EscalationAction,
-  SLACondition,
-  Attachment,
-  Comment,
-  ActivityType,
-  Activity,
-  TicketFilters,
-  SortConfig,
-  QueryParams,
-  CreateTicketRequest,
-  UpdateTicketRequest,
-  AssignTicketRequest,
-  ResolveTicketRequest,
-  CloseTicketRequest,
-  ReopenTicketRequest,
-  TicketStats,
-  TimeRangeStats,
-  NotificationType,
-  NotificationTemplate,
-  Notification,
-};
-
 // ==================== 类型守卫 ====================
 
 /**

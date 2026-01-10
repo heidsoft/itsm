@@ -50,6 +50,10 @@ const mockData = {
     avgResponseTime: "2.3 hours",
     avgResolutionTime: "8.7 hours",
     customerSatisfaction: 4.2,
+    monthlyGrowth: 6.4,
+    openTickets: 89,
+    slaCompliance: 94.2,
+    teamPerformance: 92.5,
   },
   slaMetrics: {
     totalSLA: 1247,
@@ -58,6 +62,11 @@ const mockData = {
     avgResponseTime: "2.3 hours",
     avgResolutionTime: "8.7 hours",
     complianceRate: 94.2,
+    withinSLA: 1175,
+    criticalSLA: 210,
+    highPrioritySLA: 320,
+    mediumPrioritySLA: 420,
+    lowPrioritySLA: 225,
   },
   teamPerformance: [
     {
@@ -428,9 +437,7 @@ const TicketDashboardPage = () => {
               title: "Customer Rating",
               dataIndex: "customerRating",
               key: "customerRating",
-              render: (value) => (
-                <Rate disabled defaultValue={value} size="small" />
-              ),
+              render: (value) => <Rate disabled defaultValue={value} />,
             },
             {
               title: "Efficiency Index",
@@ -489,7 +496,7 @@ const TicketDashboardPage = () => {
                 <div>
                   <Text strong>{activity.action}</Text>
                   <div className="text-sm text-gray-500">
-                    {activity.ticketNumber}
+                    {activity.ticketId}
                   </div>
                   <div className="text-sm">{activity.details}</div>
                 </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import { Tag, Avatar, Typography, Space, Tooltip, Badge, Button } from 'antd';
 import {
   UserOutlined,
@@ -54,7 +54,7 @@ export default function OptimizedTicketList({
   embedded = false,
   showHeader = true,
   pageSize = 20,
-  filters,
+  filters: externalFilters,
   onTicketSelect,
   className,
 }: OptimizedTicketListProps) {
@@ -63,31 +63,50 @@ export default function OptimizedTicketList({
     tickets,
     loading,
     total,
-    searchQuery,
-    currentPage,
+    page,
+    pageSize: storePageSize,
     selectedTickets,
-    setSearchQuery,
-    setCurrentPage,
-    setSelectedTickets,
-    refreshTickets,
-    deleteTickets,
+    fetchTickets,
+    batchDeleteTickets,
+    setFilters,
+    setPage,
+    setPageSize,
+    deselectAll,
+    selectTicket,
   } = useTicketListStore();
+
+  useEffect(() => {
+    if (pageSize !== storePageSize) {
+      setPageSize(pageSize);
+    }
+  }, [pageSize, setPageSize, storePageSize]);
+
+  useEffect(() => {
+    if (externalFilters && Object.keys(externalFilters).length > 0) {
+      setFilters(externalFilters);
+    }
+    fetchTickets();
+  }, [externalFilters, fetchTickets, setFilters]);
 
   // 处理搜索
   const handleSearch = useCallback((value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  }, [setSearchQuery, setCurrentPage]);
+    setFilters({ keyword: value });
+    setPage(1);
+    fetchTickets({ keyword: value, page: 1 });
+  }, [fetchTickets, setFilters, setPage]);
 
   // 处理分页
   const handlePaginationChange = useCallback((page: number, size: number) => {
-    setCurrentPage(page);
-  }, [setCurrentPage]);
+    setPage(page);
+    setPageSize(size);
+    fetchTickets({ page, page_size: size, size });
+  }, [fetchTickets, setPage, setPageSize]);
 
   // 处理行选择
   const handleSelectionChange = useCallback((selectedRowKeys: React.Key[], selectedRows: Ticket[]) => {
-    setSelectedTickets(selectedRows);
-  }, [setSelectedTickets]);
+    deselectAll();
+    selectedRows.forEach((row) => selectTicket(row));
+  }, [deselectAll, selectTicket]);
 
   // 表格列配置
   const columns: EnhancedTableColumn<Ticket>[] = useMemo(() => [
@@ -284,7 +303,7 @@ export default function OptimizedTicketList({
       danger: true,
       onClick: (selectedRows: Ticket[]) => {
         const ids = selectedRows.map(row => row.id);
-        deleteTickets(ids);
+        batchDeleteTickets(ids);
       },
       disabled: (selectedRows: Ticket[]) => 
         selectedRows.some(row => row.status === 'closed'),
@@ -297,10 +316,10 @@ export default function OptimizedTicketList({
         console.log('Batch assign tickets:', selectedRows.map(row => row.id));
       },
     },
-  ], [deleteTickets]);
+  ], [batchDeleteTickets]);
 
   // 过滤器配置
-  const filters = useMemo(() => [
+  const tableFilters = useMemo(() => [
     {
       key: 'status',
       label: '状态',
@@ -336,9 +355,9 @@ export default function OptimizedTicketList({
         actions={actions}
         batchActions={batchActions}
         pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: total,
+          current: page,
+          pageSize: storePageSize,
+          total,
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: true,
@@ -353,11 +372,11 @@ export default function OptimizedTicketList({
           onSearch: handleSearch,
           loading: loading,
         }}
-        filters={filters}
+        filters={tableFilters}
         toolbar={{
           title: embedded ? undefined : '工单列表',
           showRefresh: true,
-          onRefresh: refreshTickets,
+          onRefresh: fetchTickets,
           showExport: true,
           onExport: () => console.log('Export tickets'),
           showSettings: true,

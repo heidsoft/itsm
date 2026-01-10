@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,        // 关闭 X-Powered-By 头
   reactStrictMode: true,         // 开启/关闭严格模式
   
+  // Docker部署配置
+  output: 'standalone',
+  
   // 修复后的开发指示器配置
   devIndicators: {
     position: 'bottom-right',     // 新的位置配置选项

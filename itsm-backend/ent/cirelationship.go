@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/configurationitem"
 	"strings"
 	"time"
 
@@ -17,21 +18,53 @@ type CIRelationship struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// 源CI ID
-	SourceCiID int `json:"source_ci_id,omitempty"`
-	// 目标CI ID
-	TargetCiID int `json:"target_ci_id,omitempty"`
-	// 关系类型ID
-	RelationshipTypeID int `json:"relationship_type_id,omitempty"`
+	// 关系类型
+	Type string `json:"type,omitempty"`
 	// 关系描述
 	Description string `json:"description,omitempty"`
-	// 租户ID
-	TenantID int `json:"tenant_id,omitempty"`
-	// 创建时间
+	// 父CI ID
+	ParentID int `json:"parent_id,omitempty"`
+	// 子CI ID
+	ChildID int `json:"child_id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CIRelationshipQuery when eager-loading is set.
+	Edges        CIRelationshipEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// CIRelationshipEdges holds the relations/edges for other nodes in the graph.
+type CIRelationshipEdges struct {
+	// Parent holds the value of the parent edge.
+	Parent *ConfigurationItem `json:"parent,omitempty"`
+	// Child holds the value of the child edge.
+	Child *ConfigurationItem `json:"child,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// ParentOrErr returns the Parent value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CIRelationshipEdges) ParentOrErr() (*ConfigurationItem, error) {
+	if e.Parent != nil {
+		return e.Parent, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: configurationitem.Label}
+	}
+	return nil, &NotLoadedError{edge: "parent"}
+}
+
+// ChildOrErr returns the Child value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CIRelationshipEdges) ChildOrErr() (*ConfigurationItem, error) {
+	if e.Child != nil {
+		return e.Child, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: configurationitem.Label}
+	}
+	return nil, &NotLoadedError{edge: "child"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -39,11 +72,11 @@ func (*CIRelationship) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case cirelationship.FieldID, cirelationship.FieldSourceCiID, cirelationship.FieldTargetCiID, cirelationship.FieldRelationshipTypeID, cirelationship.FieldTenantID:
+		case cirelationship.FieldID, cirelationship.FieldParentID, cirelationship.FieldChildID:
 			values[i] = new(sql.NullInt64)
-		case cirelationship.FieldDescription:
+		case cirelationship.FieldType, cirelationship.FieldDescription:
 			values[i] = new(sql.NullString)
-		case cirelationship.FieldCreatedAt, cirelationship.FieldUpdatedAt:
+		case cirelationship.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -66,23 +99,11 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			cr.ID = int(value.Int64)
-		case cirelationship.FieldSourceCiID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field source_ci_id", values[i])
+		case cirelationship.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				cr.SourceCiID = int(value.Int64)
-			}
-		case cirelationship.FieldTargetCiID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field target_ci_id", values[i])
-			} else if value.Valid {
-				cr.TargetCiID = int(value.Int64)
-			}
-		case cirelationship.FieldRelationshipTypeID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field relationship_type_id", values[i])
-			} else if value.Valid {
-				cr.RelationshipTypeID = int(value.Int64)
+				cr.Type = value.String
 			}
 		case cirelationship.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -90,23 +111,23 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				cr.Description = value.String
 			}
-		case cirelationship.FieldTenantID:
+		case cirelationship.FieldParentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
+				return fmt.Errorf("unexpected type %T for field parent_id", values[i])
 			} else if value.Valid {
-				cr.TenantID = int(value.Int64)
+				cr.ParentID = int(value.Int64)
+			}
+		case cirelationship.FieldChildID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field child_id", values[i])
+			} else if value.Valid {
+				cr.ChildID = int(value.Int64)
 			}
 		case cirelationship.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				cr.CreatedAt = value.Time
-			}
-		case cirelationship.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				cr.UpdatedAt = value.Time
 			}
 		default:
 			cr.selectValues.Set(columns[i], values[i])
@@ -119,6 +140,16 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (cr *CIRelationship) Value(name string) (ent.Value, error) {
 	return cr.selectValues.Get(name)
+}
+
+// QueryParent queries the "parent" edge of the CIRelationship entity.
+func (cr *CIRelationship) QueryParent() *ConfigurationItemQuery {
+	return NewCIRelationshipClient(cr.config).QueryParent(cr)
+}
+
+// QueryChild queries the "child" edge of the CIRelationship entity.
+func (cr *CIRelationship) QueryChild() *ConfigurationItemQuery {
+	return NewCIRelationshipClient(cr.config).QueryChild(cr)
 }
 
 // Update returns a builder for updating this CIRelationship.
@@ -144,26 +175,20 @@ func (cr *CIRelationship) String() string {
 	var builder strings.Builder
 	builder.WriteString("CIRelationship(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", cr.ID))
-	builder.WriteString("source_ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.SourceCiID))
-	builder.WriteString(", ")
-	builder.WriteString("target_ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.TargetCiID))
-	builder.WriteString(", ")
-	builder.WriteString("relationship_type_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.RelationshipTypeID))
+	builder.WriteString("type=")
+	builder.WriteString(cr.Type)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(cr.Description)
 	builder.WriteString(", ")
-	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.TenantID))
+	builder.WriteString("parent_id=")
+	builder.WriteString(fmt.Sprintf("%v", cr.ParentID))
+	builder.WriteString(", ")
+	builder.WriteString("child_id=")
+	builder.WriteString(fmt.Sprintf("%v", cr.ChildID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(cr.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("updated_at=")
-	builder.WriteString(cr.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

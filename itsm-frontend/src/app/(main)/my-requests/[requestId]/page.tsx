@@ -197,6 +197,15 @@ export default function MyRequestDetailPage() {
             <Descriptions.Item label='当前级别'>
               {detail?.current_level ?? '-'} / {detail?.total_levels ?? '-'}
             </Descriptions.Item>
+            <Descriptions.Item label='关联CI'>
+              {detail?.ci_id ? (
+                <Button type='link' onClick={() => router.push(`/cmdb/cis/${detail.ci_id}`)}>
+                  CI #{detail.ci_id}
+                </Button>
+              ) : (
+                '-'
+              )}
+            </Descriptions.Item>
             <Descriptions.Item label='标题' span={2}>
               {detail?.title || detail?.catalog?.name || '-'}
             </Descriptions.Item>

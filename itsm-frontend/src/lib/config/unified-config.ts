@@ -392,8 +392,9 @@ export const validateConfig = () => {
   const allPermissions = Object.values(PERMISSION_CONFIG.ROLE_PERMISSIONS).flat();
   
   for (const permission of requiredPermissions) {
-    if (permission !== '*' && !allPermissions.includes(permission) && !allPermissions.includes('*')) {
-      errors.push(`Permission ${permission} is not assigned to any role`);
+    const permissionValue = permission as string;
+    if (permissionValue !== '*' && !allPermissions.includes(permission as any) && !allPermissions.includes('*' as any)) {
+      errors.push(`Permission ${permissionValue} is not assigned to any role`);
     }
   }
   

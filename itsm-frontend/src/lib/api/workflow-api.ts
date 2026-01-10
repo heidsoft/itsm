@@ -165,7 +165,7 @@ export class WorkflowApi {
     const payload = {
         name: request.name,
         description: request.description,
-        bpmn_xml: request.bpmn_xml,
+        bpmn_xml: (request as any).bpmn_xml,
     };
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.

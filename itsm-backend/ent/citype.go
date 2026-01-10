@@ -34,8 +34,29 @@ type CIType struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CITypeQuery when eager-loading is set.
+	Edges        CITypeEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// CITypeEdges holds the relations/edges for other nodes in the graph.
+type CITypeEdges struct {
+	// Cis holds the value of the cis edge.
+	Cis []*ConfigurationItem `json:"cis,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// CisOrErr returns the Cis value or an error if the edge
+// was not loaded in eager-loading.
+func (e CITypeEdges) CisOrErr() ([]*ConfigurationItem, error) {
+	if e.loadedTypes[0] {
+		return e.Cis, nil
+	}
+	return nil, &NotLoadedError{edge: "cis"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -137,6 +158,11 @@ func (ct *CIType) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ct *CIType) Value(name string) (ent.Value, error) {
 	return ct.selectValues.Get(name)
+}
+
+// QueryCis queries the "cis" edge of the CIType entity.
+func (ct *CIType) QueryCis() *ConfigurationItemQuery {
+	return NewCITypeClient(ct.config).QueryCis(ct)
 }
 
 // Update returns a builder for updating this CIType.

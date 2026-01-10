@@ -11,6 +11,7 @@ type ServiceRequest struct {
 	TenantID           int
 	CatalogID          int
 	RequesterID        int
+	CIID               int
 	Status             string
 	Title              string
 	Reason             string

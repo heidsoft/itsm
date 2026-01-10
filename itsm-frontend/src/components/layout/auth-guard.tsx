@@ -3,8 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../app/lib/store';
-import { usePermissions, useRoutePermissions } from '../hooks/use-permissions';
-import { RoutePermission } from '../router/route-config';
+import { usePermissions, useRoutePermissions } from '@/lib/hooks/use-permissions';
+import { RoutePermission } from '@/lib/router/route-config';
 
 interface AuthGuardProps {
   children: React.ReactNode;

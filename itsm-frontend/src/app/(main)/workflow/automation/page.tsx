@@ -314,7 +314,6 @@ const WorkflowAutomationPage = () => {
               <Switch
                 checked={automationEnabled}
                 onChange={setAutomationEnabled}
-                size="large"
               />
               <div>
                 <Title level={5} className="mb-1">

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -530,6 +531,21 @@ func (iu *IncidentUpdate) AddParentIncident(i ...*Incident) *IncidentUpdate {
 	return iu.AddParentIncidentIDs(ids...)
 }
 
+// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
+func (iu *IncidentUpdate) AddConfigurationItemIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.AddConfigurationItemIDs(ids...)
+	return iu
+}
+
+// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
+func (iu *IncidentUpdate) AddConfigurationItems(c ...*ConfigurationItem) *IncidentUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return iu.AddConfigurationItemIDs(ids...)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (iu *IncidentUpdate) Mutation() *IncidentMutation {
 	return iu.mutation
@@ -638,6 +654,27 @@ func (iu *IncidentUpdate) RemoveParentIncident(i ...*Incident) *IncidentUpdate {
 		ids[j] = i[j].ID
 	}
 	return iu.RemoveParentIncidentIDs(ids...)
+}
+
+// ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
+func (iu *IncidentUpdate) ClearConfigurationItems() *IncidentUpdate {
+	iu.mutation.ClearConfigurationItems()
+	return iu
+}
+
+// RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
+func (iu *IncidentUpdate) RemoveConfigurationItemIDs(ids ...int) *IncidentUpdate {
+	iu.mutation.RemoveConfigurationItemIDs(ids...)
+	return iu
+}
+
+// RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
+func (iu *IncidentUpdate) RemoveConfigurationItems(c ...*ConfigurationItem) *IncidentUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return iu.RemoveConfigurationItemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1062,6 +1099,51 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ConfigurationItemsTable,
+			Columns: incident.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !iu.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ConfigurationItemsTable,
+			Columns: incident.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ConfigurationItemsTable,
+			Columns: incident.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1587,6 +1669,21 @@ func (iuo *IncidentUpdateOne) AddParentIncident(i ...*Incident) *IncidentUpdateO
 	return iuo.AddParentIncidentIDs(ids...)
 }
 
+// AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
+func (iuo *IncidentUpdateOne) AddConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.AddConfigurationItemIDs(ids...)
+	return iuo
+}
+
+// AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
+func (iuo *IncidentUpdateOne) AddConfigurationItems(c ...*ConfigurationItem) *IncidentUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return iuo.AddConfigurationItemIDs(ids...)
+}
+
 // Mutation returns the IncidentMutation object of the builder.
 func (iuo *IncidentUpdateOne) Mutation() *IncidentMutation {
 	return iuo.mutation
@@ -1695,6 +1792,27 @@ func (iuo *IncidentUpdateOne) RemoveParentIncident(i ...*Incident) *IncidentUpda
 		ids[j] = i[j].ID
 	}
 	return iuo.RemoveParentIncidentIDs(ids...)
+}
+
+// ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
+func (iuo *IncidentUpdateOne) ClearConfigurationItems() *IncidentUpdateOne {
+	iuo.mutation.ClearConfigurationItems()
+	return iuo
+}
+
+// RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
+func (iuo *IncidentUpdateOne) RemoveConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
+	iuo.mutation.RemoveConfigurationItemIDs(ids...)
+	return iuo
+}
+
+// RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
+func (iuo *IncidentUpdateOne) RemoveConfigurationItems(c ...*ConfigurationItem) *IncidentUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return iuo.RemoveConfigurationItemIDs(ids...)
 }
 
 // Where appends a list predicates to the IncidentUpdate builder.
@@ -2149,6 +2267,51 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ConfigurationItemsTable,
+			Columns: incident.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !iuo.mutation.ConfigurationItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ConfigurationItemsTable,
+			Columns: incident.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   incident.ConfigurationItemsTable,
+			Columns: incident.ConfigurationItemsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

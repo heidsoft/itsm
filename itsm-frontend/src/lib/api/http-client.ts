@@ -175,6 +175,10 @@ class HttpClient {
   private async requestInternal<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = this.getHeaders();
+    const sanitizedHeaders = { ...headers };
+    if (sanitizedHeaders.Authorization) {
+      sanitizedHeaders.Authorization = '[REDACTED]';
+    }
     const requestConfig: RequestInit = {
       method: config.method,
       headers: {
@@ -187,7 +191,7 @@ class HttpClient {
     logger.debug('HTTP Client Request:', {
       url,
       method: config.method,
-      headers,
+      headers: sanitizedHeaders,
       body: config.body
     });
 
@@ -198,7 +202,8 @@ class HttpClient {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const timeoutMs = config.timeout ?? this.timeout;
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       
       const response = await fetch(url, {
         ...requestConfig,
@@ -572,7 +577,8 @@ class HttpClient {
         reject(new Error('Upload failed'));
       });
 
-      xhr.open('POST', endpoint);
+      const uploadUrl = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
+      xhr.open('POST', uploadUrl);
       
       // 添加认证头
       const token = this.getAuthToken();

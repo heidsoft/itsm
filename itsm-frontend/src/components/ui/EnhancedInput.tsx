@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Input, InputProps, AutoComplete } from 'antd';
+import { Input, AutoComplete } from 'antd';
+import type { InputProps } from 'antd';
+import type { TextAreaProps } from 'antd/es/input';
 import { cn } from '@/lib/utils';
 import { TouchFeedback } from './TouchFeedback';
 import { useIsTouchDevice } from '@/hooks/useResponsive';
 
 const { TextArea } = Input;
 
-export interface EnhancedInputProps extends Omit<InputProps, 'size'> {
+export interface EnhancedInputProps extends Omit<InputProps, 'size' | 'variant'> {
   /** 输入框变体 */
   variant?: 'default' | 'filled' | 'outlined' | 'underlined';
   /** 尺寸 */
@@ -33,7 +35,7 @@ export interface EnhancedInputProps extends Omit<InputProps, 'size'> {
   /** 是否显示字符计数 */
   showCount?: boolean;
   /** 输入类型扩展 */
-  inputType?: 'text' | 'email' | 'tel' | 'url' | 'password' | 'search';
+  inputType?: 'text' | 'email' | 'tel' | 'url' | 'password' | 'search' | 'date';
   /** 格式化输入 */
   formatter?: (value: string) => string;
   /** 移动端优化 */
@@ -44,7 +46,7 @@ export interface EnhancedInputProps extends Omit<InputProps, 'size'> {
   className?: string;
 }
 
-export interface EnhancedTextAreaProps extends Omit<Input.TextAreaProps, 'size'> {
+export interface EnhancedTextAreaProps extends Omit<TextAreaProps, 'size'> {
   /** 尺寸 */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** 最大高度 */
@@ -84,7 +86,9 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
     onChange,
     ...props
   }, ref) => {
-    const [internalValue, setInternalValue] = useState(value || '');
+    const [internalValue, setInternalValue] = useState<string>(
+      typeof value === 'string' ? value : value != null ? String(value) : ''
+    );
     const [focused, setFocused] = useState(false);
     const isTouchDevice = useIsTouchDevice();
     const inputRef = useRef<any>(null);
@@ -128,7 +132,7 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
             ...e.target,
             value: formattedValue,
           },
-        });
+        } as React.ChangeEvent<HTMLInputElement>);
       }
     };
 
@@ -163,7 +167,7 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
       return (
         <div className="relative">
           <AutoComplete
-            {...inputProps}
+            {...(inputProps as any)}
             options={options.map(opt => ({
               value: opt.value,
               label: (
@@ -176,7 +180,7 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
               ),
             }))}
             filterOption={(inputValue, option) =>
-              (option?.value ?? '').toLowerCase().includes(inputValue.toLowerCase())
+              String(option?.value ?? '').toLowerCase().includes(inputValue.toLowerCase())
             }
           />
           
@@ -185,9 +189,9 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
             <div className={cn(
               'mt-1 text-xs transition-all duration-200',
               {
-                'text-green-600': validation.status === 'success',
-                'text-yellow-600': validation.status === 'warning',
-                'text-red-600': validation.status === 'error',
+                success: 'text-green-600',
+                warning: 'text-yellow-600',
+                error: 'text-red-600',
               }[validation.status]
             )}>
               {validation.message}
@@ -240,12 +244,12 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
             {validation?.message && (
               <div className={cn(
                 'mt-1 text-xs transition-all duration-200',
-                {
-                  'text-green-600': validation.status === 'success',
-                  'text-yellow-600': validation.status === 'warning',
-                  'text-red-600': validation.status === 'error',
-                }[validation.status]
-              )}>
+              {
+                success: 'text-green-600',
+                warning: 'text-yellow-600',
+                error: 'text-red-600',
+              }[validation.status]
+            )}>
                 {validation.message}
               </div>
             )}
@@ -271,9 +275,9 @@ export const EnhancedInput = forwardRef<any, EnhancedInputProps>(
           <div className={cn(
             'mt-1 text-xs transition-all duration-200',
             {
-              'text-green-600': validation.status === 'success',
-              'text-yellow-600': validation.status === 'warning',
-              'text-red-600': validation.status === 'error',
+              success: 'text-green-600',
+              warning: 'text-yellow-600',
+              error: 'text-red-600',
             }[validation.status]
           )}>
             {validation.message}
@@ -306,7 +310,9 @@ export const EnhancedTextArea: React.FC<EnhancedTextAreaProps> = ({
   onChange,
   ...props
 }) => {
-  const [internalValue, setInternalValue] = useState(value || '');
+  const [internalValue, setInternalValue] = useState<string>(
+    typeof value === 'string' ? value : value != null ? String(value) : ''
+  );
   const [focused, setFocused] = useState(false);
   const isTouchDevice = useIsTouchDevice();
   const textAreaRef = useRef<any>(null);
@@ -351,13 +357,7 @@ export const EnhancedTextArea: React.FC<EnhancedTextAreaProps> = ({
 
   if (isTouchDevice && mobileOptimized) {
     return (
-      <TouchFeedback
-        touchArea={{ 
-          width: '100%',
-          height: '120px'
-        }}
-        className="w-full"
-      >
+      <TouchFeedback className="w-full">
         <div className="relative">
           <TextArea {...textAreaProps} ref={textAreaRef} />
           

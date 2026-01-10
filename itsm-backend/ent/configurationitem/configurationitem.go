@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -15,48 +16,167 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldDescription holds the string denoting the description field in the database.
-	FieldDescription = "description"
-	// FieldType holds the string denoting the type field in the database.
-	FieldType = "type"
+	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
+	FieldCiTypeID = "ci_type_id"
+	// FieldCiType holds the string denoting the ci_type field in the database.
+	FieldCiType = "ci_type"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldLocation holds the string denoting the location field in the database.
-	FieldLocation = "location"
+	// FieldEnvironment holds the string denoting the environment field in the database.
+	FieldEnvironment = "environment"
+	// FieldCriticality holds the string denoting the criticality field in the database.
+	FieldCriticality = "criticality"
+	// FieldAssetTag holds the string denoting the asset_tag field in the database.
+	FieldAssetTag = "asset_tag"
 	// FieldSerialNumber holds the string denoting the serial_number field in the database.
 	FieldSerialNumber = "serial_number"
 	// FieldModel holds the string denoting the model field in the database.
 	FieldModel = "model"
 	// FieldVendor holds the string denoting the vendor field in the database.
 	FieldVendor = "vendor"
-	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
-	FieldCiTypeID = "ci_type_id"
+	// FieldLocation holds the string denoting the location field in the database.
+	FieldLocation = "location"
+	// FieldAssignedTo holds the string denoting the assigned_to field in the database.
+	FieldAssignedTo = "assigned_to"
+	// FieldOwnedBy holds the string denoting the owned_by field in the database.
+	FieldOwnedBy = "owned_by"
+	// FieldDiscoverySource holds the string denoting the discovery_source field in the database.
+	FieldDiscoverySource = "discovery_source"
+	// FieldLastDiscovered holds the string denoting the last_discovered field in the database.
+	FieldLastDiscovered = "last_discovered"
+	// FieldSource holds the string denoting the source field in the database.
+	FieldSource = "source"
+	// FieldAttributes holds the string denoting the attributes field in the database.
+	FieldAttributes = "attributes"
+	// FieldCloudProvider holds the string denoting the cloud_provider field in the database.
+	FieldCloudProvider = "cloud_provider"
+	// FieldCloudAccountID holds the string denoting the cloud_account_id field in the database.
+	FieldCloudAccountID = "cloud_account_id"
+	// FieldCloudRegion holds the string denoting the cloud_region field in the database.
+	FieldCloudRegion = "cloud_region"
+	// FieldCloudZone holds the string denoting the cloud_zone field in the database.
+	FieldCloudZone = "cloud_zone"
+	// FieldCloudResourceID holds the string denoting the cloud_resource_id field in the database.
+	FieldCloudResourceID = "cloud_resource_id"
+	// FieldCloudResourceType holds the string denoting the cloud_resource_type field in the database.
+	FieldCloudResourceType = "cloud_resource_type"
+	// FieldCloudMetadata holds the string denoting the cloud_metadata field in the database.
+	FieldCloudMetadata = "cloud_metadata"
+	// FieldCloudTags holds the string denoting the cloud_tags field in the database.
+	FieldCloudTags = "cloud_tags"
+	// FieldCloudMetrics holds the string denoting the cloud_metrics field in the database.
+	FieldCloudMetrics = "cloud_metrics"
+	// FieldCloudSyncTime holds the string denoting the cloud_sync_time field in the database.
+	FieldCloudSyncTime = "cloud_sync_time"
+	// FieldCloudSyncStatus holds the string denoting the cloud_sync_status field in the database.
+	FieldCloudSyncStatus = "cloud_sync_status"
+	// FieldCloudResourceRefID holds the string denoting the cloud_resource_ref_id field in the database.
+	FieldCloudResourceRefID = "cloud_resource_ref_id"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeCiTypeRef holds the string denoting the ci_type_ref edge name in mutations.
+	EdgeCiTypeRef = "ci_type_ref"
+	// EdgeCloudResourceRef holds the string denoting the cloud_resource_ref edge name in mutations.
+	EdgeCloudResourceRef = "cloud_resource_ref"
+	// EdgeTickets holds the string denoting the tickets edge name in mutations.
+	EdgeTickets = "tickets"
+	// EdgeIncidents holds the string denoting the incidents edge name in mutations.
+	EdgeIncidents = "incidents"
+	// EdgeParentRelations holds the string denoting the parent_relations edge name in mutations.
+	EdgeParentRelations = "parent_relations"
+	// EdgeChildRelations holds the string denoting the child_relations edge name in mutations.
+	EdgeChildRelations = "child_relations"
 	// Table holds the table name of the configurationitem in the database.
 	Table = "configuration_items"
+	// CiTypeRefTable is the table that holds the ci_type_ref relation/edge.
+	CiTypeRefTable = "configuration_items"
+	// CiTypeRefInverseTable is the table name for the CIType entity.
+	// It exists in this package in order to avoid circular dependency with the "citype" package.
+	CiTypeRefInverseTable = "ci_types"
+	// CiTypeRefColumn is the table column denoting the ci_type_ref relation/edge.
+	CiTypeRefColumn = "ci_type_id"
+	// CloudResourceRefTable is the table that holds the cloud_resource_ref relation/edge.
+	CloudResourceRefTable = "configuration_items"
+	// CloudResourceRefInverseTable is the table name for the CloudResource entity.
+	// It exists in this package in order to avoid circular dependency with the "cloudresource" package.
+	CloudResourceRefInverseTable = "cloud_resources"
+	// CloudResourceRefColumn is the table column denoting the cloud_resource_ref relation/edge.
+	CloudResourceRefColumn = "cloud_resource_ref_id"
+	// TicketsTable is the table that holds the tickets relation/edge. The primary key declared below.
+	TicketsTable = "configuration_item_tickets"
+	// TicketsInverseTable is the table name for the Ticket entity.
+	// It exists in this package in order to avoid circular dependency with the "ticket" package.
+	TicketsInverseTable = "tickets"
+	// IncidentsTable is the table that holds the incidents relation/edge. The primary key declared below.
+	IncidentsTable = "configuration_item_incidents"
+	// IncidentsInverseTable is the table name for the Incident entity.
+	// It exists in this package in order to avoid circular dependency with the "incident" package.
+	IncidentsInverseTable = "incidents"
+	// ParentRelationsTable is the table that holds the parent_relations relation/edge.
+	ParentRelationsTable = "ci_relationships"
+	// ParentRelationsInverseTable is the table name for the CIRelationship entity.
+	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
+	ParentRelationsInverseTable = "ci_relationships"
+	// ParentRelationsColumn is the table column denoting the parent_relations relation/edge.
+	ParentRelationsColumn = "parent_id"
+	// ChildRelationsTable is the table that holds the child_relations relation/edge.
+	ChildRelationsTable = "ci_relationships"
+	// ChildRelationsInverseTable is the table name for the CIRelationship entity.
+	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
+	ChildRelationsInverseTable = "ci_relationships"
+	// ChildRelationsColumn is the table column denoting the child_relations relation/edge.
+	ChildRelationsColumn = "child_id"
 )
 
 // Columns holds all SQL columns for configurationitem fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
-	FieldDescription,
-	FieldType,
+	FieldCiTypeID,
+	FieldCiType,
 	FieldStatus,
-	FieldLocation,
+	FieldEnvironment,
+	FieldCriticality,
+	FieldAssetTag,
 	FieldSerialNumber,
 	FieldModel,
 	FieldVendor,
-	FieldCiTypeID,
+	FieldLocation,
+	FieldAssignedTo,
+	FieldOwnedBy,
+	FieldDiscoverySource,
+	FieldLastDiscovered,
+	FieldSource,
+	FieldAttributes,
+	FieldCloudProvider,
+	FieldCloudAccountID,
+	FieldCloudRegion,
+	FieldCloudZone,
+	FieldCloudResourceID,
+	FieldCloudResourceType,
+	FieldCloudMetadata,
+	FieldCloudTags,
+	FieldCloudMetrics,
+	FieldCloudSyncTime,
+	FieldCloudSyncStatus,
+	FieldCloudResourceRefID,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
+
+var (
+	// TicketsPrimaryKey and TicketsColumn2 are the table columns denoting the
+	// primary key for the tickets relation (M2M).
+	TicketsPrimaryKey = []string{"configuration_item_id", "ticket_id"}
+	// IncidentsPrimaryKey and IncidentsColumn2 are the table columns denoting the
+	// primary key for the incidents relation (M2M).
+	IncidentsPrimaryKey = []string{"configuration_item_id", "incident_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -71,10 +191,16 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
 	// CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
 	CiTypeIDValidator func(int) error
+	// DefaultCiType holds the default value on creation for the "ci_type" field.
+	DefaultCiType string
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
+	// DefaultEnvironment holds the default value on creation for the "environment" field.
+	DefaultEnvironment string
+	// DefaultCriticality holds the default value on creation for the "criticality" field.
+	DefaultCriticality string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -98,14 +224,14 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByDescription orders the results by the description field.
-func ByDescription(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+// ByCiTypeID orders the results by the ci_type_id field.
+func ByCiTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCiTypeID, opts...).ToFunc()
 }
 
-// ByType orders the results by the type field.
-func ByType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldType, opts...).ToFunc()
+// ByCiType orders the results by the ci_type field.
+func ByCiType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCiType, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -113,9 +239,19 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
-// ByLocation orders the results by the location field.
-func ByLocation(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLocation, opts...).ToFunc()
+// ByEnvironment orders the results by the environment field.
+func ByEnvironment(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEnvironment, opts...).ToFunc()
+}
+
+// ByCriticality orders the results by the criticality field.
+func ByCriticality(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCriticality, opts...).ToFunc()
+}
+
+// ByAssetTag orders the results by the asset_tag field.
+func ByAssetTag(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAssetTag, opts...).ToFunc()
 }
 
 // BySerialNumber orders the results by the serial_number field.
@@ -133,9 +269,79 @@ func ByVendor(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVendor, opts...).ToFunc()
 }
 
-// ByCiTypeID orders the results by the ci_type_id field.
-func ByCiTypeID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCiTypeID, opts...).ToFunc()
+// ByLocation orders the results by the location field.
+func ByLocation(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLocation, opts...).ToFunc()
+}
+
+// ByAssignedTo orders the results by the assigned_to field.
+func ByAssignedTo(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAssignedTo, opts...).ToFunc()
+}
+
+// ByOwnedBy orders the results by the owned_by field.
+func ByOwnedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnedBy, opts...).ToFunc()
+}
+
+// ByDiscoverySource orders the results by the discovery_source field.
+func ByDiscoverySource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDiscoverySource, opts...).ToFunc()
+}
+
+// ByLastDiscovered orders the results by the last_discovered field.
+func ByLastDiscovered(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastDiscovered, opts...).ToFunc()
+}
+
+// BySource orders the results by the source field.
+func BySource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSource, opts...).ToFunc()
+}
+
+// ByCloudProvider orders the results by the cloud_provider field.
+func ByCloudProvider(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudProvider, opts...).ToFunc()
+}
+
+// ByCloudAccountID orders the results by the cloud_account_id field.
+func ByCloudAccountID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudAccountID, opts...).ToFunc()
+}
+
+// ByCloudRegion orders the results by the cloud_region field.
+func ByCloudRegion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudRegion, opts...).ToFunc()
+}
+
+// ByCloudZone orders the results by the cloud_zone field.
+func ByCloudZone(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudZone, opts...).ToFunc()
+}
+
+// ByCloudResourceID orders the results by the cloud_resource_id field.
+func ByCloudResourceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudResourceID, opts...).ToFunc()
+}
+
+// ByCloudResourceType orders the results by the cloud_resource_type field.
+func ByCloudResourceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudResourceType, opts...).ToFunc()
+}
+
+// ByCloudSyncTime orders the results by the cloud_sync_time field.
+func ByCloudSyncTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudSyncTime, opts...).ToFunc()
+}
+
+// ByCloudSyncStatus orders the results by the cloud_sync_status field.
+func ByCloudSyncStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudSyncStatus, opts...).ToFunc()
+}
+
+// ByCloudResourceRefID orders the results by the cloud_resource_ref_id field.
+func ByCloudResourceRefID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudResourceRefID, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.
@@ -151,4 +357,116 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCiTypeRefField orders the results by ci_type_ref field.
+func ByCiTypeRefField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCiTypeRefStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCloudResourceRefField orders the results by cloud_resource_ref field.
+func ByCloudResourceRefField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCloudResourceRefStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByTicketsCount orders the results by tickets count.
+func ByTicketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTicketsStep(), opts...)
+	}
+}
+
+// ByTickets orders the results by tickets terms.
+func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTicketsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByIncidentsCount orders the results by incidents count.
+func ByIncidentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIncidentsStep(), opts...)
+	}
+}
+
+// ByIncidents orders the results by incidents terms.
+func ByIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIncidentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByParentRelationsCount orders the results by parent_relations count.
+func ByParentRelationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParentRelationsStep(), opts...)
+	}
+}
+
+// ByParentRelations orders the results by parent_relations terms.
+func ByParentRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentRelationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByChildRelationsCount orders the results by child_relations count.
+func ByChildRelationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChildRelationsStep(), opts...)
+	}
+}
+
+// ByChildRelations orders the results by child_relations terms.
+func ByChildRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChildRelationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newCiTypeRefStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CiTypeRefInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CiTypeRefTable, CiTypeRefColumn),
+	)
+}
+func newCloudResourceRefStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CloudResourceRefInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CloudResourceRefTable, CloudResourceRefColumn),
+	)
+}
+func newTicketsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TicketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, TicketsTable, TicketsPrimaryKey...),
+	)
+}
+func newIncidentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IncidentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, IncidentsTable, IncidentsPrimaryKey...),
+	)
+}
+func newParentRelationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ParentRelationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ParentRelationsTable, ParentRelationsColumn),
+	)
+}
+func newChildRelationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChildRelationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ChildRelationsTable, ChildRelationsColumn),
+	)
 }

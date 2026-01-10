@@ -38,7 +38,7 @@ export const ticketKeys = {
   list: (filters: Partial<TicketQueryFilters>, pagination: PaginationState) =>
     [...ticketKeys.lists(), filters, pagination] as const,
   details: () => [...ticketKeys.all, 'detail'] as const,
-  detail: (id: string) => [...ticketKeys.details(), id] as const,
+  detail: (id: number) => [...ticketKeys.details(), id] as const,
   stats: () => [...ticketKeys.all, 'stats'] as const,
 };
 
@@ -56,13 +56,16 @@ export const useTicketsQuery = (
         page_size: pagination.pageSize,
         ...filters,
       });
+      const pageSize = response?.page_size || pagination.pageSize;
+      const total = response?.total || 0;
+      const totalPages = pageSize ? Math.ceil(total / pageSize) : 0;
         // 确保返回的数据结构完整
         return {
           tickets: Array.isArray(response?.tickets) ? response.tickets : [],
-          total: response?.total || 0,
+          total,
           page: response?.page || pagination.current,
-          page_size: response?.page_size || pagination.pageSize,
-          total_pages: response?.total_pages || 0,
+          page_size: pageSize,
+          total_pages: totalPages,
         };
       } catch (error) {
         console.error('Failed to fetch tickets:', error);
@@ -107,7 +110,7 @@ export const useTicketStatsQuery = () => {
 };
 
 // 获取单个工单详情
-export const useTicketDetailQuery = (id: string) => {
+export const useTicketDetailQuery = (id: number) => {
   return useQuery({
     queryKey: ticketKeys.detail(id),
     queryFn: async () => {
@@ -157,7 +160,7 @@ export const useUpdateTicketMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const response = await ticketService.updateTicket(id, data);
       return response;
     },
@@ -183,8 +186,8 @@ export const useDeleteTicketMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await ticketService.deleteTicket(Number(id));
+    mutationFn: async (id: number) => {
+      await ticketService.deleteTicket(id);
       return id;
     },
     onSuccess: (id) => {
@@ -218,8 +221,8 @@ export const useBatchDeleteTicketsMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (ids: string[]) => {
-      await Promise.all(ids.map(id => ticketService.deleteTicket(Number(id))));
+    mutationFn: async (ids: number[]) => {
+      await Promise.all(ids.map(id => ticketService.deleteTicket(id)));
       return ids;
     },
     onSuccess: (ids) => {
@@ -254,7 +257,7 @@ export const useBatchDeleteTicketsMutation = () => {
 export const usePrefetchTicketDetail = () => {
   const queryClient = useQueryClient();
 
-  return (id: string) => {
+  return (id: number) => {
     queryClient.prefetchQuery({
       queryKey: ticketKeys.detail(id),
       queryFn: async () => {

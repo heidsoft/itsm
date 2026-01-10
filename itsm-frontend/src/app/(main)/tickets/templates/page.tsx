@@ -19,15 +19,29 @@ import {
   Divider,
   Tooltip,
   Popconfirm,
+  Statistic,
+  Rate,
+  Radio,
 } from "antd";
+import type { RadioChangeEvent } from "antd";
 import {
+  AlertTriangle,
+  BarChart3,
+  BookOpen,
+  CheckCircle,
   Plus,
   Edit,
   Delete,
   Copy,
   Eye,
   Settings,
+  Shield,
+  Zap,
+  Workflow,
+  RefreshCw,
+  Search,
   FileText,
+  Star,
   Tag as TagIcon,
 } from "lucide-react";
 // AppLayout is handled by layout.tsx
@@ -290,7 +304,7 @@ const TicketTemplatesPage = () => {
     try {
       // Mock API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const allTemplates = templateCategories.flatMap(cat => cat.templates);
+      const allTemplates = templateCategories.flatMap(cat => cat.templates) as TicketTemplate[];
       setTemplates(allTemplates);
     } catch (error) {
       message.error('Failed to load templates');
@@ -430,7 +444,7 @@ const TicketTemplatesPage = () => {
           <div className="text-center">
             <Text className="text-xs text-gray-500">Rating</Text>
             <div className="flex items-center">
-              <Rate disabled defaultValue={template.rating} size="small" />
+              <Rate disabled defaultValue={template.rating} />
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -525,7 +539,7 @@ const TicketTemplatesPage = () => {
         <div className="flex items-center justify-between mb-4">
           <Title level={5} className="mb-0">Filter Conditions</Title>
           <Space>
-            <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
+            <Radio.Group value={viewMode} onChange={(e: RadioChangeEvent) => setViewMode(e.target.value)}>
               <Radio.Button value="grid">Grid View</Radio.Button>
               <Radio.Button value="list">List View</Radio.Button>
             </Radio.Group>

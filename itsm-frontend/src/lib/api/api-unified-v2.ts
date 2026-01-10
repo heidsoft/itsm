@@ -510,5 +510,3 @@ export const createApiClient = (config?: Partial<typeof API_CONFIG>) => {
 };
 
 // 导出类型和实例
-export { ApiError };
-export type { RequestConfig, StandardApiResponse, PaginatedResponse, BatchOperationResult };

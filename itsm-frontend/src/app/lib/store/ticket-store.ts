@@ -6,15 +6,16 @@ export * from "./ticket-ui-store";
 export * from "./ticket-filter-store";
 
 // Convenience hooks that combine multiple stores for common use cases
-import { useTicketsData, useTicketStats, useTicketCRUD } from "./ticket-data-store";
+import { useTicketsList, useTicketStats, useTicketCRUD, useTicketCache } from "./ticket-data-store";
 import { useTicketSelection, useTicketModals, useTicketView, useTicketLoading } from "./ticket-ui-store";
 import { useTicketFilters, useTicketPagination, useTicketAdvancedFilters } from "./ticket-filter-store";
 
 // Combined hooks for common patterns
 export const useTicketManagement = () => {
-  const data = useTicketsData();
+  const data = useTicketsList();
   const stats = useTicketStats();
   const crud = useTicketCRUD();
+  const cache = useTicketCache();
   const selection = useTicketSelection();
   const modals = useTicketModals();
   const view = useTicketView();
@@ -96,7 +97,7 @@ export const useTicketManagement = () => {
     
     // Utility
     clearError: data.clearError,
-    resetData: crud.resetData,
+    resetData: cache.resetData,
   };
 };
 

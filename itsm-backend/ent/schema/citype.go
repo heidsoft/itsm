@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -22,4 +23,8 @@ func (CIType) Fields() []ent.Field {
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
-func (CIType) Edges() []ent.Edge { return nil }
+func (CIType) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("cis", ConfigurationItem.Type),
+	}
+}

@@ -155,7 +155,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         try {
           switch (operation) {
             case 'assign':
-              await TicketAPI.assignTicket(ticket.id, values.assignee_id, {
+              await TicketAPI.assignTicket(ticket.id, {
+                assignee_id: values.assignee_id,
                 comment: values.comment,
               });
               break;
@@ -220,7 +221,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   }, [selectedTickets, form, onOperationComplete]);
 
   // 处理操作菜单点击
-  const handleMenuClick: MenuProps['onClick'] = useCallback(({ key }) => {
+  const handleMenuClick: MenuProps['onClick'] = useCallback((info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
+    const { key } = info;
     const operation = batchOperations.find(op => op.key === key);
     if (!operation || key === 'divider1') return;
 

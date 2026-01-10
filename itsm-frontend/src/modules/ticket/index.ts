@@ -46,29 +46,34 @@ export {
 
 // ==================== 类型定义导出 ====================
 export {
-  BaseEntity,
-  PaginationResponse,
-  ApiResponse,
-  ErrorResponse,
-  User,
   UserRole,
   UserStatus,
   TicketStatus,
   TicketPriority,
   TicketType,
+  SLAStatus,
+  ActivityType,
+  NotificationType,
+  TypeGuards,
+} from './types/ticket-types';
+
+export type {
+  BaseEntity,
+  PaginationResponse,
+  ApiResponse,
+  ErrorResponse,
+  User,
   Ticket,
   UserGroup,
   SLA,
-  SLAStatus,
   BusinessHours,
   EscalationRule,
   EscalationAction,
   SLACondition,
   Attachment,
   Comment,
-  ActivityType,
   Activity,
-  TicketFilters,
+  TicketFilters as TicketFiltersType,
   SortConfig,
   QueryParams,
   CreateTicketRequest,
@@ -79,10 +84,8 @@ export {
   ReopenTicketRequest,
   TicketStats,
   TimeRangeStats,
-  NotificationType,
   NotificationTemplate,
   Notification,
-  TypeGuards,
 } from './types/ticket-types';
 
 // ==================== 工具函数导出 ====================
@@ -103,7 +106,7 @@ import { registerModule, CORE_MODULES } from '@/lib/architecture/modules';
 const ticketModuleConfig = {
   name: '工单管理模块',
   version: '1.0.0',
-  dependencies: ['auth', 'user', 'notification'],
+  dependencies: [CORE_MODULES.AUTH, CORE_MODULES.USER, CORE_MODULES.NOTIFICATION],
   exports: [
     'TicketManagementPage',
     'useTicketListStore',

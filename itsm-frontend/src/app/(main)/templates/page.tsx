@@ -53,11 +53,10 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 import {
   ticketTemplateService,
-  type TicketTemplate,
   type CreateTemplateRequest,
   type UpdateTemplateRequest,
-  type FormField,
-  type WorkflowStep,
+  type TemplateField,
+  type TicketTemplate as ServiceTicketTemplate,
 } from '@/lib/services/ticket-template-service';
 
 const { TextArea } = Input;
@@ -65,34 +64,6 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
-
-// 工单模板接口
-interface TicketTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  priority: string;
-  form_fields: Record<string, any>;
-  workflow_steps: WorkflowStep[];
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  tenant_id: string;
-}
-
-interface FormField {
-  id: string;
-  name: string;
-  label: string;
-  type: 'text' | 'textarea' | 'select' | 'number' | 'date' | 'checkbox' | 'radio';
-  required: boolean;
-  default_value?: string;
-  options?: string[];
-  placeholder?: string;
-  validation_rules?: string;
-  order: number;
-}
 
 interface WorkflowStep {
   id: string;
@@ -104,6 +75,19 @@ interface WorkflowStep {
   conditions?: string;
   order: number;
 }
+
+type TicketTemplate = ServiceTicketTemplate & {
+  priority?: string;
+  form_fields?: Record<string, any> | TemplateField[];
+  workflow_steps?: WorkflowStep[];
+  tenant_id?: string;
+};
+
+type FormField = TemplateField & {
+  id: string;
+  placeholder?: string;
+  order?: number;
+};
 
 interface TemplateFilters {
   category?: string;
@@ -137,12 +121,10 @@ const TicketTemplatePage: React.FC = () => {
       // 调用真实API
       const response = await ticketTemplateService.getTemplates({
         page: 1,
-        size: 100,
-        sort_by: 'created_at',
-        sort_order: 'desc',
+        page_size: 100,
       });
 
-      setTemplates(response.data || []);
+      setTemplates(response.templates || []);
     } catch (error) {
       console.error('加载模板失败:', error);
       // 如果API调用失败，使用模拟数据作为备用
@@ -173,11 +155,23 @@ const TicketTemplatePage: React.FC = () => {
 
     // 解析表单字段和工作流步骤
     try {
-      if (template.form_fields) {
+      if (template.fields && Array.isArray(template.fields)) {
+        const normalized = template.fields.map((field, index) => ({
+          ...field,
+          id: `field-${template.id}-${index}`,
+          order: index,
+        }));
+        setFormFields(normalized as FormField[]);
+      } else if (template.form_fields) {
         const fields = Array.isArray(template.form_fields)
           ? template.form_fields
           : Object.values(template.form_fields);
-        setFormFields(fields as FormField[]);
+        const normalized = fields.map((field, index) => ({
+          ...(field as TemplateField),
+          id: `field-${template.id}-${index}`,
+          order: index,
+        }));
+        setFormFields(normalized as FormField[]);
       }
 
       if (template.workflow_steps) {
@@ -192,7 +186,10 @@ const TicketTemplatePage: React.FC = () => {
       description: template.description,
       category: template.category,
       priority: template.priority,
-      assignee_group: template.form_fields?.assignee_group,
+      assignee_group:
+        template.form_fields && !Array.isArray(template.form_fields)
+          ? template.form_fields.assignee_group
+          : undefined,
       is_active: template.is_active,
     });
     setModalVisible(true);
@@ -200,7 +197,7 @@ const TicketTemplatePage: React.FC = () => {
   };
 
   // 处理删除模板
-  const handleDeleteTemplate = async (id: string) => {
+  const handleDeleteTemplate = async (id: number) => {
     try {
       await ticketTemplateService.deleteTemplate(id);
 
@@ -229,37 +226,38 @@ const TicketTemplatePage: React.FC = () => {
   // 处理表单提交
   const handleFormSubmit = async (values: any) => {
     try {
+      const fields: TemplateField[] = formFields.map(field => ({
+        name: field.name,
+        label: field.label,
+        type: field.type,
+        required: field.required,
+        options: field.options,
+        default_value: field.default_value,
+        validation_rules: field.validation_rules,
+      }));
+
       if (editingTemplate) {
         // 更新模板
-        const updatedTemplate = await ticketTemplateService.updateTemplate(editingTemplate.id, {
+        const updatePayload: UpdateTemplateRequest = {
           name: values.name,
           description: values.description,
           category: values.category,
-          priority: values.priority,
-          form_fields: {
-            ...values.form_fields,
-            fields: formFields,
-          },
-          workflow_steps: workflowSteps,
+          fields,
           is_active: values.is_active,
-        });
+        };
+        const updatedTemplate = await ticketTemplateService.updateTemplate(editingTemplate.id, updatePayload);
 
         setTemplates(templates.map(t => (t.id === editingTemplate.id ? updatedTemplate : t)));
         message.success('模板更新成功');
       } else {
         // 创建新模板
-        const newTemplate = await ticketTemplateService.createTemplate({
+        const createPayload: CreateTemplateRequest = {
           name: values.name,
           description: values.description,
           category: values.category,
-          priority: values.priority,
-          form_fields: {
-            ...values.form_fields,
-            fields: formFields,
-          },
-          workflow_steps: workflowSteps,
-          is_active: values.is_active,
-        });
+          fields,
+        };
+        const newTemplate = await ticketTemplateService.createTemplate(createPayload);
 
         setTemplates([newTemplate, ...templates]);
         message.success('模板创建成功');
@@ -386,14 +384,17 @@ const TicketTemplatePage: React.FC = () => {
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
-      render: (priority: string) => (
-        <Tag color={getPriorityColor(priority)}>
-          {priority === 'low' && '低'}
-          {priority === 'medium' && '中'}
-          {priority === 'high' && '高'}
-          {priority === 'critical' && '紧急'}
-        </Tag>
-      ),
+      render: (priority?: string) =>
+        priority ? (
+          <Tag color={getPriorityColor(priority)}>
+            {priority === 'low' && '低'}
+            {priority === 'medium' && '中'}
+            {priority === 'high' && '高'}
+            {priority === 'critical' && '紧急'}
+          </Tag>
+        ) : (
+          <Tag>-</Tag>
+        ),
     },
     {
       title: '状态',
@@ -584,27 +585,17 @@ const TicketTemplatePage: React.FC = () => {
         state={getCurrentState()}
         loadingText='正在加载模板数据...'
         empty={{
-          type: 'workflow',
           title: '暂无模板',
           description: '当前没有找到匹配的工单模板',
-          actions: [
-            {
-              text: '创建模板',
-              icon: <Plus className='w-4 h-4' />,
-              onClick: handleCreateTemplate,
-              type: 'primary',
-            },
-            {
-              text: '刷新数据',
-              icon: <RefreshCw className='w-4 h-4' />,
-              onClick: loadTemplates,
-            },
-          ],
+          actionText: '创建模板',
+          onAction: handleCreateTemplate,
+          icon: <FileText className='w-10 h-10' />,
         }}
         error={{
           title: '加载失败',
           description: error || '无法获取模板数据，请稍后重试',
-          onRetry: loadTemplates,
+          actionText: '重试',
+          onAction: loadTemplates,
         }}
       >
         <Card className='shadow-sm'>

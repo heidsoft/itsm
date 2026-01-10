@@ -10,7 +10,7 @@
  * 5. 页面组件 (Pages) - 具体业务页面
  */
 
-import { ReactNode, ComponentType } from 'react';
+import { ReactNode } from 'react';
 
 // 组件类型枚举
 export enum ComponentType {

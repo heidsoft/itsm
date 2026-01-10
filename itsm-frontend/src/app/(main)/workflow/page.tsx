@@ -44,6 +44,7 @@ import {
 
 import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { WorkflowType } from '@/types/workflow';
 
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
@@ -1153,16 +1154,17 @@ const WorkflowManagementPage = () => {
             try {
               if (editingWorkflow) {
                 // 更新现有工作流
-                await WorkflowAPI.updateWorkflow(editingWorkflow.id, {
+                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
                   bpmn_xml: xml,
-                });
+                } as any);
                 message.success(t('workflow.saveSuccess'));
               } else {
                 // 创建新工作流
                 await WorkflowAPI.createWorkflow({
                   name: t('workflow.newBPMNWorkflow'),
                   description: t('workflow.bpmnWorkflowDescription'),
-                  category: t('workflow.approvalProcess'),
+                  code: `workflow_${Date.now()}`,
+                  type: WorkflowType.APPROVAL,
                   bpmn_xml: xml,
                 });
                 message.success(t('workflow.createWorkflowSuccess'));
@@ -1177,21 +1179,22 @@ const WorkflowManagementPage = () => {
             try {
               if (editingWorkflow) {
                 // 先保存BPMN XML
-                await WorkflowAPI.updateWorkflow(editingWorkflow.id, {
+                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
                   bpmn_xml: xml,
-                });
+                } as any);
                 // 然后部署工作流
-                await WorkflowAPI.deployWorkflow(editingWorkflow.id);
+                await WorkflowAPI.deployWorkflow(String(editingWorkflow.id));
                 message.success(t('workflow.deploySuccess'));
               } else {
                 // 创建并部署新工作流
                 const newWorkflow = await WorkflowAPI.createWorkflow({
                   name: t('workflow.newBPMNWorkflow'),
                   description: t('workflow.bpmnWorkflowDescription'),
-                  category: t('workflow.approvalProcess'),
+                  code: `workflow_${Date.now()}`,
+                  type: WorkflowType.APPROVAL,
                   bpmn_xml: xml,
                 });
-                await WorkflowAPI.deployWorkflow(newWorkflow.id);
+                await WorkflowAPI.deployWorkflow(String(newWorkflow.id));
                 message.success(t('workflow.createAndDeploySuccess'));
               }
               setDesignerVisible(false);

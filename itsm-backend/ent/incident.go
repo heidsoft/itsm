@@ -86,9 +86,11 @@ type IncidentEdges struct {
 	IncidentMetrics []*IncidentMetric `json:"incident_metrics,omitempty"`
 	// 父事件
 	ParentIncident []*Incident `json:"parent_incident,omitempty"`
+	// 关联的配置项
+	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // RelatedIncidentsOrErr returns the RelatedIncidents value or an error if the edge
@@ -134,6 +136,15 @@ func (e IncidentEdges) ParentIncidentOrErr() ([]*Incident, error) {
 		return e.ParentIncident, nil
 	}
 	return nil, &NotLoadedError{edge: "parent_incident"}
+}
+
+// ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e IncidentEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
+	if e.loadedTypes[5] {
+		return e.ConfigurationItems, nil
+	}
+	return nil, &NotLoadedError{edge: "configuration_items"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -366,6 +377,11 @@ func (i *Incident) QueryIncidentMetrics() *IncidentMetricQuery {
 // QueryParentIncident queries the "parent_incident" edge of the Incident entity.
 func (i *Incident) QueryParentIncident() *IncidentQuery {
 	return NewIncidentClient(i.config).QueryParentIncident(i)
+}
+
+// QueryConfigurationItems queries the "configuration_items" edge of the Incident entity.
+func (i *Incident) QueryConfigurationItems() *ConfigurationItemQuery {
+	return NewIncidentClient(i.config).QueryConfigurationItems(i)
 }
 
 // Update returns a builder for updating this Incident.

@@ -237,7 +237,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           {/* 工单号和类型 */}
           <div className="flex items-center justify-between">
             <Text code className="text-xs">{ticket.ticket_number}</Text>
-            <Tag size="small" color="blue">{ticket.type}</Tag>
+            <Tag color="blue">{ticket.type}</Tag>
           </div>
 
           {/* 工单描述 */}

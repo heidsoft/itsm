@@ -136,6 +136,11 @@ export const useTheme = (): ThemeContextType => {
 // Ant Design 主题配置
 export const getAntdTheme = (isDark: boolean) => {
   const colorPalette = isDark ? darkColors : colors;
+  const spacingValue = (value: string) => parseInt(value, 10);
+  const fontSizeValue = (value: string) => parseInt(value, 10);
+  const borderRadiusValue = (value: string) => parseInt(value, 10);
+  const lineHeightValue = (value: string) => parseFloat(value);
+  const fontWeightValue = (value: string) => parseInt(value, 10);
 
   return {
     algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
@@ -163,9 +168,9 @@ export const getAntdTheme = (isDark: boolean) => {
       colorBorderSecondary: colorPalette.functional.border.secondary,
 
       // 圆角
-      borderRadius: borderRadius.lg,
-      borderRadiusLG: borderRadius.xl,
-      borderRadiusSM: borderRadius.md,
+      borderRadius: borderRadiusValue(borderRadius.lg),
+      borderRadiusLG: borderRadiusValue(borderRadius.xl),
+      borderRadiusSM: borderRadiusValue(borderRadius.md),
 
       // 阴影
       boxShadow: boxShadow.md,
@@ -173,30 +178,30 @@ export const getAntdTheme = (isDark: boolean) => {
       boxShadowTertiary: boxShadow.xl,
 
       // 字体
-      fontSize: fontSize.base,
-      fontSizeLG: fontSize.lg,
-      fontSizeSM: fontSize.sm,
-      fontSizeXL: fontSize.xl,
+      fontSize: fontSizeValue(fontSize.base),
+      fontSizeLG: fontSizeValue(fontSize.lg),
+      fontSizeSM: fontSizeValue(fontSize.sm),
+      fontSizeXL: fontSizeValue(fontSize.xl),
 
       // 行高
-      lineHeight: lineHeight.normal,
-      lineHeightLG: lineHeight.relaxed,
-      lineHeightSM: lineHeight.snug,
+      lineHeight: lineHeightValue(lineHeight.normal),
+      lineHeightLG: lineHeightValue(lineHeight.relaxed),
+      lineHeightSM: lineHeightValue(lineHeight.snug),
 
       // 字重
       fontWeight: 400,
       fontWeightStrong: 600,
 
       // 间距
-      padding: spacing[4],
-      paddingLG: spacing[6],
-      paddingSM: spacing[2],
-      paddingXL: spacing[8],
+      padding: spacingValue(spacing[4]),
+      paddingLG: spacingValue(spacing[6]),
+      paddingSM: spacingValue(spacing[2]),
+      paddingXL: spacingValue(spacing[8]),
 
-      margin: spacing[4],
-      marginLG: spacing[6],
-      marginSM: spacing[2],
-      marginXL: spacing[8],
+      margin: spacingValue(spacing[4]),
+      marginLG: spacingValue(spacing[6]),
+      marginSM: spacingValue(spacing[2]),
+      marginXL: spacingValue(spacing[8]),
 
       // 控件高度
       controlHeight: 32,
@@ -211,16 +216,16 @@ export const getAntdTheme = (isDark: boolean) => {
     components: {
       // 按钮组件
       Button: {
-        borderRadius: borderRadius.lg,
+        borderRadius: borderRadiusValue(borderRadius.lg),
         controlHeight: 40,
         controlHeightLG: 48,
         controlHeightSM: 32,
-        fontWeight: fontWeight.medium,
+        fontWeight: fontWeightValue(fontWeight.medium),
       },
 
       // 输入框组件
       Input: {
-        borderRadius: borderRadius.lg,
+        borderRadius: borderRadiusValue(borderRadius.lg),
         controlHeight: 40,
         controlHeightLG: 48,
         controlHeightSM: 32,
@@ -228,29 +233,29 @@ export const getAntdTheme = (isDark: boolean) => {
 
       // 卡片组件
       Card: {
-        borderRadius: borderRadius.lg,
+        borderRadius: borderRadiusValue(borderRadius.lg),
         boxShadow: boxShadow.md,
       },
 
       // 模态框组件
       Modal: {
-        borderRadius: borderRadius.xl,
+        borderRadius: borderRadiusValue(borderRadius.xl),
         boxShadow: boxShadow.xl,
       },
 
       // 抽屉组件
       Drawer: {
-        borderRadius: borderRadius.xl,
+        borderRadius: borderRadiusValue(borderRadius.xl),
       },
 
       // 消息组件
       Message: {
-        borderRadius: borderRadius.lg,
+        borderRadius: borderRadiusValue(borderRadius.lg),
       },
 
       // 通知组件
       Notification: {
-        borderRadius: borderRadius.lg,
+        borderRadius: borderRadiusValue(borderRadius.lg),
       },
     },
   };

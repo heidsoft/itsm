@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"itsm-backend/dto"
 	"itsm-backend/ent"
 )
 
@@ -78,7 +77,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if v, ok := args["offset"].(float64); ok {
 			offset = int(v)
 		}
-		req := &dto.ListCIsRequest{TenantID: tenantID, Limit: limit, Offset: offset}
+		req := &ListCIsRequest{Limit: limit, Offset: offset}
 		return t.cmdb.ListCIs(ctx, req)
 	case "create_ticket":
 		return map[string]any{"needs_approval": true}, nil

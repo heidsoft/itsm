@@ -28,12 +28,24 @@ type Tx struct {
 	CIType *CITypeClient
 	// Change is the client for interacting with the Change builders.
 	Change *ChangeClient
+	// CloudAccount is the client for interacting with the CloudAccount builders.
+	CloudAccount *CloudAccountClient
+	// CloudResource is the client for interacting with the CloudResource builders.
+	CloudResource *CloudResourceClient
+	// CloudService is the client for interacting with the CloudService builders.
+	CloudService *CloudServiceClient
 	// ConfigurationItem is the client for interacting with the ConfigurationItem builders.
 	ConfigurationItem *ConfigurationItemClient
 	// Conversation is the client for interacting with the Conversation builders.
 	Conversation *ConversationClient
 	// Department is the client for interacting with the Department builders.
 	Department *DepartmentClient
+	// DiscoveryJob is the client for interacting with the DiscoveryJob builders.
+	DiscoveryJob *DiscoveryJobClient
+	// DiscoveryResult is the client for interacting with the DiscoveryResult builders.
+	DiscoveryResult *DiscoveryResultClient
+	// DiscoverySource is the client for interacting with the DiscoverySource builders.
+	DiscoverySource *DiscoverySourceClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
@@ -74,6 +86,8 @@ type Tx struct {
 	PromptTemplate *PromptTemplateClient
 	// ProvisioningTask is the client for interacting with the ProvisioningTask builders.
 	ProvisioningTask *ProvisioningTaskClient
+	// RelationshipType is the client for interacting with the RelationshipType builders.
+	RelationshipType *RelationshipTypeClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -265,9 +279,15 @@ func (tx *Tx) init() {
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)
 	tx.Change = NewChangeClient(tx.config)
+	tx.CloudAccount = NewCloudAccountClient(tx.config)
+	tx.CloudResource = NewCloudResourceClient(tx.config)
+	tx.CloudService = NewCloudServiceClient(tx.config)
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.Department = NewDepartmentClient(tx.config)
+	tx.DiscoveryJob = NewDiscoveryJobClient(tx.config)
+	tx.DiscoveryResult = NewDiscoveryResultClient(tx.config)
+	tx.DiscoverySource = NewDiscoverySourceClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
 	tx.IncidentEvent = NewIncidentEventClient(tx.config)
@@ -288,6 +308,7 @@ func (tx *Tx) init() {
 	tx.Project = NewProjectClient(tx.config)
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.ProvisioningTask = NewProvisioningTaskClient(tx.config)
+	tx.RelationshipType = NewRelationshipTypeClient(tx.config)
 	tx.RootCauseAnalysis = NewRootCauseAnalysisClient(tx.config)
 	tx.SLAAlertHistory = NewSLAAlertHistoryClient(tx.config)
 	tx.SLAAlertRule = NewSLAAlertRuleClient(tx.config)

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Row, Col, Empty, Form, Skeleton } from 'antd';
 import { useServiceCatalogData } from './hooks/useServiceCatalogData';
 import { ServiceCatalogStats } from './components/ServiceCatalogStats';
@@ -10,6 +10,8 @@ import { CreateServiceModal } from './components/CreateServiceModal';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { message } from 'antd';
 import { useI18n } from '@/lib/i18n';
+import { CMDBApi } from '@/modules/cmdb/api';
+import type { CIType, CloudService } from '@/modules/cmdb/types';
 
 const ServiceCatalogSkeleton: React.FC = () => (
   <div>
@@ -34,10 +36,34 @@ export default function ServiceCatalogPage() {
     setSearchText,
     setCategoryFilter,
     setPriorityFilter,
+    setCiTypeFilter,
+    setCloudServiceFilter,
     loadServiceCatalogs,
   } = useServiceCatalogData();
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [createForm] = Form.useForm();
+  const [ciTypes, setCiTypes] = useState<CIType[]>([]);
+  const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
+  const [optionsLoading, setOptionsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        setOptionsLoading(true);
+        const [types, services] = await Promise.all([
+          CMDBApi.getTypes(),
+          CMDBApi.getCloudServices(),
+        ]);
+        setCiTypes(types || []);
+        setCloudServices(services || []);
+      } catch (error) {
+        message.error('加载CMDB选项失败');
+      } finally {
+        setOptionsLoading(false);
+      }
+    };
+    loadOptions();
+  }, []);
 
   const handleCreateService = () => {
     setCreateModalVisible(true);
@@ -77,6 +103,11 @@ export default function ServiceCatalogPage() {
         onSearch={setSearchText}
         onCategoryFilterChange={setCategoryFilter}
         onPriorityFilterChange={setPriorityFilter}
+        onCITypeFilterChange={setCiTypeFilter}
+        onCloudServiceFilterChange={setCloudServiceFilter}
+        ciTypes={ciTypes}
+        cloudServices={cloudServices}
+        optionsLoading={optionsLoading}
         onCreateService={handleCreateService}
       />
 

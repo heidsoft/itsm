@@ -6,8 +6,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { httpClient } from '@/lib/api/base-api';
-import { Ticket, TicketFilters, Comment, Attachment } from './ticket-store';
+import { httpClient } from '@/lib/api/http-client';
+import type { Ticket, TicketFilters, Comment, Attachment } from '../store/ticket-store';
 
 // ==================== API端点配置 ====================
 
@@ -207,8 +207,7 @@ export function useTickets(params?: {
     queryKey: QUERY_KEYS.TICKET_LIST(params?.filters),
     queryFn: () => TicketApiService.getTickets(params),
     staleTime: 5 * 60 * 1000, // 5分钟
-    cacheTime: 10 * 60 * 1000, // 10分钟
-    keepPreviousData: true,
+    gcTime: 10 * 60 * 1000, // 10分钟
   });
 }
 
@@ -221,7 +220,7 @@ export function useTicket(id: number) {
     queryFn: () => TicketApiService.getTicket(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000, // 2分钟
-    cacheTime: 5 * 60 * 1000, // 5分钟
+    gcTime: 5 * 60 * 1000, // 5分钟
   });
 }
 
@@ -234,7 +233,7 @@ export function useTicketComments(id: number) {
     queryFn: () => TicketApiService.getTicketComments(id),
     enabled: !!id,
     staleTime: 1 * 60 * 1000, // 1分钟
-    cacheTime: 5 * 60 * 1000, // 5分钟
+    gcTime: 5 * 60 * 1000, // 5分钟
   });
 }
 
@@ -247,7 +246,7 @@ export function useTicketAttachments(id: number) {
     queryFn: () => TicketApiService.getTicketAttachments(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5分钟
-    cacheTime: 10 * 60 * 1000, // 10分钟
+    gcTime: 10 * 60 * 1000, // 10分钟
   });
 }
 

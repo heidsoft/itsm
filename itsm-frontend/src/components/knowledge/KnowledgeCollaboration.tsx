@@ -10,6 +10,8 @@ import {
   List,
   Tooltip,
   Badge,
+  Tag,
+  Alert,
   Modal,
   Form,
   Input,
@@ -32,6 +34,7 @@ import {
   GitBranch,
   Send,
   Bell,
+  HelpCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -407,7 +410,7 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
                       <span className="font-medium">{comment.userName}</span>
                       {getCommentIcon(comment.type)}
                       {comment.resolved && (
-                        <Tag color="green" size="small">已解决</Tag>
+                        <Tag color="green">已解决</Tag>
                       )}
                     </Space>
                   }

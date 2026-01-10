@@ -6,7 +6,7 @@
 import commonTypes from '../../../shared-types/common-types.json';
 
 // API配置类型
-interface APIConfig {
+export interface APIConfig {
   baseURL: string;
   version: string;
   endpoints: Record<string, string>;
@@ -250,15 +250,3 @@ export const ERROR_CODES = {
   EXTERNAL_SERVICE_ERROR: 5001,
   INTERNAL_ERROR: 9001,
 } as const;
-
-// 导出类型
-export type {
-  APIConfig,
-  StandardApiResponse,
-  PaginatedApiResponse,
-  BatchRequest,
-  BatchResponse,
-  ApiError,
-  StandardPaginationParams,
-  DateRangeParams,
-};

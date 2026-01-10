@@ -3,7 +3,7 @@
 import React, { ReactNode } from "react";
 import { theme } from "antd";
 import { cn } from "@/lib/utils";
-import { layout, spacing, grid } from "@/lib/design-system/spacing";
+import { layout, semanticSpacing } from "@/lib/design-system/spacing";
 
 const { token } = theme.useToken();
 
@@ -29,7 +29,7 @@ export interface PageLayoutProps {
   /** 页面最大宽度 */
   maxWidth?: keyof typeof layout.page.maxWidth;
   /** 页面内边距 */
-  padding?: keyof typeof spacing;
+  padding?: keyof typeof semanticSpacing.padding;
   /** 页面背景色 */
   backgroundColor?: string;
   /** 自定义类名 */
@@ -110,7 +110,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                 className="mx-auto"
                 style={{
                   maxWidth: layout.page.maxWidth,
-                  padding: `0 ${spacing[padding]}`,
+                  padding: `0 ${semanticSpacing.padding[padding]}`,
                 }}
               >
                 {/* 面包屑 */}
@@ -173,7 +173,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           <div
             className="flex-1 px-4 py-6 lg:px-8"
             style={{
-              padding: `${spacing[padding]} ${spacing[padding]}`,
+              padding: `${semanticSpacing.padding[padding]} ${semanticSpacing.padding[padding]}`,
             }}
           >
             <div
@@ -194,7 +194,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           style={{
             backgroundColor: token.colorBgContainer,
             borderTop: `1px solid ${token.colorBorder}`,
-            padding: spacing[padding],
+            padding: semanticSpacing.padding[padding],
           }}
         >
           <div
@@ -225,7 +225,7 @@ export interface ContentLayoutProps {
   /** 内容最大宽度 */
   maxWidth?: keyof typeof layout.content.maxWidth;
   /** 内容内边距 */
-  padding?: keyof typeof spacing;
+  padding?: keyof typeof semanticSpacing.padding;
   /** 是否显示边框 */
   bordered?: boolean;
   /** 自定义类名 */
@@ -251,7 +251,7 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
       className={cn("w-full", bordered && "border rounded-lg", className)}
       style={{
         maxWidth: layout.content.maxWidth,
-        padding: (spacing as any)[padding],
+        padding: semanticSpacing.padding[padding],
         ...(bordered && {
           borderColor: token.colorBorder,
           backgroundColor: token.colorBgContainer,
@@ -292,7 +292,7 @@ export interface GridLayoutProps {
   /** 网格列数 */
   columns?: 1 | 2 | 3 | 4 | 6 | 12;
   /** 网格间距 */
-  gap?: keyof typeof spacing;
+  gap?: keyof typeof semanticSpacing.component;
   /** 响应式列数 */
   responsive?: {
     xs?: 1 | 2 | 3 | 4;
@@ -318,7 +318,6 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
 }) => {
   const getGridClasses = () => {
     const baseClasses = "grid";
-    const gapClasses = `gap-${gap}`;
 
     // 基础列数
     const columnClasses = `grid-cols-${columns}`;
@@ -330,10 +329,17 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
           .join(" ")
       : "";
 
-    return cn(baseClasses, gapClasses, columnClasses, responsiveClasses);
+    return cn(baseClasses, columnClasses, responsiveClasses);
   };
 
-  return <div className={cn(getGridClasses(), className)}>{children}</div>;
+  return (
+    <div
+      className={cn(getGridClasses(), className)}
+      style={{ gap: semanticSpacing.component[gap] }}
+    >
+      {children}
+    </div>
+  );
 };
 
 /**
@@ -350,7 +356,7 @@ export interface FlexLayoutProps {
   /** 是否换行 */
   wrap?: boolean;
   /** 间距 */
-  gap?: keyof typeof spacing;
+  gap?: keyof typeof semanticSpacing.component;
   /** 自定义类名 */
   className?: string;
 }
@@ -374,19 +380,24 @@ export const FlexLayout: React.FC<FlexLayoutProps> = ({
     const alignClasses = `items-${align}`;
     const justifyClasses = `justify-${justify}`;
     const wrapClasses = wrap ? "flex-wrap" : "flex-nowrap";
-    const gapClasses = `gap-${gap}`;
 
     return cn(
       baseClasses,
       directionClasses,
       alignClasses,
       justifyClasses,
-      wrapClasses,
-      gapClasses
+      wrapClasses
     );
   };
 
-  return <div className={cn(getFlexClasses(), className)}>{children}</div>;
+  return (
+    <div
+      className={cn(getFlexClasses(), className)}
+      style={{ gap: semanticSpacing.component[gap] }}
+    >
+      {children}
+    </div>
+  );
 };
 
 export default PageLayout;
