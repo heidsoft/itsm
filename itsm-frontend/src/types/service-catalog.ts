@@ -33,6 +33,8 @@ export interface ServiceItem {
   status: ServiceStatus;
   shortDescription: string;
   fullDescription?: string;
+  ciTypeId?: number;
+  cloudServiceId?: number;
   
   // 图标和图片
   icon?: string;
@@ -355,6 +357,8 @@ export interface CreateServiceItemRequest {
   category: ServiceCategory;
   shortDescription: string;
   fullDescription?: string;
+  ciTypeId?: number;
+  cloudServiceId?: number;
   icon?: string;
   provider?: string;
   owner?: number;
@@ -365,6 +369,7 @@ export interface CreateServiceItemRequest {
   tags?: string[];
   requiresApproval?: boolean;
   approvalWorkflow?: string;
+  status?: ServiceStatus;
 }
 
 /**
@@ -412,4 +417,3 @@ export interface ServiceRequestQuery {
 }
 
 export default ServiceItem;
-

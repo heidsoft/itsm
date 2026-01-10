@@ -1,0 +1,62 @@
+a3c0cee288e232e47f368bc950f025d8
+/**
+ * 协作组件导出
+ */ // 暂时仅导出类型，UI组件将在后续完善
+"use strict";
+
+/* istanbul ignore next */
+function cov_1bbsi9tvui() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/collaboration/index.ts";
+  var hash = "11631a8c916e5a4782425766e6c261d20456c919";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/collaboration/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 3
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/collaboration/index.ts"],
+      sourcesContent: ["/**\n * \u534F\u4F5C\u7EC4\u4EF6\u5BFC\u51FA\n */\n\n// \u6682\u65F6\u4EC5\u5BFC\u51FA\u7C7B\u578B\uFF0CUI\u7EC4\u4EF6\u5C06\u5728\u540E\u7EED\u5B8C\u5584\nexport type { } from '@/types/collaboration';\n\n"],
+      names: [],
+      mappings: "AAAA;;CAEC,GAED,qBAAqB"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "11631a8c916e5a4782425766e6c261d20456c919"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1bbsi9tvui = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1bbsi9tvui();
+cov_1bbsi9tvui().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tZnJvbnRlbmQvc3JjL2NvbXBvbmVudHMvY29sbGFib3JhdGlvbi9pbmRleC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIOWNj+S9nOe7hOS7tuWvvOWHulxuICovXG5cbi8vIOaaguaXtuS7heWvvOWHuuexu+Wei++8jFVJ57uE5Lu25bCG5Zyo5ZCO57ut5a6M5ZaEXG5leHBvcnQgdHlwZSB7IH0gZnJvbSAnQC90eXBlcy9jb2xsYWJvcmF0aW9uJztcblxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7R0FBQSxDQUlBIiwiaWdub3JlTGlzdCI6W119

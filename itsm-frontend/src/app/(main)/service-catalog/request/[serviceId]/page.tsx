@@ -140,6 +140,14 @@ const ServiceRequestPage = () => {
         </button>
         <h2 className='text-4xl font-bold text-gray-800'>服务请求：{catalog.name}</h2>
         <p className='text-gray-500 mt-1'>{catalog.shortDescription || ''}</p>
+        <div className='mt-4 rounded-md border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800'>
+          本次请求将自动关联或创建配置项（CI）。
+          <div className='text-xs text-blue-700 mt-1'>
+            {catalog.ciTypeId || catalog.cloudServiceId
+              ? '已配置CMDB关联：提交后将自动创建或绑定CI，并在请求详情中展示。'
+              : '当前服务目录未配置CI类型/云服务，将仅提交请求，不自动创建CI。'}
+          </div>
+        </div>
       </header>
 
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>

@@ -23,4 +23,27 @@ type Repository interface {
 	CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error)
 	GetRelationships(ctx context.Context, ciID int) ([]*CIRelationship, error)
 	DeleteRelationship(ctx context.Context, id int, tenantID int) error
+
+	// Relationship types
+	ListRelationshipTypes(ctx context.Context, tenantID int) ([]*RelationshipType, error)
+
+	// Cloud services
+	CreateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error)
+	ListCloudServices(ctx context.Context, tenantID int, provider string) ([]*CloudService, error)
+	GetCloudService(ctx context.Context, tenantID int, id int) (*CloudService, error)
+
+	// Cloud accounts
+	CreateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
+	ListCloudAccounts(ctx context.Context, tenantID int, provider string) ([]*CloudAccount, error)
+
+	// Cloud resources
+	ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error)
+	ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
+	GetCIByCloudResourceRefID(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
+
+	// Discovery
+	CreateDiscoverySource(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error)
+	ListDiscoverySources(ctx context.Context, tenantID int) ([]*DiscoverySource, error)
+	CreateDiscoveryJob(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error)
+	ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
 }

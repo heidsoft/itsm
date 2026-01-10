@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -13,34 +14,46 @@ const (
 	Label = "ci_relationship"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldSourceCiID holds the string denoting the source_ci_id field in the database.
-	FieldSourceCiID = "source_ci_id"
-	// FieldTargetCiID holds the string denoting the target_ci_id field in the database.
-	FieldTargetCiID = "target_ci_id"
-	// FieldRelationshipTypeID holds the string denoting the relationship_type_id field in the database.
-	FieldRelationshipTypeID = "relationship_type_id"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldTenantID holds the string denoting the tenant_id field in the database.
-	FieldTenantID = "tenant_id"
+	// FieldParentID holds the string denoting the parent_id field in the database.
+	FieldParentID = "parent_id"
+	// FieldChildID holds the string denoting the child_id field in the database.
+	FieldChildID = "child_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
-	FieldUpdatedAt = "updated_at"
+	// EdgeParent holds the string denoting the parent edge name in mutations.
+	EdgeParent = "parent"
+	// EdgeChild holds the string denoting the child edge name in mutations.
+	EdgeChild = "child"
 	// Table holds the table name of the cirelationship in the database.
 	Table = "ci_relationships"
+	// ParentTable is the table that holds the parent relation/edge.
+	ParentTable = "ci_relationships"
+	// ParentInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	ParentInverseTable = "configuration_items"
+	// ParentColumn is the table column denoting the parent relation/edge.
+	ParentColumn = "parent_id"
+	// ChildTable is the table that holds the child relation/edge.
+	ChildTable = "ci_relationships"
+	// ChildInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	ChildInverseTable = "configuration_items"
+	// ChildColumn is the table column denoting the child relation/edge.
+	ChildColumn = "child_id"
 )
 
 // Columns holds all SQL columns for cirelationship fields.
 var Columns = []string{
 	FieldID,
-	FieldSourceCiID,
-	FieldTargetCiID,
-	FieldRelationshipTypeID,
+	FieldType,
 	FieldDescription,
-	FieldTenantID,
+	FieldParentID,
+	FieldChildID,
 	FieldCreatedAt,
-	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -54,20 +67,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// SourceCiIDValidator is a validator for the "source_ci_id" field. It is called by the builders before save.
-	SourceCiIDValidator func(int) error
-	// TargetCiIDValidator is a validator for the "target_ci_id" field. It is called by the builders before save.
-	TargetCiIDValidator func(int) error
-	// RelationshipTypeIDValidator is a validator for the "relationship_type_id" field. It is called by the builders before save.
-	RelationshipTypeIDValidator func(int) error
-	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
-	TenantIDValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
-	DefaultUpdatedAt func() time.Time
-	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
-	UpdateDefaultUpdatedAt func() time.Time
 )
 
 // OrderOption defines the ordering options for the CIRelationship queries.
@@ -78,19 +79,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// BySourceCiID orders the results by the source_ci_id field.
-func BySourceCiID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSourceCiID, opts...).ToFunc()
-}
-
-// ByTargetCiID orders the results by the target_ci_id field.
-func ByTargetCiID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldTargetCiID, opts...).ToFunc()
-}
-
-// ByRelationshipTypeID orders the results by the relationship_type_id field.
-func ByRelationshipTypeID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRelationshipTypeID, opts...).ToFunc()
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.
@@ -98,9 +89,14 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByTenantID orders the results by the tenant_id field.
-func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldTenantID, opts...).ToFunc()
+// ByParentID orders the results by the parent_id field.
+func ByParentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParentID, opts...).ToFunc()
+}
+
+// ByChildID orders the results by the child_id field.
+func ByChildID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChildID, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -108,7 +104,30 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByUpdatedAt orders the results by the updated_at field.
-func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+// ByParentField orders the results by parent field.
+func ByParentField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByChildField orders the results by child field.
+func ByChildField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChildStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newParentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ParentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+	)
+}
+func newChildStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChildInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ChildTable, ChildColumn),
+	)
 }

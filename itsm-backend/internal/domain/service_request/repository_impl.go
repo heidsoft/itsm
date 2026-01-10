@@ -28,6 +28,7 @@ func (r *EntRepository) toDomain(req *ent.ServiceRequest) *ServiceRequest {
 		TenantID:           req.TenantID,
 		CatalogID:          req.CatalogID,
 		RequesterID:        req.RequesterID,
+		CIID:               req.CIID,
 		Status:             req.Status,
 		Title:              req.Title,
 		Reason:             req.Reason,
@@ -119,6 +120,9 @@ func (r *EntRepository) Create(ctx context.Context, req *ServiceRequest, approva
 	}
 	if req.ExpireAt != nil {
 		create.SetExpireAt(*req.ExpireAt)
+	}
+	if req.CIID > 0 {
+		create.SetCIID(req.CIID)
 	}
 
 	savedReq, err := create.Save(ctx)

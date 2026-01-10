@@ -180,23 +180,26 @@ const TicketApprovalWorkflowPage = () => {
 
     // 创建预览用的流程步骤
     const previewSteps =
-      workflow.nodes?.map((node: any, index: number) => ({
-        title: node.name,
-        description: node.description,
-        status: index === 0 ? "process" : "wait",
-        icon:
-          node.type === "start" ? (
-            <Play className="w-4 h-4" />
-          ) : node.type === "approval" ? (
-            <Users className="w-4 h-4" />
-          ) : node.type === "condition" ? (
-            <GitBranch className="w-4 h-4" />
-          ) : node.type === "action" ? (
-            <Zap className="w-4 h-4" />
-          ) : node.type === "end" ? (
-            <CheckCircle className="w-4 h-4" />
-          ) : null,
-      })) || [];
+      workflow.nodes?.map((node: any, index: number) => {
+        const status: 'process' | 'wait' = index === 0 ? 'process' : 'wait';
+        return {
+          title: node.name,
+          description: node.description,
+          status,
+          icon:
+            node.type === 'start' ? (
+              <Play className="w-4 h-4" />
+            ) : node.type === 'approval' ? (
+              <Users className="w-4 h-4" />
+            ) : node.type === 'condition' ? (
+              <GitBranch className="w-4 h-4" />
+            ) : node.type === 'action' ? (
+              <Zap className="w-4 h-4" />
+            ) : node.type === 'end' ? (
+              <CheckCircle className="w-4 h-4" />
+            ) : null,
+        };
+      }) || [];
 
     modal.info({
       title: (
@@ -337,11 +340,7 @@ const TicketApprovalWorkflowPage = () => {
 
       {/* 设计器区域 */}
       <div className="flex-1">
-        <WorkflowEngine
-          workflow={workflow}
-          onSave={handleSaveWorkflow}
-          onCancel={handleCancel}
-        />
+        <WorkflowEngine mode="design" />
       </div>
 
       {/* 保存确认模态框 */}

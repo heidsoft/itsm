@@ -1,0 +1,61 @@
+0b1c8f26e7b6121ad783de09db43fb7d
+/**
+ * CMDB 资产管理类型定义
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_1d6nr0v8p() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/cmdb/types.ts";
+  var hash = "af4b5b3e4385fa8a42e8b7b9b7e700053e8df982";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/cmdb/types.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 3
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/cmdb/types.ts"],
+      sourcesContent: ["/**\n * CMDB \u8D44\u4EA7\u7BA1\u7406\u7C7B\u578B\u5B9A\u4E49\n */\n\nimport { CIStatus } from \"./constants\";\n\n// \u914D\u7F6E\u9879\u5B9E\u4F53\nexport interface ConfigurationItem {\n    id: number;\n    name: string;\n    description: string;\n    type: string; // \u5197\u4F59\u5B57\u6BB5\u6216\u5206\u7C7B\n    status: CIStatus;\n    environment?: string;\n    criticality?: string;\n    asset_tag?: string;\n    location?: string;\n    serial_number?: string;\n    model?: string;\n    vendor?: string;\n    ci_type_id: number;\n    tenant_id: number;\n    assigned_to?: string;\n    owned_by?: string;\n    discovery_source?: string;\n    attributes?: Record<string, any>;\n    created_at: string;\n    updated_at: string;\n}\n\n// CI \u7C7B\u578B\u5B9E\u4F53\nexport interface CIType {\n    id: number;\n    name: string;\n    description: string;\n    icon?: string;\n    color?: string;\n    attribute_schema?: string;\n    is_active: boolean;\n    tenant_id: number;\n}\n\n// CI \u5173\u7CFB\u5B9E\u4F53\nexport interface CIRelationship {\n    id: number;\n    source_ci_id: number;\n    target_ci_id: number;\n    relationship_type_id: number;\n    description?: string;\n    tenant_id: number;\n}\n\n// \u7EDF\u8BA1\u4FE1\u606F\nexport interface CMDBStats {\n    total_count: number;\n    active_count: number;\n    inactive_count: number;\n    maintenance_count: number;\n    type_distribution: Record<string, number>;\n}\n\n// \u5217\u8868\u54CD\u5E94\nexport interface CIListResponse {\n    items: ConfigurationItem[];\n    total: number;\n    page: number;\n    size: number;\n}\n\n// \u67E5\u8BE2\u53C2\u6570\nexport interface CIQuery {\n    page?: number;\n    page_size?: number;\n    status?: string;\n    ci_type_id?: number;\n    search?: string;\n}\n"],
+      names: [],
+      mappings: "AAAA;;CAEC"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "af4b5b3e4385fa8a42e8b7b9b7e700053e8df982"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1d6nr0v8p = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1d6nr0v8p();
+cov_1d6nr0v8p().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMWQ2bnIwdjhwIiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwiYnJhbmNoTWFwIiwicyIsImYiLCJiIiwiaW5wdXRTb3VyY2VNYXAiLCJ2ZXJzaW9uIiwic291cmNlcyIsInNvdXJjZXNDb250ZW50IiwibmFtZXMiLCJtYXBwaW5ncyIsIl9jb3ZlcmFnZVNjaGVtYSIsImNvdmVyYWdlIiwiYWN0dWFsQ292ZXJhZ2UiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1mcm9udGVuZC9zcmMvbW9kdWxlcy9jbWRiL3R5cGVzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogQ01EQiDotYTkuqfnrqHnkIbnsbvlnovlrprkuYlcbiAqL1xuXG5pbXBvcnQgeyBDSVN0YXR1cyB9IGZyb20gXCIuL2NvbnN0YW50c1wiO1xuXG4vLyDphY3nva7pobnlrp7kvZNcbmV4cG9ydCBpbnRlcmZhY2UgQ29uZmlndXJhdGlvbkl0ZW0ge1xuICAgIGlkOiBudW1iZXI7XG4gICAgbmFtZTogc3RyaW5nO1xuICAgIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG4gICAgdHlwZTogc3RyaW5nOyAvLyDlhpfkvZnlrZfmrrXmiJbliIbnsbtcbiAgICBzdGF0dXM6IENJU3RhdHVzO1xuICAgIGVudmlyb25tZW50Pzogc3RyaW5nO1xuICAgIGNyaXRpY2FsaXR5Pzogc3RyaW5nO1xuICAgIGFzc2V0X3RhZz86IHN0cmluZztcbiAgICBsb2NhdGlvbj86IHN0cmluZztcbiAgICBzZXJpYWxfbnVtYmVyPzogc3RyaW5nO1xuICAgIG1vZGVsPzogc3RyaW5nO1xuICAgIHZlbmRvcj86IHN0cmluZztcbiAgICBjaV90eXBlX2lkOiBudW1iZXI7XG4gICAgdGVuYW50X2lkOiBudW1iZXI7XG4gICAgYXNzaWduZWRfdG8/OiBzdHJpbmc7XG4gICAgb3duZWRfYnk/OiBzdHJpbmc7XG4gICAgZGlzY292ZXJ5X3NvdXJjZT86IHN0cmluZztcbiAgICBhdHRyaWJ1dGVzPzogUmVjb3JkPHN0cmluZywgYW55PjtcbiAgICBjcmVhdGVkX2F0OiBzdHJpbmc7XG4gICAgdXBkYXRlZF9hdDogc3RyaW5nO1xufVxuXG4vLyBDSSDnsbvlnovlrp7kvZNcbmV4cG9ydCBpbnRlcmZhY2UgQ0lUeXBlIHtcbiAgICBpZDogbnVtYmVyO1xuICAgIG5hbWU6IHN0cmluZztcbiAgICBkZXNjcmlwdGlvbjogc3RyaW5nO1xuICAgIGljb24/OiBzdHJpbmc7XG4gICAgY29sb3I/OiBzdHJpbmc7XG4gICAgYXR0cmlidXRlX3NjaGVtYT86IHN0cmluZztcbiAgICBpc19hY3RpdmU6IGJvb2xlYW47XG4gICAgdGVuYW50X2lkOiBudW1iZXI7XG59XG5cbi8vIENJIOWFs+ezu+WunuS9k1xuZXhwb3J0IGludGVyZmFjZSBDSVJlbGF0aW9uc2hpcCB7XG4gICAgaWQ6IG51bWJlcjtcbiAgICBzb3VyY2VfY2lfaWQ6IG51bWJlcjtcbiAgICB0YXJnZXRfY2lfaWQ6IG51bWJlcjtcbiAgICByZWxhdGlvbnNoaXBfdHlwZV9pZDogbnVtYmVyO1xuICAgIGRlc2NyaXB0aW9uPzogc3RyaW5nO1xuICAgIHRlbmFudF9pZDogbnVtYmVyO1xufVxuXG4vLyDnu5/orqHkv6Hmga9cbmV4cG9ydCBpbnRlcmZhY2UgQ01EQlN0YXRzIHtcbiAgICB0b3RhbF9jb3VudDogbnVtYmVyO1xuICAgIGFjdGl2ZV9jb3VudDogbnVtYmVyO1xuICAgIGluYWN0aXZlX2NvdW50OiBudW1iZXI7XG4gICAgbWFpbnRlbmFuY2VfY291bnQ6IG51bWJlcjtcbiAgICB0eXBlX2Rpc3RyaWJ1dGlvbjogUmVjb3JkPHN0cmluZywgbnVtYmVyPjtcbn1cblxuLy8g5YiX6KGo5ZON5bqUXG5leHBvcnQgaW50ZXJmYWNlIENJTGlzdFJlc3BvbnNlIHtcbiAgICBpdGVtczogQ29uZmlndXJhdGlvbkl0ZW1bXTtcbiAgICB0b3RhbDogbnVtYmVyO1xuICAgIHBhZ2U6IG51bWJlcjtcbiAgICBzaXplOiBudW1iZXI7XG59XG5cbi8vIOafpeivouWPguaVsFxuZXhwb3J0IGludGVyZmFjZSBDSVF1ZXJ5IHtcbiAgICBwYWdlPzogbnVtYmVyO1xuICAgIHBhZ2Vfc2l6ZT86IG51bWJlcjtcbiAgICBzdGF0dXM/OiBzdHJpbmc7XG4gICAgY2lfdHlwZV9pZD86IG51bWJlcjtcbiAgICBzZWFyY2g/OiBzdHJpbmc7XG59XG4iXSwibWFwcGluZ3MiOiJBQUFBOztHQUVDOztBQUFBO0FBQUEsU0FBQUEsY0FBQTtFQUFBLElBQUFDLElBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsTUFBQSxPQUFBQyxRQUFBO0VBQUEsSUFBQUMsR0FBQTtFQUFBLElBQUFDLFlBQUE7SUFBQUwsSUFBQTtJQUFBTSxZQUFBO01BQUE7UUFBQUMsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7SUFBQTtJQUFBRSxLQUFBO0lBQUFDLFNBQUE7SUFBQUMsQ0FBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtJQUFBQyxDQUFBO0lBQUFDLGNBQUE7TUFBQUMsT0FBQTtNQUFBQyxPQUFBO01BQUFDLGNBQUE7TUFBQUMsS0FBQTtNQUFBQyxRQUFBO0lBQUE7SUFBQUMsZUFBQTtJQUFBckIsSUFBQTtFQUFBO0VBQUEsSUFBQXNCLFFBQUEsR0FBQXJCLE1BQUEsQ0FBQUUsR0FBQSxNQUFBRixNQUFBLENBQUFFLEdBQUE7RUFBQSxLQUFBbUIsUUFBQSxDQUFBdkIsSUFBQSxLQUFBdUIsUUFBQSxDQUFBdkIsSUFBQSxFQUFBQyxJQUFBLEtBQUFBLElBQUE7SUFBQXNCLFFBQUEsQ0FBQXZCLElBQUEsSUFBQUssWUFBQTtFQUFBO0VBQUEsSUFBQW1CLGNBQUEsR0FBQUQsUUFBQSxDQUFBdkIsSUFBQTtFQUFBIiwiaWdub3JlTGlzdCI6W119

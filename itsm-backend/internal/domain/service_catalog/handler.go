@@ -83,6 +83,10 @@ func (h *Handler) Create(c *gin.Context) {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
 		return
 	}
+	if req.CloudServiceID > 0 && req.CITypeID == 0 {
+		common.Fail(c, 1001, "关联云服务时必须选择CI类型")
+		return
+	}
 
 	tenantID, exists := c.Get("tenant_id")
 	if !exists {
@@ -105,6 +109,8 @@ func (h *Handler) Create(c *gin.Context) {
 		deliveryTime,
 		tenantID.(int),
 		req.Status,
+		req.CITypeID,
+		req.CloudServiceID,
 	)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
@@ -125,6 +131,10 @@ func (h *Handler) Update(c *gin.Context) {
 	var req dto.UpdateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.Fail(c, 1001, "参数错误: "+err.Error())
+		return
+	}
+	if req.CloudServiceID > 0 && req.CITypeID == 0 {
+		common.Fail(c, 1001, "关联云服务时必须选择CI类型")
 		return
 	}
 
@@ -150,6 +160,8 @@ func (h *Handler) Update(c *gin.Context) {
 		req.Description,
 		deliveryTime,
 		req.Status,
+		req.CITypeID,
+		req.CloudServiceID,
 	)
 	if err != nil {
 		common.Fail(c, 5001, err.Error())
@@ -184,13 +196,15 @@ func (h *Handler) Delete(c *gin.Context) {
 
 func (h *Handler) toDTO(c *ServiceCatalog) dto.ServiceCatalogResponse {
 	return dto.ServiceCatalogResponse{
-		ID:           c.ID,
-		Name:         c.Name,
-		Category:     c.Category,
-		Description:  c.Description,
-		DeliveryTime: strconv.Itoa(c.DeliveryTime),
-		Status:       c.Status,
-		CreatedAt:    c.CreatedAt,
-		UpdatedAt:    c.UpdatedAt,
+		ID:             c.ID,
+		Name:           c.Name,
+		Category:       c.Category,
+		Description:    c.Description,
+		DeliveryTime:   strconv.Itoa(c.DeliveryTime),
+		CITypeID:       c.CITypeID,
+		CloudServiceID: c.CloudServiceID,
+		Status:         c.Status,
+		CreatedAt:      c.CreatedAt,
+		UpdatedAt:      c.UpdatedAt,
 	}
 }

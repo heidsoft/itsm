@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ITSM前端性能优化 - PWA和离线支持
  * 

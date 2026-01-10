@@ -221,7 +221,7 @@ export default function RoleManagement() {
         name: values.name,
         description: values.description,
         permissions,
-        status: values.status ? 'active' : 'inactive',
+        status: (values.status ? 'active' : 'inactive') as 'active' | 'inactive',
       };
 
       if (selectedRole) {

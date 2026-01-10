@@ -94,9 +94,9 @@ export interface ValidationRule {
 }
 
 // 字段验证配置
-export interface FieldValidation<T extends Record<string, unknown>> {
-  [fieldName: keyof T]: ValidationRule[];
-}
+export type FieldValidation<T extends Record<string, unknown>> = Partial<
+  Record<keyof T, ValidationRule[]>
+>;
 
 // 验证结果接口
 export interface ValidationResult {
@@ -153,7 +153,7 @@ export class Validator<T extends Record<string, unknown>> {
 
     Object.keys(this.rules).forEach(fieldName => {
 
-      const fieldRules = this.rules[fieldName as keyof T];
+      const fieldRules = this.rules[fieldName as keyof T] || [];
 
       const fieldValue = data[fieldName as keyof T];
 

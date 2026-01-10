@@ -1,4 +1,7 @@
 # 操作系统文件
+.gocache
+.gomodcache
+.gopath
 .DS_Store
 .DS_Store?
 ._*

@@ -1,0 +1,225 @@
+46d32340451000407fc65818212da9ca
+/**
+ * 工单趋势预测 API 服务
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_js0wogrny() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/ticket-prediction-api.ts";
+  var hash = "c5c229101b6b1f63b26fa7159694ff5d778d7116";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/ticket-prediction-api.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 12,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 10,
+          column: 8
+        },
+        end: {
+          line: 10,
+          column: 35
+        }
+      },
+      "3": {
+        start: {
+          line: 13,
+          column: 20
+        },
+        end: {
+          line: 13,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 17,
+          column: 8
+        },
+        end: {
+          line: 17,
+          column: 84
+        }
+      },
+      "5": {
+        start: {
+          line: 21,
+          column: 8
+        },
+        end: {
+          line: 23,
+          column: 11
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 9,
+            column: 9
+          },
+          end: {
+            line: 9,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 9,
+            column: 20
+          },
+          end: {
+            line: 11,
+            column: 5
+          }
+        },
+        line: 9
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 16,
+            column: 4
+          },
+          end: {
+            line: 16,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 44
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        line: 16
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 20,
+            column: 4
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 56
+          },
+          end: {
+            line: 24,
+            column: 5
+          }
+        },
+        line: 20
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/ticket-prediction-api.ts"],
+      sourcesContent: ["/**\n * \u5DE5\u5355\u8D8B\u52BF\u9884\u6D4B API \u670D\u52A1\n */\n\nimport { httpClient } from './http-client';\n\nexport interface PredictionRequest {\n  ticket_type?: string;\n  category?: string;\n  time_range: [string, string];\n  prediction_period: 'week' | 'month' | 'quarter';\n  model_type: 'arima' | 'exponential' | 'linear';\n}\n\nexport interface PredictionDataPoint {\n  date: string;\n  actual?: number;\n  predicted: number;\n  upper_bound?: number;\n  lower_bound?: number;\n  confidence?: number;\n}\n\nexport interface PredictionMetrics {\n  accuracy: number;\n  mape: number;\n  rmse: number;\n  trend: 'up' | 'down' | 'stable';\n  trend_strength: number;\n  next_week_prediction: number;\n  next_month_prediction: number;\n  risk_level: 'low' | 'medium' | 'high';\n  risk_factors: string[];\n}\n\nexport interface PredictionReport {\n  period: string;\n  summary: string;\n  key_findings: string[];\n  recommendations: string[];\n  metrics: PredictionMetrics;\n  data: PredictionDataPoint[];\n  generated_at: string;\n}\n\nexport class TicketPredictionApi {\n  // \u83B7\u53D6\u8D8B\u52BF\u9884\u6D4B\n  static async getTrendPrediction(params: PredictionRequest): Promise<PredictionReport> {\n    return httpClient.post<PredictionReport>('/api/tickets/prediction/trend', params);\n  }\n\n  // \u5BFC\u51FA\u9884\u6D4B\u62A5\u544A\n  static async exportPredictionReport(params: PredictionRequest, format: 'excel' | 'pdf'): Promise<Blob> {\n    return httpClient.post<Blob>(`/api/tickets/prediction/export?format=${format}`, params, {\n      responseType: 'blob',\n    });\n  }\n}\n\n"],
+      names: ["TicketPredictionApi", "getTrendPrediction", "params", "httpClient", "post", "exportPredictionReport", "format", "responseType"],
+      mappings: "AAAA;;CAEC;;;;+BA2CYA;;;eAAAA;;;4BAzCc;AAyCpB,MAAMA;IACX,SAAS;IACT,aAAaC,mBAAmBC,MAAyB,EAA6B;QACpF,OAAOC,sBAAU,CAACC,IAAI,CAAmB,iCAAiCF;IAC5E;IAEA,SAAS;IACT,aAAaG,uBAAuBH,MAAyB,EAAEI,MAAuB,EAAiB;QACrG,OAAOH,sBAAU,CAACC,IAAI,CAAO,CAAC,sCAAsC,EAAEE,QAAQ,EAAEJ,QAAQ;YACtFK,cAAc;QAChB;IACF;AACF"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "c5c229101b6b1f63b26fa7159694ff5d778d7116"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_js0wogrny = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_js0wogrny();
+cov_js0wogrny().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_js0wogrny().s[1]++;
+Object.defineProperty(exports, "TicketPredictionApi", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_js0wogrny().f[0]++;
+    cov_js0wogrny().s[2]++;
+    return TicketPredictionApi;
+  }
+});
+const _httpclient =
+/* istanbul ignore next */
+(cov_js0wogrny().s[3]++, require("./http-client"));
+class TicketPredictionApi {
+  // 获取趋势预测
+  static async getTrendPrediction(params) {
+    /* istanbul ignore next */
+    cov_js0wogrny().f[1]++;
+    cov_js0wogrny().s[4]++;
+    return _httpclient.httpClient.post('/api/tickets/prediction/trend', params);
+  }
+  // 导出预测报告
+  static async exportPredictionReport(params, format) {
+    /* istanbul ignore next */
+    cov_js0wogrny().f[2]++;
+    cov_js0wogrny().s[5]++;
+    return _httpclient.httpClient.post(`/api/tickets/prediction/export?format=${format}`, params, {
+      responseType: 'blob'
+    });
+  }
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfanMwd29ncm55IiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwibmFtZSIsImRlY2wiLCJsb2MiLCJicmFuY2hNYXAiLCJzIiwiZiIsImIiLCJpbnB1dFNvdXJjZU1hcCIsInZlcnNpb24iLCJzb3VyY2VzIiwic291cmNlc0NvbnRlbnQiLCJuYW1lcyIsIm1hcHBpbmdzIiwiX2NvdmVyYWdlU2NoZW1hIiwiY292ZXJhZ2UiLCJhY3R1YWxDb3ZlcmFnZSIsIlRpY2tldFByZWRpY3Rpb25BcGkiLCJnZXRUcmVuZFByZWRpY3Rpb24iLCJwYXJhbXMiLCJfaHR0cGNsaWVudCIsImh0dHBDbGllbnQiLCJwb3N0IiwiZXhwb3J0UHJlZGljdGlvblJlcG9ydCIsImZvcm1hdCIsInJlc3BvbnNlVHlwZSJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9saWIvYXBpL3RpY2tldC1wcmVkaWN0aW9uLWFwaS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIOW3peWNlei2i+WKv+mihOa1iyBBUEkg5pyN5YqhXG4gKi9cblxuaW1wb3J0IHsgaHR0cENsaWVudCB9IGZyb20gJy4vaHR0cC1jbGllbnQnO1xuXG5leHBvcnQgaW50ZXJmYWNlIFByZWRpY3Rpb25SZXF1ZXN0IHtcbiAgdGlja2V0X3R5cGU/OiBzdHJpbmc7XG4gIGNhdGVnb3J5Pzogc3RyaW5nO1xuICB0aW1lX3JhbmdlOiBbc3RyaW5nLCBzdHJpbmddO1xuICBwcmVkaWN0aW9uX3BlcmlvZDogJ3dlZWsnIHwgJ21vbnRoJyB8ICdxdWFydGVyJztcbiAgbW9kZWxfdHlwZTogJ2FyaW1hJyB8ICdleHBvbmVudGlhbCcgfCAnbGluZWFyJztcbn1cblxuZXhwb3J0IGludGVyZmFjZSBQcmVkaWN0aW9uRGF0YVBvaW50IHtcbiAgZGF0ZTogc3RyaW5nO1xuICBhY3R1YWw/OiBudW1iZXI7XG4gIHByZWRpY3RlZDogbnVtYmVyO1xuICB1cHBlcl9ib3VuZD86IG51bWJlcjtcbiAgbG93ZXJfYm91bmQ/OiBudW1iZXI7XG4gIGNvbmZpZGVuY2U/OiBudW1iZXI7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgUHJlZGljdGlvbk1ldHJpY3Mge1xuICBhY2N1cmFjeTogbnVtYmVyO1xuICBtYXBlOiBudW1iZXI7XG4gIHJtc2U6IG51bWJlcjtcbiAgdHJlbmQ6ICd1cCcgfCAnZG93bicgfCAnc3RhYmxlJztcbiAgdHJlbmRfc3RyZW5ndGg6IG51bWJlcjtcbiAgbmV4dF93ZWVrX3ByZWRpY3Rpb246IG51bWJlcjtcbiAgbmV4dF9tb250aF9wcmVkaWN0aW9uOiBudW1iZXI7XG4gIHJpc2tfbGV2ZWw6ICdsb3cnIHwgJ21lZGl1bScgfCAnaGlnaCc7XG4gIHJpc2tfZmFjdG9yczogc3RyaW5nW107XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgUHJlZGljdGlvblJlcG9ydCB7XG4gIHBlcmlvZDogc3RyaW5nO1xuICBzdW1tYXJ5OiBzdHJpbmc7XG4gIGtleV9maW5kaW5nczogc3RyaW5nW107XG4gIHJlY29tbWVuZGF0aW9uczogc3RyaW5nW107XG4gIG1ldHJpY3M6IFByZWRpY3Rpb25NZXRyaWNzO1xuICBkYXRhOiBQcmVkaWN0aW9uRGF0YVBvaW50W107XG4gIGdlbmVyYXRlZF9hdDogc3RyaW5nO1xufVxuXG5leHBvcnQgY2xhc3MgVGlja2V0UHJlZGljdGlvbkFwaSB7XG4gIC8vIOiOt+WPlui2i+WKv+mihOa1i1xuICBzdGF0aWMgYXN5bmMgZ2V0VHJlbmRQcmVkaWN0aW9uKHBhcmFtczogUHJlZGljdGlvblJlcXVlc3QpOiBQcm9taXNlPFByZWRpY3Rpb25SZXBvcnQ+IHtcbiAgICByZXR1cm4gaHR0cENsaWVudC5wb3N0PFByZWRpY3Rpb25SZXBvcnQ+KCcvYXBpL3RpY2tldHMvcHJlZGljdGlvbi90cmVuZCcsIHBhcmFtcyk7XG4gIH1cblxuICAvLyDlr7zlh7rpooTmtYvmiqXlkYpcbiAgc3RhdGljIGFzeW5jIGV4cG9ydFByZWRpY3Rpb25SZXBvcnQocGFyYW1zOiBQcmVkaWN0aW9uUmVxdWVzdCwgZm9ybWF0OiAnZXhjZWwnIHwgJ3BkZicpOiBQcm9taXNlPEJsb2I+IHtcbiAgICByZXR1cm4gaHR0cENsaWVudC5wb3N0PEJsb2I+KGAvYXBpL3RpY2tldHMvcHJlZGljdGlvbi9leHBvcnQ/Zm9ybWF0PSR7Zm9ybWF0fWAsIHBhcmFtcywge1xuICAgICAgcmVzcG9uc2VUeXBlOiAnYmxvYicsXG4gICAgfSk7XG4gIH1cbn1cblxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7R0FFQzs7QUFBQTtBQUFBLFNBQUFBLGNBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLE1BQUEsT0FBQUMsUUFBQTtFQUFBLElBQUFDLEdBQUE7RUFBQSxJQUFBQyxZQUFBO0lBQUFMLElBQUE7SUFBQU0sWUFBQTtNQUFBO1FBQUFDLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtJQUFBO0lBQUFFLEtBQUE7TUFBQTtRQUFBQyxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBSSxJQUFBO1FBQUFDLElBQUE7VUFBQU4sS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUssR0FBQTtVQUFBUCxLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7SUFBQTtJQUFBTyxTQUFBO0lBQUFDLENBQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7SUFBQTtJQUFBQyxDQUFBO01BQUE7TUFBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLE9BQUE7TUFBQUMsT0FBQTtNQUFBQyxjQUFBO01BQUFDLEtBQUE7TUFBQUMsUUFBQTtJQUFBO0lBQUFDLGVBQUE7SUFBQXhCLElBQUE7RUFBQTtFQUFBLElBQUF5QixRQUFBLEdBQUF4QixNQUFBLENBQUFFLEdBQUEsTUFBQUYsTUFBQSxDQUFBRSxHQUFBO0VBQUEsS0FBQXNCLFFBQUEsQ0FBQTFCLElBQUEsS0FBQTBCLFFBQUEsQ0FBQTFCLElBQUEsRUFBQUMsSUFBQSxLQUFBQSxJQUFBO0lBQUF5QixRQUFBLENBQUExQixJQUFBLElBQUFLLFlBQUE7RUFBQTtFQUFBLElBQUFzQixjQUFBLEdBQUFELFFBQUEsQ0FBQTFCLElBQUE7RUFBQTtJQTZDQztJQUFBRCxhQUFBLFlBQUFBLENBQUE7TUFBQSxPQUFBNEIsY0FBQTtJQUFBO0VBQUE7RUFBQSxPQUFBQSxjQUFBO0FBQUE7QUFBQTVCLGFBQUE7QUFBQUEsYUFBQSxHQUFBaUIsQ0FBQTs7Ozs7OytCQUZXOzs7Ozs7V0FBQVksbUJBQUE7Ozs7O2lDQXpDYztBQXlDcEIsTUFBTUEsbUJBQUE7RUFDWDtFQUNBLGFBQWFDLG1CQUFtQkMsTUFBeUIsRUFBNkI7SUFBQTtJQUFBL0IsYUFBQSxHQUFBa0IsQ0FBQTtJQUFBbEIsYUFBQSxHQUFBaUIsQ0FBQTtJQUNwRixPQUFPZSxXQUFBLENBQUFDLFVBQVUsQ0FBQ0MsSUFBSSxDQUFtQixpQ0FBaUNILE1BQUE7RUFDNUU7RUFFQTtFQUNBLGFBQWFJLHVCQUF1QkosTUFBeUIsRUFBRUssTUFBdUIsRUFBaUI7SUFBQTtJQUFBcEMsYUFBQSxHQUFBa0IsQ0FBQTtJQUFBbEIsYUFBQSxHQUFBaUIsQ0FBQTtJQUNyRyxPQUFPZSxXQUFBLENBQUFDLFVBQVUsQ0FBQ0MsSUFBSSxDQUFPLHlDQUF5Q0UsTUFBQSxFQUFRLEVBQUVMLE1BQUEsRUFBUTtNQUN0Rk0sWUFBQSxFQUFjO0lBQ2hCO0VBQ0Y7QUFDRiIsImlnbm9yZUxpc3QiOltdfQ==

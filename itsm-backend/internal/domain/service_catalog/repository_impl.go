@@ -24,6 +24,12 @@ func (r *EntRepository) Create(ctx context.Context, catalog *ServiceCatalog) (*S
 		SetDeliveryTime(catalog.DeliveryTime).
 		SetStatus(catalog.Status).
 		SetTenantID(catalog.TenantID)
+	if catalog.CITypeID > 0 {
+		entFunc = entFunc.SetCiTypeID(catalog.CITypeID)
+	}
+	if catalog.CloudServiceID > 0 {
+		entFunc = entFunc.SetCloudServiceID(catalog.CloudServiceID)
+	}
 
 	res, err := entFunc.Save(ctx)
 	if err != nil {
@@ -79,6 +85,12 @@ func (r *EntRepository) Update(ctx context.Context, catalog *ServiceCatalog) (*S
 		SetDescription(catalog.Description).
 		SetDeliveryTime(catalog.DeliveryTime).
 		SetStatus(catalog.Status)
+	if catalog.CITypeID > 0 {
+		update = update.SetCiTypeID(catalog.CITypeID)
+	}
+	if catalog.CloudServiceID > 0 {
+		update = update.SetCloudServiceID(catalog.CloudServiceID)
+	}
 
 	res, err := update.Save(ctx)
 	if err != nil {
@@ -93,14 +105,16 @@ func (r *EntRepository) Delete(ctx context.Context, id int) error {
 
 func (r *EntRepository) toDomain(e *ent.ServiceCatalog) *ServiceCatalog {
 	return &ServiceCatalog{
-		ID:           e.ID,
-		Name:         e.Name,
-		Category:     e.Category,
-		Description:  e.Description,
-		DeliveryTime: e.DeliveryTime,
-		Status:       e.Status,
-		TenantID:     e.TenantID,
-		CreatedAt:    e.CreatedAt,
-		UpdatedAt:    e.UpdatedAt,
+		ID:             e.ID,
+		Name:           e.Name,
+		Category:       e.Category,
+		Description:    e.Description,
+		DeliveryTime:   e.DeliveryTime,
+		CITypeID:       e.CiTypeID,
+		CloudServiceID: e.CloudServiceID,
+		Status:         e.Status,
+		TenantID:       e.TenantID,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
 	}
 }

@@ -106,9 +106,11 @@ type TicketEdges struct {
 	ApprovalRecords []*ApprovalRecord `json:"approval_records,omitempty"`
 	// 根因分析
 	RootCauseAnalyses []*RootCauseAnalysis `json:"root_cause_analyses,omitempty"`
+	// 关联的配置项
+	ConfigurationItems []*ConfigurationItem `json:"configuration_items,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [15]bool
+	loadedTypes [16]bool
 }
 
 // TemplateOrErr returns the Template value or an error if the edge
@@ -254,6 +256,15 @@ func (e TicketEdges) RootCauseAnalysesOrErr() ([]*RootCauseAnalysis, error) {
 		return e.RootCauseAnalyses, nil
 	}
 	return nil, &NotLoadedError{edge: "root_cause_analyses"}
+}
+
+// ConfigurationItemsOrErr returns the ConfigurationItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e TicketEdges) ConfigurationItemsOrErr() ([]*ConfigurationItem, error) {
+	if e.loadedTypes[15] {
+		return e.ConfigurationItems, nil
+	}
+	return nil, &NotLoadedError{edge: "configuration_items"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -521,6 +532,11 @@ func (t *Ticket) QueryApprovalRecords() *ApprovalRecordQuery {
 // QueryRootCauseAnalyses queries the "root_cause_analyses" edge of the Ticket entity.
 func (t *Ticket) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
 	return NewTicketClient(t.config).QueryRootCauseAnalyses(t)
+}
+
+// QueryConfigurationItems queries the "configuration_items" edge of the Ticket entity.
+func (t *Ticket) QueryConfigurationItems() *ConfigurationItemQuery {
+	return NewTicketClient(t.config).QueryConfigurationItems(t)
 }
 
 // Update returns a builder for updating this Ticket.

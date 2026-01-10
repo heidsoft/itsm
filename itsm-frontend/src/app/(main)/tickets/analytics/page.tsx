@@ -287,7 +287,11 @@ const TicketAnalytics: React.FC = () => {
           <Space>
             <RangePicker
               value={dateRange}
-              onChange={setDateRange}
+              onChange={(dates) => {
+                if (dates) {
+                  setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs]);
+                }
+              }}
               format="YYYY-MM-DD"
               allowClear={false}
             />
@@ -402,7 +406,9 @@ const TicketAnalytics: React.FC = () => {
                       cy="50%"
                       outerRadius={80}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name} ${(((percent ?? 0) * 100)).toFixed(0)}%`
+                      }
                     >
                       {analyticsData.statusDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />

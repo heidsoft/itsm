@@ -1,0 +1,310 @@
+3f3d2cd73c4e284ffc1924536d852e32
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_2i6ayu99pj() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/knowledge/articles/[id]/page.tsx";
+  var hash = "75daa8d23e51e8f926ad5bd6e47b9e0cd6e21e9b";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/knowledge/articles/[id]/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 33
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 37
+        },
+        end: {
+          line: 13,
+          column: 131
+        }
+      },
+      "5": {
+        start: {
+          line: 15,
+          column: 4
+        },
+        end: {
+          line: 17,
+          column: 6
+        }
+      },
+      "6": {
+        start: {
+          line: 20,
+          column: 4
+        },
+        end: {
+          line: 20,
+          column: 74
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 14,
+            column: 9
+          },
+          end: {
+            line: 14,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 39
+          },
+          end: {
+            line: 18,
+            column: 1
+          }
+        },
+        line: 14
+      },
+      "2": {
+        name: "ArticleDetailPage",
+        decl: {
+          start: {
+            line: 19,
+            column: 9
+          },
+          end: {
+            line: 19,
+            column: 26
+          }
+        },
+        loc: {
+          start: {
+            line: 19,
+            column: 29
+          },
+          end: {
+            line: 21,
+            column: 1
+          }
+        },
+        line: 19
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 15,
+            column: 35
+          },
+          end: {
+            line: 15,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 15,
+            column: 41
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        }],
+        line: 15
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 15,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 15,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 15,
+            column: 18
+          },
+          end: {
+            line: 15,
+            column: 32
+          }
+        }],
+        line: 15
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/knowledge/articles/[id]/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport ArticleDetail from '@/modules/knowledge/components/ArticleDetail';\n\nexport default function ArticleDetailPage() {\n    return <ArticleDetail />;\n}\n"],
+      names: ["ArticleDetailPage", "ArticleDetail"],
+      mappings: "AAAA;;;;;+BAIA;;;eAAwBA;;;;sEAFE;;;;;;AAEX,SAASA;IACpB,qBAAO,qBAACC,sBAAa;AACzB"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "75daa8d23e51e8f926ad5bd6e47b9e0cd6e21e9b"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2i6ayu99pj = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2i6ayu99pj();
+cov_2i6ayu99pj().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2i6ayu99pj().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_2i6ayu99pj().f[0]++;
+    cov_2i6ayu99pj().s[2]++;
+    return ArticleDetailPage;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_2i6ayu99pj().s[3]++, require("react/jsx-runtime"));
+const _ArticleDetail =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_2i6ayu99pj().s[4]++, _interop_require_default(require("../../../../../modules/knowledge/components/ArticleDetail")));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_2i6ayu99pj().f[1]++;
+  cov_2i6ayu99pj().s[5]++;
+  return /* istanbul ignore next */(cov_2i6ayu99pj().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_2i6ayu99pj().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_2i6ayu99pj().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_2i6ayu99pj().b[0][1]++, {
+    default: obj
+  });
+}
+function ArticleDetailPage() {
+  /* istanbul ignore next */
+  cov_2i6ayu99pj().f[2]++;
+  cov_2i6ayu99pj().s[6]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)(_ArticleDetail.default, {});
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJBcnRpY2xlRGV0YWlsUGFnZSIsImNvdl8yaTZheXU5OXBqIiwiZiIsInMiLCJfanN4cnVudGltZSIsImpzeCIsIl9BcnRpY2xlRGV0YWlsIiwiZGVmYXVsdCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9hcHAvKG1haW4pL2tub3dsZWRnZS9hcnRpY2xlcy9baWRdL3BhZ2UudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50JztcblxuaW1wb3J0IEFydGljbGVEZXRhaWwgZnJvbSAnQC9tb2R1bGVzL2tub3dsZWRnZS9jb21wb25lbnRzL0FydGljbGVEZXRhaWwnO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBBcnRpY2xlRGV0YWlsUGFnZSgpIHtcbiAgICByZXR1cm4gPEFydGljbGVEZXRhaWwgLz47XG59XG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7K0JBSUE7Ozs7OztXQUF3QkEsaUJBQUE7Ozs7Ozs7O3dFQUZFOzs7Ozs7Ozs7Ozs7Ozs7QUFFWCxTQUFTQSxrQkFBQTtFQUFBO0VBQUFDLGNBQUEsR0FBQUMsQ0FBQTtFQUFBRCxjQUFBLEdBQUFFLENBQUE7RUFDcEIsb0JBQU8sSUFBQUMsV0FBQSxDQUFBQyxHQUFBLEVBQUNDLGNBQUEsQ0FBQUMsT0FBYTtBQUN6QiIsImlnbm9yZUxpc3QiOltdfQ==

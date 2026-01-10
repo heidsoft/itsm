@@ -1,0 +1,196 @@
+[
+  {
+    "key": "aliyun-compute",
+    "provider": "aliyun",
+    "category": "compute",
+    "service_code": "ecs",
+    "service_name": "Elastic Compute Service",
+    "resource_type_code": "service",
+    "resource_type_name": "ECS Service",
+    "api_version": "2014-05-26",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "billing_mode",
+          "label": "Billing Mode",
+          "type": "select",
+          "options": ["pay_as_you_go", "subscription"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "aliyun-ecs-instance",
+    "parent_key": "aliyun-compute",
+    "provider": "aliyun",
+    "category": "compute",
+    "service_code": "ecs",
+    "service_name": "Elastic Compute Service",
+    "resource_type_code": "instance",
+    "resource_type_name": "ECS Instance",
+    "api_version": "2014-05-26",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "instance_type",
+          "label": "Instance Type",
+          "type": "select",
+          "options": ["ecs.c6.large", "ecs.c6.xlarge", "ecs.g6.large"]
+        },
+        {
+          "key": "os",
+          "label": "Operating System",
+          "type": "select",
+          "options": ["Alibaba Cloud Linux", "Ubuntu", "CentOS"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "aliyun-database",
+    "provider": "aliyun",
+    "category": "database",
+    "service_code": "rds",
+    "service_name": "Relational Database Service",
+    "resource_type_code": "service",
+    "resource_type_name": "RDS Service",
+    "api_version": "2014-08-15",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "engine",
+          "label": "Engine",
+          "type": "select",
+          "options": ["mysql", "postgresql", "sqlserver", "mariadb"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "aliyun-rds-instance",
+    "parent_key": "aliyun-database",
+    "provider": "aliyun",
+    "category": "database",
+    "service_code": "rds",
+    "service_name": "Relational Database Service",
+    "resource_type_code": "instance",
+    "resource_type_name": "RDS Instance",
+    "api_version": "2014-08-15",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "instance_class",
+          "label": "Instance Class",
+          "type": "select",
+          "options": ["rds.mysql.s1.small", "rds.mysql.s2.medium", "rds.pg.s1.small"]
+        },
+        {
+          "key": "engine_version",
+          "label": "Engine Version",
+          "type": "select",
+          "options": ["5.7", "8.0", "13", "14"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "aliyun-storage",
+    "provider": "aliyun",
+    "category": "storage",
+    "service_code": "oss",
+    "service_name": "Object Storage Service",
+    "resource_type_code": "service",
+    "resource_type_name": "OSS Service",
+    "api_version": "2013-10-15",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "storage_class",
+          "label": "Storage Class",
+          "type": "select",
+          "options": ["standard", "ia", "archive"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "aliyun-oss-bucket",
+    "parent_key": "aliyun-storage",
+    "provider": "aliyun",
+    "category": "storage",
+    "service_code": "oss",
+    "service_name": "Object Storage Service",
+    "resource_type_code": "bucket",
+    "resource_type_name": "OSS Bucket",
+    "api_version": "2013-10-15",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "versioning",
+          "label": "Versioning",
+          "type": "select",
+          "options": ["enabled", "suspended"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "aliyun-network",
+    "provider": "aliyun",
+    "category": "network",
+    "service_code": "vpc",
+    "service_name": "Virtual Private Cloud",
+    "resource_type_code": "vpc",
+    "resource_type_name": "VPC",
+    "api_version": "2016-04-28",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "cidr_block",
+          "label": "CIDR Block",
+          "type": "select",
+          "options": ["10.0.0.0/16", "172.16.0.0/16", "192.168.0.0/16"]
+        }
+      ]
+    },
+    "is_system": true
+  },
+  {
+    "key": "onprem-compute",
+    "provider": "onprem",
+    "category": "compute",
+    "service_code": "vmware",
+    "service_name": "VMware vSphere",
+    "resource_type_code": "vm",
+    "resource_type_name": "Virtual Machine",
+    "attribute_schema": {
+      "fields": [
+        {
+          "key": "cluster",
+          "label": "Cluster",
+          "type": "select",
+          "options": ["cluster-a", "cluster-b"]
+        },
+        {
+          "key": "cpu",
+          "label": "vCPU",
+          "type": "select",
+          "options": ["2", "4", "8", "16"]
+        },
+        {
+          "key": "memory_gb",
+          "label": "Memory (GB)",
+          "type": "select",
+          "options": ["4", "8", "16", "32"]
+        }
+      ]
+    },
+    "is_system": true
+  }
+]

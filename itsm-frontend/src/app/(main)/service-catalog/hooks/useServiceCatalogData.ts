@@ -10,6 +10,8 @@ export const useServiceCatalogData = () => {
   const [searchText, setSearchText] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [ciTypeFilter, setCiTypeFilter] = useState<number | undefined>(undefined);
+  const [cloudServiceFilter, setCloudServiceFilter] = useState<number | undefined>(undefined);
   const [stats, setStats] = useState({
     total: 0,
     cloudServices: 0,
@@ -24,9 +26,9 @@ export const useServiceCatalogData = () => {
   useEffect(() => {
     setStats({
       total: catalogs.length,
-      cloudServices: catalogs.filter(c => c.category === '云资源服务').length,
-      accountServices: catalogs.filter(c => c.category === '账号与权限').length,
-      securityServices: catalogs.filter(c => c.category === '安全服务').length,
+      cloudServices: catalogs.filter(c => String(c.category) === '云资源服务').length,
+      accountServices: catalogs.filter(c => String(c.category) === '账号与权限').length,
+      securityServices: catalogs.filter(c => String(c.category) === '安全服务').length,
     });
   }, [catalogs]);
 
@@ -51,7 +53,9 @@ export const useServiceCatalogData = () => {
     const categoryLabel = String(catalog.category);
     const matchesCategory = categoryFilter ? categoryLabel === categoryFilter : true;
     const matchesPriority = priorityFilter ? (catalog as any).priority === priorityFilter : true;
-    return matchesSearch && matchesCategory && matchesPriority;
+    const matchesCIType = ciTypeFilter ? catalog.ciTypeId === ciTypeFilter : true;
+    const matchesCloudService = cloudServiceFilter ? catalog.cloudServiceId === cloudServiceFilter : true;
+    return matchesSearch && matchesCategory && matchesPriority && matchesCIType && matchesCloudService;
   });
 
   return {
@@ -61,6 +65,8 @@ export const useServiceCatalogData = () => {
     setSearchText,
     setCategoryFilter,
     setPriorityFilter,
+    setCiTypeFilter,
+    setCloudServiceFilter,
     loadServiceCatalogs,
   };
 };

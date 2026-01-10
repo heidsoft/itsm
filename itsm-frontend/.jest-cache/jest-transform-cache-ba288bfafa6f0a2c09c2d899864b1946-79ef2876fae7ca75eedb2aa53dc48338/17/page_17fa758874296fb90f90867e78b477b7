@@ -1,0 +1,339 @@
+a2b6d74fc0b7a980daeca99d36435f5e
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_7upap7cwp() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/problems/page.tsx";
+  var hash = "eb493c344f36cba353bb8f9f277afc0a08ecf338";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/problems/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 31
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 35
+        },
+        end: {
+          line: 14,
+          column: 119
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 21,
+          column: 4
+        },
+        end: {
+          line: 39,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "ProblemListPage",
+        decl: {
+          start: {
+            line: 20,
+            column: 9
+          },
+          end: {
+            line: 20,
+            column: 24
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 27
+          },
+          end: {
+            line: 40,
+            column: 1
+          }
+        },
+        line: 20
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/problems/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport ProblemList from '@/modules/problem/components/ProblemList';\n\nexport default function ProblemListPage() {\n  return (\n    <div style={{ padding: 24 }}>\n      <div style={{ marginBottom: 16 }}>\n        <h2 style={{ margin: 0 }}>\u95EE\u9898\u7BA1\u7406</h2>\n      </div>\n      <ProblemList />\n    </div>\n  );\n}\n"],
+      names: ["ProblemListPage", "div", "style", "padding", "marginBottom", "h2", "margin", "ProblemList"],
+      mappings: "AAAA;;;;;+BAKA;;;eAAwBA;;;;8DAHN;oEACM;;;;;;AAET,SAASA;IACtB,qBACE,sBAACC;QAAIC,OAAO;YAAEC,SAAS;QAAG;;0BACxB,qBAACF;gBAAIC,OAAO;oBAAEE,cAAc;gBAAG;0BAC7B,cAAA,qBAACC;oBAAGH,OAAO;wBAAEI,QAAQ;oBAAE;8BAAG;;;0BAE5B,qBAACC,oBAAW;;;AAGlB"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "eb493c344f36cba353bb8f9f277afc0a08ecf338"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_7upap7cwp = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_7upap7cwp();
+cov_7upap7cwp().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_7upap7cwp().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_7upap7cwp().f[0]++;
+    cov_7upap7cwp().s[2]++;
+    return ProblemListPage;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_7upap7cwp().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_7upap7cwp().s[4]++, _interop_require_default(require("react")));
+const _ProblemList =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_7upap7cwp().s[5]++, _interop_require_default(require("../../../modules/problem/components/ProblemList")));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_7upap7cwp().f[1]++;
+  cov_7upap7cwp().s[6]++;
+  return /* istanbul ignore next */(cov_7upap7cwp().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_7upap7cwp().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_7upap7cwp().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_7upap7cwp().b[0][1]++, {
+    default: obj
+  });
+}
+function ProblemListPage() {
+  /* istanbul ignore next */
+  cov_7upap7cwp().f[2]++;
+  cov_7upap7cwp().s[7]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+    style: {
+      padding: 24
+    },
+    children: [/*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+      style: {
+        marginBottom: 16
+      },
+      children: /*#__PURE__*/(0, _jsxruntime.jsx)("h2", {
+        style: {
+          margin: 0
+        },
+        children: "问题管理"
+      })
+    }), /*#__PURE__*/(0, _jsxruntime.jsx)(_ProblemList.default, {})]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJQcm9ibGVtTGlzdFBhZ2UiLCJjb3ZfN3VwYXA3Y3dwIiwiZiIsInMiLCJfanN4cnVudGltZSIsImpzeHMiLCJzdHlsZSIsInBhZGRpbmciLCJqc3giLCJtYXJnaW5Cb3R0b20iLCJtYXJnaW4iLCJfUHJvYmxlbUxpc3QiLCJkZWZhdWx0Il0sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tZnJvbnRlbmQvc3JjL2FwcC8obWFpbikvcHJvYmxlbXMvcGFnZS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBjbGllbnQnO1xuXG5pbXBvcnQgUmVhY3QgZnJvbSAncmVhY3QnO1xuaW1wb3J0IFByb2JsZW1MaXN0IGZyb20gJ0AvbW9kdWxlcy9wcm9ibGVtL2NvbXBvbmVudHMvUHJvYmxlbUxpc3QnO1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBQcm9ibGVtTGlzdFBhZ2UoKSB7XG4gIHJldHVybiAoXG4gICAgPGRpdiBzdHlsZT17eyBwYWRkaW5nOiAyNCB9fT5cbiAgICAgIDxkaXYgc3R5bGU9e3sgbWFyZ2luQm90dG9tOiAxNiB9fT5cbiAgICAgICAgPGgyIHN0eWxlPXt7IG1hcmdpbjogMCB9fT7pl67popjnrqHnkIY8L2gyPlxuICAgICAgPC9kaXY+XG4gICAgICA8UHJvYmxlbUxpc3QgLz5cbiAgICA8L2Rpdj5cbiAgKTtcbn1cbiJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OytCQUtBOzs7Ozs7V0FBd0JBLGVBQUE7Ozs7Ozs7O3VFQUhOOzs7dUVBQ007Ozs7Ozs7Ozs7Ozs7OztBQUVULFNBQVNBLGdCQUFBO0VBQUE7RUFBQUMsYUFBQSxHQUFBQyxDQUFBO0VBQUFELGFBQUEsR0FBQUUsQ0FBQTtFQUN0QixvQkFDRSxJQUFBQyxXQUFBLENBQUFDLElBQUEsRUFBQztJQUFJQyxLQUFBLEVBQU87TUFBRUMsT0FBQSxFQUFTO0lBQUc7NEJBQ3hCLElBQUFILFdBQUEsQ0FBQUksR0FBQSxFQUFDO01BQUlGLEtBQUEsRUFBTztRQUFFRyxZQUFBLEVBQWM7TUFBRztnQkFDN0IsaUJBQUFMLFdBQUEsQ0FBQUksR0FBQSxFQUFDO1FBQUdGLEtBQUEsRUFBTztVQUFFSSxNQUFBLEVBQVE7UUFBRTtrQkFBRzs7cUJBRTVCLElBQUFOLFdBQUEsQ0FBQUksR0FBQSxFQUFDRyxZQUFBLENBQUFDLE9BQVc7O0FBR2xCIiwiaWdub3JlTGlzdCI6W119

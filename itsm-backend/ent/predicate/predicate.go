@@ -30,6 +30,15 @@ type CIType func(*sql.Selector)
 // Change is the predicate function for change builders.
 type Change func(*sql.Selector)
 
+// CloudAccount is the predicate function for cloudaccount builders.
+type CloudAccount func(*sql.Selector)
+
+// CloudResource is the predicate function for cloudresource builders.
+type CloudResource func(*sql.Selector)
+
+// CloudService is the predicate function for cloudservice builders.
+type CloudService func(*sql.Selector)
+
 // ConfigurationItem is the predicate function for configurationitem builders.
 type ConfigurationItem func(*sql.Selector)
 
@@ -38,6 +47,15 @@ type Conversation func(*sql.Selector)
 
 // Department is the predicate function for department builders.
 type Department func(*sql.Selector)
+
+// DiscoveryJob is the predicate function for discoveryjob builders.
+type DiscoveryJob func(*sql.Selector)
+
+// DiscoveryResult is the predicate function for discoveryresult builders.
+type DiscoveryResult func(*sql.Selector)
+
+// DiscoverySource is the predicate function for discoverysource builders.
+type DiscoverySource func(*sql.Selector)
 
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
@@ -98,6 +116,9 @@ type PromptTemplate func(*sql.Selector)
 
 // ProvisioningTask is the predicate function for provisioningtask builders.
 type ProvisioningTask func(*sql.Selector)
+
+// RelationshipType is the predicate function for relationshiptype builders.
+type RelationshipType func(*sql.Selector)
 
 // RootCauseAnalysis is the predicate function for rootcauseanalysis builders.
 type RootCauseAnalysis func(*sql.Selector)

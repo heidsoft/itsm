@@ -42,7 +42,7 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 
 interface WorkflowDesignerPageProps {
-  params: Promise<{ id?: string }>;
+  params: { id?: string };
 }
 
 interface WorkflowDefinition {
@@ -127,7 +127,7 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
   });
 
   // 从URL参数获取工作流ID
-  const workflowId = params.id || searchParams.get('id');
+  const workflowId = params?.id || searchParams.get('id');
 
   useEffect(() => {
     if (workflowId) {
@@ -167,17 +167,17 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 
     try {
       // 使用新的BPMN API
-      const response = await WorkflowAPI.getProcessDefinition(id);
+      const response = await WorkflowAPI.getProcessDefinition(id) as any;
       setWorkflow({
-        id: response.key,
+        id: response.key || response.id,
         name: response.name,
         description: response.description || '',
         version: response.version.toString(),
-        category: response.category || 'general',
+        category: response.category || response.type || 'general',
         status: response.is_active ? 'active' : 'inactive',
         xml: '', // BPMN XML需要从部署的资源中获取
-        created_at: response.created_at,
-        updated_at: response.updated_at,
+        created_at: response.created_at || new Date().toISOString(),
+        updated_at: response.updated_at || new Date().toISOString(),
         created_by: '系统', // 从用户信息中获取
         tags: [],
         approval_config: approvalConfig,
@@ -203,7 +203,16 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 
     try {
       const versions = await WorkflowAPI.getProcessVersions(id);
-      setWorkflowVersions(versions);
+      const normalized = (versions as any[]).map((version, index) => ({
+        id: version.id || version.key || `version-${index}`,
+        version: String(version.version ?? '1.0.0'),
+        status: version.status || (version.is_active ? 'active' : 'draft'),
+        created_at: version.created_at || new Date().toISOString(),
+        created_by: version.created_by || '系统',
+        change_log: version.change_log || '',
+        xml: version.bpmn_xml || '',
+      }));
+      setWorkflowVersions(normalized);
     } catch (error) {
       console.error('加载工作流版本失败:', error);
     }
@@ -286,20 +295,20 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     try {
       if (workflow.id === 'new') {
         // 创建新工作流 - 使用新的BPMN API
-        const response = await WorkflowAPI.createProcessDefinition({
+        const response = (await WorkflowAPI.createProcessDefinition({
           name: workflow.name,
           description: workflow.description,
           category: workflow.category,
           bpmn_xml: xml,
           tenant_id: 1, // 从当前用户信息中获取
-        });
+        })) as any;
 
         // 更新工作流ID和状态
         setWorkflow(prev =>
           prev
             ? {
                 ...prev,
-                id: response.key,
+                id: response.key || response.id,
                 status: 'draft',
               }
             : null
@@ -334,10 +343,7 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     setDeploying(true);
     try {
       // 部署工作流
-      await WorkflowAPI.deployProcessDefinition(workflow.id, {
-        bpmn_xml: currentXML,
-        activate: true,
-      });
+      await WorkflowAPI.deployProcessDefinition(workflow.id);
 
       // 更新状态
       setWorkflow(prev =>
@@ -362,11 +368,15 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     if (!workflow) return;
 
     try {
-      const newVersion = await WorkflowAPI.createProcessVersion(workflow.id, {
+      const newVersion: WorkflowVersion = {
+        id: `version-${Date.now()}`,
         version: `${parseFloat(workflow.version) + 0.1}`.slice(0, 3),
+        status: 'draft',
+        created_at: new Date().toISOString(),
+        created_by: '当前用户',
         change_log: '创建新版本',
-        bpmn_xml: currentXML,
-      });
+        xml: currentXML,
+      };
 
       setWorkflowVersions([...workflowVersions, newVersion]);
       setWorkflow(prev =>

@@ -1,0 +1,264 @@
+0deac552f8f39c7b50f8abe6701b2caa
+"use strict";
+
+/* istanbul ignore next */
+function cov_vkqye2t00() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/ticket-rating-api.ts";
+  var hash = "336b1e2af8b65fd0e4a6f1e11ce23b50bd958c07";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/ticket-rating-api.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 8,
+          column: 31
+        }
+      },
+      "3": {
+        start: {
+          line: 11,
+          column: 20
+        },
+        end: {
+          line: 11,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 15,
+          column: 8
+        },
+        end: {
+          line: 15,
+          column: 87
+        }
+      },
+      "5": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 80
+        }
+      },
+      "6": {
+        start: {
+          line: 23,
+          column: 8
+        },
+        end: {
+          line: 23,
+          column: 82
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 20
+          },
+          end: {
+            line: 9,
+            column: 5
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 14,
+            column: 4
+          },
+          end: {
+            line: 14,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 46
+          },
+          end: {
+            line: 16,
+            column: 5
+          }
+        },
+        line: 14
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 18,
+            column: 4
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 37
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        line: 18
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 22,
+            column: 4
+          },
+          end: {
+            line: 22,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 40
+          },
+          end: {
+            line: 24,
+            column: 5
+          }
+        },
+        line: 22
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/ticket-rating-api.ts"],
+      sourcesContent: ["import { httpClient } from './http-client';\n\n// \u5DE5\u5355\u8BC4\u5206\u7C7B\u578B\u5B9A\u4E49\nexport interface TicketRating {\n  rating: number; // 1-5\u661F\n  comment: string;\n  rated_at?: string;\n  rated_by: number;\n  rated_by_name?: string;\n}\n\nexport interface SubmitTicketRatingRequest {\n  rating: number; // 1-5\u661F\n  comment?: string;\n}\n\nexport interface RatingStats {\n  total_ratings: number;\n  average_rating: number;\n  rating_distribution: {\n    [key: number]: number; // {1: 10, 2: 5, 3: 8, 4: 20, 5: 30}\n  };\n  by_assignee?: {\n    [key: number]: {\n      assignee_id: number;\n      assignee_name: string;\n      total_ratings: number;\n      average_rating: number;\n    };\n  };\n  by_category?: {\n    [key: number]: {\n      category_id: number;\n      category_name: string;\n      total_ratings: number;\n      average_rating: number;\n    };\n  };\n}\n\nexport interface GetRatingStatsParams {\n  assignee_id?: number;\n  category_id?: number;\n  start_date?: string;\n  end_date?: string;\n}\n\nexport class TicketRatingApi {\n  // \u63D0\u4EA4\u5DE5\u5355\u8BC4\u5206\n  static async submitRating(ticketId: number, data: SubmitTicketRatingRequest): Promise<TicketRating> {\n    return httpClient.post<TicketRating>(`/api/v1/tickets/${ticketId}/rating`, data);\n  }\n\n  // \u83B7\u53D6\u5DE5\u5355\u8BC4\u5206\n  static async getRating(ticketId: number): Promise<TicketRating | null> {\n    return httpClient.get<TicketRating | null>(`/api/v1/tickets/${ticketId}/rating`);\n  }\n\n  // \u83B7\u53D6\u8BC4\u5206\u7EDF\u8BA1\n  static async getRatingStats(params?: GetRatingStatsParams): Promise<RatingStats> {\n    return httpClient.get<RatingStats>('/api/v1/tickets/rating-stats', params);\n  }\n}\n\n"],
+      names: ["TicketRatingApi", "submitRating", "ticketId", "data", "httpClient", "post", "getRating", "get", "getRatingStats", "params"],
+      mappings: ";;;;+BA+CaA;;;eAAAA;;;4BA/Cc;AA+CpB,MAAMA;IACX,SAAS;IACT,aAAaC,aAAaC,QAAgB,EAAEC,IAA+B,EAAyB;QAClG,OAAOC,sBAAU,CAACC,IAAI,CAAe,CAAC,gBAAgB,EAAEH,SAAS,OAAO,CAAC,EAAEC;IAC7E;IAEA,SAAS;IACT,aAAaG,UAAUJ,QAAgB,EAAgC;QACrE,OAAOE,sBAAU,CAACG,GAAG,CAAsB,CAAC,gBAAgB,EAAEL,SAAS,OAAO,CAAC;IACjF;IAEA,SAAS;IACT,aAAaM,eAAeC,MAA6B,EAAwB;QAC/E,OAAOL,sBAAU,CAACG,GAAG,CAAc,gCAAgCE;IACrE;AACF"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "336b1e2af8b65fd0e4a6f1e11ce23b50bd958c07"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_vkqye2t00 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_vkqye2t00();
+cov_vkqye2t00().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_vkqye2t00().s[1]++;
+Object.defineProperty(exports, "TicketRatingApi", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_vkqye2t00().f[0]++;
+    cov_vkqye2t00().s[2]++;
+    return TicketRatingApi;
+  }
+});
+const _httpclient =
+/* istanbul ignore next */
+(cov_vkqye2t00().s[3]++, require("./http-client"));
+class TicketRatingApi {
+  // 提交工单评分
+  static async submitRating(ticketId, data) {
+    /* istanbul ignore next */
+    cov_vkqye2t00().f[1]++;
+    cov_vkqye2t00().s[4]++;
+    return _httpclient.httpClient.post(`/api/v1/tickets/${ticketId}/rating`, data);
+  }
+  // 获取工单评分
+  static async getRating(ticketId) {
+    /* istanbul ignore next */
+    cov_vkqye2t00().f[2]++;
+    cov_vkqye2t00().s[5]++;
+    return _httpclient.httpClient.get(`/api/v1/tickets/${ticketId}/rating`);
+  }
+  // 获取评分统计
+  static async getRatingStats(params) {
+    /* istanbul ignore next */
+    cov_vkqye2t00().f[3]++;
+    cov_vkqye2t00().s[6]++;
+    return _httpclient.httpClient.get('/api/v1/tickets/rating-stats', params);
+  }
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfdmtxeWUydDAwIiwiYWN0dWFsQ292ZXJhZ2UiLCJzIiwiVGlja2V0UmF0aW5nQXBpIiwic3VibWl0UmF0aW5nIiwidGlja2V0SWQiLCJkYXRhIiwiZiIsIl9odHRwY2xpZW50IiwiaHR0cENsaWVudCIsInBvc3QiLCJnZXRSYXRpbmciLCJnZXQiLCJnZXRSYXRpbmdTdGF0cyIsInBhcmFtcyJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9saWIvYXBpL3RpY2tldC1yYXRpbmctYXBpLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IGh0dHBDbGllbnQgfSBmcm9tICcuL2h0dHAtY2xpZW50JztcblxuLy8g5bel5Y2V6K+E5YiG57G75Z6L5a6a5LmJXG5leHBvcnQgaW50ZXJmYWNlIFRpY2tldFJhdGluZyB7XG4gIHJhdGluZzogbnVtYmVyOyAvLyAxLTXmmJ9cbiAgY29tbWVudDogc3RyaW5nO1xuICByYXRlZF9hdD86IHN0cmluZztcbiAgcmF0ZWRfYnk6IG51bWJlcjtcbiAgcmF0ZWRfYnlfbmFtZT86IHN0cmluZztcbn1cblxuZXhwb3J0IGludGVyZmFjZSBTdWJtaXRUaWNrZXRSYXRpbmdSZXF1ZXN0IHtcbiAgcmF0aW5nOiBudW1iZXI7IC8vIDEtNeaYn1xuICBjb21tZW50Pzogc3RyaW5nO1xufVxuXG5leHBvcnQgaW50ZXJmYWNlIFJhdGluZ1N0YXRzIHtcbiAgdG90YWxfcmF0aW5nczogbnVtYmVyO1xuICBhdmVyYWdlX3JhdGluZzogbnVtYmVyO1xuICByYXRpbmdfZGlzdHJpYnV0aW9uOiB7XG4gICAgW2tleTogbnVtYmVyXTogbnVtYmVyOyAvLyB7MTogMTAsIDI6IDUsIDM6IDgsIDQ6IDIwLCA1OiAzMH1cbiAgfTtcbiAgYnlfYXNzaWduZWU/OiB7XG4gICAgW2tleTogbnVtYmVyXToge1xuICAgICAgYXNzaWduZWVfaWQ6IG51bWJlcjtcbiAgICAgIGFzc2lnbmVlX25hbWU6IHN0cmluZztcbiAgICAgIHRvdGFsX3JhdGluZ3M6IG51bWJlcjtcbiAgICAgIGF2ZXJhZ2VfcmF0aW5nOiBudW1iZXI7XG4gICAgfTtcbiAgfTtcbiAgYnlfY2F0ZWdvcnk/OiB7XG4gICAgW2tleTogbnVtYmVyXToge1xuICAgICAgY2F0ZWdvcnlfaWQ6IG51bWJlcjtcbiAgICAgIGNhdGVnb3J5X25hbWU6IHN0cmluZztcbiAgICAgIHRvdGFsX3JhdGluZ3M6IG51bWJlcjtcbiAgICAgIGF2ZXJhZ2VfcmF0aW5nOiBudW1iZXI7XG4gICAgfTtcbiAgfTtcbn1cblxuZXhwb3J0IGludGVyZmFjZSBHZXRSYXRpbmdTdGF0c1BhcmFtcyB7XG4gIGFzc2lnbmVlX2lkPzogbnVtYmVyO1xuICBjYXRlZ29yeV9pZD86IG51bWJlcjtcbiAgc3RhcnRfZGF0ZT86IHN0cmluZztcbiAgZW5kX2RhdGU/OiBzdHJpbmc7XG59XG5cbmV4cG9ydCBjbGFzcyBUaWNrZXRSYXRpbmdBcGkge1xuICAvLyDmj5DkuqTlt6XljZXor4TliIZcbiAgc3RhdGljIGFzeW5jIHN1Ym1pdFJhdGluZyh0aWNrZXRJZDogbnVtYmVyLCBkYXRhOiBTdWJtaXRUaWNrZXRSYXRpbmdSZXF1ZXN0KTogUHJvbWlzZTxUaWNrZXRSYXRpbmc+IHtcbiAgICByZXR1cm4gaHR0cENsaWVudC5wb3N0PFRpY2tldFJhdGluZz4oYC9hcGkvdjEvdGlja2V0cy8ke3RpY2tldElkfS9yYXRpbmdgLCBkYXRhKTtcbiAgfVxuXG4gIC8vIOiOt+WPluW3peWNleivhOWIhlxuICBzdGF0aWMgYXN5bmMgZ2V0UmF0aW5nKHRpY2tldElkOiBudW1iZXIpOiBQcm9taXNlPFRpY2tldFJhdGluZyB8IG51bGw+IHtcbiAgICByZXR1cm4gaHR0cENsaWVudC5nZXQ8VGlja2V0UmF0aW5nIHwgbnVsbD4oYC9hcGkvdjEvdGlja2V0cy8ke3RpY2tldElkfS9yYXRpbmdgKTtcbiAgfVxuXG4gIC8vIOiOt+WPluivhOWIhue7n+iuoVxuICBzdGF0aWMgYXN5bmMgZ2V0UmF0aW5nU3RhdHMocGFyYW1zPzogR2V0UmF0aW5nU3RhdHNQYXJhbXMpOiBQcm9taXNlPFJhdGluZ1N0YXRzPiB7XG4gICAgcmV0dXJuIGh0dHBDbGllbnQuZ2V0PFJhdGluZ1N0YXRzPignL2FwaS92MS90aWNrZXRzL3JhdGluZy1zdGF0cycsIHBhcmFtcyk7XG4gIH1cbn1cblxuIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7SUFtREU7SUFBQUEsYUFBQSxZQUFBQSxDQUFBO01BQUEsT0FBQUMsY0FBQTtJQUFBO0VBQUE7RUFBQSxPQUFBQSxjQUFBO0FBQUE7QUFBQUQsYUFBQTtBQUFBQSxhQUFBLEdBQUFFLENBQUE7Ozs7OzsrQkFKVzs7Ozs7O1dBQUFDLGVBQUE7Ozs7O2lDQS9DYztBQStDcEIsTUFBTUEsZUFBQTtFQUNYO0VBQ0EsYUFBYUMsYUFBYUMsUUFBZ0IsRUFBRUMsSUFBK0IsRUFBeUI7SUFBQTtJQUFBTixhQUFBLEdBQUFPLENBQUE7SUFBQVAsYUFBQSxHQUFBRSxDQUFBO0lBQ2xHLE9BQU9NLFdBQUEsQ0FBQUMsVUFBVSxDQUFDQyxJQUFJLENBQWUsbUJBQW1CTCxRQUFBLFNBQWlCLEVBQUVDLElBQUE7RUFDN0U7RUFFQTtFQUNBLGFBQWFLLFVBQVVOLFFBQWdCLEVBQWdDO0lBQUE7SUFBQUwsYUFBQSxHQUFBTyxDQUFBO0lBQUFQLGFBQUEsR0FBQUUsQ0FBQTtJQUNyRSxPQUFPTSxXQUFBLENBQUFDLFVBQVUsQ0FBQ0csR0FBRyxDQUFzQixtQkFBbUJQLFFBQUEsU0FBaUI7RUFDakY7RUFFQTtFQUNBLGFBQWFRLGVBQWVDLE1BQTZCLEVBQXdCO0lBQUE7SUFBQWQsYUFBQSxHQUFBTyxDQUFBO0lBQUFQLGFBQUEsR0FBQUUsQ0FBQTtJQUMvRSxPQUFPTSxXQUFBLENBQUFDLFVBQVUsQ0FBQ0csR0FBRyxDQUFjLGdDQUFnQ0UsTUFBQTtFQUNyRTtBQUNGIiwiaWdub3JlTGlzdCI6W119

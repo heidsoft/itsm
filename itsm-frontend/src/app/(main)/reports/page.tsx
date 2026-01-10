@@ -101,27 +101,27 @@ const ReportsPage: React.FC = () => {
   };
 
   // 导出报告
-  const handleExport = async (format: 'excel' | 'pdf' | 'csv') => {
+  const handleExport = async (fileFormat: 'excel' | 'pdf' | 'csv') => {
     try {
       const config: AnalyticsConfig = {
         dimensions: ['status'],
         metrics: ['count', 'avg_resolution_time'],
         chart_type: 'table',
-        time_range,
+        time_range: timeRange,
         filters: {},
       };
 
-      const blob = await TicketAnalyticsApi.exportAnalytics(config, format);
+      const blob = await TicketAnalyticsApi.exportAnalytics(config, fileFormat);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.${format}`;
+      a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.${fileFormat}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      message.success(`报告导出成功 (${format.toUpperCase()})`);
+      message.success(`报告导出成功 (${fileFormat.toUpperCase()})`);
     } catch (error) {
       message.error('导出失败');
     }

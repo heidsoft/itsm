@@ -231,7 +231,7 @@ const MyRequestsPage = () => {
   const fetchRequests = async (page = 1, status = filter) => {
     setLoading(true);
     try {
-      const data = await ServiceCatalogApi.getMyServiceRequests({
+      const data = await ServiceCatalogApi.getServiceRequests({
         page,
         pageSize,
         status: status === 'all' ? undefined : status,

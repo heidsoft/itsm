@@ -1,0 +1,567 @@
+fab4c23bb85f3df00801e3b18378c0ba
+/**
+ * 问题管理相关常量定义
+ */ // 问题状态
+"use strict";
+
+/* istanbul ignore next */
+function cov_6rkc6ii1g() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/problem/constants.ts";
+  var hash = "d32ad3af7844d38d647091d09b0c6bc341186a61";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/problem/constants.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 9,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 7
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 24
+        },
+        end: {
+          line: 12,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 14,
+          column: 0
+        },
+        end: {
+          line: 27,
+          column: 3
+        }
+      },
+      "4": {
+        start: {
+          line: 16,
+          column: 8
+        },
+        end: {
+          line: 16,
+          column: 31
+        }
+      },
+      "5": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 37
+        }
+      },
+      "6": {
+        start: {
+          line: 22,
+          column: 8
+        },
+        end: {
+          line: 22,
+          column: 29
+        }
+      },
+      "7": {
+        start: {
+          line: 25,
+          column: 8
+        },
+        end: {
+          line: 25,
+          column: 35
+        }
+      },
+      "8": {
+        start: {
+          line: 28,
+          column: 34
+        },
+        end: {
+          line: 34,
+          column: 5
+        }
+      },
+      "9": {
+        start: {
+          line: 29,
+          column: 4
+        },
+        end: {
+          line: 29,
+          column: 35
+        }
+      },
+      "10": {
+        start: {
+          line: 30,
+          column: 4
+        },
+        end: {
+          line: 30,
+          column: 49
+        }
+      },
+      "11": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 31,
+          column: 43
+        }
+      },
+      "12": {
+        start: {
+          line: 32,
+          column: 4
+        },
+        end: {
+          line: 32,
+          column: 39
+        }
+      },
+      "13": {
+        start: {
+          line: 33,
+          column: 4
+        },
+        end: {
+          line: 33,
+          column: 25
+        }
+      },
+      "14": {
+        start: {
+          line: 35,
+          column: 28
+        },
+        end: {
+          line: 40,
+          column: 1
+        }
+      },
+      "15": {
+        start: {
+          line: 41,
+          column: 36
+        },
+        end: {
+          line: 47,
+          column: 5
+        }
+      },
+      "16": {
+        start: {
+          line: 42,
+          column: 4
+        },
+        end: {
+          line: 42,
+          column: 35
+        }
+      },
+      "17": {
+        start: {
+          line: 43,
+          column: 4
+        },
+        end: {
+          line: 43,
+          column: 41
+        }
+      },
+      "18": {
+        start: {
+          line: 44,
+          column: 4
+        },
+        end: {
+          line: 44,
+          column: 37
+        }
+      },
+      "19": {
+        start: {
+          line: 45,
+          column: 4
+        },
+        end: {
+          line: 45,
+          column: 45
+        }
+      },
+      "20": {
+        start: {
+          line: 46,
+          column: 4
+        },
+        end: {
+          line: 46,
+          column: 27
+        }
+      },
+      "21": {
+        start: {
+          line: 48,
+          column: 30
+        },
+        end: {
+          line: 53,
+          column: 1
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "_export",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 30
+          },
+          end: {
+            line: 13,
+            column: 1
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 15,
+            column: 21
+          },
+          end: {
+            line: 15,
+            column: 22
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 32
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 18,
+            column: 27
+          },
+          end: {
+            line: 18,
+            column: 28
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 38
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        line: 18
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 21,
+            column: 19
+          },
+          end: {
+            line: 21,
+            column: 20
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 30
+          },
+          end: {
+            line: 23,
+            column: 5
+          }
+        },
+        line: 21
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 24,
+            column: 25
+          },
+          end: {
+            line: 24,
+            column: 26
+          }
+        },
+        loc: {
+          start: {
+            line: 24,
+            column: 36
+          },
+          end: {
+            line: 26,
+            column: 5
+          }
+        },
+        line: 24
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 28,
+            column: 34
+          },
+          end: {
+            line: 28,
+            column: 35
+          }
+        },
+        loc: {
+          start: {
+            line: 28,
+            column: 58
+          },
+          end: {
+            line: 34,
+            column: 1
+          }
+        },
+        line: 28
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 41,
+            column: 36
+          },
+          end: {
+            line: 41,
+            column: 37
+          }
+        },
+        loc: {
+          start: {
+            line: 41,
+            column: 62
+          },
+          end: {
+            line: 47,
+            column: 1
+          }
+        },
+        line: 41
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/problem/constants.ts"],
+      sourcesContent: ["/**\n * \u95EE\u9898\u7BA1\u7406\u76F8\u5173\u5E38\u91CF\u5B9A\u4E49\n */\n\n// \u95EE\u9898\u72B6\u6001\nexport enum ProblemStatus {\n    OPEN = 'open',\n    IN_PROGRESS = 'in_progress',\n    RESOLVED = 'resolved',\n    CLOSED = 'closed',\n}\n\n// \u72B6\u6001\u63CF\u8FF0\u6620\u5C04\nexport const ProblemStatusLabels: Record<ProblemStatus, string> = {\n    [ProblemStatus.OPEN]: '\u5F85\u5904\u7406',\n    [ProblemStatus.IN_PROGRESS]: '\u5904\u7406\u4E2D',\n    [ProblemStatus.RESOLVED]: '\u5DF2\u89E3\u51B3',\n    [ProblemStatus.CLOSED]: '\u5DF2\u5173\u95ED',\n};\n\n// \u4F18\u5148\u7EA7\nexport enum ProblemPriority {\n    LOW = 'low',\n    MEDIUM = 'medium',\n    HIGH = 'high',\n    CRITICAL = 'critical',\n}\n\nexport const ProblemPriorityLabels: Record<ProblemPriority, string> = {\n    [ProblemPriority.LOW]: '\u4F4E',\n    [ProblemPriority.MEDIUM]: '\u4E2D',\n    [ProblemPriority.HIGH]: '\u9AD8',\n    [ProblemPriority.CRITICAL]: '\u6781\u9AD8',\n};\n"],
+      names: ["ProblemPriority", "ProblemPriorityLabels", "ProblemStatus", "ProblemStatusLabels"],
+      mappings: "AAAA;;CAEC,GAED,OAAO;;;;;;;;;;;;IAiBKA,eAAe;eAAfA;;IAOCC,qBAAqB;eAArBA;;IAvBDC,aAAa;eAAbA;;IAQCC,mBAAmB;eAAnBA;;;AARN,IAAA,AAAKD,uCAAAA;;;;;WAAAA;;AAQL,MAAMC,sBAAqD;IAC9D,QAAoB,EAAE;IACtB,eAA2B,EAAE;IAC7B,YAAwB,EAAE;IAC1B,UAAsB,EAAE;AAC5B;AAGO,IAAA,AAAKH,yCAAAA;;;;;WAAAA;;AAOL,MAAMC,wBAAyD;IAClE,OAAqB,EAAE;IACvB,UAAwB,EAAE;IAC1B,QAAsB,EAAE;IACxB,YAA0B,EAAE;AAChC"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "d32ad3af7844d38d647091d09b0c6bc341186a61"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_6rkc6ii1g = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_6rkc6ii1g();
+cov_6rkc6ii1g().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function _export(target, all) {
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().f[0]++;
+  cov_6rkc6ii1g().s[1]++;
+  for (var name in all) {
+    /* istanbul ignore next */
+    cov_6rkc6ii1g().s[2]++;
+    Object.defineProperty(target, name, {
+      enumerable: true,
+      get: all[name]
+    });
+  }
+}
+/* istanbul ignore next */
+cov_6rkc6ii1g().s[3]++;
+_export(exports, {
+  ProblemPriority: function () {
+    /* istanbul ignore next */
+    cov_6rkc6ii1g().f[1]++;
+    cov_6rkc6ii1g().s[4]++;
+    return ProblemPriority;
+  },
+  ProblemPriorityLabels: function () {
+    /* istanbul ignore next */
+    cov_6rkc6ii1g().f[2]++;
+    cov_6rkc6ii1g().s[5]++;
+    return ProblemPriorityLabels;
+  },
+  ProblemStatus: function () {
+    /* istanbul ignore next */
+    cov_6rkc6ii1g().f[3]++;
+    cov_6rkc6ii1g().s[6]++;
+    return ProblemStatus;
+  },
+  ProblemStatusLabels: function () {
+    /* istanbul ignore next */
+    cov_6rkc6ii1g().f[4]++;
+    cov_6rkc6ii1g().s[7]++;
+    return ProblemStatusLabels;
+  }
+});
+var ProblemStatus =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_6rkc6ii1g().s[8]++, function (ProblemStatus) {
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().f[5]++;
+  cov_6rkc6ii1g().s[9]++;
+  ProblemStatus["OPEN"] = "open";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[10]++;
+  ProblemStatus["IN_PROGRESS"] = "in_progress";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[11]++;
+  ProblemStatus["RESOLVED"] = "resolved";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[12]++;
+  ProblemStatus["CLOSED"] = "closed";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[13]++;
+  return ProblemStatus;
+}({}));
+const ProblemStatusLabels =
+/* istanbul ignore next */
+(cov_6rkc6ii1g().s[14]++, {
+  ["open"]: '待处理',
+  ["in_progress"]: '处理中',
+  ["resolved"]: '已解决',
+  ["closed"]: '已关闭'
+});
+var ProblemPriority =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_6rkc6ii1g().s[15]++, function (ProblemPriority) {
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().f[6]++;
+  cov_6rkc6ii1g().s[16]++;
+  ProblemPriority["LOW"] = "low";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[17]++;
+  ProblemPriority["MEDIUM"] = "medium";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[18]++;
+  ProblemPriority["HIGH"] = "high";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[19]++;
+  ProblemPriority["CRITICAL"] = "critical";
+  /* istanbul ignore next */
+  cov_6rkc6ii1g().s[20]++;
+  return ProblemPriority;
+}({}));
+const ProblemPriorityLabels =
+/* istanbul ignore next */
+(cov_6rkc6ii1g().s[21]++, {
+  ["low"]: '低',
+  ["medium"]: '中',
+  ["high"]: '高',
+  ["critical"]: '极高'
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJQcm9ibGVtUHJpb3JpdHkiLCJjb3ZfNnJrYzZpaTFnIiwiZiIsInMiLCJQcm9ibGVtUHJpb3JpdHlMYWJlbHMiLCJQcm9ibGVtU3RhdHVzIiwiUHJvYmxlbVN0YXR1c0xhYmVscyJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9tb2R1bGVzL3Byb2JsZW0vY29uc3RhbnRzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICog6Zeu6aKY566h55CG55u45YWz5bi46YeP5a6a5LmJXG4gKi9cblxuLy8g6Zeu6aKY54q25oCBXG5leHBvcnQgZW51bSBQcm9ibGVtU3RhdHVzIHtcbiAgICBPUEVOID0gJ29wZW4nLFxuICAgIElOX1BST0dSRVNTID0gJ2luX3Byb2dyZXNzJyxcbiAgICBSRVNPTFZFRCA9ICdyZXNvbHZlZCcsXG4gICAgQ0xPU0VEID0gJ2Nsb3NlZCcsXG59XG5cbi8vIOeKtuaAgeaPj+i/sOaYoOWwhFxuZXhwb3J0IGNvbnN0IFByb2JsZW1TdGF0dXNMYWJlbHM6IFJlY29yZDxQcm9ibGVtU3RhdHVzLCBzdHJpbmc+ID0ge1xuICAgIFtQcm9ibGVtU3RhdHVzLk9QRU5dOiAn5b6F5aSE55CGJyxcbiAgICBbUHJvYmxlbVN0YXR1cy5JTl9QUk9HUkVTU106ICflpITnkIbkuK0nLFxuICAgIFtQcm9ibGVtU3RhdHVzLlJFU09MVkVEXTogJ+W3suino+WGsycsXG4gICAgW1Byb2JsZW1TdGF0dXMuQ0xPU0VEXTogJ+W3suWFs+mXrScsXG59O1xuXG4vLyDkvJjlhYjnuqdcbmV4cG9ydCBlbnVtIFByb2JsZW1Qcmlvcml0eSB7XG4gICAgTE9XID0gJ2xvdycsXG4gICAgTUVESVVNID0gJ21lZGl1bScsXG4gICAgSElHSCA9ICdoaWdoJyxcbiAgICBDUklUSUNBTCA9ICdjcml0aWNhbCcsXG59XG5cbmV4cG9ydCBjb25zdCBQcm9ibGVtUHJpb3JpdHlMYWJlbHM6IFJlY29yZDxQcm9ibGVtUHJpb3JpdHksIHN0cmluZz4gPSB7XG4gICAgW1Byb2JsZW1Qcmlvcml0eS5MT1ddOiAn5L2OJyxcbiAgICBbUHJvYmxlbVByaW9yaXR5Lk1FRElVTV06ICfkuK0nLFxuICAgIFtQcm9ibGVtUHJpb3JpdHkuSElHSF06ICfpq5gnLFxuICAgIFtQcm9ibGVtUHJpb3JpdHkuQ1JJVElDQUxdOiAn5p6B6auYJyxcbn07XG4iXSwibWFwcGluZ3MiOiJBQUFBOztHQUFBLENBSUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0VBaUJZQSxlQUFlLFdBQUFBLENBQUE7SUFBQTtJQUFBQyxhQUFBLEdBQUFDLENBQUE7SUFBQUQsYUFBQSxHQUFBRSxDQUFBO1dBQWZILGVBQUE7O0VBT0NJLHFCQUFxQixXQUFBQSxDQUFBO0lBQUE7SUFBQUgsYUFBQSxHQUFBQyxDQUFBO0lBQUFELGFBQUEsR0FBQUUsQ0FBQTtXQUFyQkMscUJBQUE7O0VBdkJEQyxhQUFhLFdBQUFBLENBQUE7SUFBQTtJQUFBSixhQUFBLEdBQUFDLENBQUE7SUFBQUQsYUFBQSxHQUFBRSxDQUFBO1dBQWJFLGFBQUE7O0VBUUNDLG1CQUFtQixXQUFBQSxDQUFBO0lBQUE7SUFBQUwsYUFBQSxHQUFBQyxDQUFBO0lBQUFELGFBQUEsR0FBQUUsQ0FBQTtXQUFuQkcsbUJBQUE7OztBQVJOLElBQUFELGFBQUs7QUFBQTtBQUFBLGNBQUFKLGFBQUEsR0FBQUUsQ0FBQSxpQkFBQUUsYUFBQTtFQUFBO0VBQUFKLGFBQUEsR0FBQUMsQ0FBQTtFQUFBRCxhQUFBLEdBQUFFLENBQUE7Ozs7Ozs7Ozs7Ozs7U0FBQUUsYUFBQTs7QUFRTCxNQUFNQyxtQkFBQTtBQUFBO0FBQUEsQ0FBQUwsYUFBQSxHQUFBRSxDQUFBLFFBQXFEO0VBQzlELFVBQXNCO0VBQ3RCLGlCQUE2QjtFQUM3QixjQUEwQjtFQUMxQixZQUF3QjtBQUM1QjtBQUdPLElBQUFILGVBQUs7QUFBQTtBQUFBLGNBQUFDLGFBQUEsR0FBQUUsQ0FBQSxrQkFBQUgsZUFBQTtFQUFBO0VBQUFDLGFBQUEsR0FBQUMsQ0FBQTtFQUFBRCxhQUFBLEdBQUFFLENBQUE7Ozs7Ozs7Ozs7Ozs7U0FBQUgsZUFBQTs7QUFPTCxNQUFNSSxxQkFBQTtBQUFBO0FBQUEsQ0FBQUgsYUFBQSxHQUFBRSxDQUFBLFFBQXlEO0VBQ2xFLFNBQXVCO0VBQ3ZCLFlBQTBCO0VBQzFCLFVBQXdCO0VBQ3hCLGNBQTRCO0FBQ2hDIiwiaWdub3JlTGlzdCI6W119

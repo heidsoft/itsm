@@ -1,0 +1,408 @@
+e64dff028efca6dabb104da52319289d
+"use strict";
+
+/* istanbul ignore next */
+function cov_2gt7lz6ofx() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/role-api.ts";
+  var hash = "9fbc01bfffef528887b8da72bde1af7b949319cf";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/role-api.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 8,
+          column: 23
+        }
+      },
+      "3": {
+        start: {
+          line: 11,
+          column: 20
+        },
+        end: {
+          line: 11,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 15,
+          column: 8
+        },
+        end: {
+          line: 15,
+          column: 64
+        }
+      },
+      "5": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 62
+        }
+      },
+      "6": {
+        start: {
+          line: 23,
+          column: 8
+        },
+        end: {
+          line: 23,
+          column: 63
+        }
+      },
+      "7": {
+        start: {
+          line: 27,
+          column: 8
+        },
+        end: {
+          line: 27,
+          column: 68
+        }
+      },
+      "8": {
+        start: {
+          line: 31,
+          column: 8
+        },
+        end: {
+          line: 31,
+          column: 65
+        }
+      },
+      "9": {
+        start: {
+          line: 35,
+          column: 25
+        },
+        end: {
+          line: 35,
+          column: 77
+        }
+      },
+      "10": {
+        start: {
+          line: 36,
+          column: 8
+        },
+        end: {
+          line: 36,
+          column: 36
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 20
+          },
+          end: {
+            line: 9,
+            column: 5
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 14,
+            column: 4
+          },
+          end: {
+            line: 14,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 34
+          },
+          end: {
+            line: 16,
+            column: 5
+          }
+        },
+        line: 14
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 18,
+            column: 4
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 29
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        line: 18
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 22,
+            column: 4
+          },
+          end: {
+            line: 22,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 34
+          },
+          end: {
+            line: 24,
+            column: 5
+          }
+        },
+        line: 22
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 26,
+            column: 4
+          },
+          end: {
+            line: 26,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 26,
+            column: 38
+          },
+          end: {
+            line: 28,
+            column: 5
+          }
+        },
+        line: 26
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 30,
+            column: 4
+          },
+          end: {
+            line: 30,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 30,
+            column: 32
+          },
+          end: {
+            line: 32,
+            column: 5
+          }
+        },
+        line: 30
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 34,
+            column: 4
+          },
+          end: {
+            line: 34,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 34,
+            column: 34
+          },
+          end: {
+            line: 37,
+            column: 5
+          }
+        },
+        line: 34
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/role-api.ts"],
+      sourcesContent: ["import { httpClient } from './http-client';\nimport {\n  Role,\n  RoleListResponse,\n  CreateRoleRequest,\n  UpdateRoleRequest,\n  GetRolesParams,\n} from './api-config';\n\nexport class RoleAPI {\n  // \u83B7\u53D6\u89D2\u8272\u5217\u8868\n  static async getRoles(params?: GetRolesParams): Promise<RoleListResponse> {\n    return httpClient.get<RoleListResponse>('/api/roles', params);\n  }\n\n  // \u83B7\u53D6\u5355\u4E2A\u89D2\u8272\n  static async getRole(id: number): Promise<Role> {\n    return httpClient.get<Role>(`/api/roles/${id}`);\n  }\n\n  // \u521B\u5EFA\u89D2\u8272\n  static async createRole(data: CreateRoleRequest): Promise<Role> {\n    return httpClient.post<Role>('/api/roles', data);\n  }\n\n  // \u66F4\u65B0\u89D2\u8272\n  static async updateRole(id: number, data: UpdateRoleRequest): Promise<Role> {\n    return httpClient.put<Role>(`/api/roles/${id}`, data);\n  }\n\n  // \u5220\u9664\u89D2\u8272\n  static async deleteRole(id: number): Promise<void> {\n    return httpClient.delete<void>(`/api/roles/${id}`);\n  }\n\n  // \u83B7\u53D6\u6240\u6709\u6743\u9650\u5217\u8868\n  static async getPermissions(): Promise<string[]> {\n    const response = await httpClient.get<{ permissions: string[] }>('/api/permissions');\n    return response.permissions;\n  }\n}"],
+      names: ["RoleAPI", "getRoles", "params", "httpClient", "get", "getRole", "id", "createRole", "data", "post", "updateRole", "put", "deleteRole", "delete", "getPermissions", "response", "permissions"],
+      mappings: ";;;;+BASaA;;;eAAAA;;;4BATc;AASpB,MAAMA;IACX,SAAS;IACT,aAAaC,SAASC,MAAuB,EAA6B;QACxE,OAAOC,sBAAU,CAACC,GAAG,CAAmB,cAAcF;IACxD;IAEA,SAAS;IACT,aAAaG,QAAQC,EAAU,EAAiB;QAC9C,OAAOH,sBAAU,CAACC,GAAG,CAAO,CAAC,WAAW,EAAEE,IAAI;IAChD;IAEA,OAAO;IACP,aAAaC,WAAWC,IAAuB,EAAiB;QAC9D,OAAOL,sBAAU,CAACM,IAAI,CAAO,cAAcD;IAC7C;IAEA,OAAO;IACP,aAAaE,WAAWJ,EAAU,EAAEE,IAAuB,EAAiB;QAC1E,OAAOL,sBAAU,CAACQ,GAAG,CAAO,CAAC,WAAW,EAAEL,IAAI,EAAEE;IAClD;IAEA,OAAO;IACP,aAAaI,WAAWN,EAAU,EAAiB;QACjD,OAAOH,sBAAU,CAACU,MAAM,CAAO,CAAC,WAAW,EAAEP,IAAI;IACnD;IAEA,WAAW;IACX,aAAaQ,iBAAoC;QAC/C,MAAMC,WAAW,MAAMZ,sBAAU,CAACC,GAAG,CAA4B;QACjE,OAAOW,SAASC,WAAW;IAC7B;AACF"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "9fbc01bfffef528887b8da72bde1af7b949319cf"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2gt7lz6ofx = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2gt7lz6ofx();
+cov_2gt7lz6ofx().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2gt7lz6ofx().s[1]++;
+Object.defineProperty(exports, "RoleAPI", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[0]++;
+    cov_2gt7lz6ofx().s[2]++;
+    return RoleAPI;
+  }
+});
+const _httpclient =
+/* istanbul ignore next */
+(cov_2gt7lz6ofx().s[3]++, require("./http-client"));
+class RoleAPI {
+  // 获取角色列表
+  static async getRoles(params) {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[1]++;
+    cov_2gt7lz6ofx().s[4]++;
+    return _httpclient.httpClient.get('/api/roles', params);
+  }
+  // 获取单个角色
+  static async getRole(id) {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[2]++;
+    cov_2gt7lz6ofx().s[5]++;
+    return _httpclient.httpClient.get(`/api/roles/${id}`);
+  }
+  // 创建角色
+  static async createRole(data) {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[3]++;
+    cov_2gt7lz6ofx().s[6]++;
+    return _httpclient.httpClient.post('/api/roles', data);
+  }
+  // 更新角色
+  static async updateRole(id, data) {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[4]++;
+    cov_2gt7lz6ofx().s[7]++;
+    return _httpclient.httpClient.put(`/api/roles/${id}`, data);
+  }
+  // 删除角色
+  static async deleteRole(id) {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[5]++;
+    cov_2gt7lz6ofx().s[8]++;
+    return _httpclient.httpClient.delete(`/api/roles/${id}`);
+  }
+  // 获取所有权限列表
+  static async getPermissions() {
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().f[6]++;
+    const response =
+    /* istanbul ignore next */
+    (cov_2gt7lz6ofx().s[9]++, await _httpclient.httpClient.get('/api/permissions'));
+    /* istanbul ignore next */
+    cov_2gt7lz6ofx().s[10]++;
+    return response.permissions;
+  }
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMmd0N2x6Nm9meCIsImFjdHVhbENvdmVyYWdlIiwicyIsIlJvbGVBUEkiLCJnZXRSb2xlcyIsInBhcmFtcyIsImYiLCJfaHR0cGNsaWVudCIsImh0dHBDbGllbnQiLCJnZXQiLCJnZXRSb2xlIiwiaWQiLCJjcmVhdGVSb2xlIiwiZGF0YSIsInBvc3QiLCJ1cGRhdGVSb2xlIiwicHV0IiwiZGVsZXRlUm9sZSIsImRlbGV0ZSIsImdldFBlcm1pc3Npb25zIiwicmVzcG9uc2UiLCJwZXJtaXNzaW9ucyJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9saWIvYXBpL3JvbGUtYXBpLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IGh0dHBDbGllbnQgfSBmcm9tICcuL2h0dHAtY2xpZW50JztcbmltcG9ydCB7XG4gIFJvbGUsXG4gIFJvbGVMaXN0UmVzcG9uc2UsXG4gIENyZWF0ZVJvbGVSZXF1ZXN0LFxuICBVcGRhdGVSb2xlUmVxdWVzdCxcbiAgR2V0Um9sZXNQYXJhbXMsXG59IGZyb20gJy4vYXBpLWNvbmZpZyc7XG5cbmV4cG9ydCBjbGFzcyBSb2xlQVBJIHtcbiAgLy8g6I635Y+W6KeS6Imy5YiX6KGoXG4gIHN0YXRpYyBhc3luYyBnZXRSb2xlcyhwYXJhbXM/OiBHZXRSb2xlc1BhcmFtcyk6IFByb21pc2U8Um9sZUxpc3RSZXNwb25zZT4ge1xuICAgIHJldHVybiBodHRwQ2xpZW50LmdldDxSb2xlTGlzdFJlc3BvbnNlPignL2FwaS9yb2xlcycsIHBhcmFtcyk7XG4gIH1cblxuICAvLyDojrflj5bljZXkuKrop5LoibJcbiAgc3RhdGljIGFzeW5jIGdldFJvbGUoaWQ6IG51bWJlcik6IFByb21pc2U8Um9sZT4ge1xuICAgIHJldHVybiBodHRwQ2xpZW50LmdldDxSb2xlPihgL2FwaS9yb2xlcy8ke2lkfWApO1xuICB9XG5cbiAgLy8g5Yib5bu66KeS6ImyXG4gIHN0YXRpYyBhc3luYyBjcmVhdGVSb2xlKGRhdGE6IENyZWF0ZVJvbGVSZXF1ZXN0KTogUHJvbWlzZTxSb2xlPiB7XG4gICAgcmV0dXJuIGh0dHBDbGllbnQucG9zdDxSb2xlPignL2FwaS9yb2xlcycsIGRhdGEpO1xuICB9XG5cbiAgLy8g5pu05paw6KeS6ImyXG4gIHN0YXRpYyBhc3luYyB1cGRhdGVSb2xlKGlkOiBudW1iZXIsIGRhdGE6IFVwZGF0ZVJvbGVSZXF1ZXN0KTogUHJvbWlzZTxSb2xlPiB7XG4gICAgcmV0dXJuIGh0dHBDbGllbnQucHV0PFJvbGU+KGAvYXBpL3JvbGVzLyR7aWR9YCwgZGF0YSk7XG4gIH1cblxuICAvLyDliKDpmaTop5LoibJcbiAgc3RhdGljIGFzeW5jIGRlbGV0ZVJvbGUoaWQ6IG51bWJlcik6IFByb21pc2U8dm9pZD4ge1xuICAgIHJldHVybiBodHRwQ2xpZW50LmRlbGV0ZTx2b2lkPihgL2FwaS9yb2xlcy8ke2lkfWApO1xuICB9XG5cbiAgLy8g6I635Y+W5omA5pyJ5p2D6ZmQ5YiX6KGoXG4gIHN0YXRpYyBhc3luYyBnZXRQZXJtaXNzaW9ucygpOiBQcm9taXNlPHN0cmluZ1tdPiB7XG4gICAgY29uc3QgcmVzcG9uc2UgPSBhd2FpdCBodHRwQ2xpZW50LmdldDx7IHBlcm1pc3Npb25zOiBzdHJpbmdbXSB9PignL2FwaS9wZXJtaXNzaW9ucycpO1xuICAgIHJldHVybiByZXNwb25zZS5wZXJtaXNzaW9ucztcbiAgfVxufSJdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7SUFhRTtJQUFBQSxjQUFBLFlBQUFBLENBQUE7TUFBQSxPQUFBQyxjQUFBO0lBQUE7RUFBQTtFQUFBLE9BQUFBLGNBQUE7QUFBQTtBQUFBRCxjQUFBO0FBQUFBLGNBQUEsR0FBQUUsQ0FBQTs7Ozs7OytCQUpXOzs7Ozs7V0FBQUMsT0FBQTs7Ozs7a0NBVGM7QUFTcEIsTUFBTUEsT0FBQTtFQUNYO0VBQ0EsYUFBYUMsU0FBU0MsTUFBdUIsRUFBNkI7SUFBQTtJQUFBTCxjQUFBLEdBQUFNLENBQUE7SUFBQU4sY0FBQSxHQUFBRSxDQUFBO0lBQ3hFLE9BQU9LLFdBQUEsQ0FBQUMsVUFBVSxDQUFDQyxHQUFHLENBQW1CLGNBQWNKLE1BQUE7RUFDeEQ7RUFFQTtFQUNBLGFBQWFLLFFBQVFDLEVBQVUsRUFBaUI7SUFBQTtJQUFBWCxjQUFBLEdBQUFNLENBQUE7SUFBQU4sY0FBQSxHQUFBRSxDQUFBO0lBQzlDLE9BQU9LLFdBQUEsQ0FBQUMsVUFBVSxDQUFDQyxHQUFHLENBQU8sY0FBY0UsRUFBQSxFQUFJO0VBQ2hEO0VBRUE7RUFDQSxhQUFhQyxXQUFXQyxJQUF1QixFQUFpQjtJQUFBO0lBQUFiLGNBQUEsR0FBQU0sQ0FBQTtJQUFBTixjQUFBLEdBQUFFLENBQUE7SUFDOUQsT0FBT0ssV0FBQSxDQUFBQyxVQUFVLENBQUNNLElBQUksQ0FBTyxjQUFjRCxJQUFBO0VBQzdDO0VBRUE7RUFDQSxhQUFhRSxXQUFXSixFQUFVLEVBQUVFLElBQXVCLEVBQWlCO0lBQUE7SUFBQWIsY0FBQSxHQUFBTSxDQUFBO0lBQUFOLGNBQUEsR0FBQUUsQ0FBQTtJQUMxRSxPQUFPSyxXQUFBLENBQUFDLFVBQVUsQ0FBQ1EsR0FBRyxDQUFPLGNBQWNMLEVBQUEsRUFBSSxFQUFFRSxJQUFBO0VBQ2xEO0VBRUE7RUFDQSxhQUFhSSxXQUFXTixFQUFVLEVBQWlCO0lBQUE7SUFBQVgsY0FBQSxHQUFBTSxDQUFBO0lBQUFOLGNBQUEsR0FBQUUsQ0FBQTtJQUNqRCxPQUFPSyxXQUFBLENBQUFDLFVBQVUsQ0FBQ1UsTUFBTSxDQUFPLGNBQWNQLEVBQUEsRUFBSTtFQUNuRDtFQUVBO0VBQ0EsYUFBYVEsZUFBQSxFQUFvQztJQUFBO0lBQUFuQixjQUFBLEdBQUFNLENBQUE7SUFDL0MsTUFBTWMsUUFBQTtJQUFBO0lBQUEsQ0FBQXBCLGNBQUEsR0FBQUUsQ0FBQSxPQUFXLE1BQU1LLFdBQUEsQ0FBQUMsVUFBVSxDQUFDQyxHQUFHLENBQTRCO0lBQUE7SUFBQVQsY0FBQSxHQUFBRSxDQUFBO0lBQ2pFLE9BQU9rQixRQUFBLENBQVNDLFdBQVc7RUFDN0I7QUFDRiIsImlnbm9yZUxpc3QiOltdfQ==

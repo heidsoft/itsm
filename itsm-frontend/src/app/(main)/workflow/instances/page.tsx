@@ -42,17 +42,39 @@ import {
   History,
 } from 'lucide-react';
 // AppLayout is handled by parent layout
-import { WorkflowAPI, WorkflowInstance, WorkflowTask } from '@/lib/api/workflow-api';
+import { WorkflowAPI, WorkflowInstance as ApiWorkflowInstance, WorkflowTask as ApiWorkflowTask } from '@/lib/api/workflow-api';
 
 const { Option } = Select;
 
+type WorkflowInstanceRecord = Omit<ApiWorkflowInstance, 'status'> & {
+  status: string;
+  instance_id: string;
+  business_key?: string;
+  workflow_name?: string;
+  priority?: string;
+  started_by?: string;
+  started_at?: string;
+  completed_at?: string;
+  due_date?: string;
+};
+
+type WorkflowTaskRecord = Omit<ApiWorkflowTask, 'status'> & {
+  status: string;
+  name?: string;
+  activity_id?: string;
+  type?: string;
+  assignee?: string;
+  created_at?: string;
+  due_date?: string;
+};
+
 const WorkflowInstancesPage = () => {
   const { message } = App.useApp();
-  const [instances, setInstances] = useState<WorkflowInstance[]>([]);
-  const [tasks, setTasks] = useState<WorkflowTask[]>([]);
+  const [instances, setInstances] = useState<WorkflowInstanceRecord[]>([]);
+  const [tasks, setTasks] = useState<WorkflowTaskRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
-  const [selectedInstance, setSelectedInstance] = useState<WorkflowInstance | null>(null);
+  const [selectedInstance, setSelectedInstance] = useState<WorkflowInstanceRecord | null>(null);
   const [filters, setFilters] = useState({
     status: '',
     workflow_id: '',
@@ -80,7 +102,18 @@ const WorkflowInstancesPage = () => {
         page_size: 50,
         ...filters,
       });
-      setInstances(response.instances);
+      const normalized = response.instances.map((instance: any) => ({
+        ...instance,
+        instance_id: instance.instance_id || instance.id,
+        business_key: instance.business_key || instance.businessKey || '',
+        workflow_name: instance.workflow_name || instance.workflowName || '',
+        priority: instance.priority || 'normal',
+        started_by: instance.started_by || instance.startedByName || '',
+        started_at: instance.started_at || instance.startTime,
+        completed_at: instance.completed_at || instance.endTime,
+        due_date: instance.due_date,
+      })) as WorkflowInstanceRecord[];
+      setInstances(normalized);
     } catch (error) {
       message.error('加载工作流实例失败');
     } finally {
@@ -93,25 +126,32 @@ const WorkflowInstancesPage = () => {
       // 模拟统计数据
       setStats({
         total: instances.length,
-        running: instances.filter(i => i.status === 'running').length,
-        completed: instances.filter(i => i.status === 'completed').length,
-        suspended: instances.filter(i => i.status === 'suspended').length,
-        terminated: instances.filter(i => i.status === 'terminated').length,
+        running: instances.filter(i => String(i.status) === 'running').length,
+        completed: instances.filter(i => String(i.status) === 'completed').length,
+        suspended: instances.filter(i => String(i.status) === 'suspended').length,
+        terminated: instances.filter(i => String(i.status) === 'terminated').length,
       });
     } catch (error) {
       console.error('加载统计数据失败:', error);
     }
   };
 
-  const handleViewDetail = async (instance: WorkflowInstance) => {
+  const handleViewDetail = async (instance: WorkflowInstanceRecord) => {
     setSelectedInstance(instance);
     setDetailVisible(true);
 
     try {
-      const tasksResponse = await WorkflowAPI.listWorkflowTasks({
-        instance_id: instance.id,
-      });
-      setTasks(tasksResponse.tasks);
+      const tasksResponse = await WorkflowAPI.listWorkflowTasks(instance.id);
+      const normalized = (tasksResponse as any[]).map((task) => ({
+        ...task,
+        name: task.name || task.nodeName,
+        activity_id: task.activity_id || task.nodeId,
+        type: task.type || task.nodeType || 'task',
+        assignee: task.assigneeName || task.assignee || '',
+        created_at: task.created_at || task.startTime,
+        due_date: task.due_date,
+      })) as WorkflowTaskRecord[];
+      setTasks(normalized);
     } catch (error) {
       message.error('加载任务列表失败');
     }
@@ -119,7 +159,7 @@ const WorkflowInstancesPage = () => {
 
   const handleSuspendInstance = async (instanceId: string) => {
     try {
-      await WorkflowAPI.suspendWorkflow(instanceId, '手动暂停');
+      await WorkflowAPI.suspendWorkflow(instanceId);
       message.success('实例暂停成功');
       loadInstances();
     } catch (error) {
@@ -129,7 +169,7 @@ const WorkflowInstancesPage = () => {
 
   const handleResumeInstance = async (instanceId: string) => {
     try {
-      await WorkflowAPI.resumeWorkflow(instanceId, '手动恢复');
+      await WorkflowAPI.resumeWorkflow(instanceId);
       message.success('实例恢复成功');
       loadInstances();
     } catch (error) {
@@ -240,7 +280,7 @@ const WorkflowInstancesPage = () => {
       title: '操作',
       key: 'action',
       width: 200,
-      render: (record: WorkflowInstance) => (
+      render: (record: WorkflowInstanceRecord) => (
         <Space>
           <Tooltip title='查看详情'>
             <Button
@@ -287,7 +327,7 @@ const WorkflowInstancesPage = () => {
       title: '任务名称',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record: WorkflowTask) => (
+      render: (name: string, record: WorkflowTaskRecord) => (
         <div>
           <div className='font-medium'>{name}</div>
           <div className='text-sm text-gray-500'>{record.activity_id}</div>
@@ -481,13 +521,15 @@ const WorkflowInstancesPage = () => {
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label='优先级'>
-                  <Tag color={getPriorityColor(selectedInstance.priority)}>
-                    {selectedInstance.priority}
+                  <Tag color={getPriorityColor(selectedInstance.priority ?? 'medium')}>
+                    {selectedInstance.priority || '-'}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label='启动人'>{selectedInstance.started_by}</Descriptions.Item>
+                <Descriptions.Item label='启动人'>{selectedInstance.started_by || '-'}</Descriptions.Item>
                 <Descriptions.Item label='启动时间'>
-                  {new Date(selectedInstance.started_at).toLocaleString('zh-CN')}
+                  {selectedInstance.started_at
+                    ? new Date(selectedInstance.started_at).toLocaleString('zh-CN')
+                    : '-'}
                 </Descriptions.Item>
                 {selectedInstance.completed_at && (
                   <Descriptions.Item label='完成时间'>

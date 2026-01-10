@@ -11,9 +11,15 @@ import (
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/cloudaccount"
+	"itsm-backend/ent/cloudresource"
+	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/discoveryjob"
+	"itsm-backend/ent/discoveryresult"
+	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentevent"
@@ -34,6 +40,7 @@ import (
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
+	"itsm-backend/ent/relationshiptype"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
@@ -254,32 +261,10 @@ func init() {
 	ciattributedefinition.UpdateDefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	cirelationshipFields := schema.CIRelationship{}.Fields()
 	_ = cirelationshipFields
-	// cirelationshipDescSourceCiID is the schema descriptor for source_ci_id field.
-	cirelationshipDescSourceCiID := cirelationshipFields[0].Descriptor()
-	// cirelationship.SourceCiIDValidator is a validator for the "source_ci_id" field. It is called by the builders before save.
-	cirelationship.SourceCiIDValidator = cirelationshipDescSourceCiID.Validators[0].(func(int) error)
-	// cirelationshipDescTargetCiID is the schema descriptor for target_ci_id field.
-	cirelationshipDescTargetCiID := cirelationshipFields[1].Descriptor()
-	// cirelationship.TargetCiIDValidator is a validator for the "target_ci_id" field. It is called by the builders before save.
-	cirelationship.TargetCiIDValidator = cirelationshipDescTargetCiID.Validators[0].(func(int) error)
-	// cirelationshipDescRelationshipTypeID is the schema descriptor for relationship_type_id field.
-	cirelationshipDescRelationshipTypeID := cirelationshipFields[2].Descriptor()
-	// cirelationship.RelationshipTypeIDValidator is a validator for the "relationship_type_id" field. It is called by the builders before save.
-	cirelationship.RelationshipTypeIDValidator = cirelationshipDescRelationshipTypeID.Validators[0].(func(int) error)
-	// cirelationshipDescTenantID is the schema descriptor for tenant_id field.
-	cirelationshipDescTenantID := cirelationshipFields[4].Descriptor()
-	// cirelationship.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
-	cirelationship.TenantIDValidator = cirelationshipDescTenantID.Validators[0].(func(int) error)
 	// cirelationshipDescCreatedAt is the schema descriptor for created_at field.
-	cirelationshipDescCreatedAt := cirelationshipFields[5].Descriptor()
+	cirelationshipDescCreatedAt := cirelationshipFields[4].Descriptor()
 	// cirelationship.DefaultCreatedAt holds the default value on creation for the created_at field.
 	cirelationship.DefaultCreatedAt = cirelationshipDescCreatedAt.Default.(func() time.Time)
-	// cirelationshipDescUpdatedAt is the schema descriptor for updated_at field.
-	cirelationshipDescUpdatedAt := cirelationshipFields[6].Descriptor()
-	// cirelationship.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	cirelationship.DefaultUpdatedAt = cirelationshipDescUpdatedAt.Default.(func() time.Time)
-	// cirelationship.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	cirelationship.UpdateDefaultUpdatedAt = cirelationshipDescUpdatedAt.UpdateDefault.(func() time.Time)
 	citypeFields := schema.CIType{}.Fields()
 	_ = citypeFields
 	// citypeDescName is the schema descriptor for name field.
@@ -348,30 +333,146 @@ func init() {
 	change.DefaultUpdatedAt = changeDescUpdatedAt.Default.(func() time.Time)
 	// change.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	change.UpdateDefaultUpdatedAt = changeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	cloudaccountFields := schema.CloudAccount{}.Fields()
+	_ = cloudaccountFields
+	// cloudaccountDescProvider is the schema descriptor for provider field.
+	cloudaccountDescProvider := cloudaccountFields[0].Descriptor()
+	// cloudaccount.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	cloudaccount.ProviderValidator = cloudaccountDescProvider.Validators[0].(func(string) error)
+	// cloudaccountDescAccountID is the schema descriptor for account_id field.
+	cloudaccountDescAccountID := cloudaccountFields[1].Descriptor()
+	// cloudaccount.AccountIDValidator is a validator for the "account_id" field. It is called by the builders before save.
+	cloudaccount.AccountIDValidator = cloudaccountDescAccountID.Validators[0].(func(string) error)
+	// cloudaccountDescAccountName is the schema descriptor for account_name field.
+	cloudaccountDescAccountName := cloudaccountFields[2].Descriptor()
+	// cloudaccount.AccountNameValidator is a validator for the "account_name" field. It is called by the builders before save.
+	cloudaccount.AccountNameValidator = cloudaccountDescAccountName.Validators[0].(func(string) error)
+	// cloudaccountDescIsActive is the schema descriptor for is_active field.
+	cloudaccountDescIsActive := cloudaccountFields[5].Descriptor()
+	// cloudaccount.DefaultIsActive holds the default value on creation for the is_active field.
+	cloudaccount.DefaultIsActive = cloudaccountDescIsActive.Default.(bool)
+	// cloudaccountDescTenantID is the schema descriptor for tenant_id field.
+	cloudaccountDescTenantID := cloudaccountFields[6].Descriptor()
+	// cloudaccount.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	cloudaccount.TenantIDValidator = cloudaccountDescTenantID.Validators[0].(func(int) error)
+	// cloudaccountDescCreatedAt is the schema descriptor for created_at field.
+	cloudaccountDescCreatedAt := cloudaccountFields[7].Descriptor()
+	// cloudaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cloudaccount.DefaultCreatedAt = cloudaccountDescCreatedAt.Default.(func() time.Time)
+	// cloudaccountDescUpdatedAt is the schema descriptor for updated_at field.
+	cloudaccountDescUpdatedAt := cloudaccountFields[8].Descriptor()
+	// cloudaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cloudaccount.DefaultUpdatedAt = cloudaccountDescUpdatedAt.Default.(func() time.Time)
+	// cloudaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cloudaccount.UpdateDefaultUpdatedAt = cloudaccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	cloudresourceFields := schema.CloudResource{}.Fields()
+	_ = cloudresourceFields
+	// cloudresourceDescCloudAccountID is the schema descriptor for cloud_account_id field.
+	cloudresourceDescCloudAccountID := cloudresourceFields[0].Descriptor()
+	// cloudresource.CloudAccountIDValidator is a validator for the "cloud_account_id" field. It is called by the builders before save.
+	cloudresource.CloudAccountIDValidator = cloudresourceDescCloudAccountID.Validators[0].(func(int) error)
+	// cloudresourceDescServiceID is the schema descriptor for service_id field.
+	cloudresourceDescServiceID := cloudresourceFields[1].Descriptor()
+	// cloudresource.ServiceIDValidator is a validator for the "service_id" field. It is called by the builders before save.
+	cloudresource.ServiceIDValidator = cloudresourceDescServiceID.Validators[0].(func(int) error)
+	// cloudresourceDescResourceID is the schema descriptor for resource_id field.
+	cloudresourceDescResourceID := cloudresourceFields[2].Descriptor()
+	// cloudresource.ResourceIDValidator is a validator for the "resource_id" field. It is called by the builders before save.
+	cloudresource.ResourceIDValidator = cloudresourceDescResourceID.Validators[0].(func(string) error)
+	// cloudresourceDescTenantID is the schema descriptor for tenant_id field.
+	cloudresourceDescTenantID := cloudresourceFields[12].Descriptor()
+	// cloudresource.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	cloudresource.TenantIDValidator = cloudresourceDescTenantID.Validators[0].(func(int) error)
+	// cloudresourceDescCreatedAt is the schema descriptor for created_at field.
+	cloudresourceDescCreatedAt := cloudresourceFields[13].Descriptor()
+	// cloudresource.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cloudresource.DefaultCreatedAt = cloudresourceDescCreatedAt.Default.(func() time.Time)
+	// cloudresourceDescUpdatedAt is the schema descriptor for updated_at field.
+	cloudresourceDescUpdatedAt := cloudresourceFields[14].Descriptor()
+	// cloudresource.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cloudresource.DefaultUpdatedAt = cloudresourceDescUpdatedAt.Default.(func() time.Time)
+	// cloudresource.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cloudresource.UpdateDefaultUpdatedAt = cloudresourceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	cloudserviceFields := schema.CloudService{}.Fields()
+	_ = cloudserviceFields
+	// cloudserviceDescProvider is the schema descriptor for provider field.
+	cloudserviceDescProvider := cloudserviceFields[1].Descriptor()
+	// cloudservice.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	cloudservice.ProviderValidator = cloudserviceDescProvider.Validators[0].(func(string) error)
+	// cloudserviceDescServiceCode is the schema descriptor for service_code field.
+	cloudserviceDescServiceCode := cloudserviceFields[3].Descriptor()
+	// cloudservice.ServiceCodeValidator is a validator for the "service_code" field. It is called by the builders before save.
+	cloudservice.ServiceCodeValidator = cloudserviceDescServiceCode.Validators[0].(func(string) error)
+	// cloudserviceDescServiceName is the schema descriptor for service_name field.
+	cloudserviceDescServiceName := cloudserviceFields[4].Descriptor()
+	// cloudservice.ServiceNameValidator is a validator for the "service_name" field. It is called by the builders before save.
+	cloudservice.ServiceNameValidator = cloudserviceDescServiceName.Validators[0].(func(string) error)
+	// cloudserviceDescResourceTypeCode is the schema descriptor for resource_type_code field.
+	cloudserviceDescResourceTypeCode := cloudserviceFields[5].Descriptor()
+	// cloudservice.ResourceTypeCodeValidator is a validator for the "resource_type_code" field. It is called by the builders before save.
+	cloudservice.ResourceTypeCodeValidator = cloudserviceDescResourceTypeCode.Validators[0].(func(string) error)
+	// cloudserviceDescResourceTypeName is the schema descriptor for resource_type_name field.
+	cloudserviceDescResourceTypeName := cloudserviceFields[6].Descriptor()
+	// cloudservice.ResourceTypeNameValidator is a validator for the "resource_type_name" field. It is called by the builders before save.
+	cloudservice.ResourceTypeNameValidator = cloudserviceDescResourceTypeName.Validators[0].(func(string) error)
+	// cloudserviceDescIsSystem is the schema descriptor for is_system field.
+	cloudserviceDescIsSystem := cloudserviceFields[9].Descriptor()
+	// cloudservice.DefaultIsSystem holds the default value on creation for the is_system field.
+	cloudservice.DefaultIsSystem = cloudserviceDescIsSystem.Default.(bool)
+	// cloudserviceDescIsActive is the schema descriptor for is_active field.
+	cloudserviceDescIsActive := cloudserviceFields[10].Descriptor()
+	// cloudservice.DefaultIsActive holds the default value on creation for the is_active field.
+	cloudservice.DefaultIsActive = cloudserviceDescIsActive.Default.(bool)
+	// cloudserviceDescTenantID is the schema descriptor for tenant_id field.
+	cloudserviceDescTenantID := cloudserviceFields[11].Descriptor()
+	// cloudservice.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	cloudservice.TenantIDValidator = cloudserviceDescTenantID.Validators[0].(func(int) error)
+	// cloudserviceDescCreatedAt is the schema descriptor for created_at field.
+	cloudserviceDescCreatedAt := cloudserviceFields[12].Descriptor()
+	// cloudservice.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cloudservice.DefaultCreatedAt = cloudserviceDescCreatedAt.Default.(func() time.Time)
+	// cloudserviceDescUpdatedAt is the schema descriptor for updated_at field.
+	cloudserviceDescUpdatedAt := cloudserviceFields[13].Descriptor()
+	// cloudservice.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cloudservice.DefaultUpdatedAt = cloudserviceDescUpdatedAt.Default.(func() time.Time)
+	// cloudservice.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cloudservice.UpdateDefaultUpdatedAt = cloudserviceDescUpdatedAt.UpdateDefault.(func() time.Time)
 	configurationitemFields := schema.ConfigurationItem{}.Fields()
 	_ = configurationitemFields
 	// configurationitemDescName is the schema descriptor for name field.
 	configurationitemDescName := configurationitemFields[0].Descriptor()
 	// configurationitem.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	configurationitem.NameValidator = configurationitemDescName.Validators[0].(func(string) error)
+	// configurationitemDescCiTypeID is the schema descriptor for ci_type_id field.
+	configurationitemDescCiTypeID := configurationitemFields[1].Descriptor()
+	// configurationitem.CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
+	configurationitem.CiTypeIDValidator = configurationitemDescCiTypeID.Validators[0].(func(int) error)
+	// configurationitemDescCiType is the schema descriptor for ci_type field.
+	configurationitemDescCiType := configurationitemFields[2].Descriptor()
+	// configurationitem.DefaultCiType holds the default value on creation for the ci_type field.
+	configurationitem.DefaultCiType = configurationitemDescCiType.Default.(string)
 	// configurationitemDescStatus is the schema descriptor for status field.
 	configurationitemDescStatus := configurationitemFields[3].Descriptor()
 	// configurationitem.DefaultStatus holds the default value on creation for the status field.
 	configurationitem.DefaultStatus = configurationitemDescStatus.Default.(string)
-	// configurationitemDescCiTypeID is the schema descriptor for ci_type_id field.
-	configurationitemDescCiTypeID := configurationitemFields[8].Descriptor()
-	// configurationitem.CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
-	configurationitem.CiTypeIDValidator = configurationitemDescCiTypeID.Validators[0].(func(int) error)
+	// configurationitemDescEnvironment is the schema descriptor for environment field.
+	configurationitemDescEnvironment := configurationitemFields[4].Descriptor()
+	// configurationitem.DefaultEnvironment holds the default value on creation for the environment field.
+	configurationitem.DefaultEnvironment = configurationitemDescEnvironment.Default.(string)
+	// configurationitemDescCriticality is the schema descriptor for criticality field.
+	configurationitemDescCriticality := configurationitemFields[5].Descriptor()
+	// configurationitem.DefaultCriticality holds the default value on creation for the criticality field.
+	configurationitem.DefaultCriticality = configurationitemDescCriticality.Default.(string)
 	// configurationitemDescTenantID is the schema descriptor for tenant_id field.
-	configurationitemDescTenantID := configurationitemFields[9].Descriptor()
+	configurationitemDescTenantID := configurationitemFields[29].Descriptor()
 	// configurationitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	configurationitem.TenantIDValidator = configurationitemDescTenantID.Validators[0].(func(int) error)
 	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
-	configurationitemDescCreatedAt := configurationitemFields[10].Descriptor()
+	configurationitemDescCreatedAt := configurationitemFields[30].Descriptor()
 	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
 	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
-	configurationitemDescUpdatedAt := configurationitemFields[11].Descriptor()
+	configurationitemDescUpdatedAt := configurationitemFields[31].Descriptor()
 	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -410,6 +511,90 @@ func init() {
 	department.DefaultUpdatedAt = departmentDescUpdatedAt.Default.(func() time.Time)
 	// department.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	department.UpdateDefaultUpdatedAt = departmentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	discoveryjobFields := schema.DiscoveryJob{}.Fields()
+	_ = discoveryjobFields
+	// discoveryjobDescSourceID is the schema descriptor for source_id field.
+	discoveryjobDescSourceID := discoveryjobFields[0].Descriptor()
+	// discoveryjob.SourceIDValidator is a validator for the "source_id" field. It is called by the builders before save.
+	discoveryjob.SourceIDValidator = discoveryjobDescSourceID.Validators[0].(func(string) error)
+	// discoveryjobDescStatus is the schema descriptor for status field.
+	discoveryjobDescStatus := discoveryjobFields[1].Descriptor()
+	// discoveryjob.DefaultStatus holds the default value on creation for the status field.
+	discoveryjob.DefaultStatus = discoveryjobDescStatus.Default.(string)
+	// discoveryjobDescTenantID is the schema descriptor for tenant_id field.
+	discoveryjobDescTenantID := discoveryjobFields[5].Descriptor()
+	// discoveryjob.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	discoveryjob.TenantIDValidator = discoveryjobDescTenantID.Validators[0].(func(int) error)
+	// discoveryjobDescCreatedAt is the schema descriptor for created_at field.
+	discoveryjobDescCreatedAt := discoveryjobFields[6].Descriptor()
+	// discoveryjob.DefaultCreatedAt holds the default value on creation for the created_at field.
+	discoveryjob.DefaultCreatedAt = discoveryjobDescCreatedAt.Default.(func() time.Time)
+	// discoveryjobDescUpdatedAt is the schema descriptor for updated_at field.
+	discoveryjobDescUpdatedAt := discoveryjobFields[7].Descriptor()
+	// discoveryjob.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	discoveryjob.DefaultUpdatedAt = discoveryjobDescUpdatedAt.Default.(func() time.Time)
+	// discoveryjob.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	discoveryjob.UpdateDefaultUpdatedAt = discoveryjobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	discoveryresultFields := schema.DiscoveryResult{}.Fields()
+	_ = discoveryresultFields
+	// discoveryresultDescJobID is the schema descriptor for job_id field.
+	discoveryresultDescJobID := discoveryresultFields[0].Descriptor()
+	// discoveryresult.JobIDValidator is a validator for the "job_id" field. It is called by the builders before save.
+	discoveryresult.JobIDValidator = discoveryresultDescJobID.Validators[0].(func(int) error)
+	// discoveryresultDescAction is the schema descriptor for action field.
+	discoveryresultDescAction := discoveryresultFields[2].Descriptor()
+	// discoveryresult.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	discoveryresult.ActionValidator = discoveryresultDescAction.Validators[0].(func(string) error)
+	// discoveryresultDescStatus is the schema descriptor for status field.
+	discoveryresultDescStatus := discoveryresultFields[6].Descriptor()
+	// discoveryresult.DefaultStatus holds the default value on creation for the status field.
+	discoveryresult.DefaultStatus = discoveryresultDescStatus.Default.(string)
+	// discoveryresultDescTenantID is the schema descriptor for tenant_id field.
+	discoveryresultDescTenantID := discoveryresultFields[7].Descriptor()
+	// discoveryresult.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	discoveryresult.TenantIDValidator = discoveryresultDescTenantID.Validators[0].(func(int) error)
+	// discoveryresultDescCreatedAt is the schema descriptor for created_at field.
+	discoveryresultDescCreatedAt := discoveryresultFields[8].Descriptor()
+	// discoveryresult.DefaultCreatedAt holds the default value on creation for the created_at field.
+	discoveryresult.DefaultCreatedAt = discoveryresultDescCreatedAt.Default.(func() time.Time)
+	// discoveryresultDescUpdatedAt is the schema descriptor for updated_at field.
+	discoveryresultDescUpdatedAt := discoveryresultFields[9].Descriptor()
+	// discoveryresult.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	discoveryresult.DefaultUpdatedAt = discoveryresultDescUpdatedAt.Default.(func() time.Time)
+	// discoveryresult.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	discoveryresult.UpdateDefaultUpdatedAt = discoveryresultDescUpdatedAt.UpdateDefault.(func() time.Time)
+	discoverysourceFields := schema.DiscoverySource{}.Fields()
+	_ = discoverysourceFields
+	// discoverysourceDescName is the schema descriptor for name field.
+	discoverysourceDescName := discoverysourceFields[1].Descriptor()
+	// discoverysource.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	discoverysource.NameValidator = discoverysourceDescName.Validators[0].(func(string) error)
+	// discoverysourceDescSourceType is the schema descriptor for source_type field.
+	discoverysourceDescSourceType := discoverysourceFields[2].Descriptor()
+	// discoverysource.SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
+	discoverysource.SourceTypeValidator = discoverysourceDescSourceType.Validators[0].(func(string) error)
+	// discoverysourceDescEnabled is the schema descriptor for enabled field.
+	discoverysourceDescEnabled := discoverysourceFields[4].Descriptor()
+	// discoverysource.DefaultEnabled holds the default value on creation for the enabled field.
+	discoverysource.DefaultEnabled = discoverysourceDescEnabled.Default.(bool)
+	// discoverysourceDescTenantID is the schema descriptor for tenant_id field.
+	discoverysourceDescTenantID := discoverysourceFields[6].Descriptor()
+	// discoverysource.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	discoverysource.TenantIDValidator = discoverysourceDescTenantID.Validators[0].(func(int) error)
+	// discoverysourceDescCreatedAt is the schema descriptor for created_at field.
+	discoverysourceDescCreatedAt := discoverysourceFields[7].Descriptor()
+	// discoverysource.DefaultCreatedAt holds the default value on creation for the created_at field.
+	discoverysource.DefaultCreatedAt = discoverysourceDescCreatedAt.Default.(func() time.Time)
+	// discoverysourceDescUpdatedAt is the schema descriptor for updated_at field.
+	discoverysourceDescUpdatedAt := discoverysourceFields[8].Descriptor()
+	// discoverysource.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	discoverysource.DefaultUpdatedAt = discoverysourceDescUpdatedAt.Default.(func() time.Time)
+	// discoverysource.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	discoverysource.UpdateDefaultUpdatedAt = discoverysourceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// discoverysourceDescID is the schema descriptor for id field.
+	discoverysourceDescID := discoverysourceFields[0].Descriptor()
+	// discoverysource.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	discoverysource.IDValidator = discoverysourceDescID.Validators[0].(func(string) error)
 	incidentFields := schema.Incident{}.Fields()
 	_ = incidentFields
 	// incidentDescTitle is the schema descriptor for title field.
@@ -1114,6 +1299,30 @@ func init() {
 	provisioningtask.DefaultUpdatedAt = provisioningtaskDescUpdatedAt.Default.(func() time.Time)
 	// provisioningtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	provisioningtask.UpdateDefaultUpdatedAt = provisioningtaskDescUpdatedAt.UpdateDefault.(func() time.Time)
+	relationshiptypeFields := schema.RelationshipType{}.Fields()
+	_ = relationshiptypeFields
+	// relationshiptypeDescName is the schema descriptor for name field.
+	relationshiptypeDescName := relationshiptypeFields[0].Descriptor()
+	// relationshiptype.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	relationshiptype.NameValidator = relationshiptypeDescName.Validators[0].(func(string) error)
+	// relationshiptypeDescDirectional is the schema descriptor for directional field.
+	relationshiptypeDescDirectional := relationshiptypeFields[1].Descriptor()
+	// relationshiptype.DefaultDirectional holds the default value on creation for the directional field.
+	relationshiptype.DefaultDirectional = relationshiptypeDescDirectional.Default.(bool)
+	// relationshiptypeDescTenantID is the schema descriptor for tenant_id field.
+	relationshiptypeDescTenantID := relationshiptypeFields[4].Descriptor()
+	// relationshiptype.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	relationshiptype.TenantIDValidator = relationshiptypeDescTenantID.Validators[0].(func(int) error)
+	// relationshiptypeDescCreatedAt is the schema descriptor for created_at field.
+	relationshiptypeDescCreatedAt := relationshiptypeFields[5].Descriptor()
+	// relationshiptype.DefaultCreatedAt holds the default value on creation for the created_at field.
+	relationshiptype.DefaultCreatedAt = relationshiptypeDescCreatedAt.Default.(func() time.Time)
+	// relationshiptypeDescUpdatedAt is the schema descriptor for updated_at field.
+	relationshiptypeDescUpdatedAt := relationshiptypeFields[6].Descriptor()
+	// relationshiptype.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	relationshiptype.DefaultUpdatedAt = relationshiptypeDescUpdatedAt.Default.(func() time.Time)
+	// relationshiptype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	relationshiptype.UpdateDefaultUpdatedAt = relationshiptypeDescUpdatedAt.UpdateDefault.(func() time.Time)
 	rootcauseanalysisFields := schema.RootCauseAnalysis{}.Fields()
 	_ = rootcauseanalysisFields
 	// rootcauseanalysisDescTicketID is the schema descriptor for ticket_id field.

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -128,6 +129,21 @@ func (ctc *CITypeCreate) SetNillableUpdatedAt(t *time.Time) *CITypeCreate {
 		ctc.SetUpdatedAt(*t)
 	}
 	return ctc
+}
+
+// AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
+func (ctc *CITypeCreate) AddCiIDs(ids ...int) *CITypeCreate {
+	ctc.mutation.AddCiIDs(ids...)
+	return ctc
+}
+
+// AddCis adds the "cis" edges to the ConfigurationItem entity.
+func (ctc *CITypeCreate) AddCis(c ...*ConfigurationItem) *CITypeCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctc.AddCiIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
@@ -267,6 +283,22 @@ func (ctc *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
 	if value, ok := ctc.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := ctc.mutation.CisIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

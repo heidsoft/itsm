@@ -1,0 +1,582 @@
+21c42078db5f497f809d81d72dd8f721
+/**
+ * CMDB 资产管理相关常量定义
+ */ // 配置项状态
+"use strict";
+
+/* istanbul ignore next */
+function cov_kl2dfhdbc() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/cmdb/constants.ts";
+  var hash = "4a01b320f2237ae09749aae72f368bccf2b30270";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/cmdb/constants.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 9,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 7
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 24
+        },
+        end: {
+          line: 12,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 14,
+          column: 0
+        },
+        end: {
+          line: 27,
+          column: 3
+        }
+      },
+      "4": {
+        start: {
+          line: 16,
+          column: 8
+        },
+        end: {
+          line: 16,
+          column: 24
+        }
+      },
+      "5": {
+        start: {
+          line: 19,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 30
+        }
+      },
+      "6": {
+        start: {
+          line: 22,
+          column: 8
+        },
+        end: {
+          line: 22,
+          column: 26
+        }
+      },
+      "7": {
+        start: {
+          line: 25,
+          column: 8
+        },
+        end: {
+          line: 25,
+          column: 28
+        }
+      },
+      "8": {
+        start: {
+          line: 28,
+          column: 29
+        },
+        end: {
+          line: 34,
+          column: 5
+        }
+      },
+      "9": {
+        start: {
+          line: 29,
+          column: 4
+        },
+        end: {
+          line: 29,
+          column: 34
+        }
+      },
+      "10": {
+        start: {
+          line: 30,
+          column: 4
+        },
+        end: {
+          line: 30,
+          column: 38
+        }
+      },
+      "11": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 31,
+          column: 44
+        }
+      },
+      "12": {
+        start: {
+          line: 32,
+          column: 4
+        },
+        end: {
+          line: 32,
+          column: 50
+        }
+      },
+      "13": {
+        start: {
+          line: 33,
+          column: 4
+        },
+        end: {
+          line: 33,
+          column: 20
+        }
+      },
+      "14": {
+        start: {
+          line: 35,
+          column: 23
+        },
+        end: {
+          line: 40,
+          column: 1
+        }
+      },
+      "15": {
+        start: {
+          line: 41,
+          column: 31
+        },
+        end: {
+          line: 48,
+          column: 5
+        }
+      },
+      "16": {
+        start: {
+          line: 42,
+          column: 4
+        },
+        end: {
+          line: 42,
+          column: 36
+        }
+      },
+      "17": {
+        start: {
+          line: 43,
+          column: 4
+        },
+        end: {
+          line: 43,
+          column: 40
+        }
+      },
+      "18": {
+        start: {
+          line: 44,
+          column: 4
+        },
+        end: {
+          line: 44,
+          column: 46
+        }
+      },
+      "19": {
+        start: {
+          line: 45,
+          column: 4
+        },
+        end: {
+          line: 45,
+          column: 38
+        }
+      },
+      "20": {
+        start: {
+          line: 46,
+          column: 4
+        },
+        end: {
+          line: 46,
+          column: 38
+        }
+      },
+      "21": {
+        start: {
+          line: 47,
+          column: 4
+        },
+        end: {
+          line: 47,
+          column: 22
+        }
+      },
+      "22": {
+        start: {
+          line: 49,
+          column: 21
+        },
+        end: {
+          line: 55,
+          column: 1
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "_export",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 30
+          },
+          end: {
+            line: 13,
+            column: 1
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 15,
+            column: 14
+          },
+          end: {
+            line: 15,
+            column: 15
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 25
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 18,
+            column: 20
+          },
+          end: {
+            line: 18,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 31
+          },
+          end: {
+            line: 20,
+            column: 5
+          }
+        },
+        line: 18
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 21,
+            column: 16
+          },
+          end: {
+            line: 21,
+            column: 17
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 27
+          },
+          end: {
+            line: 23,
+            column: 5
+          }
+        },
+        line: 21
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 24,
+            column: 18
+          },
+          end: {
+            line: 24,
+            column: 19
+          }
+        },
+        loc: {
+          start: {
+            line: 24,
+            column: 29
+          },
+          end: {
+            line: 26,
+            column: 5
+          }
+        },
+        line: 24
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 28,
+            column: 29
+          },
+          end: {
+            line: 28,
+            column: 30
+          }
+        },
+        loc: {
+          start: {
+            line: 28,
+            column: 48
+          },
+          end: {
+            line: 34,
+            column: 1
+          }
+        },
+        line: 28
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 41,
+            column: 31
+          },
+          end: {
+            line: 41,
+            column: 32
+          }
+        },
+        loc: {
+          start: {
+            line: 41,
+            column: 52
+          },
+          end: {
+            line: 48,
+            column: 1
+          }
+        },
+        line: 41
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/cmdb/constants.ts"],
+      sourcesContent: ["/**\n * CMDB \u8D44\u4EA7\u7BA1\u7406\u76F8\u5173\u5E38\u91CF\u5B9A\u4E49\n */\n\n// \u914D\u7F6E\u9879\u72B6\u6001\nexport enum CIStatus {\n    ACTIVE = 'active',\n    INACTIVE = 'inactive',\n    MAINTENANCE = 'maintenance',\n    DECOMMISSIONED = 'decommissioned',\n}\n\nexport const CIStatusLabels: Record<CIStatus, string> = {\n    [CIStatus.ACTIVE]: '\u4F7F\u7528\u4E2D',\n    [CIStatus.INACTIVE]: '\u672A\u6FC0\u6D3B',\n    [CIStatus.MAINTENANCE]: '\u7EF4\u62A4\u4E2D',\n    [CIStatus.DECOMMISSIONED]: '\u5DF2\u62A5\u5E9F',\n};\n\n// \u5E38\u89C1 CI \u7C7B\u578B (\u6F14\u793A\u7528\uFF0C\u5B9E\u9645\u4ECE API \u83B7\u53D6)\nexport enum CITypeEnum {\n    SERVER = 'server',\n    DATABASE = 'database',\n    APPLICATION = 'application',\n    NETWORK = 'network',\n    STORAGE = 'storage',\n}\n\nexport const CITypeLabels: Record<string, string> = {\n    [CITypeEnum.SERVER]: '\u670D\u52A1\u5668',\n    [CITypeEnum.DATABASE]: '\u6570\u636E\u5E93',\n    [CITypeEnum.APPLICATION]: '\u5E94\u7528\u7CFB\u7EDF',\n    [CITypeEnum.NETWORK]: '\u7F51\u7EDC\u8BBE\u5907',\n    [CITypeEnum.STORAGE]: '\u5B58\u50A8\u8BBE\u5907',\n};\n"],
+      names: ["CIStatus", "CIStatusLabels", "CITypeEnum", "CITypeLabels"],
+      mappings: "AAAA;;CAEC,GAED,QAAQ;;;;;;;;;;;;IACIA,QAAQ;eAARA;;IAOCC,cAAc;eAAdA;;IAQDC,UAAU;eAAVA;;IAQCC,YAAY;eAAZA;;;AAvBN,IAAA,AAAKH,kCAAAA;;;;;WAAAA;;AAOL,MAAMC,iBAA2C;IACpD,UAAiB,EAAE;IACnB,YAAmB,EAAE;IACrB,eAAsB,EAAE;IACxB,kBAAyB,EAAE;AAC/B;AAGO,IAAA,AAAKC,oCAAAA;;;;;;WAAAA;;AAQL,MAAMC,eAAuC;IAChD,UAAmB,EAAE;IACrB,YAAqB,EAAE;IACvB,eAAwB,EAAE;IAC1B,WAAoB,EAAE;IACtB,WAAoB,EAAE;AAC1B"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "4a01b320f2237ae09749aae72f368bccf2b30270"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_kl2dfhdbc = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_kl2dfhdbc();
+cov_kl2dfhdbc().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function _export(target, all) {
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().f[0]++;
+  cov_kl2dfhdbc().s[1]++;
+  for (var name in all) {
+    /* istanbul ignore next */
+    cov_kl2dfhdbc().s[2]++;
+    Object.defineProperty(target, name, {
+      enumerable: true,
+      get: all[name]
+    });
+  }
+}
+/* istanbul ignore next */
+cov_kl2dfhdbc().s[3]++;
+_export(exports, {
+  CIStatus: function () {
+    /* istanbul ignore next */
+    cov_kl2dfhdbc().f[1]++;
+    cov_kl2dfhdbc().s[4]++;
+    return CIStatus;
+  },
+  CIStatusLabels: function () {
+    /* istanbul ignore next */
+    cov_kl2dfhdbc().f[2]++;
+    cov_kl2dfhdbc().s[5]++;
+    return CIStatusLabels;
+  },
+  CITypeEnum: function () {
+    /* istanbul ignore next */
+    cov_kl2dfhdbc().f[3]++;
+    cov_kl2dfhdbc().s[6]++;
+    return CITypeEnum;
+  },
+  CITypeLabels: function () {
+    /* istanbul ignore next */
+    cov_kl2dfhdbc().f[4]++;
+    cov_kl2dfhdbc().s[7]++;
+    return CITypeLabels;
+  }
+});
+var CIStatus =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_kl2dfhdbc().s[8]++, function (CIStatus) {
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().f[5]++;
+  cov_kl2dfhdbc().s[9]++;
+  CIStatus["ACTIVE"] = "active";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[10]++;
+  CIStatus["INACTIVE"] = "inactive";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[11]++;
+  CIStatus["MAINTENANCE"] = "maintenance";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[12]++;
+  CIStatus["DECOMMISSIONED"] = "decommissioned";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[13]++;
+  return CIStatus;
+}({}));
+const CIStatusLabels =
+/* istanbul ignore next */
+(cov_kl2dfhdbc().s[14]++, {
+  ["active"]: '使用中',
+  ["inactive"]: '未激活',
+  ["maintenance"]: '维护中',
+  ["decommissioned"]: '已报废'
+});
+var CITypeEnum =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_kl2dfhdbc().s[15]++, function (CITypeEnum) {
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().f[6]++;
+  cov_kl2dfhdbc().s[16]++;
+  CITypeEnum["SERVER"] = "server";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[17]++;
+  CITypeEnum["DATABASE"] = "database";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[18]++;
+  CITypeEnum["APPLICATION"] = "application";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[19]++;
+  CITypeEnum["NETWORK"] = "network";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[20]++;
+  CITypeEnum["STORAGE"] = "storage";
+  /* istanbul ignore next */
+  cov_kl2dfhdbc().s[21]++;
+  return CITypeEnum;
+}({}));
+const CITypeLabels =
+/* istanbul ignore next */
+(cov_kl2dfhdbc().s[22]++, {
+  ["server"]: '服务器',
+  ["database"]: '数据库',
+  ["application"]: '应用系统',
+  ["network"]: '网络设备',
+  ["storage"]: '存储设备'
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJDSVN0YXR1cyIsImNvdl9rbDJkZmhkYmMiLCJmIiwicyIsIkNJU3RhdHVzTGFiZWxzIiwiQ0lUeXBlRW51bSIsIkNJVHlwZUxhYmVscyJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9tb2R1bGVzL2NtZGIvY29uc3RhbnRzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogQ01EQiDotYTkuqfnrqHnkIbnm7jlhbPluLjph4/lrprkuYlcbiAqL1xuXG4vLyDphY3nva7pobnnirbmgIFcbmV4cG9ydCBlbnVtIENJU3RhdHVzIHtcbiAgICBBQ1RJVkUgPSAnYWN0aXZlJyxcbiAgICBJTkFDVElWRSA9ICdpbmFjdGl2ZScsXG4gICAgTUFJTlRFTkFOQ0UgPSAnbWFpbnRlbmFuY2UnLFxuICAgIERFQ09NTUlTU0lPTkVEID0gJ2RlY29tbWlzc2lvbmVkJyxcbn1cblxuZXhwb3J0IGNvbnN0IENJU3RhdHVzTGFiZWxzOiBSZWNvcmQ8Q0lTdGF0dXMsIHN0cmluZz4gPSB7XG4gICAgW0NJU3RhdHVzLkFDVElWRV06ICfkvb/nlKjkuK0nLFxuICAgIFtDSVN0YXR1cy5JTkFDVElWRV06ICfmnKrmv4DmtLsnLFxuICAgIFtDSVN0YXR1cy5NQUlOVEVOQU5DRV06ICfnu7TmiqTkuK0nLFxuICAgIFtDSVN0YXR1cy5ERUNPTU1JU1NJT05FRF06ICflt7LmiqXlup8nLFxufTtcblxuLy8g5bi46KeBIENJIOexu+WeiyAo5ryU56S655So77yM5a6e6ZmF5LuOIEFQSSDojrflj5YpXG5leHBvcnQgZW51bSBDSVR5cGVFbnVtIHtcbiAgICBTRVJWRVIgPSAnc2VydmVyJyxcbiAgICBEQVRBQkFTRSA9ICdkYXRhYmFzZScsXG4gICAgQVBQTElDQVRJT04gPSAnYXBwbGljYXRpb24nLFxuICAgIE5FVFdPUksgPSAnbmV0d29yaycsXG4gICAgU1RPUkFHRSA9ICdzdG9yYWdlJyxcbn1cblxuZXhwb3J0IGNvbnN0IENJVHlwZUxhYmVsczogUmVjb3JkPHN0cmluZywgc3RyaW5nPiA9IHtcbiAgICBbQ0lUeXBlRW51bS5TRVJWRVJdOiAn5pyN5Yqh5ZmoJyxcbiAgICBbQ0lUeXBlRW51bS5EQVRBQkFTRV06ICfmlbDmja7lupMnLFxuICAgIFtDSVR5cGVFbnVtLkFQUExJQ0FUSU9OXTogJ+W6lOeUqOezu+e7nycsXG4gICAgW0NJVHlwZUVudW0uTkVUV09SS106ICfnvZHnu5zorr7lpIcnLFxuICAgIFtDSVR5cGVFbnVtLlNUT1JBR0VdOiAn5a2Y5YKo6K6+5aSHJyxcbn07XG4iXSwibWFwcGluZ3MiOiJBQUFBOztHQUFBLENBSUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7RUFDWUEsUUFBUSxXQUFBQSxDQUFBO0lBQUE7SUFBQUMsYUFBQSxHQUFBQyxDQUFBO0lBQUFELGFBQUEsR0FBQUUsQ0FBQTtXQUFSSCxRQUFBOztFQU9DSSxjQUFjLFdBQUFBLENBQUE7SUFBQTtJQUFBSCxhQUFBLEdBQUFDLENBQUE7SUFBQUQsYUFBQSxHQUFBRSxDQUFBO1dBQWRDLGNBQUE7O0VBUURDLFVBQVUsV0FBQUEsQ0FBQTtJQUFBO0lBQUFKLGFBQUEsR0FBQUMsQ0FBQTtJQUFBRCxhQUFBLEdBQUFFLENBQUE7V0FBVkUsVUFBQTs7RUFRQ0MsWUFBWSxXQUFBQSxDQUFBO0lBQUE7SUFBQUwsYUFBQSxHQUFBQyxDQUFBO0lBQUFELGFBQUEsR0FBQUUsQ0FBQTtXQUFaRyxZQUFBOzs7QUF2Qk4sSUFBQU4sUUFBSztBQUFBO0FBQUEsY0FBQUMsYUFBQSxHQUFBRSxDQUFBLGlCQUFBSCxRQUFBO0VBQUE7RUFBQUMsYUFBQSxHQUFBQyxDQUFBO0VBQUFELGFBQUEsR0FBQUUsQ0FBQTs7Ozs7Ozs7Ozs7OztTQUFBSCxRQUFBOztBQU9MLE1BQU1JLGNBQUE7QUFBQTtBQUFBLENBQUFILGFBQUEsR0FBQUUsQ0FBQSxRQUEyQztFQUNwRCxZQUFtQjtFQUNuQixjQUFxQjtFQUNyQixpQkFBd0I7RUFDeEIsb0JBQTJCO0FBQy9CO0FBR08sSUFBQUUsVUFBSztBQUFBO0FBQUEsY0FBQUosYUFBQSxHQUFBRSxDQUFBLGtCQUFBRSxVQUFBO0VBQUE7RUFBQUosYUFBQSxHQUFBQyxDQUFBO0VBQUFELGFBQUEsR0FBQUUsQ0FBQTs7Ozs7Ozs7Ozs7Ozs7OztTQUFBRSxVQUFBOztBQVFMLE1BQU1DLFlBQUE7QUFBQTtBQUFBLENBQUFMLGFBQUEsR0FBQUUsQ0FBQSxRQUF1QztFQUNoRCxZQUFxQjtFQUNyQixjQUF1QjtFQUN2QixpQkFBMEI7RUFDMUIsYUFBc0I7RUFDdEIsYUFBc0I7QUFDMUIiLCJpZ25vcmVMaXN0IjpbXX0=

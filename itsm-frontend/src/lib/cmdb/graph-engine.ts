@@ -10,8 +10,8 @@ import type {
   GraphNode,
   GraphEdge,
   CIType,
-  RelationType,
 } from '@/types/cmdb';
+import { RelationType } from '@/types/cmdb';
 
 export class GraphEngine {
   /**
@@ -486,4 +486,3 @@ export class GraphEngine {
 }
 
 export default GraphEngine;
-

@@ -222,11 +222,11 @@ export function useCreateTemplateMutation(
       
       message.success('模板创建成功！');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`创建失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -256,11 +256,11 @@ export function useUpdateTemplateMutation(
       
       message.success('模板更新成功！');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`更新失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -285,11 +285,11 @@ export function useDeleteTemplateMutation(
       
       message.success('模板删除成功！');
       
-      options?.onSuccess?.(data, templateId, context);
+      options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`删除失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -321,11 +321,11 @@ export function usePublishTemplateMutation(
       
       message.success('模板发布成功！');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`发布失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -352,11 +352,11 @@ export function useDuplicateTemplateMutation(
       
       message.success('模板复制成功！');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`复制失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -391,11 +391,11 @@ export function useCreateTicketFromTemplateMutation(
       
       message.success('工单创建成功！');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`创建工单失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -429,11 +429,11 @@ export function useRateTemplateMutation(
       
       message.success('评分成功！感谢您的反馈');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`评分失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -455,11 +455,11 @@ export function useFavoriteTemplateMutation(
       
       message.success('已添加到收藏');
       
-      options?.onSuccess?.(data, templateId, context);
+      options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`收藏失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -482,11 +482,11 @@ export function useUnfavoriteTemplateMutation(
       
       message.success('已取消收藏');
       
-      options?.onSuccess?.(data, templateId, context);
+      options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`取消收藏失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -509,11 +509,11 @@ export function useImportTemplateMutation(
       
       message.success('模板导入成功！');
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`导入失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -538,11 +538,11 @@ export function useArchiveTemplateMutation(
       
       message.success('模板已归档');
       
-      options?.onSuccess?.(data, templateId, context);
+      options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`归档失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -569,11 +569,11 @@ export function useBatchDeleteTemplatesMutation(
         message.warning(`有 ${data.failed} 个模板删除失败`);
       }
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`批量删除失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });
@@ -605,11 +605,11 @@ export function useBatchToggleTemplatesMutation(
         message.warning(`有 ${data.failed} 个模板${action}失败`);
       }
       
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
       message.error(`批量操作失败：${error.message}`);
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, undefined as any);
     },
     ...options,
   });

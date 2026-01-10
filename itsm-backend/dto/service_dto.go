@@ -53,14 +53,16 @@ type GetServiceRequestsRequest struct {
 
 // ServiceCatalogResponse 服务目录响应
 type ServiceCatalogResponse struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
-	Category     string    `json:"category"`
-	Description  string    `json:"description"`
-	DeliveryTime string    `json:"delivery_time"`
-	Status       string    `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID             int       `json:"id"`
+	Name           string    `json:"name"`
+	Category       string    `json:"category"`
+	Description    string    `json:"description"`
+	DeliveryTime   string    `json:"delivery_time"`
+	CITypeID       int       `json:"ci_type_id,omitempty"`
+	CloudServiceID int       `json:"cloud_service_id,omitempty"`
+	Status         string    `json:"status"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // ServiceRequestResponse 服务请求响应
@@ -68,6 +70,7 @@ type ServiceRequestResponse struct {
 	ID          int            `json:"id"`
 	CatalogID   int            `json:"catalog_id"`
 	RequesterID int            `json:"requester_id"`
+	CIID        int            `json:"ci_id,omitempty"`
 	Status      string         `json:"status"`
 	Title       string         `json:"title,omitempty"`
 	Reason      string         `json:"reason,omitempty"`
@@ -137,14 +140,16 @@ type ServiceRequestListResponse struct {
 // ToServiceCatalogResponse 转换为服务目录响应
 func ToServiceCatalogResponse(catalog *ent.ServiceCatalog) *ServiceCatalogResponse {
 	return &ServiceCatalogResponse{
-		ID:           catalog.ID,
-		Name:         catalog.Name,
-		Category:     catalog.Category,
-		Description:  catalog.Description,
-		DeliveryTime: strconv.Itoa(catalog.DeliveryTime),
-		Status:       string(catalog.Status),
-		CreatedAt:    catalog.CreatedAt,
-		UpdatedAt:    catalog.UpdatedAt,
+		ID:             catalog.ID,
+		Name:           catalog.Name,
+		Category:       catalog.Category,
+		Description:    catalog.Description,
+		DeliveryTime:   strconv.Itoa(catalog.DeliveryTime),
+		CITypeID:       catalog.CiTypeID,
+		CloudServiceID: catalog.CloudServiceID,
+		Status:         string(catalog.Status),
+		CreatedAt:      catalog.CreatedAt,
+		UpdatedAt:      catalog.UpdatedAt,
 	}
 }
 
@@ -159,6 +164,7 @@ func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestRespon
 		ID:                 request.ID,
 		CatalogID:          request.CatalogID,
 		RequesterID:        request.RequesterID,
+		CIID:               request.CIID,
 		Status:             string(request.Status),
 		Title:              request.Title,
 		Reason:             request.Reason,
@@ -201,18 +207,22 @@ func ToServiceRequestApprovalResponse(a *ent.ServiceRequestApproval) ServiceRequ
 
 // CreateServiceCatalogRequest 创建服务目录请求
 type CreateServiceCatalogRequest struct {
-	Name         string `json:"name" binding:"required,max=255"`
-	Category     string `json:"category" binding:"required,max=100"`
-	Description  string `json:"description" binding:"omitempty,max=1000"`
-	DeliveryTime string `json:"delivery_time" binding:"required,max=50"`
-	Status       string `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	Name           string `json:"name" binding:"required,max=255"`
+	Category       string `json:"category" binding:"required,max=100"`
+	Description    string `json:"description" binding:"omitempty,max=1000"`
+	DeliveryTime   string `json:"delivery_time" binding:"required,max=50"`
+	CITypeID       int    `json:"ci_type_id,omitempty"`
+	CloudServiceID int    `json:"cloud_service_id,omitempty"`
+	Status         string `json:"status" binding:"omitempty,oneof=enabled disabled"`
 }
 
 // UpdateServiceCatalogRequest 更新服务目录请求
 type UpdateServiceCatalogRequest struct {
-	Name         string `json:"name" binding:"omitempty,max=255"`
-	Category     string `json:"category" binding:"omitempty,max=100"`
-	Description  string `json:"description" binding:"omitempty,max=1000"`
-	DeliveryTime string `json:"delivery_time" binding:"omitempty,max=50"`
-	Status       string `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	Name           string `json:"name" binding:"omitempty,max=255"`
+	Category       string `json:"category" binding:"omitempty,max=100"`
+	Description    string `json:"description" binding:"omitempty,max=1000"`
+	DeliveryTime   string `json:"delivery_time" binding:"omitempty,max=50"`
+	CITypeID       int    `json:"ci_type_id,omitempty"`
+	CloudServiceID int    `json:"cloud_service_id,omitempty"`
+	Status         string `json:"status" binding:"omitempty,oneof=enabled disabled"`
 }

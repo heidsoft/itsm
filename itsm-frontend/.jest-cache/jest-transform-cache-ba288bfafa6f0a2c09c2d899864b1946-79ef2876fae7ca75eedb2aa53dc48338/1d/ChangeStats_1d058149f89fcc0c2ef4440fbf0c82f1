@@ -1,0 +1,437 @@
+a95b93fd2bfed63c8e190bc4b039cc65
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1ult2afjtx() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/changes/components/ChangeStats.tsx";
+  var hash = "ca911e2609ba3ff1b3b2975404c84e2db58aa409";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/changes/components/ChangeStats.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 27
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 14
+        },
+        end: {
+          line: 14,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 15,
+          column: 21
+        },
+        end: {
+          line: 15,
+          column: 44
+        }
+      },
+      "7": {
+        start: {
+          line: 17,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 6
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 20
+        },
+        end: {
+          line: 131,
+          column: 1
+        }
+      },
+      "9": {
+        start: {
+          line: 22,
+          column: 4
+        },
+        end: {
+          line: 130,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 16,
+            column: 9
+          },
+          end: {
+            line: 16,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 16
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 21,
+            column: 20
+          },
+          end: {
+            line: 21,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 33
+          },
+          end: {
+            line: 131,
+            column: 1
+          }
+        },
+        line: 21
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 35
+          },
+          end: {
+            line: 17,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 41
+          },
+          end: {
+            line: 19,
+            column: 5
+          }
+        }],
+        line: 17
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 17,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 17,
+            column: 18
+          },
+          end: {
+            line: 17,
+            column: 32
+          }
+        }],
+        line: 17
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/changes/components/ChangeStats.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { Card, Col, Row } from 'antd';\nimport { GitBranch, AlertTriangle } from 'lucide-react';\nimport type { ChangeStats as ChangeStatsData } from '@/lib/services/change-service';\n\ninterface ChangeStatsProps {\n  stats: ChangeStatsData;\n}\n\nexport const ChangeStats: React.FC<ChangeStatsProps> = ({ stats }) => {\n  return (\n    <Row gutter={[16, 16]} className='mb-6'>\n      <Col xs={24} sm={12} md={6}>\n        <Card className='bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'>\n          <div className='text-center'>\n            <GitBranch className='mx-auto mb-3 text-white' size={32} />\n            <div className='text-3xl font-bold text-white'>{stats.total}</div>\n            <div className='text-blue-100'>\u603B\u53D8\u66F4\u6570</div>\n          </div>\n        </Card>\n      </Col>\n      <Col xs={24} sm={12} md={6}>\n        <Card className='bg-gradient-to-br from-orange-500 to-orange-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'>\n          <div className='text-center'>\n            <AlertTriangle className='mx-auto mb-3 text-white' size={32} />\n            <div className='text-3xl font-bold text-white'>{stats.pending}</div>\n            <div className='text-orange-100'>\u5F85\u5BA1\u6279</div>\n          </div>\n        </Card>\n      </Col>\n      <Col xs={24} sm={12} md={6}>\n        <Card className='bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'>\n          <div className='text-center'>\n            <GitBranch className='mx-auto mb-3 text-white' size={32} />\n            <div className='text-3xl font-bold text-white'>{stats.approved}</div>\n            <div className='text-green-100'>\u5DF2\u6279\u51C6</div>\n          </div>\n        </Card>\n      </Col>\n      <Col xs={24} sm={12} md={6}>\n        <Card className='bg-gradient-to-br from-purple-500 to-purple-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300'>\n          <div className='text-center'>\n            <GitBranch className='mx-auto mb-3 text-white' size={32} />\n            <div className='text-3xl font-bold text-white'>{stats.completed}</div>\n            <div className='text-purple-100'>\u5DF2\u5B8C\u6210</div>\n          </div>\n        </Card>\n      </Col>\n    </Row>\n  );\n};\n"],
+      names: ["ChangeStats", "stats", "Row", "gutter", "className", "Col", "xs", "sm", "md", "Card", "div", "GitBranch", "size", "total", "AlertTriangle", "pending", "approved", "completed"],
+      mappings: "AAAA;;;;;+BAWaA;;;eAAAA;;;;8DATK;sBACa;6BACU;;;;;;AAOlC,MAAMA,cAA0C,CAAC,EAAEC,KAAK,EAAE;IAC/D,qBACE,sBAACC,SAAG;QAACC,QAAQ;YAAC;YAAI;SAAG;QAAEC,WAAU;;0BAC/B,qBAACC,SAAG;gBAACC,IAAI;gBAAIC,IAAI;gBAAIC,IAAI;0BACvB,cAAA,qBAACC,UAAI;oBAACL,WAAU;8BACd,cAAA,sBAACM;wBAAIN,WAAU;;0CACb,qBAACO,sBAAS;gCAACP,WAAU;gCAA0BQ,MAAM;;0CACrD,qBAACF;gCAAIN,WAAU;0CAAiCH,MAAMY,KAAK;;0CAC3D,qBAACH;gCAAIN,WAAU;0CAAgB;;;;;;0BAIrC,qBAACC,SAAG;gBAACC,IAAI;gBAAIC,IAAI;gBAAIC,IAAI;0BACvB,cAAA,qBAACC,UAAI;oBAACL,WAAU;8BACd,cAAA,sBAACM;wBAAIN,WAAU;;0CACb,qBAACU,0BAAa;gCAACV,WAAU;gCAA0BQ,MAAM;;0CACzD,qBAACF;gCAAIN,WAAU;0CAAiCH,MAAMc,OAAO;;0CAC7D,qBAACL;gCAAIN,WAAU;0CAAkB;;;;;;0BAIvC,qBAACC,SAAG;gBAACC,IAAI;gBAAIC,IAAI;gBAAIC,IAAI;0BACvB,cAAA,qBAACC,UAAI;oBAACL,WAAU;8BACd,cAAA,sBAACM;wBAAIN,WAAU;;0CACb,qBAACO,sBAAS;gCAACP,WAAU;gCAA0BQ,MAAM;;0CACrD,qBAACF;gCAAIN,WAAU;0CAAiCH,MAAMe,QAAQ;;0CAC9D,qBAACN;gCAAIN,WAAU;0CAAiB;;;;;;0BAItC,qBAACC,SAAG;gBAACC,IAAI;gBAAIC,IAAI;gBAAIC,IAAI;0BACvB,cAAA,qBAACC,UAAI;oBAACL,WAAU;8BACd,cAAA,sBAACM;wBAAIN,WAAU;;0CACb,qBAACO,sBAAS;gCAACP,WAAU;gCAA0BQ,MAAM;;0CACrD,qBAACF;gCAAIN,WAAU;0CAAiCH,MAAMgB,SAAS;;0CAC/D,qBAACP;gCAAIN,WAAU;0CAAkB;;;;;;;;AAM7C"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "ca911e2609ba3ff1b3b2975404c84e2db58aa409"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1ult2afjtx = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1ult2afjtx();
+cov_1ult2afjtx().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1ult2afjtx().s[1]++;
+Object.defineProperty(exports, "ChangeStats", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_1ult2afjtx().f[0]++;
+    cov_1ult2afjtx().s[2]++;
+    return ChangeStats;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_1ult2afjtx().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_1ult2afjtx().s[4]++, _interop_require_default(require("react")));
+const _antd =
+/* istanbul ignore next */
+(cov_1ult2afjtx().s[5]++, require("antd"));
+const _lucidereact =
+/* istanbul ignore next */
+(cov_1ult2afjtx().s[6]++, require("lucide-react"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_1ult2afjtx().f[1]++;
+  cov_1ult2afjtx().s[7]++;
+  return /* istanbul ignore next */(cov_1ult2afjtx().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_1ult2afjtx().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_1ult2afjtx().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_1ult2afjtx().b[0][1]++, {
+    default: obj
+  });
+}
+/* istanbul ignore next */
+cov_1ult2afjtx().s[8]++;
+const ChangeStats = ({
+  stats
+}) => {
+  /* istanbul ignore next */
+  cov_1ult2afjtx().f[2]++;
+  cov_1ult2afjtx().s[9]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Row, {
+    gutter: [16, 16],
+    className: "mb-6",
+    children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+      xs: 24,
+      sm: 12,
+      md: 6,
+      children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Card, {
+        className: "bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300",
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+          className: "text-center",
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.GitBranch, {
+            className: "mx-auto mb-3 text-white",
+            size: 32
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-3xl font-bold text-white",
+            children: stats.total
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-blue-100",
+            children: "总变更数"
+          })]
+        })
+      })
+    }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+      xs: 24,
+      sm: 12,
+      md: 6,
+      children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Card, {
+        className: "bg-gradient-to-br from-orange-500 to-orange-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300",
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+          className: "text-center",
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.AlertTriangle, {
+            className: "mx-auto mb-3 text-white",
+            size: 32
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-3xl font-bold text-white",
+            children: stats.pending
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-orange-100",
+            children: "待审批"
+          })]
+        })
+      })
+    }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+      xs: 24,
+      sm: 12,
+      md: 6,
+      children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Card, {
+        className: "bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300",
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+          className: "text-center",
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.GitBranch, {
+            className: "mx-auto mb-3 text-white",
+            size: 32
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-3xl font-bold text-white",
+            children: stats.approved
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-green-100",
+            children: "已批准"
+          })]
+        })
+      })
+    }), /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Col, {
+      xs: 24,
+      sm: 12,
+      md: 6,
+      children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Card, {
+        className: "bg-gradient-to-br from-purple-500 to-purple-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300",
+        children: /*#__PURE__*/(0, _jsxruntime.jsxs)("div", {
+          className: "text-center",
+          children: [/*#__PURE__*/(0, _jsxruntime.jsx)(_lucidereact.GitBranch, {
+            className: "mx-auto mb-3 text-white",
+            size: 32
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-3xl font-bold text-white",
+            children: stats.completed
+          }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+            className: "text-purple-100",
+            children: "已完成"
+          })]
+        })
+      })
+    })]
+  });
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJDaGFuZ2VTdGF0cyIsInN0YXRzIiwiY292XzF1bHQyYWZqdHgiLCJmIiwicyIsIl9qc3hydW50aW1lIiwianN4cyIsIl9hbnRkIiwiUm93IiwiZ3V0dGVyIiwiY2xhc3NOYW1lIiwianN4IiwiQ29sIiwieHMiLCJzbSIsIm1kIiwiQ2FyZCIsIl9sdWNpZGVyZWFjdCIsIkdpdEJyYW5jaCIsInNpemUiLCJ0b3RhbCIsIkFsZXJ0VHJpYW5nbGUiLCJwZW5kaW5nIiwiYXBwcm92ZWQiLCJjb21wbGV0ZWQiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1mcm9udGVuZC9zcmMvYXBwLyhtYWluKS9jaGFuZ2VzL2NvbXBvbmVudHMvQ2hhbmdlU3RhdHMudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50JztcblxuaW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IENhcmQsIENvbCwgUm93IH0gZnJvbSAnYW50ZCc7XG5pbXBvcnQgeyBHaXRCcmFuY2gsIEFsZXJ0VHJpYW5nbGUgfSBmcm9tICdsdWNpZGUtcmVhY3QnO1xuaW1wb3J0IHR5cGUgeyBDaGFuZ2VTdGF0cyBhcyBDaGFuZ2VTdGF0c0RhdGEgfSBmcm9tICdAL2xpYi9zZXJ2aWNlcy9jaGFuZ2Utc2VydmljZSc7XG5cbmludGVyZmFjZSBDaGFuZ2VTdGF0c1Byb3BzIHtcbiAgc3RhdHM6IENoYW5nZVN0YXRzRGF0YTtcbn1cblxuZXhwb3J0IGNvbnN0IENoYW5nZVN0YXRzOiBSZWFjdC5GQzxDaGFuZ2VTdGF0c1Byb3BzPiA9ICh7IHN0YXRzIH0pID0+IHtcbiAgcmV0dXJuIChcbiAgICA8Um93IGd1dHRlcj17WzE2LCAxNl19IGNsYXNzTmFtZT0nbWItNic+XG4gICAgICA8Q29sIHhzPXsyNH0gc209ezEyfSBtZD17Nn0+XG4gICAgICAgIDxDYXJkIGNsYXNzTmFtZT0nYmctZ3JhZGllbnQtdG8tYnIgZnJvbS1ibHVlLTUwMCB0by1ibHVlLTYwMCBib3JkZXItMCBzaGFkb3ctbGcgaG92ZXI6c2hhZG93LXhsIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTMwMCc+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3RleHQtY2VudGVyJz5cbiAgICAgICAgICAgIDxHaXRCcmFuY2ggY2xhc3NOYW1lPSdteC1hdXRvIG1iLTMgdGV4dC13aGl0ZScgc2l6ZT17MzJ9IC8+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ndGV4dC0zeGwgZm9udC1ib2xkIHRleHQtd2hpdGUnPntzdGF0cy50b3RhbH08L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LWJsdWUtMTAwJz7mgLvlj5jmm7TmlbA8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9DYXJkPlxuICAgICAgPC9Db2w+XG4gICAgICA8Q29sIHhzPXsyNH0gc209ezEyfSBtZD17Nn0+XG4gICAgICAgIDxDYXJkIGNsYXNzTmFtZT0nYmctZ3JhZGllbnQtdG8tYnIgZnJvbS1vcmFuZ2UtNTAwIHRvLW9yYW5nZS02MDAgYm9yZGVyLTAgc2hhZG93LWxnIGhvdmVyOnNoYWRvdy14bCB0cmFuc2l0aW9uLWFsbCBkdXJhdGlvbi0zMDAnPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LWNlbnRlcic+XG4gICAgICAgICAgICA8QWxlcnRUcmlhbmdsZSBjbGFzc05hbWU9J214LWF1dG8gbWItMyB0ZXh0LXdoaXRlJyBzaXplPXszMn0gLz5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LTN4bCBmb250LWJvbGQgdGV4dC13aGl0ZSc+e3N0YXRzLnBlbmRpbmd9PC9kaXY+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ndGV4dC1vcmFuZ2UtMTAwJz7lvoXlrqHmibk8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9DYXJkPlxuICAgICAgPC9Db2w+XG4gICAgICA8Q29sIHhzPXsyNH0gc209ezEyfSBtZD17Nn0+XG4gICAgICAgIDxDYXJkIGNsYXNzTmFtZT0nYmctZ3JhZGllbnQtdG8tYnIgZnJvbS1ncmVlbi01MDAgdG8tZ3JlZW4tNjAwIGJvcmRlci0wIHNoYWRvdy1sZyBob3ZlcjpzaGFkb3cteGwgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMzAwJz5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ndGV4dC1jZW50ZXInPlxuICAgICAgICAgICAgPEdpdEJyYW5jaCBjbGFzc05hbWU9J214LWF1dG8gbWItMyB0ZXh0LXdoaXRlJyBzaXplPXszMn0gLz5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LTN4bCBmb250LWJvbGQgdGV4dC13aGl0ZSc+e3N0YXRzLmFwcHJvdmVkfTwvZGl2PlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3RleHQtZ3JlZW4tMTAwJz7lt7Lmibnlh4Y8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9DYXJkPlxuICAgICAgPC9Db2w+XG4gICAgICA8Q29sIHhzPXsyNH0gc209ezEyfSBtZD17Nn0+XG4gICAgICAgIDxDYXJkIGNsYXNzTmFtZT0nYmctZ3JhZGllbnQtdG8tYnIgZnJvbS1wdXJwbGUtNTAwIHRvLXB1cnBsZS02MDAgYm9yZGVyLTAgc2hhZG93LWxnIGhvdmVyOnNoYWRvdy14bCB0cmFuc2l0aW9uLWFsbCBkdXJhdGlvbi0zMDAnPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSd0ZXh0LWNlbnRlcic+XG4gICAgICAgICAgICA8R2l0QnJhbmNoIGNsYXNzTmFtZT0nbXgtYXV0byBtYi0zIHRleHQtd2hpdGUnIHNpemU9ezMyfSAvPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3RleHQtM3hsIGZvbnQtYm9sZCB0ZXh0LXdoaXRlJz57c3RhdHMuY29tcGxldGVkfTwvZGl2PlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9J3RleHQtcHVycGxlLTEwMCc+5bey5a6M5oiQPC9kaXY+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvQ2FyZD5cbiAgICAgIDwvQ29sPlxuICAgIDwvUm93PlxuICApO1xufTtcbiJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OzsrQkFXYTs7Ozs7O1dBQUFBLFdBQUE7Ozs7Ozs7O3dFQVRLOzs7a0NBQ2E7OztrQ0FDVTs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFPbEMsTUFBTUEsV0FBQSxHQUEwQ0EsQ0FBQztFQUFFQztBQUFLLENBQUU7RUFBQTtFQUFBQyxjQUFBLEdBQUFDLENBQUE7RUFBQUQsY0FBQSxHQUFBRSxDQUFBO0VBQy9ELG9CQUNFLElBQUFDLFdBQUEsQ0FBQUMsSUFBQSxFQUFDQyxLQUFBLENBQUFDLEdBQUc7SUFBQ0MsTUFBQSxFQUFRLENBQUMsSUFBSSxHQUFHO0lBQUVDLFNBQUEsRUFBVTs0QkFDL0IsSUFBQUwsV0FBQSxDQUFBTSxHQUFBLEVBQUNKLEtBQUEsQ0FBQUssR0FBRztNQUFDQyxFQUFBLEVBQUk7TUFBSUMsRUFBQSxFQUFJO01BQUlDLEVBQUEsRUFBSTtnQkFDdkIsaUJBQUFWLFdBQUEsQ0FBQU0sR0FBQSxFQUFDSixLQUFBLENBQUFTLElBQUk7UUFBQ04sU0FBQSxFQUFVO2tCQUNkLGlCQUFBTCxXQUFBLENBQUFDLElBQUEsRUFBQztVQUFJSSxTQUFBLEVBQVU7a0NBQ2IsSUFBQUwsV0FBQSxDQUFBTSxHQUFBLEVBQUNN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

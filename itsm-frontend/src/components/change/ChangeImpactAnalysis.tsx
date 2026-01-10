@@ -335,14 +335,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
                 dataSource={mockData}
                 titles={['可用系统', '受影响系统']}
                 targetKeys={targetKeys}
-                onChange={setTargetKeys}
+                onChange={(keys) => setTargetKeys(keys as string[])}
                 render={renderSystemItem}
                 listStyle={{
                   width: 300,
                   height: 300,
                 }}
                 showSearch
-                searchPlaceholder="搜索系统..."
                 disabled={readOnly}
               />
             </Form.Item>

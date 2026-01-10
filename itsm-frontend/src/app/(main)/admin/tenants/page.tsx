@@ -237,7 +237,7 @@ export default function TenantManagement() {
       title: '操作',
       key: 'actions',
       width: 120,
-      render: (_: unknown, record: unknown) => (
+      render: (_: unknown, record: Tenant) => (
         <Space size='small'>
           <Tooltip title='编辑'>
             <Button

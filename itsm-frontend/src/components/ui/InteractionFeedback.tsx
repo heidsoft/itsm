@@ -378,19 +378,18 @@ export const useConfirmActions = () => {
 export const useOperationFeedback = () => {
   const { showSuccess, showError, showWarning, showInfo } = useInteractionFeedback();
   
-  const handleOperation = useCallback(
-    async <T>(
-      operation: () => Promise<T>,
-      options: {
-        successMessage?: string;
-        errorMessage?: string;
-        warningMessage?: string;
-        infoMessage?: string;
-        onSuccess?: (result: T) => void;
-        onError?: (error: Error) => void;
-        showLoading?: boolean;
-      } = {}
-    ): Promise<T | null> => {
+  const handleOperation = useCallback(async function <T>(
+    operation: () => Promise<T>,
+    options: {
+      successMessage?: string;
+      errorMessage?: string;
+      warningMessage?: string;
+      infoMessage?: string;
+      onSuccess?: (result: T) => void;
+      onError?: (error: Error) => void;
+      showLoading?: boolean;
+    } = {}
+  ): Promise<T | null> {
       const {
         successMessage = '操作成功',
         errorMessage = '操作失败，请重试',

@@ -9,7 +9,15 @@ import type {
     CIRelationship,
     CMDBStats,
     CIListResponse,
-    CIQuery
+    CIQuery,
+    CloudService,
+    CloudAccount,
+    CloudResource,
+    RelationshipType,
+    DiscoverySource,
+    DiscoveryJob,
+    DiscoveryResult,
+    ReconciliationResponse
 } from './types';
 
 const BASE_URL = '/api/v1/cmdb';
@@ -62,5 +70,74 @@ export class CMDBApi {
      */
     static async getTypes(): Promise<CIType[]> {
         return httpClient.get<CIType[]>(`${BASE_URL}/types`);
+    }
+
+    /**
+     * 获取关系类型
+     */
+    static async getRelationshipTypes(): Promise<RelationshipType[]> {
+        return httpClient.get<RelationshipType[]>(`${BASE_URL}/relationship-types`);
+    }
+
+    /**
+     * CMDB 对账
+     */
+    static async getReconciliation(): Promise<ReconciliationResponse> {
+        return httpClient.get<ReconciliationResponse>(`${BASE_URL}/reconciliation`);
+    }
+
+    /**
+     * 云服务目录
+     */
+    static async getCloudServices(provider?: string): Promise<CloudService[]> {
+        return httpClient.get<CloudService[]>(`${BASE_URL}/cloud-services`, { provider });
+    }
+
+    static async createCloudService(data: Partial<CloudService>): Promise<CloudService> {
+        return httpClient.post<CloudService>(`${BASE_URL}/cloud-services`, data);
+    }
+
+    /**
+     * 云账号
+     */
+    static async getCloudAccounts(provider?: string): Promise<CloudAccount[]> {
+        return httpClient.get<CloudAccount[]>(`${BASE_URL}/cloud-accounts`, { provider });
+    }
+
+    static async createCloudAccount(data: Partial<CloudAccount>): Promise<CloudAccount> {
+        return httpClient.post<CloudAccount>(`${BASE_URL}/cloud-accounts`, data);
+    }
+
+    /**
+     * 云资源
+     */
+    static async getCloudResources(params?: {
+        provider?: string;
+        service_id?: number;
+        region?: string;
+    }): Promise<CloudResource[]> {
+        return httpClient.get<CloudResource[]>(`${BASE_URL}/cloud-resources`, params);
+    }
+
+    /**
+     * 发现源
+     */
+    static async getDiscoverySources(): Promise<DiscoverySource[]> {
+        return httpClient.get<DiscoverySource[]>(`${BASE_URL}/discovery-sources`);
+    }
+
+    static async createDiscoverySource(data: Partial<DiscoverySource>): Promise<DiscoverySource> {
+        return httpClient.post<DiscoverySource>(`${BASE_URL}/discovery-sources`, data);
+    }
+
+    /**
+     * 发现任务
+     */
+    static async createDiscoveryJob(data: { source_id: string }): Promise<DiscoveryJob> {
+        return httpClient.post<DiscoveryJob>(`${BASE_URL}/discovery/jobs`, data);
+    }
+
+    static async getDiscoveryResults(jobId?: number): Promise<DiscoveryResult[]> {
+        return httpClient.get<DiscoveryResult[]>(`${BASE_URL}/discovery/results`, { job_id: jobId });
     }
 }

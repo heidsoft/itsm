@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/approvalrecord"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/rootcauseanalysis"
@@ -32,26 +33,27 @@ import (
 // TicketQuery is the builder for querying Ticket entities.
 type TicketQuery struct {
 	config
-	ctx                   *QueryContext
-	order                 []ticket.OrderOption
-	inters                []Interceptor
-	predicates            []predicate.Ticket
-	withTemplate          *TicketTemplateQuery
-	withCategory          *TicketCategoryQuery
-	withDepartment        *DepartmentQuery
-	withTags              *TicketTagQuery
-	withRelatedTickets    *TicketQuery
-	withParentTicket      *TicketQuery
-	withWorkflowInstances *WorkflowInstanceQuery
-	withSLADefinition     *SLADefinitionQuery
-	withSLAViolations     *SLAViolationQuery
-	withComments          *TicketCommentQuery
-	withAttachments       *TicketAttachmentQuery
-	withNotifications     *TicketNotificationQuery
-	withSLAAlertHistory   *SLAAlertHistoryQuery
-	withApprovalRecords   *ApprovalRecordQuery
-	withRootCauseAnalyses *RootCauseAnalysisQuery
-	withFKs               bool
+	ctx                    *QueryContext
+	order                  []ticket.OrderOption
+	inters                 []Interceptor
+	predicates             []predicate.Ticket
+	withTemplate           *TicketTemplateQuery
+	withCategory           *TicketCategoryQuery
+	withDepartment         *DepartmentQuery
+	withTags               *TicketTagQuery
+	withRelatedTickets     *TicketQuery
+	withParentTicket       *TicketQuery
+	withWorkflowInstances  *WorkflowInstanceQuery
+	withSLADefinition      *SLADefinitionQuery
+	withSLAViolations      *SLAViolationQuery
+	withComments           *TicketCommentQuery
+	withAttachments        *TicketAttachmentQuery
+	withNotifications      *TicketNotificationQuery
+	withSLAAlertHistory    *SLAAlertHistoryQuery
+	withApprovalRecords    *ApprovalRecordQuery
+	withRootCauseAnalyses  *RootCauseAnalysisQuery
+	withConfigurationItems *ConfigurationItemQuery
+	withFKs                bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -418,6 +420,28 @@ func (tq *TicketQuery) QueryRootCauseAnalyses() *RootCauseAnalysisQuery {
 	return query
 }
 
+// QueryConfigurationItems chains the current query on the "configuration_items" edge.
+func (tq *TicketQuery) QueryConfigurationItems() *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: tq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ticket.Table, ticket.FieldID, selector),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ticket.ConfigurationItemsTable, ticket.ConfigurationItemsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Ticket entity from the query.
 // Returns a *NotFoundError when no Ticket was found.
 func (tq *TicketQuery) First(ctx context.Context) (*Ticket, error) {
@@ -605,26 +629,27 @@ func (tq *TicketQuery) Clone() *TicketQuery {
 		return nil
 	}
 	return &TicketQuery{
-		config:                tq.config,
-		ctx:                   tq.ctx.Clone(),
-		order:                 append([]ticket.OrderOption{}, tq.order...),
-		inters:                append([]Interceptor{}, tq.inters...),
-		predicates:            append([]predicate.Ticket{}, tq.predicates...),
-		withTemplate:          tq.withTemplate.Clone(),
-		withCategory:          tq.withCategory.Clone(),
-		withDepartment:        tq.withDepartment.Clone(),
-		withTags:              tq.withTags.Clone(),
-		withRelatedTickets:    tq.withRelatedTickets.Clone(),
-		withParentTicket:      tq.withParentTicket.Clone(),
-		withWorkflowInstances: tq.withWorkflowInstances.Clone(),
-		withSLADefinition:     tq.withSLADefinition.Clone(),
-		withSLAViolations:     tq.withSLAViolations.Clone(),
-		withComments:          tq.withComments.Clone(),
-		withAttachments:       tq.withAttachments.Clone(),
-		withNotifications:     tq.withNotifications.Clone(),
-		withSLAAlertHistory:   tq.withSLAAlertHistory.Clone(),
-		withApprovalRecords:   tq.withApprovalRecords.Clone(),
-		withRootCauseAnalyses: tq.withRootCauseAnalyses.Clone(),
+		config:                 tq.config,
+		ctx:                    tq.ctx.Clone(),
+		order:                  append([]ticket.OrderOption{}, tq.order...),
+		inters:                 append([]Interceptor{}, tq.inters...),
+		predicates:             append([]predicate.Ticket{}, tq.predicates...),
+		withTemplate:           tq.withTemplate.Clone(),
+		withCategory:           tq.withCategory.Clone(),
+		withDepartment:         tq.withDepartment.Clone(),
+		withTags:               tq.withTags.Clone(),
+		withRelatedTickets:     tq.withRelatedTickets.Clone(),
+		withParentTicket:       tq.withParentTicket.Clone(),
+		withWorkflowInstances:  tq.withWorkflowInstances.Clone(),
+		withSLADefinition:      tq.withSLADefinition.Clone(),
+		withSLAViolations:      tq.withSLAViolations.Clone(),
+		withComments:           tq.withComments.Clone(),
+		withAttachments:        tq.withAttachments.Clone(),
+		withNotifications:      tq.withNotifications.Clone(),
+		withSLAAlertHistory:    tq.withSLAAlertHistory.Clone(),
+		withApprovalRecords:    tq.withApprovalRecords.Clone(),
+		withRootCauseAnalyses:  tq.withRootCauseAnalyses.Clone(),
+		withConfigurationItems: tq.withConfigurationItems.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -796,6 +821,17 @@ func (tq *TicketQuery) WithRootCauseAnalyses(opts ...func(*RootCauseAnalysisQuer
 	return tq
 }
 
+// WithConfigurationItems tells the query-builder to eager-load the nodes that are connected to
+// the "configuration_items" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TicketQuery) WithConfigurationItems(opts ...func(*ConfigurationItemQuery)) *TicketQuery {
+	query := (&ConfigurationItemClient{config: tq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withConfigurationItems = query
+	return tq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -875,7 +911,7 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 		nodes       = []*Ticket{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [15]bool{
+		loadedTypes = [16]bool{
 			tq.withTemplate != nil,
 			tq.withCategory != nil,
 			tq.withDepartment != nil,
@@ -891,6 +927,7 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			tq.withSLAAlertHistory != nil,
 			tq.withApprovalRecords != nil,
 			tq.withRootCauseAnalyses != nil,
+			tq.withConfigurationItems != nil,
 		}
 	)
 	if withFKs {
@@ -1012,6 +1049,15 @@ func (tq *TicketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Ticke
 			func(n *Ticket) { n.Edges.RootCauseAnalyses = []*RootCauseAnalysis{} },
 			func(n *Ticket, e *RootCauseAnalysis) {
 				n.Edges.RootCauseAnalyses = append(n.Edges.RootCauseAnalyses, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := tq.withConfigurationItems; query != nil {
+		if err := tq.loadConfigurationItems(ctx, query, nodes,
+			func(n *Ticket) { n.Edges.ConfigurationItems = []*ConfigurationItem{} },
+			func(n *Ticket, e *ConfigurationItem) {
+				n.Edges.ConfigurationItems = append(n.Edges.ConfigurationItems, e)
 			}); err != nil {
 			return nil, err
 		}
@@ -1464,6 +1510,67 @@ func (tq *TicketQuery) loadRootCauseAnalyses(ctx context.Context, query *RootCau
 			return fmt.Errorf(`unexpected referenced foreign-key "ticket_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (tq *TicketQuery) loadConfigurationItems(ctx context.Context, query *ConfigurationItemQuery, nodes []*Ticket, init func(*Ticket), assign func(*Ticket, *ConfigurationItem)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Ticket)
+	nids := make(map[int]map[*Ticket]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(ticket.ConfigurationItemsTable)
+		s.Join(joinT).On(s.C(configurationitem.FieldID), joinT.C(ticket.ConfigurationItemsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(ticket.ConfigurationItemsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(ticket.ConfigurationItemsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Ticket]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*ConfigurationItem](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "configuration_items" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

@@ -15,6 +15,7 @@ import {
   Badge,
   Avatar,
   Pagination,
+  Select,
 } from 'antd';
 import {
   FilterOutlined,
@@ -335,7 +336,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                     mode="multiple"
                     placeholder={filter.label}
                     value={selectedFilters[filter.key] || filter.value}
-                    onChange={(values) => {
+                    onChange={(values: string[]) => {
                       setSelectedFilters(prev => ({ ...prev, [filter.key]: values }));
                       filter.onChange(values);
                     }}
@@ -462,7 +463,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               expandable={expandable}
               components={virtual ? {
                 body: {
-                  wrapper: ({ children }) => (
+                  wrapper: ({ children }: { children: React.ReactNode }) => (
                     <div style={{ height: scroll?.y || 400, overflow: 'auto' }}>
                       {children}
                     </div>

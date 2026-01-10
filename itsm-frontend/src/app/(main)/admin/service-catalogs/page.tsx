@@ -38,12 +38,14 @@ import {
   Tag,
 } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import { CMDBApi } from '@/modules/cmdb/api';
 import type {
   ServiceItem,
   CreateServiceItemRequest,
   UpdateServiceItemRequest,
   ServiceStatus,
 } from '@/types/service-catalog';
+import type { CIType, CloudService } from '@/modules/cmdb/types';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -58,6 +60,11 @@ const ServiceCatalogManagement = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [ciTypeFilter, setCiTypeFilter] = useState<number | undefined>(undefined);
+  const [cloudServiceFilter, setCloudServiceFilter] = useState<number | undefined>(undefined);
+  const [ciTypes, setCiTypes] = useState<CIType[]>([]);
+  const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
+  const [optionsLoading, setOptionsLoading] = useState(false);
   const [form] = Form.useForm();
 
   // 统计数据
@@ -102,17 +109,52 @@ const ServiceCatalogManagement = () => {
     fetchCatalogs();
   }, []);
 
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        setOptionsLoading(true);
+        const [types, services] = await Promise.all([
+          CMDBApi.getTypes(),
+          CMDBApi.getCloudServices(),
+        ]);
+        setCiTypes(types || []);
+        setCloudServices(services || []);
+      } catch (error) {
+        message.error('加载CMDB选项失败');
+      } finally {
+        setOptionsLoading(false);
+      }
+    };
+    loadOptions();
+  }, []);
+
   // 处理表单提交
-  const handleSubmit = async (values: CreateServiceItemRequest) => {
+  const handleSubmit = async (values: CreateServiceItemRequest & Record<string, any>) => {
     try {
+      if (values.cloudServiceId && !values.ciTypeId) {
+        message.error('关联云服务时必须选择CI类型');
+        return;
+      }
+      const payload: CreateServiceItemRequest = {
+        name: values.name,
+        category: values.category,
+        shortDescription: values.description,
+        fullDescription: values.description,
+        availability: values.delivery_time
+          ? { responseTime: values.delivery_time }
+          : undefined,
+        ciTypeId: values.ciTypeId,
+        cloudServiceId: values.cloudServiceId,
+        ...(values.status ? { status: values.status } : {}),
+      } as CreateServiceItemRequest;
       if (editingCatalog) {
         await ServiceCatalogApi.updateService(
           editingCatalog.id,
-          values as UpdateServiceItemRequest
+          payload as UpdateServiceItemRequest
         );
         message.success('服务目录更新成功');
       } else {
-        await ServiceCatalogApi.createService(values);
+        await ServiceCatalogApi.createService(payload);
         message.success('服务目录创建成功');
       }
       setShowModal(false);
@@ -131,9 +173,11 @@ const ServiceCatalogManagement = () => {
     form.setFieldsValue({
       name: catalog.name,
       category: catalog.category,
-      shortDescription: catalog.shortDescription,
-      fullDescription: catalog.fullDescription,
+      description: catalog.shortDescription || catalog.fullDescription,
+      delivery_time: catalog.availability?.responseTime,
       status: catalog.status,
+      ciTypeId: catalog.ciTypeId,
+      cloudServiceId: catalog.cloudServiceId,
     });
     setShowModal(true);
   };
@@ -195,10 +239,16 @@ const ServiceCatalogManagement = () => {
       catalog.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       catalog.shortDescription.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = !statusFilter || catalog.status === statusFilter;
+    const matchesStatus =
+      !statusFilter ||
+      (statusFilter === 'enabled'
+        ? catalog.status === 'published'
+        : catalog.status !== 'published');
     const matchesCategory = !categoryFilter || catalog.category === categoryFilter;
+    const matchesCIType = !ciTypeFilter || catalog.ciTypeId === ciTypeFilter;
+    const matchesCloudService = !cloudServiceFilter || catalog.cloudServiceId === cloudServiceFilter;
 
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch && matchesStatus && matchesCategory && matchesCIType && matchesCloudService;
   });
 
   // 表格列定义
@@ -220,6 +270,26 @@ const ServiceCatalogManagement = () => {
       key: 'category',
       width: 120,
       render: (category: string) => <Tag color='blue'>{category}</Tag>,
+    },
+    {
+      title: '关联CI类型',
+      dataIndex: 'ciTypeId',
+      key: 'ciTypeId',
+      width: 140,
+      render: (_: number | undefined, record: ServiceItem) => {
+        const type = ciTypes.find(item => item.id === record.ciTypeId);
+        return type ? type.name : '-';
+      },
+    },
+    {
+      title: '关联云服务',
+      dataIndex: 'cloudServiceId',
+      key: 'cloudServiceId',
+      width: 180,
+      render: (_: number | undefined, record: ServiceItem) => {
+        const service = cloudServices.find(item => item.id === record.cloudServiceId);
+        return service ? `${service.service_name} (${service.resource_type_name})` : '-';
+      },
     },
     {
       title: '交付时间',
@@ -417,7 +487,45 @@ const ServiceCatalogManagement = () => {
               <Option value='数据服务'>数据服务</Option>
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={10}>
+          <Col xs={24} sm={12} md={5}>
+            <Select
+              placeholder='CI类型筛选'
+              value={ciTypeFilter}
+              onChange={setCiTypeFilter}
+              allowClear
+              loading={optionsLoading}
+              style={{ width: '100%' }}
+            >
+              {ciTypes.map(type => (
+                <Option key={type.id} value={type.id}>
+                  {type.name}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} md={5}>
+            <Select
+              placeholder='云服务筛选'
+              value={cloudServiceFilter}
+              onChange={setCloudServiceFilter}
+              allowClear
+              loading={optionsLoading}
+              showSearch
+              optionFilterProp='label'
+              style={{ width: '100%' }}
+            >
+              {cloudServices.map(service => (
+                <Option
+                  key={service.id}
+                  value={service.id}
+                  label={`${service.service_name} (${service.resource_type_name})`}
+                >
+                  {service.service_name} ({service.resource_type_name})
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={24} md={24}>
             <Space>
               <Button
                 type='primary'
@@ -546,6 +654,35 @@ const ServiceCatalogManagement = () => {
           >
             <Input.TextArea rows={3} placeholder='请输入服务描述' showCount maxLength={500} />
           </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name='ciTypeId' label='关联CI类型'>
+                <Select placeholder='选择CI类型' allowClear loading={optionsLoading}>
+                  {ciTypes.map(type => (
+                    <Option key={type.id} value={type.id}>
+                      {type.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name='cloudServiceId' label='关联云服务'>
+                <Select placeholder='选择云服务' allowClear loading={optionsLoading} showSearch optionFilterProp='label'>
+                  {cloudServices.map(service => (
+                    <Option
+                      key={service.id}
+                      value={service.id}
+                      label={`${service.service_name} (${service.resource_type_name})`}
+                    >
+                      {service.service_name} ({service.resource_type_name})
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Row gutter={16}>
             <Col span={12}>

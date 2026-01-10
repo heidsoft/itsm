@@ -4,7 +4,7 @@
  * 配置项 (CI) 列表组件
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Table, Tag, Button, Card, Space, Tooltip,
     Input, Select, Form, message, Modal, Breadcrumb
@@ -29,6 +29,12 @@ const statusColors: Record<string, string> = {
     [CIStatus.DECOMMISSIONED]: 'red',
 };
 
+const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    return '';
+};
+
 const CIList: React.FC = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -36,6 +42,8 @@ const CIList: React.FC = () => {
     const [total, setTotal] = useState(0);
     const [types, setTypes] = useState<CIType[]>([]);
     const [form] = Form.useForm();
+    const requestIdRef = useRef(0);
+    const isMountedRef = useRef(true);
 
     const [query, setQuery] = useState<CIQuery>({
         page: 1,
@@ -45,32 +53,50 @@ const CIList: React.FC = () => {
     const loadTypes = async () => {
         try {
             const res = await CMDBApi.getTypes();
+            if (!isMountedRef.current) return;
             setTypes(res || []);
         } catch (e) {
+            if (!isMountedRef.current) return;
             console.error(e);
+            message.error('加载资产类型失败');
         }
     };
 
     const loadData = async () => {
+        const requestId = ++requestIdRef.current;
         setLoading(true);
         try {
-            const values = await form.validateFields();
+            const values = form.getFieldsValue();
             const resp = await CMDBApi.getCIs({
                 ...query,
                 ...values,
             });
+            if (!isMountedRef.current || requestId !== requestIdRef.current) return;
             setData(resp.items || []);
             setTotal(resp.total || 0);
         } catch (error) {
+            if (!isMountedRef.current || requestId !== requestIdRef.current) return;
             console.error(error);
-            message.error('加载配置项列表失败');
+            const errorMessage = getErrorMessage(error);
+            message.error(errorMessage ? `加载配置项列表失败：${errorMessage}` : '加载配置项列表失败');
         } finally {
-            setLoading(false);
+            if (isMountedRef.current && requestId === requestIdRef.current) {
+                setLoading(false);
+            }
         }
     };
 
     useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
+    useEffect(() => {
         loadTypes();
+    }, []);
+
+    useEffect(() => {
         loadData();
     }, [query]);
 
@@ -88,7 +114,8 @@ const CIList: React.FC = () => {
                     message.success('删除成功');
                     loadData();
                 } catch (e) {
-                    message.error('删除失败');
+                    const errorMessage = getErrorMessage(e);
+                    message.error(errorMessage ? `删除失败：${errorMessage}` : '删除失败');
                 }
             }
         });
@@ -105,7 +132,13 @@ const CIList: React.FC = () => {
             dataIndex: 'name',
             ellipsis: true,
             render: (text: string, record: ConfigurationItem) => (
-                <a onClick={() => router.push(`/cmdb/cis/${record.id}`)}>{text}</a>
+                <Button
+                    type="link"
+                    onClick={() => router.push(`/cmdb/cis/${record.id}`)}
+                    style={{ padding: 0, height: 'auto' }}
+                >
+                    {text}
+                </Button>
             )
         },
         {
@@ -113,6 +146,12 @@ const CIList: React.FC = () => {
             dataIndex: 'ci_type_id',
             width: 120,
             render: (id: number) => types.find(t => t.id === id)?.name || `类型 ${id}`,
+        },
+        {
+            title: '云厂商',
+            dataIndex: 'cloud_provider',
+            width: 120,
+            render: (value?: string) => value || '-',
         },
         {
             title: '状态',
@@ -148,6 +187,7 @@ const CIList: React.FC = () => {
                         <Button
                             type="text"
                             icon={<EditOutlined />}
+                            aria-label="编辑"
                             onClick={() => router.push(`/cmdb/cis/${record.id}/edit`)}
                         />
                     </Tooltip>
@@ -156,6 +196,7 @@ const CIList: React.FC = () => {
                             type="text"
                             danger
                             icon={<DeleteOutlined />}
+                            aria-label="删除"
                             onClick={() => handleDelete(record.id)}
                         />
                     </Tooltip>
@@ -165,12 +206,15 @@ const CIList: React.FC = () => {
     ];
 
     return (
-        <Card bordered={false}>
-            <Breadcrumb style={{ marginBottom: 16 }}>
-                <Breadcrumb.Item>首页</Breadcrumb.Item>
-                <Breadcrumb.Item>配置管理</Breadcrumb.Item>
-                <Breadcrumb.Item>配置项列表</Breadcrumb.Item>
-            </Breadcrumb>
+        <Card variant="borderless">
+            <Breadcrumb
+                style={{ marginBottom: 16 }}
+                items={[
+                    { title: '首页' },
+                    { title: '配置管理' },
+                    { title: '配置项列表' },
+                ]}
+            />
 
             <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
                 <Form.Item name="search">
@@ -192,8 +236,12 @@ const CIList: React.FC = () => {
                 </Form.Item>
                 <Form.Item>
                     <Space>
-                        <Button type="primary" onClick={handleSearch}>查询</Button>
-                        <Button icon={<ReloadOutlined />} onClick={loadData} />
+                        <Button onClick={handleSearch}>查询</Button>
+                        <Button icon={<ReloadOutlined />} onClick={loadData} aria-label="刷新" />
+                        <Button onClick={() => router.push('/cmdb/cloud-services')}>云服务目录</Button>
+                        <Button onClick={() => router.push('/cmdb/cloud-accounts')}>云账号管理</Button>
+                        <Button onClick={() => router.push('/cmdb/cloud-resources')}>云资源列表</Button>
+                        <Button onClick={() => router.push('/cmdb/reconciliation')}>对账中心</Button>
                     </Space>
                 </Form.Item>
                 <div style={{ flex: 1, textAlign: 'right' }}>
@@ -212,6 +260,7 @@ const CIList: React.FC = () => {
                 columns={columns as any}
                 dataSource={data}
                 loading={loading}
+                locale={{ emptyText: '暂无配置项' }}
                 pagination={{
                     current: query.page,
                     pageSize: query.page_size,

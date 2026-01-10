@@ -51,9 +51,9 @@ export interface UseTicketsReturn {
   
   // Ticket operations
   createTicket: (ticketData: any) => Promise<void>;
-  updateTicket: (id: string, ticketData: any) => Promise<void>;
-  deleteTicket: (id: string) => Promise<void>;
-  batchDeleteTickets: (ids: string[]) => Promise<void>;
+  updateTicket: (id: number, ticketData: any) => Promise<void>;
+  deleteTicket: (id: number) => Promise<void>;
+  batchDeleteTickets: (ids: number[]) => Promise<void>;
 }
 
 export const useTickets = (): UseTicketsReturn => {
@@ -148,7 +148,7 @@ export const useTickets = (): UseTicketsReturn => {
   }, [refreshData]);
 
   // Update ticket
-  const updateTicket = useCallback(async (id: string, ticketData: any) => {
+  const updateTicket = useCallback(async (id: number, ticketData: any) => {
     try {
       await ticketService.updateTicket(id, ticketData);
       message.success("Ticket updated successfully");
@@ -161,9 +161,9 @@ export const useTickets = (): UseTicketsReturn => {
   }, [refreshData]);
 
   // Delete ticket
-  const deleteTicket = useCallback(async (id: string) => {
+  const deleteTicket = useCallback(async (id: number) => {
     try {
-      await ticketService.deleteTicket(Number(id));
+      await ticketService.deleteTicket(id);
       message.success("Ticket deleted successfully");
       await refreshData();
     } catch (err) {
@@ -174,9 +174,9 @@ export const useTickets = (): UseTicketsReturn => {
   }, [refreshData]);
 
   // Batch delete tickets
-  const batchDeleteTickets = useCallback(async (ids: string[]) => {
+  const batchDeleteTickets = useCallback(async (ids: number[]) => {
     try {
-      await Promise.all(ids.map(id => ticketService.deleteTicket(Number(id))));
+      await Promise.all(ids.map(id => ticketService.deleteTicket(id)));
       message.success(`${ids.length} tickets deleted successfully`);
       await refreshData();
     } catch (err) {

@@ -90,6 +90,8 @@ const (
 	EdgeApprovalRecords = "approval_records"
 	// EdgeRootCauseAnalyses holds the string denoting the root_cause_analyses edge name in mutations.
 	EdgeRootCauseAnalyses = "root_cause_analyses"
+	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
+	EdgeConfigurationItems = "configuration_items"
 	// Table holds the table name of the ticket in the database.
 	Table = "tickets"
 	// TemplateTable is the table that holds the template relation/edge.
@@ -191,6 +193,11 @@ const (
 	RootCauseAnalysesInverseTable = "root_cause_analyses"
 	// RootCauseAnalysesColumn is the table column denoting the root_cause_analyses relation/edge.
 	RootCauseAnalysesColumn = "ticket_id"
+	// ConfigurationItemsTable is the table that holds the configuration_items relation/edge. The primary key declared below.
+	ConfigurationItemsTable = "configuration_item_tickets"
+	// ConfigurationItemsInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	ConfigurationItemsInverseTable = "configuration_items"
 )
 
 // Columns holds all SQL columns for ticket fields.
@@ -226,6 +233,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"ticket_tag_tickets",
 }
+
+var (
+	// ConfigurationItemsPrimaryKey and ConfigurationItemsColumn2 are the table columns denoting the
+	// primary key for the configuration_items relation (M2M).
+	ConfigurationItemsPrimaryKey = []string{"configuration_item_id", "ticket_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -562,6 +575,20 @@ func ByRootCauseAnalyses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption
 		sqlgraph.OrderByNeighborTerms(s, newRootCauseAnalysesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByConfigurationItemsCount orders the results by configuration_items count.
+func ByConfigurationItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newConfigurationItemsStep(), opts...)
+	}
+}
+
+// ByConfigurationItems orders the results by configuration_items terms.
+func ByConfigurationItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -665,5 +692,12 @@ func newRootCauseAnalysesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RootCauseAnalysesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RootCauseAnalysesTable, RootCauseAnalysesColumn),
+	)
+}
+func newConfigurationItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConfigurationItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ConfigurationItemsTable, ConfigurationItemsPrimaryKey...),
 	)
 }

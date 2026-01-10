@@ -59,7 +59,7 @@ const ArticleDetail: React.FC = () => {
         );
     }
 
-    const status = article.is_published ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
+    const status = article.status === KnowledgeStatus.PUBLISHED ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
 
     return (
         <div style={{ padding: '0 0 24px' }}>
@@ -91,7 +91,7 @@ const ArticleDetail: React.FC = () => {
                     <Title level={2}>{article.title}</Title>
 
                     <Space split={<Divider type="vertical" />} wrap>
-                        <Space><UserOutlined /><Text type="secondary">作者 ID: {article.author_id}</Text></Space>
+                        <Space><UserOutlined /><Text type="secondary">作者: {article.author}</Text></Space>
                         <Space><CalendarOutlined /><Text type="secondary">{dayjs(article.created_at).format('YYYY-MM-DD HH:mm')}</Text></Space>
                         <Space><FolderOutlined /><Text type="secondary">{article.category || '未分类'}</Text></Space>
                         <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>

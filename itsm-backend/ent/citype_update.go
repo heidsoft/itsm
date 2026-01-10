@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
 	"time"
 
@@ -177,9 +178,45 @@ func (ctu *CITypeUpdate) SetUpdatedAt(t time.Time) *CITypeUpdate {
 	return ctu
 }
 
+// AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
+func (ctu *CITypeUpdate) AddCiIDs(ids ...int) *CITypeUpdate {
+	ctu.mutation.AddCiIDs(ids...)
+	return ctu
+}
+
+// AddCis adds the "cis" edges to the ConfigurationItem entity.
+func (ctu *CITypeUpdate) AddCis(c ...*ConfigurationItem) *CITypeUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctu.AddCiIDs(ids...)
+}
+
 // Mutation returns the CITypeMutation object of the builder.
 func (ctu *CITypeUpdate) Mutation() *CITypeMutation {
 	return ctu.mutation
+}
+
+// ClearCis clears all "cis" edges to the ConfigurationItem entity.
+func (ctu *CITypeUpdate) ClearCis() *CITypeUpdate {
+	ctu.mutation.ClearCis()
+	return ctu
+}
+
+// RemoveCiIDs removes the "cis" edge to ConfigurationItem entities by IDs.
+func (ctu *CITypeUpdate) RemoveCiIDs(ids ...int) *CITypeUpdate {
+	ctu.mutation.RemoveCiIDs(ids...)
+	return ctu
+}
+
+// RemoveCis removes "cis" edges to ConfigurationItem entities.
+func (ctu *CITypeUpdate) RemoveCis(c ...*ConfigurationItem) *CITypeUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctu.RemoveCiIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -286,6 +323,51 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ctu.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if ctu.mutation.CisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctu.mutation.RemovedCisIDs(); len(nodes) > 0 && !ctu.mutation.CisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctu.mutation.CisIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ctu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -456,9 +538,45 @@ func (ctuo *CITypeUpdateOne) SetUpdatedAt(t time.Time) *CITypeUpdateOne {
 	return ctuo
 }
 
+// AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
+func (ctuo *CITypeUpdateOne) AddCiIDs(ids ...int) *CITypeUpdateOne {
+	ctuo.mutation.AddCiIDs(ids...)
+	return ctuo
+}
+
+// AddCis adds the "cis" edges to the ConfigurationItem entity.
+func (ctuo *CITypeUpdateOne) AddCis(c ...*ConfigurationItem) *CITypeUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctuo.AddCiIDs(ids...)
+}
+
 // Mutation returns the CITypeMutation object of the builder.
 func (ctuo *CITypeUpdateOne) Mutation() *CITypeMutation {
 	return ctuo.mutation
+}
+
+// ClearCis clears all "cis" edges to the ConfigurationItem entity.
+func (ctuo *CITypeUpdateOne) ClearCis() *CITypeUpdateOne {
+	ctuo.mutation.ClearCis()
+	return ctuo
+}
+
+// RemoveCiIDs removes the "cis" edge to ConfigurationItem entities by IDs.
+func (ctuo *CITypeUpdateOne) RemoveCiIDs(ids ...int) *CITypeUpdateOne {
+	ctuo.mutation.RemoveCiIDs(ids...)
+	return ctuo
+}
+
+// RemoveCis removes "cis" edges to ConfigurationItem entities.
+func (ctuo *CITypeUpdateOne) RemoveCis(c ...*ConfigurationItem) *CITypeUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ctuo.RemoveCiIDs(ids...)
 }
 
 // Where appends a list predicates to the CITypeUpdate builder.
@@ -595,6 +713,51 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 	}
 	if value, ok := ctuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if ctuo.mutation.CisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctuo.mutation.RemovedCisIDs(); len(nodes) > 0 && !ctuo.mutation.CisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ctuo.mutation.CisIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   citype.CisTable,
+			Columns: []string{citype.CisColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &CIType{config: ctuo.config}
 	_spec.Assign = _node.assignValues

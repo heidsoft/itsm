@@ -1,0 +1,61 @@
+c8bde2ff38081c6c826ba53e862754f8
+/**
+ * 变更管理类型定义
+ */"use strict";
+
+/* istanbul ignore next */
+function cov_2562vpod3w() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/change/types.ts";
+  var hash = "1292f4f497ed64a9e30cef86e5076dde9c295847";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/change/types.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 3
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/modules/change/types.ts"],
+      sourcesContent: ["/**\n * \u53D8\u66F4\u7BA1\u7406\u7C7B\u578B\u5B9A\u4E49\n */\n\nimport {\n    ChangeStatus, ChangeType,\n    ChangePriority, ChangeImpact, ChangeRisk\n} from \"./constants\";\n\n// \u53D8\u66F4\u5B9E\u4F53\nexport interface Change {\n    id: number;\n    title: string;\n    description: string;\n    justification: string;\n    type: ChangeType;\n    status: ChangeStatus;\n    priority: ChangePriority;\n    impact_scope: ChangeImpact;\n    risk_level: ChangeRisk;\n    assignee_id?: number;\n    assignee_name?: string;\n    created_by: number;\n    created_by_name: string;\n    tenant_id: number;\n    planned_start_date?: string;\n    planned_end_date?: string;\n    actual_start_date?: string;\n    actual_end_date?: string;\n    implementation_plan: string;\n    rollback_plan: string;\n    affected_cis?: string[];\n    related_tickets?: string[];\n    created_at: string;\n    updated_at: string;\n}\n\n// \u5BA1\u6279\u8BB0\u5F55\nexport interface ApprovalRecord {\n    id: number;\n    change_id: number;\n    approver_id: number;\n    approver_name: string;\n    status: ChangeStatus;\n    comment?: string;\n    approved_at?: string;\n    created_at: string;\n}\n\n// \u5BA1\u6279\u94FE/\u5DE5\u4F5C\u6D41\u9879\nexport interface ApprovalChainItem {\n    id: number;\n    level: number;\n    approver_id: number;\n    approver_name: string;\n    role: string;\n    status: string;\n    is_required: boolean;\n}\n\n// \u98CE\u9669\u8BC4\u4F30\nexport interface RiskAssessment {\n    id: number;\n    change_id: number;\n    risk_level: ChangeRisk;\n    risk_description: string;\n    impact_analysis: string;\n    mitigation_measures: string;\n    contingency_plan?: string;\n    risk_owner: string;\n    risk_review_date?: string;\n}\n\n// \u521B\u5EFA\u53D8\u66F4\u8BF7\u6C42\nexport interface CreateChangeRequest {\n    title: string;\n    description: string;\n    justification: string;\n    type: ChangeType;\n    priority: ChangePriority;\n    impact_scope: ChangeImpact;\n    risk_level: ChangeRisk;\n    planned_start_date?: string;\n    planned_end_date?: string;\n    implementation_plan: string;\n    rollback_plan: string;\n    affected_cis?: string[];\n    related_tickets?: string[];\n}\n\n// \u5217\u8868\u67E5\u8BE2\u53C2\u6570\nexport interface ChangeQuery {\n    page?: number;\n    page_size?: number;\n    status?: string;\n    type?: string;\n    search?: string;\n}\n\n// \u5217\u8868\u54CD\u5E94\nexport interface ChangeListResponse {\n    changes: Change[];\n    total: number;\n    page: number;\n    size: number;\n}\n\n// \u7EDF\u8BA1\u54CD\u5E94\nexport interface ChangeStats {\n    total: number;\n    pending: number;\n    approved: number;\n    in_progress: number;\n    completed: number;\n    rolled_back: number;\n    rejected: number;\n    cancelled: number;\n}\n"],
+      names: [],
+      mappings: "AAAA;;CAEC"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "1292f4f497ed64a9e30cef86e5076dde9c295847"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2562vpod3w = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2562vpod3w();
+cov_2562vpod3w().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMjU2MnZwb2QzdyIsInBhdGgiLCJoYXNoIiwiZ2xvYmFsIiwiRnVuY3Rpb24iLCJnY3YiLCJjb3ZlcmFnZURhdGEiLCJzdGF0ZW1lbnRNYXAiLCJzdGFydCIsImxpbmUiLCJjb2x1bW4iLCJlbmQiLCJmbk1hcCIsImJyYW5jaE1hcCIsInMiLCJmIiwiYiIsImlucHV0U291cmNlTWFwIiwidmVyc2lvbiIsInNvdXJjZXMiLCJzb3VyY2VzQ29udGVudCIsIm5hbWVzIiwibWFwcGluZ3MiLCJfY292ZXJhZ2VTY2hlbWEiLCJjb3ZlcmFnZSIsImFjdHVhbENvdmVyYWdlIl0sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tZnJvbnRlbmQvc3JjL21vZHVsZXMvY2hhbmdlL3R5cGVzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICog5Y+Y5pu0566h55CG57G75Z6L5a6a5LmJXG4gKi9cblxuaW1wb3J0IHtcbiAgICBDaGFuZ2VTdGF0dXMsIENoYW5nZVR5cGUsXG4gICAgQ2hhbmdlUHJpb3JpdHksIENoYW5nZUltcGFjdCwgQ2hhbmdlUmlza1xufSBmcm9tIFwiLi9jb25zdGFudHNcIjtcblxuLy8g5Y+Y5pu05a6e5L2TXG5leHBvcnQgaW50ZXJmYWNlIENoYW5nZSB7XG4gICAgaWQ6IG51bWJlcjtcbiAgICB0aXRsZTogc3RyaW5nO1xuICAgIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG4gICAganVzdGlmaWNhdGlvbjogc3RyaW5nO1xuICAgIHR5cGU6IENoYW5nZVR5cGU7XG4gICAgc3RhdHVzOiBDaGFuZ2VTdGF0dXM7XG4gICAgcHJpb3JpdHk6IENoYW5nZVByaW9yaXR5O1xuICAgIGltcGFjdF9zY29wZTogQ2hhbmdlSW1wYWN0O1xuICAgIHJpc2tfbGV2ZWw6IENoYW5nZVJpc2s7XG4gICAgYXNzaWduZWVfaWQ/OiBudW1iZXI7XG4gICAgYXNzaWduZWVfbmFtZT86IHN0cmluZztcbiAgICBjcmVhdGVkX2J5OiBudW1iZXI7XG4gICAgY3JlYXRlZF9ieV9uYW1lOiBzdHJpbmc7XG4gICAgdGVuYW50X2lkOiBudW1iZXI7XG4gICAgcGxhbm5lZF9zdGFydF9kYXRlPzogc3RyaW5nO1xuICAgIHBsYW5uZWRfZW5kX2RhdGU/OiBzdHJpbmc7XG4gICAgYWN0dWFsX3N0YXJ0X2RhdGU/OiBzdHJpbmc7XG4gICAgYWN0dWFsX2VuZF9kYXRlPzogc3RyaW5nO1xuICAgIGltcGxlbWVudGF0aW9uX3BsYW46IHN0cmluZztcbiAgICByb2xsYmFja19wbGFuOiBzdHJpbmc7XG4gICAgYWZmZWN0ZWRfY2lzPzogc3RyaW5nW107XG4gICAgcmVsYXRlZF90aWNrZXRzPzogc3RyaW5nW107XG4gICAgY3JlYXRlZF9hdDogc3RyaW5nO1xuICAgIHVwZGF0ZWRfYXQ6IHN0cmluZztcbn1cblxuLy8g5a6h5om56K6w5b2VXG5leHBvcnQgaW50ZXJmYWNlIEFwcHJvdmFsUmVjb3JkIHtcbiAgICBpZDogbnVtYmVyO1xuICAgIGNoYW5nZV9pZDogbnVtYmVyO1xuICAgIGFwcHJvdmVyX2lkOiBudW1iZXI7XG4gICAgYXBwcm92ZXJfbmFtZTogc3RyaW5nO1xuICAgIHN0YXR1czogQ2hhbmdlU3RhdHVzO1xuICAgIGNvbW1lbnQ/OiBzdHJpbmc7XG4gICAgYXBwcm92ZWRfYXQ/OiBzdHJpbmc7XG4gICAgY3JlYXRlZF9hdDogc3RyaW5nO1xufVxuXG4vLyDlrqHmibnpk74v5bel5L2c5rWB6aG5XG5leHBvcnQgaW50ZXJmYWNlIEFwcHJvdmFsQ2hhaW5JdGVtIHtcbiAgICBpZDogbnVtYmVyO1xuICAgIGxldmVsOiBudW1iZXI7XG4gICAgYXBwcm92ZXJfaWQ6IG51bWJlcjtcbiAgICBhcHByb3Zlcl9uYW1lOiBzdHJpbmc7XG4gICAgcm9sZTogc3RyaW5nO1xuICAgIHN0YXR1czogc3RyaW5nO1xuICAgIGlzX3JlcXVpcmVkOiBib29sZWFuO1xufVxuXG4vLyDpo47pmanor4TkvLBcbmV4cG9ydCBpbnRlcmZhY2UgUmlza0Fzc2Vzc21lbnQge1xuICAgIGlkOiBudW1iZXI7XG4gICAgY2hhbmdlX2lkOiBudW1iZXI7XG4gICAgcmlza19sZXZlbDogQ2hhbmdlUmlzaztcbiAgICByaXNrX2Rlc2NyaXB0aW9uOiBzdHJpbmc7XG4gICAgaW1wYWN0X2FuYWx5c2lzOiBzdHJpbmc7XG4gICAgbWl0aWdhdGlvbl9tZWFzdXJlczogc3RyaW5nO1xuICAgIGNvbnRpbmdlbmN5X3BsYW4/OiBzdHJpbmc7XG4gICAgcmlza19vd25lcjogc3RyaW5nO1xuICAgIHJpc2tfcmV2aWV3X2RhdGU/OiBzdHJpbmc7XG59XG5cbi8vIOWIm+W7uuWPmOabtOivt+axglxuZXhwb3J0IGludGVyZmFjZSBDcmVhdGVDaGFuZ2VSZXF1ZXN0IHtcbiAgICB0aXRsZTogc3RyaW5nO1xuICAgIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG4gICAganVzdGlmaWNhdGlvbjogc3RyaW5nO1xuICAgIHR5cGU6IENoYW5nZVR5cGU7XG4gICAgcHJpb3JpdHk6IENoYW5nZVByaW9yaXR5O1xuICAgIGltcGFjdF9zY29wZTogQ2hhbmdlSW1wYWN0O1xuICAgIHJpc2tfbGV2ZWw6IENoYW5nZVJpc2s7XG4gICAgcGxhbm5lZF9zdGFydF9kYXRlPzogc3RyaW5nO1xuICAgIHBsYW5uZWRfZW5kX2RhdGU/OiBzdHJpbmc7XG4gICAgaW1wbGVtZW50YXRpb25fcGxhbjogc3RyaW5nO1xuICAgIHJvbGxiYWNrX3BsYW46IHN0cmluZztcbiAgICBhZmZlY3RlZF9jaXM/OiBzdHJpbmdbXTtcbiAgICByZWxhdGVkX3RpY2tldHM/OiBzdHJpbmdbXTtcbn1cblxuLy8g5YiX6KGo5p+l6K+i5Y+C5pWwXG5leHBvcnQgaW50ZXJmYWNlIENoYW5nZVF1ZXJ5IHtcbiAgICBwYWdlPzogbnVtYmVyO1xuICAgIHBhZ2Vfc2l6ZT86IG51bWJlcjtcbiAgICBzdGF0dXM/OiBzdHJpbmc7XG4gICAgdHlwZT86IHN0cmluZztcbiAgICBzZWFyY2g/OiBzdHJpbmc7XG59XG5cbi8vIOWIl+ihqOWTjeW6lFxuZXhwb3J0IGludGVyZmFjZSBDaGFuZ2VMaXN0UmVzcG9uc2Uge1xuICAgIGNoYW5nZXM6IENoYW5nZVtdO1xuICAgIHRvdGFsOiBudW1iZXI7XG4gICAgcGFnZTogbnVtYmVyO1xuICAgIHNpemU6IG51bWJlcjtcbn1cblxuLy8g57uf6K6h5ZON5bqUXG5leHBvcnQgaW50ZXJmYWNlIENoYW5nZVN0YXRzIHtcbiAgICB0b3RhbDogbnVtYmVyO1xuICAgIHBlbmRpbmc6IG51bWJlcjtcbiAgICBhcHByb3ZlZDogbnVtYmVyO1xuICAgIGluX3Byb2dyZXNzOiBudW1iZXI7XG4gICAgY29tcGxldGVkOiBudW1iZXI7XG4gICAgcm9sbGVkX2JhY2s6IG51bWJlcjtcbiAgICByZWplY3RlZDogbnVtYmVyO1xuICAgIGNhbmNlbGxlZDogbnVtYmVyO1xufVxuIl0sIm1hcHBpbmdzIjoiQUFBQTs7R0FFQzs7QUFBQTtBQUFBLFNBQUFBLGVBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLE1BQUEsT0FBQUMsUUFBQTtFQUFBLElBQUFDLEdBQUE7RUFBQSxJQUFBQyxZQUFBO0lBQUFMLElBQUE7SUFBQU0sWUFBQTtNQUFBO1FBQUFDLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO0lBQUE7SUFBQUUsS0FBQTtJQUFBQyxTQUFBO0lBQUFDLENBQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLE9BQUE7TUFBQUMsT0FBQTtNQUFBQyxjQUFBO01BQUFDLEtBQUE7TUFBQUMsUUFBQTtJQUFBO0lBQUFDLGVBQUE7SUFBQXJCLElBQUE7RUFBQTtFQUFBLElBQUFzQixRQUFBLEdBQUFyQixNQUFBLENBQUFFLEdBQUEsTUFBQUYsTUFBQSxDQUFBRSxHQUFBO0VBQUEsS0FBQW1CLFFBQUEsQ0FBQXZCLElBQUEsS0FBQXVCLFFBQUEsQ0FBQXZCLElBQUEsRUFBQUMsSUFBQSxLQUFBQSxJQUFBO0lBQUFzQixRQUFBLENBQUF2QixJQUFBLElBQUFLLFlBQUE7RUFBQTtFQUFBLElBQUFtQixjQUFBLEdBQUFELFFBQUEsQ0FBQXZCLElBQUE7RUFBQSIsImlnbm9yZUxpc3QiOltdfQ==

@@ -1,0 +1,487 @@
+32bcf757f6d5dcd8ded0163093ea0ccd
+// 认证组件库统一导出
+"use strict";
+
+/* istanbul ignore next */
+function cov_tnb4cfpw1() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/auth/index.ts";
+  var hash = "f16863c6a4173ddb967c710c4de573a828693477";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/auth/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 4
+        },
+        end: {
+          line: 10,
+          column: 7
+        }
+      },
+      "2": {
+        start: {
+          line: 7,
+          column: 24
+        },
+        end: {
+          line: 10,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 0
+        },
+        end: {
+          line: 34,
+          column: 3
+        }
+      },
+      "4": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 14,
+          column: 38
+        }
+      },
+      "5": {
+        start: {
+          line: 17,
+          column: 8
+        },
+        end: {
+          line: 17,
+          column: 43
+        }
+      },
+      "6": {
+        start: {
+          line: 20,
+          column: 8
+        },
+        end: {
+          line: 20,
+          column: 36
+        }
+      },
+      "7": {
+        start: {
+          line: 23,
+          column: 8
+        },
+        end: {
+          line: 23,
+          column: 36
+        }
+      },
+      "8": {
+        start: {
+          line: 26,
+          column: 8
+        },
+        end: {
+          line: 26,
+          column: 41
+        }
+      },
+      "9": {
+        start: {
+          line: 29,
+          column: 8
+        },
+        end: {
+          line: 29,
+          column: 34
+        }
+      },
+      "10": {
+        start: {
+          line: 32,
+          column: 8
+        },
+        end: {
+          line: 32,
+          column: 38
+        }
+      },
+      "11": {
+        start: {
+          line: 35,
+          column: 20
+        },
+        end: {
+          line: 35,
+          column: 43
+        }
+      },
+      "12": {
+        start: {
+          line: 36,
+          column: 18
+        },
+        end: {
+          line: 36,
+          column: 39
+        }
+      },
+      "13": {
+        start: {
+          line: 37,
+          column: 19
+        },
+        end: {
+          line: 37,
+          column: 41
+        }
+      },
+      "14": {
+        start: {
+          line: 38,
+          column: 20
+        },
+        end: {
+          line: 38,
+          column: 43
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "_export",
+        decl: {
+          start: {
+            line: 6,
+            column: 9
+          },
+          end: {
+            line: 6,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 30
+          },
+          end: {
+            line: 11,
+            column: 1
+          }
+        },
+        line: 6
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 13,
+            column: 16
+          },
+          end: {
+            line: 13,
+            column: 17
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 27
+          },
+          end: {
+            line: 15,
+            column: 5
+          }
+        },
+        line: 13
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 16,
+            column: 21
+          },
+          end: {
+            line: 16,
+            column: 22
+          }
+        },
+        loc: {
+          start: {
+            line: 16,
+            column: 32
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        line: 16
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 19,
+            column: 14
+          },
+          end: {
+            line: 19,
+            column: 15
+          }
+        },
+        loc: {
+          start: {
+            line: 19,
+            column: 25
+          },
+          end: {
+            line: 21,
+            column: 5
+          }
+        },
+        line: 19
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 22,
+            column: 15
+          },
+          end: {
+            line: 22,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 26
+          },
+          end: {
+            line: 24,
+            column: 5
+          }
+        },
+        line: 22
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 25,
+            column: 20
+          },
+          end: {
+            line: 25,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 25,
+            column: 31
+          },
+          end: {
+            line: 27,
+            column: 5
+          }
+        },
+        line: 25
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 28,
+            column: 14
+          },
+          end: {
+            line: 28,
+            column: 15
+          }
+        },
+        loc: {
+          start: {
+            line: 28,
+            column: 25
+          },
+          end: {
+            line: 30,
+            column: 5
+          }
+        },
+        line: 28
+      },
+      "7": {
+        name: "(anonymous_7)",
+        decl: {
+          start: {
+            line: 31,
+            column: 16
+          },
+          end: {
+            line: 31,
+            column: 17
+          }
+        },
+        loc: {
+          start: {
+            line: 31,
+            column: 27
+          },
+          end: {
+            line: 33,
+            column: 5
+          }
+        },
+        line: 31
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/auth/index.ts"],
+      sourcesContent: ["// \u8BA4\u8BC1\u7EC4\u4EF6\u5E93\u7EDF\u4E00\u5BFC\u51FA\nexport { AuthLayout, AuthCard } from \"./AuthLayout\";\nexport { AuthForm } from \"./AuthForm\";\nexport { AuthField, AuthFieldGroup } from \"./AuthField\";\nexport { AuthButton, AuthButtonGroup } from \"./AuthButton\";\n\n// \u7C7B\u578B\u5BFC\u51FA\nexport type { AuthLayoutProps } from \"./AuthLayout\";\nexport type { AuthCardProps } from \"./AuthLayout\";\nexport type { AuthFormProps, AuthFieldConfig, AuthButtonConfig } from \"./AuthForm\";\nexport type { AuthFieldProps, AuthFieldGroupProps } from \"./AuthField\";\nexport type { AuthButtonProps, AuthButtonGroupProps } from \"./AuthButton\";\n \n"],
+      names: ["AuthButton", "AuthButtonGroup", "AuthCard", "AuthField", "AuthFieldGroup", "AuthForm", "AuthLayout"],
+      mappings: "AAAA,YAAY;;;;;;;;;;;;IAIHA,UAAU;eAAVA,sBAAU;;IAAEC,eAAe;eAAfA,2BAAe;;IAHfC,QAAQ;eAARA,oBAAQ;;IAEpBC,SAAS;eAATA,oBAAS;;IAAEC,cAAc;eAAdA,yBAAc;;IADzBC,QAAQ;eAARA,kBAAQ;;IADRC,UAAU;eAAVA,sBAAU;;;4BAAkB;0BACZ;2BACiB;4BACE"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "f16863c6a4173ddb967c710c4de573a828693477"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_tnb4cfpw1 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_tnb4cfpw1();
+cov_tnb4cfpw1().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function _export(target, all) {
+  /* istanbul ignore next */
+  cov_tnb4cfpw1().f[0]++;
+  cov_tnb4cfpw1().s[1]++;
+  for (var name in all) {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().s[2]++;
+    Object.defineProperty(target, name, {
+      enumerable: true,
+      get: all[name]
+    });
+  }
+}
+/* istanbul ignore next */
+cov_tnb4cfpw1().s[3]++;
+_export(exports, {
+  AuthButton: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[1]++;
+    cov_tnb4cfpw1().s[4]++;
+    return _AuthButton.AuthButton;
+  },
+  AuthButtonGroup: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[2]++;
+    cov_tnb4cfpw1().s[5]++;
+    return _AuthButton.AuthButtonGroup;
+  },
+  AuthCard: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[3]++;
+    cov_tnb4cfpw1().s[6]++;
+    return _AuthLayout.AuthCard;
+  },
+  AuthField: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[4]++;
+    cov_tnb4cfpw1().s[7]++;
+    return _AuthField.AuthField;
+  },
+  AuthFieldGroup: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[5]++;
+    cov_tnb4cfpw1().s[8]++;
+    return _AuthField.AuthFieldGroup;
+  },
+  AuthForm: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[6]++;
+    cov_tnb4cfpw1().s[9]++;
+    return _AuthForm.AuthForm;
+  },
+  AuthLayout: function () {
+    /* istanbul ignore next */
+    cov_tnb4cfpw1().f[7]++;
+    cov_tnb4cfpw1().s[10]++;
+    return _AuthLayout.AuthLayout;
+  }
+});
+const _AuthLayout =
+/* istanbul ignore next */
+(cov_tnb4cfpw1().s[11]++, require("./AuthLayout"));
+const _AuthForm =
+/* istanbul ignore next */
+(cov_tnb4cfpw1().s[12]++, require("./AuthForm"));
+const _AuthField =
+/* istanbul ignore next */
+(cov_tnb4cfpw1().s[13]++, require("./AuthField"));
+const _AuthButton =
+/* istanbul ignore next */
+(cov_tnb4cfpw1().s[14]++, require("./AuthButton"));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfdG5iNGNmcHcxIiwiYWN0dWFsQ292ZXJhZ2UiLCJzIiwiQXV0aEJ1dHRvbiIsImYiLCJfQXV0aEJ1dHRvbiIsIkF1dGhCdXR0b25Hcm91cCIsIkF1dGhDYXJkIiwiX0F1dGhMYXlvdXQiLCJBdXRoRmllbGQiLCJfQXV0aEZpZWxkIiwiQXV0aEZpZWxkR3JvdXAiLCJBdXRoRm9ybSIsIl9BdXRoRm9ybSIsIkF1dGhMYXlvdXQiXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1mcm9udGVuZC9zcmMvY29tcG9uZW50cy9hdXRoL2luZGV4LnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIOiupOivgee7hOS7tuW6k+e7n+S4gOWvvOWHulxuZXhwb3J0IHsgQXV0aExheW91dCwgQXV0aENhcmQgfSBmcm9tIFwiLi9BdXRoTGF5b3V0XCI7XG5leHBvcnQgeyBBdXRoRm9ybSB9IGZyb20gXCIuL0F1dGhGb3JtXCI7XG5leHBvcnQgeyBBdXRoRmllbGQsIEF1dGhGaWVsZEdyb3VwIH0gZnJvbSBcIi4vQXV0aEZpZWxkXCI7XG5leHBvcnQgeyBBdXRoQnV0dG9uLCBBdXRoQnV0dG9uR3JvdXAgfSBmcm9tIFwiLi9BdXRoQnV0dG9uXCI7XG5cbi8vIOexu+Wei+WvvOWHulxuZXhwb3J0IHR5cGUgeyBBdXRoTGF5b3V0UHJvcHMgfSBmcm9tIFwiLi9BdXRoTGF5b3V0XCI7XG5leHBvcnQgdHlwZSB7IEF1dGhDYXJkUHJvcHMgfSBmcm9tIFwiLi9BdXRoTGF5b3V0XCI7XG5leHBvcnQgdHlwZSB7IEF1dGhGb3JtUHJvcHMsIEF1dGhGaWVsZENvbmZpZywgQXV0aEJ1dHRvbkNvbmZpZyB9IGZyb20gXCIuL0F1dGhGb3JtXCI7XG5leHBvcnQgdHlwZSB7IEF1dGhGaWVsZFByb3BzLCBBdXRoRmllbGRHcm91cFByb3BzIH0gZnJvbSBcIi4vQXV0aEZpZWxkXCI7XG5leHBvcnQgdHlwZSB7IEF1dGhCdXR0b25Qcm9wcywgQXV0aEJ1dHRvbkdyb3VwUHJvcHMgfSBmcm9tIFwiLi9BdXRoQnV0dG9uXCI7XG4gXG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7SUFJcUI7SUFBQUEsYUFBQSxZQUFBQSxDQUFBO01BQUEsT0FBQUMsY0FBQTtJQUFBO0VBQUE7RUFBQSxPQUFBQSxjQUFBO0FBQUE7QUFBQUQsYUFBQTtBQUFBQSxhQUFBLEdBQUFFLENBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0VBQVpDLFVBQVUsV0FBQUEsQ0FBQTtJQUFBO0lBQUFILGFBQUEsR0FBQUksQ0FBQTtJQUFBSixhQUFBLEdBQUFFLENBQUE7V0FBVkcsV0FBQSxDQUFBRixVQUFVOztFQUFFRyxlQUFlLFdBQUFBLENBQUE7SUFBQTtJQUFBTixhQUFBLEdBQUFJLENBQUE7SUFBQUosYUFBQSxHQUFBRSxDQUFBO1dBQWZHLFdBQUEsQ0FBQUMsZUFBZTs7RUFIZkMsUUFBUSxXQUFBQSxDQUFBO0lBQUE7SUFBQVAsYUFBQSxHQUFBSSxDQUFBO0lBQUFKLGFBQUEsR0FBQUUsQ0FBQTtXQUFSTSxXQUFBLENBQUFELFFBQVE7O0VBRXBCRSxTQUFTLFdBQUFBLENBQUE7SUFBQTtJQUFBVCxhQUFBLEdBQUFJLENBQUE7SUFBQUosYUFBQSxHQUFBRSxDQUFBO1dBQVRRLFVBQUEsQ0FBQUQsU0FBUzs7RUFBRUUsY0FBYyxXQUFBQSxDQUFBO0lBQUE7SUFBQVgsYUFBQSxHQUFBSSxDQUFBO0lBQUFKLGFBQUEsR0FBQUUsQ0FBQTtXQUFkUSxVQUFBLENBQUFDLGNBQWM7O0VBRHpCQyxRQUFRLFdBQUFBLENBQUE7SUFBQTtJQUFBWixhQUFBLEdBQUFJLENBQUE7SUFBQUosYUFBQSxHQUFBRSxDQUFBO1dBQVJXLFNBQUEsQ0FBQUQsUUFBUTs7RUFEUkUsVUFBVSxXQUFBQSxDQUFBO0lBQUE7SUFBQWQsYUFBQSxHQUFBSSxDQUFBO0lBQUFKLGFBQUEsR0FBQUUsQ0FBQTtXQUFWTSxXQUFBLENBQUFNLFVBQVU7Ozs7O2tDQUFrQjs7O2tDQUNaOzs7a0NBQ2lCOzs7a0NBQ0UiLCJpZ25vcmVMaXN0IjpbXX0=

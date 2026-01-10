@@ -2,9 +2,13 @@ package seeder
 
 import (
 	"context"
+	"encoding/json"
 	"itsm-backend/ent"
+	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
+	"os"
+	"path/filepath"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -30,6 +34,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedUser1(ctx)
 	s.seedSecurity1(ctx)
 	s.backfillUserRole(ctx)
+	s.seedCloudServiceTemplates(ctx)
 }
 
 // backfillAdminRole ensures default admin account has admin role
@@ -126,5 +131,90 @@ func (s *Seeder) backfillUserRole(ctx context.Context) {
 		s.sugar.Warnw("backfill role user->end_user failed", "error", err)
 	} else if n > 0 {
 		s.sugar.Infow("backfilled roles", "updated", n)
+	}
+}
+
+type cloudServiceTemplate struct {
+	Key              string                 `json:"key"`
+	ParentKey        string                 `json:"parent_key"`
+	Provider         string                 `json:"provider"`
+	Category         string                 `json:"category"`
+	ServiceCode      string                 `json:"service_code"`
+	ServiceName      string                 `json:"service_name"`
+	ResourceTypeCode string                 `json:"resource_type_code"`
+	ResourceTypeName string                 `json:"resource_type_name"`
+	APIVersion       string                 `json:"api_version"`
+	AttributeSchema  map[string]interface{} `json:"attribute_schema"`
+	IsSystem         bool                   `json:"is_system"`
+}
+
+func (s *Seeder) seedCloudServiceTemplates(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip cloud service templates", "error", err)
+		return
+	}
+
+	filePath := filepath.Join("config", "cmdb", "cloud_service_templates.json")
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		s.sugar.Warnw("read cloud service templates failed", "error", err, "path", filePath)
+		return
+	}
+
+	var templates []cloudServiceTemplate
+	if err := json.Unmarshal(data, &templates); err != nil {
+		s.sugar.Warnw("parse cloud service templates failed", "error", err)
+		return
+	}
+
+	existing, err := s.client.CloudService.Query().
+		Where(cloudservice.TenantID(t.ID)).
+		All(ctx)
+	if err != nil {
+		s.sugar.Warnw("load existing cloud services failed", "error", err)
+		return
+	}
+
+	existingIndex := make(map[string]*ent.CloudService, len(existing))
+	for _, item := range existing {
+		key := item.Provider + "|" + item.ServiceCode + "|" + item.ResourceTypeCode
+		existingIndex[key] = item
+	}
+
+	keyToID := make(map[string]int, len(templates))
+	for _, tpl := range templates {
+		matchKey := tpl.Provider + "|" + tpl.ServiceCode + "|" + tpl.ResourceTypeCode
+		if found, ok := existingIndex[matchKey]; ok {
+			keyToID[tpl.Key] = found.ID
+			continue
+		}
+		parentID := 0
+		if tpl.ParentKey != "" {
+			if id, ok := keyToID[tpl.ParentKey]; ok {
+				parentID = id
+			}
+		}
+		create := s.client.CloudService.Create().
+			SetProvider(tpl.Provider).
+			SetCategory(tpl.Category).
+			SetServiceCode(tpl.ServiceCode).
+			SetServiceName(tpl.ServiceName).
+			SetResourceTypeCode(tpl.ResourceTypeCode).
+			SetResourceTypeName(tpl.ResourceTypeName).
+			SetAPIVersion(tpl.APIVersion).
+			SetAttributeSchema(tpl.AttributeSchema).
+			SetIsSystem(tpl.IsSystem).
+			SetIsActive(true).
+			SetTenantID(t.ID)
+		if parentID > 0 {
+			create.SetParentID(parentID)
+		}
+		entity, err := create.Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed cloud service failed", "error", err, "service_code", tpl.ServiceCode, "resource_type_code", tpl.ResourceTypeCode)
+			continue
+		}
+		keyToID[tpl.Key] = entity.ID
 	}
 }

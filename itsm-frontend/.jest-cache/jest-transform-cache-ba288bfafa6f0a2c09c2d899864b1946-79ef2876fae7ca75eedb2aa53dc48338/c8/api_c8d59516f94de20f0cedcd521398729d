@@ -1,0 +1,63 @@
+32c7aa8432143320046c84194030c773
+/**
+ * API 通用类型定义
+ * 统一管理所有API相关的类型定义
+ */ // 基础响应类型
+"use strict";
+
+/* istanbul ignore next */
+function cov_2kjk4e1985() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/types/api.ts";
+  var hash = "85b70bc8bece8e16783dbeef36b474f4a9aa5ff7";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/types/api.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 8,
+          column: 3
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/types/api.ts"],
+      sourcesContent: ["/**\n * API \u901A\u7528\u7C7B\u578B\u5B9A\u4E49\n * \u7EDF\u4E00\u7BA1\u7406\u6240\u6709API\u76F8\u5173\u7684\u7C7B\u578B\u5B9A\u4E49\n */\n\n// \u57FA\u7840\u54CD\u5E94\u7C7B\u578B\nexport interface BaseResponse<T = unknown> {\n  code: number;\n  message: string;\n  data: T;\n  timestamp?: string;\n  requestId?: string;\n}\n\n// API\u54CD\u5E94\u7C7B\u578B\u522B\u540D\nexport type ApiResponse<T = unknown> = BaseResponse<T>;\n\n// \u5206\u9875\u54CD\u5E94\u7C7B\u578B\nexport interface PaginatedResponse<T> extends BaseResponse<{\n  items: T[];\n  total: number;\n  page: number;\n  pageSize: number;\n  totalPages: number;\n}> {}\n\n// \u5206\u9875\u8BF7\u6C42\u53C2\u6570\nexport interface PaginationParams {\n  page?: number;\n  pageSize?: number;\n  sortBy?: string;\n  sortOrder?: 'asc' | 'desc';\n}\n\n// \u641C\u7D22\u53C2\u6570\nexport interface SearchParams {\n  keyword?: string;\n  filters?: Record<string, unknown>;\n}\n\n// \u6279\u91CF\u64CD\u4F5C\u8BF7\u6C42\nexport interface BatchOperationRequest {\n  ids: number[];\n  action: string;\n  data?: Record<string, unknown>;\n}\n\n// \u6279\u91CF\u64CD\u4F5C\u54CD\u5E94\nexport interface BatchOperationResponse {\n  success: number;\n  failed: number;\n  errors: Array<{\n    id: number;\n    error: string;\n  }>;\n}\n\n// \u6587\u4EF6\u4E0A\u4F20\u54CD\u5E94\nexport interface FileUploadResponse {\n  id: number;\n  filename: string;\n  originalName: string;\n  fileSize: number;\n  mimeType: string;\n  url: string;\n  uploadedAt: string;\n}\n\n// \u9519\u8BEF\u7C7B\u578B\nexport interface ApiError {\n  code: number;\n  message: string;\n  details?: Record<string, unknown>;\n  field?: string;\n}\n\n// \u64CD\u4F5C\u7ED3\u679C\nexport interface OperationResult {\n  success: boolean;\n  message: string;\n  data?: unknown;\n}\n\n// \u7EDF\u8BA1\u6570\u636E\u7C7B\u578B\nexport interface StatsData {\n  total: number;\n  active: number;\n  inactive: number;\n  percentage?: number;\n}\n\n// \u8D8B\u52BF\u6570\u636E\u7C7B\u578B\nexport interface TrendData {\n  date: string;\n  value: number;\n  label?: string;\n}\n\n// \u56FE\u8868\u6570\u636E\u7C7B\u578B\nexport interface ChartData {\n  labels: string[];\n  datasets: Array<{\n    label: string;\n    data: number[];\n    backgroundColor?: string | string[];\n    borderColor?: string | string[];\n  }>;\n}\n\n// \u5BFC\u51FA\u9009\u9879\nexport interface ExportOptions {\n  format: 'excel' | 'csv' | 'pdf';\n  fields?: string[];\n  filters?: Record<string, unknown>;\n  filename?: string;\n}\n\n// \u5BFC\u5165\u7ED3\u679C\nexport interface ImportResult {\n  total: number;\n  success: number;\n  failed: number;\n  errors: Array<{\n    row: number;\n    field: string;\n    error: string;\n  }>;\n}\n"],
+      names: [],
+      mappings: "AAAA;;;CAGC,GAED,SAAS"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "85b70bc8bece8e16783dbeef36b474f4a9aa5ff7"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2kjk4e1985 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2kjk4e1985();
+cov_2kjk4e1985().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL1VzZXJzL2hlaWRzb2Z0L0Rvd25sb2Fkcy9yZXNlYXJjaC9pdHNtL2l0c20tZnJvbnRlbmQvc3JjL3R5cGVzL2FwaS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEFQSSDpgJrnlKjnsbvlnovlrprkuYlcbiAqIOe7n+S4gOeuoeeQhuaJgOaciUFQSeebuOWFs+eahOexu+Wei+WumuS5iVxuICovXG5cbi8vIOWfuuehgOWTjeW6lOexu+Wei1xuZXhwb3J0IGludGVyZmFjZSBCYXNlUmVzcG9uc2U8VCA9IHVua25vd24+IHtcbiAgY29kZTogbnVtYmVyO1xuICBtZXNzYWdlOiBzdHJpbmc7XG4gIGRhdGE6IFQ7XG4gIHRpbWVzdGFtcD86IHN0cmluZztcbiAgcmVxdWVzdElkPzogc3RyaW5nO1xufVxuXG4vLyBBUEnlk43lupTnsbvlnovliKvlkI1cbmV4cG9ydCB0eXBlIEFwaVJlc3BvbnNlPFQgPSB1bmtub3duPiA9IEJhc2VSZXNwb25zZTxUPjtcblxuLy8g5YiG6aG15ZON5bqU57G75Z6LXG5leHBvcnQgaW50ZXJmYWNlIFBhZ2luYXRlZFJlc3BvbnNlPFQ+IGV4dGVuZHMgQmFzZVJlc3BvbnNlPHtcbiAgaXRlbXM6IFRbXTtcbiAgdG90YWw6IG51bWJlcjtcbiAgcGFnZTogbnVtYmVyO1xuICBwYWdlU2l6ZTogbnVtYmVyO1xuICB0b3RhbFBhZ2VzOiBudW1iZXI7XG59PiB7fVxuXG4vLyDliIbpobXor7fmsYLlj4LmlbBcbmV4cG9ydCBpbnRlcmZhY2UgUGFnaW5hdGlvblBhcmFtcyB7XG4gIHBhZ2U/OiBudW1iZXI7XG4gIHBhZ2VTaXplPzogbnVtYmVyO1xuICBzb3J0Qnk/OiBzdHJpbmc7XG4gIHNvcnRPcmRlcj86ICdhc2MnIHwgJ2Rlc2MnO1xufVxuXG4vLyDmkJzntKLlj4LmlbBcbmV4cG9ydCBpbnRlcmZhY2UgU2VhcmNoUGFyYW1zIHtcbiAga2V5d29yZD86IHN0cmluZztcbiAgZmlsdGVycz86IFJlY29yZDxzdHJpbmcsIHVua25vd24+O1xufVxuXG4vLyDmibnph4/mk43kvZzor7fmsYJcbmV4cG9ydCBpbnRlcmZhY2UgQmF0Y2hPcGVyYXRpb25SZXF1ZXN0IHtcbiAgaWRzOiBudW1iZXJbXTtcbiAgYWN0aW9uOiBzdHJpbmc7XG4gIGRhdGE/OiBSZWNvcmQ8c3RyaW5nLCB1bmtub3duPjtcbn1cblxuLy8g5om56YeP5pON5L2c5ZON5bqUXG5leHBvcnQgaW50ZXJmYWNlIEJhdGNoT3BlcmF0aW9uUmVzcG9uc2Uge1xuICBzdWNjZXNzOiBudW1iZXI7XG4gIGZhaWxlZDogbnVtYmVyO1xuICBlcnJvcnM6IEFycmF5PHtcbiAgICBpZDogbnVtYmVyO1xuICAgIGVycm9yOiBzdHJpbmc7XG4gIH0+O1xufVxuXG4vLyDmlofku7bkuIrkvKDlk43lupRcbmV4cG9ydCBpbnRlcmZhY2UgRmlsZVVwbG9hZFJlc3BvbnNlIHtcbiAgaWQ6IG51bWJlcjtcbiAgZmlsZW5hbWU6IHN0cmluZztcbiAgb3JpZ2luYWxOYW1lOiBzdHJpbmc7XG4gIGZpbGVTaXplOiBudW1iZXI7XG4gIG1pbWVUeXBlOiBzdHJpbmc7XG4gIHVybDogc3RyaW5nO1xuICB1cGxvYWRlZEF0OiBzdHJpbmc7XG59XG5cbi8vIOmUmeivr+exu+Wei1xuZXhwb3J0IGludGVyZmFjZSBBcGlFcnJvciB7XG4gIGNvZGU6IG51bWJlcjtcbiAgbWVzc2FnZTogc3RyaW5nO1xuICBkZXRhaWxzPzogUmVjb3JkPHN0cmluZywgdW5rbm93bj47XG4gIGZpZWxkPzogc3RyaW5nO1xufVxuXG4vLyDmk43kvZznu5PmnpxcbmV4cG9ydCBpbnRlcmZhY2UgT3BlcmF0aW9uUmVzdWx0IHtcbiAgc3VjY2VzczogYm9vbGVhbjtcbiAgbWVzc2FnZTogc3RyaW5nO1xuICBkYXRhPzogdW5rbm93bjtcbn1cblxuLy8g57uf6K6h5pWw5o2u57G75Z6LXG5leHBvcnQgaW50ZXJmYWNlIFN0YXRzRGF0YSB7XG4gIHRvdGFsOiBudW1iZXI7XG4gIGFjdGl2ZTogbnVtYmVyO1xuICBpbmFjdGl2ZTogbnVtYmVyO1xuICBwZXJjZW50YWdlPzogbnVtYmVyO1xufVxuXG4vLyDotovlir/mlbDmja7nsbvlnotcbmV4cG9ydCBpbnRlcmZhY2UgVHJlbmREYXRhIHtcbiAgZGF0ZTogc3RyaW5nO1xuICB2YWx1ZTogbnVtYmVyO1xuICBsYWJlbD86IHN0cmluZztcbn1cblxuLy8g5Zu+6KGo5pWw5o2u57G75Z6LXG5leHBvcnQgaW50ZXJmYWNlIENoYXJ0RGF0YSB7XG4gIGxhYmVsczogc3RyaW5nW107XG4gIGRhdGFzZXRzOiBBcnJheTx7XG4gICAgbGFiZWw6IHN0cmluZztcbiAgICBkYXRhOiBudW1iZXJbXTtcbiAgICBiYWNrZ3JvdW5kQ29sb3I/OiBzdHJpbmcgfCBzdHJpbmdbXTtcbiAgICBib3JkZXJDb2xvcj86IHN0cmluZyB8IHN0cmluZ1tdO1xuICB9Pjtcbn1cblxuLy8g5a+85Ye66YCJ6aG5XG5leHBvcnQgaW50ZXJmYWNlIEV4cG9ydE9wdGlvbnMge1xuICBmb3JtYXQ6ICdleGNlbCcgfCAnY3N2JyB8ICdwZGYnO1xuICBmaWVsZHM/OiBzdHJpbmdbXTtcbiAgZmlsdGVycz86IFJlY29yZDxzdHJpbmcsIHVua25vd24+O1xuICBmaWxlbmFtZT86IHN0cmluZztcbn1cblxuLy8g5a+85YWl57uT5p6cXG5leHBvcnQgaW50ZXJmYWNlIEltcG9ydFJlc3VsdCB7XG4gIHRvdGFsOiBudW1iZXI7XG4gIHN1Y2Nlc3M6IG51bWJlcjtcbiAgZmFpbGVkOiBudW1iZXI7XG4gIGVycm9yczogQXJyYXk8e1xuICAgIHJvdzogbnVtYmVyO1xuICAgIGZpZWxkOiBzdHJpbmc7XG4gICAgZXJyb3I6IHN0cmluZztcbiAgfT47XG59XG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7R0FBQSxDQUtBIiwiaWdub3JlTGlzdCI6W119

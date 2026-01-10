@@ -2,12 +2,12 @@
 
 import React, { forwardRef } from 'react';
 import { Card as AntdCard, Typography, Space, Skeleton, Badge } from 'antd';
-import { motion, HTMLMotionProps } from 'framer-motion';
+import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
 const { Title, Text } = Typography;
 
-export interface EnhancedCardProps extends Omit<HTMLMotionProps<'div'>, 'title'> {
+export interface EnhancedCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   // 基础属性
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -156,7 +156,7 @@ export const EnhancedCard = forwardRef<HTMLDivElement, EnhancedCardProps>(({
   );
 
   // 动画配置
-  const animationConfig = animationVariants[animation];
+  const animationConfig = animationVariants[animation as keyof typeof animationVariants];
   
   // 渲染标题区域
   const renderHeader = () => {
@@ -217,7 +217,7 @@ export const EnhancedCard = forwardRef<HTMLDivElement, EnhancedCardProps>(({
     return (
       <div className="enhanced-card__actions">
         <Space size="small">
-          {actions.map((action, index) => (
+          {actions.map((action: React.ReactNode, index: number) => (
             <div key={index} className="enhanced-card__action">
               {action}
             </div>
@@ -357,7 +357,7 @@ export const InfoCard: React.FC<{
     hoverable
     shadow="hover"
   >
-    <Space direction="vertical" size="medium" className="w-full">
+    <Space direction="vertical" size="middle" className="w-full">
       {items.map((item, index) => (
         <div key={index} className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

@@ -3,6 +3,7 @@
  * 提供一致的错误处理、日志记录和用户反馈
  */
 
+import React from 'react';
 import { message, notification } from 'antd';
 import { ApiError, OperationResult } from '@/types/api';
 
@@ -192,29 +193,29 @@ export class ErrorHandler {
 
   // 显示用户通知
   private showUserNotification(errorInfo: ErrorInfo): void {
-    const { type, severity, message } = errorInfo;
+    const { type, severity, message: errorMessage } = errorInfo;
 
     // 根据严重程度选择通知方式
     switch (severity) {
       case ErrorSeverity.CRITICAL:
         notification.error({
           message: '系统错误',
-          description: message,
+          description: errorMessage,
           duration: 0, // 不自动关闭
         });
         break;
       case ErrorSeverity.HIGH:
         notification.error({
           message: '操作失败',
-          description: message,
+          description: errorMessage,
           duration: 5,
         });
         break;
       case ErrorSeverity.MEDIUM:
-        message.error(message);
+        message.error(errorMessage);
         break;
       case ErrorSeverity.LOW:
-        message.warning(message);
+        message.warning(errorMessage);
         break;
     }
   }

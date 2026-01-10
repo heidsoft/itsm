@@ -20,15 +20,17 @@ func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, name, category, description string, deliveryTime, tenantID int, status string) (*ServiceCatalog, error) {
+func (s *Service) Create(ctx context.Context, name, category, description string, deliveryTime, tenantID int, status string, ciTypeID, cloudServiceID int) (*ServiceCatalog, error) {
 	// Business validation could go here
 	catalog := &ServiceCatalog{
-		Name:         name,
-		Category:     category,
-		Description:  description,
-		DeliveryTime: deliveryTime,
-		Status:       status,
-		TenantID:     tenantID,
+		Name:           name,
+		Category:       category,
+		Description:    description,
+		DeliveryTime:   deliveryTime,
+		CITypeID:       ciTypeID,
+		CloudServiceID: cloudServiceID,
+		Status:         status,
+		TenantID:       tenantID,
 	}
 	return s.repo.Create(ctx, catalog)
 }
@@ -47,7 +49,7 @@ func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) (
 	return s.repo.List(ctx, tenantID, filters)
 }
 
-func (s *Service) Update(ctx context.Context, id int, name, category, description string, deliveryTime int, status string) (*ServiceCatalog, error) {
+func (s *Service) Update(ctx context.Context, id int, name, category, description string, deliveryTime int, status string, ciTypeID, cloudServiceID int) (*ServiceCatalog, error) {
 	// First check if exists
 	current, err := s.repo.Get(ctx, id)
 	if err != nil {
@@ -69,6 +71,12 @@ func (s *Service) Update(ctx context.Context, id int, name, category, descriptio
 	}
 	if status != "" {
 		current.Status = status
+	}
+	if ciTypeID > 0 {
+		current.CITypeID = ciTypeID
+	}
+	if cloudServiceID > 0 {
+		current.CloudServiceID = cloudServiceID
 	}
 
 	return s.repo.Update(ctx, current)

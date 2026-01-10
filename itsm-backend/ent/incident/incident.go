@@ -74,6 +74,8 @@ const (
 	EdgeIncidentMetrics = "incident_metrics"
 	// EdgeParentIncident holds the string denoting the parent_incident edge name in mutations.
 	EdgeParentIncident = "parent_incident"
+	// EdgeConfigurationItems holds the string denoting the configuration_items edge name in mutations.
+	EdgeConfigurationItems = "configuration_items"
 	// Table holds the table name of the incident in the database.
 	Table = "incidents"
 	// RelatedIncidentsTable is the table that holds the related_incidents relation/edge. The primary key declared below.
@@ -101,6 +103,11 @@ const (
 	IncidentMetricsColumn = "incident_id"
 	// ParentIncidentTable is the table that holds the parent_incident relation/edge. The primary key declared below.
 	ParentIncidentTable = "incident_related_incidents"
+	// ConfigurationItemsTable is the table that holds the configuration_items relation/edge. The primary key declared below.
+	ConfigurationItemsTable = "configuration_item_incidents"
+	// ConfigurationItemsInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	ConfigurationItemsInverseTable = "configuration_items"
 )
 
 // Columns holds all SQL columns for incident fields.
@@ -140,6 +147,9 @@ var (
 	// ParentIncidentPrimaryKey and ParentIncidentColumn2 are the table columns denoting the
 	// primary key for the parent_incident relation (M2M).
 	ParentIncidentPrimaryKey = []string{"incident_id", "parent_incident_id"}
+	// ConfigurationItemsPrimaryKey and ConfigurationItemsColumn2 are the table columns denoting the
+	// primary key for the configuration_items relation (M2M).
+	ConfigurationItemsPrimaryKey = []string{"configuration_item_id", "incident_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -365,6 +375,20 @@ func ByParentIncident(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newParentIncidentStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByConfigurationItemsCount orders the results by configuration_items count.
+func ByConfigurationItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newConfigurationItemsStep(), opts...)
+	}
+}
+
+// ByConfigurationItems orders the results by configuration_items terms.
+func ByConfigurationItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConfigurationItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRelatedIncidentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -398,5 +422,12 @@ func newParentIncidentStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(Table, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, ParentIncidentTable, ParentIncidentPrimaryKey...),
+	)
+}
+func newConfigurationItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConfigurationItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ConfigurationItemsTable, ConfigurationItemsPrimaryKey...),
 	)
 }

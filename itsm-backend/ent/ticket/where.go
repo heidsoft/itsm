@@ -1635,6 +1635,29 @@ func HasRootCauseAnalysesWith(preds ...predicate.RootCauseAnalysis) predicate.Ti
 	})
 }
 
+// HasConfigurationItems applies the HasEdge predicate on the "configuration_items" edge.
+func HasConfigurationItems() predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ConfigurationItemsTable, ConfigurationItemsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasConfigurationItemsWith applies the HasEdge predicate on the "configuration_items" edge with a given conditions (other predicates).
+func HasConfigurationItemsWith(preds ...predicate.ConfigurationItem) predicate.Ticket {
+	return predicate.Ticket(func(s *sql.Selector) {
+		step := newConfigurationItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Ticket) predicate.Ticket {
 	return predicate.Ticket(sql.AndPredicates(predicates...))

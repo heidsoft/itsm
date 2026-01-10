@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -31,8 +32,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeCis holds the string denoting the cis edge name in mutations.
+	EdgeCis = "cis"
 	// Table holds the table name of the citype in the database.
 	Table = "ci_types"
+	// CisTable is the table that holds the cis relation/edge.
+	CisTable = "configuration_items"
+	// CisInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	CisInverseTable = "configuration_items"
+	// CisColumn is the table column denoting the cis relation/edge.
+	CisColumn = "ci_type_id"
 )
 
 // Columns holds all SQL columns for citype fields.
@@ -125,4 +135,25 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCisCount orders the results by cis count.
+func ByCisCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCisStep(), opts...)
+	}
+}
+
+// ByCis orders the results by cis terms.
+func ByCis(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCisStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newCisStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CisInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CisTable, CisColumn),
+	)
 }

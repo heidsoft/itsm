@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 type ServiceCatalog struct{ ent.Schema }
@@ -16,6 +17,8 @@ func (ServiceCatalog) Fields() []ent.Field {
 		field.String("category").Comment("服务分类").Optional(),
 		field.Float("price").Comment("价格").Optional(),
 		field.Int("delivery_time").Comment("交付时间（天）").Optional(),
+		field.Int("ci_type_id").Comment("关联CI类型ID").Optional(),
+		field.Int("cloud_service_id").Comment("关联云服务ID").Optional(),
 		field.String("status").Comment("状态").Default("active"),
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Bool("is_active").Comment("是否激活").Default(true),
@@ -24,3 +27,10 @@ func (ServiceCatalog) Fields() []ent.Field {
 	}
 }
 func (ServiceCatalog) Edges() []ent.Edge { return nil }
+
+func (ServiceCatalog) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("ci_type_id"),
+		index.Fields("cloud_service_id"),
+	}
+}

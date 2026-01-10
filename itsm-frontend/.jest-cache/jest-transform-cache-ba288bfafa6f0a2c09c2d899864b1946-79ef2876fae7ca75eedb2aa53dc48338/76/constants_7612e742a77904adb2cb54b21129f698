@@ -1,0 +1,58 @@
+579cdbd400e9997b5fb8ece9766854c3
+/**
+ * CMDB 资产管理相关常量定义
+ */ // 配置项状态
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    CIStatus: function() {
+        return CIStatus;
+    },
+    CIStatusLabels: function() {
+        return CIStatusLabels;
+    },
+    CITypeEnum: function() {
+        return CITypeEnum;
+    },
+    CITypeLabels: function() {
+        return CITypeLabels;
+    }
+});
+var CIStatus = /*#__PURE__*/ function(CIStatus) {
+    CIStatus["ACTIVE"] = "active";
+    CIStatus["INACTIVE"] = "inactive";
+    CIStatus["MAINTENANCE"] = "maintenance";
+    CIStatus["DECOMMISSIONED"] = "decommissioned";
+    return CIStatus;
+}({});
+const CIStatusLabels = {
+    ["active"]: '使用中',
+    ["inactive"]: '未激活',
+    ["maintenance"]: '维护中',
+    ["decommissioned"]: '已报废'
+};
+var CITypeEnum = /*#__PURE__*/ function(CITypeEnum) {
+    CITypeEnum["SERVER"] = "server";
+    CITypeEnum["DATABASE"] = "database";
+    CITypeEnum["APPLICATION"] = "application";
+    CITypeEnum["NETWORK"] = "network";
+    CITypeEnum["STORAGE"] = "storage";
+    return CITypeEnum;
+}({});
+const CITypeLabels = {
+    ["server"]: '服务器',
+    ["database"]: '数据库',
+    ["application"]: '应用系统',
+    ["network"]: '网络设备',
+    ["storage"]: '存储设备'
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9tb2R1bGVzL2NtZGIvY29uc3RhbnRzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogQ01EQiDotYTkuqfnrqHnkIbnm7jlhbPluLjph4/lrprkuYlcbiAqL1xuXG4vLyDphY3nva7pobnnirbmgIFcbmV4cG9ydCBlbnVtIENJU3RhdHVzIHtcbiAgICBBQ1RJVkUgPSAnYWN0aXZlJyxcbiAgICBJTkFDVElWRSA9ICdpbmFjdGl2ZScsXG4gICAgTUFJTlRFTkFOQ0UgPSAnbWFpbnRlbmFuY2UnLFxuICAgIERFQ09NTUlTU0lPTkVEID0gJ2RlY29tbWlzc2lvbmVkJyxcbn1cblxuZXhwb3J0IGNvbnN0IENJU3RhdHVzTGFiZWxzOiBSZWNvcmQ8Q0lTdGF0dXMsIHN0cmluZz4gPSB7XG4gICAgW0NJU3RhdHVzLkFDVElWRV06ICfkvb/nlKjkuK0nLFxuICAgIFtDSVN0YXR1cy5JTkFDVElWRV06ICfmnKrmv4DmtLsnLFxuICAgIFtDSVN0YXR1cy5NQUlOVEVOQU5DRV06ICfnu7TmiqTkuK0nLFxuICAgIFtDSVN0YXR1cy5ERUNPTU1JU1NJT05FRF06ICflt7LmiqXlup8nLFxufTtcblxuLy8g5bi46KeBIENJIOexu+WeiyAo5ryU56S655So77yM5a6e6ZmF5LuOIEFQSSDojrflj5YpXG5leHBvcnQgZW51bSBDSVR5cGVFbnVtIHtcbiAgICBTRVJWRVIgPSAnc2VydmVyJyxcbiAgICBEQVRBQkFTRSA9ICdkYXRhYmFzZScsXG4gICAgQVBQTElDQVRJT04gPSAnYXBwbGljYXRpb24nLFxuICAgIE5FVFdPUksgPSAnbmV0d29yaycsXG4gICAgU1RPUkFHRSA9ICdzdG9yYWdlJyxcbn1cblxuZXhwb3J0IGNvbnN0IENJVHlwZUxhYmVsczogUmVjb3JkPHN0cmluZywgc3RyaW5nPiA9IHtcbiAgICBbQ0lUeXBlRW51bS5TRVJWRVJdOiAn5pyN5Yqh5ZmoJyxcbiAgICBbQ0lUeXBlRW51bS5EQVRBQkFTRV06ICfmlbDmja7lupMnLFxuICAgIFtDSVR5cGVFbnVtLkFQUExJQ0FUSU9OXTogJ+W6lOeUqOezu+e7nycsXG4gICAgW0NJVHlwZUVudW0uTkVUV09SS106ICfnvZHnu5zorr7lpIcnLFxuICAgIFtDSVR5cGVFbnVtLlNUT1JBR0VdOiAn5a2Y5YKo6K6+5aSHJyxcbn07XG4iXSwibmFtZXMiOlsiQ0lTdGF0dXMiLCJDSVN0YXR1c0xhYmVscyIsIkNJVHlwZUVudW0iLCJDSVR5cGVMYWJlbHMiXSwibWFwcGluZ3MiOiJBQUFBOztDQUVDLEdBRUQsUUFBUTs7Ozs7Ozs7Ozs7O0lBQ0lBLFFBQVE7ZUFBUkE7O0lBT0NDLGNBQWM7ZUFBZEE7O0lBUURDLFVBQVU7ZUFBVkE7O0lBUUNDLFlBQVk7ZUFBWkE7OztBQXZCTixJQUFBLEFBQUtILGtDQUFBQTs7Ozs7V0FBQUE7O0FBT0wsTUFBTUMsaUJBQTJDO0lBQ3BELFVBQWlCLEVBQUU7SUFDbkIsWUFBbUIsRUFBRTtJQUNyQixlQUFzQixFQUFFO0lBQ3hCLGtCQUF5QixFQUFFO0FBQy9CO0FBR08sSUFBQSxBQUFLQyxvQ0FBQUE7Ozs7OztXQUFBQTs7QUFRTCxNQUFNQyxlQUF1QztJQUNoRCxVQUFtQixFQUFFO0lBQ3JCLFlBQXFCLEVBQUU7SUFDdkIsZUFBd0IsRUFBRTtJQUMxQixXQUFvQixFQUFFO0lBQ3RCLFdBQW9CLEVBQUU7QUFDMUIifQ==

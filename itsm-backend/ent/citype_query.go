@@ -4,8 +4,10 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
 	"math"
 
@@ -22,6 +24,7 @@ type CITypeQuery struct {
 	order      []citype.OrderOption
 	inters     []Interceptor
 	predicates []predicate.CIType
+	withCis    *ConfigurationItemQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (ctq *CITypeQuery) Unique(unique bool) *CITypeQuery {
 func (ctq *CITypeQuery) Order(o ...citype.OrderOption) *CITypeQuery {
 	ctq.order = append(ctq.order, o...)
 	return ctq
+}
+
+// QueryCis chains the current query on the "cis" edge.
+func (ctq *CITypeQuery) QueryCis() *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: ctq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := ctq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := ctq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(citype.Table, citype.FieldID, selector),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, citype.CisTable, citype.CisColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(ctq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first CIType entity from the query.
@@ -250,10 +275,22 @@ func (ctq *CITypeQuery) Clone() *CITypeQuery {
 		order:      append([]citype.OrderOption{}, ctq.order...),
 		inters:     append([]Interceptor{}, ctq.inters...),
 		predicates: append([]predicate.CIType{}, ctq.predicates...),
+		withCis:    ctq.withCis.Clone(),
 		// clone intermediate query.
 		sql:  ctq.sql.Clone(),
 		path: ctq.path,
 	}
+}
+
+// WithCis tells the query-builder to eager-load the nodes that are connected to
+// the "cis" edge. The optional arguments are used to configure the query builder of the edge.
+func (ctq *CITypeQuery) WithCis(opts ...func(*ConfigurationItemQuery)) *CITypeQuery {
+	query := (&ConfigurationItemClient{config: ctq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	ctq.withCis = query
+	return ctq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +369,11 @@ func (ctq *CITypeQuery) prepareQuery(ctx context.Context) error {
 
 func (ctq *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CIType, error) {
 	var (
-		nodes = []*CIType{}
-		_spec = ctq.querySpec()
+		nodes       = []*CIType{}
+		_spec       = ctq.querySpec()
+		loadedTypes = [1]bool{
+			ctq.withCis != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*CIType).scanValues(nil, columns)
@@ -341,6 +381,7 @@ func (ctq *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CITy
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &CIType{config: ctq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +393,45 @@ func (ctq *CITypeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CITy
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := ctq.withCis; query != nil {
+		if err := ctq.loadCis(ctx, query, nodes,
+			func(n *CIType) { n.Edges.Cis = []*ConfigurationItem{} },
+			func(n *CIType, e *ConfigurationItem) { n.Edges.Cis = append(n.Edges.Cis, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (ctq *CITypeQuery) loadCis(ctx context.Context, query *ConfigurationItemQuery, nodes []*CIType, init func(*CIType), assign func(*CIType, *ConfigurationItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*CIType)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(configurationitem.FieldCiTypeID)
+	}
+	query.Where(predicate.ConfigurationItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(citype.CisColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CiTypeID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "ci_type_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (ctq *CITypeQuery) sqlCount(ctx context.Context) (int, error) {

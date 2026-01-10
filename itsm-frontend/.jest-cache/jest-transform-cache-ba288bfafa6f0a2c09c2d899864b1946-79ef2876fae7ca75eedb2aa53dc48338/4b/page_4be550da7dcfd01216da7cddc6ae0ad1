@@ -1,0 +1,310 @@
+10bc05fd437a403d41a85022d669eb7f
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_32zmllijh() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/sla/definitions/[id]/page.tsx";
+  var hash = "449b5f980eada33b968c16a771172c2ef9b14b5f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/sla/definitions/[id]/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 29
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 33
+        },
+        end: {
+          line: 13,
+          column: 117
+        }
+      },
+      "5": {
+        start: {
+          line: 15,
+          column: 4
+        },
+        end: {
+          line: 17,
+          column: 6
+        }
+      },
+      "6": {
+        start: {
+          line: 20,
+          column: 4
+        },
+        end: {
+          line: 20,
+          column: 70
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 14,
+            column: 9
+          },
+          end: {
+            line: 14,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 39
+          },
+          end: {
+            line: 18,
+            column: 1
+          }
+        },
+        line: 14
+      },
+      "2": {
+        name: "SLADetailPage",
+        decl: {
+          start: {
+            line: 19,
+            column: 9
+          },
+          end: {
+            line: 19,
+            column: 22
+          }
+        },
+        loc: {
+          start: {
+            line: 19,
+            column: 25
+          },
+          end: {
+            line: 21,
+            column: 1
+          }
+        },
+        line: 19
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 15,
+            column: 35
+          },
+          end: {
+            line: 15,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 15,
+            column: 41
+          },
+          end: {
+            line: 17,
+            column: 5
+          }
+        }],
+        line: 15
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 15,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 15,
+            column: 11
+          },
+          end: {
+            line: 15,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 15,
+            column: 18
+          },
+          end: {
+            line: 15,
+            column: 32
+          }
+        }],
+        line: 15
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/sla/definitions/[id]/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport SLADetail from '@/modules/sla/components/SLADetail';\n\nexport default function SLADetailPage() {\n    return <SLADetail />;\n}\n"],
+      names: ["SLADetailPage", "SLADetail"],
+      mappings: "AAAA;;;;;+BAIA;;;eAAwBA;;;;kEAFF;;;;;;AAEP,SAASA;IACpB,qBAAO,qBAACC,kBAAS;AACrB"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "449b5f980eada33b968c16a771172c2ef9b14b5f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_32zmllijh = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_32zmllijh();
+cov_32zmllijh().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_32zmllijh().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_32zmllijh().f[0]++;
+    cov_32zmllijh().s[2]++;
+    return SLADetailPage;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_32zmllijh().s[3]++, require("react/jsx-runtime"));
+const _SLADetail =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_32zmllijh().s[4]++, _interop_require_default(require("../../../../../modules/sla/components/SLADetail")));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_32zmllijh().f[1]++;
+  cov_32zmllijh().s[5]++;
+  return /* istanbul ignore next */(cov_32zmllijh().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_32zmllijh().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_32zmllijh().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_32zmllijh().b[0][1]++, {
+    default: obj
+  });
+}
+function SLADetailPage() {
+  /* istanbul ignore next */
+  cov_32zmllijh().f[2]++;
+  cov_32zmllijh().s[6]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)(_SLADetail.default, {});
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJTTEFEZXRhaWxQYWdlIiwiY292XzMyem1sbGlqaCIsImYiLCJzIiwiX2pzeHJ1bnRpbWUiLCJqc3giLCJfU0xBRGV0YWlsIiwiZGVmYXVsdCJdLCJzb3VyY2VzIjpbIi9Vc2Vycy9oZWlkc29mdC9Eb3dubG9hZHMvcmVzZWFyY2gvaXRzbS9pdHNtLWZyb250ZW5kL3NyYy9hcHAvKG1haW4pL3NsYS9kZWZpbml0aW9ucy9baWRdL3BhZ2UudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50JztcblxuaW1wb3J0IFNMQURldGFpbCBmcm9tICdAL21vZHVsZXMvc2xhL2NvbXBvbmVudHMvU0xBRGV0YWlsJztcblxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gU0xBRGV0YWlsUGFnZSgpIHtcbiAgICByZXR1cm4gPFNMQURldGFpbCAvPjtcbn1cbiJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OzsrQkFJQTs7Ozs7O1dBQXdCQSxhQUFBOzs7Ozs7Ozt1RUFGRjs7Ozs7Ozs7Ozs7Ozs7O0FBRVAsU0FBU0EsY0FBQTtFQUFBO0VBQUFDLGFBQUEsR0FBQUMsQ0FBQTtFQUFBRCxhQUFBLEdBQUFFLENBQUE7RUFDcEIsb0JBQU8sSUFBQUMsV0FBQSxDQUFBQyxHQUFBLEVBQUNDLFVBQUEsQ0FBQUMsT0FBUztBQUNyQiIsImlnbm9yZUxpc3QiOltdfQ==

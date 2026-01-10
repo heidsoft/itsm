@@ -144,19 +144,31 @@ var (
 	// CiRelationshipsColumns holds the columns for the "ci_relationships" table.
 	CiRelationshipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "source_ci_id", Type: field.TypeInt},
-		{Name: "target_ci_id", Type: field.TypeInt},
-		{Name: "relationship_type_id", Type: field.TypeInt},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "type", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parent_id", Type: field.TypeInt},
+		{Name: "child_id", Type: field.TypeInt},
 	}
 	// CiRelationshipsTable holds the schema information for the "ci_relationships" table.
 	CiRelationshipsTable = &schema.Table{
 		Name:       "ci_relationships",
 		Columns:    CiRelationshipsColumns,
 		PrimaryKey: []*schema.Column{CiRelationshipsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ci_relationships_configuration_items_parent_relations",
+				Columns:    []*schema.Column{CiRelationshipsColumns[4]},
+				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "ci_relationships_configuration_items_child_relations",
+				Columns:    []*schema.Column{CiRelationshipsColumns[5]},
+				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// CiTypesColumns holds the columns for the "ci_types" table.
 	CiTypesColumns = []*schema.Column{
@@ -208,27 +220,254 @@ var (
 		Columns:    ChangesColumns,
 		PrimaryKey: []*schema.Column{ChangesColumns[0]},
 	}
+	// CloudAccountsColumns holds the columns for the "cloud_accounts" table.
+	CloudAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "provider", Type: field.TypeString},
+		{Name: "account_id", Type: field.TypeString},
+		{Name: "account_name", Type: field.TypeString},
+		{Name: "credential_ref", Type: field.TypeString, Nullable: true},
+		{Name: "region_whitelist", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// CloudAccountsTable holds the schema information for the "cloud_accounts" table.
+	CloudAccountsTable = &schema.Table{
+		Name:       "cloud_accounts",
+		Columns:    CloudAccountsColumns,
+		PrimaryKey: []*schema.Column{CloudAccountsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cloudaccount_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{CloudAccountsColumns[7]},
+			},
+			{
+				Name:    "cloudaccount_provider_account_id",
+				Unique:  true,
+				Columns: []*schema.Column{CloudAccountsColumns[1], CloudAccountsColumns[2]},
+			},
+		},
+	}
+	// CloudResourcesColumns holds the columns for the "cloud_resources" table.
+	CloudResourcesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "resource_id", Type: field.TypeString},
+		{Name: "resource_name", Type: field.TypeString, Nullable: true},
+		{Name: "region", Type: field.TypeString, Nullable: true},
+		{Name: "zone", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Nullable: true},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "first_seen_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_seen_at", Type: field.TypeTime, Nullable: true},
+		{Name: "lifecycle_state", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "cloud_account_id", Type: field.TypeInt},
+		{Name: "service_id", Type: field.TypeInt},
+	}
+	// CloudResourcesTable holds the schema information for the "cloud_resources" table.
+	CloudResourcesTable = &schema.Table{
+		Name:       "cloud_resources",
+		Columns:    CloudResourcesColumns,
+		PrimaryKey: []*schema.Column{CloudResourcesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "cloud_resources_cloud_accounts_resources",
+				Columns:    []*schema.Column{CloudResourcesColumns[14]},
+				RefColumns: []*schema.Column{CloudAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "cloud_resources_cloud_services_resources",
+				Columns:    []*schema.Column{CloudResourcesColumns[15]},
+				RefColumns: []*schema.Column{CloudServicesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cloudresource_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{CloudResourcesColumns[11]},
+			},
+			{
+				Name:    "cloudresource_cloud_account_id_resource_id",
+				Unique:  true,
+				Columns: []*schema.Column{CloudResourcesColumns[14], CloudResourcesColumns[1]},
+			},
+			{
+				Name:    "cloudresource_service_id",
+				Unique:  false,
+				Columns: []*schema.Column{CloudResourcesColumns[15]},
+			},
+			{
+				Name:    "cloudresource_region",
+				Unique:  false,
+				Columns: []*schema.Column{CloudResourcesColumns[3]},
+			},
+		},
+	}
+	// CloudServicesColumns holds the columns for the "cloud_services" table.
+	CloudServicesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "provider", Type: field.TypeString},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "service_code", Type: field.TypeString},
+		{Name: "service_name", Type: field.TypeString},
+		{Name: "resource_type_code", Type: field.TypeString},
+		{Name: "resource_type_name", Type: field.TypeString},
+		{Name: "api_version", Type: field.TypeString, Nullable: true},
+		{Name: "attribute_schema", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_system", Type: field.TypeBool, Default: false},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "parent_id", Type: field.TypeInt, Nullable: true},
+	}
+	// CloudServicesTable holds the schema information for the "cloud_services" table.
+	CloudServicesTable = &schema.Table{
+		Name:       "cloud_services",
+		Columns:    CloudServicesColumns,
+		PrimaryKey: []*schema.Column{CloudServicesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "cloud_services_cloud_services_children",
+				Columns:    []*schema.Column{CloudServicesColumns[14]},
+				RefColumns: []*schema.Column{CloudServicesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cloudservice_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{CloudServicesColumns[11]},
+			},
+			{
+				Name:    "cloudservice_parent_id",
+				Unique:  false,
+				Columns: []*schema.Column{CloudServicesColumns[14]},
+			},
+			{
+				Name:    "cloudservice_category",
+				Unique:  false,
+				Columns: []*schema.Column{CloudServicesColumns[2]},
+			},
+			{
+				Name:    "cloudservice_provider_service_code_resource_type_code",
+				Unique:  true,
+				Columns: []*schema.Column{CloudServicesColumns[1], CloudServicesColumns[3], CloudServicesColumns[5]},
+			},
+		},
+	}
 	// ConfigurationItemsColumns holds the columns for the "configuration_items" table.
 	ConfigurationItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "type", Type: field.TypeString, Nullable: true},
-		{Name: "status", Type: field.TypeString, Default: "active"},
-		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "ci_type", Type: field.TypeString, Default: "server"},
+		{Name: "status", Type: field.TypeString, Default: "operational"},
+		{Name: "environment", Type: field.TypeString, Default: "production"},
+		{Name: "criticality", Type: field.TypeString, Default: "medium"},
+		{Name: "asset_tag", Type: field.TypeString, Nullable: true},
 		{Name: "serial_number", Type: field.TypeString, Nullable: true},
 		{Name: "model", Type: field.TypeString, Nullable: true},
 		{Name: "vendor", Type: field.TypeString, Nullable: true},
-		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "assigned_to", Type: field.TypeString, Nullable: true},
+		{Name: "owned_by", Type: field.TypeString, Nullable: true},
+		{Name: "discovery_source", Type: field.TypeString, Nullable: true},
+		{Name: "last_discovered", Type: field.TypeTime, Nullable: true},
+		{Name: "source", Type: field.TypeString, Nullable: true},
+		{Name: "attributes", Type: field.TypeJSON, Nullable: true},
+		{Name: "cloud_provider", Type: field.TypeString, Nullable: true},
+		{Name: "cloud_account_id", Type: field.TypeString, Nullable: true},
+		{Name: "cloud_region", Type: field.TypeString, Nullable: true},
+		{Name: "cloud_zone", Type: field.TypeString, Nullable: true},
+		{Name: "cloud_resource_id", Type: field.TypeString, Nullable: true},
+		{Name: "cloud_resource_type", Type: field.TypeString, Nullable: true},
+		{Name: "cloud_metadata", Type: field.TypeJSON, Nullable: true},
+		{Name: "cloud_tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "cloud_metrics", Type: field.TypeJSON, Nullable: true},
+		{Name: "cloud_sync_time", Type: field.TypeTime, Nullable: true},
+		{Name: "cloud_sync_status", Type: field.TypeString, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "ci_type_id", Type: field.TypeInt},
+		{Name: "cloud_resource_ref_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ConfigurationItemsTable holds the schema information for the "configuration_items" table.
 	ConfigurationItemsTable = &schema.Table{
 		Name:       "configuration_items",
 		Columns:    ConfigurationItemsColumns,
 		PrimaryKey: []*schema.Column{ConfigurationItemsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "configuration_items_ci_types_cis",
+				Columns:    []*schema.Column{ConfigurationItemsColumns[31]},
+				RefColumns: []*schema.Column{CiTypesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "configuration_items_cloud_resources_cis",
+				Columns:    []*schema.Column{ConfigurationItemsColumns[32]},
+				RefColumns: []*schema.Column{CloudResourcesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "configurationitem_ci_type",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[2]},
+			},
+			{
+				Name:    "configurationitem_ci_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[31]},
+			},
+			{
+				Name:    "configurationitem_status",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[3]},
+			},
+			{
+				Name:    "configurationitem_environment",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[4]},
+			},
+			{
+				Name:    "configurationitem_cloud_provider",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[17]},
+			},
+			{
+				Name:    "configurationitem_cloud_account_id",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[18]},
+			},
+			{
+				Name:    "configurationitem_cloud_region",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[19]},
+			},
+			{
+				Name:    "configurationitem_cloud_resource_id",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[21]},
+			},
+			{
+				Name:    "configurationitem_serial_number",
+				Unique:  true,
+				Columns: []*schema.Column{ConfigurationItemsColumns[7]},
+			},
+		},
 	}
 	// ConversationsColumns holds the columns for the "conversations" table.
 	ConversationsColumns = []*schema.Column{
@@ -267,6 +506,124 @@ var (
 				Columns:    []*schema.Column{DepartmentsColumns[8]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// DiscoveryJobsColumns holds the columns for the "discovery_jobs" table.
+	DiscoveryJobsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+		{Name: "summary", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "source_id", Type: field.TypeString},
+	}
+	// DiscoveryJobsTable holds the schema information for the "discovery_jobs" table.
+	DiscoveryJobsTable = &schema.Table{
+		Name:       "discovery_jobs",
+		Columns:    DiscoveryJobsColumns,
+		PrimaryKey: []*schema.Column{DiscoveryJobsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "discovery_jobs_discovery_sources_jobs",
+				Columns:    []*schema.Column{DiscoveryJobsColumns[8]},
+				RefColumns: []*schema.Column{DiscoverySourcesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "discoveryjob_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoveryJobsColumns[5]},
+			},
+			{
+				Name:    "discoveryjob_source_id",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoveryJobsColumns[8]},
+			},
+			{
+				Name:    "discoveryjob_status",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoveryJobsColumns[1]},
+			},
+		},
+	}
+	// DiscoveryResultsColumns holds the columns for the "discovery_results" table.
+	DiscoveryResultsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ci_id", Type: field.TypeInt, Nullable: true},
+		{Name: "action", Type: field.TypeString},
+		{Name: "resource_type", Type: field.TypeString, Nullable: true},
+		{Name: "resource_id", Type: field.TypeString, Nullable: true},
+		{Name: "diff", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "job_id", Type: field.TypeInt},
+	}
+	// DiscoveryResultsTable holds the schema information for the "discovery_results" table.
+	DiscoveryResultsTable = &schema.Table{
+		Name:       "discovery_results",
+		Columns:    DiscoveryResultsColumns,
+		PrimaryKey: []*schema.Column{DiscoveryResultsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "discovery_results_discovery_jobs_results",
+				Columns:    []*schema.Column{DiscoveryResultsColumns[10]},
+				RefColumns: []*schema.Column{DiscoveryJobsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "discoveryresult_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoveryResultsColumns[7]},
+			},
+			{
+				Name:    "discoveryresult_job_id",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoveryResultsColumns[10]},
+			},
+			{
+				Name:    "discoveryresult_status",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoveryResultsColumns[6]},
+			},
+		},
+	}
+	// DiscoverySourcesColumns holds the columns for the "discovery_sources" table.
+	DiscoverySourcesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "source_type", Type: field.TypeString},
+		{Name: "provider", Type: field.TypeString, Nullable: true},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// DiscoverySourcesTable holds the schema information for the "discovery_sources" table.
+	DiscoverySourcesTable = &schema.Table{
+		Name:       "discovery_sources",
+		Columns:    DiscoverySourcesColumns,
+		PrimaryKey: []*schema.Column{DiscoverySourcesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "discoverysource_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{DiscoverySourcesColumns[6]},
+			},
+			{
+				Name:    "discoverysource_tenant_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{DiscoverySourcesColumns[6], DiscoverySourcesColumns[1]},
 			},
 		},
 	}
@@ -1074,6 +1431,35 @@ var (
 				Name:    "provisioningtask_tenant_id_status_created_at",
 				Unique:  false,
 				Columns: []*schema.Column{ProvisioningTasksColumns[1], ProvisioningTasksColumns[7], ProvisioningTasksColumns[9]},
+			},
+		},
+	}
+	// RelationshipTypesColumns holds the columns for the "relationship_types" table.
+	RelationshipTypesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "directional", Type: field.TypeBool, Default: true},
+		{Name: "reverse_name", Type: field.TypeString, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// RelationshipTypesTable holds the schema information for the "relationship_types" table.
+	RelationshipTypesTable = &schema.Table{
+		Name:       "relationship_types",
+		Columns:    RelationshipTypesColumns,
+		PrimaryKey: []*schema.Column{RelationshipTypesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "relationshiptype_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{RelationshipTypesColumns[5]},
+			},
+			{
+				Name:    "relationshiptype_tenant_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{RelationshipTypesColumns[5], RelationshipTypesColumns[1]},
 			},
 		},
 	}
@@ -1925,6 +2311,56 @@ var (
 			},
 		},
 	}
+	// ConfigurationItemTicketsColumns holds the columns for the "configuration_item_tickets" table.
+	ConfigurationItemTicketsColumns = []*schema.Column{
+		{Name: "configuration_item_id", Type: field.TypeInt},
+		{Name: "ticket_id", Type: field.TypeInt},
+	}
+	// ConfigurationItemTicketsTable holds the schema information for the "configuration_item_tickets" table.
+	ConfigurationItemTicketsTable = &schema.Table{
+		Name:       "configuration_item_tickets",
+		Columns:    ConfigurationItemTicketsColumns,
+		PrimaryKey: []*schema.Column{ConfigurationItemTicketsColumns[0], ConfigurationItemTicketsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "configuration_item_tickets_configuration_item_id",
+				Columns:    []*schema.Column{ConfigurationItemTicketsColumns[0]},
+				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "configuration_item_tickets_ticket_id",
+				Columns:    []*schema.Column{ConfigurationItemTicketsColumns[1]},
+				RefColumns: []*schema.Column{TicketsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// ConfigurationItemIncidentsColumns holds the columns for the "configuration_item_incidents" table.
+	ConfigurationItemIncidentsColumns = []*schema.Column{
+		{Name: "configuration_item_id", Type: field.TypeInt},
+		{Name: "incident_id", Type: field.TypeInt},
+	}
+	// ConfigurationItemIncidentsTable holds the schema information for the "configuration_item_incidents" table.
+	ConfigurationItemIncidentsTable = &schema.Table{
+		Name:       "configuration_item_incidents",
+		Columns:    ConfigurationItemIncidentsColumns,
+		PrimaryKey: []*schema.Column{ConfigurationItemIncidentsColumns[0], ConfigurationItemIncidentsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "configuration_item_incidents_configuration_item_id",
+				Columns:    []*schema.Column{ConfigurationItemIncidentsColumns[0]},
+				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "configuration_item_incidents_incident_id",
+				Columns:    []*schema.Column{ConfigurationItemIncidentsColumns[1]},
+				RefColumns: []*schema.Column{IncidentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// DepartmentTagsColumns holds the columns for the "department_tags" table.
 	DepartmentTagsColumns = []*schema.Column{
 		{Name: "department_id", Type: field.TypeInt},
@@ -2060,9 +2496,15 @@ var (
 		CiRelationshipsTable,
 		CiTypesTable,
 		ChangesTable,
+		CloudAccountsTable,
+		CloudResourcesTable,
+		CloudServicesTable,
 		ConfigurationItemsTable,
 		ConversationsTable,
 		DepartmentsTable,
+		DiscoveryJobsTable,
+		DiscoveryResultsTable,
+		DiscoverySourcesTable,
 		IncidentsTable,
 		IncidentAlertsTable,
 		IncidentEventsTable,
@@ -2083,6 +2525,7 @@ var (
 		ProjectsTable,
 		PromptTemplatesTable,
 		ProvisioningTasksTable,
+		RelationshipTypesTable,
 		RootCauseAnalysesTable,
 		SLAAlertHistoriesTable,
 		SLAAlertRulesTable,
@@ -2110,6 +2553,8 @@ var (
 		WorkflowsTable,
 		WorkflowInstancesTable,
 		ApplicationTagsTable,
+		ConfigurationItemTicketsTable,
+		ConfigurationItemIncidentsTable,
 		DepartmentTagsTable,
 		IncidentRelatedIncidentsTable,
 		MicroserviceTagsTable,
@@ -2122,7 +2567,16 @@ func init() {
 	ApplicationsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ApprovalRecordsTable.ForeignKeys[0].RefTable = ApprovalWorkflowsTable
 	ApprovalRecordsTable.ForeignKeys[1].RefTable = TicketsTable
+	CiRelationshipsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
+	CiRelationshipsTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
+	CloudResourcesTable.ForeignKeys[0].RefTable = CloudAccountsTable
+	CloudResourcesTable.ForeignKeys[1].RefTable = CloudServicesTable
+	CloudServicesTable.ForeignKeys[0].RefTable = CloudServicesTable
+	ConfigurationItemsTable.ForeignKeys[0].RefTable = CiTypesTable
+	ConfigurationItemsTable.ForeignKeys[1].RefTable = CloudResourcesTable
 	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	DiscoveryJobsTable.ForeignKeys[0].RefTable = DiscoverySourcesTable
+	DiscoveryResultsTable.ForeignKeys[0].RefTable = DiscoveryJobsTable
 	IncidentAlertsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
@@ -2163,6 +2617,10 @@ func init() {
 	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
 	ApplicationTagsTable.ForeignKeys[0].RefTable = ApplicationsTable
 	ApplicationTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ConfigurationItemTicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
+	ConfigurationItemTicketsTable.ForeignKeys[1].RefTable = TicketsTable
+	ConfigurationItemIncidentsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
+	ConfigurationItemIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
 	DepartmentTagsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	DepartmentTagsTable.ForeignKeys[1].RefTable = TagsTable
 	IncidentRelatedIncidentsTable.ForeignKeys[0].RefTable = IncidentsTable

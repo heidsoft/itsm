@@ -169,6 +169,7 @@ interface CardProps {
   footer?: React.ReactNode;
   variant?: 'default' | 'elevated' | 'outlined' | 'filled';
   size?: 'sm' | 'default' | 'lg';
+  onClick?: () => void;
 }
 
 export function Card({
@@ -180,6 +181,7 @@ export function Card({
   footer,
   variant = 'default',
   size = 'default',
+  onClick,
 }: CardProps) {
   const variants = {
     default: 'bg-white border border-gray-200',
@@ -195,11 +197,10 @@ export function Card({
   };
 
   return (
-    <div className={cn(
-      'rounded-lg',
-      variants[variant],
-      className
-    )}>
+    <div
+      className={cn('rounded-lg', variants[variant], className)}
+      onClick={onClick}
+    >
       {/* Header */}
       {(title || headerActions) && (
         <div className={cn(
@@ -495,15 +496,3 @@ export function ErrorBoundaryFallback({
     </div>
   );
 }
-
-// Export all components
-export {
-  ResponsiveLayout,
-  PageHeader,
-  Card,
-  Grid,
-  Stack,
-  LoadingState,
-  EmptyState,
-  ErrorBoundaryFallback,
-};

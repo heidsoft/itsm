@@ -15,6 +15,7 @@ import {
   Tag,
   Tooltip,
   Collapse,
+  Typography,
 } from 'antd';
 import {
   SearchOutlined,
@@ -31,6 +32,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { Panel } = Collapse;
 const { TextArea } = Input;
+const { Text } = Typography;
 
 interface AdvancedSearchFilters {
   // 基础信息

@@ -139,5 +139,8 @@ func (Ticket) Edges() []ent.Edge {
 			Comment("审批记录"),
 		edge.To("root_cause_analyses", RootCauseAnalysis.Type).
 			Comment("根因分析"),
+		edge.From("configuration_items", ConfigurationItem.Type).
+			Ref("tickets").
+			Comment("关联的配置项"),
 	}
 }

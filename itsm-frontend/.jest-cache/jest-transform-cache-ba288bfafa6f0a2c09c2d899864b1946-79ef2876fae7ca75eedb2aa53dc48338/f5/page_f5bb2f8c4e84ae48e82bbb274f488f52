@@ -1,0 +1,363 @@
+c5f11658a170e788bcb2142e42493423
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1h0e4xr0cu() {
+  var path = "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/tickets/automation-rules/page.tsx";
+  var hash = "39b24a2e77beb80db4755c923bb389ac208455c0";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/tickets/automation-rules/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 3
+        }
+      },
+      "1": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 3
+        }
+      },
+      "2": {
+        start: {
+          line: 9,
+          column: 8
+        },
+        end: {
+          line: 9,
+          column: 35
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 20
+        },
+        end: {
+          line: 12,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 29
+        },
+        end: {
+          line: 13,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 14,
+          column: 14
+        },
+        end: {
+          line: 14,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 18,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 24
+        },
+        end: {
+          line: 20,
+          column: 40
+        }
+      },
+      "8": {
+        start: {
+          line: 22,
+          column: 4
+        },
+        end: {
+          line: 48,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 10
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 20
+          },
+          end: {
+            line: 10,
+            column: 5
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "_interop_require_default",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "AutomationRulesPage",
+        decl: {
+          start: {
+            line: 21,
+            column: 9
+          },
+          end: {
+            line: 21,
+            column: 28
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 31
+          },
+          end: {
+            line: 49,
+            column: 1
+          }
+        },
+        line: 21
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 35
+          },
+          end: {
+            line: 16,
+            column: 38
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 41
+          },
+          end: {
+            line: 18,
+            column: 5
+          }
+        }],
+        line: 16
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 16,
+            column: 11
+          },
+          end: {
+            line: 16,
+            column: 14
+          }
+        }, {
+          start: {
+            line: 16,
+            column: 18
+          },
+          end: {
+            line: 16,
+            column: 32
+          }
+        }],
+        line: 16
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      version: 3,
+      sources: ["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/tickets/automation-rules/page.tsx"],
+      sourcesContent: ["'use client';\n\nimport React from 'react';\nimport { Card, Typography, Alert } from 'antd';\n\nconst { Title, Text } = Typography;\n\nexport default function AutomationRulesPage() {\n  return (\n    <div className='max-w-4xl mx-auto p-6'>\n      <Card>\n        <Title level={2} style={{ marginBottom: 0 }}>\n          \u5DE5\u5355\u81EA\u52A8\u5316\u89C4\u5219\n        </Title>\n        <Text type='secondary'>P0 \u6784\u5EFA\u7A33\u5B9A\u7248\uFF1A\u8BE5\u9875\u9762\u6682\u65F6\u964D\u7EA7\u4E3A\u5360\u4F4D\uFF0C\u540E\u7EED\u6062\u590D\u81EA\u52A8\u5316\u89C4\u5219\u7BA1\u7406\u3002</Text>\n        <div className='mt-4'>\n          <Alert\n            type='info'\n            showIcon\n            message='\u529F\u80FD\u5F85\u6062\u590D'\n            description='\u5F53\u524D\u7248\u672C\u4E3A\u4E86\u6E05\u96F6 TS \u963B\u585E\uFF0C\u79FB\u9664\u4E86\u5BF9 legacy business \u7EC4\u4EF6\u94FE\u8DEF\u7684\u4F9D\u8D56\u3002'\n          />\n        </div>\n      </Card>\n    </div>\n  );\n}\n\n\n"],
+      names: ["AutomationRulesPage", "Title", "Text", "Typography", "div", "className", "Card", "level", "style", "marginBottom", "type", "Alert", "showIcon", "message", "description"],
+      mappings: "AAAA;;;;;+BAOA;;;eAAwBA;;;;8DALN;sBACsB;;;;;;AAExC,MAAM,EAAEC,KAAK,EAAEC,IAAI,EAAE,GAAGC,gBAAU;AAEnB,SAASH;IACtB,qBACE,qBAACI;QAAIC,WAAU;kBACb,cAAA,sBAACC,UAAI;;8BACH,qBAACL;oBAAMM,OAAO;oBAAGC,OAAO;wBAAEC,cAAc;oBAAE;8BAAG;;8BAG7C,qBAACP;oBAAKQ,MAAK;8BAAY;;8BACvB,qBAACN;oBAAIC,WAAU;8BACb,cAAA,qBAACM,WAAK;wBACJD,MAAK;wBACLE,QAAQ;wBACRC,SAAQ;wBACRC,aAAY;;;;;;AAMxB"
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "39b24a2e77beb80db4755c923bb389ac208455c0"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1h0e4xr0cu = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1h0e4xr0cu();
+cov_1h0e4xr0cu().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1h0e4xr0cu().s[1]++;
+Object.defineProperty(exports, "default", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_1h0e4xr0cu().f[0]++;
+    cov_1h0e4xr0cu().s[2]++;
+    return AutomationRulesPage;
+  }
+});
+const _jsxruntime =
+/* istanbul ignore next */
+(cov_1h0e4xr0cu().s[3]++, require("react/jsx-runtime"));
+const _react =
+/* istanbul ignore next */
+(/*#__PURE__*/cov_1h0e4xr0cu().s[4]++, _interop_require_default(require("react")));
+const _antd =
+/* istanbul ignore next */
+(cov_1h0e4xr0cu().s[5]++, require("antd"));
+function _interop_require_default(obj) {
+  /* istanbul ignore next */
+  cov_1h0e4xr0cu().f[1]++;
+  cov_1h0e4xr0cu().s[6]++;
+  return /* istanbul ignore next */(cov_1h0e4xr0cu().b[1][0]++, obj) &&
+  /* istanbul ignore next */
+  (cov_1h0e4xr0cu().b[1][1]++, obj.__esModule) ?
+  /* istanbul ignore next */
+  (cov_1h0e4xr0cu().b[0][0]++, obj) :
+  /* istanbul ignore next */
+  (cov_1h0e4xr0cu().b[0][1]++, {
+    default: obj
+  });
+}
+const {
+  Title,
+  Text
+} =
+/* istanbul ignore next */
+(cov_1h0e4xr0cu().s[7]++, _antd.Typography);
+function AutomationRulesPage() {
+  /* istanbul ignore next */
+  cov_1h0e4xr0cu().f[2]++;
+  cov_1h0e4xr0cu().s[8]++;
+  return /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+    className: "max-w-4xl mx-auto p-6",
+    children: /*#__PURE__*/(0, _jsxruntime.jsxs)(_antd.Card, {
+      children: [/*#__PURE__*/(0, _jsxruntime.jsx)(Title, {
+        level: 2,
+        style: {
+          marginBottom: 0
+        },
+        children: "工单自动化规则"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)(Text, {
+        type: "secondary",
+        children: "P0 构建稳定版：该页面暂时降级为占位，后续恢复自动化规则管理。"
+      }), /*#__PURE__*/(0, _jsxruntime.jsx)("div", {
+        className: "mt-4",
+        children: /*#__PURE__*/(0, _jsxruntime.jsx)(_antd.Alert, {
+          type: "info",
+          showIcon: true,
+          message: "功能待恢复",
+          description: "当前版本为了清零 TS 阻塞，移除了对 legacy business 组件链路的依赖。"
+        })
+      })]
+    })
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJBdXRvbWF0aW9uUnVsZXNQYWdlIiwiVGl0bGUiLCJUZXh0IiwiY292XzFoMGU0eHIwY3UiLCJzIiwiX2FudGQiLCJUeXBvZ3JhcGh5IiwiZiIsIl9qc3hydW50aW1lIiwianN4IiwiY2xhc3NOYW1lIiwianN4cyIsIkNhcmQiLCJsZXZlbCIsInN0eWxlIiwibWFyZ2luQm90dG9tIiwidHlwZSIsIkFsZXJ0Iiwic2hvd0ljb24iLCJtZXNzYWdlIiwiZGVzY3JpcHRpb24iXSwic291cmNlcyI6WyIvVXNlcnMvaGVpZHNvZnQvRG93bmxvYWRzL3Jlc2VhcmNoL2l0c20vaXRzbS1mcm9udGVuZC9zcmMvYXBwLyhtYWluKS9hZG1pbi90aWNrZXRzL2F1dG9tYXRpb24tcnVsZXMvcGFnZS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBjbGllbnQnO1xuXG5pbXBvcnQgUmVhY3QgZnJvbSAncmVhY3QnO1xuaW1wb3J0IHsgQ2FyZCwgVHlwb2dyYXBoeSwgQWxlcnQgfSBmcm9tICdhbnRkJztcblxuY29uc3QgeyBUaXRsZSwgVGV4dCB9ID0gVHlwb2dyYXBoeTtcblxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQXV0b21hdGlvblJ1bGVzUGFnZSgpIHtcbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT0nbWF4LXctNHhsIG14LWF1dG8gcC02Jz5cbiAgICAgIDxDYXJkPlxuICAgICAgICA8VGl0bGUgbGV2ZWw9ezJ9IHN0eWxlPXt7IG1hcmdpbkJvdHRvbTogMCB9fT5cbiAgICAgICAgICDlt6XljZXoh6rliqjljJbop4TliJlcbiAgICAgICAgPC9UaXRsZT5cbiAgICAgICAgPFRleHQgdHlwZT0nc2Vjb25kYXJ5Jz5QMCDmnoTlu7rnqLPlrprniYjvvJror6XpobXpnaLmmoLml7bpmY3nuqfkuLrljaDkvY3vvIzlkI7nu63mgaLlpI3oh6rliqjljJbop4TliJnnrqHnkIbjgII8L1RleHQ+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPSdtdC00Jz5cbiAgICAgICAgICA8QWxlcnRcbiAgICAgICAgICAgIHR5cGU9J2luZm8nXG4gICAgICAgICAgICBzaG93SWNvblxuICAgICAgICAgICAgbWVzc2FnZT0n5Yqf6IO95b6F5oGi5aSNJ1xuICAgICAgICAgICAgZGVzY3JpcHRpb249J+W9k+WJjeeJiOacrOS4uuS6hua4hembtiBUUyDpmLvloZ7vvIznp7vpmaTkuoblr7kgbGVnYWN5IGJ1c2luZXNzIOe7hOS7tumTvui3r+eahOS+nei1luOAgidcbiAgICAgICAgICAvPlxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvQ2FyZD5cbiAgICA8L2Rpdj5cbiAgKTtcbn1cblxuXG4iXSwibWFwcGluZ3MiOiJBQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OytCQU9BOzs7Ozs7V0FBd0JBLG1CQUFBOzs7Ozs7Ozt3RUFMTjs7O2tDQUNzQjs7Ozs7Ozs7Ozs7Ozs7O0FBRXhDLE1BQU07RUFBRUMsS0FBSztFQUFFQztBQUFJLENBQUU7QUFBQTtBQUFBLENBQUFDLGNBQUEsR0FBQUMsQ0FBQSxPQUFHQyxLQUFBLENBQUFDLFVBQVU7QUFFbkIsU0FBU04sb0JBQUE7RUFBQTtFQUFBRyxjQUFBLEdBQUFJLENBQUE7RUFBQUosY0FBQSxHQUFBQyxDQUFBO0VBQ3RCLG9CQUNFLElBQUFJLFdBQUEsQ0FBQUMsR0FBQSxFQUFDO0lBQUlDLFNBQUEsRUFBVTtjQUNiLGlCQUFBRixXQUFBLENBQUFHLElBQUEsRUFBQ04sS0FBQSxDQUFBTyxJQUFJOzhCQUNILElBQUFKLFdBQUEsQ0FBQUMsR0FBQSxFQUFDUixLQUFBO1FBQU1ZLEtBQUEsRUFBTztRQUFHQyxLQUFBLEVBQU87VUFBRUMsWUFBQSxFQUFjO1FBQUU7a0JBQUc7dUJBRzdDLElBQUFQLFdBQUEsQ0FBQUMsR0FBQSxFQUFDUCxJQUFBO1FBQUtjLElBQUEsRUFBSztrQkFBWTt1QkFDdkIsSUFBQVIsV0FBQSxDQUFBQyxHQUFBLEVBQUM7UUFBSUMsU0FBQSxFQUFVO2tCQUNiLGlCQUFBRixXQUFBLENBQUFDLEdBQUEsRUFBQ0osS0FBQSxDQUFBWSxLQUFLO1VBQ0pELElBQUEsRUFBSztVQUNMRSxRQUFRO1VBQ1JDLE9BQUEsRUFBUTtVQUNSQyxXQUFBLEVBQVk7Ozs7O0FBTXhCIiwiaWdub3JlTGlzdCI6W119

@@ -2,10 +2,14 @@ package service_request
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/ent"
+	"itsm-backend/internal/domain/cmdb"
 	"itsm-backend/internal/domain/service_catalog"
 
 	"go.uber.org/zap"
@@ -42,16 +46,18 @@ const (
 )
 
 type Service struct {
-	repo   Repository
-	scRepo service_catalog.Repository
-	logger *zap.SugaredLogger
+	repo     Repository
+	scRepo   service_catalog.Repository
+	cmdbRepo cmdb.Repository
+	logger   *zap.SugaredLogger
 }
 
-func NewService(repo Repository, scRepo service_catalog.Repository, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, logger *zap.SugaredLogger) *Service {
 	return &Service{
-		repo:   repo,
-		scRepo: scRepo,
-		logger: logger,
+		repo:     repo,
+		scRepo:   scRepo,
+		cmdbRepo: cmdbRepo,
+		logger:   logger,
 	}
 }
 
@@ -64,6 +70,9 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	}
 	if cat.TenantID != tenantID {
 		return nil, common.NewNotFoundError("Service Catalog not found")
+	}
+	if cat.CloudServiceID > 0 && cat.CITypeID == 0 {
+		return nil, common.NewBadRequestError("关联云服务时必须配置CI类型", nil)
 	}
 
 	// 2. Validate Request Data
@@ -94,6 +103,14 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 		CostCenter:         reqData.CostCenter,
 		SourceIPWhitelist:  reqData.SourceIPWhitelist,
 		ExpireAt:           reqData.ExpireAt,
+	}
+
+	if cat.CITypeID > 0 {
+		ciID, err := s.ensureLinkedCI(ctx, tenantID, cat, reqData)
+		if err != nil {
+			return nil, err
+		}
+		newReq.CIID = ciID
 	}
 
 	// 4. Create Approval Steps
@@ -129,6 +146,109 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	}
 
 	return created, nil
+}
+
+func (s *Service) ensureLinkedCI(ctx context.Context, tenantID int, cat *service_catalog.ServiceCatalog, reqData *ServiceRequest) (int, error) {
+	cloudResourceRefID := parseIntField(reqData.FormData, "cloud_resource_ref_id")
+	if cloudResourceRefID > 0 {
+		existing, err := s.cmdbRepo.GetCIByCloudResourceRefID(ctx, tenantID, cloudResourceRefID)
+		if err == nil && existing != nil {
+			return existing.ID, nil
+		}
+		if err != nil && !ent.IsNotFound(err) {
+			return 0, common.NewInternalError("查询关联CI失败", err)
+		}
+	}
+
+	ciName := strings.TrimSpace(reqData.Title)
+	if ciName == "" {
+		if nameVal, ok := reqData.FormData["name"].(string); ok {
+			ciName = strings.TrimSpace(nameVal)
+		}
+	}
+	if ciName == "" {
+		if titleVal, ok := reqData.FormData["title"].(string); ok {
+			ciName = strings.TrimSpace(titleVal)
+		}
+	}
+	if ciName == "" {
+		ciName = fmt.Sprintf("%s-%s", cat.Name, time.Now().Format("20060102150405"))
+	}
+
+	ci := &cmdb.ConfigurationItem{
+		Name:            ciName,
+		CITypeID:        cat.CITypeID,
+		Status:          "active",
+		Source:          "service_catalog",
+		TenantID:        tenantID,
+		CloudResourceID: parseStringField(reqData.FormData, "cloud_resource_id"),
+		CloudAccountID:  parseStringField(reqData.FormData, "cloud_account_id"),
+		CloudRegion:     parseStringField(reqData.FormData, "cloud_region"),
+		CloudZone:       parseStringField(reqData.FormData, "cloud_zone"),
+		CloudProvider:   parseStringField(reqData.FormData, "cloud_provider"),
+	}
+
+	if cloudResourceRefID > 0 {
+		ci.CloudResourceRefID = cloudResourceRefID
+	}
+
+	if cat.CloudServiceID > 0 {
+		cs, err := s.cmdbRepo.GetCloudService(ctx, tenantID, cat.CloudServiceID)
+		if err != nil && !ent.IsNotFound(err) {
+			return 0, common.NewInternalError("获取云服务目录失败", err)
+		}
+		if cs != nil {
+			if ci.CloudProvider == "" {
+				ci.CloudProvider = cs.Provider
+			}
+			if ci.CloudResourceType == "" {
+				ci.CloudResourceType = cs.ResourceTypeCode
+			}
+		}
+	}
+
+	if ci.CloudResourceType == "" {
+		ci.CloudResourceType = parseStringField(reqData.FormData, "cloud_resource_type")
+	}
+
+	created, err := s.cmdbRepo.CreateCI(ctx, ci)
+	if err != nil {
+		return 0, common.NewInternalError("创建关联CI失败", err)
+	}
+	return created.ID, nil
+}
+
+func parseStringField(formData map[string]interface{}, key string) string {
+	if formData == nil {
+		return ""
+	}
+	if v, ok := formData[key].(string); ok {
+		return strings.TrimSpace(v)
+	}
+	return ""
+}
+
+func parseIntField(formData map[string]interface{}, key string) int {
+	if formData == nil {
+		return 0
+	}
+	switch v := formData[key].(type) {
+	case int:
+		return v
+	case int64:
+		return int(v)
+	case float64:
+		return int(v)
+	case string:
+		v = strings.TrimSpace(v)
+		if v == "" {
+			return 0
+		}
+		if parsed, err := strconv.Atoi(v); err == nil {
+			return parsed
+		}
+	}
+	return 0
 }
 
 // Get retrieves a service request with approvals

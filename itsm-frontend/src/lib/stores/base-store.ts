@@ -240,7 +240,7 @@ export const createListActions = <T extends ListState<Item>, Item>(
  * 创建详情操作
  */
 export const createDetailActions = <T extends DetailState<Item>, Item>(
-  set: (partial: Partial<T>) => void
+  set: (partial: Partial<T> | ((state: T) => Partial<T>)) => void
 ): DetailActions<Item> => {
   const baseActions = createBaseActions(set);
 
