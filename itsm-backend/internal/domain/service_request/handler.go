@@ -28,7 +28,7 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 		ID:                 req.ID,
 		CatalogID:          req.CatalogID,
 		RequesterID:        req.RequesterID,
-		CIID:               req.CIID,
+		CIID:               req.CiID,
 		Status:             req.Status,
 		Title:              req.Title,
 		Reason:             req.Reason,

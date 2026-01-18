@@ -37,6 +37,7 @@ type RouterConfig struct {
 	TicketRatingController          *controller.TicketRatingController
 	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
 	TicketViewController            *controller.TicketViewController
+	TicketWorkflowController        *controller.TicketWorkflowController
 	IncidentController              *controller.IncidentController
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
@@ -186,6 +187,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.ApprovalController != nil {
 				tickets.POST("/approval/submit", config.ApprovalController.SubmitApproval)
 				tickets.GET("/approval/records", config.ApprovalController.GetApprovalRecords)
+			}
+
+			// 工单流转工作流
+			if config.TicketWorkflowController != nil {
+				tickets.POST("/workflow/accept", config.TicketWorkflowController.AcceptTicket)
+				tickets.POST("/workflow/reject", config.TicketWorkflowController.RejectTicket)
+				tickets.POST("/workflow/withdraw", config.TicketWorkflowController.WithdrawTicket)
+				tickets.POST("/workflow/forward", config.TicketWorkflowController.ForwardTicket)
+				tickets.POST("/workflow/cc", config.TicketWorkflowController.CCTicket)
+				tickets.POST("/workflow/approve", config.TicketWorkflowController.ApproveTicket)
+				tickets.POST("/workflow/resolve", config.TicketWorkflowController.ResolveTicket)
+				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
+				tickets.POST("/workflow/reopen", config.TicketWorkflowController.ReopenTicket)
+				tickets.GET("/:id/workflow/state", config.TicketWorkflowController.GetTicketWorkflowState)
 			}
 		}
 

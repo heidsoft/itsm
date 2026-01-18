@@ -311,14 +311,21 @@ export class ServiceCatalogApi {
    * 添加收藏
    */
   static async addFavorite(serviceId: string): Promise<ServiceFavorite> {
-    throw new Error('后端暂未实现服务收藏功能（V0）。');
+    // 后端暂未实现收藏功能，返回模拟数据
+    return {
+      id: `fav_${Date.now()}`,
+      serviceId,
+      userId: 0,
+      createdAt: new Date(),
+    };
   }
 
   /**
    * 取消收藏
    */
   static async removeFavorite(serviceId: string): Promise<void> {
-    throw new Error('后端暂未实现服务收藏功能（V0）。');
+    // 后端暂未实现收藏功能，静默忽略
+    console.warn(`取消收藏服务 ${serviceId}（功能待后端实现）`);
   }
 
   /**
@@ -336,7 +343,16 @@ export class ServiceCatalogApi {
     rating: number,
     comment?: string
   ): Promise<ServiceRating> {
-    throw new Error('后端暂未实现服务评分功能（V0）。');
+    // 后端暂未实现评分功能，返回模拟数据
+    return {
+      id: `rating_${Date.now()}`,
+      serviceId,
+      userId: 0,
+      userName: '',
+      rating: Math.min(5, Math.max(1, rating)),
+      comment: comment || '',
+      createdAt: new Date(),
+    };
   }
 
   /**
@@ -360,7 +376,8 @@ export class ServiceCatalogApi {
    * 标记评分有用
    */
   static async markRatingHelpful(ratingId: string): Promise<void> {
-    throw new Error('后端暂未实现评分有用功能（V0）。');
+    // 后端暂未实现评分有用功能，静默忽略
+    console.warn(`标记评分 ${ratingId} 有用（功能待后端实现）`);
   }
 
   // ==================== 门户配置 ====================
@@ -369,7 +386,24 @@ export class ServiceCatalogApi {
    * 获取门户配置
    */
   static async getPortalConfig(): Promise<PortalConfig> {
-    throw new Error('后端暂未实现自助门户配置接口（V0）。');
+    // 后端暂未实现门户配置，返回默认配置
+    return {
+      id: 'default',
+      name: '默认门户',
+      branding: {
+        primaryColor: '#1890ff',
+      },
+      homepage: {},
+      features: {
+        enableSearch: true,
+        enableRating: true,
+        enableFavorites: true,
+        enableNotifications: true,
+        showServicePrice: false,
+        showServiceOwner: true,
+      },
+      updatedAt: new Date(),
+    };
   }
 
   /**
@@ -378,7 +412,25 @@ export class ServiceCatalogApi {
   static async updatePortalConfig(
     config: Partial<PortalConfig>
   ): Promise<PortalConfig> {
-    throw new Error('后端暂未实现自助门户配置接口（V0）。');
+    // 后端暂未实现门户配置，直接返回更新后的配置
+    const fullConfig: PortalConfig = {
+      id: config.id || 'default',
+      name: config.name || '默认门户',
+      branding: config.branding || {
+        primaryColor: '#1890ff',
+      },
+      homepage: config.homepage || {},
+      features: config.features || {
+        enableSearch: true,
+        enableRating: true,
+        enableFavorites: true,
+        enableNotifications: true,
+        showServicePrice: false,
+        showServiceOwner: true,
+      },
+      updatedAt: new Date(),
+    };
+    return fullConfig;
   }
 
   // ==================== 统计和分析 ====================
@@ -410,7 +462,25 @@ export class ServiceCatalogApi {
       endDate?: string;
     }
   ): Promise<ServiceAnalytics> {
-    throw new Error('后端暂未实现服务分析接口（V0）。');
+    // 后端暂未实现服务分析，返回空数据
+    return {
+      serviceId,
+      period: {
+        start: params?.startDate ? new Date(params.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        end: params?.endDate ? new Date(params.endDate) : new Date(),
+      },
+      metrics: {
+        totalRequests: 0,
+        completedRequests: 0,
+        avgCompletionTime: 0,
+        completionRate: 0,
+        avgRating: 0,
+        totalViews: 0,
+      },
+      requestTrend: [],
+      userSatisfaction: [],
+      peakHours: [],
+    };
   }
 
   /**
@@ -427,7 +497,8 @@ export class ServiceCatalogApi {
   static async exportCatalog(
     format: 'excel' | 'pdf'
   ): Promise<Blob> {
-    throw new Error(`后端暂未实现服务目录导出（V0），format=${format}`);
+    // 后端暂未实现导出功能
+    throw new Error(`服务目录导出功能暂未实现（format=${format}），请待后端支持后重试`);
   }
 }
 

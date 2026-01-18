@@ -35,7 +35,10 @@ const mockTicketProps = {
 
 describe('TicketCard', () => {
   beforeEach(() => {
+    // Clear mocks but preserve Audio mock
     jest.clearAllMocks();
+    // Reset Audio mock to track new calls
+    (window.Audio as unknown as jest.Mock).mockClear();
   });
 
   describe('Rendering', () => {

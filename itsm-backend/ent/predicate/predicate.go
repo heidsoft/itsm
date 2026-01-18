@@ -197,3 +197,9 @@ type Workflow func(*sql.Selector)
 
 // WorkflowInstance is the predicate function for workflowinstance builders.
 type WorkflowInstance func(*sql.Selector)
+
+// WorkflowTask is the predicate function for workflowtask builders.
+type WorkflowTask func(*sql.Selector)
+
+// WorkflowVersion is the predicate function for workflowversion builders.
+type WorkflowVersion func(*sql.Selector)

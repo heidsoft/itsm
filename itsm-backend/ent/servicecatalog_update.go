@@ -136,6 +136,60 @@ func (scu *ServiceCatalogUpdate) ClearDeliveryTime() *ServiceCatalogUpdate {
 	return scu
 }
 
+// SetCiTypeID sets the "ci_type_id" field.
+func (scu *ServiceCatalogUpdate) SetCiTypeID(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetCiTypeID()
+	scu.mutation.SetCiTypeID(i)
+	return scu
+}
+
+// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableCiTypeID(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetCiTypeID(*i)
+	}
+	return scu
+}
+
+// AddCiTypeID adds i to the "ci_type_id" field.
+func (scu *ServiceCatalogUpdate) AddCiTypeID(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddCiTypeID(i)
+	return scu
+}
+
+// ClearCiTypeID clears the value of the "ci_type_id" field.
+func (scu *ServiceCatalogUpdate) ClearCiTypeID() *ServiceCatalogUpdate {
+	scu.mutation.ClearCiTypeID()
+	return scu
+}
+
+// SetCloudServiceID sets the "cloud_service_id" field.
+func (scu *ServiceCatalogUpdate) SetCloudServiceID(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetCloudServiceID()
+	scu.mutation.SetCloudServiceID(i)
+	return scu
+}
+
+// SetNillableCloudServiceID sets the "cloud_service_id" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableCloudServiceID(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetCloudServiceID(*i)
+	}
+	return scu
+}
+
+// AddCloudServiceID adds i to the "cloud_service_id" field.
+func (scu *ServiceCatalogUpdate) AddCloudServiceID(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddCloudServiceID(i)
+	return scu
+}
+
+// ClearCloudServiceID clears the value of the "cloud_service_id" field.
+func (scu *ServiceCatalogUpdate) ClearCloudServiceID() *ServiceCatalogUpdate {
+	scu.mutation.ClearCloudServiceID()
+	return scu
+}
+
 // SetStatus sets the "status" field.
 func (scu *ServiceCatalogUpdate) SetStatus(s string) *ServiceCatalogUpdate {
 	scu.mutation.SetStatus(s)
@@ -306,6 +360,24 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if scu.mutation.DeliveryTimeCleared() {
 		_spec.ClearField(servicecatalog.FieldDeliveryTime, field.TypeInt)
 	}
+	if value, ok := scu.mutation.CiTypeID(); ok {
+		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedCiTypeID(); ok {
+		_spec.AddField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
+	}
+	if scu.mutation.CiTypeIDCleared() {
+		_spec.ClearField(servicecatalog.FieldCiTypeID, field.TypeInt)
+	}
+	if value, ok := scu.mutation.CloudServiceID(); ok {
+		_spec.SetField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedCloudServiceID(); ok {
+		_spec.AddField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
+	}
+	if scu.mutation.CloudServiceIDCleared() {
+		_spec.ClearField(servicecatalog.FieldCloudServiceID, field.TypeInt)
+	}
 	if value, ok := scu.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
 	}
@@ -449,6 +521,60 @@ func (scuo *ServiceCatalogUpdateOne) AddDeliveryTime(i int) *ServiceCatalogUpdat
 // ClearDeliveryTime clears the value of the "delivery_time" field.
 func (scuo *ServiceCatalogUpdateOne) ClearDeliveryTime() *ServiceCatalogUpdateOne {
 	scuo.mutation.ClearDeliveryTime()
+	return scuo
+}
+
+// SetCiTypeID sets the "ci_type_id" field.
+func (scuo *ServiceCatalogUpdateOne) SetCiTypeID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetCiTypeID()
+	scuo.mutation.SetCiTypeID(i)
+	return scuo
+}
+
+// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableCiTypeID(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetCiTypeID(*i)
+	}
+	return scuo
+}
+
+// AddCiTypeID adds i to the "ci_type_id" field.
+func (scuo *ServiceCatalogUpdateOne) AddCiTypeID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddCiTypeID(i)
+	return scuo
+}
+
+// ClearCiTypeID clears the value of the "ci_type_id" field.
+func (scuo *ServiceCatalogUpdateOne) ClearCiTypeID() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearCiTypeID()
+	return scuo
+}
+
+// SetCloudServiceID sets the "cloud_service_id" field.
+func (scuo *ServiceCatalogUpdateOne) SetCloudServiceID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetCloudServiceID()
+	scuo.mutation.SetCloudServiceID(i)
+	return scuo
+}
+
+// SetNillableCloudServiceID sets the "cloud_service_id" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableCloudServiceID(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetCloudServiceID(*i)
+	}
+	return scuo
+}
+
+// AddCloudServiceID adds i to the "cloud_service_id" field.
+func (scuo *ServiceCatalogUpdateOne) AddCloudServiceID(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddCloudServiceID(i)
+	return scuo
+}
+
+// ClearCloudServiceID clears the value of the "cloud_service_id" field.
+func (scuo *ServiceCatalogUpdateOne) ClearCloudServiceID() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearCloudServiceID()
 	return scuo
 }
 
@@ -651,6 +777,24 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	}
 	if scuo.mutation.DeliveryTimeCleared() {
 		_spec.ClearField(servicecatalog.FieldDeliveryTime, field.TypeInt)
+	}
+	if value, ok := scuo.mutation.CiTypeID(); ok {
+		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedCiTypeID(); ok {
+		_spec.AddField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
+	}
+	if scuo.mutation.CiTypeIDCleared() {
+		_spec.ClearField(servicecatalog.FieldCiTypeID, field.TypeInt)
+	}
+	if value, ok := scuo.mutation.CloudServiceID(); ok {
+		_spec.SetField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedCloudServiceID(); ok {
+		_spec.AddField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
+	}
+	if scuo.mutation.CloudServiceIDCleared() {
+		_spec.ClearField(servicecatalog.FieldCloudServiceID, field.TypeInt)
 	}
 	if value, ok := scuo.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)

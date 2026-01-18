@@ -64,6 +64,11 @@ func CatalogID(v int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldCatalogID, v))
 }
 
+// CiID applies equality check predicate on the "ci_id" field. It's identical to CiIDEQ.
+func CiID(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldCiID, v))
+}
+
 // RequesterID applies equality check predicate on the "requester_id" field. It's identical to RequesterIDEQ.
 func RequesterID(v int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldEQ(FieldRequesterID, v))
@@ -212,6 +217,56 @@ func CatalogIDLT(v int) predicate.ServiceRequest {
 // CatalogIDLTE applies the LTE predicate on the "catalog_id" field.
 func CatalogIDLTE(v int) predicate.ServiceRequest {
 	return predicate.ServiceRequest(sql.FieldLTE(FieldCatalogID, v))
+}
+
+// CiIDEQ applies the EQ predicate on the "ci_id" field.
+func CiIDEQ(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldEQ(FieldCiID, v))
+}
+
+// CiIDNEQ applies the NEQ predicate on the "ci_id" field.
+func CiIDNEQ(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNEQ(FieldCiID, v))
+}
+
+// CiIDIn applies the In predicate on the "ci_id" field.
+func CiIDIn(vs ...int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIn(FieldCiID, vs...))
+}
+
+// CiIDNotIn applies the NotIn predicate on the "ci_id" field.
+func CiIDNotIn(vs ...int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotIn(FieldCiID, vs...))
+}
+
+// CiIDGT applies the GT predicate on the "ci_id" field.
+func CiIDGT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGT(FieldCiID, v))
+}
+
+// CiIDGTE applies the GTE predicate on the "ci_id" field.
+func CiIDGTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldGTE(FieldCiID, v))
+}
+
+// CiIDLT applies the LT predicate on the "ci_id" field.
+func CiIDLT(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLT(FieldCiID, v))
+}
+
+// CiIDLTE applies the LTE predicate on the "ci_id" field.
+func CiIDLTE(v int) predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldLTE(FieldCiID, v))
+}
+
+// CiIDIsNil applies the IsNil predicate on the "ci_id" field.
+func CiIDIsNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldIsNull(FieldCiID))
+}
+
+// CiIDNotNil applies the NotNil predicate on the "ci_id" field.
+func CiIDNotNil() predicate.ServiceRequest {
+	return predicate.ServiceRequest(sql.FieldNotNull(FieldCiID))
 }
 
 // RequesterIDEQ applies the EQ predicate on the "requester_id" field.

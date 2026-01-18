@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowversion"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -195,6 +196,21 @@ func (wu *WorkflowUpdate) AddWorkflowInstances(w ...*WorkflowInstance) *Workflow
 	return wu.AddWorkflowInstanceIDs(ids...)
 }
 
+// AddWorkflowVersionIDs adds the "workflow_versions" edge to the WorkflowVersion entity by IDs.
+func (wu *WorkflowUpdate) AddWorkflowVersionIDs(ids ...int) *WorkflowUpdate {
+	wu.mutation.AddWorkflowVersionIDs(ids...)
+	return wu
+}
+
+// AddWorkflowVersions adds the "workflow_versions" edges to the WorkflowVersion entity.
+func (wu *WorkflowUpdate) AddWorkflowVersions(w ...*WorkflowVersion) *WorkflowUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wu.AddWorkflowVersionIDs(ids...)
+}
+
 // SetDepartment sets the "department" edge to the Department entity.
 func (wu *WorkflowUpdate) SetDepartment(d *Department) *WorkflowUpdate {
 	return wu.SetDepartmentID(d.ID)
@@ -224,6 +240,27 @@ func (wu *WorkflowUpdate) RemoveWorkflowInstances(w ...*WorkflowInstance) *Workf
 		ids[i] = w[i].ID
 	}
 	return wu.RemoveWorkflowInstanceIDs(ids...)
+}
+
+// ClearWorkflowVersions clears all "workflow_versions" edges to the WorkflowVersion entity.
+func (wu *WorkflowUpdate) ClearWorkflowVersions() *WorkflowUpdate {
+	wu.mutation.ClearWorkflowVersions()
+	return wu
+}
+
+// RemoveWorkflowVersionIDs removes the "workflow_versions" edge to WorkflowVersion entities by IDs.
+func (wu *WorkflowUpdate) RemoveWorkflowVersionIDs(ids ...int) *WorkflowUpdate {
+	wu.mutation.RemoveWorkflowVersionIDs(ids...)
+	return wu
+}
+
+// RemoveWorkflowVersions removes "workflow_versions" edges to WorkflowVersion entities.
+func (wu *WorkflowUpdate) RemoveWorkflowVersions(w ...*WorkflowVersion) *WorkflowUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wu.RemoveWorkflowVersionIDs(ids...)
 }
 
 // ClearDepartment clears the "department" edge to the Department entity.
@@ -371,6 +408,51 @@ func (wu *WorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wu.mutation.WorkflowVersionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.RemovedWorkflowVersionsIDs(); len(nodes) > 0 && !wu.mutation.WorkflowVersionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wu.mutation.WorkflowVersionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -591,6 +673,21 @@ func (wuo *WorkflowUpdateOne) AddWorkflowInstances(w ...*WorkflowInstance) *Work
 	return wuo.AddWorkflowInstanceIDs(ids...)
 }
 
+// AddWorkflowVersionIDs adds the "workflow_versions" edge to the WorkflowVersion entity by IDs.
+func (wuo *WorkflowUpdateOne) AddWorkflowVersionIDs(ids ...int) *WorkflowUpdateOne {
+	wuo.mutation.AddWorkflowVersionIDs(ids...)
+	return wuo
+}
+
+// AddWorkflowVersions adds the "workflow_versions" edges to the WorkflowVersion entity.
+func (wuo *WorkflowUpdateOne) AddWorkflowVersions(w ...*WorkflowVersion) *WorkflowUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wuo.AddWorkflowVersionIDs(ids...)
+}
+
 // SetDepartment sets the "department" edge to the Department entity.
 func (wuo *WorkflowUpdateOne) SetDepartment(d *Department) *WorkflowUpdateOne {
 	return wuo.SetDepartmentID(d.ID)
@@ -620,6 +717,27 @@ func (wuo *WorkflowUpdateOne) RemoveWorkflowInstances(w ...*WorkflowInstance) *W
 		ids[i] = w[i].ID
 	}
 	return wuo.RemoveWorkflowInstanceIDs(ids...)
+}
+
+// ClearWorkflowVersions clears all "workflow_versions" edges to the WorkflowVersion entity.
+func (wuo *WorkflowUpdateOne) ClearWorkflowVersions() *WorkflowUpdateOne {
+	wuo.mutation.ClearWorkflowVersions()
+	return wuo
+}
+
+// RemoveWorkflowVersionIDs removes the "workflow_versions" edge to WorkflowVersion entities by IDs.
+func (wuo *WorkflowUpdateOne) RemoveWorkflowVersionIDs(ids ...int) *WorkflowUpdateOne {
+	wuo.mutation.RemoveWorkflowVersionIDs(ids...)
+	return wuo
+}
+
+// RemoveWorkflowVersions removes "workflow_versions" edges to WorkflowVersion entities.
+func (wuo *WorkflowUpdateOne) RemoveWorkflowVersions(w ...*WorkflowVersion) *WorkflowUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wuo.RemoveWorkflowVersionIDs(ids...)
 }
 
 // ClearDepartment clears the "department" edge to the Department entity.
@@ -797,6 +915,51 @@ func (wuo *WorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Workflow, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wuo.mutation.WorkflowVersionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.RemovedWorkflowVersionsIDs(); len(nodes) > 0 && !wuo.mutation.WorkflowVersionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wuo.mutation.WorkflowVersionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

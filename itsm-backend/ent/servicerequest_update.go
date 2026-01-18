@@ -71,6 +71,33 @@ func (sru *ServiceRequestUpdate) AddCatalogID(i int) *ServiceRequestUpdate {
 	return sru
 }
 
+// SetCiID sets the "ci_id" field.
+func (sru *ServiceRequestUpdate) SetCiID(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetCiID()
+	sru.mutation.SetCiID(i)
+	return sru
+}
+
+// SetNillableCiID sets the "ci_id" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCiID(i *int) *ServiceRequestUpdate {
+	if i != nil {
+		sru.SetCiID(*i)
+	}
+	return sru
+}
+
+// AddCiID adds i to the "ci_id" field.
+func (sru *ServiceRequestUpdate) AddCiID(i int) *ServiceRequestUpdate {
+	sru.mutation.AddCiID(i)
+	return sru
+}
+
+// ClearCiID clears the value of the "ci_id" field.
+func (sru *ServiceRequestUpdate) ClearCiID() *ServiceRequestUpdate {
+	sru.mutation.ClearCiID()
+	return sru
+}
+
 // SetRequesterID sets the "requester_id" field.
 func (sru *ServiceRequestUpdate) SetRequesterID(i int) *ServiceRequestUpdate {
 	sru.mutation.ResetRequesterID()
@@ -425,6 +452,15 @@ func (sru *ServiceRequestUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if value, ok := sru.mutation.AddedCatalogID(); ok {
 		_spec.AddField(servicerequest.FieldCatalogID, field.TypeInt, value)
 	}
+	if value, ok := sru.mutation.CiID(); ok {
+		_spec.SetField(servicerequest.FieldCiID, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedCiID(); ok {
+		_spec.AddField(servicerequest.FieldCiID, field.TypeInt, value)
+	}
+	if sru.mutation.CiIDCleared() {
+		_spec.ClearField(servicerequest.FieldCiID, field.TypeInt)
+	}
 	if value, ok := sru.mutation.RequesterID(); ok {
 		_spec.SetField(servicerequest.FieldRequesterID, field.TypeInt, value)
 	}
@@ -567,6 +603,33 @@ func (sruo *ServiceRequestUpdateOne) SetNillableCatalogID(i *int) *ServiceReques
 // AddCatalogID adds i to the "catalog_id" field.
 func (sruo *ServiceRequestUpdateOne) AddCatalogID(i int) *ServiceRequestUpdateOne {
 	sruo.mutation.AddCatalogID(i)
+	return sruo
+}
+
+// SetCiID sets the "ci_id" field.
+func (sruo *ServiceRequestUpdateOne) SetCiID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetCiID()
+	sruo.mutation.SetCiID(i)
+	return sruo
+}
+
+// SetNillableCiID sets the "ci_id" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCiID(i *int) *ServiceRequestUpdateOne {
+	if i != nil {
+		sruo.SetCiID(*i)
+	}
+	return sruo
+}
+
+// AddCiID adds i to the "ci_id" field.
+func (sruo *ServiceRequestUpdateOne) AddCiID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddCiID(i)
+	return sruo
+}
+
+// ClearCiID clears the value of the "ci_id" field.
+func (sruo *ServiceRequestUpdateOne) ClearCiID() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearCiID()
 	return sruo
 }
 
@@ -953,6 +1016,15 @@ func (sruo *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	}
 	if value, ok := sruo.mutation.AddedCatalogID(); ok {
 		_spec.AddField(servicerequest.FieldCatalogID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.CiID(); ok {
+		_spec.SetField(servicerequest.FieldCiID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedCiID(); ok {
+		_spec.AddField(servicerequest.FieldCiID, field.TypeInt, value)
+	}
+	if sruo.mutation.CiIDCleared() {
+		_spec.ClearField(servicerequest.FieldCiID, field.TypeInt)
 	}
 	if value, ok := sruo.mutation.RequesterID(); ok {
 		_spec.SetField(servicerequest.FieldRequesterID, field.TypeInt, value)

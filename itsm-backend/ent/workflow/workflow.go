@@ -36,6 +36,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeWorkflowInstances holds the string denoting the workflow_instances edge name in mutations.
 	EdgeWorkflowInstances = "workflow_instances"
+	// EdgeWorkflowVersions holds the string denoting the workflow_versions edge name in mutations.
+	EdgeWorkflowVersions = "workflow_versions"
 	// EdgeDepartment holds the string denoting the department edge name in mutations.
 	EdgeDepartment = "department"
 	// Table holds the table name of the workflow in the database.
@@ -47,6 +49,13 @@ const (
 	WorkflowInstancesInverseTable = "workflow_instances"
 	// WorkflowInstancesColumn is the table column denoting the workflow_instances relation/edge.
 	WorkflowInstancesColumn = "workflow_id"
+	// WorkflowVersionsTable is the table that holds the workflow_versions relation/edge.
+	WorkflowVersionsTable = "workflow_versions"
+	// WorkflowVersionsInverseTable is the table name for the WorkflowVersion entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowversion" package.
+	WorkflowVersionsInverseTable = "workflow_versions"
+	// WorkflowVersionsColumn is the table column denoting the workflow_versions relation/edge.
+	WorkflowVersionsColumn = "workflow_id"
 	// DepartmentTable is the table that holds the department relation/edge.
 	DepartmentTable = "workflows"
 	// DepartmentInverseTable is the table name for the Department entity.
@@ -167,6 +176,20 @@ func ByWorkflowInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption
 	}
 }
 
+// ByWorkflowVersionsCount orders the results by workflow_versions count.
+func ByWorkflowVersionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowVersionsStep(), opts...)
+	}
+}
+
+// ByWorkflowVersions orders the results by workflow_versions terms.
+func ByWorkflowVersions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowVersionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByDepartmentField orders the results by department field.
 func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -178,6 +201,13 @@ func newWorkflowInstancesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(WorkflowInstancesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowInstancesTable, WorkflowInstancesColumn),
+	)
+}
+func newWorkflowVersionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowVersionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowVersionsTable, WorkflowVersionsColumn),
 	)
 }
 func newDepartmentStep() *sqlgraph.Step {

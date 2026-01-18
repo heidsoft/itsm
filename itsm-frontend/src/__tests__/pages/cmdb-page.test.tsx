@@ -25,6 +25,8 @@ jest.mock('next/navigation', () => ({
     prefetch: jest.fn(),
   }),
   useParams: () => ({ id: '1' }),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  usePathname: () => '/cmdb/cis/create',
 }));
 
 jest.mock('antd', () => {

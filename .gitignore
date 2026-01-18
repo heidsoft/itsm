@@ -1,7 +1,4 @@
-# 操作系统文件
-.gocache
-.gomodcache
-.gopath
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -10,106 +7,77 @@
 ehthumbs.db
 Thumbs.db
 
-# IDE 和编辑器
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Go 相关
-# 二进制文件
+# Go
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# 测试二进制文件
 *.test
-
-# 输出目录
+*.out
 /bin/
 /pkg/
 /vendor/
-itsm-backend/.gocache/
-
-# Go 工作空间文件
 go.work
 go.work.sum
 
-# 依赖目录（如果使用vendor）
-itsm-backend/vendor/
-
-# 构建输出
+# Build outputs
 itsm-backend/dist/
 itsm-backend/build/
 itsm-backend/tmp/
 
-# 日志文件
+# Logs
 *.log
 logs/
 
-# 配置文件（包含敏感信息）
+# Environment files (sensitive)
 .env
 .env.local
 .env.*.local
 config/local.yaml
 config/production.yaml
 
-# 数据库文件
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Node.js 相关（前端项目）
+# Node.js
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Next.js 相关
+# Next.js
 itsm-frontend/.next/
 itsm-frontend/out/
 itsm-frontend/build/
 itsm-frontend/dist/
-itsm-frontend/.next/
 itsm-frontend/.jest-cache/
 itsm-frontend/playwright-report/
 itsm-frontend/coverage/
-itsm-frontend/node_modules/
+itsm-frontend/.swc/
 
+# TypeScript
+*.tsbuildinfo
 
-# 依赖锁定文件（可选择性提交）
-# package-lock.json
-# yarn.lock
-
-# 测试覆盖率
-coverage/
-*.cover
-*.out
-
-# 临时文件
-*.tmp
-*.temp
-/tmp/
-
-# 文档生成
-/docs/build/
-
-# 部署相关
+# Vercel
 .vercel
 
-# 证书和密钥
+# Certificates
 *.pem
 *.key
 *.crt
 *.p12
 
-# 备份文件
+# Backup files
 *.bak
 *.backup
-
-# Trae 相关（保留规则文件）
-# .trae/

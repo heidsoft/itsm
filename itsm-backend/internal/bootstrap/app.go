@@ -92,7 +92,7 @@ func NewApplication() *Application {
 		embedder = service.NewOpenAIEmbedder()
 	}
 	vectorStore := service.NewVectorStore(database.GetRawDB())
-	ragService := service.NewRAGService(client, vectorStore, embedder)
+	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
 	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
 
 	// 控制器依赖
@@ -127,6 +127,10 @@ func NewApplication() *Application {
 	ticketAssignmentRuleService := service.NewTicketAssignmentRuleService(client, sugar)
 	ticketAssignmentSmartService := service.NewTicketAssignmentSmartService(client, sugar, ticketAssignmentService, ticketAssignmentRuleService)
 	ticketAssignmentSmartController := controller.NewTicketAssignmentSmartController(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar)
+
+	// Ticket Workflow Service & Controller
+	ticketWorkflowService := service.NewTicketWorkflowService(client, database.GetRawDB(), sugar)
+	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, sugar)
 
 	// Set notification service dependencies
 	ticketService.SetNotificationService(ticketNotificationService)
@@ -228,6 +232,7 @@ func NewApplication() *Application {
 		TicketRatingController:          ticketRatingController,
 		TicketAssignmentSmartController: ticketAssignmentSmartController,
 		TicketViewController:            ticketViewController,
+		TicketWorkflowController:        ticketWorkflowController,
 		IncidentController:              incidentController,
 		ApprovalController:              approvalController,
 		BPMNWorkflowController:          bpmnWorkflowController,

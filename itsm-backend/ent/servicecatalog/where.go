@@ -79,6 +79,16 @@ func DeliveryTime(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldDeliveryTime, v))
 }
 
+// CiTypeID applies equality check predicate on the "ci_type_id" field. It's identical to CiTypeIDEQ.
+func CiTypeID(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldCiTypeID, v))
+}
+
+// CloudServiceID applies equality check predicate on the "cloud_service_id" field. It's identical to CloudServiceIDEQ.
+func CloudServiceID(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldCloudServiceID, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldStatus, v))
@@ -417,6 +427,106 @@ func DeliveryTimeIsNil() predicate.ServiceCatalog {
 // DeliveryTimeNotNil applies the NotNil predicate on the "delivery_time" field.
 func DeliveryTimeNotNil() predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNotNull(FieldDeliveryTime))
+}
+
+// CiTypeIDEQ applies the EQ predicate on the "ci_type_id" field.
+func CiTypeIDEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldCiTypeID, v))
+}
+
+// CiTypeIDNEQ applies the NEQ predicate on the "ci_type_id" field.
+func CiTypeIDNEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldCiTypeID, v))
+}
+
+// CiTypeIDIn applies the In predicate on the "ci_type_id" field.
+func CiTypeIDIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldCiTypeID, vs...))
+}
+
+// CiTypeIDNotIn applies the NotIn predicate on the "ci_type_id" field.
+func CiTypeIDNotIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldCiTypeID, vs...))
+}
+
+// CiTypeIDGT applies the GT predicate on the "ci_type_id" field.
+func CiTypeIDGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldCiTypeID, v))
+}
+
+// CiTypeIDGTE applies the GTE predicate on the "ci_type_id" field.
+func CiTypeIDGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldCiTypeID, v))
+}
+
+// CiTypeIDLT applies the LT predicate on the "ci_type_id" field.
+func CiTypeIDLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldCiTypeID, v))
+}
+
+// CiTypeIDLTE applies the LTE predicate on the "ci_type_id" field.
+func CiTypeIDLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldCiTypeID, v))
+}
+
+// CiTypeIDIsNil applies the IsNil predicate on the "ci_type_id" field.
+func CiTypeIDIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldCiTypeID))
+}
+
+// CiTypeIDNotNil applies the NotNil predicate on the "ci_type_id" field.
+func CiTypeIDNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldCiTypeID))
+}
+
+// CloudServiceIDEQ applies the EQ predicate on the "cloud_service_id" field.
+func CloudServiceIDEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldCloudServiceID, v))
+}
+
+// CloudServiceIDNEQ applies the NEQ predicate on the "cloud_service_id" field.
+func CloudServiceIDNEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldCloudServiceID, v))
+}
+
+// CloudServiceIDIn applies the In predicate on the "cloud_service_id" field.
+func CloudServiceIDIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldCloudServiceID, vs...))
+}
+
+// CloudServiceIDNotIn applies the NotIn predicate on the "cloud_service_id" field.
+func CloudServiceIDNotIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldCloudServiceID, vs...))
+}
+
+// CloudServiceIDGT applies the GT predicate on the "cloud_service_id" field.
+func CloudServiceIDGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldCloudServiceID, v))
+}
+
+// CloudServiceIDGTE applies the GTE predicate on the "cloud_service_id" field.
+func CloudServiceIDGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldCloudServiceID, v))
+}
+
+// CloudServiceIDLT applies the LT predicate on the "cloud_service_id" field.
+func CloudServiceIDLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldCloudServiceID, v))
+}
+
+// CloudServiceIDLTE applies the LTE predicate on the "cloud_service_id" field.
+func CloudServiceIDLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldCloudServiceID, v))
+}
+
+// CloudServiceIDIsNil applies the IsNil predicate on the "cloud_service_id" field.
+func CloudServiceIDIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldCloudServiceID))
+}
+
+// CloudServiceIDNotNil applies the NotNil predicate on the "cloud_service_id" field.
+func CloudServiceIDNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldCloudServiceID))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

@@ -75,6 +75,8 @@ import (
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowtask"
+	"itsm-backend/ent/workflowversion"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -215,6 +217,10 @@ type Client struct {
 	Workflow *WorkflowClient
 	// WorkflowInstance is the client for interacting with the WorkflowInstance builders.
 	WorkflowInstance *WorkflowInstanceClient
+	// WorkflowTask is the client for interacting with the WorkflowTask builders.
+	WorkflowTask *WorkflowTaskClient
+	// WorkflowVersion is the client for interacting with the WorkflowVersion builders.
+	WorkflowVersion *WorkflowVersionClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -290,6 +296,8 @@ func (c *Client) init() {
 	c.User = NewUserClient(c.config)
 	c.Workflow = NewWorkflowClient(c.config)
 	c.WorkflowInstance = NewWorkflowInstanceClient(c.config)
+	c.WorkflowTask = NewWorkflowTaskClient(c.config)
+	c.WorkflowVersion = NewWorkflowVersionClient(c.config)
 }
 
 type (
@@ -446,6 +454,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		User:                    NewUserClient(cfg),
 		Workflow:                NewWorkflowClient(cfg),
 		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
+		WorkflowTask:            NewWorkflowTaskClient(cfg),
+		WorkflowVersion:         NewWorkflowVersionClient(cfg),
 	}, nil
 }
 
@@ -529,6 +539,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		User:                    NewUserClient(cfg),
 		Workflow:                NewWorkflowClient(cfg),
 		WorkflowInstance:        NewWorkflowInstanceClient(cfg),
+		WorkflowTask:            NewWorkflowTaskClient(cfg),
+		WorkflowVersion:         NewWorkflowVersionClient(cfg),
 	}, nil
 }
 
@@ -573,7 +585,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
 		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
 		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -598,7 +610,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
 		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
 		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -735,6 +747,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Workflow.mutate(ctx, m)
 	case *WorkflowInstanceMutation:
 		return c.WorkflowInstance.mutate(ctx, m)
+	case *WorkflowTaskMutation:
+		return c.WorkflowTask.mutate(ctx, m)
+	case *WorkflowVersionMutation:
+		return c.WorkflowVersion.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -10838,6 +10854,22 @@ func (c *WorkflowClient) QueryWorkflowInstances(w *Workflow) *WorkflowInstanceQu
 	return query
 }
 
+// QueryWorkflowVersions queries the workflow_versions edge of a Workflow.
+func (c *WorkflowClient) QueryWorkflowVersions(w *Workflow) *WorkflowVersionQuery {
+	query := (&WorkflowVersionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := w.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, id),
+			sqlgraph.To(workflowversion.Table, workflowversion.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflow.WorkflowVersionsTable, workflow.WorkflowVersionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(w.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryDepartment queries the department edge of a Workflow.
 func (c *WorkflowClient) QueryDepartment(w *Workflow) *DepartmentQuery {
 	query := (&DepartmentClient{config: c.config}).Query()
@@ -11003,6 +11035,22 @@ func (c *WorkflowInstanceClient) QueryWorkflow(wi *WorkflowInstance) *WorkflowQu
 	return query
 }
 
+// QueryWorkflowTasks queries the workflow_tasks edge of a WorkflowInstance.
+func (c *WorkflowInstanceClient) QueryWorkflowTasks(wi *WorkflowInstance) *WorkflowTaskQuery {
+	query := (&WorkflowTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowinstance.Table, workflowinstance.FieldID, id),
+			sqlgraph.To(workflowtask.Table, workflowtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowinstance.WorkflowTasksTable, workflowinstance.WorkflowTasksColumn),
+		)
+		fromV = sqlgraph.Neighbors(wi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *WorkflowInstanceClient) Hooks() []Hook {
 	return c.hooks.WorkflowInstance
@@ -11028,6 +11076,304 @@ func (c *WorkflowInstanceClient) mutate(ctx context.Context, m *WorkflowInstance
 	}
 }
 
+// WorkflowTaskClient is a client for the WorkflowTask schema.
+type WorkflowTaskClient struct {
+	config
+}
+
+// NewWorkflowTaskClient returns a client for the WorkflowTask from the given config.
+func NewWorkflowTaskClient(c config) *WorkflowTaskClient {
+	return &WorkflowTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowtask.Hooks(f(g(h())))`.
+func (c *WorkflowTaskClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowTask = append(c.hooks.WorkflowTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowtask.Intercept(f(g(h())))`.
+func (c *WorkflowTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowTask = append(c.inters.WorkflowTask, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowTask entity.
+func (c *WorkflowTaskClient) Create() *WorkflowTaskCreate {
+	mutation := newWorkflowTaskMutation(c.config, OpCreate)
+	return &WorkflowTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowTask entities.
+func (c *WorkflowTaskClient) CreateBulk(builders ...*WorkflowTaskCreate) *WorkflowTaskCreateBulk {
+	return &WorkflowTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *WorkflowTaskClient) MapCreateBulk(slice any, setFunc func(*WorkflowTaskCreate, int)) *WorkflowTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &WorkflowTaskCreateBulk{err: fmt.Errorf("calling to WorkflowTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*WorkflowTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &WorkflowTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowTask.
+func (c *WorkflowTaskClient) Update() *WorkflowTaskUpdate {
+	mutation := newWorkflowTaskMutation(c.config, OpUpdate)
+	return &WorkflowTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowTaskClient) UpdateOne(wt *WorkflowTask) *WorkflowTaskUpdateOne {
+	mutation := newWorkflowTaskMutation(c.config, OpUpdateOne, withWorkflowTask(wt))
+	return &WorkflowTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowTaskClient) UpdateOneID(id int) *WorkflowTaskUpdateOne {
+	mutation := newWorkflowTaskMutation(c.config, OpUpdateOne, withWorkflowTaskID(id))
+	return &WorkflowTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowTask.
+func (c *WorkflowTaskClient) Delete() *WorkflowTaskDelete {
+	mutation := newWorkflowTaskMutation(c.config, OpDelete)
+	return &WorkflowTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowTaskClient) DeleteOne(wt *WorkflowTask) *WorkflowTaskDeleteOne {
+	return c.DeleteOneID(wt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowTaskClient) DeleteOneID(id int) *WorkflowTaskDeleteOne {
+	builder := c.Delete().Where(workflowtask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowTask.
+func (c *WorkflowTaskClient) Query() *WorkflowTaskQuery {
+	return &WorkflowTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowTask entity by its id.
+func (c *WorkflowTaskClient) Get(ctx context.Context, id int) (*WorkflowTask, error) {
+	return c.Query().Where(workflowtask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowTaskClient) GetX(ctx context.Context, id int) *WorkflowTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInstance queries the instance edge of a WorkflowTask.
+func (c *WorkflowTaskClient) QueryInstance(wt *WorkflowTask) *WorkflowInstanceQuery {
+	query := (&WorkflowInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowtask.Table, workflowtask.FieldID, id),
+			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowtask.InstanceTable, workflowtask.InstanceColumn),
+		)
+		fromV = sqlgraph.Neighbors(wt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowTaskClient) Hooks() []Hook {
+	return c.hooks.WorkflowTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowTaskClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowTask
+}
+
+func (c *WorkflowTaskClient) mutate(ctx context.Context, m *WorkflowTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown WorkflowTask mutation op: %q", m.Op())
+	}
+}
+
+// WorkflowVersionClient is a client for the WorkflowVersion schema.
+type WorkflowVersionClient struct {
+	config
+}
+
+// NewWorkflowVersionClient returns a client for the WorkflowVersion from the given config.
+func NewWorkflowVersionClient(c config) *WorkflowVersionClient {
+	return &WorkflowVersionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowversion.Hooks(f(g(h())))`.
+func (c *WorkflowVersionClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowVersion = append(c.hooks.WorkflowVersion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowversion.Intercept(f(g(h())))`.
+func (c *WorkflowVersionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowVersion = append(c.inters.WorkflowVersion, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowVersion entity.
+func (c *WorkflowVersionClient) Create() *WorkflowVersionCreate {
+	mutation := newWorkflowVersionMutation(c.config, OpCreate)
+	return &WorkflowVersionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowVersion entities.
+func (c *WorkflowVersionClient) CreateBulk(builders ...*WorkflowVersionCreate) *WorkflowVersionCreateBulk {
+	return &WorkflowVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *WorkflowVersionClient) MapCreateBulk(slice any, setFunc func(*WorkflowVersionCreate, int)) *WorkflowVersionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &WorkflowVersionCreateBulk{err: fmt.Errorf("calling to WorkflowVersionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*WorkflowVersionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &WorkflowVersionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowVersion.
+func (c *WorkflowVersionClient) Update() *WorkflowVersionUpdate {
+	mutation := newWorkflowVersionMutation(c.config, OpUpdate)
+	return &WorkflowVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowVersionClient) UpdateOne(wv *WorkflowVersion) *WorkflowVersionUpdateOne {
+	mutation := newWorkflowVersionMutation(c.config, OpUpdateOne, withWorkflowVersion(wv))
+	return &WorkflowVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowVersionClient) UpdateOneID(id int) *WorkflowVersionUpdateOne {
+	mutation := newWorkflowVersionMutation(c.config, OpUpdateOne, withWorkflowVersionID(id))
+	return &WorkflowVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowVersion.
+func (c *WorkflowVersionClient) Delete() *WorkflowVersionDelete {
+	mutation := newWorkflowVersionMutation(c.config, OpDelete)
+	return &WorkflowVersionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowVersionClient) DeleteOne(wv *WorkflowVersion) *WorkflowVersionDeleteOne {
+	return c.DeleteOneID(wv.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowVersionClient) DeleteOneID(id int) *WorkflowVersionDeleteOne {
+	builder := c.Delete().Where(workflowversion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowVersionDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowVersion.
+func (c *WorkflowVersionClient) Query() *WorkflowVersionQuery {
+	return &WorkflowVersionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowVersion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowVersion entity by its id.
+func (c *WorkflowVersionClient) Get(ctx context.Context, id int) (*WorkflowVersion, error) {
+	return c.Query().Where(workflowversion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowVersionClient) GetX(ctx context.Context, id int) *WorkflowVersion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryWorkflow queries the workflow edge of a WorkflowVersion.
+func (c *WorkflowVersionClient) QueryWorkflow(wv *WorkflowVersion) *WorkflowQuery {
+	query := (&WorkflowClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := wv.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowversion.Table, workflowversion.FieldID, id),
+			sqlgraph.To(workflow.Table, workflow.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, workflowversion.WorkflowTable, workflowversion.WorkflowColumn),
+		)
+		fromV = sqlgraph.Neighbors(wv.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowVersionClient) Hooks() []Hook {
+	return c.hooks.WorkflowVersion
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowVersionClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowVersion
+}
+
+func (c *WorkflowVersionClient) mutate(ctx context.Context, m *WorkflowVersionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowVersionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowVersionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowVersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowVersionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown WorkflowVersion mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
@@ -11043,7 +11389,8 @@ type (
 		ServiceCatalog, ServiceRequest, ServiceRequestApproval, Tag, Team, Tenant,
 		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
 		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance []ent.Hook
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
+		WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
@@ -11058,6 +11405,7 @@ type (
 		ServiceCatalog, ServiceRequest, ServiceRequestApproval, Tag, Team, Tenant,
 		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
 		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance []ent.Interceptor
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
+		WorkflowVersion []ent.Interceptor
 	}
 )

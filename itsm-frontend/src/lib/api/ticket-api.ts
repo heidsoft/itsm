@@ -37,18 +37,17 @@ export class TicketApi {
     return httpClient.delete(`/api/v1/tickets/${id}`);
   }
 
-  // Approve ticket
+  // Approve ticket - 使用后端实际的 workflow/approve 端点
   static async approveTicket(id: number, data: {
-    action: 'approve' | 'reject';
-    comment: string;
-    step_name: string;
+    action: 'approve' | 'reject' | 'delegate';
+    comment?: string;
+    ticket_id: number;
+    delegate_to_user_id?: number;
   }): Promise<{
     success: boolean;
-    ticket: Ticket;
     message: string;
-    approval_status: 'approved' | 'rejected' | 'pending';
   }> {
-    return httpClient.post(`/api/v1/tickets/${id}/approve`, data);
+    return httpClient.post(`/api/v1/tickets/workflow/approve`, data);
   }
 
   // Add comment
@@ -319,25 +318,55 @@ export class TicketApi {
     return httpClient.delete(`/api/v1/tickets/${ticketId}/attachments/${attachmentId}`);
   }
 
-  // Get ticket workflow
-  static async getTicketWorkflow(id: number): Promise<Array<{
-    id: number;
-    step_name: string;
-    step_order: number;
-    status: string;
-    assignee_id?: number;
-    assignee?: {
-      id: number;
-      name: string;
-    };
-    started_at?: string;
-    completed_at?: string;
-    comments?: string;
-    required_approval: boolean;
-    approval_status?: string;
-    approval_comments?: string;
-  }>> {
-    return httpClient.get(`/api/v1/tickets/${id}/workflow`);
+  // Get ticket workflow state - 使用后端实际的 workflow/state 端点
+  static async getTicketWorkflow(id: number): Promise<{
+    ticket_id: number;
+    current_status: string;
+    available_actions: Array<{
+      action: string;
+      label: string;
+      requires_comment: boolean;
+    }>;
+    workflow_history: Array<{
+      from_status: string;
+      to_status: string;
+      action: string;
+      performed_at: string;
+      performed_by: number;
+      comment?: string;
+    }>;
+  }> {
+    return httpClient.get(`/api/v1/tickets/${id}/workflow/state`);
+  }
+
+  // Accept ticket (接单)
+  static async acceptTicket(ticketId: number): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/accept`, { ticket_id: ticketId });
+  }
+
+  // Reject ticket (驳回)
+  static async rejectTicket(ticketId: number, reason: string): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/reject`, { ticket_id: ticketId, reason });
+  }
+
+  // Withdraw ticket (撤回)
+  static async withdrawTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/withdraw`, { ticket_id: ticketId, reason });
+  }
+
+  // Forward ticket (转发)
+  static async forwardTicket(ticketId: number, toUserId: number, comment?: string): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/forward`, { ticket_id: ticketId, to_user_id: toUserId, comment });
+  }
+
+  // CC ticket (抄送)
+  static async ccTicket(ticketId: number, ccUserIds: number[], comment?: string): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/cc`, { ticket_id: ticketId, cc_user_ids: ccUserIds, comment });
+  }
+
+  // Reopen ticket (重开)
+  static async reopenTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/reopen`, { ticket_id: ticketId, reason });
   }
 
   // Update workflow step

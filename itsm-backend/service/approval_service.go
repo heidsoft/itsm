@@ -331,8 +331,8 @@ func (s *ApprovalService) GetApprovalRecords(ctx context.Context, req *dto.GetAp
 }
 
 // SubmitApproval 提交审批
-func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, action string, comment string, delegateToUserID *int, tenantID int) error {
-	s.logger.Infow("Submitting approval", "record_id", recordID, "action", action, "tenant_id", tenantID)
+func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, userID int, action string, comment string, delegateToUserID *int, tenantID int) error {
+	s.logger.Infow("Submitting approval", "record_id", recordID, "user_id", userID, "action", action, "tenant_id", tenantID)
 
 	// 获取审批记录
 	approvalRecord, err := s.client.ApprovalRecord.Query().
@@ -344,6 +344,26 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, acti
 		Only(ctx)
 	if err != nil {
 		return fmt.Errorf("approval record not found or already processed: %w", err)
+	}
+
+	// 权限检查：验证用户是否是该审批记录的指定审批人
+	if approvalRecord.ApproverID != userID {
+		s.logger.Warnw("User is not the assigned approver", "user_id", userID, "approver_id", approvalRecord.ApproverID, "record_id", recordID)
+		return fmt.Errorf("user is not authorized to approve this record")
+	}
+
+	// 获取审批工作流以检查操作权限
+	workflow, err := s.client.ApprovalWorkflow.Query().
+		Where(approvalworkflow.IDEQ(approvalRecord.WorkflowID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get approval workflow: %w", err)
+	}
+
+	// 验证当前节点是否允许该操作
+	if !s.canPerformAction(workflow, approvalRecord.CurrentLevel, action) {
+		s.logger.Warnw("Action not allowed at current level", "action", action, "level", approvalRecord.CurrentLevel)
+		return fmt.Errorf("action '%s' is not allowed at this approval level", action)
 	}
 
 	// 更新审批记录
@@ -461,6 +481,37 @@ func (s *ApprovalService) handleApprovalRejected(ctx context.Context, record *en
 	}
 
 	return nil
+}
+
+// canPerformAction 检查在指定审批级别是否允许执行该操作
+func (s *ApprovalService) canPerformAction(workflow *ent.ApprovalWorkflow, level int, action string) bool {
+	if workflow.Nodes == nil || len(workflow.Nodes) == 0 {
+		// 如果没有节点配置，默认允许所有操作
+		return true
+	}
+
+	// 查找当前级别的节点配置
+	for _, nodeMap := range workflow.Nodes {
+		if nodeLevel, ok := nodeMap["level"].(float64); ok && int(nodeLevel) == level {
+			// 检查各个操作的允许状态
+			switch action {
+			case "approve":
+				return true // 审批通过总是允许的
+			case "reject":
+				if allowReject, ok := nodeMap["allow_reject"].(bool); ok {
+					return allowReject
+				}
+				return false // 默认不允许拒绝
+			case "delegate":
+				if allowDelegate, ok := nodeMap["allow_delegate"].(bool); ok {
+					return allowDelegate
+				}
+				return false // 默认不允许委托
+			}
+		}
+	}
+
+	return true // 未找到节点配置时默认允许
 }
 
 // handleApprovalDelegated 处理审批委托

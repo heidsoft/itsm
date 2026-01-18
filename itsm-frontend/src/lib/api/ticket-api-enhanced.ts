@@ -239,16 +239,16 @@ export class TicketApiEnhanced {
    * @returns Promise
    */
   static async approveTicket(
-    id: number, 
+    id: number,
     data: {
-      action: 'approve' | 'reject';
-      comment: string;
-      step_name: string;
+      action: 'approve' | 'reject' | 'delegate';
+      comment?: string;
+      delegate_to_user_id?: number;
     }
   ) {
-    const actionText = data.action === 'approve' ? '审批通过' : '审批拒绝';
+    const actionText = data.action === 'approve' ? '审批通过' : data.action === 'reject' ? '审批拒绝' : '转交';
     return handleApiRequest(
-      TicketApi.approveTicket(id, data),
+      TicketApi.approveTicket(id, { ...data, ticket_id: id }),
       {
         errorMessage: `${actionText}失败`,
         showSuccess: true,

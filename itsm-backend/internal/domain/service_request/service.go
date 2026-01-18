@@ -110,7 +110,7 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 		if err != nil {
 			return nil, err
 		}
-		newReq.CIID = ciID
+		newReq.CiID = ciID
 	}
 
 	// 4. Create Approval Steps

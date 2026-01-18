@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowtask"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -211,6 +212,21 @@ func (wiu *WorkflowInstanceUpdate) SetWorkflow(w *Workflow) *WorkflowInstanceUpd
 	return wiu.SetWorkflowID(w.ID)
 }
 
+// AddWorkflowTaskIDs adds the "workflow_tasks" edge to the WorkflowTask entity by IDs.
+func (wiu *WorkflowInstanceUpdate) AddWorkflowTaskIDs(ids ...int) *WorkflowInstanceUpdate {
+	wiu.mutation.AddWorkflowTaskIDs(ids...)
+	return wiu
+}
+
+// AddWorkflowTasks adds the "workflow_tasks" edges to the WorkflowTask entity.
+func (wiu *WorkflowInstanceUpdate) AddWorkflowTasks(w ...*WorkflowTask) *WorkflowInstanceUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wiu.AddWorkflowTaskIDs(ids...)
+}
+
 // Mutation returns the WorkflowInstanceMutation object of the builder.
 func (wiu *WorkflowInstanceUpdate) Mutation() *WorkflowInstanceMutation {
 	return wiu.mutation
@@ -220,6 +236,27 @@ func (wiu *WorkflowInstanceUpdate) Mutation() *WorkflowInstanceMutation {
 func (wiu *WorkflowInstanceUpdate) ClearWorkflow() *WorkflowInstanceUpdate {
 	wiu.mutation.ClearWorkflow()
 	return wiu
+}
+
+// ClearWorkflowTasks clears all "workflow_tasks" edges to the WorkflowTask entity.
+func (wiu *WorkflowInstanceUpdate) ClearWorkflowTasks() *WorkflowInstanceUpdate {
+	wiu.mutation.ClearWorkflowTasks()
+	return wiu
+}
+
+// RemoveWorkflowTaskIDs removes the "workflow_tasks" edge to WorkflowTask entities by IDs.
+func (wiu *WorkflowInstanceUpdate) RemoveWorkflowTaskIDs(ids ...int) *WorkflowInstanceUpdate {
+	wiu.mutation.RemoveWorkflowTaskIDs(ids...)
+	return wiu
+}
+
+// RemoveWorkflowTasks removes "workflow_tasks" edges to WorkflowTask entities.
+func (wiu *WorkflowInstanceUpdate) RemoveWorkflowTasks(w ...*WorkflowTask) *WorkflowInstanceUpdate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wiu.RemoveWorkflowTaskIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -365,6 +402,51 @@ func (wiu *WorkflowInstanceUpdate) sqlSave(ctx context.Context) (n int, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wiu.mutation.WorkflowTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wiu.mutation.RemovedWorkflowTasksIDs(); len(nodes) > 0 && !wiu.mutation.WorkflowTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wiu.mutation.WorkflowTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -573,6 +655,21 @@ func (wiuo *WorkflowInstanceUpdateOne) SetWorkflow(w *Workflow) *WorkflowInstanc
 	return wiuo.SetWorkflowID(w.ID)
 }
 
+// AddWorkflowTaskIDs adds the "workflow_tasks" edge to the WorkflowTask entity by IDs.
+func (wiuo *WorkflowInstanceUpdateOne) AddWorkflowTaskIDs(ids ...int) *WorkflowInstanceUpdateOne {
+	wiuo.mutation.AddWorkflowTaskIDs(ids...)
+	return wiuo
+}
+
+// AddWorkflowTasks adds the "workflow_tasks" edges to the WorkflowTask entity.
+func (wiuo *WorkflowInstanceUpdateOne) AddWorkflowTasks(w ...*WorkflowTask) *WorkflowInstanceUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wiuo.AddWorkflowTaskIDs(ids...)
+}
+
 // Mutation returns the WorkflowInstanceMutation object of the builder.
 func (wiuo *WorkflowInstanceUpdateOne) Mutation() *WorkflowInstanceMutation {
 	return wiuo.mutation
@@ -582,6 +679,27 @@ func (wiuo *WorkflowInstanceUpdateOne) Mutation() *WorkflowInstanceMutation {
 func (wiuo *WorkflowInstanceUpdateOne) ClearWorkflow() *WorkflowInstanceUpdateOne {
 	wiuo.mutation.ClearWorkflow()
 	return wiuo
+}
+
+// ClearWorkflowTasks clears all "workflow_tasks" edges to the WorkflowTask entity.
+func (wiuo *WorkflowInstanceUpdateOne) ClearWorkflowTasks() *WorkflowInstanceUpdateOne {
+	wiuo.mutation.ClearWorkflowTasks()
+	return wiuo
+}
+
+// RemoveWorkflowTaskIDs removes the "workflow_tasks" edge to WorkflowTask entities by IDs.
+func (wiuo *WorkflowInstanceUpdateOne) RemoveWorkflowTaskIDs(ids ...int) *WorkflowInstanceUpdateOne {
+	wiuo.mutation.RemoveWorkflowTaskIDs(ids...)
+	return wiuo
+}
+
+// RemoveWorkflowTasks removes "workflow_tasks" edges to WorkflowTask entities.
+func (wiuo *WorkflowInstanceUpdateOne) RemoveWorkflowTasks(w ...*WorkflowTask) *WorkflowInstanceUpdateOne {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wiuo.RemoveWorkflowTaskIDs(ids...)
 }
 
 // Where appends a list predicates to the WorkflowInstanceUpdate builder.
@@ -757,6 +875,51 @@ func (wiuo *WorkflowInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Work
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if wiuo.mutation.WorkflowTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wiuo.mutation.RemovedWorkflowTasksIDs(); len(nodes) > 0 && !wiuo.mutation.WorkflowTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := wiuo.mutation.WorkflowTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

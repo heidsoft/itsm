@@ -242,9 +242,17 @@ func (c *ApprovalController) SubmitApproval(ctx *gin.Context) {
 		return
 	}
 
+	// 获取当前用户ID
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 用户信息缺失")
+		return
+	}
+
 	err := c.approvalService.SubmitApproval(
 		ctx.Request.Context(),
 		req.ApprovalID,
+		userID.(int),
 		req.Action,
 		req.Comment,
 		req.DelegateToUserID,

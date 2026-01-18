@@ -27,6 +27,10 @@ type ServiceCatalog struct {
 	Price float64 `json:"price,omitempty"`
 	// 交付时间（天）
 	DeliveryTime int `json:"delivery_time,omitempty"`
+	// 关联CI类型ID
+	CiTypeID int `json:"ci_type_id,omitempty"`
+	// 关联云服务ID
+	CloudServiceID int `json:"cloud_service_id,omitempty"`
 	// 状态
 	Status string `json:"status,omitempty"`
 	// 租户ID
@@ -49,7 +53,7 @@ func (*ServiceCatalog) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case servicecatalog.FieldPrice:
 			values[i] = new(sql.NullFloat64)
-		case servicecatalog.FieldID, servicecatalog.FieldDeliveryTime, servicecatalog.FieldTenantID:
+		case servicecatalog.FieldID, servicecatalog.FieldDeliveryTime, servicecatalog.FieldCiTypeID, servicecatalog.FieldCloudServiceID, servicecatalog.FieldTenantID:
 			values[i] = new(sql.NullInt64)
 		case servicecatalog.FieldName, servicecatalog.FieldDescription, servicecatalog.FieldCategory, servicecatalog.FieldStatus:
 			values[i] = new(sql.NullString)
@@ -105,6 +109,18 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field delivery_time", values[i])
 			} else if value.Valid {
 				sc.DeliveryTime = int(value.Int64)
+			}
+		case servicecatalog.FieldCiTypeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
+			} else if value.Valid {
+				sc.CiTypeID = int(value.Int64)
+			}
+		case servicecatalog.FieldCloudServiceID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field cloud_service_id", values[i])
+			} else if value.Valid {
+				sc.CloudServiceID = int(value.Int64)
 			}
 		case servicecatalog.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -186,6 +202,12 @@ func (sc *ServiceCatalog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("delivery_time=")
 	builder.WriteString(fmt.Sprintf("%v", sc.DeliveryTime))
+	builder.WriteString(", ")
+	builder.WriteString("ci_type_id=")
+	builder.WriteString(fmt.Sprintf("%v", sc.CiTypeID))
+	builder.WriteString(", ")
+	builder.WriteString("cloud_service_id=")
+	builder.WriteString(fmt.Sprintf("%v", sc.CloudServiceID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(sc.Status)

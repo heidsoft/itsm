@@ -1653,6 +1653,8 @@ var (
 		{Name: "category", Type: field.TypeString, Nullable: true},
 		{Name: "price", Type: field.TypeFloat64, Nullable: true},
 		{Name: "delivery_time", Type: field.TypeInt, Nullable: true},
+		{Name: "ci_type_id", Type: field.TypeInt, Nullable: true},
+		{Name: "cloud_service_id", Type: field.TypeInt, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "active"},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
@@ -1664,12 +1666,25 @@ var (
 		Name:       "service_catalogs",
 		Columns:    ServiceCatalogsColumns,
 		PrimaryKey: []*schema.Column{ServiceCatalogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "servicecatalog_ci_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[6]},
+			},
+			{
+				Name:    "servicecatalog_cloud_service_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceCatalogsColumns[7]},
+			},
+		},
 	}
 	// ServiceRequestsColumns holds the columns for the "service_requests" table.
 	ServiceRequestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "catalog_id", Type: field.TypeInt},
+		{Name: "ci_id", Type: field.TypeInt, Nullable: true},
 		{Name: "requester_id", Type: field.TypeInt},
 		{Name: "status", Type: field.TypeString, Default: "submitted"},
 		{Name: "title", Type: field.TypeString, Nullable: true},
@@ -1696,17 +1711,22 @@ var (
 			{
 				Name:    "servicerequest_tenant_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[17]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[18]},
 			},
 			{
 				Name:    "servicerequest_tenant_id_requester_id_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[3], ServiceRequestsColumns[17]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[4], ServiceRequestsColumns[18]},
 			},
 			{
 				Name:    "servicerequest_tenant_id_status_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[4], ServiceRequestsColumns[17]},
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[5], ServiceRequestsColumns[18]},
+			},
+			{
+				Name:    "servicerequest_tenant_id_ci_id",
+				Unique:  false,
+				Columns: []*schema.Column{ServiceRequestsColumns[1], ServiceRequestsColumns[3]},
 			},
 		},
 	}
@@ -2286,6 +2306,72 @@ var (
 			},
 		},
 	}
+	// WorkflowTasksColumns holds the columns for the "workflow_tasks" table.
+	WorkflowTasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "task_id", Type: field.TypeString},
+		{Name: "activity_id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeString, Default: "user_task"},
+		{Name: "assignee", Type: field.TypeString, Nullable: true},
+		{Name: "candidate_users", Type: field.TypeString, Nullable: true},
+		{Name: "candidate_groups", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "priority", Type: field.TypeString, Default: "medium"},
+		{Name: "form_data", Type: field.TypeJSON, Nullable: true},
+		{Name: "variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "comment", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "due_date", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "completed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "completed_by", Type: field.TypeString, Nullable: true},
+		{Name: "instance_id", Type: field.TypeInt},
+	}
+	// WorkflowTasksTable holds the schema information for the "workflow_tasks" table.
+	WorkflowTasksTable = &schema.Table{
+		Name:       "workflow_tasks",
+		Columns:    WorkflowTasksColumns,
+		PrimaryKey: []*schema.Column{WorkflowTasksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workflow_tasks_workflow_instances_workflow_tasks",
+				Columns:    []*schema.Column{WorkflowTasksColumns[19]},
+				RefColumns: []*schema.Column{WorkflowInstancesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// WorkflowVersionsColumns holds the columns for the "workflow_versions" table.
+	WorkflowVersionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "version", Type: field.TypeString},
+		{Name: "bpmn_xml", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "process_variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "change_log", Type: field.TypeString, Nullable: true},
+		{Name: "created_by", Type: field.TypeString, Nullable: true},
+		{Name: "is_current", Type: field.TypeBool, Default: false},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "workflow_id", Type: field.TypeInt},
+	}
+	// WorkflowVersionsTable holds the schema information for the "workflow_versions" table.
+	WorkflowVersionsTable = &schema.Table{
+		Name:       "workflow_versions",
+		Columns:    WorkflowVersionsColumns,
+		PrimaryKey: []*schema.Column{WorkflowVersionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "workflow_versions_workflows_workflow_versions",
+				Columns:    []*schema.Column{WorkflowVersionsColumns[11]},
+				RefColumns: []*schema.Column{WorkflowsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// ApplicationTagsColumns holds the columns for the "application_tags" table.
 	ApplicationTagsColumns = []*schema.Column{
 		{Name: "application_id", Type: field.TypeInt},
@@ -2552,6 +2638,8 @@ var (
 		UsersTable,
 		WorkflowsTable,
 		WorkflowInstancesTable,
+		WorkflowTasksTable,
+		WorkflowVersionsTable,
 		ApplicationTagsTable,
 		ConfigurationItemTicketsTable,
 		ConfigurationItemIncidentsTable,
@@ -2615,6 +2703,8 @@ func init() {
 	WorkflowsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	WorkflowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
 	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
+	WorkflowTasksTable.ForeignKeys[0].RefTable = WorkflowInstancesTable
+	WorkflowVersionsTable.ForeignKeys[0].RefTable = WorkflowsTable
 	ApplicationTagsTable.ForeignKeys[0].RefTable = ApplicationsTable
 	ApplicationTagsTable.ForeignKeys[1].RefTable = TagsTable
 	ConfigurationItemTicketsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable

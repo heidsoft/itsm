@@ -1,1 +1,0 @@
-{"version":3,"names":[],"sources":["/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/priority-matrix/index.ts"],"sourcesContent":["/**\n * 优先级矩阵组件导出\n */\n\n// UI组件将在后续完善\nexport type { } from '@/types/priority-matrix';\n\n"],"mappings":"AAAA;;GAAA,CAIA","ignoreList":[]}
