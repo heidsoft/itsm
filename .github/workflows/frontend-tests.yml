@@ -9,6 +9,7 @@ on:
     paths:
       - 'itsm-frontend/**'
       - '.github/workflows/frontend-tests.yml'
+  workflow_dispatch:
 
 jobs:
   lint:
