@@ -23,6 +23,10 @@ const (
 	FieldPrice = "price"
 	// FieldDeliveryTime holds the string denoting the delivery_time field in the database.
 	FieldDeliveryTime = "delivery_time"
+	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
+	FieldCiTypeID = "ci_type_id"
+	// FieldCloudServiceID holds the string denoting the cloud_service_id field in the database.
+	FieldCloudServiceID = "cloud_service_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
@@ -45,6 +49,8 @@ var Columns = []string{
 	FieldCategory,
 	FieldPrice,
 	FieldDeliveryTime,
+	FieldCiTypeID,
+	FieldCloudServiceID,
 	FieldStatus,
 	FieldTenantID,
 	FieldIsActive,
@@ -110,6 +116,16 @@ func ByPrice(opts ...sql.OrderTermOption) OrderOption {
 // ByDeliveryTime orders the results by the delivery_time field.
 func ByDeliveryTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeliveryTime, opts...).ToFunc()
+}
+
+// ByCiTypeID orders the results by the ci_type_id field.
+func ByCiTypeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCiTypeID, opts...).ToFunc()
+}
+
+// ByCloudServiceID orders the results by the cloud_service_id field.
+func ByCloudServiceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCloudServiceID, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

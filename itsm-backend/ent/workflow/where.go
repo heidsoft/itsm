@@ -553,6 +553,29 @@ func HasWorkflowInstancesWith(preds ...predicate.WorkflowInstance) predicate.Wor
 	})
 }
 
+// HasWorkflowVersions applies the HasEdge predicate on the "workflow_versions" edge.
+func HasWorkflowVersions() predicate.Workflow {
+	return predicate.Workflow(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, WorkflowVersionsTable, WorkflowVersionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWorkflowVersionsWith applies the HasEdge predicate on the "workflow_versions" edge with a given conditions (other predicates).
+func HasWorkflowVersionsWith(preds ...predicate.WorkflowVersion) predicate.Workflow {
+	return predicate.Workflow(func(s *sql.Selector) {
+		step := newWorkflowVersionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasDepartment applies the HasEdge predicate on the "department" edge.
 func HasDepartment() predicate.Workflow {
 	return predicate.Workflow(func(s *sql.Selector) {

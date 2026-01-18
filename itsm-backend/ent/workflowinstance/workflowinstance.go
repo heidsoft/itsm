@@ -38,6 +38,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeWorkflow holds the string denoting the workflow edge name in mutations.
 	EdgeWorkflow = "workflow"
+	// EdgeWorkflowTasks holds the string denoting the workflow_tasks edge name in mutations.
+	EdgeWorkflowTasks = "workflow_tasks"
 	// Table holds the table name of the workflowinstance in the database.
 	Table = "workflow_instances"
 	// WorkflowTable is the table that holds the workflow relation/edge.
@@ -47,6 +49,13 @@ const (
 	WorkflowInverseTable = "workflows"
 	// WorkflowColumn is the table column denoting the workflow relation/edge.
 	WorkflowColumn = "workflow_id"
+	// WorkflowTasksTable is the table that holds the workflow_tasks relation/edge.
+	WorkflowTasksTable = "workflow_tasks"
+	// WorkflowTasksInverseTable is the table name for the WorkflowTask entity.
+	// It exists in this package in order to avoid circular dependency with the "workflowtask" package.
+	WorkflowTasksInverseTable = "workflow_tasks"
+	// WorkflowTasksColumn is the table column denoting the workflow_tasks relation/edge.
+	WorkflowTasksColumn = "instance_id"
 )
 
 // Columns holds all SQL columns for workflowinstance fields.
@@ -171,10 +180,31 @@ func ByWorkflowField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newWorkflowStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByWorkflowTasksCount orders the results by workflow_tasks count.
+func ByWorkflowTasksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newWorkflowTasksStep(), opts...)
+	}
+}
+
+// ByWorkflowTasks orders the results by workflow_tasks terms.
+func ByWorkflowTasks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newWorkflowTasksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newWorkflowStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(WorkflowInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, WorkflowTable, WorkflowColumn),
+	)
+}
+func newWorkflowTasksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(WorkflowTasksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowTasksTable, WorkflowTasksColumn),
 	)
 }

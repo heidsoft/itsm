@@ -54,6 +54,8 @@ func (Workflow) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("workflow_instances", WorkflowInstance.Type).
 			Comment("工作流实例"),
+		edge.To("workflow_versions", WorkflowVersion.Type).
+			Comment("版本历史"),
 		edge.From("department", Department.Type).
 			Ref("workflows").
 			Field("department_id").

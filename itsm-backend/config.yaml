@@ -6,6 +6,13 @@ database:
   dbname: itsm
   sslmode: disable
 
+# pgvector configuration (optional, for RAG/AI features)
+# Install extension: CREATE EXTENSION IF NOT EXISTS vector;
+# vectors table is auto-created if not exists
+vector:
+  enabled: false  # Set to true when pgvector is installed
+  dimension: 1536  # OpenAI text-embedding-3-small dimension
+
 server:
   port: 8090
   mode: debug
@@ -20,8 +27,16 @@ log:
   path: ./logs/app.log
 
 llm:
-  provider: openai
+  provider: openai        # openai, azure, local
   model: gpt-4o-mini
-  api_key: ""
-  endpoint: ""
-  token_cap: 8000
+  api_key: ""             # Set via environment: OPENAI_API_KEY
+  endpoint: ""            # For Azure: https://{resource}.openai.azure.com/
+  deployment: ""          # Azure deployment ID
+  token_cap: 8000         # Rate limit
+
+# Embedding configuration for RAG
+embedding:
+  provider: openai        # openai, local
+  model: text-embedding-3-small
+  api_key: ""             # Set via environment: OPENAI_API_KEY
+  endpoint: ""            # Custom embedding endpoint

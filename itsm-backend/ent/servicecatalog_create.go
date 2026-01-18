@@ -82,6 +82,34 @@ func (scc *ServiceCatalogCreate) SetNillableDeliveryTime(i *int) *ServiceCatalog
 	return scc
 }
 
+// SetCiTypeID sets the "ci_type_id" field.
+func (scc *ServiceCatalogCreate) SetCiTypeID(i int) *ServiceCatalogCreate {
+	scc.mutation.SetCiTypeID(i)
+	return scc
+}
+
+// SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableCiTypeID(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetCiTypeID(*i)
+	}
+	return scc
+}
+
+// SetCloudServiceID sets the "cloud_service_id" field.
+func (scc *ServiceCatalogCreate) SetCloudServiceID(i int) *ServiceCatalogCreate {
+	scc.mutation.SetCloudServiceID(i)
+	return scc
+}
+
+// SetNillableCloudServiceID sets the "cloud_service_id" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableCloudServiceID(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetCloudServiceID(*i)
+	}
+	return scc
+}
+
 // SetStatus sets the "status" field.
 func (scc *ServiceCatalogCreate) SetStatus(s string) *ServiceCatalogCreate {
 	scc.mutation.SetStatus(s)
@@ -272,6 +300,14 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 	if value, ok := scc.mutation.DeliveryTime(); ok {
 		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
 		_node.DeliveryTime = value
+	}
+	if value, ok := scc.mutation.CiTypeID(); ok {
+		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
+		_node.CiTypeID = value
+	}
+	if value, ok := scc.mutation.CloudServiceID(); ok {
+		_spec.SetField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
+		_node.CloudServiceID = value
 	}
 	if value, ok := scc.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)

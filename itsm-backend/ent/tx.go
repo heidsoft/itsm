@@ -140,6 +140,10 @@ type Tx struct {
 	Workflow *WorkflowClient
 	// WorkflowInstance is the client for interacting with the WorkflowInstance builders.
 	WorkflowInstance *WorkflowInstanceClient
+	// WorkflowTask is the client for interacting with the WorkflowTask builders.
+	WorkflowTask *WorkflowTaskClient
+	// WorkflowVersion is the client for interacting with the WorkflowVersion builders.
+	WorkflowVersion *WorkflowVersionClient
 
 	// lazily loaded.
 	client     *Client
@@ -335,6 +339,8 @@ func (tx *Tx) init() {
 	tx.User = NewUserClient(tx.config)
 	tx.Workflow = NewWorkflowClient(tx.config)
 	tx.WorkflowInstance = NewWorkflowInstanceClient(tx.config)
+	tx.WorkflowTask = NewWorkflowTaskClient(tx.config)
+	tx.WorkflowVersion = NewWorkflowVersionClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -61,5 +61,7 @@ func (WorkflowInstance) Edges() []ent.Edge {
 			Field("workflow_id").
 			Unique().
 			Required(),
+		edge.To("workflow_tasks", WorkflowTask.Type).
+			Comment("任务列表"),
 	}
 }

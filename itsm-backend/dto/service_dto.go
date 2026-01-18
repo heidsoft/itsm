@@ -164,7 +164,7 @@ func ToServiceRequestResponse(request *ent.ServiceRequest) *ServiceRequestRespon
 		ID:                 request.ID,
 		CatalogID:          request.CatalogID,
 		RequesterID:        request.RequesterID,
-		CIID:               request.CIID,
+		CIID:               request.CiID,
 		Status:             string(request.Status),
 		Title:              request.Title,
 		Reason:             request.Reason,

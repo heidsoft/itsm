@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowversion"
 	"math"
 
 	"entgo.io/ent"
@@ -26,6 +27,7 @@ type WorkflowQuery struct {
 	inters                []Interceptor
 	predicates            []predicate.Workflow
 	withWorkflowInstances *WorkflowInstanceQuery
+	withWorkflowVersions  *WorkflowVersionQuery
 	withDepartment        *DepartmentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -78,6 +80,28 @@ func (wq *WorkflowQuery) QueryWorkflowInstances() *WorkflowInstanceQuery {
 			sqlgraph.From(workflow.Table, workflow.FieldID, selector),
 			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, workflow.WorkflowInstancesTable, workflow.WorkflowInstancesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowVersions chains the current query on the "workflow_versions" edge.
+func (wq *WorkflowQuery) QueryWorkflowVersions() *WorkflowVersionQuery {
+	query := (&WorkflowVersionClient{config: wq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflow.Table, workflow.FieldID, selector),
+			sqlgraph.To(workflowversion.Table, workflowversion.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflow.WorkflowVersionsTable, workflow.WorkflowVersionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wq.driver.Dialect(), step)
 		return fromU, nil
@@ -300,6 +324,7 @@ func (wq *WorkflowQuery) Clone() *WorkflowQuery {
 		inters:                append([]Interceptor{}, wq.inters...),
 		predicates:            append([]predicate.Workflow{}, wq.predicates...),
 		withWorkflowInstances: wq.withWorkflowInstances.Clone(),
+		withWorkflowVersions:  wq.withWorkflowVersions.Clone(),
 		withDepartment:        wq.withDepartment.Clone(),
 		// clone intermediate query.
 		sql:  wq.sql.Clone(),
@@ -315,6 +340,17 @@ func (wq *WorkflowQuery) WithWorkflowInstances(opts ...func(*WorkflowInstanceQue
 		opt(query)
 	}
 	wq.withWorkflowInstances = query
+	return wq
+}
+
+// WithWorkflowVersions tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_versions" edge. The optional arguments are used to configure the query builder of the edge.
+func (wq *WorkflowQuery) WithWorkflowVersions(opts ...func(*WorkflowVersionQuery)) *WorkflowQuery {
+	query := (&WorkflowVersionClient{config: wq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	wq.withWorkflowVersions = query
 	return wq
 }
 
@@ -407,8 +443,9 @@ func (wq *WorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Wor
 	var (
 		nodes       = []*Workflow{}
 		_spec       = wq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			wq.withWorkflowInstances != nil,
+			wq.withWorkflowVersions != nil,
 			wq.withDepartment != nil,
 		}
 	)
@@ -439,6 +476,13 @@ func (wq *WorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Wor
 			return nil, err
 		}
 	}
+	if query := wq.withWorkflowVersions; query != nil {
+		if err := wq.loadWorkflowVersions(ctx, query, nodes,
+			func(n *Workflow) { n.Edges.WorkflowVersions = []*WorkflowVersion{} },
+			func(n *Workflow, e *WorkflowVersion) { n.Edges.WorkflowVersions = append(n.Edges.WorkflowVersions, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := wq.withDepartment; query != nil {
 		if err := wq.loadDepartment(ctx, query, nodes, nil,
 			func(n *Workflow, e *Department) { n.Edges.Department = e }); err != nil {
@@ -464,6 +508,36 @@ func (wq *WorkflowQuery) loadWorkflowInstances(ctx context.Context, query *Workf
 	}
 	query.Where(predicate.WorkflowInstance(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(workflow.WorkflowInstancesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.WorkflowID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "workflow_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (wq *WorkflowQuery) loadWorkflowVersions(ctx context.Context, query *WorkflowVersionQuery, nodes []*Workflow, init func(*Workflow), assign func(*Workflow, *WorkflowVersion)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Workflow)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowversion.FieldWorkflowID)
+	}
+	query.Where(predicate.WorkflowVersion(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(workflow.WorkflowVersionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

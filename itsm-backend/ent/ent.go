@@ -70,6 +70,8 @@ import (
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowtask"
+	"itsm-backend/ent/workflowversion"
 	"reflect"
 	"sync"
 
@@ -200,6 +202,8 @@ func checkColumn(table, column string) error {
 			user.Table:                    user.ValidColumn,
 			workflow.Table:                workflow.ValidColumn,
 			workflowinstance.Table:        workflowinstance.ValidColumn,
+			workflowtask.Table:            workflowtask.ValidColumn,
+			workflowversion.Table:         workflowversion.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

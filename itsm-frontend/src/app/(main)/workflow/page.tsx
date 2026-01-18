@@ -1204,7 +1204,6 @@ const WorkflowManagementPage = () => {
             }
           }}
           height={700}
-          showPropertiesPanel={true}
         />
       </Modal>
     </>

@@ -49,11 +49,13 @@ type Workflow struct {
 type WorkflowEdges struct {
 	// 工作流实例
 	WorkflowInstances []*WorkflowInstance `json:"workflow_instances,omitempty"`
+	// 版本历史
+	WorkflowVersions []*WorkflowVersion `json:"workflow_versions,omitempty"`
 	// 所属部门
 	Department *Department `json:"department,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // WorkflowInstancesOrErr returns the WorkflowInstances value or an error if the edge
@@ -65,12 +67,21 @@ func (e WorkflowEdges) WorkflowInstancesOrErr() ([]*WorkflowInstance, error) {
 	return nil, &NotLoadedError{edge: "workflow_instances"}
 }
 
+// WorkflowVersionsOrErr returns the WorkflowVersions value or an error if the edge
+// was not loaded in eager-loading.
+func (e WorkflowEdges) WorkflowVersionsOrErr() ([]*WorkflowVersion, error) {
+	if e.loadedTypes[1] {
+		return e.WorkflowVersions, nil
+	}
+	return nil, &NotLoadedError{edge: "workflow_versions"}
+}
+
 // DepartmentOrErr returns the Department value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e WorkflowEdges) DepartmentOrErr() (*Department, error) {
 	if e.Department != nil {
 		return e.Department, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[2] {
 		return nil, &NotFoundError{label: department.Label}
 	}
 	return nil, &NotLoadedError{edge: "department"}
@@ -190,6 +201,11 @@ func (w *Workflow) Value(name string) (ent.Value, error) {
 // QueryWorkflowInstances queries the "workflow_instances" edge of the Workflow entity.
 func (w *Workflow) QueryWorkflowInstances() *WorkflowInstanceQuery {
 	return NewWorkflowClient(w.config).QueryWorkflowInstances(w)
+}
+
+// QueryWorkflowVersions queries the "workflow_versions" edge of the Workflow entity.
+func (w *Workflow) QueryWorkflowVersions() *WorkflowVersionQuery {
+	return NewWorkflowClient(w.config).QueryWorkflowVersions(w)
 }
 
 // QueryDepartment queries the "department" edge of the Workflow entity.

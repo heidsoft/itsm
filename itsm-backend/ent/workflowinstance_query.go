@@ -4,10 +4,12 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowtask"
 	"math"
 
 	"entgo.io/ent"
@@ -19,12 +21,13 @@ import (
 // WorkflowInstanceQuery is the builder for querying WorkflowInstance entities.
 type WorkflowInstanceQuery struct {
 	config
-	ctx          *QueryContext
-	order        []workflowinstance.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.WorkflowInstance
-	withWorkflow *WorkflowQuery
-	withFKs      bool
+	ctx               *QueryContext
+	order             []workflowinstance.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.WorkflowInstance
+	withWorkflow      *WorkflowQuery
+	withWorkflowTasks *WorkflowTaskQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,28 @@ func (wiq *WorkflowInstanceQuery) QueryWorkflow() *WorkflowQuery {
 			sqlgraph.From(workflowinstance.Table, workflowinstance.FieldID, selector),
 			sqlgraph.To(workflow.Table, workflow.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, workflowinstance.WorkflowTable, workflowinstance.WorkflowColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(wiq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWorkflowTasks chains the current query on the "workflow_tasks" edge.
+func (wiq *WorkflowInstanceQuery) QueryWorkflowTasks() *WorkflowTaskQuery {
+	query := (&WorkflowTaskClient{config: wiq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := wiq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := wiq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(workflowinstance.Table, workflowinstance.FieldID, selector),
+			sqlgraph.To(workflowtask.Table, workflowtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, workflowinstance.WorkflowTasksTable, workflowinstance.WorkflowTasksColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(wiq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +295,13 @@ func (wiq *WorkflowInstanceQuery) Clone() *WorkflowInstanceQuery {
 		return nil
 	}
 	return &WorkflowInstanceQuery{
-		config:       wiq.config,
-		ctx:          wiq.ctx.Clone(),
-		order:        append([]workflowinstance.OrderOption{}, wiq.order...),
-		inters:       append([]Interceptor{}, wiq.inters...),
-		predicates:   append([]predicate.WorkflowInstance{}, wiq.predicates...),
-		withWorkflow: wiq.withWorkflow.Clone(),
+		config:            wiq.config,
+		ctx:               wiq.ctx.Clone(),
+		order:             append([]workflowinstance.OrderOption{}, wiq.order...),
+		inters:            append([]Interceptor{}, wiq.inters...),
+		predicates:        append([]predicate.WorkflowInstance{}, wiq.predicates...),
+		withWorkflow:      wiq.withWorkflow.Clone(),
+		withWorkflowTasks: wiq.withWorkflowTasks.Clone(),
 		// clone intermediate query.
 		sql:  wiq.sql.Clone(),
 		path: wiq.path,
@@ -290,6 +316,17 @@ func (wiq *WorkflowInstanceQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *Wo
 		opt(query)
 	}
 	wiq.withWorkflow = query
+	return wiq
+}
+
+// WithWorkflowTasks tells the query-builder to eager-load the nodes that are connected to
+// the "workflow_tasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (wiq *WorkflowInstanceQuery) WithWorkflowTasks(opts ...func(*WorkflowTaskQuery)) *WorkflowInstanceQuery {
+	query := (&WorkflowTaskClient{config: wiq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	wiq.withWorkflowTasks = query
 	return wiq
 }
 
@@ -372,8 +409,9 @@ func (wiq *WorkflowInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		nodes       = []*WorkflowInstance{}
 		withFKs     = wiq.withFKs
 		_spec       = wiq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			wiq.withWorkflow != nil,
+			wiq.withWorkflowTasks != nil,
 		}
 	)
 	if withFKs {
@@ -400,6 +438,13 @@ func (wiq *WorkflowInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	if query := wiq.withWorkflow; query != nil {
 		if err := wiq.loadWorkflow(ctx, query, nodes, nil,
 			func(n *WorkflowInstance, e *Workflow) { n.Edges.Workflow = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := wiq.withWorkflowTasks; query != nil {
+		if err := wiq.loadWorkflowTasks(ctx, query, nodes,
+			func(n *WorkflowInstance) { n.Edges.WorkflowTasks = []*WorkflowTask{} },
+			func(n *WorkflowInstance, e *WorkflowTask) { n.Edges.WorkflowTasks = append(n.Edges.WorkflowTasks, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -432,6 +477,36 @@ func (wiq *WorkflowInstanceQuery) loadWorkflow(ctx context.Context, query *Workf
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (wiq *WorkflowInstanceQuery) loadWorkflowTasks(ctx context.Context, query *WorkflowTaskQuery, nodes []*WorkflowInstance, init func(*WorkflowInstance), assign func(*WorkflowInstance, *WorkflowTask)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*WorkflowInstance)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(workflowtask.FieldInstanceID)
+	}
+	query.Where(predicate.WorkflowTask(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(workflowinstance.WorkflowTasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.InstanceID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "instance_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

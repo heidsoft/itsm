@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"go.uber.org/zap"
+
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/service"
@@ -23,10 +25,18 @@ type AIController struct {
 	triage             *service.TriageService
 	summary            *service.SummarizeService
 	aiTelemetryService *service.AITelemetryService
+	logger             *zap.Logger
 }
 
-func NewAIController(rag *service.RAGService, client *ent.Client, aiTelemetryService *service.AITelemetryService) *AIController {
-	return &AIController{rag: rag, client: client, triage: service.NewTriageService(), summary: service.NewSummarizeService(), aiTelemetryService: aiTelemetryService}
+func NewAIController(rag *service.RAGService, client *ent.Client, aiTelemetryService *service.AITelemetryService, gateway *service.LLMGateway, logger *zap.Logger) *AIController {
+	return &AIController{
+		rag:                rag,
+		client:             client,
+		triage:             service.NewTriageService(gateway, logger),
+		summary:            service.NewSummarizeService(gateway, logger),
+		aiTelemetryService: aiTelemetryService,
+		logger:             logger,
+	}
 }
 
 func (a *AIController) SetToolRegistry(tr *service.ToolRegistry) { a.tools = tr }
@@ -104,7 +114,11 @@ func (a *AIController) Summarize(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
-	sum := a.summary.Summarize(c.Request.Context(), req.Text, req.MaxLen)
+	sum, err := a.summary.Summarize(c.Request.Context(), req.Text, req.MaxLen)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, "摘要生成失败: "+err.Error())
+		return
+	}
 	common.Success(c, gin.H{"summary": sum})
 }
 

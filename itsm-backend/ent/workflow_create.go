@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowversion"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -151,6 +152,21 @@ func (wc *WorkflowCreate) AddWorkflowInstances(w ...*WorkflowInstance) *Workflow
 		ids[i] = w[i].ID
 	}
 	return wc.AddWorkflowInstanceIDs(ids...)
+}
+
+// AddWorkflowVersionIDs adds the "workflow_versions" edge to the WorkflowVersion entity by IDs.
+func (wc *WorkflowCreate) AddWorkflowVersionIDs(ids ...int) *WorkflowCreate {
+	wc.mutation.AddWorkflowVersionIDs(ids...)
+	return wc
+}
+
+// AddWorkflowVersions adds the "workflow_versions" edges to the WorkflowVersion entity.
+func (wc *WorkflowCreate) AddWorkflowVersions(w ...*WorkflowVersion) *WorkflowCreate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wc.AddWorkflowVersionIDs(ids...)
 }
 
 // SetDepartment sets the "department" edge to the Department entity.
@@ -322,6 +338,22 @@ func (wc *WorkflowCreate) createSpec() (*Workflow, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wc.mutation.WorkflowVersionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflow.WorkflowVersionsTable,
+			Columns: []string{workflow.WorkflowVersionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

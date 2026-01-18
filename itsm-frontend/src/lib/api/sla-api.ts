@@ -170,28 +170,28 @@ export class SLAApi {
     if (params?.sla_definition_id) requestBody.sla_definition_id = params.sla_definition_id;
     
     const response = await httpClient.post('/api/sla/monitoring', requestBody);
-    
+
     // 转换后端响应格式到前端格式
-    const violationRate = response.total_tickets > 0 
-      ? (response.violated_tickets / response.total_tickets) * 100 
+    const violationRate = response.total_tickets > 0
+      ? (response.violated_tickets / response.total_tickets) * 100
       : 0;
     const compliantTickets = response.total_tickets - response.violated_tickets;
-    
-    // 计算风险工单（接近SLA截止时间的工单）
-    const atRiskTickets = Math.floor(response.total_tickets * 0.15); // 模拟数据
-    
+
+    // 使用后端返回的风险工单数，如果没有则估算
+    const atRiskTickets = response.at_risk_tickets ?? Math.floor(response.total_tickets * 0.15);
+
     return {
-      compliance_rate: response.compliance_rate,
+      compliance_rate: response.compliance_rate ?? (response.total_tickets > 0 ? (compliantTickets / response.total_tickets) * 100 : 0),
       violation_rate: violationRate,
       total_tickets: response.total_tickets,
       compliant_tickets: compliantTickets,
       violated_tickets: response.violated_tickets,
       at_risk_tickets: atRiskTickets,
-      average_response_time: response.average_response_time,
-      average_resolution_time: response.average_resolution_time,
-      response_time_compliance: 92.5, // 需要从后端计算
-      resolution_time_compliance: 88.2, // 需要从后端计算
-      alerts: [], // 需要从后端获取
+      average_response_time: response.average_response_time ?? 0,
+      average_resolution_time: response.average_resolution_time ?? 0,
+      response_time_compliance: response.response_time_compliance ?? 0,
+      resolution_time_compliance: response.resolution_time_compliance ?? 0,
+      alerts: response.alerts ?? [],
     };
   }
 

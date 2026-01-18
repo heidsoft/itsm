@@ -32,6 +32,20 @@ func (src *ServiceRequestCreate) SetCatalogID(i int) *ServiceRequestCreate {
 	return src
 }
 
+// SetCiID sets the "ci_id" field.
+func (src *ServiceRequestCreate) SetCiID(i int) *ServiceRequestCreate {
+	src.mutation.SetCiID(i)
+	return src
+}
+
+// SetNillableCiID sets the "ci_id" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableCiID(i *int) *ServiceRequestCreate {
+	if i != nil {
+		src.SetCiID(*i)
+	}
+	return src
+}
+
 // SetRequesterID sets the "requester_id" field.
 func (src *ServiceRequestCreate) SetRequesterID(i int) *ServiceRequestCreate {
 	src.mutation.SetRequesterID(i)
@@ -384,6 +398,10 @@ func (src *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.Create
 	if value, ok := src.mutation.CatalogID(); ok {
 		_spec.SetField(servicerequest.FieldCatalogID, field.TypeInt, value)
 		_node.CatalogID = value
+	}
+	if value, ok := src.mutation.CiID(); ok {
+		_spec.SetField(servicerequest.FieldCiID, field.TypeInt, value)
+		_node.CiID = value
 	}
 	if value, ok := src.mutation.RequesterID(); ok {
 		_spec.SetField(servicerequest.FieldRequesterID, field.TypeInt, value)

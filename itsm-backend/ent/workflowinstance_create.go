@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
+	"itsm-backend/ent/workflowtask"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -146,6 +147,21 @@ func (wic *WorkflowInstanceCreate) SetNillableUpdatedAt(t *time.Time) *WorkflowI
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
 func (wic *WorkflowInstanceCreate) SetWorkflow(w *Workflow) *WorkflowInstanceCreate {
 	return wic.SetWorkflowID(w.ID)
+}
+
+// AddWorkflowTaskIDs adds the "workflow_tasks" edge to the WorkflowTask entity by IDs.
+func (wic *WorkflowInstanceCreate) AddWorkflowTaskIDs(ids ...int) *WorkflowInstanceCreate {
+	wic.mutation.AddWorkflowTaskIDs(ids...)
+	return wic
+}
+
+// AddWorkflowTasks adds the "workflow_tasks" edges to the WorkflowTask entity.
+func (wic *WorkflowInstanceCreate) AddWorkflowTasks(w ...*WorkflowTask) *WorkflowInstanceCreate {
+	ids := make([]int, len(w))
+	for i := range w {
+		ids[i] = w[i].ID
+	}
+	return wic.AddWorkflowTaskIDs(ids...)
 }
 
 // Mutation returns the WorkflowInstanceMutation object of the builder.
@@ -330,6 +346,22 @@ func (wic *WorkflowInstanceCreate) createSpec() (*WorkflowInstance, *sqlgraph.Cr
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.WorkflowID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := wic.mutation.WorkflowTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   workflowinstance.WorkflowTasksTable,
+			Columns: []string{workflowinstance.WorkflowTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
