@@ -9,6 +9,7 @@ on:
     paths:
       - 'itsm-backend/**'
       - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
 
 jobs:
   lint:
