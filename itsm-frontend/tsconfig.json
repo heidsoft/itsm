@@ -26,17 +26,17 @@
       "@/app/*": ["./src/app/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "src/**/*",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": [
     "node_modules",
-    "**/__tests__/**",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-
-    // 暂时排除遗留/实验性组件（P0：保证主链路可稳定构建发布）
-    "src/components/business/**",
-    "src/components/common/**",
-    "src/components/dashboard/**",
-    "src/lib/architecture/**"
+    // 如果想保留 tests 在 lint/tsc 中被排除，可保留下面几项，否则可以删掉
+    "dist",
+    ".next"
   ]
 }
