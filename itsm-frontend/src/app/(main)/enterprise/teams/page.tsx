@@ -116,8 +116,14 @@ export default function TeamsPage() {
     Modal.confirm({
       title: '确认删除',
       content: `确定要删除团队 "${record.name}" 吗？`,
-      onOk: () => {
-        message.success('删除功能暂未实现'); // Backend API missing delete
+      onOk: async () => {
+        try {
+          await teamService.deleteTeam(record.id);
+          message.success('删除成功');
+          fetchTeams();
+        } catch (error) {
+          message.error('删除失败');
+        }
       },
     });
   };

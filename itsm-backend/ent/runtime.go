@@ -30,6 +30,8 @@ import (
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
@@ -41,6 +43,7 @@ import (
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/relationshiptype"
+	"itsm-backend/ent/role"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/servicecatalog"
@@ -939,6 +942,86 @@ func init() {
 	notification.DefaultUpdatedAt = notificationDescUpdatedAt.Default.(func() time.Time)
 	// notification.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	notification.UpdateDefaultUpdatedAt = notificationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	notificationpreferenceFields := schema.NotificationPreference{}.Fields()
+	_ = notificationpreferenceFields
+	// notificationpreferenceDescUserID is the schema descriptor for user_id field.
+	notificationpreferenceDescUserID := notificationpreferenceFields[0].Descriptor()
+	// notificationpreference.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	notificationpreference.UserIDValidator = notificationpreferenceDescUserID.Validators[0].(func(int) error)
+	// notificationpreferenceDescTenantID is the schema descriptor for tenant_id field.
+	notificationpreferenceDescTenantID := notificationpreferenceFields[1].Descriptor()
+	// notificationpreference.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	notificationpreference.TenantIDValidator = notificationpreferenceDescTenantID.Validators[0].(func(int) error)
+	// notificationpreferenceDescEventType is the schema descriptor for event_type field.
+	notificationpreferenceDescEventType := notificationpreferenceFields[2].Descriptor()
+	// notificationpreference.EventTypeValidator is a validator for the "event_type" field. It is called by the builders before save.
+	notificationpreference.EventTypeValidator = notificationpreferenceDescEventType.Validators[0].(func(string) error)
+	// notificationpreferenceDescEmailEnabled is the schema descriptor for email_enabled field.
+	notificationpreferenceDescEmailEnabled := notificationpreferenceFields[3].Descriptor()
+	// notificationpreference.DefaultEmailEnabled holds the default value on creation for the email_enabled field.
+	notificationpreference.DefaultEmailEnabled = notificationpreferenceDescEmailEnabled.Default.(bool)
+	// notificationpreferenceDescSmsEnabled is the schema descriptor for sms_enabled field.
+	notificationpreferenceDescSmsEnabled := notificationpreferenceFields[4].Descriptor()
+	// notificationpreference.DefaultSmsEnabled holds the default value on creation for the sms_enabled field.
+	notificationpreference.DefaultSmsEnabled = notificationpreferenceDescSmsEnabled.Default.(bool)
+	// notificationpreferenceDescInAppEnabled is the schema descriptor for in_app_enabled field.
+	notificationpreferenceDescInAppEnabled := notificationpreferenceFields[5].Descriptor()
+	// notificationpreference.DefaultInAppEnabled holds the default value on creation for the in_app_enabled field.
+	notificationpreference.DefaultInAppEnabled = notificationpreferenceDescInAppEnabled.Default.(bool)
+	// notificationpreferenceDescPushEnabled is the schema descriptor for push_enabled field.
+	notificationpreferenceDescPushEnabled := notificationpreferenceFields[6].Descriptor()
+	// notificationpreference.DefaultPushEnabled holds the default value on creation for the push_enabled field.
+	notificationpreference.DefaultPushEnabled = notificationpreferenceDescPushEnabled.Default.(bool)
+	// notificationpreferenceDescFrequency is the schema descriptor for frequency field.
+	notificationpreferenceDescFrequency := notificationpreferenceFields[7].Descriptor()
+	// notificationpreference.DefaultFrequency holds the default value on creation for the frequency field.
+	notificationpreference.DefaultFrequency = notificationpreferenceDescFrequency.Default.(string)
+	// notificationpreferenceDescTimezone is the schema descriptor for timezone field.
+	notificationpreferenceDescTimezone := notificationpreferenceFields[10].Descriptor()
+	// notificationpreference.DefaultTimezone holds the default value on creation for the timezone field.
+	notificationpreference.DefaultTimezone = notificationpreferenceDescTimezone.Default.(string)
+	// notificationpreferenceDescCreatedAt is the schema descriptor for created_at field.
+	notificationpreferenceDescCreatedAt := notificationpreferenceFields[11].Descriptor()
+	// notificationpreference.DefaultCreatedAt holds the default value on creation for the created_at field.
+	notificationpreference.DefaultCreatedAt = notificationpreferenceDescCreatedAt.Default.(func() time.Time)
+	// notificationpreferenceDescUpdatedAt is the schema descriptor for updated_at field.
+	notificationpreferenceDescUpdatedAt := notificationpreferenceFields[12].Descriptor()
+	// notificationpreference.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	notificationpreference.DefaultUpdatedAt = notificationpreferenceDescUpdatedAt.Default.(func() time.Time)
+	// notificationpreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	notificationpreference.UpdateDefaultUpdatedAt = notificationpreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	permissionFields := schema.Permission{}.Fields()
+	_ = permissionFields
+	// permissionDescCode is the schema descriptor for code field.
+	permissionDescCode := permissionFields[0].Descriptor()
+	// permission.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	permission.CodeValidator = permissionDescCode.Validators[0].(func(string) error)
+	// permissionDescName is the schema descriptor for name field.
+	permissionDescName := permissionFields[1].Descriptor()
+	// permission.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	permission.NameValidator = permissionDescName.Validators[0].(func(string) error)
+	// permissionDescResource is the schema descriptor for resource field.
+	permissionDescResource := permissionFields[3].Descriptor()
+	// permission.ResourceValidator is a validator for the "resource" field. It is called by the builders before save.
+	permission.ResourceValidator = permissionDescResource.Validators[0].(func(string) error)
+	// permissionDescAction is the schema descriptor for action field.
+	permissionDescAction := permissionFields[4].Descriptor()
+	// permission.ActionValidator is a validator for the "action" field. It is called by the builders before save.
+	permission.ActionValidator = permissionDescAction.Validators[0].(func(string) error)
+	// permissionDescTenantID is the schema descriptor for tenant_id field.
+	permissionDescTenantID := permissionFields[5].Descriptor()
+	// permission.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	permission.TenantIDValidator = permissionDescTenantID.Validators[0].(func(int) error)
+	// permissionDescCreatedAt is the schema descriptor for created_at field.
+	permissionDescCreatedAt := permissionFields[6].Descriptor()
+	// permission.DefaultCreatedAt holds the default value on creation for the created_at field.
+	permission.DefaultCreatedAt = permissionDescCreatedAt.Default.(func() time.Time)
+	// permissionDescUpdatedAt is the schema descriptor for updated_at field.
+	permissionDescUpdatedAt := permissionFields[7].Descriptor()
+	// permission.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	permission.DefaultUpdatedAt = permissionDescUpdatedAt.Default.(func() time.Time)
+	// permission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	permission.UpdateDefaultUpdatedAt = permissionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	problemFields := schema.Problem{}.Fields()
 	_ = problemFields
 	// problemDescTitle is the schema descriptor for title field.
@@ -1325,6 +1408,34 @@ func init() {
 	relationshiptype.DefaultUpdatedAt = relationshiptypeDescUpdatedAt.Default.(func() time.Time)
 	// relationshiptype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	relationshiptype.UpdateDefaultUpdatedAt = relationshiptypeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescName is the schema descriptor for name field.
+	roleDescName := roleFields[0].Descriptor()
+	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	role.NameValidator = roleDescName.Validators[0].(func(string) error)
+	// roleDescCode is the schema descriptor for code field.
+	roleDescCode := roleFields[1].Descriptor()
+	// role.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	role.CodeValidator = roleDescCode.Validators[0].(func(string) error)
+	// roleDescIsSystem is the schema descriptor for is_system field.
+	roleDescIsSystem := roleFields[3].Descriptor()
+	// role.DefaultIsSystem holds the default value on creation for the is_system field.
+	role.DefaultIsSystem = roleDescIsSystem.Default.(bool)
+	// roleDescTenantID is the schema descriptor for tenant_id field.
+	roleDescTenantID := roleFields[4].Descriptor()
+	// role.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	role.TenantIDValidator = roleDescTenantID.Validators[0].(func(int) error)
+	// roleDescCreatedAt is the schema descriptor for created_at field.
+	roleDescCreatedAt := roleFields[5].Descriptor()
+	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
+	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	// roleDescUpdatedAt is the schema descriptor for updated_at field.
+	roleDescUpdatedAt := roleFields[6].Descriptor()
+	// role.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	role.DefaultUpdatedAt = roleDescUpdatedAt.Default.(func() time.Time)
+	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	role.UpdateDefaultUpdatedAt = roleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	rootcauseanalysisFields := schema.RootCauseAnalysis{}.Fields()
 	_ = rootcauseanalysisFields
 	// rootcauseanalysisDescTicketID is the schema descriptor for ticket_id field.

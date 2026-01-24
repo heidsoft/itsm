@@ -18,6 +18,7 @@ import (
 	"itsm-backend/internal/domain/service_request"
 	"itsm-backend/internal/domain/sla"
 	"itsm-backend/middleware"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -58,6 +59,11 @@ type RouterConfig struct {
 	// User Controller
 	UserController *controller.UserController
 
+	// Role & Permission Controllers (new database-backed implementation)
+	RoleController                   *controller.RoleController
+	PermissionController             *controller.PermissionController
+	NotificationPreferenceController *controller.NotificationPreferenceController
+
 	// Additional domain controllers
 	ServiceController        *controller.ServiceController
 	ProblemController        *controller.ProblemController
@@ -78,6 +84,11 @@ type RouterConfig struct {
 	AIHandler        *ai.Handler
 	CommonHandler    *domainCommon.Handler
 	RoleHandler      *common.RoleHandler
+
+	// Legacy SLA Controller (for metrics, violations, monitoring)
+	SLAController   *controller.SLAController
+	SLAService      *service.SLAService
+	SLAAlertService *service.SLAAlertService
 }
 
 // SetupRoutes 设置路由
@@ -337,6 +348,31 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 
+		// ==================== SLA Additional Endpoints (Legacy Controller) ====================
+		if config.SLAController != nil {
+			slaV2 := tenant.(*gin.RouterGroup).Group("/sla/v2")
+			{
+				// SLA Metrics
+				slaV2.GET("/metrics", middleware.RequirePermission("sla", "read"), config.SLAController.GetSLAMetrics)
+
+				// SLA Violations
+				slaV2.GET("/violations", middleware.RequirePermission("sla", "read"), config.SLAController.GetSLAViolations)
+				slaV2.PUT("/violations/:id", middleware.RequirePermission("sla", "write"), config.SLAController.UpdateViolationStatus)
+
+				// SLA Monitoring
+				slaV2.POST("/monitoring", middleware.RequirePermission("sla", "read"), config.SLAController.GetSLAMonitoring)
+
+				// SLA Compliance Check
+				slaV2.POST("/check-compliance/:ticketId", middleware.RequirePermission("sla", "read"), config.SLAController.CheckSLACompliance)
+
+				// SLA Alert Rules (additional endpoints)
+				slaV2.GET("/alert-rules/:id", middleware.RequirePermission("sla", "read"), config.SLAController.GetAlertRule)
+				slaV2.PUT("/alert-rules/:id", middleware.RequirePermission("sla", "write"), config.SLAController.UpdateAlertRule)
+				slaV2.DELETE("/alert-rules/:id", middleware.RequirePermission("sla", "delete"), config.SLAController.DeleteAlertRule)
+				slaV2.GET("/alert-history", middleware.RequirePermission("sla", "read"), config.SLAController.GetAlertHistory)
+			}
+		}
+
 		// ==================== AI & Analytics (DDD) ====================
 		if config.AIHandler != nil {
 			aiGrp := tenant.(*gin.RouterGroup).Group("/ai")
@@ -392,7 +428,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sys.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
 			}
 
-			// Roles
+			// Roles (old in-memory handler)
 			if config.RoleHandler != nil {
 				roles := tenant.(*gin.RouterGroup).Group("/roles")
 				{
@@ -407,6 +443,43 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				permissions := tenant.(*gin.RouterGroup).Group("/permissions")
 				{
 					permissions.GET("", config.RoleHandler.ListPermissions)
+				}
+			}
+
+			// New Role & Permission Controllers (database-backed with tenant isolation)
+			if config.RoleController != nil {
+				roles := tenant.(*gin.RouterGroup).Group("/roles")
+				{
+					roles.GET("", config.RoleController.ListRoles)
+					roles.POST("", config.RoleController.CreateRole)
+					roles.GET("/:id", config.RoleController.GetRole)
+					roles.PUT("/:id", config.RoleController.UpdateRole)
+					roles.DELETE("/:id", config.RoleController.DeleteRole)
+					roles.POST("/:id/permissions", config.RoleController.AssignPermissions)
+				}
+			}
+
+			if config.PermissionController != nil {
+				permissions := tenant.(*gin.RouterGroup).Group("/permissions")
+				{
+					permissions.GET("", config.PermissionController.ListPermissions)
+					permissions.POST("", config.PermissionController.CreatePermission)
+					permissions.POST("/init", config.PermissionController.InitDefaultPermissions)
+				}
+			}
+
+			// Notification Preferences
+			if config.NotificationPreferenceController != nil {
+				notifPrefs := tenant.(*gin.RouterGroup).Group("/notification-preferences")
+				{
+					notifPrefs.GET("", config.NotificationPreferenceController.ListPreferences)
+					notifPrefs.GET("/event-types", config.NotificationPreferenceController.ListEventTypes)
+					notifPrefs.GET("/:event_type", config.NotificationPreferenceController.GetPreference)
+					notifPrefs.POST("", config.NotificationPreferenceController.CreateOrUpdatePreference)
+					notifPrefs.PUT("", config.NotificationPreferenceController.BulkUpdatePreferences)
+					notifPrefs.DELETE("/:event_type", config.NotificationPreferenceController.DeletePreference)
+					notifPrefs.POST("/reset", config.NotificationPreferenceController.ResetPreferences)
+					notifPrefs.POST("/init", config.NotificationPreferenceController.InitializeDefaultPreferences)
 				}
 			}
 		}

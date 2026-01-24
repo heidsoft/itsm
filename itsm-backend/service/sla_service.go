@@ -302,6 +302,123 @@ func (s *SLAService) CreateSLAMetric(ctx context.Context, req *dto.CreateSLAMetr
 	return s.toSLAMetricResponse(metric), nil
 }
 
+// GetSLAMetrics 获取SLA指标
+func (s *SLAService) GetSLAMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*dto.SLAMetricResponse, error) {
+	s.logger.Infow("Getting SLA metrics", "tenant_id", tenantID)
+
+	query := s.client.SLAMetric.Query().
+		Where(slametric.TenantIDEQ(tenantID))
+
+	// 应用过滤器
+	if slaDefID, ok := filters["sla_definition_id"].(int); ok && slaDefID > 0 {
+		query = query.Where(slametric.SLADefinitionIDEQ(slaDefID))
+	}
+	if metricType, ok := filters["metric_type"].(string); ok && metricType != "" {
+		query = query.Where(slametric.MetricTypeEQ(metricType))
+	}
+
+	// 获取最近30天的数据
+	startTime := time.Now().AddDate(0, 0, -30)
+	query = query.Where(slametric.MeasurementTimeGTE(startTime))
+
+	// 排序
+	query = query.Order(ent.Desc(slametric.FieldMeasurementTime))
+
+	metrics, err := query.All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get SLA metrics", "error", err)
+		return nil, fmt.Errorf("failed to get SLA metrics: %w", err)
+	}
+
+	responses := make([]*dto.SLAMetricResponse, len(metrics))
+	for i, m := range metrics {
+		responses[i] = s.toSLAMetricResponse(m)
+	}
+
+	return responses, nil
+}
+
+// UpdateSLAViolationStatus 更新SLA违规状态
+func (s *SLAService) UpdateSLAViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) (*dto.SLAViolationResponse, error) {
+	s.logger.Infow("Updating SLA violation status", "id", id, "is_resolved", isResolved)
+
+	violation, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.IDEQ(id),
+			slaviolation.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("违规记录不存在")
+		}
+		return nil, fmt.Errorf("查询违规记录失败: %w", err)
+	}
+
+	// 更新状态
+	update := violation.Update().
+		SetIsResolved(isResolved)
+	if isResolved {
+		update = update.SetResolvedAt(time.Now())
+	}
+	if notes != "" {
+		update = update.SetResolutionNotes(notes)
+	}
+
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("更新违规状态失败: %w", err)
+	}
+
+	return s.toSLAViolationResponse(updated), nil
+}
+
+// GetSLAViolations 获取SLA违规列表
+func (s *SLAService) GetSLAViolations(ctx context.Context, tenantID int, filters map[string]interface{}, page, size int) ([]*dto.SLAViolationResponse, int, error) {
+	s.logger.Infow("Getting SLA violations", "tenant_id", tenantID)
+
+	query := s.client.SLAViolation.Query().
+		Where(slaviolation.TenantIDEQ(tenantID))
+
+	// 应用过滤器
+	if isResolved, ok := filters["is_resolved"].(bool); ok {
+		query = query.Where(slaviolation.IsResolvedEQ(isResolved))
+	}
+	if severity, ok := filters["severity"].(string); ok && severity != "" {
+		query = query.Where(slaviolation.SeverityEQ(severity))
+	}
+	if violationType, ok := filters["violation_type"].(string); ok && violationType != "" {
+		query = query.Where(slaviolation.ViolationTypeEQ(violationType))
+	}
+	if slaDefID, ok := filters["sla_definition_id"].(int); ok && slaDefID > 0 {
+		query = query.Where(slaviolation.SLADefinitionIDEQ(slaDefID))
+	}
+
+	// 获取总数
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count violations: %w", err)
+	}
+
+	// 分页
+	violations, err := query.
+		Order(ent.Desc(slaviolation.FieldViolationTime)).
+		Offset((page - 1) * size).
+		Limit(size).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get SLA violations", "error", err)
+		return nil, 0, fmt.Errorf("failed to get SLA violations: %w", err)
+	}
+
+	responses := make([]*dto.SLAViolationResponse, len(violations))
+	for i, v := range violations {
+		responses[i] = s.toSLAViolationResponse(v)
+	}
+
+	return responses, total, nil
+}
+
 // GetSLAMonitoring 获取SLA监控数据
 func (s *SLAService) GetSLAMonitoring(ctx context.Context, req *dto.SLAMonitoringRequest, tenantID int) (*dto.SLAMonitoringResponse, error) {
 	s.logger.Infow("Getting SLA monitoring data", "tenant_id", tenantID)

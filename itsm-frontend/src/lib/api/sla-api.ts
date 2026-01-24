@@ -96,19 +96,22 @@ export class SLAApi {
   static async getSLAViolations(params?: {
     page?: number;
     page_size?: number;
-    status?: string;
+    is_resolved?: boolean;
+    severity?: string;
+    violation_type?: string;
+    sla_definition_id?: number;
   }): Promise<{
     items: SLAViolation[];
     total: number;
     page: number;
     page_size: number;
   }> {
-    return httpClient.get('/api/v1/sla/violations', params);
+    return httpClient.get('/api/v1/sla/v2/violations', params);
   }
 
   // 更新SLA违规状态
-  static async updateSLAViolationStatus(id: number, status: string): Promise<void> {
-    return httpClient.put(`/api/v1/sla/violations/${id}/status`, { status });
+  static async updateSLAViolationStatus(id: number, isResolved: boolean, notes?: string): Promise<void> {
+    return httpClient.put(`/api/v1/sla/v2/violations/${id}`, { is_resolved: isResolved, notes });
   }
 
   // 获取SLA合规报告
@@ -121,7 +124,7 @@ export class SLAApi {
 
   // 检查工单SLA违规
   static async checkTicketSLAViolation(ticketId: number): Promise<void> {
-    return httpClient.post(`/api/v1/sla/check-violation/${ticketId}`);
+    return httpClient.post(`/api/v1/sla/v2/check-compliance/${ticketId}`);
   }
 
   // 获取SLA统计信息
@@ -168,8 +171,8 @@ export class SLAApi {
     if (params?.start_time) requestBody.start_time = params.start_time;
     if (params?.end_time) requestBody.end_time = params.end_time;
     if (params?.sla_definition_id) requestBody.sla_definition_id = params.sla_definition_id;
-    
-    const response = await httpClient.post('/api/v1/sla/monitoring', requestBody);
+
+    const response = await httpClient.post('/api/v1/sla/v2/monitoring', requestBody);
 
     // 转换后端响应格式到前端格式
     const violationRate = response.total_tickets > 0
@@ -200,6 +203,8 @@ export class SLAApi {
     period?: 'day' | 'week' | 'month' | 'quarter';
     service_type?: string;
     priority?: string;
+    sla_definition_id?: number;
+    metric_type?: string;
   }): Promise<{
     response_time_avg: number;
     resolution_time_avg: number;
@@ -212,7 +217,7 @@ export class SLAApi {
       avg_resolution_time: number;
     }>;
   }> {
-    return httpClient.get('/api/v1/sla/metrics', params);
+    return httpClient.get('/api/v1/sla/v2/metrics', params);
   }
 
   // 获取SLA预警
@@ -242,11 +247,14 @@ export class SLAApi {
     name: string;
     sla_definition_id: number;
     alert_level: 'warning' | 'critical';
-    trigger_conditions: {
-      time_threshold_percent: number;
-      violation_types: string[];
-    };
+    threshold_percentage: number;
     notification_channels: string[];
+    escalation_enabled?: boolean;
+    escalation_levels?: Array<{
+      level: number;
+      threshold: number;
+      notify_users: number[];
+    }>;
     is_active: boolean;
   }): Promise<any> {
     return httpClient.post('/api/v1/sla/alert-rules', data);
@@ -256,19 +264,16 @@ export class SLAApi {
   static async updateAlertRule(id: number, data: Partial<{
     name: string;
     alert_level: 'warning' | 'critical';
-    trigger_conditions: {
-      time_threshold_percent: number;
-      violation_types: string[];
-    };
+    threshold_percentage: number;
     notification_channels: string[];
     is_active: boolean;
   }>): Promise<any> {
-    return httpClient.put(`/api/v1/sla/alert-rules/${id}`, data);
+    return httpClient.put(`/api/v1/sla/v2/alert-rules/${id}`, data);
   }
 
   // 删除SLA预警规则
   static async deleteAlertRule(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/sla/alert-rules/${id}`);
+    return httpClient.delete(`/api/v1/sla/v2/alert-rules/${id}`);
   }
 
   // 获取SLA预警规则列表
@@ -278,6 +283,30 @@ export class SLAApi {
     alert_level?: string;
   }): Promise<any[]> {
     return httpClient.get('/api/v1/sla/alert-rules', params);
+  }
+
+  // 获取SLA预警规则详情
+  static async getAlertRule(id: number): Promise<any> {
+    return httpClient.get(`/api/v1/sla/v2/alert-rules/${id}`);
+  }
+
+  // 获取SLA预警历史
+  static async getAlertHistory(params?: {
+    sla_definition_id?: number;
+    alert_rule_id?: number;
+    ticket_id?: number;
+    alert_level?: string;
+    start_time?: string;
+    end_time?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<{
+    items: any[];
+    total: number;
+    page: number;
+    page_size: number;
+  }> {
+    return httpClient.get('/api/v1/sla/v2/alert-history', params);
   }
 }
 

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
+import { App, message } from 'antd';
+import { incidentService } from '@/lib/services/incident-service';
 
 interface ConfigItem {
   id: string;
@@ -14,6 +16,8 @@ interface ConfigItem {
 
 export default function NewIncidentPage() {
   const router = useRouter();
+  const { message } = App.useApp();
+  const [loading, setLoading] = useState(false);
   const [selectedCIs, setSelectedCIs] = useState<ConfigItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<ConfigItem[]>([]);
@@ -55,6 +59,7 @@ export default function NewIncidentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     const formData = new FormData(e.target as HTMLFormElement);
 
     const data = {
@@ -67,12 +72,14 @@ export default function NewIncidentPage() {
     };
 
     try {
-      console.log('Creating new incident:', JSON.stringify(data, null, 2));
-      alert('Incident created successfully!');
-      router.push('/incidents'); // Redirect to incidents list after submission
+      await incidentService.createIncident(data);
+      message.success('事件创建成功');
+      router.push('/incidents');
     } catch (error) {
       console.error('Failed to create incident:', error);
-      alert('Failed to create incident. Please try again.');
+      message.error('创建事件失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 

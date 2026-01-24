@@ -59,9 +59,13 @@ type UserEdges struct {
 	TicketAttachments []*TicketAttachment `json:"ticket_attachments,omitempty"`
 	// 工单通知
 	TicketNotifications []*TicketNotification `json:"ticket_notifications,omitempty"`
+	// 通知偏好
+	NotificationPreferences []*NotificationPreference `json:"notification_preferences,omitempty"`
+	// 用户角色
+	Roles []*Role `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [6]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -100,6 +104,24 @@ func (e UserEdges) TicketNotificationsOrErr() ([]*TicketNotification, error) {
 		return e.TicketNotifications, nil
 	}
 	return nil, &NotLoadedError{edge: "ticket_notifications"}
+}
+
+// NotificationPreferencesOrErr returns the NotificationPreferences value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) NotificationPreferencesOrErr() ([]*NotificationPreference, error) {
+	if e.loadedTypes[4] {
+		return e.NotificationPreferences, nil
+	}
+	return nil, &NotLoadedError{edge: "notification_preferences"}
+}
+
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[5] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -248,6 +270,16 @@ func (u *User) QueryTicketAttachments() *TicketAttachmentQuery {
 // QueryTicketNotifications queries the "ticket_notifications" edge of the User entity.
 func (u *User) QueryTicketNotifications() *TicketNotificationQuery {
 	return NewUserClient(u.config).QueryTicketNotifications(u)
+}
+
+// QueryNotificationPreferences queries the "notification_preferences" edge of the User entity.
+func (u *User) QueryNotificationPreferences() *NotificationPreferenceQuery {
+	return NewUserClient(u.config).QueryNotificationPreferences(u)
+}
+
+// QueryRoles queries the "roles" edge of the User entity.
+func (u *User) QueryRoles() *RoleQuery {
+	return NewUserClient(u.config).QueryRoles(u)
 }
 
 // Update returns a builder for updating this User.

@@ -134,8 +134,18 @@ export default function ApplicationsPage() {
     Modal.confirm({
       title: "确认删除",
       content: `确定要删除 "${record.name}" 吗？`,
-      onOk: () => {
-        message.success("删除功能暂未实现");
+      onOk: async () => {
+        try {
+          if (modalType === "application" || activeTab === "applications") {
+            await applicationService.deleteApplication(record.id);
+          } else {
+            await applicationService.deleteMicroservice(record.id);
+          }
+          message.success("删除成功");
+          fetchData();
+        } catch (error) {
+          message.error("删除失败");
+        }
       },
     });
   };

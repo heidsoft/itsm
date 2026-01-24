@@ -9,6 +9,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/ticketcomment"
 	"strings"
 	"time"
 
@@ -694,20 +696,134 @@ func (s *TicketService) GetTicketsByAssignee(ctx context.Context, assigneeID int
 func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, tenantID int) ([]map[string]interface{}, error) {
 	s.logger.Infow("Getting ticket activity", "ticket_id", ticketID, "tenant_id", tenantID)
 
-	// 这里应该从审计日志表中查询，暂时返回模拟数据
-	activities := []map[string]interface{}{
-		{
-			"action":    "created",
-			"timestamp": time.Now().Add(-2 * time.Hour),
-			"user_id":   1,
-			"details":   "工单已创建",
-		},
-		{
-			"action":    "assigned",
-			"timestamp": time.Now().Add(-1 * time.Hour),
-			"user_id":   2,
-			"details":   "工单已分配给技术支持",
-		},
+	// 验证工单存在
+	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		return nil, fmt.Errorf("工单不存在: %w", err)
+	}
+
+	activities := make([]map[string]interface{}, 0)
+
+	// 1. 添加工单创建活动
+	activities = append(activities, map[string]interface{}{
+		"action":     "created",
+		"timestamp":  ticket.CreatedAt,
+		"user_id":    ticket.RequesterID,
+		"user_name":  "",
+		"details":    "工单已创建",
+		"old_value":  nil,
+		"new_value":  ticket.Title,
+	})
+
+	// 2. 查询评论作为活动记录
+	comments, err := s.client.TicketComment.Query().
+		Where(
+			ticketcomment.TicketID(ticketID),
+		).
+		WithUser().
+		Order(ent.Asc(ticketcomment.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to get comments for activity", "error", err)
+	} else {
+		for _, c := range comments {
+			userName := ""
+			if c.Edges.User != nil {
+				userName = c.Edges.User.Name
+				if userName == "" {
+					userName = c.Edges.User.Username
+				}
+			}
+			activities = append(activities, map[string]interface{}{
+				"action":     "commented",
+				"timestamp":  c.CreatedAt,
+				"user_id":    c.UserID,
+				"user_name":  userName,
+				"details":    "添加了评论",
+				"old_value":  nil,
+				"new_value":  nil,
+			})
+		}
+	}
+
+	// 3. 查询附件作为活动记录
+	attachments, err := s.client.TicketAttachment.Query().
+		Where(
+			ticketattachment.TicketID(ticketID),
+		).
+		Order(ent.Asc(ticketattachment.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to get attachments for activity", "error", err)
+	} else {
+		for _, a := range attachments {
+			activities = append(activities, map[string]interface{}{
+				"action":     "attachment",
+				"timestamp":  a.CreatedAt,
+				"user_id":    a.UploadedBy,
+				"user_name":  "",
+				"details":    fmt.Sprintf("添加了附件: %s", a.FileName),
+				"old_value":  nil,
+				"new_value":  nil,
+			})
+		}
+	}
+
+	// 4. 如果有分配历史，添加分配活动
+	if ticket.AssigneeID > 0 {
+		activities = append(activities, map[string]interface{}{
+			"action":     "assigned",
+			"timestamp":  ticket.UpdatedAt,
+			"user_id":    ticket.AssigneeID,
+			"user_name":  "",
+			"details":    "工单已分配",
+			"old_value":  nil,
+			"new_value":  ticket.AssigneeID,
+		})
+	}
+
+	// 5. 如果有首次响应时间，添加响应活动
+	if !ticket.FirstResponseAt.IsZero() {
+		activities = append(activities, map[string]interface{}{
+			"action":     "first_response",
+			"timestamp":  ticket.FirstResponseAt,
+			"user_id":    ticket.AssigneeID,
+			"user_name":  "",
+			"details":    "首次响应工单",
+			"old_value":  nil,
+			"new_value":  nil,
+		})
+	}
+
+	// 6. 如果有解决时间，添加解决活动
+	if !ticket.ResolvedAt.IsZero() {
+		activities = append(activities, map[string]interface{}{
+			"action":     "resolved",
+			"timestamp":  ticket.ResolvedAt,
+			"user_id":    ticket.AssigneeID,
+			"user_name":  "",
+			"details":    "工单已解决",
+			"old_value":  nil,
+			"new_value":  nil,
+		})
+	}
+
+	// 7. 如果有评分，添加评分活动
+	if ticket.Rating > 0 {
+		activities = append(activities, map[string]interface{}{
+			"action":     "rated",
+			"timestamp":  ticket.RatedAt,
+			"user_id":    ticket.RatedBy,
+			"user_name":  "",
+			"details":    fmt.Sprintf("用户评分: %d星", ticket.Rating),
+			"old_value":  nil,
+			"new_value":  ticket.Rating,
+		})
+	}
+
+	// 按时间倒序排列
+	for i, j := 0, len(activities)-1; i < j; i, j = i+1, j-1 {
+		activities[i], activities[j] = activities[j], activities[i]
 	}
 
 	return activities, nil

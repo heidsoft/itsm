@@ -283,3 +283,19 @@ func (s *AuthService) GetUserInfo(ctx context.Context, userID int) (*dto.UserInf
         TenantID:   userEntity.TenantID,
     }, nil
 }
+
+// Logout 用户登出
+func (s *AuthService) Logout(ctx context.Context, userID int) error {
+	// 记录登出日志
+	s.logger.Infow("User logged out", "user_id", userID)
+
+	// 注意：JWT 是无状态的，无法主动失效
+	// 在生产环境中，可以考虑以下方案：
+	// 1. 使用 Redis 维护 token 黑名单
+	// 2. 使用短期 access token + 长期 refresh token
+	// 3. 使用 token 版本号机制
+	//
+	// 当前实现只记录日志，实际的 token 失效依赖客户端清除 token
+
+	return nil
+}

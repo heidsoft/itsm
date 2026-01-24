@@ -24,6 +24,62 @@ func NewProblemInvestigationService(db *sql.DB, logger *zap.SugaredLogger) *Prob
 	}
 }
 
+// GetRootCauseAnalysis 获取根本原因分析
+func (s *ProblemInvestigationService) GetRootCauseAnalysis(ctx context.Context, id int, tenantID int) (*dto.RootCauseAnalysisResponse, error) {
+	var analysis dto.RootCauseAnalysisResponse
+	err := s.db.QueryRowContext(ctx, `
+		SELECT prca.id, prca.problem_id, prca.analyst_id, u1.name, prca.analysis_method,
+		       prca.root_cause_description, prca.contributing_factors, prca.evidence, prca.confidence_level,
+		       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
+		       prca.created_at, prca.updated_at
+		FROM problem_root_cause_analyses prca
+		JOIN users u1 ON prca.analyst_id = u1.id
+		LEFT JOIN users u2 ON prca.reviewed_by = u2.id
+		WHERE prca.id = $1
+	`, id).Scan(
+		&analysis.ID, &analysis.ProblemID, &analysis.AnalystID, &analysis.AnalystName,
+		&analysis.AnalysisMethod, &analysis.RootCauseDescription, &analysis.ContributingFactors,
+		&analysis.Evidence, &analysis.ConfidenceLevel, &analysis.AnalysisDate,
+		&analysis.ReviewedBy, &analysis.ReviewedByName, &analysis.ReviewDate,
+		&analysis.CreatedAt, &analysis.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("根因分析不存在")
+		}
+		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+	}
+	return &analysis, nil
+}
+
+// GetProblemSolution 获取解决方案
+func (s *ProblemInvestigationService) GetProblemSolution(ctx context.Context, id int, tenantID int) (*dto.ProblemSolutionResponse, error) {
+	var solution dto.ProblemSolutionResponse
+	err := s.db.QueryRowContext(ctx, `
+		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
+		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
+		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
+		       ps.created_at, ps.updated_at
+		FROM problem_solutions ps
+		JOIN users u1 ON ps.proposed_by = u1.id
+		LEFT JOIN users u2 ON ps.approved_by = u2.id
+		WHERE ps.id = $1
+	`, id).Scan(
+		&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
+		&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
+		&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
+		&solution.RiskAssessment, &solution.ApprovalStatus, &solution.ApprovedBy, &solution.ApprovedByName,
+		&solution.ApprovalDate, &solution.CreatedAt, &solution.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("解决方案不存在")
+		}
+		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+	}
+	return &solution, nil
+}
+
 // CreateProblemInvestigation 创建问题调查
 func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Context, req *dto.CreateProblemInvestigationRequest, tenantID int) (*dto.ProblemInvestigationResponse, error) {
 	// 检查问题是否存在
@@ -527,4 +583,273 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	}
 
 	return summary, nil
+}
+
+// UpdateRootCauseAnalysis 更新根本原因分析
+func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Context, id int, req *dto.UpdateRootCauseAnalysisRequest, tenantID int) (*dto.RootCauseAnalysisResponse, error) {
+	s.logger.Infow("Updating root cause analysis", "id", id, "tenant_id", tenantID)
+
+	// 检查根因分析是否存在
+	var existingAnalysis dto.RootCauseAnalysisResponse
+	err := s.db.QueryRowContext(ctx, `
+		SELECT prca.id, prca.problem_id, prca.analyst_id, u1.name, prca.analysis_method,
+		       prca.root_cause_description, prca.contributing_factors, prca.evidence, prca.confidence_level,
+		       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
+		       prca.created_at, prca.updated_at
+		FROM problem_root_cause_analyses prca
+		JOIN users u1 ON prca.analyst_id = u1.id
+		LEFT JOIN users u2 ON prca.reviewed_by = u2.id
+		WHERE prca.id = $1
+	`, id).Scan(
+		&existingAnalysis.ID, &existingAnalysis.ProblemID, &existingAnalysis.AnalystID, &existingAnalysis.AnalystName,
+		&existingAnalysis.AnalysisMethod, &existingAnalysis.RootCauseDescription, &existingAnalysis.ContributingFactors,
+		&existingAnalysis.Evidence, &existingAnalysis.ConfidenceLevel, &existingAnalysis.AnalysisDate,
+		&existingAnalysis.ReviewedBy, &existingAnalysis.ReviewedByName, &existingAnalysis.ReviewDate,
+		&existingAnalysis.CreatedAt, &existingAnalysis.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("根因分析不存在")
+		}
+		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+	}
+
+	// 构建更新语句
+	updateSQL := "UPDATE problem_root_cause_analyses SET updated_at = $1"
+	var params []interface{}
+	paramIndex := 2
+
+	if req.AnalysisMethod != nil {
+		updateSQL += fmt.Sprintf(", analysis_method = $%d", paramIndex)
+		params = append(params, *req.AnalysisMethod)
+		paramIndex++
+	}
+	if req.RootCauseDescription != nil {
+		updateSQL += fmt.Sprintf(", root_cause_description = $%d", paramIndex)
+		params = append(params, *req.RootCauseDescription)
+		paramIndex++
+	}
+	if req.ContributingFactors != nil {
+		updateSQL += fmt.Sprintf(", contributing_factors = $%d", paramIndex)
+		params = append(params, *req.ContributingFactors)
+		paramIndex++
+	}
+	if req.Evidence != nil {
+		updateSQL += fmt.Sprintf(", evidence = $%d", paramIndex)
+		params = append(params, *req.Evidence)
+		paramIndex++
+	}
+	if req.ConfidenceLevel != nil {
+		updateSQL += fmt.Sprintf(", confidence_level = $%d", paramIndex)
+		params = append(params, *req.ConfidenceLevel)
+		paramIndex++
+	}
+	if req.ReviewedBy != nil {
+		updateSQL += fmt.Sprintf(", reviewed_by = $%d", paramIndex)
+		params = append(params, *req.ReviewedBy)
+		paramIndex++
+	}
+
+	updateSQL += fmt.Sprintf(" WHERE id = $%d", paramIndex)
+	params = append(params, id)
+
+	now := time.Now()
+	params[0] = now
+
+	_, err = s.db.ExecContext(ctx, updateSQL, params...)
+	if err != nil {
+		return nil, fmt.Errorf("更新根因分析失败: %v", err)
+	}
+
+	// 获取更新后的数据
+	return s.GetRootCauseAnalysis(ctx, id, tenantID)
+}
+
+// DeleteRootCauseAnalysis 删除根本原因分析
+func (s *ProblemInvestigationService) DeleteRootCauseAnalysis(ctx context.Context, id int, tenantID int) error {
+	s.logger.Infow("Deleting root cause analysis", "id", id, "tenant_id", tenantID)
+
+	// 检查是否存在
+	var count int
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_root_cause_analyses WHERE id = $1", id).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("查询根因分析失败: %v", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("根因分析不存在")
+	}
+
+	// 删除
+	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_root_cause_analyses WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("删除根因分析失败: %v", err)
+	}
+
+	return nil
+}
+
+// UpdateProblemSolution 更新解决方案
+func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context, id int, req *dto.UpdateProblemSolutionRequest, tenantID int) (*dto.ProblemSolutionResponse, error) {
+	s.logger.Infow("Updating problem solution", "id", id, "tenant_id", tenantID)
+
+	// 检查解决方案是否存在
+	var existingSolution dto.ProblemSolutionResponse
+	err := s.db.QueryRowContext(ctx, `
+		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
+		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
+		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
+		       ps.created_at, ps.updated_at
+		FROM problem_solutions ps
+		JOIN users u1 ON ps.proposed_by = u1.id
+		LEFT JOIN users u2 ON ps.approved_by = u2.id
+		WHERE ps.id = $1
+	`, id).Scan(
+		&existingSolution.ID, &existingSolution.ProblemID, &existingSolution.SolutionType, &existingSolution.SolutionDescription,
+		&existingSolution.ProposedBy, &existingSolution.ProposedByName, &existingSolution.ProposedDate, &existingSolution.Status,
+		&existingSolution.Priority, &existingSolution.EstimatedEffortHours, &existingSolution.EstimatedCost,
+		&existingSolution.RiskAssessment, &existingSolution.ApprovalStatus, &existingSolution.ApprovedBy, &existingSolution.ApprovedByName,
+		&existingSolution.ApprovalDate, &existingSolution.CreatedAt, &existingSolution.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("解决方案不存在")
+		}
+		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+	}
+
+	// 构建更新语句
+	updateSQL := "UPDATE problem_solutions SET updated_at = $1"
+	var params []interface{}
+	paramIndex := 2
+
+	if req.SolutionType != nil {
+		updateSQL += fmt.Sprintf(", solution_type = $%d", paramIndex)
+		params = append(params, *req.SolutionType)
+		paramIndex++
+	}
+	if req.SolutionDescription != nil {
+		updateSQL += fmt.Sprintf(", solution_description = $%d", paramIndex)
+		params = append(params, *req.SolutionDescription)
+		paramIndex++
+	}
+	if req.Status != nil {
+		updateSQL += fmt.Sprintf(", status = $%d", paramIndex)
+		params = append(params, *req.Status)
+		paramIndex++
+	}
+	if req.Priority != nil {
+		updateSQL += fmt.Sprintf(", priority = $%d", paramIndex)
+		params = append(params, *req.Priority)
+		paramIndex++
+	}
+	if req.EstimatedEffortHours != nil {
+		updateSQL += fmt.Sprintf(", estimated_effort_hours = $%d", paramIndex)
+		params = append(params, *req.EstimatedEffortHours)
+		paramIndex++
+	}
+	if req.EstimatedCost != nil {
+		updateSQL += fmt.Sprintf(", estimated_cost = $%d", paramIndex)
+		params = append(params, *req.EstimatedCost)
+		paramIndex++
+	}
+	if req.RiskAssessment != nil {
+		updateSQL += fmt.Sprintf(", risk_assessment = $%d", paramIndex)
+		params = append(params, *req.RiskAssessment)
+		paramIndex++
+	}
+
+	updateSQL += fmt.Sprintf(" WHERE id = $%d", paramIndex)
+	params = append(params, id)
+
+	now := time.Now()
+	params[0] = now
+
+	_, err = s.db.ExecContext(ctx, updateSQL, params...)
+	if err != nil {
+		return nil, fmt.Errorf("更新解决方案失败: %v", err)
+	}
+
+	// 获取更新后的数据
+	return s.GetProblemSolution(ctx, id, tenantID)
+}
+
+// DeleteProblemSolution 删除解决方案
+func (s *ProblemInvestigationService) DeleteProblemSolution(ctx context.Context, id int, tenantID int) error {
+	s.logger.Infow("Deleting problem solution", "id", id, "tenant_id", tenantID)
+
+	// 检查是否存在
+	var count int
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_solutions WHERE id = $1", id).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("查询解决方案失败: %v", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("解决方案不存在")
+	}
+
+	// 删除
+	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_solutions WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("删除解决方案失败: %v", err)
+	}
+
+	return nil
+}
+
+// ApproveSolution 审批解决方案
+func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id int, approverID int, approved bool, comment string, tenantID int) (*dto.ProblemSolutionResponse, error) {
+	s.logger.Infow("Approving solution", "id", id, "approver_id", approverID, "approved", approved)
+
+	// 检查解决方案是否存在
+	var solution dto.ProblemSolutionResponse
+	err := s.db.QueryRowContext(ctx, `
+		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
+		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
+		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
+		       ps.created_at, ps.updated_at
+		FROM problem_solutions ps
+		JOIN users u1 ON ps.proposed_by = u1.id
+		LEFT JOIN users u2 ON ps.approved_by = u2.id
+		WHERE ps.id = $1
+	`, id).Scan(
+		&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
+		&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
+		&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
+		&solution.RiskAssessment, &solution.ApprovalStatus, &solution.ApprovedBy, &solution.ApprovedByName,
+		&solution.ApprovalDate, &solution.CreatedAt, &solution.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("解决方案不存在")
+		}
+		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+	}
+
+	// 更新审批状态
+	approvalStatus := "rejected"
+	if approved {
+		approvalStatus = "approved"
+	}
+
+	now := time.Now()
+	_, err = s.db.ExecContext(ctx, `
+		UPDATE problem_solutions
+		SET approval_status = $1, approved_by = $2, approval_date = $3, updated_at = $3
+		WHERE id = $4
+	`, approvalStatus, approverID, now, id)
+	if err != nil {
+		return nil, fmt.Errorf("更新审批状态失败: %v", err)
+	}
+
+	// 如果批准，更新解决方案状态为待实施
+	if approved {
+		_, err = s.db.ExecContext(ctx, `
+			UPDATE problem_solutions SET status = $1, updated_at = $2 WHERE id = $3
+		`, dto.SolutionStatusPendingImplementation, now, id)
+		if err != nil {
+			s.logger.Warnw("Failed to update solution status after approval", "error", err)
+		}
+	}
+
+	return s.GetProblemSolution(ctx, id, tenantID)
 }

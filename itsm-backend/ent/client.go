@@ -38,6 +38,8 @@ import (
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
@@ -49,6 +51,7 @@ import (
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/relationshiptype"
+	"itsm-backend/ent/role"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -143,6 +146,10 @@ type Client struct {
 	Microservice *MicroserviceClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
+	// NotificationPreference is the client for interacting with the NotificationPreference builders.
+	NotificationPreference *NotificationPreferenceClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
 	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
@@ -165,6 +172,8 @@ type Client struct {
 	ProvisioningTask *ProvisioningTaskClient
 	// RelationshipType is the client for interacting with the RelationshipType builders.
 	RelationshipType *RelationshipTypeClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -259,6 +268,8 @@ func (c *Client) init() {
 	c.Message = NewMessageClient(c.config)
 	c.Microservice = NewMicroserviceClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
+	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
+	c.Permission = NewPermissionClient(c.config)
 	c.Problem = NewProblemClient(c.config)
 	c.ProcessDefinition = NewProcessDefinitionClient(c.config)
 	c.ProcessDeployment = NewProcessDeploymentClient(c.config)
@@ -270,6 +281,7 @@ func (c *Client) init() {
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
 	c.ProvisioningTask = NewProvisioningTaskClient(c.config)
 	c.RelationshipType = NewRelationshipTypeClient(c.config)
+	c.Role = NewRoleClient(c.config)
 	c.RootCauseAnalysis = NewRootCauseAnalysisClient(c.config)
 	c.SLAAlertHistory = NewSLAAlertHistoryClient(c.config)
 	c.SLAAlertRule = NewSLAAlertRuleClient(c.config)
@@ -417,6 +429,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
+		NotificationPreference:  NewNotificationPreferenceClient(cfg),
+		Permission:              NewPermissionClient(cfg),
 		Problem:                 NewProblemClient(cfg),
 		ProcessDefinition:       NewProcessDefinitionClient(cfg),
 		ProcessDeployment:       NewProcessDeploymentClient(cfg),
@@ -428,6 +442,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		ProvisioningTask:        NewProvisioningTaskClient(cfg),
 		RelationshipType:        NewRelationshipTypeClient(cfg),
+		Role:                    NewRoleClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
@@ -502,6 +517,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
+		NotificationPreference:  NewNotificationPreferenceClient(cfg),
+		Permission:              NewPermissionClient(cfg),
 		Problem:                 NewProblemClient(cfg),
 		ProcessDefinition:       NewProcessDefinitionClient(cfg),
 		ProcessDeployment:       NewProcessDeploymentClient(cfg),
@@ -513,6 +530,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		ProvisioningTask:        NewProvisioningTaskClient(cfg),
 		RelationshipType:        NewRelationshipTypeClient(cfg),
+		Role:                    NewRoleClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
@@ -576,9 +594,10 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.Incident,
 		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
 		c.IncidentRuleExecution, c.KnowledgeArticle, c.Message, c.Microservice,
-		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType,
+		c.Notification, c.NotificationPreference, c.Permission, c.Problem,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
+		c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Role,
 		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
 		c.SLAMetric, c.SLAViolation, c.ServiceCatalog, c.ServiceRequest,
 		c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
@@ -601,9 +620,10 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.Incident,
 		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
 		c.IncidentRuleExecution, c.KnowledgeArticle, c.Message, c.Microservice,
-		c.Notification, c.Problem, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType,
+		c.Notification, c.NotificationPreference, c.Permission, c.Problem,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
+		c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Role,
 		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
 		c.SLAMetric, c.SLAViolation, c.ServiceCatalog, c.ServiceRequest,
 		c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
@@ -673,6 +693,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Microservice.mutate(ctx, m)
 	case *NotificationMutation:
 		return c.Notification.mutate(ctx, m)
+	case *NotificationPreferenceMutation:
+		return c.NotificationPreference.mutate(ctx, m)
+	case *PermissionMutation:
+		return c.Permission.mutate(ctx, m)
 	case *ProblemMutation:
 		return c.Problem.mutate(ctx, m)
 	case *ProcessDefinitionMutation:
@@ -695,6 +719,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ProvisioningTask.mutate(ctx, m)
 	case *RelationshipTypeMutation:
 		return c.RelationshipType.mutate(ctx, m)
+	case *RoleMutation:
+		return c.Role.mutate(ctx, m)
 	case *RootCauseAnalysisMutation:
 		return c.RootCauseAnalysis.mutate(ctx, m)
 	case *SLAAlertHistoryMutation:
@@ -5147,6 +5173,304 @@ func (c *NotificationClient) mutate(ctx context.Context, m *NotificationMutation
 	}
 }
 
+// NotificationPreferenceClient is a client for the NotificationPreference schema.
+type NotificationPreferenceClient struct {
+	config
+}
+
+// NewNotificationPreferenceClient returns a client for the NotificationPreference from the given config.
+func NewNotificationPreferenceClient(c config) *NotificationPreferenceClient {
+	return &NotificationPreferenceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `notificationpreference.Hooks(f(g(h())))`.
+func (c *NotificationPreferenceClient) Use(hooks ...Hook) {
+	c.hooks.NotificationPreference = append(c.hooks.NotificationPreference, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `notificationpreference.Intercept(f(g(h())))`.
+func (c *NotificationPreferenceClient) Intercept(interceptors ...Interceptor) {
+	c.inters.NotificationPreference = append(c.inters.NotificationPreference, interceptors...)
+}
+
+// Create returns a builder for creating a NotificationPreference entity.
+func (c *NotificationPreferenceClient) Create() *NotificationPreferenceCreate {
+	mutation := newNotificationPreferenceMutation(c.config, OpCreate)
+	return &NotificationPreferenceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of NotificationPreference entities.
+func (c *NotificationPreferenceClient) CreateBulk(builders ...*NotificationPreferenceCreate) *NotificationPreferenceCreateBulk {
+	return &NotificationPreferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *NotificationPreferenceClient) MapCreateBulk(slice any, setFunc func(*NotificationPreferenceCreate, int)) *NotificationPreferenceCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &NotificationPreferenceCreateBulk{err: fmt.Errorf("calling to NotificationPreferenceClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*NotificationPreferenceCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &NotificationPreferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for NotificationPreference.
+func (c *NotificationPreferenceClient) Update() *NotificationPreferenceUpdate {
+	mutation := newNotificationPreferenceMutation(c.config, OpUpdate)
+	return &NotificationPreferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NotificationPreferenceClient) UpdateOne(np *NotificationPreference) *NotificationPreferenceUpdateOne {
+	mutation := newNotificationPreferenceMutation(c.config, OpUpdateOne, withNotificationPreference(np))
+	return &NotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NotificationPreferenceClient) UpdateOneID(id int) *NotificationPreferenceUpdateOne {
+	mutation := newNotificationPreferenceMutation(c.config, OpUpdateOne, withNotificationPreferenceID(id))
+	return &NotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for NotificationPreference.
+func (c *NotificationPreferenceClient) Delete() *NotificationPreferenceDelete {
+	mutation := newNotificationPreferenceMutation(c.config, OpDelete)
+	return &NotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NotificationPreferenceClient) DeleteOne(np *NotificationPreference) *NotificationPreferenceDeleteOne {
+	return c.DeleteOneID(np.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NotificationPreferenceClient) DeleteOneID(id int) *NotificationPreferenceDeleteOne {
+	builder := c.Delete().Where(notificationpreference.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NotificationPreferenceDeleteOne{builder}
+}
+
+// Query returns a query builder for NotificationPreference.
+func (c *NotificationPreferenceClient) Query() *NotificationPreferenceQuery {
+	return &NotificationPreferenceQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNotificationPreference},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a NotificationPreference entity by its id.
+func (c *NotificationPreferenceClient) Get(ctx context.Context, id int) (*NotificationPreference, error) {
+	return c.Query().Where(notificationpreference.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NotificationPreferenceClient) GetX(ctx context.Context, id int) *NotificationPreference {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a NotificationPreference.
+func (c *NotificationPreferenceClient) QueryUser(np *NotificationPreference) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := np.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(notificationpreference.Table, notificationpreference.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, notificationpreference.UserTable, notificationpreference.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(np.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *NotificationPreferenceClient) Hooks() []Hook {
+	return c.hooks.NotificationPreference
+}
+
+// Interceptors returns the client interceptors.
+func (c *NotificationPreferenceClient) Interceptors() []Interceptor {
+	return c.inters.NotificationPreference
+}
+
+func (c *NotificationPreferenceClient) mutate(ctx context.Context, m *NotificationPreferenceMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NotificationPreferenceCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NotificationPreferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NotificationPreferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NotificationPreferenceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown NotificationPreference mutation op: %q", m.Op())
+	}
+}
+
+// PermissionClient is a client for the Permission schema.
+type PermissionClient struct {
+	config
+}
+
+// NewPermissionClient returns a client for the Permission from the given config.
+func NewPermissionClient(c config) *PermissionClient {
+	return &PermissionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `permission.Hooks(f(g(h())))`.
+func (c *PermissionClient) Use(hooks ...Hook) {
+	c.hooks.Permission = append(c.hooks.Permission, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `permission.Intercept(f(g(h())))`.
+func (c *PermissionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Permission = append(c.inters.Permission, interceptors...)
+}
+
+// Create returns a builder for creating a Permission entity.
+func (c *PermissionClient) Create() *PermissionCreate {
+	mutation := newPermissionMutation(c.config, OpCreate)
+	return &PermissionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Permission entities.
+func (c *PermissionClient) CreateBulk(builders ...*PermissionCreate) *PermissionCreateBulk {
+	return &PermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PermissionClient) MapCreateBulk(slice any, setFunc func(*PermissionCreate, int)) *PermissionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PermissionCreateBulk{err: fmt.Errorf("calling to PermissionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PermissionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PermissionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Permission.
+func (c *PermissionClient) Update() *PermissionUpdate {
+	mutation := newPermissionMutation(c.config, OpUpdate)
+	return &PermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PermissionClient) UpdateOne(pe *Permission) *PermissionUpdateOne {
+	mutation := newPermissionMutation(c.config, OpUpdateOne, withPermission(pe))
+	return &PermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PermissionClient) UpdateOneID(id int) *PermissionUpdateOne {
+	mutation := newPermissionMutation(c.config, OpUpdateOne, withPermissionID(id))
+	return &PermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Permission.
+func (c *PermissionClient) Delete() *PermissionDelete {
+	mutation := newPermissionMutation(c.config, OpDelete)
+	return &PermissionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PermissionClient) DeleteOne(pe *Permission) *PermissionDeleteOne {
+	return c.DeleteOneID(pe.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PermissionClient) DeleteOneID(id int) *PermissionDeleteOne {
+	builder := c.Delete().Where(permission.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PermissionDeleteOne{builder}
+}
+
+// Query returns a query builder for Permission.
+func (c *PermissionClient) Query() *PermissionQuery {
+	return &PermissionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePermission},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Permission entity by its id.
+func (c *PermissionClient) Get(ctx context.Context, id int) (*Permission, error) {
+	return c.Query().Where(permission.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PermissionClient) GetX(ctx context.Context, id int) *Permission {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRoles queries the roles edge of a Permission.
+func (c *PermissionClient) QueryRoles(pe *Permission) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pe.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(permission.Table, permission.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, permission.RolesTable, permission.RolesColumn),
+		)
+		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PermissionClient) Hooks() []Hook {
+	return c.hooks.Permission
+}
+
+// Interceptors returns the client interceptors.
+func (c *PermissionClient) Interceptors() []Interceptor {
+	return c.inters.Permission
+}
+
+func (c *PermissionClient) mutate(ctx context.Context, m *PermissionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PermissionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PermissionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PermissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PermissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Permission mutation op: %q", m.Op())
+	}
+}
+
 // ProblemClient is a client for the Problem schema.
 type ProblemClient struct {
 	config
@@ -6655,6 +6979,171 @@ func (c *RelationshipTypeClient) mutate(ctx context.Context, m *RelationshipType
 		return (&RelationshipTypeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown RelationshipType mutation op: %q", m.Op())
+	}
+}
+
+// RoleClient is a client for the Role schema.
+type RoleClient struct {
+	config
+}
+
+// NewRoleClient returns a client for the Role from the given config.
+func NewRoleClient(c config) *RoleClient {
+	return &RoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `role.Hooks(f(g(h())))`.
+func (c *RoleClient) Use(hooks ...Hook) {
+	c.hooks.Role = append(c.hooks.Role, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `role.Intercept(f(g(h())))`.
+func (c *RoleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Role = append(c.inters.Role, interceptors...)
+}
+
+// Create returns a builder for creating a Role entity.
+func (c *RoleClient) Create() *RoleCreate {
+	mutation := newRoleMutation(c.config, OpCreate)
+	return &RoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Role entities.
+func (c *RoleClient) CreateBulk(builders ...*RoleCreate) *RoleCreateBulk {
+	return &RoleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RoleClient) MapCreateBulk(slice any, setFunc func(*RoleCreate, int)) *RoleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RoleCreateBulk{err: fmt.Errorf("calling to RoleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RoleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RoleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Role.
+func (c *RoleClient) Update() *RoleUpdate {
+	mutation := newRoleMutation(c.config, OpUpdate)
+	return &RoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RoleClient) UpdateOne(r *Role) *RoleUpdateOne {
+	mutation := newRoleMutation(c.config, OpUpdateOne, withRole(r))
+	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RoleClient) UpdateOneID(id int) *RoleUpdateOne {
+	mutation := newRoleMutation(c.config, OpUpdateOne, withRoleID(id))
+	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Role.
+func (c *RoleClient) Delete() *RoleDelete {
+	mutation := newRoleMutation(c.config, OpDelete)
+	return &RoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RoleClient) DeleteOne(r *Role) *RoleDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RoleClient) DeleteOneID(id int) *RoleDeleteOne {
+	builder := c.Delete().Where(role.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RoleDeleteOne{builder}
+}
+
+// Query returns a query builder for Role.
+func (c *RoleClient) Query() *RoleQuery {
+	return &RoleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRole},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Role entity by its id.
+func (c *RoleClient) Get(ctx context.Context, id int) (*Role, error) {
+	return c.Query().Where(role.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RoleClient) GetX(ctx context.Context, id int) *Role {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPermissions queries the permissions edge of a Role.
+func (c *RoleClient) QueryPermissions(r *Role) *PermissionQuery {
+	query := (&PermissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(permission.Table, permission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, role.PermissionsTable, role.PermissionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsers queries the users edge of a Role.
+func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(role.Table, role.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, role.UsersTable, role.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RoleClient) Hooks() []Hook {
+	return c.hooks.Role
+}
+
+// Interceptors returns the client interceptors.
+func (c *RoleClient) Interceptors() []Interceptor {
+	return c.inters.Role
+}
+
+func (c *RoleClient) mutate(ctx context.Context, m *RoleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RoleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RoleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RoleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Role mutation op: %q", m.Op())
 	}
 }
 
@@ -10705,6 +11194,38 @@ func (c *UserClient) QueryTicketNotifications(u *User) *TicketNotificationQuery 
 	return query
 }
 
+// QueryNotificationPreferences queries the notification_preferences edge of a User.
+func (c *UserClient) QueryNotificationPreferences(u *User) *NotificationPreferenceQuery {
+	query := (&NotificationPreferenceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(notificationpreference.Table, notificationpreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.NotificationPreferencesTable, user.NotificationPreferencesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRoles queries the roles edge of a User.
+func (c *UserClient) QueryRoles(u *User) *RoleQuery {
+	query := (&RoleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.RolesTable, user.RolesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -11382,15 +11903,15 @@ type (
 		ConfigurationItem, Conversation, Department, DiscoveryJob, DiscoveryResult,
 		DiscoverySource, Incident, IncidentAlert, IncidentEvent, IncidentMetric,
 		IncidentRule, IncidentRuleExecution, KnowledgeArticle, Message, Microservice,
-		Notification, Problem, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAViolation,
-		ServiceCatalog, ServiceRequest, ServiceRequestApproval, Tag, Team, Tenant,
-		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
-		WorkflowVersion []ent.Hook
+		Notification, NotificationPreference, Permission, Problem, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, Project, PromptTemplate, ProvisioningTask, RelationshipType,
+		Role, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition,
+		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest,
+		ServiceRequestApproval, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
@@ -11398,14 +11919,15 @@ type (
 		ConfigurationItem, Conversation, Department, DiscoveryJob, DiscoveryResult,
 		DiscoverySource, Incident, IncidentAlert, IncidentEvent, IncidentMetric,
 		IncidentRule, IncidentRuleExecution, KnowledgeArticle, Message, Microservice,
-		Notification, Problem, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAViolation,
-		ServiceCatalog, ServiceRequest, ServiceRequestApproval, Tag, Team, Tenant,
-		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
+		Notification, NotificationPreference, Permission, Problem, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, Project, PromptTemplate, ProvisioningTask, RelationshipType,
+		Role, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition,
+		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest,
+		ServiceRequestApproval, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Workflow, WorkflowInstance, WorkflowTask,
 		WorkflowVersion []ent.Interceptor
 	}
 )

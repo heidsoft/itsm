@@ -33,6 +33,8 @@ import (
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
+	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
@@ -44,6 +46,7 @@ import (
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/relationshiptype"
+	"itsm-backend/ent/role"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
@@ -165,6 +168,8 @@ func checkColumn(table, column string) error {
 			message.Table:                 message.ValidColumn,
 			microservice.Table:            microservice.ValidColumn,
 			notification.Table:            notification.ValidColumn,
+			notificationpreference.Table:  notificationpreference.ValidColumn,
+			permission.Table:              permission.ValidColumn,
 			problem.Table:                 problem.ValidColumn,
 			processdefinition.Table:       processdefinition.ValidColumn,
 			processdeployment.Table:       processdeployment.ValidColumn,
@@ -176,6 +181,7 @@ func checkColumn(table, column string) error {
 			prompttemplate.Table:          prompttemplate.ValidColumn,
 			provisioningtask.Table:        provisioningtask.ValidColumn,
 			relationshiptype.Table:        relationshiptype.ValidColumn,
+			role.Table:                    role.ValidColumn,
 			rootcauseanalysis.Table:       rootcauseanalysis.ValidColumn,
 			slaalerthistory.Table:         slaalerthistory.ValidColumn,
 			slaalertrule.Table:            slaalertrule.ValidColumn,

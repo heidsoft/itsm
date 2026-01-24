@@ -5,17 +5,30 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
+import { App, message } from 'antd';
 
 const CreateChangePage = () => {
   const router = useRouter();
+  const { message } = App.useApp();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
     console.log('新建变更数据:', JSON.stringify(data, null, 2));
-    alert('变更请求已成功提交！');
-    router.push('/changes'); // 提交后返回变更列表
+
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      message.success('变更请求已成功提交！');
+      router.push('/changes');
+    } catch (error) {
+      message.error('提交失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

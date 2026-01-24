@@ -13,14 +13,16 @@ import (
 )
 
 type AnalyticsService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client           *ent.Client
+	logger           *zap.SugaredLogger
+	reportExport     *ReportExportService
 }
 
 func NewAnalyticsService(client *ent.Client, logger *zap.SugaredLogger) *AnalyticsService {
 	return &AnalyticsService{
-		client: client,
-		logger: logger,
+		client:           client,
+		logger:           logger,
+		reportExport:     NewReportExportService(),
 	}
 }
 
@@ -297,39 +299,13 @@ func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]b
 	return []byte(csvData), filename, nil
 }
 
-// exportToExcel 导出为Excel格式（简化版，实际应使用excelize库）
+// exportToExcel 导出为Excel格式
 func (s *AnalyticsService) exportToExcel(response *dto.DeepAnalyticsResponse) ([]byte, string, error) {
-	// 简化实现：返回CSV格式（实际应使用excelize库生成真正的Excel文件）
-	// TODO: 使用github.com/xuri/excelize/v2库生成Excel文件
-	return s.exportToCSV(response)
+	return s.reportExport.ExportToExcel(context.Background(), response)
 }
 
-// exportToPDF 导出为PDF格式（简化版，实际应使用pdf库）
+// exportToPDF 导出为PDF格式
 func (s *AnalyticsService) exportToPDF(response *dto.DeepAnalyticsResponse) ([]byte, string, error) {
-	// 简化实现：返回文本格式（实际应使用gofpdf或类似库生成PDF文件）
-	// TODO: 使用github.com/jung-kurt/gofpdf库生成PDF文件
-	var pdfData string
-	
-	pdfData = "数据分析报告\n"
-	pdfData += "================\n\n"
-	pdfData += "数据点:\n"
-	for _, point := range response.Data {
-		avgTime := ""
-		if point.AvgTime != nil {
-			avgTime = fmt.Sprintf("%.2f", *point.AvgTime)
-		}
-		pdfData += fmt.Sprintf("- %s: 数值=%.2f, 数量=%d, 平均时间=%s\n", point.Name, point.Value, point.Count, avgTime)
-	}
-	
-	pdfData += "\n汇总信息:\n"
-	pdfData += fmt.Sprintf("- 总计: %d\n", response.Summary.Total)
-	pdfData += fmt.Sprintf("- 已解决: %d\n", response.Summary.Resolved)
-	pdfData += fmt.Sprintf("- 平均响应时间: %.2f\n", response.Summary.AvgResponseTime)
-	pdfData += fmt.Sprintf("- 平均解决时间: %.2f\n", response.Summary.AvgResolutionTime)
-	pdfData += fmt.Sprintf("- SLA合规率: %.2f%%\n", response.Summary.SLACompliance)
-	pdfData += fmt.Sprintf("- 客户满意度: %.2f\n", response.Summary.CustomerSatisfaction)
-	
-	filename := fmt.Sprintf("analytics_%s.txt", time.Now().Format("20060102_150405"))
-	return []byte(pdfData), filename, nil
+	return s.reportExport.ExportToPDF(context.Background(), response)
 }
 

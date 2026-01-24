@@ -206,6 +206,11 @@ func NewApplication() *Application {
 	slaServiceDomain := sla.NewService(slaRepo, sugar)
 	slaHandler := sla.NewHandler(slaServiceDomain)
 
+	// Legacy SLA Service & Controller (for additional endpoints)
+	slaService := service.NewSLAService(client, sugar)
+	slaAlertService := service.NewSLAAlertService(client, sugar)
+	slaController := controller.NewSLAController(slaService, slaAlertService)
+
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, rootCauseService, aiTelemetryService)
@@ -273,6 +278,11 @@ func NewApplication() *Application {
 		AIHandler:             aiHandler, // Added AI domain handler
 		CommonHandler:         commonHandler,
 		RoleHandler:           roleHandler,
+
+		// Legacy SLA Controller (for metrics, violations, monitoring)
+		SLAController:      slaController,
+		SLAService:         slaService,
+		SLAAlertService:    slaAlertService,
 	}
 	router.SetupRoutes(r, routerConfig)
 

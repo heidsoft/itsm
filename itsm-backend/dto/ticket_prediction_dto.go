@@ -18,9 +18,11 @@ type TrendPredictionResponse struct {
 }
 
 type PredictionDataPoint struct {
-	Date          string   `json:"date" example:"2024-02-01"`
-	PredictedValue float64 `json:"predicted_value" example:"45.0"`
-	LowerBound    float64  `json:"lower_bound" example:"38.0"`
-	UpperBound    float64  `json:"upper_bound" example:"52.0"`
-	Confidence    float64  `json:"confidence" example:"0.85"`
+	Date           string   `json:"date" example:"2024-02-01"`
+	PredictedValue float64  `json:"predicted_value" example:"45.0"`
+	LowerBound     float64  `json:"lower_bound" example:"38.0"`
+	UpperBound     float64  `json:"upper_bound" example:"52.0"`
+	Confidence     float64  `json:"confidence" example:"0.85"`
+	Category       string   `json:"category,omitempty" example:"database"`
+	Priority       string   `json:"priority,omitempty" example:"high"`
 }

@@ -35,8 +35,8 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
 import { TicketApi } from '@/lib/api/ticket-api';
-import type { Ticket } from '@/app/lib/api-config';
-import { useTicketListStore } from '@/lib/stores/ticket-store';
+import type { Ticket } from '@/lib/api/types';
+import { useTicketListStore } from '@/lib/store/ticket-list-store';
 import TicketBatchOperations from './TicketBatchOperations';
 
 type ListTicketsRequest = Record<string, any>;

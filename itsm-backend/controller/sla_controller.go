@@ -206,18 +206,25 @@ func (c *SLAController) GetSLAMetrics(ctx *gin.Context) {
 
 	// 获取查询参数
 	filters := make(map[string]interface{})
-	if serviceType := ctx.Query("service_type"); serviceType != "" {
-		filters["service_type"] = serviceType
+	if slaDefIDStr := ctx.Query("sla_definition_id"); slaDefIDStr != "" {
+		if slaDefID, err := strconv.Atoi(slaDefIDStr); err == nil && slaDefID > 0 {
+			filters["sla_definition_id"] = slaDefID
+		}
 	}
-	if priority := ctx.Query("priority"); priority != "" {
-		filters["priority"] = priority
+	if metricType := ctx.Query("metric_type"); metricType != "" {
+		filters["metric_type"] = metricType
 	}
 
-	// TODO: 实现GetSLAMetrics方法
-	_ = tenantID
-	metrics := []interface{}{}
+	metrics, err := c.slaService.GetSLAMetrics(ctx.Request.Context(), tenantID.(int), filters)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取SLA指标失败: "+err.Error())
+		return
+	}
 
-	common.Success(ctx, metrics)
+	common.Success(ctx, gin.H{
+		"metrics": metrics,
+		"count":   len(metrics),
+	})
 }
 
 // GetSLAViolations 获取SLA违规列表
@@ -231,8 +238,10 @@ func (c *SLAController) GetSLAViolations(ctx *gin.Context) {
 
 	// 获取查询参数
 	filters := make(map[string]interface{})
-	if status := ctx.Query("status"); status != "" {
-		filters["status"] = status
+	if isResolvedStr := ctx.Query("is_resolved"); isResolvedStr != "" {
+		if isResolved, err := strconv.ParseBool(isResolvedStr); err == nil {
+			filters["is_resolved"] = isResolved
+		}
 	}
 	if severity := ctx.Query("severity"); severity != "" {
 		filters["severity"] = severity
@@ -240,12 +249,27 @@ func (c *SLAController) GetSLAViolations(ctx *gin.Context) {
 	if violationType := ctx.Query("violation_type"); violationType != "" {
 		filters["violation_type"] = violationType
 	}
+	if slaDefIDStr := ctx.Query("sla_definition_id"); slaDefIDStr != "" {
+		if slaDefID, err := strconv.Atoi(slaDefIDStr); err == nil && slaDefID > 0 {
+			filters["sla_definition_id"] = slaDefID
+		}
+	}
 
-	// TODO: 实现GetSLAViolations方法
-	_ = tenantID
-	violations := []interface{}{}
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
 
-	common.Success(ctx, violations)
+	violations, total, err := c.slaService.GetSLAViolations(ctx.Request.Context(), tenantID.(int), filters, page, size)
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "获取SLA违规列表失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, gin.H{
+		"items":  violations,
+		"total":  total,
+		"page":   page,
+		"size":   size,
+	})
 }
 
 // UpdateViolationStatus 更新违规状态
@@ -258,8 +282,8 @@ func (c *SLAController) UpdateViolationStatus(ctx *gin.Context) {
 	}
 
 	var req struct {
-		Status string `json:"status" binding:"required"`
-		Notes  string `json:"notes"`
+		IsResolved bool   `json:"is_resolved"`
+		Notes      string `json:"notes"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -267,9 +291,19 @@ func (c *SLAController) UpdateViolationStatus(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 实现UpdateViolationStatus方法
-	_ = id
-	common.Success(ctx, map[string]string{"message": "违规状态更新成功"})
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+
+	response, err := c.slaService.UpdateSLAViolationStatus(ctx.Request.Context(), id, req.IsResolved, req.Notes, tenantID.(int))
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "更新违规状态失败: "+err.Error())
+		return
+	}
+
+	common.Success(ctx, response)
 }
 
 // GetSLAMonitoring 获取SLA监控数据

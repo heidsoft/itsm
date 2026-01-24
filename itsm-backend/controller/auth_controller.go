@@ -113,3 +113,21 @@ func (ac *AuthController) GetUserInfo(c *gin.Context) {
 
 	common.Success(c, response)
 }
+
+// Logout 登出接口
+func (ac *AuthController) Logout(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		common.AuthFailed(c, "用户未认证")
+		return
+	}
+
+	ctx := c.Request.Context()
+	err := ac.authService.Logout(ctx, userID.(int))
+	if err != nil {
+		common.InternalError(c, err.Error())
+		return
+	}
+
+	common.Success(c, nil)
+}

@@ -36,8 +36,8 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
 
 import { useRouter } from 'next/navigation';
-import type { Ticket } from '@/app/lib/api-config';
-import { useTicketListStore } from '@/lib/stores/ticket-store';
+import type { Ticket } from '@/lib/api/types';
+import { useTicketListStore } from '@/lib/store/ticket-list-store';
 
 dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');

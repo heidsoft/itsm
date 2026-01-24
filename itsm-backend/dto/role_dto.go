@@ -6,6 +6,7 @@ import "time"
 type RoleDTO struct {
 	ID          int      `json:"id"`
 	Name        string   `json:"name"`
+	Code        string   `json:"code"`
 	Description string   `json:"description,omitempty"`
 	Permissions []string `json:"permissions"`
 	Status      string   `json:"status,omitempty"`
@@ -13,6 +14,7 @@ type RoleDTO struct {
 	UserCount   int      `json:"user_count,omitempty"`
 	CreatedAt   string   `json:"created_at"`
 	UpdatedAt   string   `json:"updated_at"`
+	TenantID    int      `json:"tenant_id"`
 }
 
 // RoleListResponse represents the response for listing roles
@@ -27,17 +29,20 @@ type RoleListResponse struct {
 // CreateRoleRequest represents the request for creating a role
 type CreateRoleRequest struct {
 	Name        string   `json:"name" binding:"required"`
+	Code        string   `json:"code" binding:"required"`
 	Description string   `json:"description"`
 	Permissions []string `json:"permissions"`
 	Status      string   `json:"status"`
+	IsSystem    bool     `json:"is_system"`
 }
 
 // UpdateRoleRequest represents the request for updating a role
 type UpdateRoleRequest struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
+	Name        *string  `json:"name"`
+	Code        *string  `json:"code"`
+	Description *string  `json:"description"`
 	Permissions []string `json:"permissions"`
-	Status      string   `json:"status"`
+	Status      *string  `json:"status"`
 }
 
 // GetRolesParams represents the query parameters for listing roles
@@ -46,6 +51,31 @@ type GetRolesParams struct {
 	PageSize int    `form:"page_size"`
 	Status   string `form:"status"`
 	Search   string `form:"search"`
+}
+
+// RoleResponse 角色响应（用于新角色服务）
+type RoleResponse struct {
+	ID          int              `json:"id"`
+	Name        string           `json:"name"`
+	Code        string           `json:"code"`
+	Description string           `json:"description"`
+	IsSystem    bool             `json:"is_system"`
+	Permissions []PermissionInfo `json:"permissions"`
+	TenantID    int              `json:"tenant_id"`
+	CreatedAt   time.Time        `json:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at"`
+}
+
+// PermissionInfo 权限信息
+type PermissionInfo struct {
+	ID   int    `json:"id"`
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+// AssignPermissionsRequest 分配权限请求
+type AssignPermissionsRequest struct {
+	PermissionIDs []int `json:"permission_ids" binding:"required"`
 }
 
 // PermissionDTO represents a permission

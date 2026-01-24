@@ -87,6 +87,12 @@ type Microservice func(*sql.Selector)
 // Notification is the predicate function for notification builders.
 type Notification func(*sql.Selector)
 
+// NotificationPreference is the predicate function for notificationpreference builders.
+type NotificationPreference func(*sql.Selector)
+
+// Permission is the predicate function for permission builders.
+type Permission func(*sql.Selector)
+
 // Problem is the predicate function for problem builders.
 type Problem func(*sql.Selector)
 
@@ -119,6 +125,9 @@ type ProvisioningTask func(*sql.Selector)
 
 // RelationshipType is the predicate function for relationshiptype builders.
 type RelationshipType func(*sql.Selector)
+
+// Role is the predicate function for role builders.
+type Role func(*sql.Selector)
 
 // RootCauseAnalysis is the predicate function for rootcauseanalysis builders.
 type RootCauseAnalysis func(*sql.Selector)

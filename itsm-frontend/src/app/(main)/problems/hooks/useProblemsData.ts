@@ -59,8 +59,13 @@ export const useProblemsData = () => {
 
   const fetchStats = async () => {
     try {
-      // TODO: 实现统计数据获取
-      console.log('获取统计数据');
+      const statsData = await problemService.getProblemStats();
+      setStats({
+        total: statsData.total || 0,
+        open: statsData.by_status?.open || 0,
+        inProgress: statsData.by_status?.in_progress || 0,
+        resolved: statsData.by_status?.resolved || 0,
+      });
     } catch {
       message.error('获取统计数据失败');
     }

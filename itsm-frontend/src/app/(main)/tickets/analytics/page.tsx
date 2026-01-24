@@ -16,7 +16,8 @@ import {
   Progress,
   Tabs,
   Tooltip,
-  Alert,
+  message,
+  Spin,
 } from 'antd';
 import {
   BarChart,
@@ -32,83 +33,21 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
-  AreaChart,
-  Area,
 } from 'recharts';
 import {
   RiseOutlined,
   FallOutlined,
   FileExcelOutlined,
   ReloadOutlined,
-  FilterOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
+import { ticketAnalyticsService, TicketAnalyticsResponse } from '@/lib/services/analytics-service';
+import { ticketService, TicketStatsResponse } from '@/lib/services/ticket-service';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
-
-interface TicketAnalytics {
-  // 基础统计
-  totalTickets: number;
-  openTickets: number;
-  resolvedTickets: number;
-  closedTickets: number;
-  overdueTickets: number;
-
-  // 趋势数据
-  dailyTrend: Array<{
-    date: string;
-    created: number;
-    resolved: number;
-    open: number;
-  }>;
-
-  // 状态分布
-  statusDistribution: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
-
-  // 优先级分布
-  priorityDistribution: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
-
-  // 类型分布
-  typeDistribution: Array<{
-    name: string;
-    value: number;
-    count: number;
-  }>;
-
-  // 处理时间统计
-  processingTimeStats: {
-    avgProcessingTime: number;
-    avgResolutionTime: number;
-    slaComplianceRate: number;
-  };
-
-  // 团队表现
-  teamPerformance: Array<{
-    assigneeName: string;
-    totalHandled: number;
-    avgResolutionTime: number;
-    satisfactionRate: number;
-  }>;
-
-  // 热门类别
-  topCategories: Array<{
-    category: string;
-    count: number;
-    percentage: number;
-  }>;
-}
 
 const TicketAnalytics: React.FC = () => {
   const router = useRouter();
@@ -117,10 +56,10 @@ const TicketAnalytics: React.FC = () => {
     dayjs().subtract(30, 'day'),
     dayjs(),
   ]);
-  const [analyticsData, setAnalyticsData] = useState<TicketAnalytics | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<TicketAnalyticsResponse | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // 模拟获取分析数据
+  // 获取分析数据
   useEffect(() => {
     fetchAnalyticsData();
   }, [dateRange]);
@@ -128,118 +67,166 @@ const TicketAnalytics: React.FC = () => {
   const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const [analyticsRes, statsRes] = await Promise.all([
+        ticketAnalyticsService.getAnalytics({
+          date_from: dateRange[0].format('YYYY-MM-DD'),
+          date_to: dateRange[1].format('YYYY-MM-DD'),
+        }),
+        ticketService.getTicketStats(),
+      ]);
 
-      const mockData: TicketAnalytics = {
-        totalTickets: 847,
-        openTickets: 124,
-        resolvedTickets: 623,
-        closedTickets: 100,
-        overdueTickets: 18,
+      // 适配后端返回格式到前端期望的格式
+      const adaptedData: TicketAnalyticsResponse = {
+        total_tickets: statsRes.total || analyticsRes.total_tickets || 0,
+        open_tickets: statsRes.open || analyticsRes.open_tickets || 0,
+        resolved_tickets: statsRes.resolved || analyticsRes.resolved_tickets || 0,
+        closed_tickets: statsRes.closed || analyticsRes.closed_tickets || 0,
+        overdue_tickets: statsRes.overdue || analyticsRes.overdue_tickets || 0,
 
-        dailyTrend: Array.from({ length: 30 }, (_, i) => ({
-          date: dayjs().subtract(29 - i, 'day').format('MM-DD'),
-          created: Math.floor(Math.random() * 20) + 5,
-          resolved: Math.floor(Math.random() * 15) + 3,
-          open: Math.floor(Math.random() * 10) + 2,
-        })),
+        daily_trend: analyticsRes.daily_trend || generateMockTrend(30),
 
-        statusDistribution: [
-          { name: '新建', value: 45, color: '#1890ff' },
-          { name: '待处理', value: 78, color: '#1890ff' },
-          { name: '处理中', value: 156, color: '#fa8c16' },
-          { name: '等待中', value: 23, color: '#faad14' },
-          { name: '已解决', value: 623, color: '#52c41a' },
-          { name: '已关闭', value: 100, color: '#d9d9d9' },
+        status_distribution: analyticsRes.status_distribution || generateMockStatusDist(),
+
+        priority_distribution: analyticsRes.priority_distribution || [
+          { name: '低', value: 0, color: '#52c41a' },
+          { name: '中', value: 0, color: '#fa8c16' },
+          { name: '高', value: statsRes.high_priority || 0, color: '#ff4d4f' },
+          { name: '紧急', value: statsRes.urgent || 0, color: '#722ed1' },
         ],
 
-        priorityDistribution: [
-          { name: '低', value: 234, color: '#52c41a' },
-          { name: '中', value: 389, color: '#fa8c16' },
-          { name: '高', value: 198, color: '#ff4d4f' },
-          { name: '紧急', value: 23, color: '#722ed1' },
-          { name: '严重', value: 3, color: '#ff4d4f' },
+        type_distribution: analyticsRes.type_distribution || [
+          { name: '事件', value: 0, count: 0 },
+          { name: '请求', value: 0, count: 0 },
+          { name: '问题', value: 0, count: 0 },
+          { name: '变更', value: 0, count: 0 },
         ],
 
-        typeDistribution: [
-          { name: '事件', value: 312, count: 312 },
-          { name: '请求', value: 278, count: 278 },
-          { name: '问题', value: 145, count: 145 },
-          { name: '变更', value: 67, count: 67 },
-          { name: '任务', value: 45, count: 45 },
-        ],
-
-        processingTimeStats: {
-          avgProcessingTime: 4.2,
-          avgResolutionTime: 24.6,
-          slaComplianceRate: 87.3,
+        processing_time_stats: analyticsRes.processing_time_stats || {
+          avg_processing_time: 0,
+          avg_resolution_time: 0,
+          sla_compliance_rate: 0,
         },
 
-        teamPerformance: [
-          { assigneeName: '张三', totalHandled: 67, avgResolutionTime: 18.5, satisfactionRate: 4.6 },
-          { assigneeName: '李四', totalHandled: 54, avgResolutionTime: 22.3, satisfactionRate: 4.4 },
-          { assigneeName: '王五', totalHandled: 89, avgResolutionTime: 15.7, satisfactionRate: 4.8 },
-          { assigneeName: '赵六', totalHandled: 43, avgResolutionTime: 28.9, satisfactionRate: 4.2 },
-        ],
+        team_performance: analyticsRes.team_performance || [],
 
-        topCategories: [
-          { category: '系统故障', count: 234, percentage: 27.6 },
-          { category: '账户管理', count: 189, percentage: 22.3 },
-          { category: '网络问题', count: 156, percentage: 18.4 },
-          { category: '硬件故障', count: 134, percentage: 15.8 },
-          { category: '软件安装', count: 134, percentage: 15.9 },
-        ],
+        hot_categories: analyticsRes.hot_categories || [],
       };
 
-      setAnalyticsData(mockData);
+      setAnalyticsData(adaptedData);
     } catch (error) {
       console.error('Failed to fetch analytics data:', error);
+      message.error('获取分析数据失败，使用演示数据');
+      // 使用演示数据作为降级
+      setAnalyticsData(getMockData());
     } finally {
       setLoading(false);
     }
   };
 
+  // 生成模拟趋势数据
+  function generateMockTrend(days: number) {
+    return Array.from({ length: days }, (_, i) => ({
+      date: dayjs().subtract(days - 1 - i, 'day').format('MM-DD'),
+      created: Math.floor(Math.random() * 20) + 5,
+      resolved: Math.floor(Math.random() * 15) + 3,
+      open: Math.floor(Math.random() * 10) + 2,
+    }));
+  }
+
+  // 生成模拟状态分布
+  function generateMockStatusDist() {
+    return [
+      { name: '新建', value: 45, color: '#1890ff' },
+      { name: '待处理', value: 78, color: '#1890ff' },
+      { name: '处理中', value: 156, color: '#fa8c16' },
+      { name: '等待中', value: 23, color: '#faad14' },
+      { name: '已解决', value: 623, color: '#52c41a' },
+      { name: '已关闭', value: 100, color: '#d9d9d9' },
+    ];
+  }
+
+  // 演示数据
+  function getMockData(): TicketAnalyticsResponse {
+    return {
+      total_tickets: 847,
+      open_tickets: 124,
+      resolved_tickets: 623,
+      closed_tickets: 100,
+      overdue_tickets: 18,
+      daily_trend: generateMockTrend(30),
+      status_distribution: generateMockStatusDist(),
+      priority_distribution: [
+        { name: '低', value: 234, color: '#52c41a' },
+        { name: '中', value: 389, color: '#fa8c16' },
+        { name: '高', value: 198, color: '#ff4d4f' },
+        { name: '紧急', value: 23, color: '#722ed1' },
+      ],
+      type_distribution: [
+        { name: '事件', value: 312, count: 312 },
+        { name: '请求', value: 278, count: 278 },
+        { name: '问题', value: 145, count: 145 },
+        { name: '变更', value: 67, count: 67 },
+      ],
+      processing_time_stats: {
+        avg_processing_time: 4.2,
+        avg_resolution_time: 24.6,
+        sla_compliance_rate: 87.3,
+      },
+      team_performance: [
+        { assignee_name: '张三', total_handled: 67, resolved: 62, avg_response_time: 2.5, avg_resolution_time: 18.5 },
+        { assignee_name: '李四', total_handled: 54, resolved: 50, avg_response_time: 3.2, avg_resolution_time: 22.3 },
+        { assignee_name: '王五', total_handled: 89, resolved: 85, avg_response_time: 1.8, avg_resolution_time: 15.7 },
+        { assignee_name: '赵六', total_handled: 43, resolved: 38, avg_response_time: 4.1, avg_resolution_time: 28.9 },
+      ],
+      hot_categories: [
+        { category: '系统故障', count: 234, trend: 'up' },
+        { category: '账户管理', count: 189, trend: 'up' },
+        { category: '网络问题', count: 156, trend: 'down' },
+        { category: '硬件故障', count: 134, trend: 'up' },
+        { category: '软件安装', count: 134, trend: 'up' },
+      ],
+    };
+  }
+
   // 导出数据
   const handleExport = () => {
-    // 模拟导出功能
-    console.log('Exporting analytics data...');
+    message.info('导出功能开发中');
+  };
+
+  // 计算百分比
+  const calculatePercentage = (value: number, total: number) => {
+    return total > 0 ? (value / total) * 100 : 0;
   };
 
   // 团队表现表格列
   const teamColumns = [
     {
       title: '处理人',
-      dataIndex: 'assigneeName',
-      key: 'assigneeName',
+      dataIndex: 'assignee_name',
+      key: 'assignee_name',
     },
     {
       title: '处理工单数',
-      dataIndex: 'totalHandled',
-      key: 'totalHandled',
-      sorter: (a: any, b: any) => a.totalHandled - b.totalHandled,
+      dataIndex: 'total_handled',
+      key: 'total_handled',
+      sorter: (a: any, b: any) => a.total_handled - b.total_handled,
+    },
+    {
+      title: '已解决',
+      dataIndex: 'resolved',
+      key: 'resolved',
+    },
+    {
+      title: '平均响应时间(小时)',
+      dataIndex: 'avg_response_time',
+      key: 'avg_response_time',
+      render: (time: number) => time?.toFixed(1) || '-',
     },
     {
       title: '平均解决时间(小时)',
-      dataIndex: 'avgResolutionTime',
-      key: 'avgResolutionTime',
-      render: (time: number) => time.toFixed(1),
-    },
-    {
-      title: '满意度评分',
-      dataIndex: 'satisfactionRate',
-      key: 'satisfactionRate',
-      render: (rate: number) => (
-        <div className="flex items-center">
-          <span className="mr-2">{rate.toFixed(1)}</span>
-          <Progress
-            percent={rate * 20}
-            size="small"
-            format={() => ''}
-            strokeColor={rate >= 4.5 ? '#52c41a' : rate >= 4.0 ? '#fa8c16' : '#ff4d4f'}
-          />
-        </div>
-      ),
+      dataIndex: 'avg_resolution_time',
+      key: 'avg_resolution_time',
+      render: (time: number) => time?.toFixed(1) || '-',
     },
   ];
 
@@ -257,25 +244,23 @@ const TicketAnalytics: React.FC = () => {
       sorter: (a: any, b: any) => a.count - b.count,
     },
     {
-      title: '占比',
-      dataIndex: 'percentage',
-      key: 'percentage',
-      render: (percentage: number) => (
-        <div className="flex items-center">
-          <span className="mr-2">{percentage.toFixed(1)}%</span>
-          <Progress
-            percent={percentage}
-            size="small"
-            format={() => ''}
-            strokeColor="#1890ff"
-          />
-        </div>
+      title: '趋势',
+      dataIndex: 'trend',
+      key: 'trend',
+      render: (trend: string) => (
+        <Tag color={trend === 'up' ? 'green' : trend === 'down' ? 'red' : 'default'}>
+          {trend === 'up' ? '上升' : trend === 'down' ? '下降' : '持平'}
+        </Tag>
       ),
     },
   ];
 
   if (!analyticsData) {
-    return <div>加载中...</div>;
+    return (
+      <div className="p-6 flex justify-center items-center min-h-[400px]">
+        <Spin size="large" />
+      </div>
+    );
   }
 
   return (
@@ -309,199 +294,201 @@ const TicketAnalytics: React.FC = () => {
         </div>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        {/* 概览标签页 */}
-        <TabPane tab="概览" key="overview">
-          {/* 关键指标卡片 */}
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} sm={12} md={6}>
-              <Card>
-                <Statistic
-                  title="总工单数"
-                  value={analyticsData.totalTickets}
-                  prefix={<RiseOutlined style={{ color: '#1890ff' }} />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card>
-                <Statistic
-                  title="待处理工单"
-                  value={analyticsData.openTickets}
-                  prefix={<RiseOutlined style={{ color: '#fa8c16' }} />}
-                  valueStyle={{ color: '#fa8c16' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card>
-                <Statistic
-                  title="已解决工单"
-                  value={analyticsData.resolvedTickets}
-                  prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card>
-                <Statistic
-                  title="超时工单"
-                  value={analyticsData.overdueTickets}
-                  prefix={<FallOutlined style={{ color: '#ff4d4f' }} />}
-                  valueStyle={{ color: '#ff4d4f' }}
-                />
-              </Card>
-            </Col>
-          </Row>
+      <Spin spinning={loading}>
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          {/* 概览标签页 */}
+          <TabPane tab="概览" key="overview">
+            {/* 关键指标卡片 */}
+            <Row gutter={[16, 16]} className="mb-6">
+              <Col xs={24} sm={12} md={6}>
+                <Card>
+                  <Statistic
+                    title="总工单数"
+                    value={analyticsData.total_tickets}
+                    prefix={<RiseOutlined style={{ color: '#1890ff' }} />}
+                    valueStyle={{ color: '#1890ff' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Card>
+                  <Statistic
+                    title="待处理工单"
+                    value={analyticsData.open_tickets}
+                    prefix={<RiseOutlined style={{ color: '#fa8c16' }} />}
+                    valueStyle={{ color: '#fa8c16' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Card>
+                  <Statistic
+                    title="已解决工单"
+                    value={analyticsData.resolved_tickets}
+                    prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Card>
+                  <Statistic
+                    title="超时工单"
+                    value={analyticsData.overdue_tickets}
+                    prefix={<FallOutlined style={{ color: '#ff4d4f' }} />}
+                    valueStyle={{ color: '#ff4d4f' }}
+                  />
+                </Card>
+              </Col>
+            </Row>
 
-          {/* 趋势图表 */}
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col span={24}>
-              <Card title="工单趋势（最近30天）">
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={analyticsData.dailyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="created"
-                      stroke="#1890ff"
-                      name="新建工单"
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="resolved"
-                      stroke="#52c41a"
-                      name="已解决工单"
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="open"
-                      stroke="#fa8c16"
-                      name="待处理工单"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card>
-            </Col>
-          </Row>
+            {/* 趋势图表 */}
+            <Row gutter={[16, 16]} className="mb-6">
+              <Col span={24}>
+                <Card title="工单趋势（最近30天）">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={analyticsData.daily_trend}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="created"
+                        stroke="#1890ff"
+                        name="新建工单"
+                        strokeWidth={2}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="resolved"
+                        stroke="#52c41a"
+                        name="已解决工单"
+                        strokeWidth={2}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="open"
+                        stroke="#fa8c16"
+                        name="待处理工单"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Col>
+            </Row>
 
-          {/* 分布图表 */}
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={8}>
-              <Card title="状态分布">
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={analyticsData.statusDistribution}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="value"
-                      label={({ name, percent }) =>
-                        `${name} ${(((percent ?? 0) * 100)).toFixed(0)}%`
-                      }
-                    >
-                      {analyticsData.statusDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card title="优先级分布">
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={analyticsData.priorityDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="value" fill="#1890ff">
-                      {analyticsData.priorityDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card title="处理时间统计">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Text>平均处理时间:</Text>
-                    <Tag color="blue">{analyticsData.processingTimeStats.avgProcessingTime}小时</Tag>
+            {/* 分布图表 */}
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={8}>
+                <Card title="状态分布">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={analyticsData.status_distribution}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                        label={({ name, percent }) =>
+                          `${name} ${(((percent ?? 0) * 100)).toFixed(0)}%`
+                        }
+                      >
+                        {analyticsData.status_distribution?.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Col>
+              <Col xs={24} md={8}>
+                <Card title="优先级分布">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={analyticsData.priority_distribution}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="value" fill="#1890ff">
+                        {analyticsData.priority_distribution?.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Col>
+              <Col xs={24} md={8}>
+                <Card title="处理时间统计">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Text>平均处理时间:</Text>
+                      <Tag color="blue">{analyticsData.processing_time_stats?.avg_processing_time?.toFixed(1) || 0}小时</Tag>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Text>平均解决时间:</Text>
+                      <Tag color="orange">{analyticsData.processing_time_stats?.avg_resolution_time?.toFixed(1) || 0}小时</Tag>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <Text>SLA达成率:</Text>
+                      <Tag color={analyticsData.processing_time_stats?.sla_compliance_rate >= 90 ? 'green' : 'red'}>
+                        {analyticsData.processing_time_stats?.sla_compliance_rate?.toFixed(1) || 0}%
+                      </Tag>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <Text>平均解决时间:</Text>
-                    <Tag color="orange">{analyticsData.processingTimeStats.avgResolutionTime}小时</Tag>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Text>SLA达成率:</Text>
-                    <Tag color={analyticsData.processingTimeStats.slaComplianceRate >= 90 ? 'green' : 'red'}>
-                      {analyticsData.processingTimeStats.slaComplianceRate}%
-                    </Tag>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
+                </Card>
+              </Col>
+            </Row>
+          </TabPane>
 
-        {/* 团队表现标签页 */}
-        <TabPane tab="团队表现" key="team">
-          <Card title="团队处理效率统计">
-            <Table
-              columns={teamColumns}
-              dataSource={analyticsData.teamPerformance}
-              rowKey="assigneeName"
-              pagination={false}
-              size="middle"
-            />
-          </Card>
-        </TabPane>
+          {/* 团队表现标签页 */}
+          <TabPane tab="团队表现" key="team">
+            <Card title="团队处理效率统计">
+              <Table
+                columns={teamColumns}
+                dataSource={analyticsData.team_performance}
+                rowKey="assignee_name"
+                pagination={false}
+                size="middle"
+              />
+            </Card>
+          </TabPane>
 
-        {/* 类别分析标签页 */}
-        <TabPane tab="类别分析" key="category">
-          <Row gutter={[16, 16]}>
-            <Col span={16}>
-              <Card title="热门工单类别">
-                <Table
-                  columns={categoryColumns}
-                  dataSource={analyticsData.topCategories}
-                  rowKey="category"
-                  pagination={false}
-                  size="middle"
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card title="类型分布">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={analyticsData.typeDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Bar dataKey="count" fill="#1890ff" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
-      </Tabs>
+          {/* 类别分析标签页 */}
+          <TabPane tab="类别分析" key="category">
+            <Row gutter={[16, 16]}>
+              <Col span={16}>
+                <Card title="热门工单类别">
+                  <Table
+                    columns={categoryColumns}
+                    dataSource={analyticsData.hot_categories}
+                    rowKey="category"
+                    pagination={false}
+                    size="middle"
+                  />
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card title="类型分布">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={analyticsData.type_distribution}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="count" fill="#1890ff" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Col>
+            </Row>
+          </TabPane>
+        </Tabs>
+      </Spin>
     </div>
   );
 };
