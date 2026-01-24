@@ -4,7 +4,7 @@ export interface KPIMetric {
   id: string;
   title: string;
   value: number | string;
-  unit?: string;
+  unit: string;
   color: string;
   icon?: React.ReactNode;
   trend?: 'up' | 'down' | 'stable';

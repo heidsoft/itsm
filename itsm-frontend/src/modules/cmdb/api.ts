@@ -140,4 +140,48 @@ export class CMDBApi {
     static async getDiscoveryResults(jobId?: number): Promise<DiscoveryResult[]> {
         return httpClient.get<DiscoveryResult[]>(`${BASE_URL}/discovery/results`, { job_id: jobId });
     }
+
+    /**
+     * 获取配置项关系
+     */
+    static async getCIRelationships(ciId: string | number): Promise<CIRelationship[]> {
+        return httpClient.get<CIRelationship[]>(`${BASE_URL}/cis/${ciId}/relationships`);
+    }
+
+    /**
+     * 创建配置项关系
+     */
+    static async createCIRelationship(data: {
+        source_ci_id: number;
+        target_ci_id: number;
+        relationship_type: string;
+    }): Promise<CIRelationship> {
+        return httpClient.post<CIRelationship>(`${BASE_URL}/relationships`, data);
+    }
+
+    /**
+     * 删除配置项关系
+     */
+    static async deleteCIRelationship(relationshipId: string | number): Promise<void> {
+        return httpClient.delete(`${BASE_URL}/relationships/${relationshipId}`);
+    }
+
+    /**
+     * 批量删除配置项
+     */
+    static async batchDeleteCIs(ids: number[]): Promise<{ deleted: number }> {
+        return httpClient.post(`${BASE_URL}/cis/batch`, { ids });
+    }
+
+    /**
+     * 导出配置项
+     */
+    static async exportCIs(format: 'csv' | 'excel' | 'json', query?: CIQuery): Promise<Blob> {
+        return httpClient.request({
+            method: 'GET',
+            url: `${BASE_URL}/cis/export`,
+            params: { format, ...query },
+            responseType: 'blob',
+        }) as Promise<Blob>;
+    }
 }

@@ -42,7 +42,7 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 
 interface WorkflowDesignerPageProps {
-  params: { id?: string };
+  params: Promise<{ id?: string }>;
 }
 
 interface WorkflowDefinition {
@@ -106,6 +106,7 @@ interface WorkflowVersion {
 const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [resolvedParams, setResolvedParams] = useState<{ id?: string }>({ id: undefined });
 
   const [form] = Form.useForm();
 
@@ -126,8 +127,13 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     escalation_rules: [],
   });
 
+  // 解析 Promise params
+  useEffect(() => {
+    params.then(setResolvedParams).catch(console.error);
+  }, [params]);
+
   // 从URL参数获取工作流ID
-  const workflowId = params?.id || searchParams.get('id');
+  const workflowId = resolvedParams?.id || searchParams.get('id');
 
   useEffect(() => {
     if (workflowId) {

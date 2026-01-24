@@ -245,7 +245,9 @@ export interface Role {
   name: string;
   description: string;
   permissions: string[];
-  status: 'active' | 'inactive';
+  status?: 'active' | 'inactive';
+  is_system?: boolean;
+  user_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -254,7 +256,7 @@ export interface RoleListResponse {
   roles: Role[];
   total: number;
   page: number;
-  size: number;
+  page_size: number;
 }
 
 export interface CreateRoleRequest {

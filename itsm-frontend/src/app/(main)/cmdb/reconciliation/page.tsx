@@ -191,7 +191,7 @@ export default function ReconciliationPage() {
             <Statistic
               key={item.key}
               title={item.label}
-              value={summary ? (summary as Record<string, number>)[item.key] : 0}
+              value={summary ? (summary as any)[item.key] ?? 0 : 0}
             />
           ))}
         </Space>

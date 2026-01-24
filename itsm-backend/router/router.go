@@ -3,6 +3,7 @@ package router
 import (
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
@@ -54,6 +55,9 @@ type RouterConfig struct {
 	CMDBController      *controller.CMDBController
 	TicketTagController *controller.TicketTagController
 
+	// User Controller
+	UserController *controller.UserController
+
 	// Additional domain controllers
 	ServiceController        *controller.ServiceController
 	ProblemController        *controller.ProblemController
@@ -73,6 +77,7 @@ type RouterConfig struct {
 	SLAHandler       *sla.Handler
 	AIHandler        *ai.Handler
 	CommonHandler    *domainCommon.Handler
+	RoleHandler      *common.RoleHandler
 }
 
 // SetupRoutes 设置路由
@@ -353,9 +358,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// Users
-			users := tenant.(*gin.RouterGroup).Group("/users")
-			{
-				users.GET("", config.CommonHandler.ListUsers)
+			if config.UserController != nil {
+				users := tenant.(*gin.RouterGroup).Group("/users")
+				{
+					users.GET("", config.UserController.ListUsers)
+					users.POST("", config.UserController.CreateUser)
+					users.GET("/:id", config.UserController.GetUser)
+					users.PUT("/:id", config.UserController.UpdateUser)
+					users.DELETE("/:id", config.UserController.DeleteUser)
+					users.PUT("/:id/status", config.UserController.ChangeUserStatus)
+					users.PUT("/:id/reset-password", config.UserController.ResetPassword)
+					users.GET("/stats", config.UserController.GetUserStats)
+					users.POST("/batch", config.UserController.BatchUpdateUsers)
+				}
+			} else {
+				users := tenant.(*gin.RouterGroup).Group("/users")
+				{
+					users.GET("", config.CommonHandler.ListUsers)
+				}
 			}
 
 			// Organization
@@ -371,6 +391,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sys.GET("/tags", config.CommonHandler.ListTags)
 				sys.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
 			}
+
+			// Roles
+			if config.RoleHandler != nil {
+				roles := tenant.(*gin.RouterGroup).Group("/roles")
+				{
+					roles.GET("", config.RoleHandler.ListRoles)
+					roles.POST("", config.RoleHandler.CreateRole)
+					roles.GET("/:id", config.RoleHandler.GetRole)
+					roles.PUT("/:id", config.RoleHandler.UpdateRole)
+					roles.DELETE("/:id", config.RoleHandler.DeleteRole)
+				}
+
+				// Permissions
+				permissions := tenant.(*gin.RouterGroup).Group("/permissions")
+				{
+					permissions.GET("", config.RoleHandler.ListPermissions)
+				}
+			}
 		}
 
 		// ==================== Miscellaneous ====================
@@ -382,6 +420,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
 			{
 				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
+				dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
+				dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
+				dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)
+				dashboard.GET("/sla-data", config.DashboardHandler.GetSLAData)
+				dashboard.GET("/satisfaction-data", config.DashboardHandler.GetSatisfactionData)
+				dashboard.GET("/quick-actions", config.DashboardHandler.GetQuickActions)
+				dashboard.GET("/recent-activities", config.DashboardHandler.GetRecentActivities)
 			}
 		}
 	}

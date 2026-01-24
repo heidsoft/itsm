@@ -36,75 +36,24 @@ import {
   App,
   Tag,
 } from 'antd';
+import { UserApi, type User } from '@/lib/api/user-api';
+
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
 const { Option } = Select;
-
-// 临时使用Mock数据，等后端API调试完成后切换
-const mockUsers = [
-  {
-    id: 1,
-    username: 'admin',
-    email: 'admin@company.com',
-    name: '系统管理员',
-    department: 'IT部门',
-    phone: '13800138000',
-    active: true,
-    tenant_id: 1,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 2,
-    username: 'john.doe',
-    email: 'john.doe@company.com',
-    name: '约翰·多伊',
-    department: 'IT部门',
-    phone: '13800138001',
-    active: true,
-    tenant_id: 1,
-    created_at: '2024-01-02T00:00:00Z',
-    updated_at: '2024-01-02T00:00:00Z',
-  },
-  {
-    id: 3,
-    username: 'jane.smith',
-    email: 'jane.smith@company.com',
-    name: '简·史密斯',
-    department: '财务部门',
-    phone: '13800138002',
-    active: false,
-    tenant_id: 1,
-    created_at: '2024-01-03T00:00:00Z',
-    updated_at: '2024-01-03T00:00:00Z',
-  },
-];
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  name: string;
-  department: string;
-  phone: string;
-  active: boolean;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
-}
 
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();
   const { message } = App.useApp();
 
   // 状态管理
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({ total: 3, active: 2, inactive: 1 });
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
-    total: 3,
+    total: 0,
   });
 
   // 筛选和搜索
@@ -126,35 +75,53 @@ const UserManagement: React.FC = () => {
   const [editForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
 
-  // 模拟API调用 - 后续替换为真实API
-  const handleCreateUser = async (values: Partial<User>) => {
+  // 加载用户列表
+  const loadUsers = async () => {
     setLoading(true);
     try {
-      // 模拟API延迟
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const newUser: User = {
-        id: Math.max(...users.map(u => u.id)) + 1,
-        username: values.username || '',
-        email: values.email || '',
-        name: values.name || '',
-        department: values.department || '',
-        phone: values.phone || '',
-        active: true,
-        tenant_id: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      const params = {
+        page: pagination.current,
+        page_size: pagination.pageSize,
+        status: filters.status || undefined,
+        department: filters.department || undefined,
+        search: filters.search || undefined,
       };
+      const response = await UserApi.getUsers(params);
+      setUsers(response.users);
+      setPagination(prev => ({ ...prev, total: response.pagination.total }));
+      setStats({
+        total: response.pagination.total,
+        active: response.users.filter(u => u.active).length,
+        inactive: response.users.filter(u => !u.active).length,
+      });
+    } catch (error) {
+      message.error('加载用户列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      setUsers([...users, newUser]);
-      setStats(prev => ({
-        ...prev,
-        total: prev.total + 1,
-        active: prev.active + 1,
-      }));
+  useEffect(() => {
+    loadUsers();
+  }, [pagination.current, pagination.pageSize, filters]);
+
+  // 创建用户
+  const handleCreateUser = async (values: any) => {
+    setLoading(true);
+    try {
+      await UserApi.createUser({
+        username: values.username,
+        email: values.email,
+        name: values.name,
+        department: values.department,
+        phone: values.phone,
+        password: values.password,
+        tenant_id: 1,
+      });
       message.success('用户创建成功');
       setIsCreateModalVisible(false);
       createForm.resetFields();
+      loadUsers();
     } catch (error) {
       message.error('创建用户失败');
     } finally {
@@ -162,24 +129,23 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = async (values: Partial<User>) => {
+  // 更新用户
+  const handleUpdateUser = async (values: any) => {
     if (!selectedUser) return;
-
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const updatedUsers = users.map(user =>
-        user.id === selectedUser.id
-          ? { ...user, ...values, updated_at: new Date().toISOString() }
-          : user
-      );
-
-      setUsers(updatedUsers);
+      await UserApi.updateUser(selectedUser.id, {
+        username: values.username,
+        email: values.email,
+        name: values.name,
+        department: values.department,
+        phone: values.phone,
+      });
       message.success('用户更新成功');
       setIsEditModalVisible(false);
       editForm.resetFields();
       setSelectedUser(null);
+      loadUsers();
     } catch (error) {
       message.error('更新用户失败');
     } finally {
@@ -187,22 +153,13 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // 删除用户
   const handleDeleteUser = async (userId: number) => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const userToDelete = users.find(u => u.id === userId);
-      const updatedUsers = users.filter(user => user.id !== userId);
-
-      setUsers(updatedUsers);
-      setStats(prev => ({
-        ...prev,
-        total: prev.total - 1,
-        active: userToDelete?.active ? prev.active - 1 : prev.active,
-        inactive: !userToDelete?.active ? prev.inactive - 1 : prev.inactive,
-      }));
+      await UserApi.deleteUser(userId);
       message.success('用户删除成功');
+      loadUsers();
     } catch (error) {
       message.error('删除用户失败');
     } finally {
@@ -210,67 +167,52 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // 切换用户状态
   const handleToggleUserStatus = async (userId: number, currentStatus: boolean) => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const updatedUsers = users.map(user =>
+      await UserApi.updateUser(userId, { ...{} });
+      setUsers(prev => prev.map(user =>
         user.id === userId
-          ? {
-              ...user,
-              active: !currentStatus,
-              updated_at: new Date().toISOString(),
-            }
+          ? { ...user, active: !currentStatus }
           : user
-      );
-
-      setUsers(updatedUsers);
-      setStats(prev => ({
-        ...prev,
-        active: currentStatus ? prev.active - 1 : prev.active + 1,
-        inactive: currentStatus ? prev.inactive + 1 : prev.inactive - 1,
-      }));
-      message.success(`用户${!currentStatus ? '激活' : '禁用'}成功`);
+      ));
+      message.success('状态更新成功');
+      loadUsers();
     } catch (error) {
-      message.error('更改用户状态失败');
+      message.error('状态更新失败');
     } finally {
       setLoading(false);
     }
   };
 
+  // 重置密码
   const handleResetPassword = async (values: { newPassword: string }) => {
+    if (!selectedUser) return;
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await UserApi.resetPassword(selectedUser.id, values.newPassword);
       message.success('密码重置成功');
       setIsPasswordModalVisible(false);
       passwordForm.resetFields();
       setSelectedUser(null);
     } catch (error) {
-      message.error('重置密码失败');
+      message.error('密码重置失败');
     } finally {
       setLoading(false);
     }
   };
 
   // 搜索和筛选逻辑
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      !filters.search ||
-      user.username.toLowerCase().includes(filters.search.toLowerCase()) ||
-      user.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      user.email.toLowerCase().includes(filters.search.toLowerCase());
+  const handleSearch = (value: string) => {
+    setFilters(prev => ({ ...prev, search: value }));
+    setPagination(prev => ({ ...prev, current: 1 }));
+  };
 
-    const matchesStatus =
-      !filters.status ||
-      (filters.status === 'active' && user.active) ||
-      (filters.status === 'inactive' && !user.active);
-
-    const matchesDepartment = !filters.department || user.department === filters.department;
-
-    return matchesSearch && matchesStatus && matchesDepartment;
-  });
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPagination(prev => ({ ...prev, current: 1 }));
+  };
 
   // 表格列定义
   const columns = [
@@ -474,16 +416,19 @@ const UserManagement: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={filteredUsers}
+          dataSource={users}
           rowKey='id'
           loading={loading}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
-            total: filteredUsers.length,
+            total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            onChange: (page, pageSize) => {
+              setPagination(prev => ({ ...prev, current: page, pageSize }));
+            },
           }}
         />
       </Card>

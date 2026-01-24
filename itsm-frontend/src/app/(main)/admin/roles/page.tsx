@@ -128,7 +128,7 @@ export default function RoleManagement() {
     id: number;
     name: string;
     description?: string;
-    status: string;
+    status?: string;
     permissions: string[];
     created_at?: string;
   }
@@ -270,7 +270,7 @@ export default function RoleManagement() {
     {
       title: '角色信息',
       key: 'info',
-      render: (_: unknown, record: { name: string; description?: string }) => (
+      render: (_: unknown, record: RoleItem) => (
         <div>
           <div className='font-medium text-gray-900'>{record.name}</div>
           <div className='text-sm text-gray-500'>{record.description}</div>
@@ -280,10 +280,10 @@ export default function RoleManagement() {
     {
       title: '状态',
       key: 'status',
-      render: (_: unknown, record: any) => (
+      render: (_: unknown, record: RoleItem) => (
         <Badge
-          status={(record as any).status === 'active' ? 'success' : 'default'}
-          text={(record as any).status === 'active' ? '启用' : '禁用'}
+          status={record.status === 'active' ? 'success' : 'default'}
+          text={record.status === 'active' ? '启用' : '禁用'}
         />
       ),
     },
@@ -553,7 +553,7 @@ export default function RoleManagement() {
       {/* 角色列表 */}
       <Card className='enterprise-card'>
         <Table
-          columns={columns}
+          columns={columns as any}
           dataSource={roles}
           rowKey='id'
           loading={loading}

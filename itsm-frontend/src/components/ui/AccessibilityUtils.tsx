@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
  */
 export interface VisuallyHiddenProps {
   children: React.ReactNode;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
   className?: string;
 }
 
