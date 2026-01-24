@@ -186,12 +186,12 @@ export const useAsync = <T>(
 
 // 前一个值Hook
 export const usePrevious = <T>(value: T): T | undefined => {
-  const ref = useRef<T>();
-  
+  const ref = useRef<T | undefined>(undefined);
+
   useEffect(() => {
     ref.current = value;
-  });
-  
+  }, [value]);
+
   return ref.current;
 };
 
@@ -269,8 +269,8 @@ export const useMediaQuery = (query: string): boolean => {
 // 点击外部Hook
 export const useClickOutside = <T extends HTMLElement>(
   callback: () => void
-): React.RefObject<T> => {
-  const ref = useRef<T>(null);
+): React.RefObject<T | null> => {
+  const ref = useRef<T | null>(null);
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {

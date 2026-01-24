@@ -18,7 +18,7 @@ const statusOptions = [
 
 type SchemaField = {
   key: string;
-  label?: string;
+  label: string;
   type?: string;
   required?: boolean;
   options?: string[];
@@ -29,7 +29,7 @@ const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
   if (!schema) return [];
   if (Array.isArray(schema)) {
     return schema
-      .map((item) => {
+      .map((item): SchemaField | null => {
         if (typeof item !== 'object' || item === null) return null;
         const record = item as Record<string, any>;
         const key = record.key || record.name;
@@ -43,7 +43,7 @@ const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
           placeholder: record.placeholder,
         };
       })
-      .filter((item): item is SchemaField => Boolean(item));
+      .filter((item): item is SchemaField => item !== null);
   }
   if (typeof schema === 'object') {
     const record = schema as Record<string, any>;
@@ -51,7 +51,7 @@ const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
       return normalizeSchemaFields(record.fields);
     }
     return Object.entries(record)
-      .map(([key, value]) => {
+      .map(([key, value]): SchemaField => {
         if (typeof value === 'string') {
           return { key, label: value };
         }

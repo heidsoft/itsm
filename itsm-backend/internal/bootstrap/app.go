@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"itsm-backend/common"
 	"itsm-backend/config"
 	"itsm-backend/controller"
 	"itsm-backend/database"
@@ -215,6 +216,13 @@ func NewApplication() *Application {
 	commonServiceDomain := domainCommon.NewService(commonRepo, cfg.JWT.Secret, sugar, client)
 	commonHandler := domainCommon.NewHandler(commonServiceDomain)
 
+	// Role Handler (in-memory for now)
+	roleHandler := common.NewRoleHandler(client, sugar)
+
+	// User Controller
+	userService := service.NewUserService(client, sugar)
+	userController := controller.NewUserController(userService, sugar)
+
 	// 7. 设置路由
 	r := gin.Default()
 	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
@@ -241,6 +249,7 @@ func NewApplication() *Application {
 		ApplicationController:           applicationController,
 		TicketCategoryController:        ticketCategoryController,
 		TicketTagController:             ticketTagController,
+		UserController:                  userController,
 
 		// CMDB Controller (新增)
 		CMDBController: cmdbController,
@@ -263,6 +272,7 @@ func NewApplication() *Application {
 		SLAHandler:            slaHandler,
 		AIHandler:             aiHandler, // Added AI domain handler
 		CommonHandler:         commonHandler,
+		RoleHandler:           roleHandler,
 	}
 	router.SetupRoutes(r, routerConfig)
 

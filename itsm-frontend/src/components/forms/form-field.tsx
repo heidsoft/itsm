@@ -34,11 +34,13 @@ export const FormField: React.FC<FormFieldProps> = ({
   const fieldContent = (
     <div className="flex-1">
       <div className="relative">
-        {React.cloneElement(children as React.ReactElement, {
-          id: fieldId,
-          name,
-          className: `${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`
-        })}
+        {React.isValidElement(children)
+          ? React.cloneElement(children as React.ReactElement<{ id?: string; name?: string; className?: string }>, {
+              id: fieldId,
+              name,
+              className: `${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`
+            })
+          : children}
       </div>
       
       {/* 错误信息 */}

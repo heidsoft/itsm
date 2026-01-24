@@ -58,7 +58,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 将后端数据转换为前端格式
 const convertBackendData = (backendData: {
-  kpiMetrics?: Array<{ id: string; title: string; value: string | number; unit: string; color: string; trend: string; change: number; changeType: string; description: string }>;
+  kpiMetrics?: Array<{ id: string; title: string; value: string | number; unit: string; color: string; trend?: string; change?: number; changeType?: string; description?: string }>;
   recentActivities?: Array<{ id: string; type: string; title: string; description: string; user: string; timestamp: string; priority?: string; status: string }>;
   quickActions?: Array<{ id: string; title: string; description: string; path: string; color: string; permission?: string }>;
 }): DashboardData => {
@@ -75,10 +75,10 @@ const convertBackendData = (backendData: {
 
   // 映射KPI指标
   kpiMetrics.forEach(metric => {
-    const trend = metric.trend as 'up' | 'down';
-    const changeType = metric.changeType as 'increase' | 'decrease' | 'stable';
-    const changeValue = changeType === 'increase' ? metric.change : changeType === 'decrease' ? -metric.change : 0;
-    const numValue = typeof metric.value === 'string' ? parseFloat(metric.value) : metric.value;
+    const trend = (metric.trend || 'up') as 'up' | 'down';
+    const changeType = (metric.changeType || 'stable') as 'increase' | 'decrease' | 'stable';
+    const changeValue = changeType === 'increase' ? (metric.change || 0) : changeType === 'decrease' ? -(metric.change || 0) : 0;
+    const numValue = typeof metric.value === 'string' ? parseFloat(metric.value) || 0 : (metric.value || 0);
 
     switch (metric.id) {
       case 'total_tickets':

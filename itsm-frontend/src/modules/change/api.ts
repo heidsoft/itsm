@@ -72,4 +72,52 @@ export class ChangeApi {
     static async getRiskAssessment(changeId: number): Promise<RiskAssessment> {
         return httpClient.get<RiskAssessment>(`${BASE_URL}/${changeId}/risk-assessment`);
     }
+
+    /**
+     * 删除变更
+     */
+    static async deleteChange(id: string | number): Promise<void> {
+        return httpClient.delete(`${BASE_URL}/${id}`);
+    }
+
+    /**
+     * 指派变更
+     */
+    static async assignChange(id: string | number, assigneeId: number): Promise<Change> {
+        return httpClient.post<Change>(`${BASE_URL}/${id}/assign`, {
+            assignee_id: assigneeId,
+        });
+    }
+
+    /**
+     * 审批变更（通过/拒绝）
+     */
+    static async approveChange(id: string | number, action: 'approve' | 'reject', comment?: string): Promise<Change> {
+        return httpClient.post<Change>(`${BASE_URL}/${id}/approve`, {
+            action,
+            comment,
+        });
+    }
+
+    /**
+     * 取消变更
+     */
+    static async cancelChange(id: string | number, reason: string): Promise<Change> {
+        return httpClient.post<Change>(`${BASE_URL}/${id}/cancel`, {
+            reason,
+        });
+    }
+
+    /**
+     * 获取变更活动记录
+     */
+    static async getChangeActivity(id: string | number): Promise<Array<{
+        id: number;
+        action: string;
+        description: string;
+        user_id: number;
+        created_at: string;
+    }>> {
+        return httpClient.get(`${BASE_URL}/${id}/activity`);
+    }
 }

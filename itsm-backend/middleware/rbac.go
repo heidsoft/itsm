@@ -69,6 +69,10 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "audit_logs", Action: "read"},
 		{Resource: "ai", Action: "read"},
 		{Resource: "ai", Action: "write"},
+		{Resource: "role", Action: "read"},
+		{Resource: "role", Action: "write"},
+		{Resource: "role", Action: "delete"},
+		{Resource: "permission", Action: "read"},
 	},
 	"manager": {
 		{Resource: "ticket", Action: "read"},
@@ -175,6 +179,9 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/problems/*":           {Resource: "problem", Action: "read"},
 		"/api/v1/changes":              {Resource: "change", Action: "read"},
 		"/api/v1/changes/*":            {Resource: "change", Action: "read"},
+		"/api/v1/roles":                {Resource: "role", Action: "read"},
+		"/api/v1/roles/*":              {Resource: "role", Action: "read"},
+		"/api/v1/permissions":          {Resource: "permission", Action: "read"},
 	},
 	"POST": {
 		"/api/v1/tickets":              {Resource: "ticket", Action: "write"},
@@ -202,6 +209,8 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/problems/*":           {Resource: "problem", Action: "write"},
 		"/api/v1/changes":              {Resource: "change", Action: "write"},
 		"/api/v1/changes/*":            {Resource: "change", Action: "write"},
+		"/api/v1/roles":                {Resource: "role", Action: "write"},
+		"/api/v1/roles/*":              {Resource: "role", Action: "write"},
 	},
 	"PUT": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "write"},
@@ -232,6 +241,7 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "delete"},
 		"/api/v1/problems/*":           {Resource: "problem", Action: "delete"},
 		"/api/v1/changes/*":            {Resource: "change", Action: "delete"},
+		"/api/v1/roles/*":              {Resource: "role", Action: "delete"},
 	},
 }
 
