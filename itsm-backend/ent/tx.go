@@ -66,6 +66,10 @@ type Tx struct {
 	Microservice *MicroserviceClient
 	// Notification is the client for interacting with the Notification builders.
 	Notification *NotificationClient
+	// NotificationPreference is the client for interacting with the NotificationPreference builders.
+	NotificationPreference *NotificationPreferenceClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
 	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
@@ -88,6 +92,8 @@ type Tx struct {
 	ProvisioningTask *ProvisioningTaskClient
 	// RelationshipType is the client for interacting with the RelationshipType builders.
 	RelationshipType *RelationshipTypeClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
 	RootCauseAnalysis *RootCauseAnalysisClient
 	// SLAAlertHistory is the client for interacting with the SLAAlertHistory builders.
@@ -302,6 +308,8 @@ func (tx *Tx) init() {
 	tx.Message = NewMessageClient(tx.config)
 	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
+	tx.NotificationPreference = NewNotificationPreferenceClient(tx.config)
+	tx.Permission = NewPermissionClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
 	tx.ProcessDefinition = NewProcessDefinitionClient(tx.config)
 	tx.ProcessDeployment = NewProcessDeploymentClient(tx.config)
@@ -313,6 +321,7 @@ func (tx *Tx) init() {
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.ProvisioningTask = NewProvisioningTaskClient(tx.config)
 	tx.RelationshipType = NewRelationshipTypeClient(tx.config)
+	tx.Role = NewRoleClient(tx.config)
 	tx.RootCauseAnalysis = NewRootCauseAnalysisClient(tx.config)
 	tx.SLAAlertHistory = NewSLAAlertHistoryClient(tx.config)
 	tx.SLAAlertRule = NewSLAAlertRuleClient(tx.config)

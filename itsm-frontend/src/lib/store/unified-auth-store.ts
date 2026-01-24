@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { httpClient } from '@/app/lib/http-client';
+import { httpClient } from '@/lib/api/http-client';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
 
 // ===================================

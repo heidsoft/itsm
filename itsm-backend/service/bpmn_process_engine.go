@@ -69,9 +69,11 @@ type TaskService interface {
 // CustomProcessEngine 是ProcessEngine接口的实现
 // 充当领域服务(Domain Service)，协调流程定义、实例和任务实体的生命周期
 type CustomProcessEngine struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
-	parser *BPMNParser // 使用自定义的BPMN解析器
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	parser          *BPMNParser       // 使用自定义的BPMN解析器
+	exprEngine      *ExpressionEngine // 表达式引擎
+	expressionVars  map[string]interface{} // 表达式变量
 	// 内部服务
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
@@ -81,14 +83,57 @@ type CustomProcessEngine struct {
 // NewCustomProcessEngine 创建自定义流程引擎实例
 func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) ProcessEngine {
 	engine := &CustomProcessEngine{
-		client: client,
-		logger: logger,
-		parser: NewBPMNParser(),
+		client:          client,
+		logger:          logger,
+		parser:          NewBPMNParser(),
+		exprEngine:      NewExpressionEngine(),
+		expressionVars:  make(map[string]interface{}),
 	}
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
 	engine.taskService = &bpmnTaskService{client: client, logger: logger}
+
+	// 注册流程相关的内置函数
+	engine.registerProcessFunctions()
+
 	return engine
+}
+
+// registerProcessFunctions 注册流程相关的内置函数
+func (e *CustomProcessEngine) registerProcessFunctions() {
+	// 获取任务列表
+	e.exprEngine.RegisterFunction("getTasks", func(assignee string) []interface{} {
+		// TODO: 从数据库查询任务
+		return []interface{}{}
+	})
+
+	// 获取用户信息
+	e.exprEngine.RegisterFunction("getUser", func(userID interface{}) interface{} {
+		return map[string]interface{}{
+			"id":   userID,
+			"name": "User " + fmt.Sprintf("%v", userID),
+		}
+	})
+
+	// 获取当前时间
+	e.exprEngine.RegisterFunction("currentTime", func() int64 {
+		return time.Now().Unix()
+	})
+
+	// 日期计算
+	e.exprEngine.RegisterFunction("addDays", func(timestamp int64, days int) int64 {
+		return timestamp + int64(days*86400)
+	})
+
+	// 数组长度
+	e.exprEngine.RegisterFunction("size", func(arr []interface{}) int {
+		return len(arr)
+	})
+
+	// 随机数
+	e.exprEngine.RegisterFunction("random", func(min, max float64) float64 {
+		return min + (max-min)*float64(time.Now().UnixNano()%10000000)/10000000
+	})
 }
 
 // ProcessDefinitionService 返回流程定义服务
@@ -307,14 +352,32 @@ func (e *CustomProcessEngine) findOutgoingFlows(process *BPMNProcess, sourceRef 
 }
 
 // evaluateCondition 评估流转条件 (Domain Logic)
-// 目前仅支持默认流转，未来可集成 govaluate 或 expr 引擎
+// 使用表达式引擎评估条件
 func (e *CustomProcessEngine) evaluateCondition(flow *BPMNSequenceFlow, variables map[string]interface{}) bool {
 	if flow.ConditionExpression == nil || flow.ConditionExpression.Expression == "" {
 		return true // 无条件则默认通过
 	}
-	// TODO: 集成表达式引擎
-	// 示例: engine.Evaluate(flow.ConditionExpression.Expression, variables)
-	return true // 暂时默认通过
+
+	// 合并变量
+	evalVars := make(map[string]interface{})
+	for k, v := range e.expressionVars {
+		evalVars[k] = v
+	}
+	for k, v := range variables {
+		evalVars[k] = v
+	}
+
+	// 使用表达式引擎评估条件
+	result, err := e.exprEngine.EvaluateCondition(flow.ConditionExpression.Expression, evalVars)
+	if err != nil {
+		e.logger.Warnw("Failed to evaluate condition, defaulting to true",
+			"expression", flow.ConditionExpression.Expression,
+			"error", err,
+		)
+		return true // 评估失败时默认通过
+	}
+
+	return result
 }
 
 func (e *CustomProcessEngine) isEndEvent(process *BPMNProcess, id string) bool {

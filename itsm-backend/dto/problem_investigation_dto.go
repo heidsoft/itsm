@@ -49,12 +49,13 @@ const (
 type SolutionStatus string
 
 const (
-	SolutionStatusProposed    SolutionStatus = "proposed"
-	SolutionStatusApproved    SolutionStatus = "approved"
-	SolutionStatusInProgress  SolutionStatus = "in_progress"
-	SolutionStatusImplemented SolutionStatus = "implemented"
-	SolutionStatusRejected    SolutionStatus = "rejected"
-	SolutionStatusCancelled   SolutionStatus = "cancelled"
+	SolutionStatusProposed               SolutionStatus = "proposed"
+	SolutionStatusApproved               SolutionStatus = "approved"
+	SolutionStatusPendingImplementation  SolutionStatus = "pending_implementation"
+	SolutionStatusInProgress             SolutionStatus = "in_progress"
+	SolutionStatusImplemented            SolutionStatus = "implemented"
+	SolutionStatusRejected               SolutionStatus = "rejected"
+	SolutionStatusCancelled              SolutionStatus = "cancelled"
 )
 
 // ImplementationStatus 实施状态

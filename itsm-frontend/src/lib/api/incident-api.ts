@@ -1,14 +1,14 @@
 import { httpClient } from './http-client';
-import { 
-  API_URLS, 
-  StandardPaginationParams, 
-  StandardApiResponse, 
+import {
+  API_URLS,
+  StandardPaginationParams,
+  StandardApiResponse,
   PaginatedApiResponse,
   normalizePaginationParams,
   normalizeDateRangeParams,
   BatchRequest,
-  BatchResponse
-} from './api-unified';
+  BatchResponse,
+} from './types';
 import { PaginationRequest, PaginationResponse } from './api-config';
 
 // 事件管理API接口

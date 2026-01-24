@@ -83,8 +83,14 @@ export default function TagsPage() {
     Modal.confirm({
       title: "确认删除",
       content: `确定要删除标签 "${record.name}" 吗？`,
-      onOk: () => {
-        message.success("删除功能暂未实现");
+      onOk: async () => {
+        try {
+          await tagService.deleteTag(record.id);
+          message.success("删除成功");
+          fetchTags();
+        } catch (error) {
+          message.error("删除失败");
+        }
       },
     });
   };

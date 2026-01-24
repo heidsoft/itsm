@@ -72,5 +72,9 @@ func (User) Edges() []ent.Edge {
 			Comment("工单附件"),
 		edge.To("ticket_notifications", TicketNotification.Type).
 			Comment("工单通知"),
+		edge.To("notification_preferences", NotificationPreference.Type).
+			Comment("通知偏好"),
+		edge.To("roles", Role.Type).
+			Comment("用户角色"),
 	}
 }

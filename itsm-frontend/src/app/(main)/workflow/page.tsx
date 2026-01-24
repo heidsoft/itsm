@@ -259,10 +259,43 @@ const WorkflowManagementPage = () => {
   const loadWorkflows = useCallback(async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setWorkflows(mockWorkflows);
+      const response = await WorkflowAPI.getWorkflows({
+        page: 1,
+        pageSize: 100,
+      });
+      // 适配后端返回格式
+      const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: any) => ({
+        id: w.id || 0,
+        name: w.name || w.code || 'Unknown',
+        description: w.description || '',
+        category: w.category || 'general',
+        version: w.version || '1.0.0',
+        status: (w.status === 'active' || w.deployed) ? 'active' : 'draft',
+        bpmn_xml: w.bpmn_xml || w.xml || '',
+        created_at: w.createdAt || w.created_at || new Date().toISOString(),
+        updated_at: w.updatedAt || w.updated_at || new Date().toISOString(),
+        instances_count: w.instances_count || 0,
+        running_instances: w.running_instances || 0,
+        created_by: w.createdBy || w.created_by || 'System',
+      }));
+      setWorkflows(adaptedWorkflows);
+      // 基于实际数据计算统计
+      setStats(prev => ({
+        ...prev,
+        total: adaptedWorkflows.length,
+        active: adaptedWorkflows.filter(w => w.status === 'active').length,
+        draft: adaptedWorkflows.filter(w => w.status === 'draft').length,
+        inactive: adaptedWorkflows.filter(w => w.status === 'inactive').length,
+        running: adaptedWorkflows.reduce((sum, w) => sum + w.running_instances, 0),
+        completed: adaptedWorkflows.reduce(
+          (sum, w) => sum + (w.instances_count - w.running_instances),
+          0
+        ),
+      }));
     } catch {
+      // 如果 API 失败，使用模拟数据作为降级
+      console.warn('Failed to load workflows, using mock data');
+      setWorkflows(mockWorkflows);
       message.error(t('workflow.loadFailed'));
     } finally {
       setLoading(false);
@@ -270,25 +303,9 @@ const WorkflowManagementPage = () => {
   }, [mockWorkflows, t]);
 
   const loadStats = useCallback(async () => {
-    try {
-      const currentWorkflows = workflows.length > 0 ? workflows : mockWorkflows;
-      setStats({
-        total: currentWorkflows.length,
-        active: currentWorkflows.filter(w => w.status === 'active').length,
-        draft: currentWorkflows.filter(w => w.status === 'draft').length,
-        inactive: currentWorkflows.filter(w => w.status === 'inactive').length,
-        running: currentWorkflows.reduce((sum, w) => sum + w.running_instances, 0),
-        completed: currentWorkflows.reduce(
-          (sum, w) => sum + (w.instances_count - w.running_instances),
-          0
-        ),
-        todayInstances: Math.floor(Math.random() * 50) + 10, // 模拟今日实例
-        avgExecutionTime: Math.floor(Math.random() * 120) + 30, // 模拟平均执行时间(分钟)
-      });
-    } catch {
-      console.error(t('workflow.loadStatsFailed'));
-    }
-  }, [workflows, mockWorkflows, t]);
+    // 统计已经在 loadWorkflows 中一起计算了
+    // 这里保持空实现作为占位符
+  }, []);
 
   useEffect(() => {
     loadWorkflows();

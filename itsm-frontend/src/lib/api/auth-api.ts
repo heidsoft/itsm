@@ -46,7 +46,19 @@ const API_TIMEOUT = 30000; // 30秒超时
 
 // 统一 token 存储工具
 import { setAccessToken, getAccessToken, clearAuthStorage } from '@/lib/auth/token-storage';
-import { API_URLS } from './api-unified';
+
+// API端点
+const API_ENDPOINTS = {
+  LOGIN: '/api/v1/auth/login',
+  LOGOUT: '/api/v1/auth/logout',
+  REFRESH: '/api/v1/auth/refresh',
+  PROFILE: '/api/v1/auth/profile',
+  VALIDATE: '/api/v1/auth/validate',
+  CSRF: '/api/v1/auth/csrf',
+  WEBAUTHN_CHALLENGE: '/api/v1/auth/webauthn/challenge',
+  WEBAUTHN_VERIFY: '/api/v1/auth/webauthn/verify',
+  SSO_INITIATE: '/api/v1/auth/sso/initiate',
+} as const;
 
 // HTTP客户端配置
 class AuthApiClient {
@@ -63,7 +75,7 @@ class AuthApiClient {
    */
   async getCsrfToken(): Promise<string> {
     try {
-      const response = await fetch(`${this.baseURL}${API_URLS.LOGIN().replace('/login', '')}/csrf`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.CSRF}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -94,7 +106,7 @@ class AuthApiClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-      const response = await fetch(`${this.baseURL}${API_URLS.LOGIN()}`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.LOGIN}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -168,7 +180,7 @@ class AuthApiClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-      const response = await fetch(`${this.baseURL}/api/auth/refresh`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.REFRESH}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -209,7 +221,7 @@ class AuthApiClient {
     try {
       const token = getAccessToken();
       
-      const response = await fetch(`${this.baseURL}/api/auth/logout`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.LOGOUT}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -248,7 +260,7 @@ class AuthApiClient {
    */
   async getWebAuthnChallenge(username: string): Promise<WebAuthnChallengeResponse> {
     try {
-      const response = await fetch(`${this.baseURL}/api/auth/webauthn/challenge`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.WEBAUTHN_CHALLENGE}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -284,7 +296,7 @@ class AuthApiClient {
    */
   async verifyWebAuthn(credential: WebAuthnCredential): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${this.baseURL}/api/auth/webauthn/verify`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.WEBAUTHN_VERIFY}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -322,7 +334,7 @@ class AuthApiClient {
    */
   async initiateSSOLogin(provider: string = 'default'): Promise<{ success: boolean; redirectUrl?: string; error?: string }> {
     try {
-      const response = await fetch(`${this.baseURL}/api/auth/sso/initiate`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.SSO_INITIATE}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -364,7 +376,7 @@ class AuthApiClient {
         return { valid: false, error: 'No token found' };
       }
 
-      const response = await fetch(`${this.baseURL}/api/auth/validate`, {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.VALIDATE}`, {
         method: 'GET',
         credentials: 'include',
         headers: {

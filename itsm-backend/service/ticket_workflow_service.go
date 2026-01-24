@@ -290,8 +290,8 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 			FROM ticket_approvals
 			WHERE id = $5
 		`
-		_, err = s.rawDB.ExecContext(ctx, insertApprovalQuery, 
-			*req.DelegateToUserID, dto.ApprovalStatusPending, time.Now(), time.Now(), 
+		_, err = s.rawDB.ExecContext(ctx, insertApprovalQuery,
+			*req.DelegateToUserID, dto.ApprovalStatusPending, time.Now(), time.Now(),
 			req.ApprovalID)
 		if err != nil {
 			s.logger.Warnw("Failed to create delegated approval", "error", err)
@@ -300,12 +300,49 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 
 	// 检查是否所有审批都已完成
 	if req.Action == "approve" {
-		// TODO: 检查是否进入下一级审批或完成所有审批
-		// 这里简化处理，如果所有审批都通过，更新工单状态
+		// 检查是否还有下一级审批
+		nextLevelQuery := `
+			SELECT id, level, level_name, approver_id FROM ticket_approvals
+			WHERE ticket_id = $1 AND tenant_id = $2 AND level > $3 AND status = $4
+			ORDER BY level ASC LIMIT 1
+		`
+		var nextApprovalID int
+		var nextLevel int
+		var nextLevelName string
+		var nextApproverID int
+		err = s.rawDB.QueryRowContext(ctx, nextLevelQuery, req.TicketID, tenantID, approvalLevel, dto.ApprovalStatusPending).Scan(&nextApprovalID, &nextLevel, &nextLevelName, &nextApproverID)
+
+		if err == sql.ErrNoRows {
+			// 没有下一级审批，所有审批都已完成
+			// 更新工单状态为已审批
+			updateTicketQuery := `
+				UPDATE tickets
+				SET status = 'approved', updated_at = $1
+				WHERE id = $2 AND tenant_id = $3
+			`
+			_, err = s.rawDB.ExecContext(ctx, updateTicketQuery, time.Now(), req.TicketID, tenantID)
+			if err != nil {
+				s.logger.Warnw("Failed to update ticket status to approved", "error", err)
+			}
+		} else if err == nil {
+			// 有下一级审批，激活下一级审批
+			activateQuery := `
+				UPDATE ticket_approvals
+				SET status = $1, updated_at = $2
+				WHERE id = $3 AND tenant_id = $4
+			`
+			_, err = s.rawDB.ExecContext(ctx, activateQuery, dto.ApprovalStatusPending, time.Now(), nextApprovalID, tenantID)
+			if err != nil {
+				s.logger.Warnw("Failed to activate next level approval", "error", err)
+			}
+			s.logger.Infow("Activated next level approval", "ticket_id", req.TicketID, "next_level", nextLevel)
+		} else {
+			s.logger.Warnw("Failed to check next level approval", "error", err)
+		}
 	} else if req.Action == "reject" {
 		// 审批拒绝，更新工单状态
 		updateTicketQuery := `
-			UPDATE tickets 
+			UPDATE tickets
 			SET status = 'rejected', updated_at = $1
 			WHERE id = $2 AND tenant_id = $3
 		`
@@ -475,18 +512,79 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 	}
 
 	// 查询审批信息
+	approvalQuery := `
+		SELECT id, level, level_name, status, approver_id FROM ticket_approvals
+		WHERE ticket_id = $1 AND tenant_id = $2
+		ORDER BY level ASC
+	`
+	rows, err := s.rawDB.QueryContext(ctx, approvalQuery, ticketID, tenantID)
+	if err != nil {
+		s.logger.Warnw("Failed to query approval status", "error", err)
+	}
+	defer rows.Close()
+
+	var approvals []struct {
+		ID          int
+		Level       int
+		LevelName   string
+		Status      string
+		ApproverID  int
+	}
+	for rows.Next() {
+		var a struct {
+			ID          int
+			Level       int
+			LevelName   string
+			Status      string
+			ApproverID  int
+		}
+		if err := rows.Scan(&a.ID, &a.Level, &a.LevelName, &a.Status, &a.ApproverID); err != nil {
+			s.logger.Warnw("Failed to scan approval row", "error", err)
+			continue
+		}
+		approvals = append(approvals, a)
+	}
+
 	var approvalStatus *dto.ApprovalStatus
 	var currentLevel, totalLevels *int
-	// TODO: 实现审批状态查询
+	if len(approvals) > 0 {
+		totalLevelsVal := len(approvals)
+		totalLevels = &totalLevelsVal
+
+		// 找到当前待审批的级别
+		for _, a := range approvals {
+			if a.Status == string(dto.ApprovalStatusPending) {
+				currentLevel = &a.Level
+				approvalStatus = ptrToApprovalStatus(a.Status)
+				break
+			}
+			// 如果有已拒绝的，状态就是已拒绝
+			if a.Status == string(dto.ApprovalStatusRejected) {
+				approvalStatus = ptrToApprovalStatus(a.Status)
+			}
+		}
+
+		// 如果所有审批都通过
+		allApproved := true
+		for _, a := range approvals {
+			if a.Status != string(dto.ApprovalStatusApproved) {
+				allApproved = false
+				break
+			}
+		}
+		if allApproved {
+			approvalStatus = ptrToApprovalStatus(string(dto.ApprovalStatusApproved))
+		}
+	}
 
 	// 构建工单流转状态
 	state := &dto.TicketWorkflowState{
-		TicketID:            ticketID,
-		CurrentStatus:       ticket.Status,
-		ApprovalStatus:      approvalStatus,
+		TicketID:             ticketID,
+		CurrentStatus:        ticket.Status,
+		ApprovalStatus:       approvalStatus,
 		CurrentApprovalLevel: currentLevel,
-		TotalApprovalLevels: totalLevels,
-		AvailableActions:    []dto.TicketWorkflowAction{},
+		TotalApprovalLevels:  totalLevels,
+		AvailableActions:     []dto.TicketWorkflowAction{},
 	}
 
 	// 根据当前状态和用户权限判断可执行的操作
@@ -495,11 +593,11 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 		state.CanAccept = true
 		state.CanForward = true
 		state.CanCC = true
-		state.AvailableActions = append(state.AvailableActions, 
-			dto.WorkflowActionAccept, 
-			dto.WorkflowActionForward, 
+		state.AvailableActions = append(state.AvailableActions,
+			dto.WorkflowActionAccept,
+			dto.WorkflowActionForward,
 			dto.WorkflowActionCC)
-		
+
 		if ticket.RequesterID == userID {
 			state.CanWithdraw = true
 			state.AvailableActions = append(state.AvailableActions, dto.WorkflowActionWithdraw)
@@ -508,28 +606,46 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 		state.CanResolve = true
 		state.CanForward = true
 		state.CanCC = true
-		state.AvailableActions = append(state.AvailableActions, 
+		state.AvailableActions = append(state.AvailableActions,
 			dto.WorkflowActionResolve,
-			dto.WorkflowActionForward, 
+			dto.WorkflowActionForward,
 			dto.WorkflowActionCC)
 	case "resolved":
 		state.CanClose = true
-		state.AvailableActions = append(state.AvailableActions, 
-			dto.WorkflowActionClose, 
+		state.AvailableActions = append(state.AvailableActions,
+			dto.WorkflowActionClose,
 			dto.WorkflowActionReopen)
 	case "closed":
 		state.AvailableActions = append(state.AvailableActions, dto.WorkflowActionReopen)
 	}
 
-	// TODO: 检查审批权限
+	// 检查审批权限
 	if approvalStatus != nil && *approvalStatus == dto.ApprovalStatusPending {
-		state.CanApprove = true
-		state.AvailableActions = append(state.AvailableActions, 
-			dto.WorkflowActionApprove, 
-			dto.WorkflowActionApproveReject)
+		// 检查当前用户是否是当前审批级别的审批人
+		for _, a := range approvals {
+			if a.Level == currentLevelVal(state) && a.ApproverID == userID {
+				state.CanApprove = true
+				state.AvailableActions = append(state.AvailableActions,
+					dto.WorkflowActionApprove,
+					dto.WorkflowActionApproveReject)
+				break
+			}
+		}
 	}
 
 	return state, nil
+}
+
+func currentLevelVal(state *dto.TicketWorkflowState) int {
+	if state.CurrentApprovalLevel == nil {
+		return 0
+	}
+	return *state.CurrentApprovalLevel
+}
+
+func ptrToApprovalStatus(s string) *dto.ApprovalStatus {
+	status := dto.ApprovalStatus(s)
+	return &status
 }
 
 // 辅助函数

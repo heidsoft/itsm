@@ -47,6 +47,10 @@ const (
 	EdgeTicketAttachments = "ticket_attachments"
 	// EdgeTicketNotifications holds the string denoting the ticket_notifications edge name in mutations.
 	EdgeTicketNotifications = "ticket_notifications"
+	// EdgeNotificationPreferences holds the string denoting the notification_preferences edge name in mutations.
+	EdgeNotificationPreferences = "notification_preferences"
+	// EdgeRoles holds the string denoting the roles edge name in mutations.
+	EdgeRoles = "roles"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -77,6 +81,18 @@ const (
 	TicketNotificationsInverseTable = "ticket_notifications"
 	// TicketNotificationsColumn is the table column denoting the ticket_notifications relation/edge.
 	TicketNotificationsColumn = "user_id"
+	// NotificationPreferencesTable is the table that holds the notification_preferences relation/edge.
+	NotificationPreferencesTable = "notification_preferences"
+	// NotificationPreferencesInverseTable is the table name for the NotificationPreference entity.
+	// It exists in this package in order to avoid circular dependency with the "notificationpreference" package.
+	NotificationPreferencesInverseTable = "notification_preferences"
+	// NotificationPreferencesColumn is the table column denoting the notification_preferences relation/edge.
+	NotificationPreferencesColumn = "user_id"
+	// RolesTable is the table that holds the roles relation/edge. The primary key declared below.
+	RolesTable = "user_roles"
+	// RolesInverseTable is the table name for the Role entity.
+	// It exists in this package in order to avoid circular dependency with the "role" package.
+	RolesInverseTable = "roles"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -101,6 +117,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"team_users",
 }
+
+var (
+	// RolesPrimaryKey and RolesColumn2 are the table columns denoting the
+	// primary key for the roles relation (M2M).
+	RolesPrimaryKey = []string{"user_id", "role_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -285,6 +307,34 @@ func ByTicketNotifications(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOpti
 		sqlgraph.OrderByNeighborTerms(s, newTicketNotificationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByNotificationPreferencesCount orders the results by notification_preferences count.
+func ByNotificationPreferencesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newNotificationPreferencesStep(), opts...)
+	}
+}
+
+// ByNotificationPreferences orders the results by notification_preferences terms.
+func ByNotificationPreferences(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNotificationPreferencesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRolesCount orders the results by roles count.
+func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
+	}
+}
+
+// ByRoles orders the results by roles terms.
+func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -311,5 +361,19 @@ func newTicketNotificationsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketNotificationsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TicketNotificationsTable, TicketNotificationsColumn),
+	)
+}
+func newNotificationPreferencesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NotificationPreferencesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, NotificationPreferencesTable, NotificationPreferencesColumn),
+	)
+}
+func newRolesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
 	)
 }

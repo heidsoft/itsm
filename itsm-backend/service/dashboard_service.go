@@ -311,14 +311,16 @@ type QuickActionData struct {
 
 // RecentActivityData 最近活动数据
 type RecentActivityData struct {
-	ID          string `json:"id"`
-	Type        string `json:"type"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	User        string `json:"user"`
-	Timestamp   string `json:"timestamp"`
-	Priority    string `json:"priority,omitempty"`
-	Status      string `json:"status"`
+	ID           int       `json:"id"`
+	Type         string    `json:"type"`
+	TicketID     int       `json:"ticketId"`
+	TicketNumber string    `json:"ticketNumber"`
+	TicketTitle  string    `json:"ticketTitle"`
+	Status       string    `json:"status"`
+	StatusName   string    `json:"statusName"`
+	Operator     string    `json:"operator"`
+	Assignee     string    `json:"assignee"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 // ResponseTimeDistributionData 响应时间分布数据
@@ -843,14 +845,58 @@ func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, sl
 
 // getSatisfactionDataForDashboard 获取满意度数据
 func (s *DashboardService) getSatisfactionDataForDashboard(ctx context.Context, tenantID int, months int) ([]SatisfactionData, error) {
-	// 简化实现，返回示例数据
-	// TODO: 从满意度调查服务查询真实数据
-	return []SatisfactionData{
-		{Month: "1月", Rating: 4.2, Responses: 120},
-		{Month: "2月", Rating: 4.4, Responses: 135},
-		{Month: "3月", Rating: 4.5, Responses: 150},
-		{Month: "4月", Rating: 4.6, Responses: 145},
-	}, nil
+	// 获取最近几个月有评分的工单
+	startTime := time.Now().AddDate(0, -months, 0)
+
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.RatingNotNil(),
+			ticket.RatedAtGTE(startTime),
+		).
+		Order(ent.Desc(ticket.FieldRatedAt)).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get tickets for satisfaction data", "error", err)
+		// 返回空数据而不是错误
+		return []SatisfactionData{}, nil
+	}
+
+	// 按月份分组统计
+	monthlyData := make(map[string]*SatisfactionData)
+
+	for _, t := range tickets {
+		if t.RatedAt.IsZero() || t.Rating == 0 {
+			continue
+		}
+
+		// 按年月分组
+		monthKey := t.RatedAt.Format("2006-01")
+		monthLabel := fmt.Sprintf("%d月", t.RatedAt.Month())
+
+		if monthlyData[monthKey] == nil {
+			monthlyData[monthKey] = &SatisfactionData{
+				Month:    monthLabel,
+				Rating:   0,
+				Responses: 0,
+			}
+		}
+
+		monthlyData[monthKey].Rating += float64(t.Rating)
+		monthlyData[monthKey].Responses++
+	}
+
+	// 转换为切片并计算平均分
+	result := make([]SatisfactionData, 0, len(monthlyData))
+	for _, data := range monthlyData {
+		if data.Responses > 0 {
+			data.Rating = math.Round((data.Rating/float64(data.Responses))*10) / 10
+		}
+		result = append(result, *data)
+	}
+
+	// 按月份排序
+	return result, nil
 }
 
 // getQuickActions 获取快速操作列表
@@ -889,9 +935,53 @@ func (s *DashboardService) getQuickActions() []QuickActionData {
 
 // getRecentActivitiesForDashboard 获取最近活动
 func (s *DashboardService) getRecentActivitiesForDashboard(ctx context.Context, tenantID int, limit int) ([]RecentActivityData, error) {
-	// 简化实现，返回空数组
-	// TODO: 从审计日志或活动日志查询真实数据
-	return []RecentActivityData{}, nil
+	// 获取最近更新的工单作为活动记录
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+		).
+		Order(ent.Desc(ticket.FieldUpdatedAt)).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get tickets for recent activities", "error", err)
+		return []RecentActivityData{}, nil
+	}
+
+	// 获取状态映射
+	statusNames := map[string]string{
+		"open":       "待处理",
+		"in_progress": "处理中",
+		"pending":    "等待中",
+		"resolved":   "已解决",
+		"closed":     "已关闭",
+	}
+
+	activities := make([]RecentActivityData, 0, len(tickets))
+	for _, t := range tickets {
+		// 确定活动类型
+		activityType := "updated"
+		if t.Status == "open" {
+			activityType = "created"
+		} else if t.Status == "resolved" || t.Status == "closed" {
+			activityType = "resolved"
+		}
+
+		activities = append(activities, RecentActivityData{
+			ID:           t.ID,
+			Type:         activityType,
+			TicketID:     t.ID,
+			TicketNumber: t.TicketNumber,
+			TicketTitle:  t.Title,
+			Status:       t.Status,
+			StatusName:   statusNames[t.Status],
+			Operator:     "",
+			Assignee:     "",
+			UpdatedAt:    t.UpdatedAt,
+		})
+	}
+
+	return activities, nil
 }
 
 // getResponseTimeDistribution 获取响应时间分布数据

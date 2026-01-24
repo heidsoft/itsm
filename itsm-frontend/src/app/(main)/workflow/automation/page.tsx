@@ -17,10 +17,11 @@ import {
   Col,
   Typography,
   Tabs,
-  Divider,
   InputNumber,
   Statistic,
   App,
+  message,
+  Spin,
 } from "antd";
 import {
   Plus,
@@ -29,29 +30,12 @@ import {
   Copy,
   PlayCircle,
   Settings,
-  Users,
-  GitBranch,
-  Clock,
-  CheckCircle,
   RefreshCw,
 } from "lucide-react";
-// AppLayout is handled by parent layout
+import { TicketAutomationRuleApi, AutomationRule } from "@/lib/api/ticket-automation-rule-api";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-interface AutomationRule {
-  id: number;
-  name: string;
-  description: string;
-  type: "assignment" | "routing" | "escalation";
-  conditions: Record<string, any>;
-  actions: Record<string, any>;
-  priority: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
 
 const WorkflowAutomationPage = () => {
   const { message } = App.useApp();
@@ -62,65 +46,6 @@ const WorkflowAutomationPage = () => {
   const [activeTab, setActiveTab] = useState("assignment");
   const [automationEnabled, setAutomationEnabled] = useState(true);
 
-  // 模拟数据
-  const mockRules: AutomationRule[] = [
-    {
-      id: 1,
-      name: "高优先级任务自动分配给专家",
-      description: "将高优先级的技术任务自动分配给专家用户",
-      type: "assignment",
-      conditions: {
-        priority: "high",
-        category: "technical",
-      },
-      actions: {
-        assign_to: "expert",
-        method: "round_robin",
-      },
-      priority: 1,
-      is_active: true,
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-15T14:20:00Z",
-    },
-    {
-      id: 2,
-      name: "技术问题智能路由",
-      description: "技术相关问题自动路由到技术支持组",
-      type: "routing",
-      conditions: {
-        category: "technical",
-        priority: "high",
-      },
-      actions: {
-        route_to: "tech_support",
-        notify: true,
-      },
-      priority: 1,
-      is_active: true,
-      created_at: "2024-01-15T09:15:00Z",
-      updated_at: "2024-01-15T11:45:00Z",
-    },
-    {
-      id: 3,
-      name: "高优先级任务4小时自动升级",
-      description: "高优先级任务4小时内未处理自动升级到经理",
-      type: "escalation",
-      conditions: {
-        priority: "high",
-        status: "pending",
-      },
-      actions: {
-        escalate_to: "manager",
-        time_limit: 4,
-        notify: true,
-      },
-      priority: 1,
-      is_active: true,
-      created_at: "2024-01-14T16:20:00Z",
-      updated_at: "2024-01-15T10:30:00Z",
-    },
-  ];
-
   useEffect(() => {
     loadRules();
   }, []);
@@ -128,10 +53,10 @@ const WorkflowAutomationPage = () => {
   const loadRules = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setRules(mockRules);
+      const response = await TicketAutomationRuleApi.listRules();
+      setRules(response.rules || []);
     } catch (error) {
+      console.error("加载自动化规则失败:", error);
       message.error("加载自动化规则失败");
     } finally {
       setLoading(false);
@@ -150,7 +75,7 @@ const WorkflowAutomationPage = () => {
 
   const handleDeleteRule = async (id: number) => {
     try {
-      // 模拟删除
+      await TicketAutomationRuleApi.deleteRule(id);
       message.success("规则删除成功");
       loadRules();
     } catch (error) {
@@ -158,10 +83,18 @@ const WorkflowAutomationPage = () => {
     }
   };
 
-  const handleToggleRule = async (id: number, isActive: boolean) => {
+  const handleToggleRule = async (rule: AutomationRule) => {
     try {
-      // 模拟切换状态
-      message.success(`规则${isActive ? "启用" : "禁用"}成功`);
+      await TicketAutomationRuleApi.updateRule(rule.id, {
+        name: rule.name,
+        description: rule.description || "",
+        type: rule.type,
+        conditions: rule.conditions,
+        actions: rule.actions,
+        priority: rule.priority,
+        is_active: !rule.is_active,
+      });
+      message.success(rule.is_active ? "规则已禁用" : "规则已启用");
       loadRules();
     } catch (error) {
       message.error("操作失败");

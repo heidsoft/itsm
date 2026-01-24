@@ -1,6 +1,12 @@
 /**
  * 统一API配置
- * 基于共享类型定义的API端点和配置
+ *
+ * @deprecated 此文件已弃用，请使用以下替代方案:
+ * - 类型定义: @/lib/api/types
+ * - API端点: @/lib/api/types (API_URLS)
+ * - HTTP客户端: @/lib/api/http-client
+ *
+ * 此文件将在后续版本中删除。
  */
 
 import commonTypes from '../../../shared-types/common-types.json';

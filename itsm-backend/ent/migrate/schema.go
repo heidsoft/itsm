@@ -903,6 +903,64 @@ var (
 		Columns:    NotificationsColumns,
 		PrimaryKey: []*schema.Column{NotificationsColumns[0]},
 	}
+	// NotificationPreferencesColumns holds the columns for the "notification_preferences" table.
+	NotificationPreferencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "email_enabled", Type: field.TypeBool, Default: true},
+		{Name: "sms_enabled", Type: field.TypeBool, Default: false},
+		{Name: "in_app_enabled", Type: field.TypeBool, Default: true},
+		{Name: "push_enabled", Type: field.TypeBool, Default: false},
+		{Name: "frequency", Type: field.TypeString, Default: "immediate"},
+		{Name: "quiet_hours_start", Type: field.TypeTime, Nullable: true},
+		{Name: "quiet_hours_end", Type: field.TypeTime, Nullable: true},
+		{Name: "timezone", Type: field.TypeString, Default: "UTC"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// NotificationPreferencesTable holds the schema information for the "notification_preferences" table.
+	NotificationPreferencesTable = &schema.Table{
+		Name:       "notification_preferences",
+		Columns:    NotificationPreferencesColumns,
+		PrimaryKey: []*schema.Column{NotificationPreferencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "notification_preferences_users_notification_preferences",
+				Columns:    []*schema.Column{NotificationPreferencesColumns[13]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// PermissionsColumns holds the columns for the "permissions" table.
+	PermissionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "role_permissions", Type: field.TypeInt, Nullable: true},
+	}
+	// PermissionsTable holds the schema information for the "permissions" table.
+	PermissionsTable = &schema.Table{
+		Name:       "permissions",
+		Columns:    PermissionsColumns,
+		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "permissions_roles_permissions",
+				Columns:    []*schema.Column{PermissionsColumns[9]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// ProblemsColumns holds the columns for the "problems" table.
 	ProblemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1460,6 +1518,32 @@ var (
 				Name:    "relationshiptype_tenant_id_name",
 				Unique:  true,
 				Columns: []*schema.Column{RelationshipTypesColumns[5], RelationshipTypesColumns[1]},
+			},
+		},
+	}
+	// RolesColumns holds the columns for the "roles" table.
+	RolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "is_system", Type: field.TypeBool, Default: false},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "permission_roles", Type: field.TypeInt, Nullable: true},
+	}
+	// RolesTable holds the schema information for the "roles" table.
+	RolesTable = &schema.Table{
+		Name:       "roles",
+		Columns:    RolesColumns,
+		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "roles_permissions_roles",
+				Columns:    []*schema.Column{RolesColumns[8]},
+				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -2572,6 +2656,31 @@ var (
 			},
 		},
 	}
+	// UserRolesColumns holds the columns for the "user_roles" table.
+	UserRolesColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+	}
+	// UserRolesTable holds the schema information for the "user_roles" table.
+	UserRolesTable = &schema.Table{
+		Name:       "user_roles",
+		Columns:    UserRolesColumns,
+		PrimaryKey: []*schema.Column{UserRolesColumns[0], UserRolesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_roles_user_id",
+				Columns:    []*schema.Column{UserRolesColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_roles_role_id",
+				Columns:    []*schema.Column{UserRolesColumns[1]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ApplicationsTable,
@@ -2601,6 +2710,8 @@ var (
 		MessagesTable,
 		MicroservicesTable,
 		NotificationsTable,
+		NotificationPreferencesTable,
+		PermissionsTable,
 		ProblemsTable,
 		ProcessDefinitionsTable,
 		ProcessDeploymentsTable,
@@ -2612,6 +2723,7 @@ var (
 		PromptTemplatesTable,
 		ProvisioningTasksTable,
 		RelationshipTypesTable,
+		RolesTable,
 		RootCauseAnalysesTable,
 		SLAAlertHistoriesTable,
 		SLAAlertRulesTable,
@@ -2648,6 +2760,7 @@ var (
 		MicroserviceTagsTable,
 		ProjectTagsTable,
 		TeamTagsTable,
+		UserRolesTable,
 	}
 )
 
@@ -2671,7 +2784,10 @@ func init() {
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
+	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
+	PermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	RolesTable.ForeignKeys[0].RefTable = PermissionsTable
 	RootCauseAnalysesTable.ForeignKeys[0].RefTable = TicketsTable
 	SLAAlertHistoriesTable.ForeignKeys[0].RefTable = SLAAlertRulesTable
 	SLAAlertHistoriesTable.ForeignKeys[1].RefTable = TicketsTable
@@ -2721,4 +2837,6 @@ func init() {
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable
 	TeamTagsTable.ForeignKeys[1].RefTable = TagsTable
+	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
+	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
 }

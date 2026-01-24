@@ -14,15 +14,28 @@ import (
 )
 
 type TicketNotificationService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client         *ent.Client
+	logger         *zap.SugaredLogger
+	emailService   *EmailService
+	smsService     *SMSService
 }
 
+// NewTicketNotificationService 创建通知服务
 func NewTicketNotificationService(client *ent.Client, logger *zap.SugaredLogger) *TicketNotificationService {
 	return &TicketNotificationService{
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetEmailService 设置邮件服务
+func (s *TicketNotificationService) SetEmailService(emailService *EmailService) {
+	s.emailService = emailService
+}
+
+// SetSMSService 设置短信服务
+func (s *TicketNotificationService) SetSMSService(smsService *SMSService) {
+	s.smsService = smsService
 }
 
 // SendNotification 发送工单通知
@@ -103,10 +116,58 @@ func (s *TicketNotificationService) SendNotification(
 					s.logger.Warnw("Failed to update notification status", "error", err)
 				}
 			} else if shouldSend {
-				// 异步发送邮件或短信（这里只是标记，实际发送需要后台任务）
-				// TODO: 集成邮件服务和短信服务
+				// 实际发送邮件或短信
+				var sendErr error
+				for _, userID := range req.UserIDs {
+					// 获取用户邮箱和手机号
+					userEntity, _ := s.client.User.Get(ctx, userID)
+					if userEntity == nil {
+						continue
+					}
+
+					// 获取工单信息
+					ticketEntity, _ := s.client.Ticket.Get(ctx, ticketID)
+					if ticketEntity == nil {
+						continue
+					}
+
+					switch req.Channel {
+					case "email":
+						if s.emailService != nil && userEntity.Email != "" {
+							sendErr = s.emailService.SendTicketNotification(
+								ctx,
+								[]string{userEntity.Email},
+								ticketEntity.TicketNumber,
+								ticketEntity.Title,
+								req.Type,
+								req.Content,
+							)
+							if sendErr != nil {
+								s.logger.Errorw("Failed to send email notification", "error", sendErr, "user_id", userID)
+							}
+						}
+					case "sms":
+						if s.smsService != nil && userEntity.Phone != "" {
+							sendErr = s.smsService.SendTicketNotification(
+								ctx,
+								[]string{userEntity.Phone},
+								ticketEntity.TicketNumber,
+								req.Type,
+							)
+							if sendErr != nil {
+								s.logger.Errorw("Failed to send SMS notification", "error", sendErr, "user_id", userID)
+							}
+						}
+					}
+				}
+
+				// 更新通知状态
+				status := "sent"
+				if sendErr != nil {
+					status = "failed"
+				}
 				_, err = s.client.TicketNotification.UpdateOneID(notification.ID).
-					SetStatus("sent").
+					SetStatus(status).
 					SetNillableSentAt(&now).
 					Save(ctx)
 				if err != nil {

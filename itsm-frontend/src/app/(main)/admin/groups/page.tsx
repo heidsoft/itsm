@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import React, { useState } from 'react';
+import { App, Modal, message } from 'antd';
 // 用户组数据类型定义
 interface Group {
   id: number;
@@ -86,6 +87,7 @@ const mockGroups: Group[] = [
 ];
 
 const GroupManagement = () => {
+  const { message } = App.useApp();
   const [groups, setGroups] = useState<Group[]>(mockGroups);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -169,12 +171,19 @@ const GroupManagement = () => {
   const handleDeleteGroup = (groupId: number) => {
     const group = groups.find(g => g.id === groupId);
     if (group?.type === 'system') {
-      alert('系统组不能删除！');
+      message.warning('系统组不能删除！');
       return;
     }
-    if (confirm('确定要删除这个用户组吗？')) {
-      setGroups(groups.filter(group => group.id !== groupId));
-    }
+    Modal.confirm({
+      title: '确认删除',
+      content: '确定要删除这个用户组吗？',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: () => {
+        setGroups(groups.filter(g => g.id !== groupId));
+        message.success('删除成功');
+      },
+    });
   };
 
   const handleToggleStatus = (groupId: number) => {

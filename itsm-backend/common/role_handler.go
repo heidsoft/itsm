@@ -189,17 +189,17 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	if req.Name != "" {
-		existingRole.Name = req.Name
+	if req.Name != nil && *req.Name != "" {
+		existingRole.Name = *req.Name
 	}
-	if req.Description != "" {
-		existingRole.Description = req.Description
+	if req.Description != nil && *req.Description != "" {
+		existingRole.Description = *req.Description
 	}
 	if req.Permissions != nil {
 		existingRole.Permissions = req.Permissions
 	}
-	if req.Status != "" {
-		existingRole.Status = req.Status
+	if req.Status != nil && *req.Status != "" {
+		existingRole.Status = *req.Status
 	}
 
 	existingRole.UpdatedAt = time.Now().Format(time.RFC3339)

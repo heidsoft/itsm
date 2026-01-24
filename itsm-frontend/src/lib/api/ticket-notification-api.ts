@@ -42,19 +42,24 @@ export interface SendTicketNotificationRequest {
   content: string;
 }
 
-export interface NotificationPreferences {
-  user_id: number;
+export interface NotificationPreferenceItem {
+  event_type: string;
   email_enabled: boolean;
   in_app_enabled: boolean;
   sms_enabled: boolean;
-  sla_warning_time: number;
 }
 
-export interface UpdateNotificationPreferencesRequest {
-  email_enabled: boolean;
-  in_app_enabled: boolean;
-  sms_enabled: boolean;
-  sla_warning_time: number;
+export interface NotificationPreferencesResponse {
+  preferences: NotificationPreferenceItem[];
+  event_types: Array<{
+    type: string;
+    name: string;
+    description: string;
+  }>;
+}
+
+export interface BulkUpdatePreferencesRequest {
+  preferences: NotificationPreferenceItem[];
 }
 
 export class TicketNotificationApi {
@@ -91,16 +96,25 @@ export class TicketNotificationApi {
   }
 
   // 获取用户通知偏好
-  static async getNotificationPreferences(userId: number): Promise<NotificationPreferences> {
-    return httpClient.get<NotificationPreferences>(`/api/v1/users/${userId}/notification-preferences`);
+  static async getNotificationPreferences(): Promise<NotificationPreferencesResponse> {
+    return httpClient.get<NotificationPreferencesResponse>('/api/v1/notification-preferences');
   }
 
-  // 更新用户通知偏好
+  // 更新用户通知偏好（单个或批量）
   static async updateNotificationPreferences(
-    userId: number,
-    data: UpdateNotificationPreferencesRequest
-  ): Promise<NotificationPreferences> {
-    return httpClient.put<NotificationPreferences>(`/api/v1/users/${userId}/notification-preferences`, data);
+    data: BulkUpdatePreferencesRequest
+  ): Promise<NotificationPreferencesResponse> {
+    return httpClient.put<NotificationPreferencesResponse>('/api/v1/notification-preferences', data);
+  }
+
+  // 重置为默认偏好
+  static async resetNotificationPreferences(): Promise<{ reset: boolean }> {
+    return httpClient.post<{ reset: boolean }>('/api/v1/notification-preferences/reset', {});
+  }
+
+  // 初始化默认通知偏好
+  static async initNotificationPreferences(): Promise<{ initialized: boolean }> {
+    return httpClient.post<{ initialized: boolean }>('/api/v1/notification-preferences/init', {});
   }
 }
 

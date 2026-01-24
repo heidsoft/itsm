@@ -22,5 +22,6 @@ func SetupAuthRoutes(r *gin.RouterGroup, authController *controller.AuthControll
 		protected.GET("/user-info", authController.GetUserInfo)
 		protected.GET("/tenants", authController.GetUserTenants)
 		protected.POST("/switch-tenant", authController.SwitchTenant)
+		protected.POST("/logout", authController.Logout)
 	}
 }

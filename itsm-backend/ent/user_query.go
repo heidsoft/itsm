@@ -7,7 +7,9 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/role"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticketnotification"
@@ -23,15 +25,17 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                     *QueryContext
-	order                   []user.OrderOption
-	inters                  []Interceptor
-	predicates              []predicate.User
-	withDepartmentRef       *DepartmentQuery
-	withTicketComments      *TicketCommentQuery
-	withTicketAttachments   *TicketAttachmentQuery
-	withTicketNotifications *TicketNotificationQuery
-	withFKs                 bool
+	ctx                         *QueryContext
+	order                       []user.OrderOption
+	inters                      []Interceptor
+	predicates                  []predicate.User
+	withDepartmentRef           *DepartmentQuery
+	withTicketComments          *TicketCommentQuery
+	withTicketAttachments       *TicketAttachmentQuery
+	withTicketNotifications     *TicketNotificationQuery
+	withNotificationPreferences *NotificationPreferenceQuery
+	withRoles                   *RoleQuery
+	withFKs                     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -149,6 +153,50 @@ func (uq *UserQuery) QueryTicketNotifications() *TicketNotificationQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(ticketnotification.Table, ticketnotification.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketNotificationsTable, user.TicketNotificationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryNotificationPreferences chains the current query on the "notification_preferences" edge.
+func (uq *UserQuery) QueryNotificationPreferences() *NotificationPreferenceQuery {
+	query := (&NotificationPreferenceClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(notificationpreference.Table, notificationpreference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.NotificationPreferencesTable, user.NotificationPreferencesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRoles chains the current query on the "roles" edge.
+func (uq *UserQuery) QueryRoles() *RoleQuery {
+	query := (&RoleClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(role.Table, role.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.RolesTable, user.RolesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -343,15 +391,17 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:                  uq.config,
-		ctx:                     uq.ctx.Clone(),
-		order:                   append([]user.OrderOption{}, uq.order...),
-		inters:                  append([]Interceptor{}, uq.inters...),
-		predicates:              append([]predicate.User{}, uq.predicates...),
-		withDepartmentRef:       uq.withDepartmentRef.Clone(),
-		withTicketComments:      uq.withTicketComments.Clone(),
-		withTicketAttachments:   uq.withTicketAttachments.Clone(),
-		withTicketNotifications: uq.withTicketNotifications.Clone(),
+		config:                      uq.config,
+		ctx:                         uq.ctx.Clone(),
+		order:                       append([]user.OrderOption{}, uq.order...),
+		inters:                      append([]Interceptor{}, uq.inters...),
+		predicates:                  append([]predicate.User{}, uq.predicates...),
+		withDepartmentRef:           uq.withDepartmentRef.Clone(),
+		withTicketComments:          uq.withTicketComments.Clone(),
+		withTicketAttachments:       uq.withTicketAttachments.Clone(),
+		withTicketNotifications:     uq.withTicketNotifications.Clone(),
+		withNotificationPreferences: uq.withNotificationPreferences.Clone(),
+		withRoles:                   uq.withRoles.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -399,6 +449,28 @@ func (uq *UserQuery) WithTicketNotifications(opts ...func(*TicketNotificationQue
 		opt(query)
 	}
 	uq.withTicketNotifications = query
+	return uq
+}
+
+// WithNotificationPreferences tells the query-builder to eager-load the nodes that are connected to
+// the "notification_preferences" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithNotificationPreferences(opts ...func(*NotificationPreferenceQuery)) *UserQuery {
+	query := (&NotificationPreferenceClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withNotificationPreferences = query
+	return uq
+}
+
+// WithRoles tells the query-builder to eager-load the nodes that are connected to
+// the "roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithRoles(opts ...func(*RoleQuery)) *UserQuery {
+	query := (&RoleClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withRoles = query
 	return uq
 }
 
@@ -481,11 +553,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [6]bool{
 			uq.withDepartmentRef != nil,
 			uq.withTicketComments != nil,
 			uq.withTicketAttachments != nil,
 			uq.withTicketNotifications != nil,
+			uq.withNotificationPreferences != nil,
+			uq.withRoles != nil,
 		}
 	)
 	if withFKs {
@@ -535,6 +609,22 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			func(n *User, e *TicketNotification) {
 				n.Edges.TicketNotifications = append(n.Edges.TicketNotifications, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withNotificationPreferences; query != nil {
+		if err := uq.loadNotificationPreferences(ctx, query, nodes,
+			func(n *User) { n.Edges.NotificationPreferences = []*NotificationPreference{} },
+			func(n *User, e *NotificationPreference) {
+				n.Edges.NotificationPreferences = append(n.Edges.NotificationPreferences, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withRoles; query != nil {
+		if err := uq.loadRoles(ctx, query, nodes,
+			func(n *User) { n.Edges.Roles = []*Role{} },
+			func(n *User, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -657,6 +747,97 @@ func (uq *UserQuery) loadTicketNotifications(ctx context.Context, query *TicketN
 			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadNotificationPreferences(ctx context.Context, query *NotificationPreferenceQuery, nodes []*User, init func(*User), assign func(*User, *NotificationPreference)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(notificationpreference.FieldUserID)
+	}
+	query.Where(predicate.NotificationPreference(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.NotificationPreferencesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*User, init func(*User), assign func(*User, *Role)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.RolesTable)
+		s.Join(joinT).On(s.C(role.FieldID), joinT.C(user.RolesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(user.RolesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.RolesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Role](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "roles" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

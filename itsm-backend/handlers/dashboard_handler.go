@@ -258,14 +258,14 @@ func convertRecentActivities(activities []service.RecentActivityData) []RecentAc
 	result := make([]RecentActivity, len(activities))
 	for i, a := range activities {
 		result[i] = RecentActivity{
-			ID:          a.ID,
+			ID:          strconv.Itoa(a.ID),
 			Type:        a.Type,
-			Title:       a.Title,
-			Description: a.Description,
-			User:        a.User,
-			Timestamp:   a.Timestamp,
-			Priority:    a.Priority,
-			Status:      a.Status,
+			Title:       a.TicketTitle,
+			Description: a.TicketNumber,
+			User:        a.Operator,
+			Timestamp:   a.UpdatedAt.Format("2006-01-02 15:04:05"),
+			Priority:    "",
+			Status:      a.StatusName,
 		}
 	}
 	return result

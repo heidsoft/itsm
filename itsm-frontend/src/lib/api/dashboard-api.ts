@@ -1,4 +1,4 @@
-import { httpClient } from '../../app/lib/http-client';
+import { httpClient } from './http-client';
 import {
   DashboardWidget,
   Dashboard,

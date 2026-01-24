@@ -5,11 +5,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { Clock, ArrowLeft, Info, AlertCircle } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { ServiceItem, ServiceStatus } from '@/types/service-catalog';
+import { App, message } from 'antd';
 
 const ServiceRequestPage = () => {
   const params = useParams();
   const router = useRouter();
   const serviceId = parseInt(params.serviceId as string);
+  const { message } = App.useApp();
 
   const [catalog, setCatalog] = useState<ServiceItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,16 +54,16 @@ const ServiceRequestPage = () => {
 
     if (!catalog) return;
     if (!complianceAck) {
-      alert('请先确认合规条款后再提交。');
+      message.warning('请先确认合规条款后再提交。');
       return;
     }
     if (!expireAtLocal) {
-      alert('请填写到期时间（用于自动回收）。');
+      message.warning('请填写到期时间（用于自动回收）。');
       return;
     }
     const expireAtISO = new Date(expireAtLocal).toISOString();
     if (Number.isNaN(Date.parse(expireAtISO))) {
-      alert('到期时间格式不正确，请重新选择。');
+      message.warning('到期时间格式不正确，请重新选择。');
       return;
     }
 
@@ -70,7 +72,7 @@ const ServiceRequestPage = () => {
       .map(s => s.trim())
       .filter(Boolean);
     if (needsPublicIP && sourceIPWhitelist.length === 0) {
-      alert('申请公网访问必须提供源IP白名单（用逗号或换行分隔）。');
+      message.warning('申请公网访问必须提供源IP白名单（用逗号或换行分隔）。');
       return;
     }
 
@@ -90,11 +92,11 @@ const ServiceRequestPage = () => {
         },
       });
 
-      alert(`服务请求 "${catalog.name}" 已成功提交！`);
+      message.success(`服务请求 "${catalog.name}" 已成功提交！`);
       router.push('/my-requests');
     } catch (err) {
       console.error('Failed to create service request:', err);
-      alert('提交服务请求失败，请稍后重试');
+      message.error('提交服务请求失败，请稍后重试');
     } finally {
       setSubmitting(false);
     }
