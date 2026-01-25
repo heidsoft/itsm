@@ -311,7 +311,7 @@ export const SatisfactionDashboard: React.FC = () => {
       render: (score: number) => (
         <Space>
           <Rate disabled defaultValue={score} style={{ fontSize: 12 }} />
-          <Tag color={getScoreColor(score) >= 4.0 ? "green" : "orange"}>
+          <Tag color={score >= 4.0 ? "green" : "orange"}>
             {getScoreLevel(score)}
           </Tag>
         </Space>

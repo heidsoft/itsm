@@ -22,6 +22,7 @@ import { antdTheme } from '@/lib/antd-theme';
 import { colors } from '@/lib/design-system/colors';
 import { AuthService } from '@/lib/services/auth-service';
 import { logger } from '@/lib/env';
+import { useAuthStoreHydration } from '@/lib/store/auth-store';
 
 const { Text, Title } = Typography;
 
@@ -32,6 +33,9 @@ const { Text, Title } = Typography;
 export default function LoginPage() {
   const router = useRouter();
   const [form] = Form.useForm();
+
+  // Hydrate auth store
+  useAuthStoreHydration();
 
   // 状态管理
   const [loading, setLoading] = useState(false);

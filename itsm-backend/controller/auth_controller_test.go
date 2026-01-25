@@ -35,7 +35,7 @@ func setupTestAuthController(t *testing.T) (*gin.Engine, *ent.Client, *AuthContr
 	logger := zaptest.NewLogger(t).Sugar()
 
 	// 创建服务
-	authService := service.NewAuthService(client, "test-secret", logger)
+	authService := service.NewAuthService(client, "test-secret", logger, nil)
 
 	// 创建控制器
 	authController := NewAuthController(authService)
@@ -489,7 +489,7 @@ func BenchmarkAuthController_Login(b *testing.B) {
 	logger := zaptest.NewLogger(b).Sugar()
 
 	// 创建服务
-	authService := service.NewAuthService(client, "test-secret", logger)
+	authService := service.NewAuthService(client, "test-secret", logger, nil)
 
 	// 创建控制器
 	authController := NewAuthController(authService)
@@ -558,7 +558,7 @@ func BenchmarkAuthController_RefreshToken(b *testing.B) {
 	logger := zaptest.NewLogger(b).Sugar()
 
 	// 创建服务
-	authService := service.NewAuthService(client, "test-secret", logger)
+	authService := service.NewAuthService(client, "test-secret", logger, nil)
 
 	// 创建控制器
 	authController := NewAuthController(authService)

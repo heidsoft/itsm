@@ -253,7 +253,7 @@ func (s *ApprovalService) ListWorkflows(ctx context.Context, filters map[string]
 
 	responses := make([]*dto.ApprovalWorkflowResponse, len(workflows))
 	for i, workflow := range workflows {
-		responses[i] = s.toWorkflowResponse(workflow)
+		responses[i] = s.toWorkflowResponse(ctx, workflow)
 	}
 
 	return responses, total, nil

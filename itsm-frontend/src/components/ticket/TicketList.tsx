@@ -36,7 +36,7 @@ import { useRouter } from 'next/navigation';
 
 import { TicketApi } from '@/lib/api/ticket-api';
 import type { Ticket } from '@/lib/api/types';
-import { useTicketListStore } from '@/lib/store/ticket-list-store';
+import { useTickets } from '@/lib/hooks/useTickets';
 import TicketBatchOperations from './TicketBatchOperations';
 
 type ListTicketsRequest = Record<string, any>;
@@ -92,34 +92,44 @@ const TicketList: React.FC<TicketListProps> = ({
   const {
     tickets,
     loading,
-    total,
-    page,
-    pageSize,
+    pagination,
     filters,
-    selectedTickets,
     fetchTickets,
-    updateFilter,
-    clearFilters,
-    setPage,
-    setPageSize,
-    selectTicket,
-    deselectTicket,
-    deselectAll,
+    updateFilters,
+    updatePagination,
     deleteTicket,
     batchDeleteTickets,
-  } = useTicketListStore();
+  } = useTickets();
 
   // 本地状态
+  const [selectedTickets, setSelectedTickets] = useState<Set<number>>(new Set());
   const [searchValue, setSearchValue] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
   const initialFiltersRef = React.useRef(initialFilters);
 
+  // 选择操作
+  const selectTicket = useCallback((id: number) => {
+    setSelectedTickets(prev => new Set(prev).add(id));
+  }, []);
+  const deselectTicket = useCallback((id: number) => {
+    setSelectedTickets(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+  const deselectAll = useCallback(() => {
+    setSelectedTickets(new Set());
+  }, []);
+  const clearFilters = useCallback(() => {
+    updateFilters({});
+  }, [updateFilters]);
+
   // 初始化加载
   useEffect(() => {
-    fetchTickets({ ...initialFiltersRef.current });
-    // 后续数据刷新由事件处理函数触发，避免依赖函数引用变化造成重复循环
+    fetchTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -127,20 +137,19 @@ const TicketList: React.FC<TicketListProps> = ({
   const handleSearch = useCallback(
     (value: string) => {
       setSearchValue(value);
-      updateFilter('keyword', value || undefined);
-      fetchTickets({ ...filters, keyword: value || undefined, page: 1 });
+      updateFilters({ keyword: value || undefined });
+      fetchTickets();
     },
-    [filters, updateFilter, fetchTickets]
+    [updateFilters, fetchTickets]
   );
 
   // 过滤器变更处理
   const handleFilterChange = useCallback(
     (key: keyof ListTicketsRequest, value: unknown) => {
-      updateFilter(key, value);
-      const newFilters = { ...filters, [key]: value, page: 1 };
-      fetchTickets(newFilters);
+      updateFilters({ [key]: value });
+      fetchTickets();
     },
-    [filters, updateFilter, fetchTickets]
+    [updateFilters, fetchTickets]
   );
 
   // 分页变更处理
@@ -149,16 +158,10 @@ const TicketList: React.FC<TicketListProps> = ({
       const newPage = pagination.current || 1;
       const newPageSize = pagination.pageSize || 20;
 
-      setPage(newPage);
-      setPageSize(newPageSize);
-
-      fetchTickets({
-        ...filters,
-        page: newPage,
-        page_size: newPageSize,
-      });
+      updatePagination(newPage, newPageSize);
+      fetchTickets();
     },
-    [filters, setPage, setPageSize, fetchTickets]
+    [updatePagination, fetchTickets]
   );
 
   // 刷新数据
@@ -191,15 +194,15 @@ const TicketList: React.FC<TicketListProps> = ({
 
   // 批量删除
   const handleBatchDelete = useCallback(async () => {
-    if (selectedTickets.length === 0) {
+    if (selectedTickets.size === 0) {
       message.warning('请选择要删除的工单');
       return;
     }
 
     try {
-      const ids = selectedTickets.map(ticket => ticket.id);
+      const ids = Array.from(selectedTickets);
       await batchDeleteTickets(ids);
-      message.success(`成功删除 ${selectedTickets.length} 个工单`);
+      message.success(`成功删除 ${selectedTickets.size} 个工单`);
       deselectAll();
     } catch (error) {
       console.error('Batch delete error:', error);
@@ -395,16 +398,16 @@ const TicketList: React.FC<TicketListProps> = ({
   // 行选择配置
   const rowSelection: TableProps<Ticket>['rowSelection'] = useMemo(
     () => ({
-      selectedRowKeys: selectedTickets.map(ticket => ticket.id),
+      selectedRowKeys: Array.from(selectedTickets),
       onChange: (selectedRowKeys: React.Key[], selectedRows: Ticket[]) => {
         deselectAll();
-        selectedRows.forEach(ticket => selectTicket(ticket));
+        selectedRows.forEach(ticket => selectTicket(ticket.id));
       },
       onSelectAll: (selected: boolean, selectedRows: Ticket[], changeRows: Ticket[]) => {
         if (selected) {
-          changeRows.forEach(ticket => selectTicket(ticket));
+          changeRows.forEach(ticket => selectTicket(ticket.id));
         } else {
-          changeRows.forEach(ticket => deselectTicket(ticket));
+          changeRows.forEach(ticket => deselectTicket(ticket.id));
         }
       },
     }),
@@ -436,9 +439,9 @@ const TicketList: React.FC<TicketListProps> = ({
             </Col>
             <Col>
               <Space>
-                {selectedTickets.length > 0 && (
+                {selectedTickets.size > 0 && (
                   <Button danger icon={<DeleteOutlined />} onClick={handleBatchDelete}>
-                    批量删除 ({selectedTickets.length})
+                    批量删除 ({selectedTickets.size})
                   </Button>
                 )}
                 <Button icon={<ExportOutlined />} onClick={handleExport}>
@@ -523,9 +526,9 @@ const TicketList: React.FC<TicketListProps> = ({
       )}
 
       {/* 批量操作工具栏 */}
-      {!embedded && selectedTickets.length > 0 && (
+      {!embedded && selectedTickets.size > 0 && (
         <TicketBatchOperations
-          selectedTickets={selectedTickets}
+          selectedTickets={tickets.filter(t => selectedTickets.has(t.id))}
           onOperationComplete={() => fetchTickets(filters)}
           onSelectionClear={deselectAll}
         />
@@ -539,9 +542,9 @@ const TicketList: React.FC<TicketListProps> = ({
           rowSelection={embedded ? undefined : rowSelection}
           loading={loading}
           pagination={{
-            current: page,
-            pageSize: pageSize,
-            total: total,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,

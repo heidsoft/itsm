@@ -6,10 +6,6 @@ import LoginPage from '../page';
 
 // Create mock functions before any imports
 const mockLogin = jest.fn();
-const mockSuccess = jest.fn();
-const mockError = jest.fn();
-const mockWarning = jest.fn();
-const mockInfo = jest.fn();
 const mockPush = jest.fn();
 
 // Mock auth service
@@ -17,16 +13,6 @@ jest.mock('@/lib/services/auth-service', () => ({
   AuthService: {
     login: mockLogin,
   },
-}));
-
-// Mock UI store
-jest.mock('@/lib/store/ui-store', () => ({
-  useNotifications: () => ({
-    success: mockSuccess,
-    error: mockError,
-    warning: mockWarning,
-    info: mockInfo,
-  }),
 }));
 
 // Mock next/navigation
@@ -226,6 +212,11 @@ describe('LoginPage', () => {
 
       await waitFor(() => {
         expect(mockSuccess).toHaveBeenCalledWith('登录成功');
+      });
+      
+      // Should redirect to dashboard
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/dashboard');
       });
     });
 

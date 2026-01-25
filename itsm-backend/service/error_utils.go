@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"go.uber.org/zap"
 )
@@ -65,7 +64,7 @@ func LogError(logger *zap.SugaredLogger, message string, err error) {
 func LogErrorWithCtx(logger *zap.SugaredLogger, message string, err error, context map[string]interface{}) {
 	if err != nil {
 		context["error"] = err.Error()
-		logger.Errorw(message, context...)
+		logger.Errorw(message, zap.Any("context", context))
 	}
 }
 
@@ -174,7 +173,10 @@ func (b *BatchProcess) Add(index int, err error) {
 
 // Result 返回处理结果
 func (b *BatchProcess) Result() (success int, failed int) {
-	return len(b.Errors) == 0, len(b.Errors)
+	if len(b.Errors) == 0 {
+		return 0, 0 // 表示没有失败
+	}
+	return 0, len(b.Errors)
 }
 
 // Summary 返回错误摘要
@@ -182,21 +184,14 @@ func (b *BatchProcess) Summary() string {
 	if len(b.Errors) == 0 {
 		return "All operations succeeded"
 	}
-	return fmt.Sprintf("%d operations failed: %v", len(b.Errors), b.Errors)
+	return fmt.Sprintf("%d operations failed", len(b.Errors))
 }
 
 // LogResult 记录处理结果
-func (b *BatchProcess) LogResult() {
+func (b *BatchProcess) LogResult(logger *zap.SugaredLogger) {
 	if len(b.Errors) == 0 {
-		log.Printf("%s: All %d operations succeeded\n", b.Operation, b.successCount())
+		logger.Infow(b.Operation + ": All operations succeeded")
 	} else {
-		b.Logger.Warnw(b.Operation+" completed with errors",
-			"success", b.successCount(),
-			"failed", len(b.Errors),
-		)
+		logger.Warnw(b.Operation+" completed with errors", "failed", len(b.Errors))
 	}
-}
-
-func (b *BatchProcess) successCount() int {
-	return 0 // 实际使用时计算
 }

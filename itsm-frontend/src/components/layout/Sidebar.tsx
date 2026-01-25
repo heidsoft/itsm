@@ -3,18 +3,18 @@
 import React from 'react';
 import { Layout, Menu, theme, Badge } from 'antd';
 import {
-  DashboardOutlined,
-  FileTextOutlined,
-  ExclamationCircleOutlined,
-  BookOutlined,
-  BarChartOutlined,
-  DatabaseOutlined,
-  QuestionCircleOutlined,
-  CalendarOutlined,
-  DeploymentUnitOutlined,
-  SafetyOutlined,
-  RiseOutlined,
-} from '@ant-design/icons';
+  LayoutDashboard,
+  FileText,
+  AlertCircle,
+  HelpCircle,
+  BarChart3,
+  Database,
+  Book,
+  Calendar,
+  GitMerge,
+  Shield,
+  TrendingUp,
+} from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
@@ -23,12 +23,15 @@ import { useI18n } from '@/lib/i18n';
 
 const { Sider } = Layout;
 
+// 图标样式，统一大小
+const iconStyle = { width: 16, height: 16 };
+
 // 菜单配置
 const getMenuConfig = (t: any) => ({
   main: [
     {
       key: '/dashboard',
-      icon: <DashboardOutlined />,
+      icon: <LayoutDashboard style={iconStyle} />,
       label: t('dashboard.title'),
       path: '/dashboard',
       permission: 'dashboard:view',
@@ -36,7 +39,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/tickets',
-      icon: <FileTextOutlined />,
+      icon: <FileText style={iconStyle} />,
       label: t('tickets.title'),
       path: '/tickets',
       permission: 'ticket:view',
@@ -45,7 +48,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/incidents',
-      icon: <ExclamationCircleOutlined />,
+      icon: <AlertCircle style={iconStyle} />,
       label: t('incidents.title'),
       path: '/incidents',
       permission: 'incident:view',
@@ -53,7 +56,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/problems',
-      icon: <QuestionCircleOutlined />,
+      icon: <HelpCircle style={iconStyle} />,
       label: t('problems.title'),
       path: '/problems',
       permission: 'problem:view',
@@ -61,7 +64,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/changes',
-      icon: <BarChartOutlined />,
+      icon: <BarChart3 style={iconStyle} />,
       label: t('changes.title'),
       path: '/changes',
       permission: 'change:view',
@@ -69,7 +72,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/cmdb',
-      icon: <DatabaseOutlined />,
+      icon: <Database style={iconStyle} />,
       label: 'CMDB',
       path: '/cmdb',
       permission: 'cmdb:view',
@@ -77,7 +80,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/service-catalog',
-      icon: <BookOutlined />,
+      icon: <Book style={iconStyle} />,
       label: t('serviceCatalog.title'),
       path: '/service-catalog',
       permission: 'service:view',
@@ -85,7 +88,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/knowledge-base',
-      icon: <QuestionCircleOutlined />,
+      icon: <HelpCircle style={iconStyle} />,
       label: '知识库',
       path: '/knowledge',
       permission: 'knowledge:view',
@@ -93,7 +96,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/sla',
-      icon: <CalendarOutlined />,
+      icon: <Calendar style={iconStyle} />,
       label: 'SLA监控',
       path: '/sla-dashboard',
       permission: 'sla:view',
@@ -101,7 +104,7 @@ const getMenuConfig = (t: any) => ({
     },
     {
       key: '/reports',
-      icon: <RiseOutlined />,
+      icon: <TrendingUp style={iconStyle} />,
       label: t('reports.title'),
       path: '/reports',
       permission: 'report:view',
@@ -111,55 +114,15 @@ const getMenuConfig = (t: any) => ({
   admin: [
     {
       key: '/workflow',
-      icon: <DeploymentUnitOutlined />,
+      icon: <GitMerge style={iconStyle} />,
       label: t('workflow.title'),
       path: '/workflow',
       permission: 'workflow:config',
       description: t('workflow.description'),
     },
-    // {
-    //   key: '/enterprise/departments',
-    //   icon: <DeploymentUnitOutlined />,
-    //   label: t('enterprise.departments.title'),
-    //   path: '/enterprise/departments',
-    //   permission: 'admin:view',
-    //   description: t('enterprise.departments.description'),
-    // },
-    // {
-    //   key: '/enterprise/teams',
-    //   icon: <DeploymentUnitOutlined />,
-    //   label: t('enterprise.teams.title'),
-    //   path: '/enterprise/teams',
-    //   permission: 'admin:view',
-    //   description: t('enterprise.teams.description'),
-    // },
-    // {
-    //   key: '/projects',
-    //   icon: <DeploymentUnitOutlined />,
-    //   label: t('enterprise.projects.title'),
-    //   path: '/projects',
-    //   permission: 'admin:view',
-    //   description: t('enterprise.projects.description'),
-    // },
-    // {
-    //   key: '/applications',
-    //   icon: <DeploymentUnitOutlined />,
-    //   label: t('enterprise.applications.title'),
-    //   path: '/applications',
-    //   permission: 'admin:view',
-    //   description: t('enterprise.applications.description'),
-    // },
-    // {
-    //   key: '/tags',
-    //   icon: <DeploymentUnitOutlined />,
-    //   label: t('enterprise.tags.title'),
-    //   path: '/tags',
-    //   permission: 'admin:view',
-    //   description: t('enterprise.tags.description'),
-    // },
     {
       key: '/admin',
-      icon: <SafetyOutlined />,
+      icon: <Shield style={iconStyle} />,
       label: t('admin.title'),
       path: '/admin',
       permission: 'admin:view',

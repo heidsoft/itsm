@@ -26,7 +26,7 @@ export const API_ERROR_CODES = {
 // 分页请求接口
 export interface PaginationRequest {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
 }
 
 // 分页响应接口
@@ -34,8 +34,8 @@ export interface PaginationResponse<T> {
   items: T[];
   total: number;
   page: number;
-  page_size: number;
-  total_pages: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // 租户相关接口
@@ -46,9 +46,9 @@ export interface Tenant {
   domain?: string;
   type: 'trial' | 'standard' | 'professional' | 'enterprise';
   status: 'active' | 'suspended' | 'expired' | 'trial';
-  created_at: string;
-  updated_at: string;
-  expires_at?: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
   settings?: Record<string, unknown>;
 }
 
@@ -64,7 +64,7 @@ export interface CreateTenantRequest {
   code: string;
   domain?: string;
   type: string;
-  expires_at?: string;
+  expiresAt?: string;
   settings?: Record<string, unknown>;
 }
 
@@ -73,7 +73,7 @@ export interface UpdateTenantRequest {
   domain?: string;
   type?: string;
   status?: string;
-  expires_at?: string;
+  expiresAt?: string;
   settings?: Record<string, unknown>;
 }
 
@@ -93,13 +93,13 @@ export interface Ticket {
   status: string;
   priority: string;
   type?: string;
-  form_fields?: Record<string, unknown>;
-  ticket_number: string;
-  requester_id: number;
-  assignee_id?: number;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
+  formFields?: Record<string, unknown>;
+  ticketNumber: string;
+  requesterId: number;
+  assigneeId?: number;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
   requester?: User;
   assignee?: User;
   tenant?: Tenant;
@@ -109,43 +109,43 @@ export interface Ticket {
   impact?: string;
   urgency?: string;
   resolution?: string;
-  work_notes?: string;
+  workNotes?: string;
   attachments?: Attachment[];
-  workflow_steps?: WorkflowStep[];
+  workflowSteps?: WorkflowStep[];
   comments?: Comment[];
-  sla_info?: SLAInfo;
+  slaInfo?: SLAInfo;
   tags?: string[];
-  due_date?: string;
-  escalation_level?: number;
+  dueDate?: string;
+  escalationLevel?: number;
 }
 
 // 附件接口
 export interface Attachment {
   id: number;
   filename: string;
-  original_name: string;
-  file_size: number;
-  mime_type: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
   url: string;
-  uploaded_by: number;
-  uploaded_at: string;
+  uploadedBy: number;
+  uploadedAt: string;
   uploader?: User;
 }
 
 // 工作流步骤接口
 export interface WorkflowStep {
   id: number;
-  step_name: string;
-  step_order: number;
+  stepName: string;
+  stepOrder: number;
   status: 'pending' | 'in_progress' | 'completed' | 'skipped';
-  assignee_id?: number;
+  assigneeId?: number;
   assignee?: User;
-  started_at?: string;
-  completed_at?: string;
+  startedAt?: string;
+  completedAt?: string;
   comments?: string;
-  required_approval: boolean;
-  approval_status?: 'pending' | 'approved' | 'rejected';
-  approval_comments?: string;
+  requiredApproval: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  approvalComments?: string;
 }
 
 // 评论接口
@@ -153,22 +153,22 @@ export interface Comment {
   id: number;
   content: string;
   type: 'comment' | 'work_note' | 'system';
-  created_by: number;
-  created_at: string;
-  updated_at?: string;
+  createdBy: number;
+  createdAt: string;
+  updatedAt?: string;
   author?: User;
-  is_internal: boolean;
+  isInternal: boolean;
 }
 
 // SLA信息接口
 export interface SLAInfo {
-  sla_id: number;
-  sla_name: string;
-  response_time: number; // 分钟
-  resolution_time: number; // 分钟
-  start_time: string;
-  due_time: string;
-  breach_time?: string;
+  slaId: number;
+  slaName: string;
+  responseTime: number; // 分钟
+  resolutionTime: number; // 分钟
+  startTime: string;
+  dueTime: string;
+  breachTime?: string;
   status: 'active' | 'breached' | 'completed';
 }
 
@@ -177,7 +177,7 @@ export interface User {
   username: string;
   email: string;
   name: string;
-  tenant_id?: number;
+  tenantId?: number;
   role?: string;
   department?: string;
 }
@@ -193,8 +193,8 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: string;
-  form_fields?: Record<string, unknown>;
-  assignee_id?: number;
+  formFields?: Record<string, unknown>;
+  assigneeId?: number;
 }
 
 export interface UpdateStatusRequest {
@@ -206,7 +206,7 @@ export interface GetTicketsParams {
   size?: number;
   status?: string;
   priority?: string;
-  tenant_id?: number;
+  tenantId?: number;
 }
 
 // 服务目录相关接口（添加租户支持）
@@ -216,24 +216,24 @@ export interface ServiceCatalog {
   description: string;
   category: string;
   price?: number;
-  tenant_id: number;
-  is_active: boolean;
-  form_schema?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  tenantId: number;
+  isActive: boolean;
+  formSchema?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
   tenant?: Tenant;
 }
 
 export interface ServiceRequest {
   id: number;
-  catalog_id: number;
-  requester_id: number;
-  tenant_id: number;
+  catalogId: number;
+  requesterId: number;
+  tenantId: number;
   status: string;
   reason: string;
-  form_data?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  formData?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
   catalog?: ServiceCatalog;
   requester?: User;
   tenant?: Tenant;
@@ -246,17 +246,17 @@ export interface Role {
   description: string;
   permissions: string[];
   status?: 'active' | 'inactive';
-  is_system?: boolean;
-  user_count?: number;
-  created_at: string;
-  updated_at: string;
+  isSystem?: boolean;
+  userCount?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RoleListResponse {
   roles: Role[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
 export interface CreateRoleRequest {
@@ -287,8 +287,8 @@ export interface SystemConfig {
   value: string;
   description?: string;
   category: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SystemConfigListResponse {

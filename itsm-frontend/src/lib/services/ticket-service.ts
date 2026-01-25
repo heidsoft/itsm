@@ -1,4 +1,5 @@
 import { httpClient } from '@/lib/api/http-client';
+import { Ticket, TicketListResponse } from '@/app/lib/api-config';
 
 // 工单状态枚举
 export enum TicketStatus {
@@ -26,46 +27,8 @@ export enum TicketType {
   CHANGE = 'change'
 }
 
-// 工单接口定义
-export interface Ticket {
-  id: number;
-  ticket_number: string;
-  title: string;
-  description: string;
-  status: TicketStatus;
-  priority: TicketPriority;
-  type: TicketType;
-  category: string;
-  subcategory?: string;
-  assignee_id?: number;
-  assignee?: {
-    id: number;
-    name: string;
-    username: string;
-    email: string;
-  };
-  requester_id: number;
-  requester?: {
-    id: number;
-    name: string;
-    username: string;
-    email: string;
-  };
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  closed_at?: string;
-  sla_deadline?: string;
-  tags: string[];
-  attachments: number;
-  comments: number;
-  tenant_id: number;
-  source?: string;
-  impact?: string;
-  urgency?: string;
-  business_value?: string;
-  custom_fields?: Record<string, unknown>;
-}
+// 移除旧的 Ticket 和 TicketListResponse 定义，使用 api-config 中的定义
+export { type Ticket };
 
 // 创建工单请求（匹配后端DTO格式）
 export interface CreateTicketRequest {
@@ -119,13 +82,7 @@ export interface ListTicketsParams {
   sort_order?: 'asc' | 'desc';
 }
 
-// 工单列表响应
-export interface ListTicketsResponse {
-  tickets: Ticket[];
-  total: number;
-  page: number;
-  page_size: number;
-}
+// 移除旧的 ListTicketsResponse 定义
 
 // 工单统计响应
 export interface TicketStatsResponse {
@@ -199,8 +156,8 @@ class TicketService {
   private readonly baseUrl = '/api/v1/tickets';
 
   // 获取工单列表
-  async listTickets(params: ListTicketsParams = {}): Promise<ListTicketsResponse> {
-    return httpClient.get<ListTicketsResponse>(this.baseUrl, params);
+  async listTickets(params: ListTicketsParams = {}): Promise<TicketListResponse> {
+    return httpClient.get<TicketListResponse>(this.baseUrl, params);
   }
 
   // 获取工单详情

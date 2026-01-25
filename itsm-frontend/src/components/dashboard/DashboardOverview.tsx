@@ -151,11 +151,29 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           id: 1,
           ticketNumber: 'T-2024-001',
           title: '系统登录异常',
+          description: '用户反馈无法登录系统，提示500错误',
+          source: 'web',
+          tenantId: 1,
+          isMajorIncident: true,
           status: 'open',
           priority: 'high',
           type: 'incident',
-          requester: { id: 1, fullName: '张三', avatar: '' },
-          assignee: { id: 2, fullName: '李四', avatar: '' },
+          requester: {
+            id: 1,
+            fullName: '张三',
+            avatar: '',
+            username: 'zhangsan',
+            email: 'zhangsan@example.com',
+            role: 'user',
+          },
+          assignee: {
+            id: 2,
+            fullName: '李四',
+            avatar: '',
+            username: 'lisi',
+            email: 'lisi@example.com',
+            role: 'agent',
+          },
           createdAt: dayjs().subtract(2, 'hour').toISOString(),
           updatedAt: dayjs().subtract(1, 'hour').toISOString(),
         },
@@ -163,11 +181,29 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           id: 2,
           ticketNumber: 'T-2024-002',
           title: '新员工账号申请',
+          description: '新员工入职，需要开通邮箱和VPN账号',
+          source: 'email',
+          tenantId: 1,
+          isMajorIncident: false,
           status: 'in_progress',
           priority: 'medium',
           type: 'request',
-          requester: { id: 3, fullName: '王五', avatar: '' },
-          assignee: { id: 4, fullName: '赵六', avatar: '' },
+          requester: {
+            id: 3,
+            fullName: '王五',
+            avatar: '',
+            username: 'wangwu',
+            email: 'wangwu@example.com',
+            role: 'user',
+          },
+          assignee: {
+            id: 4,
+            fullName: '赵六',
+            avatar: '',
+            username: 'zhaoliu',
+            email: 'zhaoliu@example.com',
+            role: 'agent',
+          },
           createdAt: dayjs().subtract(4, 'hour').toISOString(),
           updatedAt: dayjs().subtract(30, 'minute').toISOString(),
         },
@@ -480,7 +516,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 renderItem={user => (
                   <List.Item>
                     <List.Item.Meta
-                      avatar={<Avatar icon={<User />} src={user.avatar} />}
+                      avatar={<Avatar icon={<UserIcon />} src={user.avatar} />}
                       title={user.fullName}
                       description={
                         <Space>

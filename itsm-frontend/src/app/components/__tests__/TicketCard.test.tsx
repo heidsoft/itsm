@@ -107,7 +107,7 @@ describe('TicketCard', () => {
 
   describe('P1 Priority Alert Behavior', () => {
     it('should play alert sound for P1 priority tickets', () => {
-      const p1Props = { ...mockTicketProps, priority: 'P1' as const };
+      const p1Props = { ...mockTicketProps, priority: 'P1' as const, playSound: true };
       render(<TicketCard {...p1Props} />);
 
       // Check if Audio constructor was called
@@ -250,7 +250,7 @@ describe('TicketCard', () => {
       const { rerender } = render(<TicketCard {...mockTicketProps} />);
 
       // Change to P1 priority
-      const p1Props = { ...mockTicketProps, priority: 'P1' as const };
+      const p1Props = { ...mockTicketProps, priority: 'P1' as const, playSound: true };
       rerender(<TicketCard {...p1Props} />);
 
       expect(screen.getByText('P1 紧急')).toBeInTheDocument();

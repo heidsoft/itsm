@@ -17,9 +17,7 @@ export {
 
 // ==================== 状态管理导出 ====================
 export {
-  useTicketListStore,
   useTicketDetailStore,
-  ticketListConfig,
   ticketDetailConfig,
 } from './store/ticket-store';
 
@@ -109,7 +107,6 @@ const ticketModuleConfig = {
   dependencies: [CORE_MODULES.AUTH, CORE_MODULES.USER, CORE_MODULES.NOTIFICATION],
   exports: [
     'TicketManagementPage',
-    'useTicketListStore',
     'useTicketDetailStore',
     'TicketApiService',
     'TicketUtils',

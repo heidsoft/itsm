@@ -2,6 +2,40 @@ import { API_BASE_URL } from '@/app/lib/api-config';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
 
+// 递归将对象的 key 从 snake_case 转换为 camelCase
+const toCamelCase = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(v => toCamelCase(v));
+  } else if (obj !== null && obj.constructor === Object) {
+    return Object.keys(obj).reduce(
+      (result, key) => {
+        const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        result[camelKey] = toCamelCase(obj[key]);
+        return result;
+      },
+      {} as any
+    );
+  }
+  return obj;
+};
+
+// 递归将对象的 key 从 camelCase 转换为 snake_case
+const toSnakeCase = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(v => toSnakeCase(v));
+  } else if (obj !== null && obj.constructor === Object) {
+    return Object.keys(obj).reduce(
+      (result, key) => {
+        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        result[snakeKey] = toSnakeCase(obj[key]);
+        return result;
+      },
+      {} as any
+    );
+  }
+  return obj;
+};
+
 // Request configuration interface
 export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -185,7 +219,10 @@ class HttpClient {
         ...headers,
         ...config.headers,
       },
-      body: config.body,
+      // 自动转换请求 body key 为 snake_case (如果是 JSON 对象)
+      body: config.body && typeof config.body === 'string' && config.body.startsWith('{')
+        ? JSON.stringify(toSnakeCase(JSON.parse(config.body as string)))
+        : config.body,
     };
 
     logger.debug('HTTP Client Request:', {
@@ -274,7 +311,8 @@ class HttpClient {
         throw new Error((responseData.message || 'Request failed') + suffix);
       }
       
-      return responseData.data;
+      // 自动转换响应数据 key 为 camelCase
+      return toCamelCase(responseData.data);
     } catch (error: unknown) {
       logger.error('Request failed:', error);
       if (error instanceof Error) {

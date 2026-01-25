@@ -9,16 +9,18 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	// "itsm-backend/ent/processdeployment" // 暂时不使用，因为ProcessDeployment没有ProcessDefinitionID字段
+	"go.uber.org/zap"
 )
 
 // BPMNVersionService BPMN流程版本管理服务
 type BPMNVersionService struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewBPMNVersionService 创建BPMN版本管理服务实例
-func NewBPMNVersionService(client *ent.Client) *BPMNVersionService {
-	return &BPMNVersionService{client: client}
+func NewBPMNVersionService(client *ent.Client, logger *zap.SugaredLogger) *BPMNVersionService {
+	return &BPMNVersionService{client: client, logger: logger}
 }
 
 // ProcessVersion 流程版本信息
@@ -71,12 +73,15 @@ type VersionComparison struct {
 
 // ChangeDetail 变更详情
 type ChangeDetail struct {
-	Type        string `json:"type"`         // "added", "removed", "modified"
-	ElementType string `json:"element_type"` // "task", "gateway", "event", "flow"
-	ElementID   string `json:"element_id"`
-	ElementName string `json:"element_name"`
-	Description string `json:"description"`
-	Impact      string `json:"impact"` // "low", "medium", "high", "critical"
+	Type          string `json:"type"`                    // "added", "removed", "modified"
+	ChangeType    string `json:"change_type"`             // 变更类型
+	ElementType   string `json:"element_type"`            // "task", "gateway", "event", "flow"
+	ElementID     string `json:"element_id"`
+	ElementName   string `json:"element_name"`
+	Description   string `json:"description"`
+	Impact        string `json:"impact"`                  // "low", "medium", "high", "critical"
+	OldValue      string `json:"old_value,omitempty"`     // 旧值
+	NewValue      string `json:"new_value,omitempty"`     // 新值
 }
 
 // CreateVersion 创建新版本

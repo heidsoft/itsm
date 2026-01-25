@@ -14,7 +14,9 @@ const mockData = [
   { id: 3, name: '测试项目3', status: 'active', createdAt: '2024-01-03' },
 ];
 
-const mockColumns: TableColumn[] = [
+type MockDataType = typeof mockData[0];
+
+const mockColumns: TableColumn<MockDataType>[] = [
   {
     key: 'name',
     title: '名称',
@@ -26,7 +28,7 @@ const mockColumns: TableColumn[] = [
     title: '状态',
     dataIndex: 'status',
     width: 100,
-    render: (value: string) => (
+    render: (value: unknown) => (
       <span className={value === 'active' ? 'text-green-500' : 'text-red-500'}>
         {value === 'active' ? '活跃' : '非活跃'}
       </span>

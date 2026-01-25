@@ -1,0 +1,56 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e5]:
+  - generic [ref=e9]:
+    - heading "ITSM Pro" [level=1] [ref=e10]
+    - generic [ref=e11]: 智能IT服务管理平台
+    - generic [ref=e12]:
+      - generic [ref=e14]:
+        - img [ref=e16]
+        - generic [ref=e18]:
+          - generic [ref=e19]: 企业级安全
+          - text: 多层安全防护
+      - generic [ref=e21]:
+        - img [ref=e23]
+        - generic [ref=e25]:
+          - generic [ref=e26]: 智能自动化
+          - text: AI驱动流程
+  - generic [ref=e29]:
+    - generic [ref=e30]:
+      - heading "欢迎回来" [level=2] [ref=e31]
+      - text: 请登录您的账户以继续使用服务
+    - generic [ref=e32]:
+      - generic [ref=e34]:
+        - generic "用户名" [ref=e36]: "* 用户名"
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - textbox "* 用户名" [ref=e45]:
+            - /placeholder: 请输入用户名
+      - generic [ref=e47]:
+        - generic "密码" [ref=e49]: "* 密码"
+        - generic [ref=e53]:
+          - img [ref=e55]
+          - textbox "* 密码" [ref=e58]:
+            - /placeholder: 请输入密码
+          - img "eye-invisible" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+      - generic [ref=e69]:
+        - generic [ref=e70] [cursor=pointer]:
+          - checkbox "记住我" [ref=e72]
+          - generic [ref=e74]: 记住我
+        - button "忘记密码？" [ref=e75] [cursor=pointer]:
+          - generic [ref=e76]: 忘记密码？
+      - button "登录" [ref=e82] [cursor=pointer]:
+        - img [ref=e84]
+        - generic [ref=e86]: 登录
+    - separator [ref=e87]:
+      - generic [ref=e88]: 或
+    - button "SSO 单点登录" [ref=e89] [cursor=pointer]:
+      - img [ref=e91]
+      - generic [ref=e93]: SSO 单点登录
+    - generic [ref=e95]:
+      - text: 还没有账户？
+      - button "立即注册" [ref=e96] [cursor=pointer]:
+        - generic [ref=e97]: 立即注册
+```
