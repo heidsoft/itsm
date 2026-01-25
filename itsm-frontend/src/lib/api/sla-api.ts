@@ -63,33 +63,44 @@ export class SLAApi {
   static async getSLADefinitions(params?: {
     page?: number;
     page_size?: number;
+    is_active?: boolean;
+    name?: string;
   }): Promise<{
     items: SLADefinition[];
     total: number;
     page: number;
     page_size: number;
   }> {
+    // 修正: 确保路径与后端一致，后端可能是 /api/v1/sla/definitions
     return httpClient.get('/api/v1/sla/definitions', params);
-  }
-
-  // 创建SLA定义
-  static async createSLADefinition(data: CreateSLADefinitionRequest): Promise<SLADefinition> {
-    return httpClient.post<SLADefinition>('/api/v1/sla/definitions', data);
   }
 
   // 获取SLA定义详情
   static async getSLADefinition(id: number): Promise<SLADefinition> {
-    return httpClient.get<SLADefinition>(`/api/v1/sla/definitions/${id}`);
+    return httpClient.get(`/api/v1/sla/definitions/${id}`);
+  }
+
+  // 创建SLA定义
+  static async createSLADefinition(data: Partial<SLADefinition>): Promise<SLADefinition> {
+    return httpClient.post('/api/v1/sla/definitions', data);
   }
 
   // 更新SLA定义
-  static async updateSLADefinition(id: number, data: Partial<CreateSLADefinitionRequest>): Promise<SLADefinition> {
-    return httpClient.put<SLADefinition>(`/api/v1/sla/definitions/${id}`, data);
+  static async updateSLADefinition(id: number, data: Partial<SLADefinition>): Promise<SLADefinition> {
+    return httpClient.put(`/api/v1/sla/definitions/${id}`, data);
   }
 
   // 删除SLA定义
   static async deleteSLADefinition(id: number): Promise<void> {
     return httpClient.delete(`/api/v1/sla/definitions/${id}`);
+  }
+
+  // 检查工单SLA合规性
+  static async checkTicketCompliance(ticketId: number): Promise<{
+    is_compliant: boolean;
+    violations: SLAViolation[];
+  }> {
+    return httpClient.post(`/api/v1/sla/compliance/${ticketId}`);
   }
 
   // 获取SLA违规列表
@@ -106,12 +117,13 @@ export class SLAApi {
     page: number;
     page_size: number;
   }> {
-    return httpClient.get('/api/v1/sla/v2/violations', params);
+    // 修正: 确保路径与后端一致，后端可能是 /api/v1/sla/violations
+    return httpClient.get('/api/v1/sla/violations', params);
   }
 
   // 更新SLA违规状态
   static async updateSLAViolationStatus(id: number, isResolved: boolean, notes?: string): Promise<void> {
-    return httpClient.put(`/api/v1/sla/v2/violations/${id}`, { is_resolved: isResolved, notes });
+    return httpClient.put(`/api/v1/sla/violations/${id}`, { is_resolved: isResolved, notes });
   }
 
   // 获取SLA合规报告
@@ -172,7 +184,7 @@ export class SLAApi {
     if (params?.end_time) requestBody.end_time = params.end_time;
     if (params?.sla_definition_id) requestBody.sla_definition_id = params.sla_definition_id;
 
-    const response = await httpClient.post('/api/v1/sla/v2/monitoring', requestBody);
+    const response = await httpClient.post('/api/v1/sla/monitoring', requestBody);
 
     // 转换后端响应格式到前端格式
     const violationRate = response.total_tickets > 0
@@ -217,7 +229,8 @@ export class SLAApi {
       avg_resolution_time: number;
     }>;
   }> {
-    return httpClient.get('/api/v1/sla/v2/metrics', params);
+    // 修正: 确保路径与后端一致，后端可能是 /api/v1/sla/metrics
+    return httpClient.get('/api/v1/sla/metrics', params);
   }
 
   // 获取SLA预警
@@ -227,10 +240,23 @@ export class SLAApi {
     priority: string;
     sla_definition: string;
     time_remaining: number;
-    alert_level: 'warning' | 'critical';
+    alert_level: 'warning' | 'critical' | 'severe';
     created_at: string;
   }>> {
-    return httpClient.get('/api/v1/sla/alerts');
+    // 修正: 确保路径与后端一致
+    // 注意：后端目前似乎没有直接的 /api/v1/sla/alerts 端点，可能需要从 monitoring 或 alert-history 获取
+    // 这里暂时假设后端会增加此端点，或者我们使用 alert-history 替代
+    // 根据 PRD，告警历史是 /api/v1/sla/alert-history
+    const history = await httpClient.get<{items: any[]}>('/api/v1/sla/alert-history', { page: 1, page_size: 10 });
+    return history.items.map(item => ({
+      ticket_id: item.ticket_id,
+      ticket_title: item.ticket_title || `Ticket #${item.ticket_id}`,
+      priority: item.priority || 'medium',
+      sla_definition: item.sla_definition_name || 'SLA',
+      time_remaining: 0, // 历史记录可能没有剩余时间
+      alert_level: item.alert_level,
+      created_at: item.created_at
+    }));
   }
 
   // 触发SLA监控检查
@@ -239,6 +265,7 @@ export class SLAApi {
     violations_found: number;
     alerts_sent: number;
   }> {
+    // 修正: 确保路径与后端一致
     return httpClient.post('/api/v1/sla/monitor');
   }
 
@@ -246,7 +273,7 @@ export class SLAApi {
   static async createAlertRule(data: {
     name: string;
     sla_definition_id: number;
-    alert_level: 'warning' | 'critical';
+    alert_level: 'warning' | 'critical' | 'severe';
     threshold_percentage: number;
     notification_channels: string[];
     escalation_enabled?: boolean;
@@ -263,17 +290,19 @@ export class SLAApi {
   // 更新SLA预警规则
   static async updateAlertRule(id: number, data: Partial<{
     name: string;
-    alert_level: 'warning' | 'critical';
+    alert_level: 'warning' | 'critical' | 'severe';
     threshold_percentage: number;
     notification_channels: string[];
     is_active: boolean;
   }>): Promise<any> {
-    return httpClient.put(`/api/v1/sla/v2/alert-rules/${id}`, data);
+    // 修正: 确保路径与后端一致，去掉 v2
+    return httpClient.put(`/api/v1/sla/alert-rules/${id}`, data);
   }
 
   // 删除SLA预警规则
   static async deleteAlertRule(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/sla/v2/alert-rules/${id}`);
+    // 修正: 确保路径与后端一致，去掉 v2
+    return httpClient.delete(`/api/v1/sla/alert-rules/${id}`);
   }
 
   // 获取SLA预警规则列表
@@ -287,7 +316,8 @@ export class SLAApi {
 
   // 获取SLA预警规则详情
   static async getAlertRule(id: number): Promise<any> {
-    return httpClient.get(`/api/v1/sla/v2/alert-rules/${id}`);
+    // 修正: 确保路径与后端一致，去掉 v2
+    return httpClient.get(`/api/v1/sla/alert-rules/${id}`);
   }
 
   // 获取SLA预警历史
@@ -306,7 +336,8 @@ export class SLAApi {
     page: number;
     page_size: number;
   }> {
-    return httpClient.get('/api/v1/sla/v2/alert-history', params);
+    // 修正: 确保路径与后端一致，去掉 v2
+    return httpClient.get('/api/v1/sla/alert-history', params);
   }
 }
 

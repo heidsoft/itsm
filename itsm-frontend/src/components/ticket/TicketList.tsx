@@ -232,34 +232,22 @@ const TicketList: React.FC<TicketListProps> = ({
   // 日期范围变更处理
   const handleDateRangeChange = useCallback(
     (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null, field: 'created' | 'due') => {
+      const startKey = field === 'created' ? 'created_after' : 'due_after';
+      const endKey = field === 'created' ? 'created_before' : 'due_before';
+
       if (dates && dates[0] && dates[1]) {
-        const startKey = field === 'created' ? 'created_after' : 'due_after';
-        const endKey = field === 'created' ? 'created_before' : 'due_before';
-
-        updateFilter(startKey as keyof ListTicketsRequest, dates[0].format('YYYY-MM-DD'));
-        updateFilter(endKey as keyof ListTicketsRequest, dates[1].format('YYYY-MM-DD'));
-
-        fetchTickets({
-          ...filters,
+        updateFilters({
           [startKey]: dates[0].format('YYYY-MM-DD'),
           [endKey]: dates[1].format('YYYY-MM-DD'),
-          page: 1,
         });
       } else {
-        const startKey = field === 'created' ? 'created_after' : 'due_after';
-        const endKey = field === 'created' ? 'created_before' : 'due_before';
-
-        updateFilter(startKey as keyof ListTicketsRequest, undefined);
-        updateFilter(endKey as keyof ListTicketsRequest, undefined);
-
-        const newFilters = { ...filters };
-        delete newFilters[startKey as keyof ListTicketsRequest];
-        delete newFilters[endKey as keyof ListTicketsRequest];
-
-        fetchTickets({ ...newFilters, page: 1 });
+        updateFilters({
+          [startKey]: undefined,
+          [endKey]: undefined,
+        });
       }
     },
-    [filters, updateFilter, fetchTickets]
+    [updateFilters]
   );
 
   // 表格列定义

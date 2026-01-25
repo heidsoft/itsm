@@ -86,70 +86,12 @@ export const TicketAssociation: React.FC = () => {
   const [relationForm] = Form.useForm();
 
   useEffect(() => {
-    loadMockData();
+    // 这里不再加载 Mock 数据，而是等待父组件传入或通过 API 获取
+    // 暂时保持空数组，等待 API 集成
+    setTickets([]);
+    setRelations([]);
+    setMergeCandidates([]);
   }, []);
-
-  const loadMockData = () => {
-    // 模拟工单数据
-    const mockTickets: Ticket[] = [
-      {
-        id: 1,
-        ticketNumber: "T-2024-001",
-        title: "数据库连接超时",
-        status: "in_progress",
-        priority: "high",
-        category: "database",
-        assignee: "张三",
-        created_at: "2024-01-15 10:00:00",
-        updated_at: "2024-01-15 14:30:00",
-      },
-      {
-        id: 2,
-        ticketNumber: "T-2024-002",
-        title: "系统登录异常",
-        status: "open",
-        priority: "medium",
-        category: "system",
-        assignee: "李四",
-        created_at: "2024-01-15 11:00:00",
-        updated_at: "2024-01-15 11:00:00",
-      },
-      {
-        id: 3,
-        ticketNumber: "T-2024-003",
-        title: "网络连接问题",
-        status: "resolved",
-        priority: "low",
-        category: "network",
-        assignee: "王五",
-        created_at: "2024-01-14 15:00:00",
-        updated_at: "2024-01-15 09:00:00",
-      },
-    ];
-
-    const mockRelations: TicketRelation[] = [
-      {
-        id: 1,
-        sourceTicket: mockTickets[0],
-        targetTicket: mockTickets[1],
-        relationType: "related",
-        description: "两个问题都与系统性能相关",
-        created_at: "2024-01-15 12:00:00",
-      },
-    ];
-
-    const mockMergeCandidates: MergeCandidate[] = [
-      {
-        ticket: mockTickets[1],
-        similarity: 85,
-        reason: "标题和描述高度相似，可能是重复工单",
-      },
-    ];
-
-    setTickets(mockTickets);
-    setRelations(mockRelations);
-    setMergeCandidates(mockMergeCandidates);
-  };
 
   const getStatusColor = (status: string): string => {
     switch (status) {

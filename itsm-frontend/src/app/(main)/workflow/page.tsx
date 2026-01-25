@@ -101,161 +101,6 @@ const WorkflowManagementPage = () => {
     avgExecutionTime: 0,
   });
 
-  // 模拟数据 - 使用useMemo避免每次渲染时重新创建
-  const mockWorkflows = useMemo<Workflow[]>(
-    () => [
-      {
-        id: 1,
-        name: t('workflow.ticketApprovalProcess'),
-        description: t('workflow.ticketApprovalDescription'),
-        category: t('workflow.approvalProcess'),
-        version: '1.0.0',
-        status: 'active',
-        bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
-                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
-                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
-                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
-                   id="Definitions_1" 
-                   targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_1" name="提交工单">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_2" name="审核工单">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_3" name="处理工单">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_1" name="结束">
-      <bpmn:incoming>Flow_4</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="UserTask_1" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="UserTask_1" targetRef="UserTask_2" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="UserTask_2" targetRef="UserTask_3" />
-    <bpmn:sequenceFlow id="Flow_4" sourceRef="UserTask_3" targetRef="EndEvent_1" />
-  </bpmn:process>
-</bpmn:definitions>`,
-        created_at: '2024-01-15T10:30:00Z',
-        updated_at: '2024-01-15T14:20:00Z',
-        instances_count: 156,
-        running_instances: 23,
-        created_by: '张三',
-      },
-      {
-        id: 2,
-        name: t('workflow.incidentHandlingProcess'),
-        description: t('workflow.incidentHandlingDescription'),
-        category: t('workflow.incidentHandling'),
-        version: '2.1.0',
-        status: 'active',
-        bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
-                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
-                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
-                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
-                   id="Definitions_3" 
-                   targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_3" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_3" name="事件报告">
-      <bpmn:outgoing>Flow_11</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_7" name="事件分类">
-      <bpmn:incoming>Flow_11</bpmn:incoming>
-      <bpmn:outgoing>Flow_12</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_2" name="优先级判断">
-      <bpmn:incoming>Flow_12</bpmn:incoming>
-      <bpmn:outgoing>Flow_13</bpmn:outgoing>
-      <bpmn:outgoing>Flow_14</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:userTask id="UserTask_8" name="紧急处理">
-      <bpmn:incoming>Flow_13</bpmn:incoming>
-      <bpmn:outgoing>Flow_15</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_9" name="常规处理">
-      <bpmn:incoming>Flow_14</bpmn:incoming>
-      <bpmn:outgoing>Flow_16</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_3" name="事件解决">
-      <bpmn:incoming>Flow_15</bpmn:incoming>
-      <bpmn:incoming>Flow_16</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_11" sourceRef="StartEvent_3" targetRef="UserTask_7" />
-    <bpmn:sequenceFlow id="Flow_12" sourceRef="UserTask_7" targetRef="Gateway_2" />
-    <bpmn:sequenceFlow id="Flow_13" sourceRef="Gateway_2" targetRef="UserTask_8" />
-    <bpmn:sequenceFlow id="Flow_14" sourceRef="Gateway_2" targetRef="UserTask_9" />
-    <bpmn:sequenceFlow id="Flow_15" sourceRef="UserTask_8" targetRef="EndEvent_3" />
-    <bpmn:sequenceFlow id="Flow_16" sourceRef="UserTask_9" targetRef="EndEvent_3" />
-  </bpmn:process>
-</bpmn:definitions>`,
-        created_at: '2024-01-14T09:15:00Z',
-        updated_at: '2024-01-15T11:45:00Z',
-        instances_count: 89,
-        running_instances: 12,
-        created_by: '李四',
-      },
-      {
-        id: 3,
-        name: t('workflow.changeManagementProcess'),
-        description: t('workflow.changeManagementDescription'),
-        category: t('workflow.changeManagement'),
-        version: '1.5.0',
-        status: 'draft',
-        bpmn_xml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
-                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
-                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
-                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
-                   id="Definitions_4" 
-                   targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_4" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_4" name="变更申请">
-      <bpmn:outgoing>Flow_17</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_10" name="变更评估">
-      <bpmn:incoming>Flow_17</bpmn:incoming>
-      <bpmn:outgoing>Flow_18</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_11" name="变更审批">
-      <bpmn:incoming>Flow_18</bpmn:incoming>
-      <bpmn:outgoing>Flow_19</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_12" name="变更实施">
-      <bpmn:incoming>Flow_19</bpmn:incoming>
-      <bpmn:outgoing>Flow_20</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_13" name="变更验证">
-      <bpmn:incoming>Flow_20</bpmn:incoming>
-      <bpmn:outgoing>Flow_21</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_4" name="变更完成">
-      <bpmn:incoming>Flow_21</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_17" sourceRef="StartEvent_4" targetRef="UserTask_10" />
-    <bpmn:sequenceFlow id="Flow_18" sourceRef="UserTask_10" targetRef="UserTask_11" />
-    <bpmn:sequenceFlow id="Flow_19" sourceRef="UserTask_11" targetRef="UserTask_12" />
-    <bpmn:sequenceFlow id="Flow_20" sourceRef="UserTask_12" targetRef="UserTask_13" />
-    <bpmn:sequenceFlow id="Flow_21" sourceRef="UserTask_13" targetRef="EndEvent_4" />
-  </bpmn:process>
-</bpmn:definitions>`,
-        created_at: '2024-01-13T16:20:00Z',
-        updated_at: '2024-01-14T10:30:00Z',
-        instances_count: 45,
-        running_instances: 8,
-        created_by: '王五',
-      },
-    ],
-    [t]
-  );
-
   const loadWorkflows = useCallback(async () => {
     setLoading(true);
     try {
@@ -292,15 +137,14 @@ const WorkflowManagementPage = () => {
           0
         ),
       }));
-    } catch {
-      // 如果 API 失败，使用模拟数据作为降级
-      console.warn('Failed to load workflows, using mock data');
-      setWorkflows(mockWorkflows);
+    } catch (error) {
+      console.error('Failed to load workflows:', error);
       message.error(t('workflow.loadFailed'));
+      setWorkflows([]); // 确保清空列表
     } finally {
       setLoading(false);
     }
-  }, [mockWorkflows, t]);
+  }, [t]);
 
   const loadStats = useCallback(async () => {
     // 统计已经在 loadWorkflows 中一起计算了

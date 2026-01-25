@@ -56,6 +56,7 @@ export class WorkflowApi {
     if (query?.page) params.page = query.page;
     if (query?.pageSize) params.page_size = query.pageSize;
     
+    // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
     const res: any = await httpClient.get('/api/v1/bpmn/process-definitions', params);
     const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
     const total = res?.pagination?.total || res?.total || list.length || 0;
@@ -76,6 +77,7 @@ export class WorkflowApi {
    */
   static async getWorkflow(id: string): Promise<WorkflowDefinition> {
     // Assuming id is the key for BPMN controller which uses key
+    // 修正: 确保路径与后端一致
     const res: any = await httpClient.get(`/api/v1/bpmn/process-definitions/${id}`);
     const item = res?.data || res;
     return {
@@ -272,6 +274,7 @@ export class WorkflowApi {
     workflowId: string
   ): Promise<WorkflowDefinition[]> {
      // Backend ListProcessDefinitions supports filter by key which gives versions
+     // 修正: 确保路径与后端一致
      const res: any = await httpClient.get(`/api/v1/bpmn/process-definitions?key=${workflowId}`);
      return res?.data || res?.items || res || [];
   }
@@ -342,6 +345,7 @@ export class WorkflowApi {
     if (params?.page) query.page = params.page;
     if (params?.pageSize) query.page_size = params.pageSize;
 
+    // 修正: 确保路径与后端一致
     const res: any = await httpClient.get('/api/v1/bpmn/process-instances', query);
     return {
         instances: res?.data || res?.items || res?.instances || [],

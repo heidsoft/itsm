@@ -47,7 +47,6 @@ interface ServiceRequest {
 }
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { mockRequestsData } from '@/app/lib/mock-data';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
@@ -181,52 +180,6 @@ const MyRequestsPage = () => {
   const [total, setTotal] = useState(0);
   const pageSize = 10;
 
-  // 添加 loadMockData 函数
-  const loadMockData = async () => {
-    try {
-      // 将 mockRequestsData 转换为 ServiceRequest 格式
-      const mockRequests: ServiceRequest[] = mockRequestsData.map((item, index) => ({
-        id: parseInt(item.id.replace('REQ-', '')),
-        catalog_id: index + 1,
-        requester_id: 1,
-        status:
-          item.status === '处理中'
-            ? 'provisioning'
-            : item.status === '已完成'
-            ? 'delivered'
-            : item.status === '待审批'
-            ? 'submitted'
-            : item.status === '已拒绝'
-            ? 'rejected'
-            : 'submitted',
-        reason: `申请${item.serviceName}`,
-        created_at: item.submittedAt,
-        catalog: {
-          id: index + 1,
-          name: item.serviceName,
-          category: 'IT服务',
-          description: `${item.serviceName}服务申请`,
-        },
-        requester: {
-          id: 1,
-          name: '当前用户',
-          email: 'user@example.com',
-        },
-      }));
-
-      setRequests(mockRequests);
-      setTotal(mockRequests.length);
-      setTotalPages(Math.ceil(mockRequests.length / pageSize));
-
-      console.log('已加载Mock数据', mockRequests.length, '条记录');
-    } catch (error) {
-      console.error('加载Mock数据失败:', error);
-      setRequests([]);
-      setTotal(0);
-      setTotalPages(1);
-    }
-  };
-
   // 获取服务请求数据
   const fetchRequests = async (page = 1, status = filter) => {
     setLoading(true);
@@ -241,8 +194,10 @@ const MyRequestsPage = () => {
       setTotal(data.total || 0);
       setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)));
     } catch (error) {
-      console.error('API调用失败，回退到Mock数据:', error);
-      await loadMockData();
+      console.error('API调用失败:', error);
+      setRequests([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }

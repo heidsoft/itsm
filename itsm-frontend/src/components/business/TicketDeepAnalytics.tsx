@@ -169,30 +169,32 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       if (data && data.data && data.data.length > 0) {
         setChartData(data.data);
         setSummaryData(data.summary);
-        return;
+      } else {
+        // 如果API返回空，显示空状态
+        setChartData([]);
+        setSummaryData({
+          total: 0,
+          resolved: 0,
+          avg_response_time: 0,
+          avg_resolution_time: 0,
+          sla_compliance: 0,
+          customer_satisfaction: 0,
+        });
+        antMessage.info('未找到符合条件的数据');
       }
-
-      // 如果API返回空，使用模拟数据
-      const mockData: ChartData[] = [
-        { name: '待处理', value: 45, count: 45, avg_time: 2.3 },
-        { name: '处理中', value: 32, count: 32, avg_time: 5.7 },
-        { name: '已解决', value: 128, count: 128, avg_time: 8.2 },
-        { name: '已关闭', value: 89, count: 89, avg_time: 0 },
-      ];
-      setChartData(mockData);
-
-      const mockSummary = {
-        total: 294,
-        resolved: 217,
-        avg_response_time: 2.3,
-        avg_resolution_time: 8.7,
-        sla_compliance: 94.2,
-        customer_satisfaction: 4.2,
-      };
-      setSummaryData(mockSummary);
     } catch (error) {
       console.error('Failed to load analytics data:', error);
       antMessage.error('加载分析数据失败');
+      // 出错时重置为空状态
+      setChartData([]);
+      setSummaryData({
+        total: 0,
+        resolved: 0,
+        avg_response_time: 0,
+        avg_resolution_time: 0,
+        sla_compliance: 0,
+        customer_satisfaction: 0,
+      });
     } finally {
       setLoading(false);
     }
