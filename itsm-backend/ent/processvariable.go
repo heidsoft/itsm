@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processvariable"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ type ProcessVariable struct {
 	// 变量ID
 	VariableID string `json:"variable_id,omitempty"`
 	// 流程实例ID
-	ProcessInstanceID string `json:"process_instance_id,omitempty"`
+	ProcessInstanceID int `json:"process_instance_id,omitempty"`
 	// 任务ID，可选
 	TaskID string `json:"task_id,omitempty"`
 	// 变量名称
@@ -40,8 +41,31 @@ type ProcessVariable struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProcessVariableQuery when eager-loading is set.
+	Edges        ProcessVariableEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ProcessVariableEdges holds the relations/edges for other nodes in the graph.
+type ProcessVariableEdges struct {
+	// ProcessInstance holds the value of the process_instance edge.
+	ProcessInstance *ProcessInstance `json:"process_instance,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ProcessInstanceOrErr returns the ProcessInstance value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProcessVariableEdges) ProcessInstanceOrErr() (*ProcessInstance, error) {
+	if e.ProcessInstance != nil {
+		return e.ProcessInstance, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: processinstance.Label}
+	}
+	return nil, &NotLoadedError{edge: "process_instance"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -51,9 +75,9 @@ func (*ProcessVariable) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case processvariable.FieldIsTransient:
 			values[i] = new(sql.NullBool)
-		case processvariable.FieldID, processvariable.FieldTenantID:
+		case processvariable.FieldID, processvariable.FieldProcessInstanceID, processvariable.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case processvariable.FieldVariableID, processvariable.FieldProcessInstanceID, processvariable.FieldTaskID, processvariable.FieldVariableName, processvariable.FieldVariableType, processvariable.FieldVariableValue, processvariable.FieldScope, processvariable.FieldSerializationFormat:
+		case processvariable.FieldVariableID, processvariable.FieldTaskID, processvariable.FieldVariableName, processvariable.FieldVariableType, processvariable.FieldVariableValue, processvariable.FieldScope, processvariable.FieldSerializationFormat:
 			values[i] = new(sql.NullString)
 		case processvariable.FieldCreatedAt, processvariable.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -85,10 +109,10 @@ func (pv *ProcessVariable) assignValues(columns []string, values []any) error {
 				pv.VariableID = value.String
 			}
 		case processvariable.FieldProcessInstanceID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				pv.ProcessInstanceID = value.String
+				pv.ProcessInstanceID = int(value.Int64)
 			}
 		case processvariable.FieldTaskID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -163,6 +187,11 @@ func (pv *ProcessVariable) Value(name string) (ent.Value, error) {
 	return pv.selectValues.Get(name)
 }
 
+// QueryProcessInstance queries the "process_instance" edge of the ProcessVariable entity.
+func (pv *ProcessVariable) QueryProcessInstance() *ProcessInstanceQuery {
+	return NewProcessVariableClient(pv.config).QueryProcessInstance(pv)
+}
+
 // Update returns a builder for updating this ProcessVariable.
 // Note that you need to call ProcessVariable.Unwrap() before calling this method if this ProcessVariable
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -190,7 +219,7 @@ func (pv *ProcessVariable) String() string {
 	builder.WriteString(pv.VariableID)
 	builder.WriteString(", ")
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(pv.ProcessInstanceID)
+	builder.WriteString(fmt.Sprintf("%v", pv.ProcessInstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("task_id=")
 	builder.WriteString(pv.TaskID)

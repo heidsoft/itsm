@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -70,7 +71,7 @@ func ProcessDefinitionKey(v string) predicate.ProcessInstance {
 }
 
 // ProcessDefinitionID applies equality check predicate on the "process_definition_id" field. It's identical to ProcessDefinitionIDEQ.
-func ProcessDefinitionID(v string) predicate.ProcessInstance {
+func ProcessDefinitionID(v int) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldEQ(FieldProcessDefinitionID, v))
 }
 
@@ -345,68 +346,23 @@ func ProcessDefinitionKeyContainsFold(v string) predicate.ProcessInstance {
 }
 
 // ProcessDefinitionIDEQ applies the EQ predicate on the "process_definition_id" field.
-func ProcessDefinitionIDEQ(v string) predicate.ProcessInstance {
+func ProcessDefinitionIDEQ(v int) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldEQ(FieldProcessDefinitionID, v))
 }
 
 // ProcessDefinitionIDNEQ applies the NEQ predicate on the "process_definition_id" field.
-func ProcessDefinitionIDNEQ(v string) predicate.ProcessInstance {
+func ProcessDefinitionIDNEQ(v int) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldNEQ(FieldProcessDefinitionID, v))
 }
 
 // ProcessDefinitionIDIn applies the In predicate on the "process_definition_id" field.
-func ProcessDefinitionIDIn(vs ...string) predicate.ProcessInstance {
+func ProcessDefinitionIDIn(vs ...int) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldIn(FieldProcessDefinitionID, vs...))
 }
 
 // ProcessDefinitionIDNotIn applies the NotIn predicate on the "process_definition_id" field.
-func ProcessDefinitionIDNotIn(vs ...string) predicate.ProcessInstance {
+func ProcessDefinitionIDNotIn(vs ...int) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldNotIn(FieldProcessDefinitionID, vs...))
-}
-
-// ProcessDefinitionIDGT applies the GT predicate on the "process_definition_id" field.
-func ProcessDefinitionIDGT(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldGT(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDGTE applies the GTE predicate on the "process_definition_id" field.
-func ProcessDefinitionIDGTE(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldGTE(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDLT applies the LT predicate on the "process_definition_id" field.
-func ProcessDefinitionIDLT(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldLT(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDLTE applies the LTE predicate on the "process_definition_id" field.
-func ProcessDefinitionIDLTE(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldLTE(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDContains applies the Contains predicate on the "process_definition_id" field.
-func ProcessDefinitionIDContains(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldContains(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDHasPrefix applies the HasPrefix predicate on the "process_definition_id" field.
-func ProcessDefinitionIDHasPrefix(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldHasPrefix(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDHasSuffix applies the HasSuffix predicate on the "process_definition_id" field.
-func ProcessDefinitionIDHasSuffix(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldHasSuffix(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDEqualFold applies the EqualFold predicate on the "process_definition_id" field.
-func ProcessDefinitionIDEqualFold(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldEqualFold(FieldProcessDefinitionID, v))
-}
-
-// ProcessDefinitionIDContainsFold applies the ContainsFold predicate on the "process_definition_id" field.
-func ProcessDefinitionIDContainsFold(v string) predicate.ProcessInstance {
-	return predicate.ProcessInstance(sql.FieldContainsFold(FieldProcessDefinitionID, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -1202,6 +1158,98 @@ func UpdatedAtLT(v time.Time) predicate.ProcessInstance {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ProcessInstance {
 	return predicate.ProcessInstance(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasProcessTasks applies the HasEdge predicate on the "process_tasks" edge.
+func HasProcessTasks() predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ProcessTasksTable, ProcessTasksColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProcessTasksWith applies the HasEdge predicate on the "process_tasks" edge with a given conditions (other predicates).
+func HasProcessTasksWith(preds ...predicate.ProcessTask) predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := newProcessTasksStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasProcessVariables applies the HasEdge predicate on the "process_variables" edge.
+func HasProcessVariables() predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ProcessVariablesTable, ProcessVariablesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProcessVariablesWith applies the HasEdge predicate on the "process_variables" edge with a given conditions (other predicates).
+func HasProcessVariablesWith(preds ...predicate.ProcessVariable) predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := newProcessVariablesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasExecutionHistory applies the HasEdge predicate on the "execution_history" edge.
+func HasExecutionHistory() predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ExecutionHistoryTable, ExecutionHistoryColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasExecutionHistoryWith applies the HasEdge predicate on the "execution_history" edge with a given conditions (other predicates).
+func HasExecutionHistoryWith(preds ...predicate.ProcessExecutionHistory) predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := newExecutionHistoryStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDefinition applies the HasEdge predicate on the "definition" edge.
+func HasDefinition() predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DefinitionTable, DefinitionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDefinitionWith applies the HasEdge predicate on the "definition" edge with a given conditions (other predicates).
+func HasDefinitionWith(preds ...predicate.ProcessDefinition) predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := newDefinitionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

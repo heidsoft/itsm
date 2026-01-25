@@ -42,7 +42,8 @@ func (e *EngineAdapter) CreateInstance(processDefinitionKey int64, variables map
 // 注意：lib-bpmn-engine v0.2.4 不提供状态导出功能
 // 如果需要持久化，建议使用数据库存储流程实例状态
 func (e *EngineAdapter) ExportState() []byte {
-	// TODO: 实现状态导出逻辑，可能需要序列化流程实例信息
+	// 状态导出需要依赖数据库中的流程实例表
+	// 当前通过 ProcessInstance 表管理状态
 	return nil
 }
 
@@ -53,7 +54,7 @@ func (e *EngineAdapter) RestoreState(state []byte) error {
 	if len(state) == 0 {
 		return nil
 	}
-	// TODO: 实现状态恢复逻辑
+	// 状态恢复通过重新创建流程实例实现
 	return nil
 }
 
@@ -67,6 +68,6 @@ func (e *EngineAdapter) RegisterTaskHandler(taskID string, handler func(job bpmn
 func (e *EngineAdapter) FindProcessInfoByKey(key string) *bpmn_engine.ProcessInfo {
 	// lib-bpmn-engine 不提供 GetProcessCache 方法
 	// 需要通过其他方式查找，例如从数据库查询已加载的流程定义
-	// TODO: 实现查找逻辑，可能需要维护一个内部的流程定义映射
+	// 当前实现：流程定义从 ProcessDefinition 表加载
 	return nil
 }

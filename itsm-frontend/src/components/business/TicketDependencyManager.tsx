@@ -152,9 +152,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       if (!ticket?.id) return;
 
       try {
-        // 调用实际API进行影响分析
-        // TODO: 实现analyzeImpact API方法
-        // const impactData = await TicketRelationsApi.analyzeImpact(ticket.id);
+        // 注意：影响分析API尚未实现
+        // 未来可通过 TicketRelationsApi.analyzeImpact(ticket.id) 获取实际数据
 
         // 模拟影响分析数据
         const mockImpact: DependencyImpact[] = [
@@ -364,7 +363,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               size='small'
               icon={<EyeOutlined />}
               onClick={() => {
-                // TODO: 跳转到工单详情页
+                // 跳转到工单详情页
                 window.open(`/tickets/${record.target_ticket_id}`, '_blank');
               }}
             >
@@ -741,7 +740,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                   type='link'
                   size='small'
                   onClick={() => {
-                    // TODO: 打开工单选择器
+                    // 工单选择器需要单独的Modal组件实现
                     antMessage.info('工单选择器功能开发中');
                   }}
                 >

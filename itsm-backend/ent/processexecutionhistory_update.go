@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -43,15 +44,15 @@ func (pehu *ProcessExecutionHistoryUpdate) SetNillableHistoryID(s *string) *Proc
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetProcessInstanceID(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetProcessInstanceID(s)
+func (pehu *ProcessExecutionHistoryUpdate) SetProcessInstanceID(i int) *ProcessExecutionHistoryUpdate {
+	pehu.mutation.SetProcessInstanceID(i)
 	return pehu
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableProcessInstanceID(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetProcessInstanceID(*s)
+func (pehu *ProcessExecutionHistoryUpdate) SetNillableProcessInstanceID(i *int) *ProcessExecutionHistoryUpdate {
+	if i != nil {
+		pehu.SetProcessInstanceID(*i)
 	}
 	return pehu
 }
@@ -319,9 +320,20 @@ func (pehu *ProcessExecutionHistoryUpdate) SetNillableCreatedAt(t *time.Time) *P
 	return pehu
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (pehu *ProcessExecutionHistoryUpdate) SetProcessInstance(p *ProcessInstance) *ProcessExecutionHistoryUpdate {
+	return pehu.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessExecutionHistoryMutation object of the builder.
 func (pehu *ProcessExecutionHistoryUpdate) Mutation() *ProcessExecutionHistoryMutation {
 	return pehu.mutation
+}
+
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (pehu *ProcessExecutionHistoryUpdate) ClearProcessInstance() *ProcessExecutionHistoryUpdate {
+	pehu.mutation.ClearProcessInstance()
+	return pehu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -383,6 +395,9 @@ func (pehu *ProcessExecutionHistoryUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.tenant_id": %w`, err)}
 		}
 	}
+	if pehu.mutation.ProcessInstanceCleared() && len(pehu.mutation.ProcessInstanceIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ProcessExecutionHistory.process_instance"`)
+	}
 	return nil
 }
 
@@ -400,9 +415,6 @@ func (pehu *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (n int, 
 	}
 	if value, ok := pehu.mutation.HistoryID(); ok {
 		_spec.SetField(processexecutionhistory.FieldHistoryID, field.TypeString, value)
-	}
-	if value, ok := pehu.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processexecutionhistory.FieldProcessInstanceID, field.TypeString, value)
 	}
 	if value, ok := pehu.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processexecutionhistory.FieldProcessDefinitionKey, field.TypeString, value)
@@ -479,6 +491,35 @@ func (pehu *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (n int, 
 	if value, ok := pehu.mutation.CreatedAt(); ok {
 		_spec.SetField(processexecutionhistory.FieldCreatedAt, field.TypeTime, value)
 	}
+	if pehu.mutation.ProcessInstanceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processexecutionhistory.ProcessInstanceTable,
+			Columns: []string{processexecutionhistory.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pehu.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processexecutionhistory.ProcessInstanceTable,
+			Columns: []string{processexecutionhistory.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pehu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processexecutionhistory.Label}
@@ -514,15 +555,15 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableHistoryID(s *string) *
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetProcessInstanceID(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetProcessInstanceID(s)
+func (pehuo *ProcessExecutionHistoryUpdateOne) SetProcessInstanceID(i int) *ProcessExecutionHistoryUpdateOne {
+	pehuo.mutation.SetProcessInstanceID(i)
 	return pehuo
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableProcessInstanceID(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetProcessInstanceID(*s)
+func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableProcessInstanceID(i *int) *ProcessExecutionHistoryUpdateOne {
+	if i != nil {
+		pehuo.SetProcessInstanceID(*i)
 	}
 	return pehuo
 }
@@ -790,9 +831,20 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableCreatedAt(t *time.Time
 	return pehuo
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (pehuo *ProcessExecutionHistoryUpdateOne) SetProcessInstance(p *ProcessInstance) *ProcessExecutionHistoryUpdateOne {
+	return pehuo.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessExecutionHistoryMutation object of the builder.
 func (pehuo *ProcessExecutionHistoryUpdateOne) Mutation() *ProcessExecutionHistoryMutation {
 	return pehuo.mutation
+}
+
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (pehuo *ProcessExecutionHistoryUpdateOne) ClearProcessInstance() *ProcessExecutionHistoryUpdateOne {
+	pehuo.mutation.ClearProcessInstance()
+	return pehuo
 }
 
 // Where appends a list predicates to the ProcessExecutionHistoryUpdate builder.
@@ -867,6 +919,9 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.tenant_id": %w`, err)}
 		}
 	}
+	if pehuo.mutation.ProcessInstanceCleared() && len(pehuo.mutation.ProcessInstanceIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ProcessExecutionHistory.process_instance"`)
+	}
 	return nil
 }
 
@@ -901,9 +956,6 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_no
 	}
 	if value, ok := pehuo.mutation.HistoryID(); ok {
 		_spec.SetField(processexecutionhistory.FieldHistoryID, field.TypeString, value)
-	}
-	if value, ok := pehuo.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processexecutionhistory.FieldProcessInstanceID, field.TypeString, value)
 	}
 	if value, ok := pehuo.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processexecutionhistory.FieldProcessDefinitionKey, field.TypeString, value)
@@ -979,6 +1031,35 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_no
 	}
 	if value, ok := pehuo.mutation.CreatedAt(); ok {
 		_spec.SetField(processexecutionhistory.FieldCreatedAt, field.TypeTime, value)
+	}
+	if pehuo.mutation.ProcessInstanceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processexecutionhistory.ProcessInstanceTable,
+			Columns: []string{processexecutionhistory.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pehuo.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processexecutionhistory.ProcessInstanceTable,
+			Columns: []string{processexecutionhistory.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ProcessExecutionHistory{config: pehuo.config}
 	_spec.Assign = _node.assignValues

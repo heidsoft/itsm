@@ -199,7 +199,7 @@ export interface CIAttributeDefinition {
   label: string;
   type: 'string' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
   required: boolean;
-  defaultValue?: any;
+  defaultValue?: string | number | boolean | string[] | null;
   options?: string[];              // 用于select类型
   validation?: {
     min?: number;
@@ -332,18 +332,18 @@ export interface CIChangeRecord {
   ciId: string;
   ciName: string;
   changeType: 'created' | 'updated' | 'deleted' | 'relationship_added' | 'relationship_removed';
-  
+
   // 变更内容
   changes: {
     field: string;
-    oldValue?: any;
-    newValue?: any;
+    oldValue?: unknown;
+    newValue?: unknown;
   }[];
-  
+
   // 关联信息
   relatedTicketId?: number;
   relatedChangeId?: number;
-  
+
   // 元数据
   changedBy: number;
   changedByName: string;

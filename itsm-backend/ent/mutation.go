@@ -36729,31 +36729,34 @@ func (m *ProblemMutation) ResetEdge(name string) error {
 // ProcessDefinitionMutation represents an operation that mutates the ProcessDefinition nodes in the graph.
 type ProcessDefinitionMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *int
-	key               *string
-	name              *string
-	description       *string
-	version           *string
-	category          *string
-	bpmn_xml          *[]uint8
-	appendbpmn_xml    []uint8
-	process_variables *map[string]interface{}
-	is_active         *bool
-	is_latest         *bool
-	deployment_id     *int
-	adddeployment_id  *int
-	deployment_name   *string
-	deployed_at       *time.Time
-	tenant_id         *int
-	addtenant_id      *int
-	created_at        *time.Time
-	updated_at        *time.Time
-	clearedFields     map[string]struct{}
-	done              bool
-	oldValue          func(context.Context) (*ProcessDefinition, error)
-	predicates        []predicate.ProcessDefinition
+	op                       Op
+	typ                      string
+	id                       *int
+	key                      *string
+	name                     *string
+	description              *string
+	version                  *string
+	category                 *string
+	bpmn_xml                 *[]uint8
+	appendbpmn_xml           []uint8
+	process_variables        *map[string]interface{}
+	is_active                *bool
+	is_latest                *bool
+	deployment_name          *string
+	deployed_at              *time.Time
+	tenant_id                *int
+	addtenant_id             *int
+	created_at               *time.Time
+	updated_at               *time.Time
+	clearedFields            map[string]struct{}
+	process_instances        map[int]struct{}
+	removedprocess_instances map[int]struct{}
+	clearedprocess_instances bool
+	deployment               *int
+	cleareddeployment        bool
+	done                     bool
+	oldValue                 func(context.Context) (*ProcessDefinition, error)
+	predicates               []predicate.ProcessDefinition
 }
 
 var _ ent.Mutation = (*ProcessDefinitionMutation)(nil)
@@ -37221,13 +37224,12 @@ func (m *ProcessDefinitionMutation) ResetIsLatest() {
 
 // SetDeploymentID sets the "deployment_id" field.
 func (m *ProcessDefinitionMutation) SetDeploymentID(i int) {
-	m.deployment_id = &i
-	m.adddeployment_id = nil
+	m.deployment = &i
 }
 
 // DeploymentID returns the value of the "deployment_id" field in the mutation.
 func (m *ProcessDefinitionMutation) DeploymentID() (r int, exists bool) {
-	v := m.deployment_id
+	v := m.deployment
 	if v == nil {
 		return
 	}
@@ -37251,28 +37253,9 @@ func (m *ProcessDefinitionMutation) OldDeploymentID(ctx context.Context) (v int,
 	return oldValue.DeploymentID, nil
 }
 
-// AddDeploymentID adds i to the "deployment_id" field.
-func (m *ProcessDefinitionMutation) AddDeploymentID(i int) {
-	if m.adddeployment_id != nil {
-		*m.adddeployment_id += i
-	} else {
-		m.adddeployment_id = &i
-	}
-}
-
-// AddedDeploymentID returns the value that was added to the "deployment_id" field in this mutation.
-func (m *ProcessDefinitionMutation) AddedDeploymentID() (r int, exists bool) {
-	v := m.adddeployment_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetDeploymentID resets all changes to the "deployment_id" field.
 func (m *ProcessDefinitionMutation) ResetDeploymentID() {
-	m.deployment_id = nil
-	m.adddeployment_id = nil
+	m.deployment = nil
 }
 
 // SetDeploymentName sets the "deployment_name" field.
@@ -37488,6 +37471,87 @@ func (m *ProcessDefinitionMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// AddProcessInstanceIDs adds the "process_instances" edge to the ProcessInstance entity by ids.
+func (m *ProcessDefinitionMutation) AddProcessInstanceIDs(ids ...int) {
+	if m.process_instances == nil {
+		m.process_instances = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.process_instances[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProcessInstances clears the "process_instances" edge to the ProcessInstance entity.
+func (m *ProcessDefinitionMutation) ClearProcessInstances() {
+	m.clearedprocess_instances = true
+}
+
+// ProcessInstancesCleared reports if the "process_instances" edge to the ProcessInstance entity was cleared.
+func (m *ProcessDefinitionMutation) ProcessInstancesCleared() bool {
+	return m.clearedprocess_instances
+}
+
+// RemoveProcessInstanceIDs removes the "process_instances" edge to the ProcessInstance entity by IDs.
+func (m *ProcessDefinitionMutation) RemoveProcessInstanceIDs(ids ...int) {
+	if m.removedprocess_instances == nil {
+		m.removedprocess_instances = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.process_instances, ids[i])
+		m.removedprocess_instances[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProcessInstances returns the removed IDs of the "process_instances" edge to the ProcessInstance entity.
+func (m *ProcessDefinitionMutation) RemovedProcessInstancesIDs() (ids []int) {
+	for id := range m.removedprocess_instances {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProcessInstancesIDs returns the "process_instances" edge IDs in the mutation.
+func (m *ProcessDefinitionMutation) ProcessInstancesIDs() (ids []int) {
+	for id := range m.process_instances {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProcessInstances resets all changes to the "process_instances" edge.
+func (m *ProcessDefinitionMutation) ResetProcessInstances() {
+	m.process_instances = nil
+	m.clearedprocess_instances = false
+	m.removedprocess_instances = nil
+}
+
+// ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
+func (m *ProcessDefinitionMutation) ClearDeployment() {
+	m.cleareddeployment = true
+	m.clearedFields[processdefinition.FieldDeploymentID] = struct{}{}
+}
+
+// DeploymentCleared reports if the "deployment" edge to the ProcessDeployment entity was cleared.
+func (m *ProcessDefinitionMutation) DeploymentCleared() bool {
+	return m.cleareddeployment
+}
+
+// DeploymentIDs returns the "deployment" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// DeploymentID instead. It exists only for internal usage by the builders.
+func (m *ProcessDefinitionMutation) DeploymentIDs() (ids []int) {
+	if id := m.deployment; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetDeployment resets all changes to the "deployment" edge.
+func (m *ProcessDefinitionMutation) ResetDeployment() {
+	m.deployment = nil
+	m.cleareddeployment = false
+}
+
 // Where appends a list predicates to the ProcessDefinitionMutation builder.
 func (m *ProcessDefinitionMutation) Where(ps ...predicate.ProcessDefinition) {
 	m.predicates = append(m.predicates, ps...)
@@ -37550,7 +37614,7 @@ func (m *ProcessDefinitionMutation) Fields() []string {
 	if m.is_latest != nil {
 		fields = append(fields, processdefinition.FieldIsLatest)
 	}
-	if m.deployment_id != nil {
+	if m.deployment != nil {
 		fields = append(fields, processdefinition.FieldDeploymentID)
 	}
 	if m.deployment_name != nil {
@@ -37767,9 +37831,6 @@ func (m *ProcessDefinitionMutation) SetField(name string, value ent.Value) error
 // this mutation.
 func (m *ProcessDefinitionMutation) AddedFields() []string {
 	var fields []string
-	if m.adddeployment_id != nil {
-		fields = append(fields, processdefinition.FieldDeploymentID)
-	}
 	if m.addtenant_id != nil {
 		fields = append(fields, processdefinition.FieldTenantID)
 	}
@@ -37781,8 +37842,6 @@ func (m *ProcessDefinitionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ProcessDefinitionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case processdefinition.FieldDeploymentID:
-		return m.AddedDeploymentID()
 	case processdefinition.FieldTenantID:
 		return m.AddedTenantID()
 	}
@@ -37794,13 +37853,6 @@ func (m *ProcessDefinitionMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ProcessDefinitionMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case processdefinition.FieldDeploymentID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddDeploymentID(v)
-		return nil
 	case processdefinition.FieldTenantID:
 		v, ok := value.(int)
 		if !ok {
@@ -37907,49 +37959,103 @@ func (m *ProcessDefinitionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessDefinitionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.process_instances != nil {
+		edges = append(edges, processdefinition.EdgeProcessInstances)
+	}
+	if m.deployment != nil {
+		edges = append(edges, processdefinition.EdgeDeployment)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProcessDefinitionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processdefinition.EdgeProcessInstances:
+		ids := make([]ent.Value, 0, len(m.process_instances))
+		for id := range m.process_instances {
+			ids = append(ids, id)
+		}
+		return ids
+	case processdefinition.EdgeDeployment:
+		if id := m.deployment; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessDefinitionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.removedprocess_instances != nil {
+		edges = append(edges, processdefinition.EdgeProcessInstances)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ProcessDefinitionMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case processdefinition.EdgeProcessInstances:
+		ids := make([]ent.Value, 0, len(m.removedprocess_instances))
+		for id := range m.removedprocess_instances {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessDefinitionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.clearedprocess_instances {
+		edges = append(edges, processdefinition.EdgeProcessInstances)
+	}
+	if m.cleareddeployment {
+		edges = append(edges, processdefinition.EdgeDeployment)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProcessDefinitionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processdefinition.EdgeProcessInstances:
+		return m.clearedprocess_instances
+	case processdefinition.EdgeDeployment:
+		return m.cleareddeployment
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProcessDefinitionMutation) ClearEdge(name string) error {
+	switch name {
+	case processdefinition.EdgeDeployment:
+		m.ClearDeployment()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessDefinition unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProcessDefinitionMutation) ResetEdge(name string) error {
+	switch name {
+	case processdefinition.EdgeProcessInstances:
+		m.ResetProcessInstances()
+		return nil
+	case processdefinition.EdgeDeployment:
+		m.ResetDeployment()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessDefinition edge %s", name)
 }
 
@@ -37973,6 +38079,9 @@ type ProcessDeploymentMutation struct {
 	created_at          *time.Time
 	updated_at          *time.Time
 	clearedFields       map[string]struct{}
+	definitions         map[int]struct{}
+	removeddefinitions  map[int]struct{}
+	cleareddefinitions  bool
 	done                bool
 	oldValue            func(context.Context) (*ProcessDeployment, error)
 	predicates          []predicate.ProcessDeployment
@@ -38580,6 +38689,60 @@ func (m *ProcessDeploymentMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by ids.
+func (m *ProcessDeploymentMutation) AddDefinitionIDs(ids ...int) {
+	if m.definitions == nil {
+		m.definitions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.definitions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDefinitions clears the "definitions" edge to the ProcessDefinition entity.
+func (m *ProcessDeploymentMutation) ClearDefinitions() {
+	m.cleareddefinitions = true
+}
+
+// DefinitionsCleared reports if the "definitions" edge to the ProcessDefinition entity was cleared.
+func (m *ProcessDeploymentMutation) DefinitionsCleared() bool {
+	return m.cleareddefinitions
+}
+
+// RemoveDefinitionIDs removes the "definitions" edge to the ProcessDefinition entity by IDs.
+func (m *ProcessDeploymentMutation) RemoveDefinitionIDs(ids ...int) {
+	if m.removeddefinitions == nil {
+		m.removeddefinitions = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.definitions, ids[i])
+		m.removeddefinitions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDefinitions returns the removed IDs of the "definitions" edge to the ProcessDefinition entity.
+func (m *ProcessDeploymentMutation) RemovedDefinitionsIDs() (ids []int) {
+	for id := range m.removeddefinitions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DefinitionsIDs returns the "definitions" edge IDs in the mutation.
+func (m *ProcessDeploymentMutation) DefinitionsIDs() (ids []int) {
+	for id := range m.definitions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDefinitions resets all changes to the "definitions" edge.
+func (m *ProcessDeploymentMutation) ResetDefinitions() {
+	m.definitions = nil
+	m.cleareddefinitions = false
+	m.removeddefinitions = nil
+}
+
 // Where appends a list predicates to the ProcessDeploymentMutation builder.
 func (m *ProcessDeploymentMutation) Where(ps ...predicate.ProcessDeployment) {
 	m.predicates = append(m.predicates, ps...)
@@ -38942,80 +39105,117 @@ func (m *ProcessDeploymentMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessDeploymentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.definitions != nil {
+		edges = append(edges, processdeployment.EdgeDefinitions)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProcessDeploymentMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processdeployment.EdgeDefinitions:
+		ids := make([]ent.Value, 0, len(m.definitions))
+		for id := range m.definitions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessDeploymentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removeddefinitions != nil {
+		edges = append(edges, processdeployment.EdgeDefinitions)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ProcessDeploymentMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case processdeployment.EdgeDefinitions:
+		ids := make([]ent.Value, 0, len(m.removeddefinitions))
+		for id := range m.removeddefinitions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessDeploymentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.cleareddefinitions {
+		edges = append(edges, processdeployment.EdgeDefinitions)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProcessDeploymentMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processdeployment.EdgeDefinitions:
+		return m.cleareddefinitions
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProcessDeploymentMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown ProcessDeployment unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProcessDeploymentMutation) ResetEdge(name string) error {
+	switch name {
+	case processdeployment.EdgeDefinitions:
+		m.ResetDefinitions()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessDeployment edge %s", name)
 }
 
 // ProcessExecutionHistoryMutation represents an operation that mutates the ProcessExecutionHistory nodes in the graph.
 type ProcessExecutionHistoryMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *int
-	history_id             *string
-	process_instance_id    *string
-	process_definition_key *string
-	activity_id            *string
-	activity_name          *string
-	activity_type          *string
-	event_type             *string
-	event_detail           *string
-	variables              *map[string]interface{}
-	user_id                *string
-	user_name              *string
-	timestamp              *time.Time
-	comment                *string
-	error_message          *string
-	error_code             *string
-	tenant_id              *int
-	addtenant_id           *int
-	created_at             *time.Time
-	clearedFields          map[string]struct{}
-	done                   bool
-	oldValue               func(context.Context) (*ProcessExecutionHistory, error)
-	predicates             []predicate.ProcessExecutionHistory
+	op                      Op
+	typ                     string
+	id                      *int
+	history_id              *string
+	process_definition_key  *string
+	activity_id             *string
+	activity_name           *string
+	activity_type           *string
+	event_type              *string
+	event_detail            *string
+	variables               *map[string]interface{}
+	user_id                 *string
+	user_name               *string
+	timestamp               *time.Time
+	comment                 *string
+	error_message           *string
+	error_code              *string
+	tenant_id               *int
+	addtenant_id            *int
+	created_at              *time.Time
+	clearedFields           map[string]struct{}
+	process_instance        *int
+	clearedprocess_instance bool
+	done                    bool
+	oldValue                func(context.Context) (*ProcessExecutionHistory, error)
+	predicates              []predicate.ProcessExecutionHistory
 }
 
 var _ ent.Mutation = (*ProcessExecutionHistoryMutation)(nil)
@@ -39153,13 +39353,13 @@ func (m *ProcessExecutionHistoryMutation) ResetHistoryID() {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (m *ProcessExecutionHistoryMutation) SetProcessInstanceID(s string) {
-	m.process_instance_id = &s
+func (m *ProcessExecutionHistoryMutation) SetProcessInstanceID(i int) {
+	m.process_instance = &i
 }
 
 // ProcessInstanceID returns the value of the "process_instance_id" field in the mutation.
-func (m *ProcessExecutionHistoryMutation) ProcessInstanceID() (r string, exists bool) {
-	v := m.process_instance_id
+func (m *ProcessExecutionHistoryMutation) ProcessInstanceID() (r int, exists bool) {
+	v := m.process_instance
 	if v == nil {
 		return
 	}
@@ -39169,7 +39369,7 @@ func (m *ProcessExecutionHistoryMutation) ProcessInstanceID() (r string, exists 
 // OldProcessInstanceID returns the old "process_instance_id" field's value of the ProcessExecutionHistory entity.
 // If the ProcessExecutionHistory object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProcessExecutionHistoryMutation) OldProcessInstanceID(ctx context.Context) (v string, err error) {
+func (m *ProcessExecutionHistoryMutation) OldProcessInstanceID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProcessInstanceID is only allowed on UpdateOne operations")
 	}
@@ -39185,7 +39385,7 @@ func (m *ProcessExecutionHistoryMutation) OldProcessInstanceID(ctx context.Conte
 
 // ResetProcessInstanceID resets all changes to the "process_instance_id" field.
 func (m *ProcessExecutionHistoryMutation) ResetProcessInstanceID() {
-	m.process_instance_id = nil
+	m.process_instance = nil
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
@@ -39865,6 +40065,33 @@ func (m *ProcessExecutionHistoryMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (m *ProcessExecutionHistoryMutation) ClearProcessInstance() {
+	m.clearedprocess_instance = true
+	m.clearedFields[processexecutionhistory.FieldProcessInstanceID] = struct{}{}
+}
+
+// ProcessInstanceCleared reports if the "process_instance" edge to the ProcessInstance entity was cleared.
+func (m *ProcessExecutionHistoryMutation) ProcessInstanceCleared() bool {
+	return m.clearedprocess_instance
+}
+
+// ProcessInstanceIDs returns the "process_instance" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProcessInstanceID instead. It exists only for internal usage by the builders.
+func (m *ProcessExecutionHistoryMutation) ProcessInstanceIDs() (ids []int) {
+	if id := m.process_instance; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProcessInstance resets all changes to the "process_instance" edge.
+func (m *ProcessExecutionHistoryMutation) ResetProcessInstance() {
+	m.process_instance = nil
+	m.clearedprocess_instance = false
+}
+
 // Where appends a list predicates to the ProcessExecutionHistoryMutation builder.
 func (m *ProcessExecutionHistoryMutation) Where(ps ...predicate.ProcessExecutionHistory) {
 	m.predicates = append(m.predicates, ps...)
@@ -39903,7 +40130,7 @@ func (m *ProcessExecutionHistoryMutation) Fields() []string {
 	if m.history_id != nil {
 		fields = append(fields, processexecutionhistory.FieldHistoryID)
 	}
-	if m.process_instance_id != nil {
+	if m.process_instance != nil {
 		fields = append(fields, processexecutionhistory.FieldProcessInstanceID)
 	}
 	if m.process_definition_key != nil {
@@ -40053,7 +40280,7 @@ func (m *ProcessExecutionHistoryMutation) SetField(name string, value ent.Value)
 		m.SetHistoryID(v)
 		return nil
 	case processexecutionhistory.FieldProcessInstanceID:
-		v, ok := value.(string)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -40342,19 +40569,28 @@ func (m *ProcessExecutionHistoryMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessExecutionHistoryMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.process_instance != nil {
+		edges = append(edges, processexecutionhistory.EdgeProcessInstance)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProcessExecutionHistoryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processexecutionhistory.EdgeProcessInstance:
+		if id := m.process_instance; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessExecutionHistoryMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -40366,25 +40602,42 @@ func (m *ProcessExecutionHistoryMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessExecutionHistoryMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedprocess_instance {
+		edges = append(edges, processexecutionhistory.EdgeProcessInstance)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProcessExecutionHistoryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processexecutionhistory.EdgeProcessInstance:
+		return m.clearedprocess_instance
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProcessExecutionHistoryMutation) ClearEdge(name string) error {
+	switch name {
+	case processexecutionhistory.EdgeProcessInstance:
+		m.ClearProcessInstance()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessExecutionHistory unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProcessExecutionHistoryMutation) ResetEdge(name string) error {
+	switch name {
+	case processexecutionhistory.EdgeProcessInstance:
+		m.ResetProcessInstance()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessExecutionHistory edge %s", name)
 }
 
@@ -40397,7 +40650,6 @@ type ProcessInstanceMutation struct {
 	process_instance_id        *string
 	business_key               *string
 	process_definition_key     *string
-	process_definition_id      *string
 	status                     *string
 	current_activity_id        *string
 	current_activity_name      *string
@@ -40416,6 +40668,17 @@ type ProcessInstanceMutation struct {
 	created_at                 *time.Time
 	updated_at                 *time.Time
 	clearedFields              map[string]struct{}
+	process_tasks              map[int]struct{}
+	removedprocess_tasks       map[int]struct{}
+	clearedprocess_tasks       bool
+	process_variables          map[int]struct{}
+	removedprocess_variables   map[int]struct{}
+	clearedprocess_variables   bool
+	execution_history          map[int]struct{}
+	removedexecution_history   map[int]struct{}
+	clearedexecution_history   bool
+	definition                 *int
+	cleareddefinition          bool
 	done                       bool
 	oldValue                   func(context.Context) (*ProcessInstance, error)
 	predicates                 []predicate.ProcessInstance
@@ -40641,13 +40904,13 @@ func (m *ProcessInstanceMutation) ResetProcessDefinitionKey() {
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (m *ProcessInstanceMutation) SetProcessDefinitionID(s string) {
-	m.process_definition_id = &s
+func (m *ProcessInstanceMutation) SetProcessDefinitionID(i int) {
+	m.definition = &i
 }
 
 // ProcessDefinitionID returns the value of the "process_definition_id" field in the mutation.
-func (m *ProcessInstanceMutation) ProcessDefinitionID() (r string, exists bool) {
-	v := m.process_definition_id
+func (m *ProcessInstanceMutation) ProcessDefinitionID() (r int, exists bool) {
+	v := m.definition
 	if v == nil {
 		return
 	}
@@ -40657,7 +40920,7 @@ func (m *ProcessInstanceMutation) ProcessDefinitionID() (r string, exists bool) 
 // OldProcessDefinitionID returns the old "process_definition_id" field's value of the ProcessInstance entity.
 // If the ProcessInstance object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProcessInstanceMutation) OldProcessDefinitionID(ctx context.Context) (v string, err error) {
+func (m *ProcessInstanceMutation) OldProcessDefinitionID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProcessDefinitionID is only allowed on UpdateOne operations")
 	}
@@ -40673,7 +40936,7 @@ func (m *ProcessInstanceMutation) OldProcessDefinitionID(ctx context.Context) (v
 
 // ResetProcessDefinitionID resets all changes to the "process_definition_id" field.
 func (m *ProcessInstanceMutation) ResetProcessDefinitionID() {
-	m.process_definition_id = nil
+	m.definition = nil
 }
 
 // SetStatus sets the "status" field.
@@ -41382,6 +41645,208 @@ func (m *ProcessInstanceMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by ids.
+func (m *ProcessInstanceMutation) AddProcessTaskIDs(ids ...int) {
+	if m.process_tasks == nil {
+		m.process_tasks = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.process_tasks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProcessTasks clears the "process_tasks" edge to the ProcessTask entity.
+func (m *ProcessInstanceMutation) ClearProcessTasks() {
+	m.clearedprocess_tasks = true
+}
+
+// ProcessTasksCleared reports if the "process_tasks" edge to the ProcessTask entity was cleared.
+func (m *ProcessInstanceMutation) ProcessTasksCleared() bool {
+	return m.clearedprocess_tasks
+}
+
+// RemoveProcessTaskIDs removes the "process_tasks" edge to the ProcessTask entity by IDs.
+func (m *ProcessInstanceMutation) RemoveProcessTaskIDs(ids ...int) {
+	if m.removedprocess_tasks == nil {
+		m.removedprocess_tasks = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.process_tasks, ids[i])
+		m.removedprocess_tasks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProcessTasks returns the removed IDs of the "process_tasks" edge to the ProcessTask entity.
+func (m *ProcessInstanceMutation) RemovedProcessTasksIDs() (ids []int) {
+	for id := range m.removedprocess_tasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProcessTasksIDs returns the "process_tasks" edge IDs in the mutation.
+func (m *ProcessInstanceMutation) ProcessTasksIDs() (ids []int) {
+	for id := range m.process_tasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProcessTasks resets all changes to the "process_tasks" edge.
+func (m *ProcessInstanceMutation) ResetProcessTasks() {
+	m.process_tasks = nil
+	m.clearedprocess_tasks = false
+	m.removedprocess_tasks = nil
+}
+
+// AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by ids.
+func (m *ProcessInstanceMutation) AddProcessVariableIDs(ids ...int) {
+	if m.process_variables == nil {
+		m.process_variables = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.process_variables[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProcessVariables clears the "process_variables" edge to the ProcessVariable entity.
+func (m *ProcessInstanceMutation) ClearProcessVariables() {
+	m.clearedprocess_variables = true
+}
+
+// ProcessVariablesCleared reports if the "process_variables" edge to the ProcessVariable entity was cleared.
+func (m *ProcessInstanceMutation) ProcessVariablesCleared() bool {
+	return m.clearedprocess_variables
+}
+
+// RemoveProcessVariableIDs removes the "process_variables" edge to the ProcessVariable entity by IDs.
+func (m *ProcessInstanceMutation) RemoveProcessVariableIDs(ids ...int) {
+	if m.removedprocess_variables == nil {
+		m.removedprocess_variables = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.process_variables, ids[i])
+		m.removedprocess_variables[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProcessVariables returns the removed IDs of the "process_variables" edge to the ProcessVariable entity.
+func (m *ProcessInstanceMutation) RemovedProcessVariablesIDs() (ids []int) {
+	for id := range m.removedprocess_variables {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProcessVariablesIDs returns the "process_variables" edge IDs in the mutation.
+func (m *ProcessInstanceMutation) ProcessVariablesIDs() (ids []int) {
+	for id := range m.process_variables {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProcessVariables resets all changes to the "process_variables" edge.
+func (m *ProcessInstanceMutation) ResetProcessVariables() {
+	m.process_variables = nil
+	m.clearedprocess_variables = false
+	m.removedprocess_variables = nil
+}
+
+// AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by ids.
+func (m *ProcessInstanceMutation) AddExecutionHistoryIDs(ids ...int) {
+	if m.execution_history == nil {
+		m.execution_history = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.execution_history[ids[i]] = struct{}{}
+	}
+}
+
+// ClearExecutionHistory clears the "execution_history" edge to the ProcessExecutionHistory entity.
+func (m *ProcessInstanceMutation) ClearExecutionHistory() {
+	m.clearedexecution_history = true
+}
+
+// ExecutionHistoryCleared reports if the "execution_history" edge to the ProcessExecutionHistory entity was cleared.
+func (m *ProcessInstanceMutation) ExecutionHistoryCleared() bool {
+	return m.clearedexecution_history
+}
+
+// RemoveExecutionHistoryIDs removes the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
+func (m *ProcessInstanceMutation) RemoveExecutionHistoryIDs(ids ...int) {
+	if m.removedexecution_history == nil {
+		m.removedexecution_history = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.execution_history, ids[i])
+		m.removedexecution_history[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedExecutionHistory returns the removed IDs of the "execution_history" edge to the ProcessExecutionHistory entity.
+func (m *ProcessInstanceMutation) RemovedExecutionHistoryIDs() (ids []int) {
+	for id := range m.removedexecution_history {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ExecutionHistoryIDs returns the "execution_history" edge IDs in the mutation.
+func (m *ProcessInstanceMutation) ExecutionHistoryIDs() (ids []int) {
+	for id := range m.execution_history {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetExecutionHistory resets all changes to the "execution_history" edge.
+func (m *ProcessInstanceMutation) ResetExecutionHistory() {
+	m.execution_history = nil
+	m.clearedexecution_history = false
+	m.removedexecution_history = nil
+}
+
+// SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by id.
+func (m *ProcessInstanceMutation) SetDefinitionID(id int) {
+	m.definition = &id
+}
+
+// ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
+func (m *ProcessInstanceMutation) ClearDefinition() {
+	m.cleareddefinition = true
+	m.clearedFields[processinstance.FieldProcessDefinitionID] = struct{}{}
+}
+
+// DefinitionCleared reports if the "definition" edge to the ProcessDefinition entity was cleared.
+func (m *ProcessInstanceMutation) DefinitionCleared() bool {
+	return m.cleareddefinition
+}
+
+// DefinitionID returns the "definition" edge ID in the mutation.
+func (m *ProcessInstanceMutation) DefinitionID() (id int, exists bool) {
+	if m.definition != nil {
+		return *m.definition, true
+	}
+	return
+}
+
+// DefinitionIDs returns the "definition" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// DefinitionID instead. It exists only for internal usage by the builders.
+func (m *ProcessInstanceMutation) DefinitionIDs() (ids []int) {
+	if id := m.definition; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetDefinition resets all changes to the "definition" edge.
+func (m *ProcessInstanceMutation) ResetDefinition() {
+	m.definition = nil
+	m.cleareddefinition = false
+}
+
 // Where appends a list predicates to the ProcessInstanceMutation builder.
 func (m *ProcessInstanceMutation) Where(ps ...predicate.ProcessInstance) {
 	m.predicates = append(m.predicates, ps...)
@@ -41426,7 +41891,7 @@ func (m *ProcessInstanceMutation) Fields() []string {
 	if m.process_definition_key != nil {
 		fields = append(fields, processinstance.FieldProcessDefinitionKey)
 	}
-	if m.process_definition_id != nil {
+	if m.definition != nil {
 		fields = append(fields, processinstance.FieldProcessDefinitionID)
 	}
 	if m.status != nil {
@@ -41598,7 +42063,7 @@ func (m *ProcessInstanceMutation) SetField(name string, value ent.Value) error {
 		m.SetProcessDefinitionKey(v)
 		return nil
 	case processinstance.FieldProcessDefinitionID:
-		v, ok := value.(string)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -41905,87 +42370,194 @@ func (m *ProcessInstanceMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessInstanceMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 4)
+	if m.process_tasks != nil {
+		edges = append(edges, processinstance.EdgeProcessTasks)
+	}
+	if m.process_variables != nil {
+		edges = append(edges, processinstance.EdgeProcessVariables)
+	}
+	if m.execution_history != nil {
+		edges = append(edges, processinstance.EdgeExecutionHistory)
+	}
+	if m.definition != nil {
+		edges = append(edges, processinstance.EdgeDefinition)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProcessInstanceMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processinstance.EdgeProcessTasks:
+		ids := make([]ent.Value, 0, len(m.process_tasks))
+		for id := range m.process_tasks {
+			ids = append(ids, id)
+		}
+		return ids
+	case processinstance.EdgeProcessVariables:
+		ids := make([]ent.Value, 0, len(m.process_variables))
+		for id := range m.process_variables {
+			ids = append(ids, id)
+		}
+		return ids
+	case processinstance.EdgeExecutionHistory:
+		ids := make([]ent.Value, 0, len(m.execution_history))
+		for id := range m.execution_history {
+			ids = append(ids, id)
+		}
+		return ids
+	case processinstance.EdgeDefinition:
+		if id := m.definition; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessInstanceMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 4)
+	if m.removedprocess_tasks != nil {
+		edges = append(edges, processinstance.EdgeProcessTasks)
+	}
+	if m.removedprocess_variables != nil {
+		edges = append(edges, processinstance.EdgeProcessVariables)
+	}
+	if m.removedexecution_history != nil {
+		edges = append(edges, processinstance.EdgeExecutionHistory)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ProcessInstanceMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case processinstance.EdgeProcessTasks:
+		ids := make([]ent.Value, 0, len(m.removedprocess_tasks))
+		for id := range m.removedprocess_tasks {
+			ids = append(ids, id)
+		}
+		return ids
+	case processinstance.EdgeProcessVariables:
+		ids := make([]ent.Value, 0, len(m.removedprocess_variables))
+		for id := range m.removedprocess_variables {
+			ids = append(ids, id)
+		}
+		return ids
+	case processinstance.EdgeExecutionHistory:
+		ids := make([]ent.Value, 0, len(m.removedexecution_history))
+		for id := range m.removedexecution_history {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessInstanceMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 4)
+	if m.clearedprocess_tasks {
+		edges = append(edges, processinstance.EdgeProcessTasks)
+	}
+	if m.clearedprocess_variables {
+		edges = append(edges, processinstance.EdgeProcessVariables)
+	}
+	if m.clearedexecution_history {
+		edges = append(edges, processinstance.EdgeExecutionHistory)
+	}
+	if m.cleareddefinition {
+		edges = append(edges, processinstance.EdgeDefinition)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProcessInstanceMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processinstance.EdgeProcessTasks:
+		return m.clearedprocess_tasks
+	case processinstance.EdgeProcessVariables:
+		return m.clearedprocess_variables
+	case processinstance.EdgeExecutionHistory:
+		return m.clearedexecution_history
+	case processinstance.EdgeDefinition:
+		return m.cleareddefinition
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProcessInstanceMutation) ClearEdge(name string) error {
+	switch name {
+	case processinstance.EdgeDefinition:
+		m.ClearDefinition()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessInstance unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProcessInstanceMutation) ResetEdge(name string) error {
+	switch name {
+	case processinstance.EdgeProcessTasks:
+		m.ResetProcessTasks()
+		return nil
+	case processinstance.EdgeProcessVariables:
+		m.ResetProcessVariables()
+		return nil
+	case processinstance.EdgeExecutionHistory:
+		m.ResetExecutionHistory()
+		return nil
+	case processinstance.EdgeDefinition:
+		m.ResetDefinition()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessInstance edge %s", name)
 }
 
 // ProcessTaskMutation represents an operation that mutates the ProcessTask nodes in the graph.
 type ProcessTaskMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *int
-	task_id                *string
-	process_instance_id    *string
-	process_definition_key *string
-	task_definition_key    *string
-	task_name              *string
-	task_type              *string
-	assignee               *string
-	candidate_users        *string
-	candidate_groups       *string
-	status                 *string
-	priority               *string
-	due_date               *time.Time
-	created_time           *time.Time
-	assigned_time          *time.Time
-	started_time           *time.Time
-	completed_time         *time.Time
-	form_key               *string
-	task_variables         *map[string]interface{}
-	description            *string
-	parent_task_id         *string
-	root_task_id           *string
-	tenant_id              *int
-	addtenant_id           *int
-	created_at             *time.Time
-	updated_at             *time.Time
-	clearedFields          map[string]struct{}
-	done                   bool
-	oldValue               func(context.Context) (*ProcessTask, error)
-	predicates             []predicate.ProcessTask
+	op                      Op
+	typ                     string
+	id                      *int
+	task_id                 *string
+	process_definition_key  *string
+	task_definition_key     *string
+	task_name               *string
+	task_type               *string
+	assignee                *string
+	candidate_users         *string
+	candidate_groups        *string
+	status                  *string
+	priority                *string
+	due_date                *time.Time
+	created_time            *time.Time
+	assigned_time           *time.Time
+	started_time            *time.Time
+	completed_time          *time.Time
+	form_key                *string
+	task_variables          *map[string]interface{}
+	description             *string
+	parent_task_id          *string
+	root_task_id            *string
+	tenant_id               *int
+	addtenant_id            *int
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	process_instance        *int
+	clearedprocess_instance bool
+	done                    bool
+	oldValue                func(context.Context) (*ProcessTask, error)
+	predicates              []predicate.ProcessTask
 }
 
 var _ ent.Mutation = (*ProcessTaskMutation)(nil)
@@ -42123,13 +42695,13 @@ func (m *ProcessTaskMutation) ResetTaskID() {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (m *ProcessTaskMutation) SetProcessInstanceID(s string) {
-	m.process_instance_id = &s
+func (m *ProcessTaskMutation) SetProcessInstanceID(i int) {
+	m.process_instance = &i
 }
 
 // ProcessInstanceID returns the value of the "process_instance_id" field in the mutation.
-func (m *ProcessTaskMutation) ProcessInstanceID() (r string, exists bool) {
-	v := m.process_instance_id
+func (m *ProcessTaskMutation) ProcessInstanceID() (r int, exists bool) {
+	v := m.process_instance
 	if v == nil {
 		return
 	}
@@ -42139,7 +42711,7 @@ func (m *ProcessTaskMutation) ProcessInstanceID() (r string, exists bool) {
 // OldProcessInstanceID returns the old "process_instance_id" field's value of the ProcessTask entity.
 // If the ProcessTask object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProcessTaskMutation) OldProcessInstanceID(ctx context.Context) (v string, err error) {
+func (m *ProcessTaskMutation) OldProcessInstanceID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProcessInstanceID is only allowed on UpdateOne operations")
 	}
@@ -42155,7 +42727,7 @@ func (m *ProcessTaskMutation) OldProcessInstanceID(ctx context.Context) (v strin
 
 // ResetProcessInstanceID resets all changes to the "process_instance_id" field.
 func (m *ProcessTaskMutation) ResetProcessInstanceID() {
-	m.process_instance_id = nil
+	m.process_instance = nil
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
@@ -43126,6 +43698,33 @@ func (m *ProcessTaskMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (m *ProcessTaskMutation) ClearProcessInstance() {
+	m.clearedprocess_instance = true
+	m.clearedFields[processtask.FieldProcessInstanceID] = struct{}{}
+}
+
+// ProcessInstanceCleared reports if the "process_instance" edge to the ProcessInstance entity was cleared.
+func (m *ProcessTaskMutation) ProcessInstanceCleared() bool {
+	return m.clearedprocess_instance
+}
+
+// ProcessInstanceIDs returns the "process_instance" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProcessInstanceID instead. It exists only for internal usage by the builders.
+func (m *ProcessTaskMutation) ProcessInstanceIDs() (ids []int) {
+	if id := m.process_instance; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProcessInstance resets all changes to the "process_instance" edge.
+func (m *ProcessTaskMutation) ResetProcessInstance() {
+	m.process_instance = nil
+	m.clearedprocess_instance = false
+}
+
 // Where appends a list predicates to the ProcessTaskMutation builder.
 func (m *ProcessTaskMutation) Where(ps ...predicate.ProcessTask) {
 	m.predicates = append(m.predicates, ps...)
@@ -43164,7 +43763,7 @@ func (m *ProcessTaskMutation) Fields() []string {
 	if m.task_id != nil {
 		fields = append(fields, processtask.FieldTaskID)
 	}
-	if m.process_instance_id != nil {
+	if m.process_instance != nil {
 		fields = append(fields, processtask.FieldProcessInstanceID)
 	}
 	if m.process_definition_key != nil {
@@ -43363,7 +43962,7 @@ func (m *ProcessTaskMutation) SetField(name string, value ent.Value) error {
 		m.SetTaskID(v)
 		return nil
 	case processtask.FieldProcessInstanceID:
-		v, ok := value.(string)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -43740,19 +44339,28 @@ func (m *ProcessTaskMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessTaskMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.process_instance != nil {
+		edges = append(edges, processtask.EdgeProcessInstance)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProcessTaskMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processtask.EdgeProcessInstance:
+		if id := m.process_instance; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessTaskMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -43764,51 +44372,69 @@ func (m *ProcessTaskMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessTaskMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedprocess_instance {
+		edges = append(edges, processtask.EdgeProcessInstance)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProcessTaskMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processtask.EdgeProcessInstance:
+		return m.clearedprocess_instance
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProcessTaskMutation) ClearEdge(name string) error {
+	switch name {
+	case processtask.EdgeProcessInstance:
+		m.ClearProcessInstance()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessTask unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProcessTaskMutation) ResetEdge(name string) error {
+	switch name {
+	case processtask.EdgeProcessInstance:
+		m.ResetProcessInstance()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessTask edge %s", name)
 }
 
 // ProcessVariableMutation represents an operation that mutates the ProcessVariable nodes in the graph.
 type ProcessVariableMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *int
-	variable_id          *string
-	process_instance_id  *string
-	task_id              *string
-	variable_name        *string
-	variable_type        *string
-	variable_value       *string
-	scope                *string
-	is_transient         *bool
-	serialization_format *string
-	tenant_id            *int
-	addtenant_id         *int
-	created_at           *time.Time
-	updated_at           *time.Time
-	clearedFields        map[string]struct{}
-	done                 bool
-	oldValue             func(context.Context) (*ProcessVariable, error)
-	predicates           []predicate.ProcessVariable
+	op                      Op
+	typ                     string
+	id                      *int
+	variable_id             *string
+	task_id                 *string
+	variable_name           *string
+	variable_type           *string
+	variable_value          *string
+	scope                   *string
+	is_transient            *bool
+	serialization_format    *string
+	tenant_id               *int
+	addtenant_id            *int
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	process_instance        *int
+	clearedprocess_instance bool
+	done                    bool
+	oldValue                func(context.Context) (*ProcessVariable, error)
+	predicates              []predicate.ProcessVariable
 }
 
 var _ ent.Mutation = (*ProcessVariableMutation)(nil)
@@ -43946,13 +44572,13 @@ func (m *ProcessVariableMutation) ResetVariableID() {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (m *ProcessVariableMutation) SetProcessInstanceID(s string) {
-	m.process_instance_id = &s
+func (m *ProcessVariableMutation) SetProcessInstanceID(i int) {
+	m.process_instance = &i
 }
 
 // ProcessInstanceID returns the value of the "process_instance_id" field in the mutation.
-func (m *ProcessVariableMutation) ProcessInstanceID() (r string, exists bool) {
-	v := m.process_instance_id
+func (m *ProcessVariableMutation) ProcessInstanceID() (r int, exists bool) {
+	v := m.process_instance
 	if v == nil {
 		return
 	}
@@ -43962,7 +44588,7 @@ func (m *ProcessVariableMutation) ProcessInstanceID() (r string, exists bool) {
 // OldProcessInstanceID returns the old "process_instance_id" field's value of the ProcessVariable entity.
 // If the ProcessVariable object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ProcessVariableMutation) OldProcessInstanceID(ctx context.Context) (v string, err error) {
+func (m *ProcessVariableMutation) OldProcessInstanceID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldProcessInstanceID is only allowed on UpdateOne operations")
 	}
@@ -43978,7 +44604,7 @@ func (m *ProcessVariableMutation) OldProcessInstanceID(ctx context.Context) (v s
 
 // ResetProcessInstanceID resets all changes to the "process_instance_id" field.
 func (m *ProcessVariableMutation) ResetProcessInstanceID() {
-	m.process_instance_id = nil
+	m.process_instance = nil
 }
 
 // SetTaskID sets the "task_id" field.
@@ -44387,6 +45013,33 @@ func (m *ProcessVariableMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (m *ProcessVariableMutation) ClearProcessInstance() {
+	m.clearedprocess_instance = true
+	m.clearedFields[processvariable.FieldProcessInstanceID] = struct{}{}
+}
+
+// ProcessInstanceCleared reports if the "process_instance" edge to the ProcessInstance entity was cleared.
+func (m *ProcessVariableMutation) ProcessInstanceCleared() bool {
+	return m.clearedprocess_instance
+}
+
+// ProcessInstanceIDs returns the "process_instance" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProcessInstanceID instead. It exists only for internal usage by the builders.
+func (m *ProcessVariableMutation) ProcessInstanceIDs() (ids []int) {
+	if id := m.process_instance; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProcessInstance resets all changes to the "process_instance" edge.
+func (m *ProcessVariableMutation) ResetProcessInstance() {
+	m.process_instance = nil
+	m.clearedprocess_instance = false
+}
+
 // Where appends a list predicates to the ProcessVariableMutation builder.
 func (m *ProcessVariableMutation) Where(ps ...predicate.ProcessVariable) {
 	m.predicates = append(m.predicates, ps...)
@@ -44425,7 +45078,7 @@ func (m *ProcessVariableMutation) Fields() []string {
 	if m.variable_id != nil {
 		fields = append(fields, processvariable.FieldVariableID)
 	}
-	if m.process_instance_id != nil {
+	if m.process_instance != nil {
 		fields = append(fields, processvariable.FieldProcessInstanceID)
 	}
 	if m.task_id != nil {
@@ -44540,7 +45193,7 @@ func (m *ProcessVariableMutation) SetField(name string, value ent.Value) error {
 		m.SetVariableID(v)
 		return nil
 	case processvariable.FieldProcessInstanceID:
-		v, ok := value.(string)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -44737,19 +45390,28 @@ func (m *ProcessVariableMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessVariableMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.process_instance != nil {
+		edges = append(edges, processvariable.EdgeProcessInstance)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ProcessVariableMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processvariable.EdgeProcessInstance:
+		if id := m.process_instance; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessVariableMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -44761,25 +45423,42 @@ func (m *ProcessVariableMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessVariableMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedprocess_instance {
+		edges = append(edges, processvariable.EdgeProcessInstance)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ProcessVariableMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processvariable.EdgeProcessInstance:
+		return m.clearedprocess_instance
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ProcessVariableMutation) ClearEdge(name string) error {
+	switch name {
+	case processvariable.EdgeProcessInstance:
+		m.ClearProcessInstance()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessVariable unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ProcessVariableMutation) ResetEdge(name string) error {
+	switch name {
+	case processvariable.EdgeProcessInstance:
+		m.ResetProcessInstance()
+		return nil
+	}
 	return fmt.Errorf("unknown ProcessVariable edge %s", name)
 }
 

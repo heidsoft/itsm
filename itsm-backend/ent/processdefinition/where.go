@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -504,26 +505,6 @@ func DeploymentIDNotIn(vs ...int) predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(sql.FieldNotIn(FieldDeploymentID, vs...))
 }
 
-// DeploymentIDGT applies the GT predicate on the "deployment_id" field.
-func DeploymentIDGT(v int) predicate.ProcessDefinition {
-	return predicate.ProcessDefinition(sql.FieldGT(FieldDeploymentID, v))
-}
-
-// DeploymentIDGTE applies the GTE predicate on the "deployment_id" field.
-func DeploymentIDGTE(v int) predicate.ProcessDefinition {
-	return predicate.ProcessDefinition(sql.FieldGTE(FieldDeploymentID, v))
-}
-
-// DeploymentIDLT applies the LT predicate on the "deployment_id" field.
-func DeploymentIDLT(v int) predicate.ProcessDefinition {
-	return predicate.ProcessDefinition(sql.FieldLT(FieldDeploymentID, v))
-}
-
-// DeploymentIDLTE applies the LTE predicate on the "deployment_id" field.
-func DeploymentIDLTE(v int) predicate.ProcessDefinition {
-	return predicate.ProcessDefinition(sql.FieldLTE(FieldDeploymentID, v))
-}
-
 // DeploymentNameEQ applies the EQ predicate on the "deployment_name" field.
 func DeploymentNameEQ(v string) predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(sql.FieldEQ(FieldDeploymentName, v))
@@ -757,6 +738,52 @@ func UpdatedAtLT(v time.Time) predicate.ProcessDefinition {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasProcessInstances applies the HasEdge predicate on the "process_instances" edge.
+func HasProcessInstances() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ProcessInstancesTable, ProcessInstancesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProcessInstancesWith applies the HasEdge predicate on the "process_instances" edge with a given conditions (other predicates).
+func HasProcessInstancesWith(preds ...predicate.ProcessInstance) predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := newProcessInstancesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasDeployment applies the HasEdge predicate on the "deployment" edge.
+func HasDeployment() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DeploymentTable, DeploymentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDeploymentWith applies the HasEdge predicate on the "deployment" edge with a given conditions (other predicates).
+func HasDeploymentWith(preds ...predicate.ProcessDeployment) predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := newDeploymentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

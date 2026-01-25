@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
 	"strings"
 	"time"
 
@@ -21,7 +22,7 @@ type ProcessExecutionHistory struct {
 	// 历史记录ID
 	HistoryID string `json:"history_id,omitempty"`
 	// 流程实例ID
-	ProcessInstanceID string `json:"process_instance_id,omitempty"`
+	ProcessInstanceID int `json:"process_instance_id,omitempty"`
 	// 流程定义Key
 	ProcessDefinitionKey string `json:"process_definition_key,omitempty"`
 	// 活动ID
@@ -51,8 +52,31 @@ type ProcessExecutionHistory struct {
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
-	CreatedAt    time.Time `json:"created_at,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProcessExecutionHistoryQuery when eager-loading is set.
+	Edges        ProcessExecutionHistoryEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ProcessExecutionHistoryEdges holds the relations/edges for other nodes in the graph.
+type ProcessExecutionHistoryEdges struct {
+	// ProcessInstance holds the value of the process_instance edge.
+	ProcessInstance *ProcessInstance `json:"process_instance,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ProcessInstanceOrErr returns the ProcessInstance value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProcessExecutionHistoryEdges) ProcessInstanceOrErr() (*ProcessInstance, error) {
+	if e.ProcessInstance != nil {
+		return e.ProcessInstance, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: processinstance.Label}
+	}
+	return nil, &NotLoadedError{edge: "process_instance"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -62,9 +86,9 @@ func (*ProcessExecutionHistory) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case processexecutionhistory.FieldVariables:
 			values[i] = new([]byte)
-		case processexecutionhistory.FieldID, processexecutionhistory.FieldTenantID:
+		case processexecutionhistory.FieldID, processexecutionhistory.FieldProcessInstanceID, processexecutionhistory.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case processexecutionhistory.FieldHistoryID, processexecutionhistory.FieldProcessInstanceID, processexecutionhistory.FieldProcessDefinitionKey, processexecutionhistory.FieldActivityID, processexecutionhistory.FieldActivityName, processexecutionhistory.FieldActivityType, processexecutionhistory.FieldEventType, processexecutionhistory.FieldEventDetail, processexecutionhistory.FieldUserID, processexecutionhistory.FieldUserName, processexecutionhistory.FieldComment, processexecutionhistory.FieldErrorMessage, processexecutionhistory.FieldErrorCode:
+		case processexecutionhistory.FieldHistoryID, processexecutionhistory.FieldProcessDefinitionKey, processexecutionhistory.FieldActivityID, processexecutionhistory.FieldActivityName, processexecutionhistory.FieldActivityType, processexecutionhistory.FieldEventType, processexecutionhistory.FieldEventDetail, processexecutionhistory.FieldUserID, processexecutionhistory.FieldUserName, processexecutionhistory.FieldComment, processexecutionhistory.FieldErrorMessage, processexecutionhistory.FieldErrorCode:
 			values[i] = new(sql.NullString)
 		case processexecutionhistory.FieldTimestamp, processexecutionhistory.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -96,10 +120,10 @@ func (peh *ProcessExecutionHistory) assignValues(columns []string, values []any)
 				peh.HistoryID = value.String
 			}
 		case processexecutionhistory.FieldProcessInstanceID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				peh.ProcessInstanceID = value.String
+				peh.ProcessInstanceID = int(value.Int64)
 			}
 		case processexecutionhistory.FieldProcessDefinitionKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -206,6 +230,11 @@ func (peh *ProcessExecutionHistory) Value(name string) (ent.Value, error) {
 	return peh.selectValues.Get(name)
 }
 
+// QueryProcessInstance queries the "process_instance" edge of the ProcessExecutionHistory entity.
+func (peh *ProcessExecutionHistory) QueryProcessInstance() *ProcessInstanceQuery {
+	return NewProcessExecutionHistoryClient(peh.config).QueryProcessInstance(peh)
+}
+
 // Update returns a builder for updating this ProcessExecutionHistory.
 // Note that you need to call ProcessExecutionHistory.Unwrap() before calling this method if this ProcessExecutionHistory
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -233,7 +262,7 @@ func (peh *ProcessExecutionHistory) String() string {
 	builder.WriteString(peh.HistoryID)
 	builder.WriteString(", ")
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(peh.ProcessInstanceID)
+	builder.WriteString(fmt.Sprintf("%v", peh.ProcessInstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_key=")
 	builder.WriteString(peh.ProcessDefinitionKey)

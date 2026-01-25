@@ -71,7 +71,8 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
 
   // 模拟在线用户（实际应该从WebSocket获取）
   useEffect(() => {
-    // TODO: 从WebSocket获取在线用户列表
+    // 注意：WebSocket实时用户功能尚未实现
+    // 未来可通过 WebSocket 连接实时获取在线用户列表
     setOnlineUsers(collaborators.filter(c => c.isOnline));
   }, [collaborators]);
 

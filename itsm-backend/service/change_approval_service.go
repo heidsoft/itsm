@@ -459,9 +459,9 @@ func (s *ChangeApprovalService) CreateChangeImplementationPlan(ctx context.Conte
 	}
 
 	// 序列化任务、前置条件和依赖关系
-	tasksJSON, _ := json.Marshal(req.Tasks)
-	prerequisitesJSON, _ := json.Marshal(req.Prerequisites)
-	dependenciesJSON, _ := json.Marshal(req.Dependencies)
+	tasksJSON := SafeMarshal(req.Tasks)
+	prerequisitesJSON := SafeMarshal(req.Prerequisites)
+	dependenciesJSON := SafeMarshal(req.Dependencies)
 
 	// 插入实施计划
 	query := `
@@ -527,8 +527,8 @@ func (s *ChangeApprovalService) CreateChangeRollbackPlan(ctx context.Context, re
 	}
 
 	// 序列化触发条件和回滚步骤
-	triggerConditionsJSON, _ := json.Marshal(req.TriggerConditions)
-	rollbackStepsJSON, _ := json.Marshal(req.RollbackSteps)
+	triggerConditionsJSON := SafeMarshal(req.TriggerConditions)
+	rollbackStepsJSON := SafeMarshal(req.RollbackSteps)
 
 	// 插入回滚计划
 	query := `

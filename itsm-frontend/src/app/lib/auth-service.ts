@@ -1,5 +1,6 @@
 import { API_BASE_URL, Tenant } from './api-config';
 import { useAuthStore } from './store';
+import logger from './logger';
 
 export class AuthService {
   // 设置tokens
@@ -30,21 +31,19 @@ export class AuthService {
   static isAuthenticated(): boolean {
     // 首先检查Zustand store的状态
     const { isAuthenticated } = useAuthStore.getState();
-    console.log('AuthService.isAuthenticated - Zustand状态:', { isAuthenticated });
+    logger.debug('AuthService.isAuthenticated check', { isAuthenticated });
     if (isAuthenticated) {
       return true;
     }
 
     // 然后检查localStorage中的token
     const token = this.getAccessToken();
-    console.log('AuthService.isAuthenticated - Token:', token);
     if (!token) {
       return false;
     }
 
     // 对于开发环境，允许mock token
     if (token.startsWith('mock_')) {
-      console.log('AuthService.isAuthenticated - Mock token detected');
       return true;
     }
 
@@ -58,7 +57,7 @@ export class AuthService {
       // 检查token是否过期
       const payload = JSON.parse(atob(parts[1]));
       const currentTime = Math.floor(Date.now() / 1000);
-      
+
       if (payload.exp && payload.exp < currentTime) {
         // Token已过期，清除它
         this.clearTokens();
@@ -66,9 +65,8 @@ export class AuthService {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       // Token格式无效
-      console.error('Invalid token format:', error);
       this.clearTokens();
       return false;
     }
@@ -77,8 +75,8 @@ export class AuthService {
   // 直接使用fetch进行HTTP请求，避免循环依赖
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log('makeRequest called with:', { url, method: options.method, body: options.body });
-    
+    logger.debug('API request', { url, method: options.method });
+
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -87,21 +85,19 @@ export class AuthService {
       ...options,
     });
 
-    console.log('makeRequest response status:', response.status);
-    console.log('makeRequest response headers:', response.headers);
+    logger.debug('API response status', { status: response.status });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const responseData = await response.json() as { code: number; message: string; data: T };
-    console.log('makeRequest response data:', responseData);
-    
+
     // 检查响应码
     if (responseData.code !== 0) {
       throw new Error(responseData.message || '请求失败');
     }
-    
+
     return responseData.data;
   }
 
@@ -127,8 +123,7 @@ export class AuthService {
         localStorage.setItem('access_token', data.access_token);
       }
       return true;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
+    } catch {
       this.clearTokens();
       return false;
     }
@@ -149,11 +144,9 @@ export class AuthService {
     logout();
   }
 
-  // 修改login方法
+  // 登录方法
   static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
     try {
-      console.log('AuthService.login called with:', { username, password: '***', tenantCode });
-      
       const data = await this.makeRequest<{
         access_token: string;
         refresh_token: string;
@@ -166,16 +159,13 @@ export class AuthService {
           tenant_code: tenantCode,
         }),
       });
-      
-      console.log('AuthService.login response data:', data);
-      
+
       // 存储tokens
       this.setTokens(data.access_token, data.refresh_token);
-      
+
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
-      console.log('AuthService.login - 调用Zustand login方法');
-      const u = data.user as any;
+      const u = data.user as Record<string, unknown>;
       login(
         {
           id: Number(u?.id || 0),
@@ -195,15 +185,9 @@ export class AuthService {
           updated_at: new Date().toISOString(),
         } as Tenant
       );
-      
-      // 验证状态是否正确设置
-      const { isAuthenticated } = useAuthStore.getState();
-      console.log('AuthService.login - 登录后Zustand状态:', { isAuthenticated });
-      
-      console.log('AuthService.login completed successfully');
+
       return true;
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch {
       return false;
     }
   }

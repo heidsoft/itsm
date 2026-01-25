@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -43,8 +44,26 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeProcessInstances holds the string denoting the process_instances edge name in mutations.
+	EdgeProcessInstances = "process_instances"
+	// EdgeDeployment holds the string denoting the deployment edge name in mutations.
+	EdgeDeployment = "deployment"
 	// Table holds the table name of the processdefinition in the database.
 	Table = "process_definitions"
+	// ProcessInstancesTable is the table that holds the process_instances relation/edge.
+	ProcessInstancesTable = "process_instances"
+	// ProcessInstancesInverseTable is the table name for the ProcessInstance entity.
+	// It exists in this package in order to avoid circular dependency with the "processinstance" package.
+	ProcessInstancesInverseTable = "process_instances"
+	// ProcessInstancesColumn is the table column denoting the process_instances relation/edge.
+	ProcessInstancesColumn = "process_definition_id"
+	// DeploymentTable is the table that holds the deployment relation/edge.
+	DeploymentTable = "process_definitions"
+	// DeploymentInverseTable is the table name for the ProcessDeployment entity.
+	// It exists in this package in order to avoid circular dependency with the "processdeployment" package.
+	DeploymentInverseTable = "process_deployments"
+	// DeploymentColumn is the table column denoting the deployment relation/edge.
+	DeploymentColumn = "deployment_id"
 )
 
 // Columns holds all SQL columns for processdefinition fields.
@@ -175,4 +194,39 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByProcessInstancesCount orders the results by process_instances count.
+func ByProcessInstancesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newProcessInstancesStep(), opts...)
+	}
+}
+
+// ByProcessInstances orders the results by process_instances terms.
+func ByProcessInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProcessInstancesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByDeploymentField orders the results by deployment field.
+func ByDeploymentField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDeploymentStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newProcessInstancesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProcessInstancesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ProcessInstancesTable, ProcessInstancesColumn),
+	)
+}
+func newDeploymentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DeploymentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DeploymentTable, DeploymentColumn),
+	)
 }

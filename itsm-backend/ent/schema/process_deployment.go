@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -60,7 +61,8 @@ func (ProcessDeployment) Fields() []ent.Field {
 // Edges of the ProcessDeployment.
 func (ProcessDeployment) Edges() []ent.Edge {
 	return []ent.Edge{
-		// TODO: 添加相关实体的edge定义
+		edge.To("definitions", ProcessDefinition.Type).
+			Comment("流程定义"),
 	}
 }
 

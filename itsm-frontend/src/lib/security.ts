@@ -381,9 +381,9 @@ export const securityLogger = {
     }
 
     // 在生产环境下可以发送到安全监控服务
+    // 注意：安全监控服务集成需要在后端配置安全日志收集
     if (process.env.NODE_ENV === 'production') {
-      // TODO: 发送到安全监控服务
-      // sendToSecurityService(logEntry);
+      // 未来可通过 sendToSecurityService(logEntry) 发送到安全监控服务
     }
   },
 

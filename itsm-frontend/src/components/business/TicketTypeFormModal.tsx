@@ -434,7 +434,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                             style={{ width: '100%' }}
                             value={level.approvers.map((a) => a.value)}
                             onChange={(values) => {
-                              // TODO: 从用户列表中获取详细信息
+                              // 注意：审批人详细信息需要从用户API获取
                               const approvers = values.map((v) => ({
                                 type: 'user' as const,
                                 value: v as number,
@@ -443,7 +443,8 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                               updateApprovalLevel(index, { approvers });
                             }}
                           >
-                            {/* TODO: 从API加载用户列表 */}
+                            {/* 注意：用户列表需要从 UserAPI 获取 */}
+                            {/* 未来可替换为动态加载的用户选项 */}
                             <Option value={1}>管理员</Option>
                             <Option value={2}>审批员A</Option>
                             <Option value={3}>审批员B</Option>

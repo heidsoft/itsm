@@ -5,6 +5,7 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ type ProcessTask struct {
 	// 任务ID，BPMN标准
 	TaskID string `json:"task_id,omitempty"`
 	// 流程实例ID
-	ProcessInstanceID string `json:"process_instance_id,omitempty"`
+	ProcessInstanceID int `json:"process_instance_id,omitempty"`
 	// 流程定义Key
 	ProcessDefinitionKey string `json:"process_definition_key,omitempty"`
 	// 任务定义Key
@@ -65,8 +66,31 @@ type ProcessTask struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProcessTaskQuery when eager-loading is set.
+	Edges        ProcessTaskEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ProcessTaskEdges holds the relations/edges for other nodes in the graph.
+type ProcessTaskEdges struct {
+	// ProcessInstance holds the value of the process_instance edge.
+	ProcessInstance *ProcessInstance `json:"process_instance,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ProcessInstanceOrErr returns the ProcessInstance value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProcessTaskEdges) ProcessInstanceOrErr() (*ProcessInstance, error) {
+	if e.ProcessInstance != nil {
+		return e.ProcessInstance, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: processinstance.Label}
+	}
+	return nil, &NotLoadedError{edge: "process_instance"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -76,9 +100,9 @@ func (*ProcessTask) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case processtask.FieldTaskVariables:
 			values[i] = new([]byte)
-		case processtask.FieldID, processtask.FieldTenantID:
+		case processtask.FieldID, processtask.FieldProcessInstanceID, processtask.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case processtask.FieldTaskID, processtask.FieldProcessInstanceID, processtask.FieldProcessDefinitionKey, processtask.FieldTaskDefinitionKey, processtask.FieldTaskName, processtask.FieldTaskType, processtask.FieldAssignee, processtask.FieldCandidateUsers, processtask.FieldCandidateGroups, processtask.FieldStatus, processtask.FieldPriority, processtask.FieldFormKey, processtask.FieldDescription, processtask.FieldParentTaskID, processtask.FieldRootTaskID:
+		case processtask.FieldTaskID, processtask.FieldProcessDefinitionKey, processtask.FieldTaskDefinitionKey, processtask.FieldTaskName, processtask.FieldTaskType, processtask.FieldAssignee, processtask.FieldCandidateUsers, processtask.FieldCandidateGroups, processtask.FieldStatus, processtask.FieldPriority, processtask.FieldFormKey, processtask.FieldDescription, processtask.FieldParentTaskID, processtask.FieldRootTaskID:
 			values[i] = new(sql.NullString)
 		case processtask.FieldDueDate, processtask.FieldCreatedTime, processtask.FieldAssignedTime, processtask.FieldStartedTime, processtask.FieldCompletedTime, processtask.FieldCreatedAt, processtask.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -110,10 +134,10 @@ func (pt *ProcessTask) assignValues(columns []string, values []any) error {
 				pt.TaskID = value.String
 			}
 		case processtask.FieldProcessInstanceID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				pt.ProcessInstanceID = value.String
+				pt.ProcessInstanceID = int(value.Int64)
 			}
 		case processtask.FieldProcessDefinitionKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -262,6 +286,11 @@ func (pt *ProcessTask) Value(name string) (ent.Value, error) {
 	return pt.selectValues.Get(name)
 }
 
+// QueryProcessInstance queries the "process_instance" edge of the ProcessTask entity.
+func (pt *ProcessTask) QueryProcessInstance() *ProcessInstanceQuery {
+	return NewProcessTaskClient(pt.config).QueryProcessInstance(pt)
+}
+
 // Update returns a builder for updating this ProcessTask.
 // Note that you need to call ProcessTask.Unwrap() before calling this method if this ProcessTask
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -289,7 +318,7 @@ func (pt *ProcessTask) String() string {
 	builder.WriteString(pt.TaskID)
 	builder.WriteString(", ")
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(pt.ProcessInstanceID)
+	builder.WriteString(fmt.Sprintf("%v", pt.ProcessInstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_key=")
 	builder.WriteString(pt.ProcessDefinitionKey)

@@ -251,7 +251,8 @@ func (s *TicketViewService) ShareTicketView(
 		return fmt.Errorf("failed to share ticket view: %w", err)
 	}
 
-	// TODO: 实现团队共享逻辑（可以创建关联表记录共享关系）
+	// 注意：团队共享需要创建 ticket_view_team 表来记录共享关系
+	// 当前实现仅标记为共享，未来版本可完善
 
 	return nil
 }

@@ -4,6 +4,7 @@
  */
 
 import { httpClient } from './http-client';
+import logger from './logger';
 
 // AI服务响应类型定义
 export interface AIAnalysisResult {
@@ -118,18 +119,17 @@ export class AIService {
    */
   static async classifyTicket(request: TicketAnalysisRequest): Promise<TicketClassificationResult> {
     try {
-      console.log('AIService.classifyTicket called with:', request);
-      
+      logger.debug('AIService.classifyTicket', { title: request.title });
+
       const response = await httpClient.post<TicketClassificationResult>(
         `${this.API_BASE}/classify-ticket`,
         request
       );
-      
-      console.log('AIService.classifyTicket response:', response);
+
+      logger.debug('AIService.classifyTicket complete', { category: response.category });
       return response;
     } catch (error) {
-      console.error('AIService.classifyTicket error:', error);
-      
+      logger.error('AIService.classifyTicket failed', error);
       // 提供降级方案
       return this.getFallbackClassification(request);
     }
@@ -141,18 +141,17 @@ export class AIService {
    */
   static async recommendAssignee(request: AssigneeRecommendationRequest): Promise<AssigneeRecommendation[]> {
     try {
-      console.log('AIService.recommendAssignee called with:', request);
-      
+      logger.debug('AIService.recommendAssignee', { ticketType: request.ticketType });
+
       const response = await httpClient.post<AssigneeRecommendation[]>(
         `${this.API_BASE}/recommend-assignee`,
         request
       );
-      
-      console.log('AIService.recommendAssignee response:', response);
+
+      logger.debug('AIService.recommendAssignee complete', { count: response.length });
       return response;
     } catch (error) {
-      console.error('AIService.recommendAssignee error:', error);
-      
+      logger.error('AIService.recommendAssignee failed', error);
       // 提供降级方案
       return this.getFallbackAssigneeRecommendations(request);
     }
@@ -164,18 +163,17 @@ export class AIService {
    */
   static async suggestSolutions(request: SolutionSearchRequest): Promise<SolutionSuggestion[]> {
     try {
-      console.log('AIService.suggestSolutions called with:', request);
-      
+      logger.debug('AIService.suggestSolutions', { query: request.query?.substring(0, 50) });
+
       const response = await httpClient.post<SolutionSuggestion[]>(
         `${this.API_BASE}/suggest-solutions`,
         request
       );
-      
-      console.log('AIService.suggestSolutions response:', response);
+
+      logger.debug('AIService.suggestSolutions complete', { count: response.length });
       return response;
     } catch (error) {
-      console.error('AIService.suggestSolutions error:', error);
-      
+      logger.error('AIService.suggestSolutions failed', error);
       // 提供降级方案
       return this.getFallbackSolutions(request);
     }
@@ -187,18 +185,17 @@ export class AIService {
    */
   static async analyzeIncident(request: IncidentAnalysisRequest): Promise<IncidentAnalysis> {
     try {
-      console.log('AIService.analyzeIncident called with:', request);
-      
+      logger.debug('AIService.analyzeIncident', { title: request.title });
+
       const response = await httpClient.post<IncidentAnalysis>(
         `${this.API_BASE}/analyze-incident`,
         request
       );
-      
-      console.log('AIService.analyzeIncident response:', response);
+
+      logger.debug('AIService.analyzeIncident complete', { severity: response.severity });
       return response;
     } catch (error) {
-      console.error('AIService.analyzeIncident error:', error);
-      
+      logger.error('AIService.analyzeIncident failed', error);
       // 提供降级方案
       return this.getFallbackIncidentAnalysis(request);
     }
@@ -210,17 +207,16 @@ export class AIService {
    */
   static async analyzeTrends(period: string = '30d'): Promise<TrendAnalysis> {
     try {
-      console.log('AIService.analyzeTrends called with period:', period);
-      
+      logger.debug('AIService.analyzeTrends', { period });
+
       const response = await httpClient.get<TrendAnalysis>(
         `${this.API_BASE}/analyze-trends?period=${period}`
       );
-      
-      console.log('AIService.analyzeTrends response:', response);
+
+      logger.debug('AIService.analyzeTrends complete', { trendsCount: response.trends.length });
       return response;
     } catch (error) {
-      console.error('AIService.analyzeTrends error:', error);
-      
+      logger.error('AIService.analyzeTrends failed', error);
       // 提供降级方案
       return this.getFallbackTrendAnalysis();
     }
@@ -241,8 +237,8 @@ export class AIService {
     suggestions: string[];
   }> {
     try {
-      console.log('AIService.intelligentSearch called with:', { query, filters });
-      
+      logger.debug('AIService.intelligentSearch', { query: query.substring(0, 50), type: filters?.type });
+
       const response = await httpClient.post<{
         tickets: SearchResult[];
         knowledge: SearchResult[];
@@ -252,12 +248,14 @@ export class AIService {
         query,
         filters
       });
-      
-      console.log('AIService.intelligentSearch response:', response);
+
+      logger.debug('AIService.intelligentSearch complete', {
+        ticketsCount: response.tickets.length,
+        knowledgeCount: response.knowledge.length,
+      });
       return response;
     } catch (error) {
-      console.error('AIService.intelligentSearch error:', error);
-      
+      logger.error('AIService.intelligentSearch failed', error);
       // 提供降级方案
       return {
         tickets: [],

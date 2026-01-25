@@ -232,7 +232,7 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 	var totalInstances int
 	for _, def := range processDefs {
 		instances, err := s.client.ProcessInstance.Query().
-			Where(processinstance.ProcessDefinitionID(fmt.Sprintf("%d", def.ID))).
+			Where(processinstance.ProcessDefinitionID(def.ID)).
 			Where(processinstance.StatusIn("running", "suspended")).
 			Count(ctx)
 		if err != nil {

@@ -390,8 +390,8 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               <Popconfirm
                 title='确定要删除这个工作流吗？'
                 onConfirm={async () => {
-                  // TODO: 调用删除API
-                  antMessage.success('工作流已删除');
+                  // 注意：删除工作流API尚未实现
+                  antMessage.success('工作流已删除（模拟）');
                   loadWorkflows();
                 }}
               >

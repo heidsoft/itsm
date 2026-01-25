@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 	"log"
+	"os"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -49,8 +50,19 @@ func main() {
 		return
 	}
 
+	// Get password from environment or generate random one
+	password := os.Getenv("INIT_USER_PASSWORD")
+	if password == "" {
+		// Generate a random secure password
+		generatedPassword, err := generateSecurePassword(16)
+		if err != nil {
+			log.Fatalf("failed to generate password: %v", err)
+		}
+		password = generatedPassword
+	}
+
 	// Hash password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatalf("failed to hash password: %v", err)
 	}
@@ -75,6 +87,22 @@ func main() {
 	fmt.Printf("Created test user with ID: %d\n", testUser.ID)
 	fmt.Println("Test credentials:")
 	fmt.Println("Username: admin")
-	fmt.Println("Password: admin123")
+	fmt.Printf("Password: %s\n", password)
 	fmt.Println("Tenant Code: default (可选)")
+	fmt.Println("")
+	fmt.Println("Note: Set INIT_USER_PASSWORD environment variable to use a custom password")
+}
+
+func generateSecurePassword(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+	b := make([]byte, length)
+	for i := range b {
+		randomByte := make([]byte, 1)
+		_, err := os.Read(randomByte)
+		if err != nil {
+			return "", err
+		}
+		b[i] = charset[int(randomByte[0])%len(charset)]
+	}
+	return string(b), nil
 }

@@ -4,9 +4,14 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processvariable"
 	"math"
 
 	"entgo.io/ent"
@@ -18,10 +23,14 @@ import (
 // ProcessInstanceQuery is the builder for querying ProcessInstance entities.
 type ProcessInstanceQuery struct {
 	config
-	ctx        *QueryContext
-	order      []processinstance.OrderOption
-	inters     []Interceptor
-	predicates []predicate.ProcessInstance
+	ctx                  *QueryContext
+	order                []processinstance.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.ProcessInstance
+	withProcessTasks     *ProcessTaskQuery
+	withProcessVariables *ProcessVariableQuery
+	withExecutionHistory *ProcessExecutionHistoryQuery
+	withDefinition       *ProcessDefinitionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +65,94 @@ func (piq *ProcessInstanceQuery) Unique(unique bool) *ProcessInstanceQuery {
 func (piq *ProcessInstanceQuery) Order(o ...processinstance.OrderOption) *ProcessInstanceQuery {
 	piq.order = append(piq.order, o...)
 	return piq
+}
+
+// QueryProcessTasks chains the current query on the "process_tasks" edge.
+func (piq *ProcessInstanceQuery) QueryProcessTasks() *ProcessTaskQuery {
+	query := (&ProcessTaskClient{config: piq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := piq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := piq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, selector),
+			sqlgraph.To(processtask.Table, processtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ProcessTasksTable, processinstance.ProcessTasksColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(piq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryProcessVariables chains the current query on the "process_variables" edge.
+func (piq *ProcessInstanceQuery) QueryProcessVariables() *ProcessVariableQuery {
+	query := (&ProcessVariableClient{config: piq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := piq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := piq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, selector),
+			sqlgraph.To(processvariable.Table, processvariable.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ProcessVariablesTable, processinstance.ProcessVariablesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(piq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryExecutionHistory chains the current query on the "execution_history" edge.
+func (piq *ProcessInstanceQuery) QueryExecutionHistory() *ProcessExecutionHistoryQuery {
+	query := (&ProcessExecutionHistoryClient{config: piq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := piq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := piq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, selector),
+			sqlgraph.To(processexecutionhistory.Table, processexecutionhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ExecutionHistoryTable, processinstance.ExecutionHistoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(piq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDefinition chains the current query on the "definition" edge.
+func (piq *ProcessInstanceQuery) QueryDefinition() *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: piq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := piq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := piq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, selector),
+			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processinstance.DefinitionTable, processinstance.DefinitionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(piq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ProcessInstance entity from the query.
@@ -245,15 +342,63 @@ func (piq *ProcessInstanceQuery) Clone() *ProcessInstanceQuery {
 		return nil
 	}
 	return &ProcessInstanceQuery{
-		config:     piq.config,
-		ctx:        piq.ctx.Clone(),
-		order:      append([]processinstance.OrderOption{}, piq.order...),
-		inters:     append([]Interceptor{}, piq.inters...),
-		predicates: append([]predicate.ProcessInstance{}, piq.predicates...),
+		config:               piq.config,
+		ctx:                  piq.ctx.Clone(),
+		order:                append([]processinstance.OrderOption{}, piq.order...),
+		inters:               append([]Interceptor{}, piq.inters...),
+		predicates:           append([]predicate.ProcessInstance{}, piq.predicates...),
+		withProcessTasks:     piq.withProcessTasks.Clone(),
+		withProcessVariables: piq.withProcessVariables.Clone(),
+		withExecutionHistory: piq.withExecutionHistory.Clone(),
+		withDefinition:       piq.withDefinition.Clone(),
 		// clone intermediate query.
 		sql:  piq.sql.Clone(),
 		path: piq.path,
 	}
+}
+
+// WithProcessTasks tells the query-builder to eager-load the nodes that are connected to
+// the "process_tasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (piq *ProcessInstanceQuery) WithProcessTasks(opts ...func(*ProcessTaskQuery)) *ProcessInstanceQuery {
+	query := (&ProcessTaskClient{config: piq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	piq.withProcessTasks = query
+	return piq
+}
+
+// WithProcessVariables tells the query-builder to eager-load the nodes that are connected to
+// the "process_variables" edge. The optional arguments are used to configure the query builder of the edge.
+func (piq *ProcessInstanceQuery) WithProcessVariables(opts ...func(*ProcessVariableQuery)) *ProcessInstanceQuery {
+	query := (&ProcessVariableClient{config: piq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	piq.withProcessVariables = query
+	return piq
+}
+
+// WithExecutionHistory tells the query-builder to eager-load the nodes that are connected to
+// the "execution_history" edge. The optional arguments are used to configure the query builder of the edge.
+func (piq *ProcessInstanceQuery) WithExecutionHistory(opts ...func(*ProcessExecutionHistoryQuery)) *ProcessInstanceQuery {
+	query := (&ProcessExecutionHistoryClient{config: piq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	piq.withExecutionHistory = query
+	return piq
+}
+
+// WithDefinition tells the query-builder to eager-load the nodes that are connected to
+// the "definition" edge. The optional arguments are used to configure the query builder of the edge.
+func (piq *ProcessInstanceQuery) WithDefinition(opts ...func(*ProcessDefinitionQuery)) *ProcessInstanceQuery {
+	query := (&ProcessDefinitionClient{config: piq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	piq.withDefinition = query
+	return piq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +477,14 @@ func (piq *ProcessInstanceQuery) prepareQuery(ctx context.Context) error {
 
 func (piq *ProcessInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessInstance, error) {
 	var (
-		nodes = []*ProcessInstance{}
-		_spec = piq.querySpec()
+		nodes       = []*ProcessInstance{}
+		_spec       = piq.querySpec()
+		loadedTypes = [4]bool{
+			piq.withProcessTasks != nil,
+			piq.withProcessVariables != nil,
+			piq.withExecutionHistory != nil,
+			piq.withDefinition != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessInstance).scanValues(nil, columns)
@@ -341,6 +492,7 @@ func (piq *ProcessInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ProcessInstance{config: piq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +504,158 @@ func (piq *ProcessInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := piq.withProcessTasks; query != nil {
+		if err := piq.loadProcessTasks(ctx, query, nodes,
+			func(n *ProcessInstance) { n.Edges.ProcessTasks = []*ProcessTask{} },
+			func(n *ProcessInstance, e *ProcessTask) { n.Edges.ProcessTasks = append(n.Edges.ProcessTasks, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := piq.withProcessVariables; query != nil {
+		if err := piq.loadProcessVariables(ctx, query, nodes,
+			func(n *ProcessInstance) { n.Edges.ProcessVariables = []*ProcessVariable{} },
+			func(n *ProcessInstance, e *ProcessVariable) {
+				n.Edges.ProcessVariables = append(n.Edges.ProcessVariables, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := piq.withExecutionHistory; query != nil {
+		if err := piq.loadExecutionHistory(ctx, query, nodes,
+			func(n *ProcessInstance) { n.Edges.ExecutionHistory = []*ProcessExecutionHistory{} },
+			func(n *ProcessInstance, e *ProcessExecutionHistory) {
+				n.Edges.ExecutionHistory = append(n.Edges.ExecutionHistory, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := piq.withDefinition; query != nil {
+		if err := piq.loadDefinition(ctx, query, nodes, nil,
+			func(n *ProcessInstance, e *ProcessDefinition) { n.Edges.Definition = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (piq *ProcessInstanceQuery) loadProcessTasks(ctx context.Context, query *ProcessTaskQuery, nodes []*ProcessInstance, init func(*ProcessInstance), assign func(*ProcessInstance, *ProcessTask)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ProcessInstance)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processtask.FieldProcessInstanceID)
+	}
+	query.Where(predicate.ProcessTask(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(processinstance.ProcessTasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProcessInstanceID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "process_instance_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (piq *ProcessInstanceQuery) loadProcessVariables(ctx context.Context, query *ProcessVariableQuery, nodes []*ProcessInstance, init func(*ProcessInstance), assign func(*ProcessInstance, *ProcessVariable)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ProcessInstance)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processvariable.FieldProcessInstanceID)
+	}
+	query.Where(predicate.ProcessVariable(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(processinstance.ProcessVariablesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProcessInstanceID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "process_instance_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (piq *ProcessInstanceQuery) loadExecutionHistory(ctx context.Context, query *ProcessExecutionHistoryQuery, nodes []*ProcessInstance, init func(*ProcessInstance), assign func(*ProcessInstance, *ProcessExecutionHistory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ProcessInstance)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processexecutionhistory.FieldProcessInstanceID)
+	}
+	query.Where(predicate.ProcessExecutionHistory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(processinstance.ExecutionHistoryColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProcessInstanceID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "process_instance_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (piq *ProcessInstanceQuery) loadDefinition(ctx context.Context, query *ProcessDefinitionQuery, nodes []*ProcessInstance, init func(*ProcessInstance), assign func(*ProcessInstance, *ProcessDefinition)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ProcessInstance)
+	for i := range nodes {
+		fk := nodes[i].ProcessDefinitionID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(processdefinition.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "process_definition_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (piq *ProcessInstanceQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +682,9 @@ func (piq *ProcessInstanceQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != processinstance.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if piq.withDefinition != nil {
+			_spec.Node.AddColumnOnce(processinstance.FieldProcessDefinitionID)
 		}
 	}
 	if ps := piq.predicates; len(ps) > 0 {

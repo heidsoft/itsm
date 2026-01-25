@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -20,9 +21,9 @@ func (ProcessExecutionHistory) Fields() []ent.Field {
 			Comment("历史记录ID").
 			Unique().
 			NotEmpty(),
-		field.String("process_instance_id").
+		field.Int("process_instance_id").
 			Comment("流程实例ID").
-			NotEmpty(),
+			Positive(),
 		field.String("process_definition_key").
 			Comment("流程定义Key").
 			NotEmpty(),
@@ -74,7 +75,11 @@ func (ProcessExecutionHistory) Fields() []ent.Field {
 // Edges of the ProcessExecutionHistory.
 func (ProcessExecutionHistory) Edges() []ent.Edge {
 	return []ent.Edge{
-		// TODO: 添加相关实体的edge定义
+		edge.From("process_instance", ProcessInstance.Type).
+			Ref("execution_history").
+			Field("process_instance_id").
+			Required().
+			Unique(),
 	}
 }
 

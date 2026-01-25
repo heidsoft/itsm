@@ -262,8 +262,8 @@ export interface Activity {
 export interface ActivityChange {
   field: string;
   fieldLabel: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
   oldValueDisplay?: string;
   newValueDisplay?: string;
 }

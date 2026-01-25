@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -37,8 +38,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeDefinitions holds the string denoting the definitions edge name in mutations.
+	EdgeDefinitions = "definitions"
 	// Table holds the table name of the processdeployment in the database.
 	Table = "process_deployments"
+	// DefinitionsTable is the table that holds the definitions relation/edge.
+	DefinitionsTable = "process_definitions"
+	// DefinitionsInverseTable is the table name for the ProcessDefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "processdefinition" package.
+	DefinitionsInverseTable = "process_definitions"
+	// DefinitionsColumn is the table column denoting the definitions relation/edge.
+	DefinitionsColumn = "deployment_id"
 )
 
 // Columns holds all SQL columns for processdeployment fields.
@@ -150,4 +160,25 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByDefinitionsCount orders the results by definitions count.
+func ByDefinitionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDefinitionsStep(), opts...)
+	}
+}
+
+// ByDefinitions orders the results by definitions terms.
+func ByDefinitions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDefinitionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newDefinitionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DefinitionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DefinitionsTable, DefinitionsColumn),
+	)
 }

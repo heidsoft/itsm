@@ -679,7 +679,7 @@ func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantI
 }
 
 func (s *TicketWorkflowService) createWorkflowRecord(ctx context.Context, record *dto.TicketWorkflowRecord, tenantID int) error {
-	metadataJSON, _ := json.Marshal(record.Metadata)
+	metadataJSON := SafeMarshal(record.Metadata)
 	
 	query := `
 		INSERT INTO ticket_workflow_records (

@@ -2,7 +2,7 @@ database:
   host: localhost
   port: 5432
   user: dev
-  password: "123456!@#$%^"
+  password: "${DB_PASSWORD:123456!@#$%^}"  # Use env: DB_PASSWORD, default for dev
   dbname: itsm
   sslmode: disable
 
@@ -15,21 +15,21 @@ vector:
 
 server:
   port: 8090
-  mode: debug
+  mode: "${SERVER_MODE:release}"  # Use env: SERVER_MODE, default release
 
 jwt:
-  secret: "itsm-dev-secret-key-2024"
+  secret: "${JWT_SECRET:your-secret-key-change-in-production}"  # Use env: JWT_SECRET
   expire_time: 900        # 15分钟 (access token)
   refresh_expire_time: 604800  # 7天 (refresh token)
 
 log:
-  level: debug  # 开发环境使用 debug 级别
+  level: "${LOG_LEVEL:info}"  # Use env: LOG_LEVEL, default info
   path: ./logs/app.log
 
 llm:
   provider: openai        # openai, azure, local
   model: gpt-4o-mini
-  api_key: ""             # Set via environment: OPENAI_API_KEY
+  api_key: "${OPENAI_API_KEY:}"             # Use env: OPENAI_API_KEY
   endpoint: ""            # For Azure: https://{resource}.openai.azure.com/
   deployment: ""          # Azure deployment ID
   token_cap: 8000         # Rate limit
@@ -38,5 +38,20 @@ llm:
 embedding:
   provider: openai        # openai, local
   model: text-embedding-3-small
-  api_key: ""             # Set via environment: OPENAI_API_KEY
+  api_key: "${OPENAI_API_KEY:}"             # Use env: OPENAI_API_KEY
   endpoint: ""            # Custom embedding endpoint
+
+# SMS Configuration (阿里云/腾讯云)
+sms:
+  provider: ""  # "aliyun" or "tencent", empty means disabled
+  aliyun:
+    access_key_id: "${ALIYUN_ACCESS_KEY_ID:}"
+    access_key_secret: "${ALIYUN_ACCESS_KEY_SECRET:}"
+    sign_name: "${ALIYUN_SMS_SIGN_NAME:ITSM}"
+    endpoint: "dysmsapi.aliyuncs.com"
+  tencent:
+    secret_id: "${TENCENT_SECRET_ID:}"
+    secret_key: "${TENCENT_SECRET_KEY:}"
+    app_id: "${TENCENT_SMS_APP_ID:}"
+    sign_name: "${TENCENT_SMS_SIGN_NAME:ITSM}"
+    endpoint: "sms.tencentcloudapi.com"

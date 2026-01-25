@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -60,7 +61,7 @@ func HistoryID(v string) predicate.ProcessExecutionHistory {
 }
 
 // ProcessInstanceID applies equality check predicate on the "process_instance_id" field. It's identical to ProcessInstanceIDEQ.
-func ProcessInstanceID(v string) predicate.ProcessExecutionHistory {
+func ProcessInstanceID(v int) predicate.ProcessExecutionHistory {
 	return predicate.ProcessExecutionHistory(sql.FieldEQ(FieldProcessInstanceID, v))
 }
 
@@ -200,68 +201,23 @@ func HistoryIDContainsFold(v string) predicate.ProcessExecutionHistory {
 }
 
 // ProcessInstanceIDEQ applies the EQ predicate on the "process_instance_id" field.
-func ProcessInstanceIDEQ(v string) predicate.ProcessExecutionHistory {
+func ProcessInstanceIDEQ(v int) predicate.ProcessExecutionHistory {
 	return predicate.ProcessExecutionHistory(sql.FieldEQ(FieldProcessInstanceID, v))
 }
 
 // ProcessInstanceIDNEQ applies the NEQ predicate on the "process_instance_id" field.
-func ProcessInstanceIDNEQ(v string) predicate.ProcessExecutionHistory {
+func ProcessInstanceIDNEQ(v int) predicate.ProcessExecutionHistory {
 	return predicate.ProcessExecutionHistory(sql.FieldNEQ(FieldProcessInstanceID, v))
 }
 
 // ProcessInstanceIDIn applies the In predicate on the "process_instance_id" field.
-func ProcessInstanceIDIn(vs ...string) predicate.ProcessExecutionHistory {
+func ProcessInstanceIDIn(vs ...int) predicate.ProcessExecutionHistory {
 	return predicate.ProcessExecutionHistory(sql.FieldIn(FieldProcessInstanceID, vs...))
 }
 
 // ProcessInstanceIDNotIn applies the NotIn predicate on the "process_instance_id" field.
-func ProcessInstanceIDNotIn(vs ...string) predicate.ProcessExecutionHistory {
+func ProcessInstanceIDNotIn(vs ...int) predicate.ProcessExecutionHistory {
 	return predicate.ProcessExecutionHistory(sql.FieldNotIn(FieldProcessInstanceID, vs...))
-}
-
-// ProcessInstanceIDGT applies the GT predicate on the "process_instance_id" field.
-func ProcessInstanceIDGT(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldGT(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDGTE applies the GTE predicate on the "process_instance_id" field.
-func ProcessInstanceIDGTE(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldGTE(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDLT applies the LT predicate on the "process_instance_id" field.
-func ProcessInstanceIDLT(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldLT(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDLTE applies the LTE predicate on the "process_instance_id" field.
-func ProcessInstanceIDLTE(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldLTE(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDContains applies the Contains predicate on the "process_instance_id" field.
-func ProcessInstanceIDContains(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldContains(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDHasPrefix applies the HasPrefix predicate on the "process_instance_id" field.
-func ProcessInstanceIDHasPrefix(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldHasPrefix(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDHasSuffix applies the HasSuffix predicate on the "process_instance_id" field.
-func ProcessInstanceIDHasSuffix(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldHasSuffix(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDEqualFold applies the EqualFold predicate on the "process_instance_id" field.
-func ProcessInstanceIDEqualFold(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldEqualFold(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDContainsFold applies the ContainsFold predicate on the "process_instance_id" field.
-func ProcessInstanceIDContainsFold(v string) predicate.ProcessExecutionHistory {
-	return predicate.ProcessExecutionHistory(sql.FieldContainsFold(FieldProcessInstanceID, v))
 }
 
 // ProcessDefinitionKeyEQ applies the EQ predicate on the "process_definition_key" field.
@@ -1187,6 +1143,29 @@ func CreatedAtLT(v time.Time) predicate.ProcessExecutionHistory {
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
 func CreatedAtLTE(v time.Time) predicate.ProcessExecutionHistory {
 	return predicate.ProcessExecutionHistory(sql.FieldLTE(FieldCreatedAt, v))
+}
+
+// HasProcessInstance applies the HasEdge predicate on the "process_instance" edge.
+func HasProcessInstance() predicate.ProcessExecutionHistory {
+	return predicate.ProcessExecutionHistory(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProcessInstanceTable, ProcessInstanceColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProcessInstanceWith applies the HasEdge predicate on the "process_instance" edge with a given conditions (other predicates).
+func HasProcessInstanceWith(preds ...predicate.ProcessInstance) predicate.ProcessExecutionHistory {
+	return predicate.ProcessExecutionHistory(func(s *sql.Selector) {
+		step := newProcessInstanceStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

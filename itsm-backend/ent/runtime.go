@@ -1147,7 +1147,7 @@ func init() {
 	// processexecutionhistoryDescProcessInstanceID is the schema descriptor for process_instance_id field.
 	processexecutionhistoryDescProcessInstanceID := processexecutionhistoryFields[1].Descriptor()
 	// processexecutionhistory.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
-	processexecutionhistory.ProcessInstanceIDValidator = processexecutionhistoryDescProcessInstanceID.Validators[0].(func(string) error)
+	processexecutionhistory.ProcessInstanceIDValidator = processexecutionhistoryDescProcessInstanceID.Validators[0].(func(int) error)
 	// processexecutionhistoryDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
 	processexecutionhistoryDescProcessDefinitionKey := processexecutionhistoryFields[2].Descriptor()
 	// processexecutionhistory.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
@@ -1185,7 +1185,7 @@ func init() {
 	// processinstanceDescProcessDefinitionID is the schema descriptor for process_definition_id field.
 	processinstanceDescProcessDefinitionID := processinstanceFields[3].Descriptor()
 	// processinstance.ProcessDefinitionIDValidator is a validator for the "process_definition_id" field. It is called by the builders before save.
-	processinstance.ProcessDefinitionIDValidator = processinstanceDescProcessDefinitionID.Validators[0].(func(string) error)
+	processinstance.ProcessDefinitionIDValidator = processinstanceDescProcessDefinitionID.Validators[0].(func(int) error)
 	// processinstanceDescStatus is the schema descriptor for status field.
 	processinstanceDescStatus := processinstanceFields[4].Descriptor()
 	// processinstance.DefaultStatus holds the default value on creation for the status field.
@@ -1217,7 +1217,7 @@ func init() {
 	// processtaskDescProcessInstanceID is the schema descriptor for process_instance_id field.
 	processtaskDescProcessInstanceID := processtaskFields[1].Descriptor()
 	// processtask.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
-	processtask.ProcessInstanceIDValidator = processtaskDescProcessInstanceID.Validators[0].(func(string) error)
+	processtask.ProcessInstanceIDValidator = processtaskDescProcessInstanceID.Validators[0].(func(int) error)
 	// processtaskDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
 	processtaskDescProcessDefinitionKey := processtaskFields[2].Descriptor()
 	// processtask.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
@@ -1269,7 +1269,7 @@ func init() {
 	// processvariableDescProcessInstanceID is the schema descriptor for process_instance_id field.
 	processvariableDescProcessInstanceID := processvariableFields[1].Descriptor()
 	// processvariable.ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
-	processvariable.ProcessInstanceIDValidator = processvariableDescProcessInstanceID.Validators[0].(func(string) error)
+	processvariable.ProcessInstanceIDValidator = processvariableDescProcessInstanceID.Validators[0].(func(int) error)
 	// processvariableDescVariableName is the schema descriptor for variable_name field.
 	processvariableDescVariableName := processvariableFields[3].Descriptor()
 	// processvariable.VariableNameValidator is a validator for the "variable_name" field. It is called by the builders before save.

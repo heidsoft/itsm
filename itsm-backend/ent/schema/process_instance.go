@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -26,9 +27,9 @@ func (ProcessInstance) Fields() []ent.Field {
 		field.String("process_definition_key").
 			Comment("流程定义Key").
 			NotEmpty(),
-		field.String("process_definition_id").
+		field.Int("process_definition_id").
 			Comment("流程定义ID").
-			NotEmpty(),
+			Positive(),
 		field.String("status").
 			Comment("实例状态：running, suspended, completed, terminated").
 			Default("running"),
@@ -81,7 +82,17 @@ func (ProcessInstance) Fields() []ent.Field {
 // Edges of the ProcessInstance.
 func (ProcessInstance) Edges() []ent.Edge {
 	return []ent.Edge{
-		// TODO: 添加相关实体的edge定义
+		edge.To("process_tasks", ProcessTask.Type).
+			Comment("流程任务"),
+		edge.To("process_variables", ProcessVariable.Type).
+			Comment("流程变量"),
+		edge.To("execution_history", ProcessExecutionHistory.Type).
+			Comment("执行历史"),
+		edge.From("definition", ProcessDefinition.Type).
+			Ref("process_instances").
+			Field("process_definition_id").
+			Required().
+			Unique(),
 	}
 }
 

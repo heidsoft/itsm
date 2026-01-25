@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -60,7 +61,7 @@ func VariableID(v string) predicate.ProcessVariable {
 }
 
 // ProcessInstanceID applies equality check predicate on the "process_instance_id" field. It's identical to ProcessInstanceIDEQ.
-func ProcessInstanceID(v string) predicate.ProcessVariable {
+func ProcessInstanceID(v int) predicate.ProcessVariable {
 	return predicate.ProcessVariable(sql.FieldEQ(FieldProcessInstanceID, v))
 }
 
@@ -180,68 +181,23 @@ func VariableIDContainsFold(v string) predicate.ProcessVariable {
 }
 
 // ProcessInstanceIDEQ applies the EQ predicate on the "process_instance_id" field.
-func ProcessInstanceIDEQ(v string) predicate.ProcessVariable {
+func ProcessInstanceIDEQ(v int) predicate.ProcessVariable {
 	return predicate.ProcessVariable(sql.FieldEQ(FieldProcessInstanceID, v))
 }
 
 // ProcessInstanceIDNEQ applies the NEQ predicate on the "process_instance_id" field.
-func ProcessInstanceIDNEQ(v string) predicate.ProcessVariable {
+func ProcessInstanceIDNEQ(v int) predicate.ProcessVariable {
 	return predicate.ProcessVariable(sql.FieldNEQ(FieldProcessInstanceID, v))
 }
 
 // ProcessInstanceIDIn applies the In predicate on the "process_instance_id" field.
-func ProcessInstanceIDIn(vs ...string) predicate.ProcessVariable {
+func ProcessInstanceIDIn(vs ...int) predicate.ProcessVariable {
 	return predicate.ProcessVariable(sql.FieldIn(FieldProcessInstanceID, vs...))
 }
 
 // ProcessInstanceIDNotIn applies the NotIn predicate on the "process_instance_id" field.
-func ProcessInstanceIDNotIn(vs ...string) predicate.ProcessVariable {
+func ProcessInstanceIDNotIn(vs ...int) predicate.ProcessVariable {
 	return predicate.ProcessVariable(sql.FieldNotIn(FieldProcessInstanceID, vs...))
-}
-
-// ProcessInstanceIDGT applies the GT predicate on the "process_instance_id" field.
-func ProcessInstanceIDGT(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldGT(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDGTE applies the GTE predicate on the "process_instance_id" field.
-func ProcessInstanceIDGTE(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldGTE(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDLT applies the LT predicate on the "process_instance_id" field.
-func ProcessInstanceIDLT(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldLT(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDLTE applies the LTE predicate on the "process_instance_id" field.
-func ProcessInstanceIDLTE(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldLTE(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDContains applies the Contains predicate on the "process_instance_id" field.
-func ProcessInstanceIDContains(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldContains(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDHasPrefix applies the HasPrefix predicate on the "process_instance_id" field.
-func ProcessInstanceIDHasPrefix(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldHasPrefix(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDHasSuffix applies the HasSuffix predicate on the "process_instance_id" field.
-func ProcessInstanceIDHasSuffix(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldHasSuffix(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDEqualFold applies the EqualFold predicate on the "process_instance_id" field.
-func ProcessInstanceIDEqualFold(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldEqualFold(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDContainsFold applies the ContainsFold predicate on the "process_instance_id" field.
-func ProcessInstanceIDContainsFold(v string) predicate.ProcessVariable {
-	return predicate.ProcessVariable(sql.FieldContainsFold(FieldProcessInstanceID, v))
 }
 
 // TaskIDEQ applies the EQ predicate on the "task_id" field.
@@ -782,6 +738,29 @@ func UpdatedAtLT(v time.Time) predicate.ProcessVariable {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ProcessVariable {
 	return predicate.ProcessVariable(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasProcessInstance applies the HasEdge predicate on the "process_instance" edge.
+func HasProcessInstance() predicate.ProcessVariable {
+	return predicate.ProcessVariable(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProcessInstanceTable, ProcessInstanceColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProcessInstanceWith applies the HasEdge predicate on the "process_instance" edge with a given conditions (other predicates).
+func HasProcessInstanceWith(preds ...predicate.ProcessInstance) predicate.ProcessVariable {
+	return predicate.ProcessVariable(func(s *sql.Selector) {
+		step := newProcessInstanceStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

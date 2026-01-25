@@ -68,9 +68,9 @@ export class APIEndpointBuilder {
   }
 
   // 构建查询字符串
-  buildQuery(params: Record<string, any>): string {
+  buildQuery<T = string>(params: Record<string, T | T[] | undefined | null>): string {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         if (Array.isArray(value)) {
@@ -86,7 +86,7 @@ export class APIEndpointBuilder {
   }
 
   // 完整URL构建器
-  url(key: string, params?: Record<string, string | number>, queryParams?: Record<string, any>): string {
+  url(key: string, params?: Record<string, string | number>, queryParams?: Record<string, unknown>): string {
     const baseUrl = this.endpoint(key, params);
     return queryParams ? `${baseUrl}${this.buildQuery(queryParams)}` : baseUrl;
   }
@@ -150,12 +150,12 @@ export interface StandardPaginationParams {
 }
 
 // 标准化分页请求参数
-export const normalizePaginationParams = (params: any): StandardPaginationParams => {
+export const normalizePaginationParams = (params: Record<string, unknown>): StandardPaginationParams => {
   return {
-    page: params.page ?? 1,
-    page_size: params.page_size ?? params.pageSize ?? 20,
-    sort_by: params.sort_by ?? params.sortBy,
-    sort_order: params.sort_order ?? params.sortOrder ?? 'desc',
+    page: params.page as number ?? 1,
+    page_size: (params.page_size ?? params.pageSize) as number ?? 20,
+    sort_by: (params.sort_by ?? params.sortBy) as string,
+    sort_order: (params.sort_order ?? params.sortOrder) as 'asc' | 'desc' ?? 'desc',
   };
 };
 
@@ -167,17 +167,17 @@ export interface DateRangeParams {
   created_to?: string;
 }
 
-export const normalizeDateRangeParams = (params: any): DateRangeParams => {
+export const normalizeDateRangeParams = (params: Record<string, unknown>): DateRangeParams => {
   return {
-    date_from: params.date_from ?? params.dateFrom ?? params.startDate,
-    date_to: params.date_to ?? params.dateTo ?? params.endDate,
-    created_from: params.created_from ?? params.createdFrom,
-    created_to: params.created_to ?? params.createdTo,
+    date_from: (params.date_from ?? params.dateFrom ?? params.startDate) as string,
+    date_to: (params.date_to ?? params.dateTo ?? params.endDate) as string,
+    created_from: params.created_from as string ?? params.createdFrom as string,
+    created_to: params.created_to as string ?? params.createdTo as string,
   };
 };
 
 // 通用API响应类型
-export interface StandardApiResponse<T = any> {
+export interface StandardApiResponse<T = unknown> {
   code: number;
   message: string;
   data: T;
@@ -186,7 +186,7 @@ export interface StandardApiResponse<T = any> {
 }
 
 // 分页响应类型
-export interface PaginatedApiResponse<T = any> {
+export interface PaginatedApiResponse<T = unknown> {
   code: number;
   message: string;
   data: {
@@ -201,28 +201,28 @@ export interface PaginatedApiResponse<T = any> {
 }
 
 // 批量操作请求类型
-export interface BatchRequest {
+export interface BatchRequest<T = unknown> {
   ids: (string | number)[];
   action: string;
-  options?: Record<string, any>;
+  options?: Record<string, T>;
 }
 
 // 批量操作响应类型
-export interface BatchResponse {
+export interface BatchResponse<T = unknown> {
   success: number;
   failed: number;
   errors?: Array<{
     id: string | number;
     error: string;
   }>;
-  data?: any;
+  data?: T;
 }
 
 // API错误类型
-export interface ApiError {
+export interface ApiError<T = unknown> {
   code: number;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, T>;
   field?: string;
   timestamp?: string;
   trace_id?: string;

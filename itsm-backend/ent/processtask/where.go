@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -60,7 +61,7 @@ func TaskID(v string) predicate.ProcessTask {
 }
 
 // ProcessInstanceID applies equality check predicate on the "process_instance_id" field. It's identical to ProcessInstanceIDEQ.
-func ProcessInstanceID(v string) predicate.ProcessTask {
+func ProcessInstanceID(v int) predicate.ProcessTask {
 	return predicate.ProcessTask(sql.FieldEQ(FieldProcessInstanceID, v))
 }
 
@@ -235,68 +236,23 @@ func TaskIDContainsFold(v string) predicate.ProcessTask {
 }
 
 // ProcessInstanceIDEQ applies the EQ predicate on the "process_instance_id" field.
-func ProcessInstanceIDEQ(v string) predicate.ProcessTask {
+func ProcessInstanceIDEQ(v int) predicate.ProcessTask {
 	return predicate.ProcessTask(sql.FieldEQ(FieldProcessInstanceID, v))
 }
 
 // ProcessInstanceIDNEQ applies the NEQ predicate on the "process_instance_id" field.
-func ProcessInstanceIDNEQ(v string) predicate.ProcessTask {
+func ProcessInstanceIDNEQ(v int) predicate.ProcessTask {
 	return predicate.ProcessTask(sql.FieldNEQ(FieldProcessInstanceID, v))
 }
 
 // ProcessInstanceIDIn applies the In predicate on the "process_instance_id" field.
-func ProcessInstanceIDIn(vs ...string) predicate.ProcessTask {
+func ProcessInstanceIDIn(vs ...int) predicate.ProcessTask {
 	return predicate.ProcessTask(sql.FieldIn(FieldProcessInstanceID, vs...))
 }
 
 // ProcessInstanceIDNotIn applies the NotIn predicate on the "process_instance_id" field.
-func ProcessInstanceIDNotIn(vs ...string) predicate.ProcessTask {
+func ProcessInstanceIDNotIn(vs ...int) predicate.ProcessTask {
 	return predicate.ProcessTask(sql.FieldNotIn(FieldProcessInstanceID, vs...))
-}
-
-// ProcessInstanceIDGT applies the GT predicate on the "process_instance_id" field.
-func ProcessInstanceIDGT(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldGT(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDGTE applies the GTE predicate on the "process_instance_id" field.
-func ProcessInstanceIDGTE(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldGTE(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDLT applies the LT predicate on the "process_instance_id" field.
-func ProcessInstanceIDLT(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldLT(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDLTE applies the LTE predicate on the "process_instance_id" field.
-func ProcessInstanceIDLTE(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldLTE(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDContains applies the Contains predicate on the "process_instance_id" field.
-func ProcessInstanceIDContains(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldContains(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDHasPrefix applies the HasPrefix predicate on the "process_instance_id" field.
-func ProcessInstanceIDHasPrefix(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldHasPrefix(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDHasSuffix applies the HasSuffix predicate on the "process_instance_id" field.
-func ProcessInstanceIDHasSuffix(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldHasSuffix(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDEqualFold applies the EqualFold predicate on the "process_instance_id" field.
-func ProcessInstanceIDEqualFold(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldEqualFold(FieldProcessInstanceID, v))
-}
-
-// ProcessInstanceIDContainsFold applies the ContainsFold predicate on the "process_instance_id" field.
-func ProcessInstanceIDContainsFold(v string) predicate.ProcessTask {
-	return predicate.ProcessTask(sql.FieldContainsFold(FieldProcessInstanceID, v))
 }
 
 // ProcessDefinitionKeyEQ applies the EQ predicate on the "process_definition_key" field.
@@ -1582,6 +1538,29 @@ func UpdatedAtLT(v time.Time) predicate.ProcessTask {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ProcessTask {
 	return predicate.ProcessTask(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasProcessInstance applies the HasEdge predicate on the "process_instance" edge.
+func HasProcessInstance() predicate.ProcessTask {
+	return predicate.ProcessTask(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProcessInstanceTable, ProcessInstanceColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProcessInstanceWith applies the HasEdge predicate on the "process_instance" edge with a given conditions (other predicates).
+func HasProcessInstanceWith(preds ...predicate.ProcessInstance) predicate.ProcessTask {
+	return predicate.ProcessTask(func(s *sql.Selector) {
+		step := newProcessInstanceStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -68,17 +68,20 @@ export function useTicketListStore(): UseTicketListStore {
   }, []);
 
   const updateTicket = useCallback(async (id: string, data: Partial<Ticket>) => {
-    // TODO: 实现更新逻辑
+    // 注意：此方法需要ticket-service支持
+    // 当前建议直接使用 ticketService.updateTicket()
     console.warn("updateTicket not fully implemented - use ticket-service directly");
   }, []);
 
   const deleteTicket = useCallback(async (id: string) => {
-    // TODO: 实现删除逻辑
+    // 注意：此方法需要ticket-service支持
+    // 当前建议直接使用 ticketService.deleteTicket()
     console.warn("deleteTicket not fully implemented - use ticket-service directly");
   }, []);
 
   const batchDeleteTickets = useCallback(async (ids: string[]) => {
-    // TODO: 实现批量删除逻辑
+    // 注意：此方法需要ticket-service支持批量删除API
+    // 当前建议直接使用 ticketService.batchDeleteTickets()
     console.warn("batchDeleteTickets not fully implemented - use ticket-service directly");
   }, []);
 

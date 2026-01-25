@@ -18,7 +18,6 @@ import (
 	"itsm-backend/internal/domain/service_request"
 	"itsm-backend/internal/domain/sla"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -84,11 +83,6 @@ type RouterConfig struct {
 	AIHandler        *ai.Handler
 	CommonHandler    *domainCommon.Handler
 	RoleHandler      *common.RoleHandler
-
-	// Legacy SLA Controller (for metrics, violations, monitoring)
-	SLAController   *controller.SLAController
-	SLAService      *service.SLAService
-	SLAAlertService *service.SLAAlertService
 }
 
 // SetupRoutes 设置路由
@@ -338,38 +332,35 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.SLAHandler != nil {
 			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
 			{
+				// SLA Definitions
 				slaGrp.GET("/definitions", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
 				slaGrp.POST("/definitions", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateSLADefinition)
 				slaGrp.GET("/definitions/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)
 				slaGrp.PUT("/definitions/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateSLADefinition)
 				slaGrp.DELETE("/definitions/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteSLADefinition)
+
+				// SLA Alert Rules
 				slaGrp.POST("/alert-rules", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateAlertRule)
 				slaGrp.GET("/alert-rules", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListAlertRules)
-			}
-		}
+				slaGrp.GET("/alert-rules/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetAlertRule)
+				slaGrp.PUT("/alert-rules/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateAlertRule)
+				slaGrp.DELETE("/alert-rules/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteAlertRule)
 
-		// ==================== SLA Additional Endpoints (Legacy Controller) ====================
-		if config.SLAController != nil {
-			slaV2 := tenant.(*gin.RouterGroup).Group("/sla/v2")
-			{
 				// SLA Metrics
-				slaV2.GET("/metrics", middleware.RequirePermission("sla", "read"), config.SLAController.GetSLAMetrics)
+				slaGrp.GET("/metrics", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMetrics)
 
 				// SLA Violations
-				slaV2.GET("/violations", middleware.RequirePermission("sla", "read"), config.SLAController.GetSLAViolations)
-				slaV2.PUT("/violations/:id", middleware.RequirePermission("sla", "write"), config.SLAController.UpdateViolationStatus)
+				slaGrp.GET("/violations", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAViolations)
+				slaGrp.PUT("/violations/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateViolationStatus)
 
 				// SLA Monitoring
-				slaV2.POST("/monitoring", middleware.RequirePermission("sla", "read"), config.SLAController.GetSLAMonitoring)
+				slaGrp.POST("/monitoring", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMonitoring)
 
 				// SLA Compliance Check
-				slaV2.POST("/check-compliance/:ticketId", middleware.RequirePermission("sla", "read"), config.SLAController.CheckSLACompliance)
+				slaGrp.POST("/check-compliance/:ticketId", middleware.RequirePermission("sla", "read"), config.SLAHandler.CheckSLACompliance)
 
-				// SLA Alert Rules (additional endpoints)
-				slaV2.GET("/alert-rules/:id", middleware.RequirePermission("sla", "read"), config.SLAController.GetAlertRule)
-				slaV2.PUT("/alert-rules/:id", middleware.RequirePermission("sla", "write"), config.SLAController.UpdateAlertRule)
-				slaV2.DELETE("/alert-rules/:id", middleware.RequirePermission("sla", "delete"), config.SLAController.DeleteAlertRule)
-				slaV2.GET("/alert-history", middleware.RequirePermission("sla", "read"), config.SLAController.GetAlertHistory)
+				// SLA Alert History
+				slaGrp.GET("/alert-history", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetAlertHistory)
 			}
 		}
 

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,8 +28,8 @@ func (pehc *ProcessExecutionHistoryCreate) SetHistoryID(s string) *ProcessExecut
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pehc *ProcessExecutionHistoryCreate) SetProcessInstanceID(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetProcessInstanceID(s)
+func (pehc *ProcessExecutionHistoryCreate) SetProcessInstanceID(i int) *ProcessExecutionHistoryCreate {
+	pehc.mutation.SetProcessInstanceID(i)
 	return pehc
 }
 
@@ -202,6 +203,11 @@ func (pehc *ProcessExecutionHistoryCreate) SetNillableCreatedAt(t *time.Time) *P
 	return pehc
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (pehc *ProcessExecutionHistoryCreate) SetProcessInstance(p *ProcessInstance) *ProcessExecutionHistoryCreate {
+	return pehc.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessExecutionHistoryMutation object of the builder.
 func (pehc *ProcessExecutionHistoryCreate) Mutation() *ProcessExecutionHistoryMutation {
 	return pehc.mutation
@@ -303,6 +309,9 @@ func (pehc *ProcessExecutionHistoryCreate) check() error {
 	if _, ok := pehc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessExecutionHistory.created_at"`)}
 	}
+	if len(pehc.mutation.ProcessInstanceIDs()) == 0 {
+		return &ValidationError{Name: "process_instance", err: errors.New(`ent: missing required edge "ProcessExecutionHistory.process_instance"`)}
+	}
 	return nil
 }
 
@@ -332,10 +341,6 @@ func (pehc *ProcessExecutionHistoryCreate) createSpec() (*ProcessExecutionHistor
 	if value, ok := pehc.mutation.HistoryID(); ok {
 		_spec.SetField(processexecutionhistory.FieldHistoryID, field.TypeString, value)
 		_node.HistoryID = value
-	}
-	if value, ok := pehc.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processexecutionhistory.FieldProcessInstanceID, field.TypeString, value)
-		_node.ProcessInstanceID = value
 	}
 	if value, ok := pehc.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processexecutionhistory.FieldProcessDefinitionKey, field.TypeString, value)
@@ -396,6 +401,23 @@ func (pehc *ProcessExecutionHistoryCreate) createSpec() (*ProcessExecutionHistor
 	if value, ok := pehc.mutation.CreatedAt(); ok {
 		_spec.SetField(processexecutionhistory.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
+	}
+	if nodes := pehc.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processexecutionhistory.ProcessInstanceTable,
+			Columns: []string{processexecutionhistory.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProcessInstanceID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

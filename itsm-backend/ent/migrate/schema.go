@@ -995,18 +995,26 @@ var (
 		{Name: "process_variables", Type: field.TypeJSON, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "is_latest", Type: field.TypeBool, Default: true},
-		{Name: "deployment_id", Type: field.TypeInt},
 		{Name: "deployment_name", Type: field.TypeString, Nullable: true},
 		{Name: "deployed_at", Type: field.TypeTime},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deployment_id", Type: field.TypeInt},
 	}
 	// ProcessDefinitionsTable holds the schema information for the "process_definitions" table.
 	ProcessDefinitionsTable = &schema.Table{
 		Name:       "process_definitions",
 		Columns:    ProcessDefinitionsColumns,
 		PrimaryKey: []*schema.Column{ProcessDefinitionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_definitions_process_deployments_definitions",
+				Columns:    []*schema.Column{ProcessDefinitionsColumns[15]},
+				RefColumns: []*schema.Column{ProcessDeploymentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "processdefinition_key_version",
@@ -1016,12 +1024,12 @@ var (
 			{
 				Name:    "processdefinition_tenant_id_key",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[13], ProcessDefinitionsColumns[1]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[12], ProcessDefinitionsColumns[1]},
 			},
 			{
 				Name:    "processdefinition_deployment_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[10]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[15]},
 			},
 			{
 				Name:    "processdefinition_is_active",
@@ -1103,7 +1111,6 @@ var (
 	ProcessExecutionHistoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "history_id", Type: field.TypeString, Unique: true},
-		{Name: "process_instance_id", Type: field.TypeString},
 		{Name: "process_definition_key", Type: field.TypeString},
 		{Name: "activity_id", Type: field.TypeString, Nullable: true},
 		{Name: "activity_name", Type: field.TypeString, Nullable: true},
@@ -1119,12 +1126,21 @@ var (
 		{Name: "error_code", Type: field.TypeString, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "process_instance_id", Type: field.TypeInt},
 	}
 	// ProcessExecutionHistoriesTable holds the schema information for the "process_execution_histories" table.
 	ProcessExecutionHistoriesTable = &schema.Table{
 		Name:       "process_execution_histories",
 		Columns:    ProcessExecutionHistoriesColumns,
 		PrimaryKey: []*schema.Column{ProcessExecutionHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_execution_histories_process_instances_execution_history",
+				Columns:    []*schema.Column{ProcessExecutionHistoriesColumns[17]},
+				RefColumns: []*schema.Column{ProcessInstancesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "processexecutionhistory_history_id",
@@ -1134,47 +1150,47 @@ var (
 			{
 				Name:    "processexecutionhistory_process_instance_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[2]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[17]},
 			},
 			{
 				Name:    "processexecutionhistory_process_definition_key",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[3]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[2]},
 			},
 			{
 				Name:    "processexecutionhistory_activity_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[4]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[3]},
 			},
 			{
 				Name:    "processexecutionhistory_activity_type",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[6]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[5]},
 			},
 			{
 				Name:    "processexecutionhistory_event_type",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[7]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[6]},
 			},
 			{
 				Name:    "processexecutionhistory_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[10]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[9]},
 			},
 			{
 				Name:    "processexecutionhistory_timestamp",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[12]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[11]},
 			},
 			{
 				Name:    "processexecutionhistory_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[16]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[15]},
 			},
 			{
 				Name:    "processexecutionhistory_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[17]},
+				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[16]},
 			},
 		},
 	}
@@ -1184,7 +1200,6 @@ var (
 		{Name: "process_instance_id", Type: field.TypeString, Unique: true},
 		{Name: "business_key", Type: field.TypeString, Nullable: true},
 		{Name: "process_definition_key", Type: field.TypeString},
-		{Name: "process_definition_id", Type: field.TypeString},
 		{Name: "status", Type: field.TypeString, Default: "running"},
 		{Name: "current_activity_id", Type: field.TypeString, Nullable: true},
 		{Name: "current_activity_name", Type: field.TypeString, Nullable: true},
@@ -1200,12 +1215,21 @@ var (
 		{Name: "state_snapshot", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "process_definition_id", Type: field.TypeInt},
 	}
 	// ProcessInstancesTable holds the schema information for the "process_instances" table.
 	ProcessInstancesTable = &schema.Table{
 		Name:       "process_instances",
 		Columns:    ProcessInstancesColumns,
 		PrimaryKey: []*schema.Column{ProcessInstancesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_instances_process_definitions_process_instances",
+				Columns:    []*schema.Column{ProcessInstancesColumns[19]},
+				RefColumns: []*schema.Column{ProcessDefinitionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "processinstance_process_instance_id",
@@ -1225,37 +1249,37 @@ var (
 			{
 				Name:    "processinstance_process_definition_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[4]},
+				Columns: []*schema.Column{ProcessInstancesColumns[19]},
 			},
 			{
 				Name:    "processinstance_status",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[5]},
+				Columns: []*schema.Column{ProcessInstancesColumns[4]},
 			},
 			{
 				Name:    "processinstance_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[13]},
+				Columns: []*schema.Column{ProcessInstancesColumns[12]},
 			},
 			{
 				Name:    "processinstance_initiator",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[14]},
+				Columns: []*schema.Column{ProcessInstancesColumns[13]},
 			},
 			{
 				Name:    "processinstance_start_time",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[9]},
+				Columns: []*schema.Column{ProcessInstancesColumns[8]},
 			},
 			{
 				Name:    "processinstance_parent_process_instance_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[15]},
+				Columns: []*schema.Column{ProcessInstancesColumns[14]},
 			},
 			{
 				Name:    "processinstance_root_process_instance_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessInstancesColumns[16]},
+				Columns: []*schema.Column{ProcessInstancesColumns[15]},
 			},
 		},
 	}
@@ -1263,7 +1287,6 @@ var (
 	ProcessTasksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "task_id", Type: field.TypeString, Unique: true},
-		{Name: "process_instance_id", Type: field.TypeString},
 		{Name: "process_definition_key", Type: field.TypeString},
 		{Name: "task_definition_key", Type: field.TypeString},
 		{Name: "task_name", Type: field.TypeString},
@@ -1286,12 +1309,21 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "process_instance_id", Type: field.TypeInt},
 	}
 	// ProcessTasksTable holds the schema information for the "process_tasks" table.
 	ProcessTasksTable = &schema.Table{
 		Name:       "process_tasks",
 		Columns:    ProcessTasksColumns,
 		PrimaryKey: []*schema.Column{ProcessTasksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_tasks_process_instances_process_tasks",
+				Columns:    []*schema.Column{ProcessTasksColumns[24]},
+				RefColumns: []*schema.Column{ProcessInstancesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "processtask_task_id",
@@ -1301,57 +1333,57 @@ var (
 			{
 				Name:    "processtask_process_instance_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[2]},
+				Columns: []*schema.Column{ProcessTasksColumns[24]},
 			},
 			{
 				Name:    "processtask_process_definition_key",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[3]},
+				Columns: []*schema.Column{ProcessTasksColumns[2]},
 			},
 			{
 				Name:    "processtask_task_definition_key",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[4]},
+				Columns: []*schema.Column{ProcessTasksColumns[3]},
 			},
 			{
 				Name:    "processtask_assignee",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[7]},
+				Columns: []*schema.Column{ProcessTasksColumns[6]},
 			},
 			{
 				Name:    "processtask_status",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[10]},
+				Columns: []*schema.Column{ProcessTasksColumns[9]},
 			},
 			{
 				Name:    "processtask_priority",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[11]},
+				Columns: []*schema.Column{ProcessTasksColumns[10]},
 			},
 			{
 				Name:    "processtask_due_date",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[12]},
+				Columns: []*schema.Column{ProcessTasksColumns[11]},
 			},
 			{
 				Name:    "processtask_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[22]},
+				Columns: []*schema.Column{ProcessTasksColumns[21]},
 			},
 			{
 				Name:    "processtask_created_time",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[13]},
+				Columns: []*schema.Column{ProcessTasksColumns[12]},
 			},
 			{
 				Name:    "processtask_parent_task_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[20]},
+				Columns: []*schema.Column{ProcessTasksColumns[19]},
 			},
 			{
 				Name:    "processtask_root_task_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessTasksColumns[21]},
+				Columns: []*schema.Column{ProcessTasksColumns[20]},
 			},
 		},
 	}
@@ -1359,7 +1391,6 @@ var (
 	ProcessVariablesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "variable_id", Type: field.TypeString, Unique: true},
-		{Name: "process_instance_id", Type: field.TypeString},
 		{Name: "task_id", Type: field.TypeString, Nullable: true},
 		{Name: "variable_name", Type: field.TypeString},
 		{Name: "variable_type", Type: field.TypeString, Default: "string"},
@@ -1370,12 +1401,21 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "process_instance_id", Type: field.TypeInt},
 	}
 	// ProcessVariablesTable holds the schema information for the "process_variables" table.
 	ProcessVariablesTable = &schema.Table{
 		Name:       "process_variables",
 		Columns:    ProcessVariablesColumns,
 		PrimaryKey: []*schema.Column{ProcessVariablesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_variables_process_instances_process_variables",
+				Columns:    []*schema.Column{ProcessVariablesColumns[12]},
+				RefColumns: []*schema.Column{ProcessInstancesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "processvariable_variable_id",
@@ -1385,32 +1425,32 @@ var (
 			{
 				Name:    "processvariable_process_instance_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessVariablesColumns[2]},
+				Columns: []*schema.Column{ProcessVariablesColumns[12]},
 			},
 			{
 				Name:    "processvariable_task_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessVariablesColumns[3]},
+				Columns: []*schema.Column{ProcessVariablesColumns[2]},
 			},
 			{
 				Name:    "processvariable_variable_name",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessVariablesColumns[4]},
+				Columns: []*schema.Column{ProcessVariablesColumns[3]},
 			},
 			{
 				Name:    "processvariable_scope",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessVariablesColumns[7]},
+				Columns: []*schema.Column{ProcessVariablesColumns[6]},
 			},
 			{
 				Name:    "processvariable_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessVariablesColumns[10]},
+				Columns: []*schema.Column{ProcessVariablesColumns[9]},
 			},
 			{
 				Name:    "processvariable_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessVariablesColumns[11]},
+				Columns: []*schema.Column{ProcessVariablesColumns[10]},
 			},
 		},
 	}
@@ -2786,6 +2826,11 @@ func init() {
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
 	PermissionsTable.ForeignKeys[0].RefTable = RolesTable
+	ProcessDefinitionsTable.ForeignKeys[0].RefTable = ProcessDeploymentsTable
+	ProcessExecutionHistoriesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
+	ProcessInstancesTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
+	ProcessTasksTable.ForeignKeys[0].RefTable = ProcessInstancesTable
+	ProcessVariablesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
 	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	RolesTable.ForeignKeys[0].RefTable = PermissionsTable
 	RootCauseAnalysesTable.ForeignKeys[0].RefTable = TicketsTable

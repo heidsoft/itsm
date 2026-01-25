@@ -50,7 +50,7 @@ export default function DepartmentsPage() {
     },
     {
       title: '负责人',
-      dataIndex: 'manager_id', // TODO: Show manager name if available
+      dataIndex: 'manager_id',
       key: 'manager',
       render: (text: string) => (
         <Space>

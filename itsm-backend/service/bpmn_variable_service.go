@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"itsm-backend/ent"
@@ -145,12 +146,17 @@ func (s *BPMNVariableService) CreateVariable(ctx context.Context, req *CreateVar
 	// }
 
 	// 创建变量记录
+	// 转换 ProcessInstanceID 从 string 到 int
+	var processInstanceID int
+	if req.ProcessInstanceID != "" {
+		processInstanceID, _ = strconv.Atoi(req.ProcessInstanceID)
+	}
 	variable, err := s.client.ProcessVariable.Create().
 		SetVariableName(req.Name).
 		SetVariableValue(string(valueBytes)). // ProcessVariable的variable_value是text类型
 		SetVariableType(string(req.Type)).
 		SetScope(string(req.Scope)).
-		SetProcessInstanceID(req.ProcessInstanceID).
+		SetProcessInstanceID(processInstanceID).
 		SetTaskID(req.TaskID).
 		SetIsTransient(req.IsTransient).
 		SetTenantID(req.TenantID).
@@ -246,7 +252,9 @@ func (s *BPMNVariableService) ListVariables(ctx context.Context, req *ListVariab
 
 	// 添加过滤条件 - 只使用ProcessVariable实际存在的字段
 	if req.ProcessInstanceID != "" {
-		query = query.Where(processvariable.ProcessInstanceID(req.ProcessInstanceID))
+		if instanceID, err := strconv.Atoi(req.ProcessInstanceID); err == nil {
+			query = query.Where(processvariable.ProcessInstanceID(instanceID))
+		}
 	}
 	if req.TaskID != "" {
 		query = query.Where(processvariable.TaskID(req.TaskID))
@@ -305,7 +313,9 @@ func (s *BPMNVariableService) GetVariablesByScope(ctx context.Context, scope Var
 	// 根据作用域类型添加过滤条件 - 只使用ProcessVariable实际存在的字段
 	switch scope {
 	case ScopeInstance:
-		query = query.Where(processvariable.ProcessInstanceID(scopeID))
+		if instanceID, err := strconv.Atoi(scopeID); err == nil {
+			query = query.Where(processvariable.ProcessInstanceID(instanceID))
+		}
 	case ScopeTask:
 		query = query.Where(processvariable.TaskID(scopeID))
 	}

@@ -65,7 +65,7 @@ export default function TeamsPage() {
       title: '负责人',
       dataIndex: 'manager_id',
       key: 'manager',
-      render: (text: number) => <span>ID: {text}</span>, // TODO: Resolve user name
+      render: (text: number) => <span>{text ? `用户ID: ${text}` : '-'}</span>,
     },
     {
       title: '成员',

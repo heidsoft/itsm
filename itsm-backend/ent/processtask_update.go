@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"time"
 
@@ -43,15 +44,15 @@ func (ptu *ProcessTaskUpdate) SetNillableTaskID(s *string) *ProcessTaskUpdate {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (ptu *ProcessTaskUpdate) SetProcessInstanceID(s string) *ProcessTaskUpdate {
-	ptu.mutation.SetProcessInstanceID(s)
+func (ptu *ProcessTaskUpdate) SetProcessInstanceID(i int) *ProcessTaskUpdate {
+	ptu.mutation.SetProcessInstanceID(i)
 	return ptu
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (ptu *ProcessTaskUpdate) SetNillableProcessInstanceID(s *string) *ProcessTaskUpdate {
-	if s != nil {
-		ptu.SetProcessInstanceID(*s)
+func (ptu *ProcessTaskUpdate) SetNillableProcessInstanceID(i *int) *ProcessTaskUpdate {
+	if i != nil {
+		ptu.SetProcessInstanceID(*i)
 	}
 	return ptu
 }
@@ -427,9 +428,20 @@ func (ptu *ProcessTaskUpdate) SetUpdatedAt(t time.Time) *ProcessTaskUpdate {
 	return ptu
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (ptu *ProcessTaskUpdate) SetProcessInstance(p *ProcessInstance) *ProcessTaskUpdate {
+	return ptu.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessTaskMutation object of the builder.
 func (ptu *ProcessTaskUpdate) Mutation() *ProcessTaskMutation {
 	return ptu.mutation
+}
+
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (ptu *ProcessTaskUpdate) ClearProcessInstance() *ProcessTaskUpdate {
+	ptu.mutation.ClearProcessInstance()
+	return ptu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -500,6 +512,9 @@ func (ptu *ProcessTaskUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.tenant_id": %w`, err)}
 		}
 	}
+	if ptu.mutation.ProcessInstanceCleared() && len(ptu.mutation.ProcessInstanceIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ProcessTask.process_instance"`)
+	}
 	return nil
 }
 
@@ -517,9 +532,6 @@ func (ptu *ProcessTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ptu.mutation.TaskID(); ok {
 		_spec.SetField(processtask.FieldTaskID, field.TypeString, value)
-	}
-	if value, ok := ptu.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processtask.FieldProcessInstanceID, field.TypeString, value)
 	}
 	if value, ok := ptu.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldProcessDefinitionKey, field.TypeString, value)
@@ -626,6 +638,35 @@ func (ptu *ProcessTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ptu.mutation.UpdatedAt(); ok {
 		_spec.SetField(processtask.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if ptu.mutation.ProcessInstanceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processtask.ProcessInstanceTable,
+			Columns: []string{processtask.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ptu.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processtask.ProcessInstanceTable,
+			Columns: []string{processtask.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ptu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processtask.Label}
@@ -661,15 +702,15 @@ func (ptuo *ProcessTaskUpdateOne) SetNillableTaskID(s *string) *ProcessTaskUpdat
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (ptuo *ProcessTaskUpdateOne) SetProcessInstanceID(s string) *ProcessTaskUpdateOne {
-	ptuo.mutation.SetProcessInstanceID(s)
+func (ptuo *ProcessTaskUpdateOne) SetProcessInstanceID(i int) *ProcessTaskUpdateOne {
+	ptuo.mutation.SetProcessInstanceID(i)
 	return ptuo
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (ptuo *ProcessTaskUpdateOne) SetNillableProcessInstanceID(s *string) *ProcessTaskUpdateOne {
-	if s != nil {
-		ptuo.SetProcessInstanceID(*s)
+func (ptuo *ProcessTaskUpdateOne) SetNillableProcessInstanceID(i *int) *ProcessTaskUpdateOne {
+	if i != nil {
+		ptuo.SetProcessInstanceID(*i)
 	}
 	return ptuo
 }
@@ -1045,9 +1086,20 @@ func (ptuo *ProcessTaskUpdateOne) SetUpdatedAt(t time.Time) *ProcessTaskUpdateOn
 	return ptuo
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (ptuo *ProcessTaskUpdateOne) SetProcessInstance(p *ProcessInstance) *ProcessTaskUpdateOne {
+	return ptuo.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessTaskMutation object of the builder.
 func (ptuo *ProcessTaskUpdateOne) Mutation() *ProcessTaskMutation {
 	return ptuo.mutation
+}
+
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (ptuo *ProcessTaskUpdateOne) ClearProcessInstance() *ProcessTaskUpdateOne {
+	ptuo.mutation.ClearProcessInstance()
+	return ptuo
 }
 
 // Where appends a list predicates to the ProcessTaskUpdate builder.
@@ -1131,6 +1183,9 @@ func (ptuo *ProcessTaskUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.tenant_id": %w`, err)}
 		}
 	}
+	if ptuo.mutation.ProcessInstanceCleared() && len(ptuo.mutation.ProcessInstanceIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ProcessTask.process_instance"`)
+	}
 	return nil
 }
 
@@ -1165,9 +1220,6 @@ func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTa
 	}
 	if value, ok := ptuo.mutation.TaskID(); ok {
 		_spec.SetField(processtask.FieldTaskID, field.TypeString, value)
-	}
-	if value, ok := ptuo.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processtask.FieldProcessInstanceID, field.TypeString, value)
 	}
 	if value, ok := ptuo.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldProcessDefinitionKey, field.TypeString, value)
@@ -1273,6 +1325,35 @@ func (ptuo *ProcessTaskUpdateOne) sqlSave(ctx context.Context) (_node *ProcessTa
 	}
 	if value, ok := ptuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(processtask.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if ptuo.mutation.ProcessInstanceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processtask.ProcessInstanceTable,
+			Columns: []string{processtask.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ptuo.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processtask.ProcessInstanceTable,
+			Columns: []string{processtask.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ProcessTask{config: ptuo.config}
 	_spec.Assign = _node.assignValues

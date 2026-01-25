@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -51,8 +52,44 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeProcessTasks holds the string denoting the process_tasks edge name in mutations.
+	EdgeProcessTasks = "process_tasks"
+	// EdgeProcessVariables holds the string denoting the process_variables edge name in mutations.
+	EdgeProcessVariables = "process_variables"
+	// EdgeExecutionHistory holds the string denoting the execution_history edge name in mutations.
+	EdgeExecutionHistory = "execution_history"
+	// EdgeDefinition holds the string denoting the definition edge name in mutations.
+	EdgeDefinition = "definition"
 	// Table holds the table name of the processinstance in the database.
 	Table = "process_instances"
+	// ProcessTasksTable is the table that holds the process_tasks relation/edge.
+	ProcessTasksTable = "process_tasks"
+	// ProcessTasksInverseTable is the table name for the ProcessTask entity.
+	// It exists in this package in order to avoid circular dependency with the "processtask" package.
+	ProcessTasksInverseTable = "process_tasks"
+	// ProcessTasksColumn is the table column denoting the process_tasks relation/edge.
+	ProcessTasksColumn = "process_instance_id"
+	// ProcessVariablesTable is the table that holds the process_variables relation/edge.
+	ProcessVariablesTable = "process_variables"
+	// ProcessVariablesInverseTable is the table name for the ProcessVariable entity.
+	// It exists in this package in order to avoid circular dependency with the "processvariable" package.
+	ProcessVariablesInverseTable = "process_variables"
+	// ProcessVariablesColumn is the table column denoting the process_variables relation/edge.
+	ProcessVariablesColumn = "process_instance_id"
+	// ExecutionHistoryTable is the table that holds the execution_history relation/edge.
+	ExecutionHistoryTable = "process_execution_histories"
+	// ExecutionHistoryInverseTable is the table name for the ProcessExecutionHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "processexecutionhistory" package.
+	ExecutionHistoryInverseTable = "process_execution_histories"
+	// ExecutionHistoryColumn is the table column denoting the execution_history relation/edge.
+	ExecutionHistoryColumn = "process_instance_id"
+	// DefinitionTable is the table that holds the definition relation/edge.
+	DefinitionTable = "process_instances"
+	// DefinitionInverseTable is the table name for the ProcessDefinition entity.
+	// It exists in this package in order to avoid circular dependency with the "processdefinition" package.
+	DefinitionInverseTable = "process_definitions"
+	// DefinitionColumn is the table column denoting the definition relation/edge.
+	DefinitionColumn = "process_definition_id"
 )
 
 // Columns holds all SQL columns for processinstance fields.
@@ -95,7 +132,7 @@ var (
 	// ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
 	ProcessDefinitionKeyValidator func(string) error
 	// ProcessDefinitionIDValidator is a validator for the "process_definition_id" field. It is called by the builders before save.
-	ProcessDefinitionIDValidator func(string) error
+	ProcessDefinitionIDValidator func(int) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// DefaultStartTime holds the default value on creation for the "start_time" field.
@@ -201,4 +238,81 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByProcessTasksCount orders the results by process_tasks count.
+func ByProcessTasksCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newProcessTasksStep(), opts...)
+	}
+}
+
+// ByProcessTasks orders the results by process_tasks terms.
+func ByProcessTasks(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProcessTasksStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByProcessVariablesCount orders the results by process_variables count.
+func ByProcessVariablesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newProcessVariablesStep(), opts...)
+	}
+}
+
+// ByProcessVariables orders the results by process_variables terms.
+func ByProcessVariables(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProcessVariablesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByExecutionHistoryCount orders the results by execution_history count.
+func ByExecutionHistoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newExecutionHistoryStep(), opts...)
+	}
+}
+
+// ByExecutionHistory orders the results by execution_history terms.
+func ByExecutionHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newExecutionHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByDefinitionField orders the results by definition field.
+func ByDefinitionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDefinitionStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newProcessTasksStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProcessTasksInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ProcessTasksTable, ProcessTasksColumn),
+	)
+}
+func newProcessVariablesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProcessVariablesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ProcessVariablesTable, ProcessVariablesColumn),
+	)
+}
+func newExecutionHistoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ExecutionHistoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ExecutionHistoryTable, ExecutionHistoryColumn),
+	)
+}
+func newDefinitionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DefinitionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DefinitionTable, DefinitionColumn),
+	)
 }

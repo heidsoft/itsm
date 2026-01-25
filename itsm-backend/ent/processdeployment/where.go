@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -707,6 +708,29 @@ func UpdatedAtLT(v time.Time) predicate.ProcessDeployment {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.ProcessDeployment {
 	return predicate.ProcessDeployment(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasDefinitions applies the HasEdge predicate on the "definitions" edge.
+func HasDefinitions() predicate.ProcessDeployment {
+	return predicate.ProcessDeployment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, DefinitionsTable, DefinitionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDefinitionsWith applies the HasEdge predicate on the "definitions" edge with a given conditions (other predicates).
+func HasDefinitionsWith(preds ...predicate.ProcessDefinition) predicate.ProcessDeployment {
+	return predicate.ProcessDeployment(func(s *sql.Selector) {
+		step := newDefinitionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.
