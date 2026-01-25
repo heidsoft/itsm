@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
 	"strings"
 	"time"
 
@@ -47,8 +48,42 @@ type ProcessDefinition struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProcessDefinitionQuery when eager-loading is set.
+	Edges        ProcessDefinitionEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ProcessDefinitionEdges holds the relations/edges for other nodes in the graph.
+type ProcessDefinitionEdges struct {
+	// 流程实例
+	ProcessInstances []*ProcessInstance `json:"process_instances,omitempty"`
+	// Deployment holds the value of the deployment edge.
+	Deployment *ProcessDeployment `json:"deployment,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// ProcessInstancesOrErr returns the ProcessInstances value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessDefinitionEdges) ProcessInstancesOrErr() ([]*ProcessInstance, error) {
+	if e.loadedTypes[0] {
+		return e.ProcessInstances, nil
+	}
+	return nil, &NotLoadedError{edge: "process_instances"}
+}
+
+// DeploymentOrErr returns the Deployment value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProcessDefinitionEdges) DeploymentOrErr() (*ProcessDeployment, error) {
+	if e.Deployment != nil {
+		return e.Deployment, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: processdeployment.Label}
+	}
+	return nil, &NotLoadedError{edge: "deployment"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -192,6 +227,16 @@ func (pd *ProcessDefinition) assignValues(columns []string, values []any) error 
 // This includes values selected through modifiers, order, etc.
 func (pd *ProcessDefinition) Value(name string) (ent.Value, error) {
 	return pd.selectValues.Get(name)
+}
+
+// QueryProcessInstances queries the "process_instances" edge of the ProcessDefinition entity.
+func (pd *ProcessDefinition) QueryProcessInstances() *ProcessInstanceQuery {
+	return NewProcessDefinitionClient(pd.config).QueryProcessInstances(pd)
+}
+
+// QueryDeployment queries the "deployment" edge of the ProcessDefinition entity.
+func (pd *ProcessDefinition) QueryDeployment() *ProcessDeploymentQuery {
+	return NewProcessDefinitionClient(pd.config).QueryDeployment(pd)
 }
 
 // Update returns a builder for updating this ProcessDefinition.

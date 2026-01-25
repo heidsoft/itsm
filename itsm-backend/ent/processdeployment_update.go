@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"time"
 
@@ -211,9 +212,45 @@ func (pdu *ProcessDeploymentUpdate) SetUpdatedAt(t time.Time) *ProcessDeployment
 	return pdu
 }
 
+// AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by IDs.
+func (pdu *ProcessDeploymentUpdate) AddDefinitionIDs(ids ...int) *ProcessDeploymentUpdate {
+	pdu.mutation.AddDefinitionIDs(ids...)
+	return pdu
+}
+
+// AddDefinitions adds the "definitions" edges to the ProcessDefinition entity.
+func (pdu *ProcessDeploymentUpdate) AddDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdu.AddDefinitionIDs(ids...)
+}
+
 // Mutation returns the ProcessDeploymentMutation object of the builder.
 func (pdu *ProcessDeploymentUpdate) Mutation() *ProcessDeploymentMutation {
 	return pdu.mutation
+}
+
+// ClearDefinitions clears all "definitions" edges to the ProcessDefinition entity.
+func (pdu *ProcessDeploymentUpdate) ClearDefinitions() *ProcessDeploymentUpdate {
+	pdu.mutation.ClearDefinitions()
+	return pdu
+}
+
+// RemoveDefinitionIDs removes the "definitions" edge to ProcessDefinition entities by IDs.
+func (pdu *ProcessDeploymentUpdate) RemoveDefinitionIDs(ids ...int) *ProcessDeploymentUpdate {
+	pdu.mutation.RemoveDefinitionIDs(ids...)
+	return pdu
+}
+
+// RemoveDefinitions removes "definitions" edges to ProcessDefinition entities.
+func (pdu *ProcessDeploymentUpdate) RemoveDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdu.RemoveDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -334,6 +371,51 @@ func (pdu *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if value, ok := pdu.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdeployment.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if pdu.mutation.DefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pdu.mutation.RemovedDefinitionsIDs(); len(nodes) > 0 && !pdu.mutation.DefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pdu.mutation.DefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pdu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -538,9 +620,45 @@ func (pduo *ProcessDeploymentUpdateOne) SetUpdatedAt(t time.Time) *ProcessDeploy
 	return pduo
 }
 
+// AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by IDs.
+func (pduo *ProcessDeploymentUpdateOne) AddDefinitionIDs(ids ...int) *ProcessDeploymentUpdateOne {
+	pduo.mutation.AddDefinitionIDs(ids...)
+	return pduo
+}
+
+// AddDefinitions adds the "definitions" edges to the ProcessDefinition entity.
+func (pduo *ProcessDeploymentUpdateOne) AddDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pduo.AddDefinitionIDs(ids...)
+}
+
 // Mutation returns the ProcessDeploymentMutation object of the builder.
 func (pduo *ProcessDeploymentUpdateOne) Mutation() *ProcessDeploymentMutation {
 	return pduo.mutation
+}
+
+// ClearDefinitions clears all "definitions" edges to the ProcessDefinition entity.
+func (pduo *ProcessDeploymentUpdateOne) ClearDefinitions() *ProcessDeploymentUpdateOne {
+	pduo.mutation.ClearDefinitions()
+	return pduo
+}
+
+// RemoveDefinitionIDs removes the "definitions" edge to ProcessDefinition entities by IDs.
+func (pduo *ProcessDeploymentUpdateOne) RemoveDefinitionIDs(ids ...int) *ProcessDeploymentUpdateOne {
+	pduo.mutation.RemoveDefinitionIDs(ids...)
+	return pduo
+}
+
+// RemoveDefinitions removes "definitions" edges to ProcessDefinition entities.
+func (pduo *ProcessDeploymentUpdateOne) RemoveDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pduo.RemoveDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the ProcessDeploymentUpdate builder.
@@ -691,6 +809,51 @@ func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 	}
 	if value, ok := pduo.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdeployment.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if pduo.mutation.DefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pduo.mutation.RemovedDefinitionsIDs(); len(nodes) > 0 && !pduo.mutation.DefinitionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pduo.mutation.DefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ProcessDeployment{config: pduo.config}
 	_spec.Assign = _node.assignValues

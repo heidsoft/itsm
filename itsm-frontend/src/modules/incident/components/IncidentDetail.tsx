@@ -48,8 +48,8 @@ const IncidentDetail: React.FC = () => {
     }, [id]);
 
     const handleEscalate = () => {
-        // TODO: 实现升级弹窗
-        message.info('功能开发中');
+        // 注意：升级弹窗需要EscalationModal组件实现
+        message.info('升级功能开发中');
     };
 
     if (loading) {

@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
-	"sort"
 	"math"
+	"sort"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
@@ -337,9 +337,9 @@ func (s *BPMNMonitoringService) getTaskMetrics(ctx context.Context, req *Process
 }
 
 // GetProcessInstanceStatus 获取流程实例状态
-func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, processInstanceID string, tenantID int) (*ProcessInstanceStatus, error) {
+func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, processInstanceID int, tenantID int) (*ProcessInstanceStatus, error) {
 	instance, err := s.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID)).
+		Where(processinstance.ProcessInstanceID(fmt.Sprintf("%d", processInstanceID))).
 		Where(processinstance.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
@@ -374,7 +374,7 @@ func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, pr
 }
 
 // calculateProcessProgress 计算流程进度
-func (s *BPMNMonitoringService) calculateProcessProgress(ctx context.Context, processInstanceID string) (float64, error) {
+func (s *BPMNMonitoringService) calculateProcessProgress(ctx context.Context, processInstanceID int) (float64, error) {
 	// 获取总任务数
 	totalTasks, err := s.client.ProcessTask.Query().
 		Where(processtask.ProcessInstanceID(processInstanceID)).

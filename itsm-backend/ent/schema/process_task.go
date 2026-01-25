@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -20,9 +21,9 @@ func (ProcessTask) Fields() []ent.Field {
 			Comment("任务ID，BPMN标准").
 			Unique().
 			NotEmpty(),
-		field.String("process_instance_id").
+		field.Int("process_instance_id").
 			Comment("流程实例ID").
-			NotEmpty(),
+			Positive(),
 		field.String("process_definition_key").
 			Comment("流程定义Key").
 			NotEmpty(),
@@ -96,7 +97,11 @@ func (ProcessTask) Fields() []ent.Field {
 // Edges of the ProcessTask.
 func (ProcessTask) Edges() []ent.Edge {
 	return []ent.Edge{
-		// TODO: 添加相关实体的edge定义
+		edge.From("process_instance", ProcessInstance.Type).
+			Ref("process_tasks").
+			Field("process_instance_id").
+			Required().
+			Unique(),
 	}
 }
 

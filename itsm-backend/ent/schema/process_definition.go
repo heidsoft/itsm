@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -68,15 +69,13 @@ func (ProcessDefinition) Fields() []ent.Field {
 // Edges of the ProcessDefinition.
 func (ProcessDefinition) Edges() []ent.Edge {
 	return []ent.Edge{
-		// TODO: 添加相关实体的edge定义
-		// edge.To("process_instances", ProcessInstance.Type).
-		// 	Comment("流程实例"),
-		// edge.To("process_tasks", ProcessTask.Type).
-		// 	Comment("流程任务定义"),
-		// edge.To("process_events", ProcessEvent.Type).
-		// 	Comment("流程事件定义"),
-		// edge.To("process_gateways", ProcessGateway.Type).
-		// 	Comment("流程网关定义"),
+		edge.To("process_instances", ProcessInstance.Type).
+			Comment("流程实例"),
+		edge.From("deployment", ProcessDeployment.Type).
+			Ref("definitions").
+			Field("deployment_id").
+			Required().
+			Unique(),
 	}
 }
 

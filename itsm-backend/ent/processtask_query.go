@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"math"
 
@@ -18,10 +19,11 @@ import (
 // ProcessTaskQuery is the builder for querying ProcessTask entities.
 type ProcessTaskQuery struct {
 	config
-	ctx        *QueryContext
-	order      []processtask.OrderOption
-	inters     []Interceptor
-	predicates []predicate.ProcessTask
+	ctx                 *QueryContext
+	order               []processtask.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.ProcessTask
+	withProcessInstance *ProcessInstanceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +58,28 @@ func (ptq *ProcessTaskQuery) Unique(unique bool) *ProcessTaskQuery {
 func (ptq *ProcessTaskQuery) Order(o ...processtask.OrderOption) *ProcessTaskQuery {
 	ptq.order = append(ptq.order, o...)
 	return ptq
+}
+
+// QueryProcessInstance chains the current query on the "process_instance" edge.
+func (ptq *ProcessTaskQuery) QueryProcessInstance() *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: ptq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := ptq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := ptq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processtask.Table, processtask.FieldID, selector),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processtask.ProcessInstanceTable, processtask.ProcessInstanceColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(ptq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ProcessTask entity from the query.
@@ -245,15 +269,27 @@ func (ptq *ProcessTaskQuery) Clone() *ProcessTaskQuery {
 		return nil
 	}
 	return &ProcessTaskQuery{
-		config:     ptq.config,
-		ctx:        ptq.ctx.Clone(),
-		order:      append([]processtask.OrderOption{}, ptq.order...),
-		inters:     append([]Interceptor{}, ptq.inters...),
-		predicates: append([]predicate.ProcessTask{}, ptq.predicates...),
+		config:              ptq.config,
+		ctx:                 ptq.ctx.Clone(),
+		order:               append([]processtask.OrderOption{}, ptq.order...),
+		inters:              append([]Interceptor{}, ptq.inters...),
+		predicates:          append([]predicate.ProcessTask{}, ptq.predicates...),
+		withProcessInstance: ptq.withProcessInstance.Clone(),
 		// clone intermediate query.
 		sql:  ptq.sql.Clone(),
 		path: ptq.path,
 	}
+}
+
+// WithProcessInstance tells the query-builder to eager-load the nodes that are connected to
+// the "process_instance" edge. The optional arguments are used to configure the query builder of the edge.
+func (ptq *ProcessTaskQuery) WithProcessInstance(opts ...func(*ProcessInstanceQuery)) *ProcessTaskQuery {
+	query := (&ProcessInstanceClient{config: ptq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	ptq.withProcessInstance = query
+	return ptq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +368,11 @@ func (ptq *ProcessTaskQuery) prepareQuery(ctx context.Context) error {
 
 func (ptq *ProcessTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessTask, error) {
 	var (
-		nodes = []*ProcessTask{}
-		_spec = ptq.querySpec()
+		nodes       = []*ProcessTask{}
+		_spec       = ptq.querySpec()
+		loadedTypes = [1]bool{
+			ptq.withProcessInstance != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessTask).scanValues(nil, columns)
@@ -341,6 +380,7 @@ func (ptq *ProcessTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ProcessTask{config: ptq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +392,43 @@ func (ptq *ProcessTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := ptq.withProcessInstance; query != nil {
+		if err := ptq.loadProcessInstance(ctx, query, nodes, nil,
+			func(n *ProcessTask, e *ProcessInstance) { n.Edges.ProcessInstance = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (ptq *ProcessTaskQuery) loadProcessInstance(ctx context.Context, query *ProcessInstanceQuery, nodes []*ProcessTask, init func(*ProcessTask), assign func(*ProcessTask, *ProcessInstance)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ProcessTask)
+	for i := range nodes {
+		fk := nodes[i].ProcessInstanceID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(processinstance.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "process_instance_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (ptq *ProcessTaskQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +455,9 @@ func (ptq *ProcessTaskQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != processtask.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if ptq.withProcessInstance != nil {
+			_spec.Node.AddColumnOnce(processtask.FieldProcessInstanceID)
 		}
 	}
 	if ps := ptq.predicates; len(ps) > 0 {

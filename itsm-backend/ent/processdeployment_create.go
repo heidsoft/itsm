@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"time"
 
@@ -154,6 +155,21 @@ func (pdc *ProcessDeploymentCreate) SetNillableUpdatedAt(t *time.Time) *ProcessD
 		pdc.SetUpdatedAt(*t)
 	}
 	return pdc
+}
+
+// AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by IDs.
+func (pdc *ProcessDeploymentCreate) AddDefinitionIDs(ids ...int) *ProcessDeploymentCreate {
+	pdc.mutation.AddDefinitionIDs(ids...)
+	return pdc
+}
+
+// AddDefinitions adds the "definitions" edges to the ProcessDefinition entity.
+func (pdc *ProcessDeploymentCreate) AddDefinitions(p ...*ProcessDefinition) *ProcessDeploymentCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdc.AddDefinitionIDs(ids...)
 }
 
 // Mutation returns the ProcessDeploymentMutation object of the builder.
@@ -327,6 +343,22 @@ func (pdc *ProcessDeploymentCreate) createSpec() (*ProcessDeployment, *sqlgraph.
 	if value, ok := pdc.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdeployment.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := pdc.mutation.DefinitionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdeployment.DefinitionsTable,
+			Columns: []string{processdeployment.DefinitionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

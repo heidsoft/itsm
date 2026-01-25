@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processvariable"
 	"math"
 
@@ -18,10 +19,11 @@ import (
 // ProcessVariableQuery is the builder for querying ProcessVariable entities.
 type ProcessVariableQuery struct {
 	config
-	ctx        *QueryContext
-	order      []processvariable.OrderOption
-	inters     []Interceptor
-	predicates []predicate.ProcessVariable
+	ctx                 *QueryContext
+	order               []processvariable.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.ProcessVariable
+	withProcessInstance *ProcessInstanceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +58,28 @@ func (pvq *ProcessVariableQuery) Unique(unique bool) *ProcessVariableQuery {
 func (pvq *ProcessVariableQuery) Order(o ...processvariable.OrderOption) *ProcessVariableQuery {
 	pvq.order = append(pvq.order, o...)
 	return pvq
+}
+
+// QueryProcessInstance chains the current query on the "process_instance" edge.
+func (pvq *ProcessVariableQuery) QueryProcessInstance() *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: pvq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pvq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pvq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processvariable.Table, processvariable.FieldID, selector),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processvariable.ProcessInstanceTable, processvariable.ProcessInstanceColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pvq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ProcessVariable entity from the query.
@@ -245,15 +269,27 @@ func (pvq *ProcessVariableQuery) Clone() *ProcessVariableQuery {
 		return nil
 	}
 	return &ProcessVariableQuery{
-		config:     pvq.config,
-		ctx:        pvq.ctx.Clone(),
-		order:      append([]processvariable.OrderOption{}, pvq.order...),
-		inters:     append([]Interceptor{}, pvq.inters...),
-		predicates: append([]predicate.ProcessVariable{}, pvq.predicates...),
+		config:              pvq.config,
+		ctx:                 pvq.ctx.Clone(),
+		order:               append([]processvariable.OrderOption{}, pvq.order...),
+		inters:              append([]Interceptor{}, pvq.inters...),
+		predicates:          append([]predicate.ProcessVariable{}, pvq.predicates...),
+		withProcessInstance: pvq.withProcessInstance.Clone(),
 		// clone intermediate query.
 		sql:  pvq.sql.Clone(),
 		path: pvq.path,
 	}
+}
+
+// WithProcessInstance tells the query-builder to eager-load the nodes that are connected to
+// the "process_instance" edge. The optional arguments are used to configure the query builder of the edge.
+func (pvq *ProcessVariableQuery) WithProcessInstance(opts ...func(*ProcessInstanceQuery)) *ProcessVariableQuery {
+	query := (&ProcessInstanceClient{config: pvq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pvq.withProcessInstance = query
+	return pvq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +368,11 @@ func (pvq *ProcessVariableQuery) prepareQuery(ctx context.Context) error {
 
 func (pvq *ProcessVariableQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessVariable, error) {
 	var (
-		nodes = []*ProcessVariable{}
-		_spec = pvq.querySpec()
+		nodes       = []*ProcessVariable{}
+		_spec       = pvq.querySpec()
+		loadedTypes = [1]bool{
+			pvq.withProcessInstance != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessVariable).scanValues(nil, columns)
@@ -341,6 +380,7 @@ func (pvq *ProcessVariableQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ProcessVariable{config: pvq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +392,43 @@ func (pvq *ProcessVariableQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := pvq.withProcessInstance; query != nil {
+		if err := pvq.loadProcessInstance(ctx, query, nodes, nil,
+			func(n *ProcessVariable, e *ProcessInstance) { n.Edges.ProcessInstance = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (pvq *ProcessVariableQuery) loadProcessInstance(ctx context.Context, query *ProcessInstanceQuery, nodes []*ProcessVariable, init func(*ProcessVariable), assign func(*ProcessVariable, *ProcessInstance)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ProcessVariable)
+	for i := range nodes {
+		fk := nodes[i].ProcessInstanceID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(processinstance.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "process_instance_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (pvq *ProcessVariableQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +455,9 @@ func (pvq *ProcessVariableQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != processvariable.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if pvq.withProcessInstance != nil {
+			_spec.Node.AddColumnOnce(processvariable.FieldProcessInstanceID)
 		}
 	}
 	if ps := pvq.predicates; len(ps) > 0 {

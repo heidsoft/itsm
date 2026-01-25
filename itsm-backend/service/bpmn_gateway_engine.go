@@ -4,23 +4,29 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
+
+	"go.uber.org/zap"
 )
 
 // GatewayEngine BPMN网关执行引擎
 type GatewayEngine struct {
 	client *ent.Client
+	logger *zap.SugaredLogger
 }
 
 // NewGatewayEngine 创建网关执行引擎实例
-func NewGatewayEngine(client *ent.Client) *GatewayEngine {
+func NewGatewayEngine(client *ent.Client, logger *zap.SugaredLogger) *GatewayEngine {
 	return &GatewayEngine{
 		client: client,
+		logger: logger,
 	}
 }
 
@@ -35,11 +41,12 @@ const (
 
 // GatewayExecutionRequest 网关执行请求
 type GatewayExecutionRequest struct {
-	ProcessInstanceID string                 `json:"process_instance_id" binding:"required"`
-	GatewayID         string                 `json:"gateway_id" binding:"required"`
-	GatewayType       GatewayType            `json:"gateway_type" binding:"required"`
-	Variables         map[string]interface{} `json:"variables"`
-	TenantID          int                    `json:"tenant_id" binding:"required"`
+	ProcessInstanceID       string                 `json:"process_instance_id" binding:"required"`
+	ProcessDefinitionKey    string                 `json:"process_definition_key" binding:"required"`
+	GatewayID               string                 `json:"gateway_id" binding:"required"`
+	GatewayType             GatewayType            `json:"gateway_type" binding:"required"`
+	Variables               map[string]interface{} `json:"variables"`
+	TenantID                int                    `json:"tenant_id" binding:"required"`
 }
 
 // GatewayExecutionResult 网关执行结果
@@ -76,7 +83,7 @@ func (e *GatewayEngine) executeExclusiveGateway(ctx context.Context, req *Gatewa
 
 	// 获取流程定义
 	definition, err := e.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(instance.ProcessDefinitionID)).
+		Where(processdefinition.Key(instance.ProcessDefinitionKey)).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
@@ -120,7 +127,7 @@ func (e *GatewayEngine) executeParallelGateway(ctx context.Context, req *Gateway
 
 	// 获取流程定义
 	definition, err := e.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(instance.ProcessDefinitionID)).
+		Where(processdefinition.Key(instance.ProcessDefinitionKey)).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
@@ -161,7 +168,7 @@ func (e *GatewayEngine) executeInclusiveGateway(ctx context.Context, req *Gatewa
 
 	// 获取流程定义
 	definition, err := e.client.ProcessDefinition.Query().
-		Where(processdefinition.Key(instance.ProcessDefinitionID)).
+		Where(processdefinition.Key(instance.ProcessDefinitionKey)).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
@@ -368,17 +375,71 @@ func (e *GatewayEngine) recordGatewayExecution(ctx context.Context, req *Gateway
 		return fmt.Errorf("序列化执行日志失败: %w", err)
 	}
 
-	// TODO: 保存到流程执行历史表
-	_ = logBytes
+	// 保存到流程执行历史表
+	historyID := fmt.Sprintf("HIST-%s-%d", req.GatewayID, time.Now().UnixNano())
+
+	// 解析 process_instance_id 为 int
+	instanceID, _ := strconv.Atoi(req.ProcessInstanceID)
+
+	_, err = e.client.ProcessExecutionHistory.Create().
+		SetHistoryID(historyID).
+		SetProcessInstanceID(instanceID).
+		SetProcessDefinitionKey(req.ProcessDefinitionKey).
+		SetActivityID(req.GatewayID).
+		SetActivityType("gateway").
+		SetEventType(gatewayType).
+		SetEventDetail(string(logBytes)).
+		SetVariables(req.Variables).
+		SetTenantID(req.TenantID).
+		SetTimestamp(time.Now()).
+		Save(ctx)
+
+	if err != nil {
+		e.logger.Warnw("Failed to save execution history", "error", err)
+		// 不返回错误，避免影响主流程
+	}
 
 	return nil
 }
 
 // GetGatewayExecutionHistory 获取网关执行历史
 func (e *GatewayEngine) GetGatewayExecutionHistory(ctx context.Context, processInstanceID string, tenantID int) ([]map[string]interface{}, error) {
-	// 这里应该从流程执行历史表查询
-	// 暂时返回空结果
-	return []map[string]interface{}{}, nil
+	// 解析 process_instance_id 为 int
+	instanceID, err := strconv.Atoi(processInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid process instance ID: %w", err)
+	}
+
+	// 从数据库查询执行历史
+	histories, err := e.client.ProcessExecutionHistory.Query().
+		Where(processexecutionhistory.ProcessInstanceID(instanceID)).
+		Where(processexecutionhistory.TenantID(tenantID)).
+		Where(processexecutionhistory.ActivityType("gateway")).
+		Order(ent.Asc(processexecutionhistory.FieldTimestamp)).
+		All(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to query execution history: %w", err)
+	}
+
+	// 转换为 map 数组
+	result := make([]map[string]interface{}, len(histories))
+	for i, h := range histories {
+		result[i] = map[string]interface{}{
+			"history_id":           h.HistoryID,
+			"process_instance_id":  h.ProcessInstanceID,
+			"process_definition_key": h.ProcessDefinitionKey,
+			"activity_id":          h.ActivityID,
+			"activity_type":        h.ActivityType,
+			"event_type":           h.EventType,
+			"event_detail":         h.EventDetail,
+			"variables":            h.Variables,
+			"timestamp":            h.Timestamp,
+			"tenant_id":            h.TenantID,
+		}
+	}
+
+	return result, nil
 }
 
 // ValidateGatewayConfiguration 验证网关配置

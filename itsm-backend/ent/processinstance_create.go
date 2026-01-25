@@ -6,7 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processvariable"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -47,8 +51,8 @@ func (pic *ProcessInstanceCreate) SetProcessDefinitionKey(s string) *ProcessInst
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (pic *ProcessInstanceCreate) SetProcessDefinitionID(s string) *ProcessInstanceCreate {
-	pic.mutation.SetProcessDefinitionID(s)
+func (pic *ProcessInstanceCreate) SetProcessDefinitionID(i int) *ProcessInstanceCreate {
+	pic.mutation.SetProcessDefinitionID(i)
 	return pic
 }
 
@@ -238,6 +242,62 @@ func (pic *ProcessInstanceCreate) SetNillableUpdatedAt(t *time.Time) *ProcessIns
 	return pic
 }
 
+// AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by IDs.
+func (pic *ProcessInstanceCreate) AddProcessTaskIDs(ids ...int) *ProcessInstanceCreate {
+	pic.mutation.AddProcessTaskIDs(ids...)
+	return pic
+}
+
+// AddProcessTasks adds the "process_tasks" edges to the ProcessTask entity.
+func (pic *ProcessInstanceCreate) AddProcessTasks(p ...*ProcessTask) *ProcessInstanceCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pic.AddProcessTaskIDs(ids...)
+}
+
+// AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by IDs.
+func (pic *ProcessInstanceCreate) AddProcessVariableIDs(ids ...int) *ProcessInstanceCreate {
+	pic.mutation.AddProcessVariableIDs(ids...)
+	return pic
+}
+
+// AddProcessVariables adds the "process_variables" edges to the ProcessVariable entity.
+func (pic *ProcessInstanceCreate) AddProcessVariables(p ...*ProcessVariable) *ProcessInstanceCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pic.AddProcessVariableIDs(ids...)
+}
+
+// AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
+func (pic *ProcessInstanceCreate) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceCreate {
+	pic.mutation.AddExecutionHistoryIDs(ids...)
+	return pic
+}
+
+// AddExecutionHistory adds the "execution_history" edges to the ProcessExecutionHistory entity.
+func (pic *ProcessInstanceCreate) AddExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pic.AddExecutionHistoryIDs(ids...)
+}
+
+// SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
+func (pic *ProcessInstanceCreate) SetDefinitionID(id int) *ProcessInstanceCreate {
+	pic.mutation.SetDefinitionID(id)
+	return pic
+}
+
+// SetDefinition sets the "definition" edge to the ProcessDefinition entity.
+func (pic *ProcessInstanceCreate) SetDefinition(p *ProcessDefinition) *ProcessInstanceCreate {
+	return pic.SetDefinitionID(p.ID)
+}
+
 // Mutation returns the ProcessInstanceMutation object of the builder.
 func (pic *ProcessInstanceCreate) Mutation() *ProcessInstanceMutation {
 	return pic.mutation
@@ -337,6 +397,9 @@ func (pic *ProcessInstanceCreate) check() error {
 	if _, ok := pic.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessInstance.updated_at"`)}
 	}
+	if len(pic.mutation.DefinitionIDs()) == 0 {
+		return &ValidationError{Name: "definition", err: errors.New(`ent: missing required edge "ProcessInstance.definition"`)}
+	}
 	return nil
 }
 
@@ -374,10 +437,6 @@ func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Crea
 	if value, ok := pic.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processinstance.FieldProcessDefinitionKey, field.TypeString, value)
 		_node.ProcessDefinitionKey = value
-	}
-	if value, ok := pic.mutation.ProcessDefinitionID(); ok {
-		_spec.SetField(processinstance.FieldProcessDefinitionID, field.TypeString, value)
-		_node.ProcessDefinitionID = value
 	}
 	if value, ok := pic.mutation.Status(); ok {
 		_spec.SetField(processinstance.FieldStatus, field.TypeString, value)
@@ -438,6 +497,71 @@ func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Crea
 	if value, ok := pic.mutation.UpdatedAt(); ok {
 		_spec.SetField(processinstance.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := pic.mutation.ProcessTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pic.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pic.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pic.mutation.DefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processinstance.DefinitionTable,
+			Columns: []string{processinstance.DefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProcessDefinitionID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

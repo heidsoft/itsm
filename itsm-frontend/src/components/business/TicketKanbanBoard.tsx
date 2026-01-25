@@ -350,8 +350,9 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   const handleSaveView = async () => {
     try {
       const values = await form.validateFields();
-      // TODO: 调用API保存视图
-      antMessage.success('视图已保存');
+      // 注意：保存视图API尚未实现
+      // 未来可通过 ViewAPI.saveView() 保存视图配置
+      antMessage.success('视图已保存（模拟）');
       setSaveViewModalVisible(false);
       form.resetFields();
     } catch (error) {

@@ -16,8 +16,9 @@ import (
 )
 
 type SLAAlertService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client            *ent.Client
+	logger            *zap.SugaredLogger
+	notificationSvc   *TicketNotificationService
 }
 
 func NewSLAAlertService(client *ent.Client, logger *zap.SugaredLogger) *SLAAlertService {
@@ -25,6 +26,11 @@ func NewSLAAlertService(client *ent.Client, logger *zap.SugaredLogger) *SLAAlert
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetNotificationService 设置通知服务
+func (s *SLAAlertService) SetNotificationService(notificationSvc *TicketNotificationService) {
+	s.notificationSvc = notificationSvc
 }
 
 // CreateAlertRule 创建SLA预警规则
@@ -362,7 +368,7 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 			}
 
 			// 创建预警历史记录
-			_, err := s.client.SLAAlertHistory.Create().
+			alertHistory, err := s.client.SLAAlertHistory.Create().
 				SetTicketID(ticketEntity.ID).
 				SetTicketNumber(ticketEntity.TicketNumber).
 				SetTicketTitle(ticketEntity.Title).
@@ -381,8 +387,51 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 				continue
 			}
 
-			// TODO: 发送通知
-			// s.sendNotification(ctx, rule, ticketEntity)
+			// 发送预警通知
+			if s.notificationSvc != nil {
+				// 根据预警级别确定通知渠道
+				alertLevel := rule.AlertLevel
+				if alertLevel == "" {
+					alertLevel = "warning"
+				}
+
+				// 发送站内通知
+				_ = s.notificationSvc.NotifySLAAlertLevelChanged(ctx, ticketEntity.ID, alertLevel, percentage, tenantID)
+
+				// 如果是严重级别，发送邮件通知
+				if alertLevel == "critical" && s.notificationSvc.emailService != nil {
+					// 获取处理人和创建人
+					userIDs := []int{ticketEntity.RequesterID}
+					if ticketEntity.AssigneeID > 0 {
+						userIDs = append(userIDs, ticketEntity.AssigneeID)
+					}
+
+					var emails []string
+					for _, userID := range userIDs {
+						userEntity, _ := s.client.User.Get(ctx, userID)
+						if userEntity != nil && userEntity.Email != "" {
+							emails = append(emails, userEntity.Email)
+						}
+					}
+
+					if len(emails) > 0 {
+						content := fmt.Sprintf("【严重SLA预警】工单 #%s 剩余时间不足 %.1f%%，请立即处理！",
+							ticketEntity.TicketNumber, percentage)
+						_ = s.notificationSvc.emailService.SendTicketNotification(
+							ctx, emails, ticketEntity.TicketNumber, ticketEntity.Title, "sla_alert", content)
+					}
+				}
+
+				// 标记通知已发送
+				if alertHistory != nil {
+					_, _ = s.client.SLAAlertHistory.UpdateOneID(alertHistory.ID).
+						SetNotificationSent(true).
+						Save(ctx)
+				}
+			}
+
+			s.logger.Infow("SLA alert triggered", "ticket_id", ticketEntity.ID,
+				"alert_rule", rule.Name, "level", rule.AlertLevel, "percentage", percentage)
 		}
 	}
 }

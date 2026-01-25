@@ -5712,6 +5712,38 @@ func (c *ProcessDefinitionClient) GetX(ctx context.Context, id int) *ProcessDefi
 	return obj
 }
 
+// QueryProcessInstances queries the process_instances edge of a ProcessDefinition.
+func (c *ProcessDefinitionClient) QueryProcessInstances(pd *ProcessDefinition) *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, id),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.ProcessInstancesTable, processdefinition.ProcessInstancesColumn),
+		)
+		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDeployment queries the deployment edge of a ProcessDefinition.
+func (c *ProcessDefinitionClient) QueryDeployment(pd *ProcessDefinition) *ProcessDeploymentQuery {
+	query := (&ProcessDeploymentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, id),
+			sqlgraph.To(processdeployment.Table, processdeployment.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processdefinition.DeploymentTable, processdefinition.DeploymentColumn),
+		)
+		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProcessDefinitionClient) Hooks() []Hook {
 	return c.hooks.ProcessDefinition
@@ -5843,6 +5875,22 @@ func (c *ProcessDeploymentClient) GetX(ctx context.Context, id int) *ProcessDepl
 		panic(err)
 	}
 	return obj
+}
+
+// QueryDefinitions queries the definitions edge of a ProcessDeployment.
+func (c *ProcessDeploymentClient) QueryDefinitions(pd *ProcessDeployment) *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdeployment.Table, processdeployment.FieldID, id),
+			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processdeployment.DefinitionsTable, processdeployment.DefinitionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -5978,6 +6026,22 @@ func (c *ProcessExecutionHistoryClient) GetX(ctx context.Context, id int) *Proce
 	return obj
 }
 
+// QueryProcessInstance queries the process_instance edge of a ProcessExecutionHistory.
+func (c *ProcessExecutionHistoryClient) QueryProcessInstance(peh *ProcessExecutionHistory) *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := peh.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processexecutionhistory.Table, processexecutionhistory.FieldID, id),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processexecutionhistory.ProcessInstanceTable, processexecutionhistory.ProcessInstanceColumn),
+		)
+		fromV = sqlgraph.Neighbors(peh.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProcessExecutionHistoryClient) Hooks() []Hook {
 	return c.hooks.ProcessExecutionHistory
@@ -6109,6 +6173,70 @@ func (c *ProcessInstanceClient) GetX(ctx context.Context, id int) *ProcessInstan
 		panic(err)
 	}
 	return obj
+}
+
+// QueryProcessTasks queries the process_tasks edge of a ProcessInstance.
+func (c *ProcessInstanceClient) QueryProcessTasks(pi *ProcessInstance) *ProcessTaskQuery {
+	query := (&ProcessTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, id),
+			sqlgraph.To(processtask.Table, processtask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ProcessTasksTable, processinstance.ProcessTasksColumn),
+		)
+		fromV = sqlgraph.Neighbors(pi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryProcessVariables queries the process_variables edge of a ProcessInstance.
+func (c *ProcessInstanceClient) QueryProcessVariables(pi *ProcessInstance) *ProcessVariableQuery {
+	query := (&ProcessVariableClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, id),
+			sqlgraph.To(processvariable.Table, processvariable.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ProcessVariablesTable, processinstance.ProcessVariablesColumn),
+		)
+		fromV = sqlgraph.Neighbors(pi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExecutionHistory queries the execution_history edge of a ProcessInstance.
+func (c *ProcessInstanceClient) QueryExecutionHistory(pi *ProcessInstance) *ProcessExecutionHistoryQuery {
+	query := (&ProcessExecutionHistoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, id),
+			sqlgraph.To(processexecutionhistory.Table, processexecutionhistory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ExecutionHistoryTable, processinstance.ExecutionHistoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(pi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDefinition queries the definition edge of a ProcessInstance.
+func (c *ProcessInstanceClient) QueryDefinition(pi *ProcessInstance) *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pi.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, id),
+			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processinstance.DefinitionTable, processinstance.DefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(pi.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -6244,6 +6372,22 @@ func (c *ProcessTaskClient) GetX(ctx context.Context, id int) *ProcessTask {
 	return obj
 }
 
+// QueryProcessInstance queries the process_instance edge of a ProcessTask.
+func (c *ProcessTaskClient) QueryProcessInstance(pt *ProcessTask) *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processtask.Table, processtask.FieldID, id),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processtask.ProcessInstanceTable, processtask.ProcessInstanceColumn),
+		)
+		fromV = sqlgraph.Neighbors(pt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProcessTaskClient) Hooks() []Hook {
 	return c.hooks.ProcessTask
@@ -6375,6 +6519,22 @@ func (c *ProcessVariableClient) GetX(ctx context.Context, id int) *ProcessVariab
 		panic(err)
 	}
 	return obj
+}
+
+// QueryProcessInstance queries the process_instance edge of a ProcessVariable.
+func (c *ProcessVariableClient) QueryProcessInstance(pv *ProcessVariable) *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pv.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processvariable.Table, processvariable.FieldID, id),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processvariable.ProcessInstanceTable, processvariable.ProcessInstanceColumn),
+		)
+		fromV = sqlgraph.Neighbors(pv.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

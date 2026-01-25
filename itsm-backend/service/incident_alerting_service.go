@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"itsm-backend/dto"
@@ -10,6 +11,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -210,32 +212,103 @@ func (s *IncidentAlertingService) getAlertChannels(channelNames []string) []Aler
 	for _, channelName := range channelNames {
 		switch channelName {
 		case "email":
+			smtpHost := viper.GetString("alerting.smtp.host")
+			smtpPort := viper.GetInt("alerting.smtp.port")
+			smtpUsername := viper.GetString("alerting.smtp.username")
+			smtpPassword := viper.GetString("alerting.smtp.password")
+			fromEmail := viper.GetString("alerting.smtp.from_email")
+
+			// 从环境变量覆盖配置
+			if host := os.Getenv("SMTP_HOST"); host != "" {
+				smtpHost = host
+			}
+			if port := os.Getenv("SMTP_PORT"); port != "" {
+				fmt.Sscanf(port, "%d", &smtpPort)
+			}
+			if username := os.Getenv("SMTP_USERNAME"); username != "" {
+				smtpUsername = username
+			}
+			if password := os.Getenv("SMTP_PASSWORD"); password != "" {
+				smtpPassword = password
+			}
+			if from := os.Getenv("SMTP_FROM_EMAIL"); from != "" {
+				fromEmail = from
+			}
+
 			channels = append(channels, &EmailChannel{
-				smtpHost:     "smtp.example.com",
-				smtpPort:     587,
-				smtpUsername: "alerts@company.com",
-				smtpPassword: "password",
-				fromEmail:    "alerts@company.com",
+				smtpHost:     smtpHost,
+				smtpPort:     smtpPort,
+				smtpUsername: smtpUsername,
+				smtpPassword: smtpPassword,
+				fromEmail:    fromEmail,
+				logger:       s.logger,
 			})
 		case "sms":
+			apiKey := viper.GetString("alerting.sms.api_key")
+			apiSecret := viper.GetString("alerting.sms.api_secret")
+			signName := viper.GetString("alerting.sms.sign_name")
+
+			// 从环境变量覆盖配置
+			if key := os.Getenv("SMS_API_KEY"); key != "" {
+				apiKey = key
+			}
+			if secret := os.Getenv("SMS_API_SECRET"); secret != "" {
+				apiSecret = secret
+			}
+			if sign := os.Getenv("SMS_SIGN_NAME"); sign != "" {
+				signName = sign
+			}
+
 			channels = append(channels, &SMSChannel{
-				apiKey:    "sms_api_key",
-				apiSecret: "sms_api_secret",
-				signName:  "ITSM系统",
+				apiKey:    apiKey,
+				apiSecret: apiSecret,
+				signName:  signName,
+				logger:    s.logger,
 			})
 		case "slack":
+			webhookURL := viper.GetString("alerting.slack.webhook_url")
+			channel := viper.GetString("alerting.slack.channel")
+
+			// 从环境变量覆盖配置
+			if url := os.Getenv("SLACK_WEBHOOK_URL"); url != "" {
+				webhookURL = url
+			}
+			if ch := os.Getenv("SLACK_CHANNEL"); ch != "" {
+				channel = ch
+			}
+
 			channels = append(channels, &SlackChannel{
-				webhookURL: "https://hooks.slack.com/services/xxx/xxx/xxx",
-				channel:    "#incidents",
+				webhookURL: webhookURL,
+				channel:    channel,
+				logger:     s.logger,
 			})
 		case "webhook":
+			url := viper.GetString("alerting.webhook.url")
+			method := viper.GetString("alerting.webhook.method")
+
+			// 从环境变量覆盖配置
+			if u := os.Getenv("WEBHOOK_URL"); u != "" {
+				url = u
+			}
+			if m := os.Getenv("WEBHOOK_METHOD"); m != "" {
+				method = m
+			}
+
+			// Authorization header from env
+			authHeader := os.Getenv("WEBHOOK_AUTH_HEADER")
+
+			headers := map[string]string{
+				"Content-Type": "application/json",
+			}
+			if authHeader != "" {
+				headers["Authorization"] = authHeader
+			}
+
 			channels = append(channels, &WebhookChannel{
-				url:    "https://monitoring.company.com/webhook",
-				method: "POST",
-				headers: map[string]string{
-					"Content-Type":  "application/json",
-					"Authorization": "Bearer webhook_token",
-				},
+				url:     url,
+				method:  method,
+				headers: headers,
+				logger:  s.logger,
 			})
 		}
 	}

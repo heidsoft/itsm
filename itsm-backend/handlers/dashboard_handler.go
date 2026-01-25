@@ -500,8 +500,14 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/dashboard/quick-actions [get]
 func (h *DashboardHandler) GetQuickActions(c *gin.Context) {
-	// TODO: 根据用户权限返回可用的快速操作
-	actions := []QuickAction{
+	// 从上下文获取用户权限
+	permissions, _ := c.Get("permissions")
+	userPermissions, ok := permissions.([]string)
+	if !ok {
+		userPermissions = []string{}
+	}
+
+	allActions := []QuickAction{
 		{
 			ID:          "create-ticket",
 			Title:       "创建工单",
@@ -536,7 +542,20 @@ func (h *DashboardHandler) GetQuickActions(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, actions)
+	// 根据用户权限过滤可用的操作
+	filteredActions := []QuickAction{}
+	permissionSet := make(map[string]bool)
+	for _, p := range userPermissions {
+		permissionSet[p] = true
+	}
+
+	for _, action := range allActions {
+		if _, hasPermission := permissionSet[action.Permission]; hasPermission || action.Permission == "" {
+			filteredActions = append(filteredActions, action)
+		}
+	}
+
+	c.JSON(http.StatusOK, filteredActions)
 }
 
 // GetRecentActivities 获取最近活动

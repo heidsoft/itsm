@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -47,8 +48,17 @@ const (
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
+	// EdgeProcessInstance holds the string denoting the process_instance edge name in mutations.
+	EdgeProcessInstance = "process_instance"
 	// Table holds the table name of the processexecutionhistory in the database.
 	Table = "process_execution_histories"
+	// ProcessInstanceTable is the table that holds the process_instance relation/edge.
+	ProcessInstanceTable = "process_execution_histories"
+	// ProcessInstanceInverseTable is the table name for the ProcessInstance entity.
+	// It exists in this package in order to avoid circular dependency with the "processinstance" package.
+	ProcessInstanceInverseTable = "process_instances"
+	// ProcessInstanceColumn is the table column denoting the process_instance relation/edge.
+	ProcessInstanceColumn = "process_instance_id"
 )
 
 // Columns holds all SQL columns for processexecutionhistory fields.
@@ -87,7 +97,7 @@ var (
 	// HistoryIDValidator is a validator for the "history_id" field. It is called by the builders before save.
 	HistoryIDValidator func(string) error
 	// ProcessInstanceIDValidator is a validator for the "process_instance_id" field. It is called by the builders before save.
-	ProcessInstanceIDValidator func(string) error
+	ProcessInstanceIDValidator func(int) error
 	// ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
 	ProcessDefinitionKeyValidator func(string) error
 	// ActivityTypeValidator is a validator for the "activity_type" field. It is called by the builders before save.
@@ -188,4 +198,18 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByProcessInstanceField orders the results by process_instance field.
+func ByProcessInstanceField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProcessInstanceStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newProcessInstanceStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProcessInstanceInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProcessInstanceTable, ProcessInstanceColumn),
+	)
 }

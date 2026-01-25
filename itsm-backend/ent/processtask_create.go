@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"time"
 
@@ -27,8 +28,8 @@ func (ptc *ProcessTaskCreate) SetTaskID(s string) *ProcessTaskCreate {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (ptc *ProcessTaskCreate) SetProcessInstanceID(s string) *ProcessTaskCreate {
-	ptc.mutation.SetProcessInstanceID(s)
+func (ptc *ProcessTaskCreate) SetProcessInstanceID(i int) *ProcessTaskCreate {
+	ptc.mutation.SetProcessInstanceID(i)
 	return ptc
 }
 
@@ -300,6 +301,11 @@ func (ptc *ProcessTaskCreate) SetNillableUpdatedAt(t *time.Time) *ProcessTaskCre
 	return ptc
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (ptc *ProcessTaskCreate) SetProcessInstance(p *ProcessInstance) *ProcessTaskCreate {
+	return ptc.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessTaskMutation object of the builder.
 func (ptc *ProcessTaskCreate) Mutation() *ProcessTaskMutation {
 	return ptc.mutation
@@ -429,6 +435,9 @@ func (ptc *ProcessTaskCreate) check() error {
 	if _, ok := ptc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessTask.updated_at"`)}
 	}
+	if len(ptc.mutation.ProcessInstanceIDs()) == 0 {
+		return &ValidationError{Name: "process_instance", err: errors.New(`ent: missing required edge "ProcessTask.process_instance"`)}
+	}
 	return nil
 }
 
@@ -458,10 +467,6 @@ func (ptc *ProcessTaskCreate) createSpec() (*ProcessTask, *sqlgraph.CreateSpec) 
 	if value, ok := ptc.mutation.TaskID(); ok {
 		_spec.SetField(processtask.FieldTaskID, field.TypeString, value)
 		_node.TaskID = value
-	}
-	if value, ok := ptc.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processtask.FieldProcessInstanceID, field.TypeString, value)
-		_node.ProcessInstanceID = value
 	}
 	if value, ok := ptc.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldProcessDefinitionKey, field.TypeString, value)
@@ -550,6 +555,23 @@ func (ptc *ProcessTaskCreate) createSpec() (*ProcessTask, *sqlgraph.CreateSpec) 
 	if value, ok := ptc.mutation.UpdatedAt(); ok {
 		_spec.SetField(processtask.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := ptc.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processtask.ProcessInstanceTable,
+			Columns: []string{processtask.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProcessInstanceID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

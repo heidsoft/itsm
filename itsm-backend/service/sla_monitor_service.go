@@ -150,7 +150,19 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		SetIsResolved(false).
 		SetTenantID(t.TenantID).
 		Save(ctx)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// 发送SLA违规通知
+	if s.notificationSvc != nil {
+		_ = s.notificationSvc.NotifySLABreached(ctx, t.ID, violationType, exceededMinutes, t.TenantID)
+	}
+
+	s.logger.Infow("SLA violation created and notification sent", "ticket_id", t.ID,
+		"violation_type", violationType, "exceeded_minutes", exceededMinutes)
+
+	return nil
 }
 
 // CalculateSLAMetrics 计算SLA指标

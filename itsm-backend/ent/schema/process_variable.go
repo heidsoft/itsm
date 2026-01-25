@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -20,9 +21,9 @@ func (ProcessVariable) Fields() []ent.Field {
 			Comment("变量ID").
 			Unique().
 			NotEmpty(),
-		field.String("process_instance_id").
+		field.Int("process_instance_id").
 			Comment("流程实例ID").
-			NotEmpty(),
+			Positive(),
 		field.String("task_id").
 			Comment("任务ID，可选").
 			Optional(),
@@ -60,7 +61,11 @@ func (ProcessVariable) Fields() []ent.Field {
 // Edges of the ProcessVariable.
 func (ProcessVariable) Edges() []ent.Edge {
 	return []ent.Edge{
-		// TODO: 添加相关实体的edge定义
+		edge.From("process_instance", ProcessInstance.Type).
+			Ref("process_variables").
+			Field("process_instance_id").
+			Required().
+			Unique(),
 	}
 }
 

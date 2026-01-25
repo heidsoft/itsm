@@ -4,9 +4,12 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/processinstance"
 	"math"
 
 	"entgo.io/ent"
@@ -18,10 +21,12 @@ import (
 // ProcessDefinitionQuery is the builder for querying ProcessDefinition entities.
 type ProcessDefinitionQuery struct {
 	config
-	ctx        *QueryContext
-	order      []processdefinition.OrderOption
-	inters     []Interceptor
-	predicates []predicate.ProcessDefinition
+	ctx                  *QueryContext
+	order                []processdefinition.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.ProcessDefinition
+	withProcessInstances *ProcessInstanceQuery
+	withDeployment       *ProcessDeploymentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +61,50 @@ func (pdq *ProcessDefinitionQuery) Unique(unique bool) *ProcessDefinitionQuery {
 func (pdq *ProcessDefinitionQuery) Order(o ...processdefinition.OrderOption) *ProcessDefinitionQuery {
 	pdq.order = append(pdq.order, o...)
 	return pdq
+}
+
+// QueryProcessInstances chains the current query on the "process_instances" edge.
+func (pdq *ProcessDefinitionQuery) QueryProcessInstances() *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: pdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, selector),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.ProcessInstancesTable, processdefinition.ProcessInstancesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDeployment chains the current query on the "deployment" edge.
+func (pdq *ProcessDefinitionQuery) QueryDeployment() *ProcessDeploymentQuery {
+	query := (&ProcessDeploymentClient{config: pdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, selector),
+			sqlgraph.To(processdeployment.Table, processdeployment.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processdefinition.DeploymentTable, processdefinition.DeploymentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ProcessDefinition entity from the query.
@@ -245,15 +294,39 @@ func (pdq *ProcessDefinitionQuery) Clone() *ProcessDefinitionQuery {
 		return nil
 	}
 	return &ProcessDefinitionQuery{
-		config:     pdq.config,
-		ctx:        pdq.ctx.Clone(),
-		order:      append([]processdefinition.OrderOption{}, pdq.order...),
-		inters:     append([]Interceptor{}, pdq.inters...),
-		predicates: append([]predicate.ProcessDefinition{}, pdq.predicates...),
+		config:               pdq.config,
+		ctx:                  pdq.ctx.Clone(),
+		order:                append([]processdefinition.OrderOption{}, pdq.order...),
+		inters:               append([]Interceptor{}, pdq.inters...),
+		predicates:           append([]predicate.ProcessDefinition{}, pdq.predicates...),
+		withProcessInstances: pdq.withProcessInstances.Clone(),
+		withDeployment:       pdq.withDeployment.Clone(),
 		// clone intermediate query.
 		sql:  pdq.sql.Clone(),
 		path: pdq.path,
 	}
+}
+
+// WithProcessInstances tells the query-builder to eager-load the nodes that are connected to
+// the "process_instances" edge. The optional arguments are used to configure the query builder of the edge.
+func (pdq *ProcessDefinitionQuery) WithProcessInstances(opts ...func(*ProcessInstanceQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessInstanceClient{config: pdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pdq.withProcessInstances = query
+	return pdq
+}
+
+// WithDeployment tells the query-builder to eager-load the nodes that are connected to
+// the "deployment" edge. The optional arguments are used to configure the query builder of the edge.
+func (pdq *ProcessDefinitionQuery) WithDeployment(opts ...func(*ProcessDeploymentQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessDeploymentClient{config: pdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pdq.withDeployment = query
+	return pdq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +405,12 @@ func (pdq *ProcessDefinitionQuery) prepareQuery(ctx context.Context) error {
 
 func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessDefinition, error) {
 	var (
-		nodes = []*ProcessDefinition{}
-		_spec = pdq.querySpec()
+		nodes       = []*ProcessDefinition{}
+		_spec       = pdq.querySpec()
+		loadedTypes = [2]bool{
+			pdq.withProcessInstances != nil,
+			pdq.withDeployment != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessDefinition).scanValues(nil, columns)
@@ -341,6 +418,7 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ProcessDefinition{config: pdq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +430,82 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := pdq.withProcessInstances; query != nil {
+		if err := pdq.loadProcessInstances(ctx, query, nodes,
+			func(n *ProcessDefinition) { n.Edges.ProcessInstances = []*ProcessInstance{} },
+			func(n *ProcessDefinition, e *ProcessInstance) {
+				n.Edges.ProcessInstances = append(n.Edges.ProcessInstances, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := pdq.withDeployment; query != nil {
+		if err := pdq.loadDeployment(ctx, query, nodes, nil,
+			func(n *ProcessDefinition, e *ProcessDeployment) { n.Edges.Deployment = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (pdq *ProcessDefinitionQuery) loadProcessInstances(ctx context.Context, query *ProcessInstanceQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessInstance)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ProcessDefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processinstance.FieldProcessDefinitionID)
+	}
+	query.Where(predicate.ProcessInstance(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(processdefinition.ProcessInstancesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProcessDefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "process_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (pdq *ProcessDefinitionQuery) loadDeployment(ctx context.Context, query *ProcessDeploymentQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessDeployment)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ProcessDefinition)
+	for i := range nodes {
+		fk := nodes[i].DeploymentID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(processdeployment.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "deployment_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (pdq *ProcessDefinitionQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +532,9 @@ func (pdq *ProcessDefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != processdefinition.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if pdq.withDeployment != nil {
+			_spec.Node.AddColumnOnce(processdefinition.FieldDeploymentID)
 		}
 	}
 	if ps := pdq.predicates; len(ps) > 0 {

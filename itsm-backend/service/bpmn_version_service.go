@@ -367,20 +367,38 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 
 // recordVersionChangeLog 记录版本变更日志
 func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, processDefID string, changeLog, createdBy string, tenantID int) error {
-	// TODO: 实现版本变更日志记录
-	// 这里可以创建一个专门的版本变更日志表
-	// 或者使用现有的审计日志系统
+	// 记录版本变更到审计日志
+	s.logger.Infow("Version change logged",
+		"process_def_id", processDefID,
+		"change_log", changeLog,
+		"created_by", createdBy,
+		"tenant_id", tenantID)
+	// TODO: 创建专门的版本变更日志表（未来版本）
 	return nil
 }
 
 // compareBPMNXML 比较BPMN XML内容
 func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]ChangeDetail, []string) {
-	// TODO: 实现BPMN XML比较逻辑
-	// 这里需要解析XML并比较各个元素
-	// 可以使用XML解析库来实现
+	// 简单比较：检查XML长度是否变化
+	baseLen := len(baseXML)
+	targetLen := len(targetXML)
 
-	// 临时返回空结果
-	return []ChangeDetail{}, []string{}
+	if baseLen == targetLen {
+		// 长度相同，视为无变化（简化处理）
+		return []ChangeDetail{}, []string{}
+	}
+
+	// 有变化但不确定具体内容
+	changeDetail := ChangeDetail{
+		ElementID:   "root",
+		ElementType: "process",
+		ChangeType:  "modified",
+		OldValue:    fmt.Sprintf("length:%d", baseLen),
+		NewValue:    fmt.Sprintf("length:%d", targetLen),
+	}
+
+	// TODO: 实现完整的XML解析比较（未来版本）
+	return []ChangeDetail{changeDetail}, []string{}
 }
 
 // assessCompatibility 评估兼容性

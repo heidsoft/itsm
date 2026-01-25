@@ -145,9 +145,10 @@ func (c *BPMNMonitoringController) GetProcessMetricsByKey(ctx *gin.Context) {
 
 // GetProcessInstanceStatus 获取流程实例状态
 func (c *BPMNMonitoringController) GetProcessInstanceStatus(ctx *gin.Context) {
-	instanceID := ctx.Param("instanceId")
-	if instanceID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "流程实例ID不能为空"})
+	instanceIDStr := ctx.Param("instanceId")
+	instanceID, err := strconv.Atoi(instanceIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的流程实例ID"})
 		return
 	}
 
@@ -222,8 +223,8 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 		}
 	}
 
-	// TODO: 实现批量查询流程实例状态的方法
-	// 这里需要先在BPMNMonitoringService中添加相应的方法
+	// 注意：批量查询流程实例状态需要BPMNMonitoringService支持
+	// 当前返回空数组
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "功能开发中",
 		"data":    []interface{}{},

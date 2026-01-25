@@ -15,12 +15,13 @@ type Repository interface {
 
 	// Violations
 	CreateViolation(ctx context.Context, v *SLAViolation) (*SLAViolation, error)
-	ListViolations(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAViolation, error)
-	UpdateViolationStatus(ctx context.Context, id int, status, notes string) error
+	ListViolations(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAViolation, int, error)
+	UpdateViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) error
 
 	// Metrics
 	CreateMetric(ctx context.Context, m *SLAMetric) (*SLAMetric, error)
 	GetMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error)
+	GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (map[string]interface{}, error)
 
 	// Alert Rules
 	CreateAlertRule(ctx context.Context, r *SLAAlertRule) (*SLAAlertRule, error)

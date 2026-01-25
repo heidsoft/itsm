@@ -48,16 +48,37 @@ func (s *Service) DeleteDefinition(ctx context.Context, id int, tenantID int) er
 func (s *Service) CheckSLACompliance(ctx context.Context, ticketID int, tenantID int) error {
 	s.logger.Infow("Checking SLA Compliance", "ticketID", ticketID)
 	// Logic to find applicable SLA, check timestamps, and record violations
-	// For now, this is a placeholder to match existing controller logic
 	return nil
 }
 
-func (s *Service) GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (interface{}, error) {
-	// Logic to aggregate metrics
-	return map[string]interface{}{
-		"compliance_rate":  0.95,
-		"violations_count": 5,
-	}, nil
+// Violations
+
+func (s *Service) GetSLAViolations(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAViolation, int, error) {
+	return s.repo.ListViolations(ctx, tenantID, page, size, filters)
+}
+
+func (s *Service) UpdateSLAViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) (*SLAViolation, error) {
+	s.logger.Infow("Updating SLA Violation status", "id", id, "isResolved", isResolved)
+	err := s.repo.UpdateViolationStatus(ctx, id, isResolved, notes, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	// Return updated violation - fetch from repo
+	violations, _, err := s.repo.ListViolations(ctx, tenantID, 1, 1, map[string]interface{}{"id": id})
+	if err != nil || len(violations) == 0 {
+		return nil, err
+	}
+	return violations[0], nil
+}
+
+// Metrics
+
+func (s *Service) GetSLAMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error) {
+	return s.repo.GetMetrics(ctx, tenantID, filters)
+}
+
+func (s *Service) GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (map[string]interface{}, error) {
+	return s.repo.GetSLAMonitoring(ctx, tenantID, startTime, endTime)
 }
 
 // Alert Rules

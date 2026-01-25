@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processexecutionhistory"
+	"itsm-backend/ent/processinstance"
 	"math"
 
 	"entgo.io/ent"
@@ -18,10 +19,11 @@ import (
 // ProcessExecutionHistoryQuery is the builder for querying ProcessExecutionHistory entities.
 type ProcessExecutionHistoryQuery struct {
 	config
-	ctx        *QueryContext
-	order      []processexecutionhistory.OrderOption
-	inters     []Interceptor
-	predicates []predicate.ProcessExecutionHistory
+	ctx                 *QueryContext
+	order               []processexecutionhistory.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.ProcessExecutionHistory
+	withProcessInstance *ProcessInstanceQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +58,28 @@ func (pehq *ProcessExecutionHistoryQuery) Unique(unique bool) *ProcessExecutionH
 func (pehq *ProcessExecutionHistoryQuery) Order(o ...processexecutionhistory.OrderOption) *ProcessExecutionHistoryQuery {
 	pehq.order = append(pehq.order, o...)
 	return pehq
+}
+
+// QueryProcessInstance chains the current query on the "process_instance" edge.
+func (pehq *ProcessExecutionHistoryQuery) QueryProcessInstance() *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: pehq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pehq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pehq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processexecutionhistory.Table, processexecutionhistory.FieldID, selector),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processexecutionhistory.ProcessInstanceTable, processexecutionhistory.ProcessInstanceColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pehq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first ProcessExecutionHistory entity from the query.
@@ -245,15 +269,27 @@ func (pehq *ProcessExecutionHistoryQuery) Clone() *ProcessExecutionHistoryQuery 
 		return nil
 	}
 	return &ProcessExecutionHistoryQuery{
-		config:     pehq.config,
-		ctx:        pehq.ctx.Clone(),
-		order:      append([]processexecutionhistory.OrderOption{}, pehq.order...),
-		inters:     append([]Interceptor{}, pehq.inters...),
-		predicates: append([]predicate.ProcessExecutionHistory{}, pehq.predicates...),
+		config:              pehq.config,
+		ctx:                 pehq.ctx.Clone(),
+		order:               append([]processexecutionhistory.OrderOption{}, pehq.order...),
+		inters:              append([]Interceptor{}, pehq.inters...),
+		predicates:          append([]predicate.ProcessExecutionHistory{}, pehq.predicates...),
+		withProcessInstance: pehq.withProcessInstance.Clone(),
 		// clone intermediate query.
 		sql:  pehq.sql.Clone(),
 		path: pehq.path,
 	}
+}
+
+// WithProcessInstance tells the query-builder to eager-load the nodes that are connected to
+// the "process_instance" edge. The optional arguments are used to configure the query builder of the edge.
+func (pehq *ProcessExecutionHistoryQuery) WithProcessInstance(opts ...func(*ProcessInstanceQuery)) *ProcessExecutionHistoryQuery {
+	query := (&ProcessInstanceClient{config: pehq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pehq.withProcessInstance = query
+	return pehq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +368,11 @@ func (pehq *ProcessExecutionHistoryQuery) prepareQuery(ctx context.Context) erro
 
 func (pehq *ProcessExecutionHistoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessExecutionHistory, error) {
 	var (
-		nodes = []*ProcessExecutionHistory{}
-		_spec = pehq.querySpec()
+		nodes       = []*ProcessExecutionHistory{}
+		_spec       = pehq.querySpec()
+		loadedTypes = [1]bool{
+			pehq.withProcessInstance != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessExecutionHistory).scanValues(nil, columns)
@@ -341,6 +380,7 @@ func (pehq *ProcessExecutionHistoryQuery) sqlAll(ctx context.Context, hooks ...q
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &ProcessExecutionHistory{config: pehq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +392,43 @@ func (pehq *ProcessExecutionHistoryQuery) sqlAll(ctx context.Context, hooks ...q
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := pehq.withProcessInstance; query != nil {
+		if err := pehq.loadProcessInstance(ctx, query, nodes, nil,
+			func(n *ProcessExecutionHistory, e *ProcessInstance) { n.Edges.ProcessInstance = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (pehq *ProcessExecutionHistoryQuery) loadProcessInstance(ctx context.Context, query *ProcessInstanceQuery, nodes []*ProcessExecutionHistory, init func(*ProcessExecutionHistory), assign func(*ProcessExecutionHistory, *ProcessInstance)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ProcessExecutionHistory)
+	for i := range nodes {
+		fk := nodes[i].ProcessInstanceID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(processinstance.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "process_instance_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (pehq *ProcessExecutionHistoryQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +455,9 @@ func (pehq *ProcessExecutionHistoryQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != processexecutionhistory.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if pehq.withProcessInstance != nil {
+			_spec.Node.AddColumnOnce(processexecutionhistory.FieldProcessInstanceID)
 		}
 	}
 	if ps := pehq.predicates; len(ps) > 0 {

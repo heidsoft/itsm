@@ -4,11 +4,13 @@ import (
 	"context"
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/role"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +20,12 @@ type Permission struct {
 	Resource string `json:"resource"` // 资源名称，如 "ticket", "user", "dashboard"
 	Action   string `json:"action"`   // 操作类型，如 "read", "write", "delete", "admin"
 }
+
+// PermissionCache 权限缓存
+var (
+	permissionCache     = make(map[string][]Permission)
+	permissionCacheLock sync.RWMutex
+)
 
 // RolePermissions 角色权限映射
 var RolePermissions = map[string][]Permission{
@@ -143,7 +151,60 @@ var RolePermissions = map[string][]Permission{
 	},
 }
 
-// ResourceActionMap 路径到资源和操作的映射
+// loadRolePermissionsFromDB 从数据库加载角色的权限
+func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int) []Permission {
+	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
+
+	// 先检查缓存
+	permissionCacheLock.RLock()
+	if perms, exists := permissionCache[cacheKey]; exists {
+		permissionCacheLock.RUnlock()
+		return perms
+	}
+	permissionCacheLock.RUnlock()
+
+	// 从数据库加载
+	var perms []Permission
+
+	roleEntity, err := client.Role.Query().
+		Where(
+			role.Name(roleName),
+			role.TenantID(tenantID),
+		).
+		WithPermissions().
+		Only(context.Background())
+
+	if err == nil && roleEntity != nil && roleEntity.Edges.Permissions != nil {
+		for _, p := range roleEntity.Edges.Permissions {
+			perms = append(perms, Permission{
+				Resource: p.Resource,
+				Action:   p.Action,
+			})
+		}
+	}
+
+	// 存入缓存
+	permissionCacheLock.Lock()
+	permissionCache[cacheKey] = perms
+	permissionCacheLock.Unlock()
+
+	return perms
+}
+
+// invalidatePermissionCache 使指定角色的缓存失效
+func invalidatePermissionCache(roleName string, tenantID int) {
+	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
+	permissionCacheLock.Lock()
+	delete(permissionCache, cacheKey)
+	permissionCacheLock.Unlock()
+}
+
+// InvalidateAllPermissionCaches 使所有权限缓存失效
+func InvalidateAllPermissionCaches() {
+	permissionCacheLock.Lock()
+	clear(permissionCache)
+	permissionCacheLock.Unlock()
+}
 var ResourceActionMap = map[string]map[string]Permission{
 	"GET": {
 		"/api/v1/tickets":              {Resource: "ticket", Action: "read"},
@@ -267,6 +328,20 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 			return
 		}
 
+		// 获取租户ID
+		tenantIDInterface, exists := c.Get("tenant_id")
+		if !exists {
+			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+			c.Abort()
+			return
+		}
+		tenantID, ok := tenantIDInterface.(int)
+		if !ok {
+			common.Fail(c, common.AuthFailedCode, "租户ID格式错误")
+			c.Abort()
+			return
+		}
+
 		// 从数据库获取用户最新角色信息
 		userEntity, err := client.User.Query().
 			Where(user.ID(userID)).
@@ -303,8 +378,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		method := c.Request.Method
 
-		// 检查权限
-		if !hasPermission(role, method, path, userID, c) {
+		// 检查权限（从数据库加载权限）
+		if !hasPermission(client, role, method, path, userID, tenantID, c) {
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return
@@ -327,7 +402,25 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 			return
 		}
 
-		if !hasResourcePermission(role.(string), resource, action) {
+		// 获取租户ID
+		tenantIDInterface, exists := c.Get("tenant_id")
+		if !exists {
+			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+			c.Abort()
+			return
+		}
+		tenantID := tenantIDInterface.(int)
+
+		// 获取客户端
+		clientInterface, exists := c.Get("client")
+		if !exists {
+			common.Fail(c, common.InternalErrorCode, "客户端缺失")
+			c.Abort()
+			return
+		}
+		client := clientInterface.(*ent.Client)
+
+		if !hasResourcePermission(client, role.(string), resource, action, tenantID) {
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return
@@ -364,33 +457,45 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 }
 
 // hasPermission 检查用户是否有权限访问指定资源
-func hasPermission(role, method, path string, userID int, c *gin.Context) bool {
+func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
 	// 超级管理员拥有所有权限
 	if role == "super_admin" {
 		return true
 	}
 
 	// 获取路径对应的资源和操作
-	permission := getPermissionFromPath(method, path)
-	if permission == nil {
+	perm := getPermissionFromPath(method, path)
+	if perm == nil {
 		// 如果没有找到对应的权限配置，默认拒绝访问
 		return false
 	}
 
 	// 检查角色是否有该资源的操作权限
-	if !hasResourcePermission(role, permission.Resource, permission.Action) {
+	if !hasResourcePermission(client, role, perm.Resource, perm.Action, tenantID) {
 		return false
 	}
 
 	// 资源级别的权限检查
-	return checkResourceLevelPermission(role, permission.Resource, permission.Action, userID, c)
+	return checkResourceLevelPermission(role, perm.Resource, perm.Action, userID, c)
 }
 
-// hasResourcePermission 检查角色是否有指定资源的操作权限
-func hasResourcePermission(role, resource, action string) bool {
-	permissions, exists := RolePermissions[role]
-	if !exists {
-		return false
+// hasResourcePermission 检查角色是否有指定资源的操作权限（从数据库加载）
+func hasResourcePermission(client *ent.Client, role, resource, action string, tenantID int) bool {
+	// 超级管理员拥有所有权限
+	if role == "super_admin" {
+		return true
+	}
+
+	// 从数据库加载权限
+	permissions := loadRolePermissionsFromDB(client, role, tenantID)
+
+	// 如果数据库中没有权限配置，使用默认的 RolePermissions
+	if len(permissions) == 0 {
+		if defaultPerms, exists := RolePermissions[role]; exists {
+			permissions = defaultPerms
+		} else {
+			return false
+		}
 	}
 
 	for _, perm := range permissions {

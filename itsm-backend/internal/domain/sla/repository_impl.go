@@ -167,26 +167,40 @@ func (r *EntRepository) CreateViolation(ctx context.Context, v *SLAViolation) (*
 	return toSLAViolationDomain(e), nil
 }
 
-func (r *EntRepository) ListViolations(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAViolation, error) {
+func (r *EntRepository) ListViolations(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAViolation, int, error) {
 	q := r.client.SLAViolation.Query().Where(slaviolation.TenantID(tenantID))
 	if val, ok := filters["is_resolved"]; ok {
 		q = q.Where(slaviolation.IsResolved(val.(bool)))
 	}
-	es, err := q.All(ctx)
+	if val, ok := filters["severity"]; ok {
+		q = q.Where(slaviolation.Severity(val.(string)))
+	}
+	if val, ok := filters["violation_type"]; ok {
+		q = q.Where(slaviolation.ViolationType(val.(string)))
+	}
+	if val, ok := filters["sla_definition_id"]; ok {
+		q = q.Where(slaviolation.SLADefinitionID(val.(int)))
+	}
+
+	total, err := q.Clone().Count(ctx)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	es, err := q.Limit(size).Offset((page - 1) * size).Order(ent.Desc(slaviolation.FieldViolationTime)).All(ctx)
+	if err != nil {
+		return nil, 0, err
 	}
 	var res []*SLAViolation
 	for _, e := range es {
 		res = append(res, toSLAViolationDomain(e))
 	}
-	return res, nil
+	return res, total, nil
 }
 
-func (r *EntRepository) UpdateViolationStatus(ctx context.Context, id int, status, notes string) error {
-	// Existing schema uses is_resolved bool instead of status string
-	isResolved := status == "resolved"
+func (r *EntRepository) UpdateViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) error {
 	update := r.client.SLAViolation.UpdateOneID(id).
+		Where(slaviolation.TenantID(tenantID)).
 		SetIsResolved(isResolved).
 		SetResolutionNotes(notes)
 	if isResolved {
@@ -375,6 +389,12 @@ func (r *EntRepository) CreateMetric(ctx context.Context, m *SLAMetric) (*SLAMet
 
 func (r *EntRepository) GetMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error) {
 	q := r.client.SLAMetric.Query().Where(slametric.TenantID(tenantID))
+	if val, ok := filters["sla_definition_id"]; ok {
+		q = q.Where(slametric.SLADefinitionID(val.(int)))
+	}
+	if val, ok := filters["metric_type"]; ok {
+		q = q.Where(slametric.MetricType(val.(string)))
+	}
 	es, err := q.All(ctx)
 	if err != nil {
 		return nil, err
@@ -384,4 +404,40 @@ func (r *EntRepository) GetMetrics(ctx context.Context, tenantID int, filters ma
 		res = append(res, toSLAMetricDomain(e))
 	}
 	return res, nil
+}
+
+func (r *EntRepository) GetSLAMonitoring(ctx context.Context, tenantID int, startTime, endTime string) (map[string]interface{}, error) {
+	// Count violations
+	totalViolations, _ := r.client.SLAViolation.Query().
+		Where(slaviolation.TenantID(tenantID)).
+		Count(ctx)
+
+	resolvedViolations, _ := r.client.SLAViolation.Query().
+		Where(slaviolation.TenantID(tenantID), slaviolation.IsResolved(true)).
+		Count(ctx)
+
+	// Calculate compliance rate
+	var complianceRate float64
+	if totalViolations > 0 {
+		complianceRate = float64(totalViolations-resolvedViolations) / float64(totalViolations)
+	}
+
+	// Get active SLA definitions
+	activeSLAs, _ := r.client.SLADefinition.Query().
+		Where(sladefinition.TenantID(tenantID), sladefinition.IsActive(true)).
+		Count(ctx)
+
+	// Get alert rules count
+	alertRules, _ := r.client.SLAAlertRule.Query().
+		Where(slaalertrule.TenantID(tenantID), slaalertrule.IsActive(true)).
+		Count(ctx)
+
+	return map[string]interface{}{
+		"total_violations":    totalViolations,
+		"resolved_violations": resolvedViolations,
+		"active_violations":   totalViolations - resolvedViolations,
+		"compliance_rate":     complianceRate,
+		"active_slas":         activeSLAs,
+		"active_alert_rules":  alertRules,
+	}, nil
 }

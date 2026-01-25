@@ -41,6 +41,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
 import type { User, UserRole, UserStatus, UserFilters } from '@/types/user';
+import { userAPI } from '@/lib/user-api';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -76,69 +77,17 @@ const UserList: React.FC<UserListProps> = ({
     async (params?: { page?: number; pageSize?: number; filters?: UserFilters }) => {
       try {
         setLoading(true);
-        // TODO: 实现API调用
-        const mockUsers: User[] = [
-          {
-            id: 1,
-            username: 'admin',
-            email: 'admin@example.com',
-            fullName: '系统管理员',
-            role: 'admin',
-            status: 'active',
-            department: 'IT部门',
-            jobTitle: '系统管理员',
-            permissions: ['*'],
-            groups: [],
-            createdAt: '2024-01-01T00:00:00Z',
-            updatedAt: '2024-01-01T00:00:00Z',
-            preferences: {
-              theme: 'light',
-              language: 'zh-CN',
-              timezone: 'Asia/Shanghai',
-              dateFormat: 'YYYY-MM-DD',
-              timeFormat: '24h',
-              notifications: {
-                email: true,
-                sms: false,
-                inApp: true,
-                desktop: true,
-                ticketAssigned: true,
-                ticketUpdated: true,
-                ticketEscalated: true,
-                ticketResolved: true,
-                slaBreached: true,
-                systemMaintenance: true,
-              },
-              ui: {
-                sidebarCollapsed: false,
-                tablePageSize: 20,
-                defaultView: 'table',
-                showAvatars: true,
-                compactMode: false,
-              },
-              work: {
-                autoAssign: false,
-                defaultPriority: 'medium',
-                workingHours: {
-                  start: '09:00',
-                  end: '18:00',
-                  timezone: 'Asia/Shanghai',
-                },
-                workingDays: [1, 2, 3, 4, 5],
-              },
-            },
-            tenantId: 1,
-            isActive: true,
-            emailVerified: true,
-            phoneVerified: false,
-          },
-        ];
+        const response = await userAPI.listUsers({
+          page: params?.page,
+          pageSize: params?.pageSize,
+          filters: params?.filters,
+        });
 
-        setUsers(mockUsers);
+        setUsers(response.users);
         setPagination({
-          current: params?.page || 1,
+          current: response.page,
           pageSize: params?.pageSize || 20,
-          total: mockUsers.length,
+          total: response.total,
         });
       } catch (error) {
         message.error('获取用户列表失败');
@@ -253,7 +202,7 @@ const UserList: React.FC<UserListProps> = ({
   const handleToggleStatus = async (user: User) => {
     try {
       const newStatus = user.status === 'active' ? 'inactive' : 'active';
-      // TODO: 实现API调用
+      await userAPI.changeUserStatus(user.id, newStatus);
       message.success(`用户${newStatus === 'active' ? '启用' : '禁用'}成功`);
       fetchUsers();
     } catch {
@@ -270,8 +219,10 @@ const UserList: React.FC<UserListProps> = ({
       cancelText: '取消',
       onOk: async () => {
         try {
-          // TODO: 实现API调用
-          message.success('密码重置成功，新密码已发送到用户邮箱');
+          // 生成随机密码并重置
+          const newPassword = Math.random().toString(36).slice(-8);
+          await userAPI.resetPassword({ userId: user.id, newPassword, sendNotification: true });
+          message.success(`密码重置成功，新密码：${newPassword}（已发送到用户邮箱）`);
         } catch {
           message.error('密码重置失败');
         }
@@ -289,7 +240,7 @@ const UserList: React.FC<UserListProps> = ({
       cancelText: '取消',
       onOk: async () => {
         try {
-          // TODO: 实现API调用
+          await userAPI.deleteUser(user.id);
           message.success('用户删除成功');
           fetchUsers();
         } catch {
@@ -300,19 +251,19 @@ const UserList: React.FC<UserListProps> = ({
   };
 
   // 批量操作
-  const handleBatchAction = (action: string) => {
+  const handleBatchAction = async (action: string) => {
     if (selectedRowKeys.length === 0) {
       message.warning('请先选择要操作的用户');
       return;
     }
 
-    // TODO: 实现批量操作逻辑
+    // 批量操作功能需要后端支持
     message.info(`批量${action}功能开发中`);
   };
 
   // 导出数据
   const handleExport = () => {
-    // TODO: 实现导出功能
+    // 导出功能需要后端支持导出API
     message.info('导出功能开发中');
   };
 

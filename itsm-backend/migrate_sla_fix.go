@@ -17,7 +17,7 @@ func main() {
 	dbHost := getEnv("DB_HOST", "localhost")
 	dbPort := getEnv("DB_PORT", "5432")
 	dbUser := getEnv("DB_USER", "dev")
-	dbPassword := getEnv("DB_PASSWORD", "123456!@#$%^")
+	dbPassword := getEnvRequired("DB_PASSWORD") // 必须提供密码
 	dbName := getEnv("DB_NAME", "itsm")
 	sslMode := getEnv("DB_SSLMODE", "disable")
 
@@ -162,4 +162,12 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func getEnvRequired(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("Required environment variable %s is not set", key)
+	}
+	return value
 }

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processvariable"
 	"time"
 
@@ -27,8 +28,8 @@ func (pvc *ProcessVariableCreate) SetVariableID(s string) *ProcessVariableCreate
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pvc *ProcessVariableCreate) SetProcessInstanceID(s string) *ProcessVariableCreate {
-	pvc.mutation.SetProcessInstanceID(s)
+func (pvc *ProcessVariableCreate) SetProcessInstanceID(i int) *ProcessVariableCreate {
+	pvc.mutation.SetProcessInstanceID(i)
 	return pvc
 }
 
@@ -156,6 +157,11 @@ func (pvc *ProcessVariableCreate) SetNillableUpdatedAt(t *time.Time) *ProcessVar
 	return pvc
 }
 
+// SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
+func (pvc *ProcessVariableCreate) SetProcessInstance(p *ProcessInstance) *ProcessVariableCreate {
+	return pvc.SetProcessInstanceID(p.ID)
+}
+
 // Mutation returns the ProcessVariableMutation object of the builder.
 func (pvc *ProcessVariableCreate) Mutation() *ProcessVariableMutation {
 	return pvc.mutation
@@ -269,6 +275,9 @@ func (pvc *ProcessVariableCreate) check() error {
 	if _, ok := pvc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessVariable.updated_at"`)}
 	}
+	if len(pvc.mutation.ProcessInstanceIDs()) == 0 {
+		return &ValidationError{Name: "process_instance", err: errors.New(`ent: missing required edge "ProcessVariable.process_instance"`)}
+	}
 	return nil
 }
 
@@ -298,10 +307,6 @@ func (pvc *ProcessVariableCreate) createSpec() (*ProcessVariable, *sqlgraph.Crea
 	if value, ok := pvc.mutation.VariableID(); ok {
 		_spec.SetField(processvariable.FieldVariableID, field.TypeString, value)
 		_node.VariableID = value
-	}
-	if value, ok := pvc.mutation.ProcessInstanceID(); ok {
-		_spec.SetField(processvariable.FieldProcessInstanceID, field.TypeString, value)
-		_node.ProcessInstanceID = value
 	}
 	if value, ok := pvc.mutation.TaskID(); ok {
 		_spec.SetField(processvariable.FieldTaskID, field.TypeString, value)
@@ -342,6 +347,23 @@ func (pvc *ProcessVariableCreate) createSpec() (*ProcessVariable, *sqlgraph.Crea
 	if value, ok := pvc.mutation.UpdatedAt(); ok {
 		_spec.SetField(processvariable.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := pvc.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processvariable.ProcessInstanceTable,
+			Columns: []string{processvariable.ProcessInstanceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ProcessInstanceID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

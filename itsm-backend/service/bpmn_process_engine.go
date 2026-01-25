@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"itsm-backend/ent"
@@ -103,8 +104,24 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 func (e *CustomProcessEngine) registerProcessFunctions() {
 	// 获取任务列表
 	e.exprEngine.RegisterFunction("getTasks", func(assignee string) []interface{} {
-		// TODO: 从数据库查询任务
-		return []interface{}{}
+		// 从数据库查询任务
+		tasks, err := e.client.UserTask.Query().
+			Where(usertask.Assignee(assignee)).
+			Where(usertask.CompletedAtIsNil()).
+			All(e.ctx)
+		if err != nil {
+			e.logger.Warnw("Failed to query tasks", "error", err)
+			return []interface{}{}
+		}
+		result := make([]interface{}, len(tasks))
+		for i, task := range tasks {
+			result[i] = map[string]interface{}{
+				"id":         task.ID,
+				"name":       task.Name,
+				"process_id": task.ProcessInstanceID,
+			}
+		}
+		return result
 	})
 
 	// 获取用户信息
@@ -185,7 +202,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		SetProcessInstanceID(fmt.Sprintf("PI-%s-%d", processDefinitionKey, time.Now().UnixNano())).
 		SetBusinessKey(businessKey).
 		SetProcessDefinitionKey(processDefinitionKey).
-		SetProcessDefinitionID(fmt.Sprintf("%d", definition.ID)).
+		SetProcessDefinitionID(definition.ID).
 		SetStatus("running").
 		SetVariables(variables).
 		SetStartTime(time.Now()).
@@ -217,7 +234,7 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 
 	// 2. 获取流程实例
 	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(task.ProcessInstanceID)).
+		Where(processinstance.ProcessInstanceID(fmt.Sprintf("%d", task.ProcessInstanceID))).
 		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
@@ -317,9 +334,11 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 }
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) error {
+	// Parse the instance.ProcessInstanceID (string) to int
+	instanceID, _ := strconv.Atoi(instance.ProcessInstanceID)
 	_, err := e.client.ProcessTask.Create().
 		SetTaskID(fmt.Sprintf("TASK-%s-%d", task.ID, time.Now().UnixNano())).
-		SetProcessInstanceID(instance.ProcessInstanceID).
+		SetProcessInstanceID(instanceID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
 		SetTaskDefinitionKey(task.ID).
 		SetTaskName(task.Name).

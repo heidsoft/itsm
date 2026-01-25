@@ -92,7 +92,7 @@ func (s *ApprovalService) CreateWorkflow(ctx context.Context, req *dto.CreateApp
 		}
 	}
 
-	return s.toWorkflowResponse(workflow), nil
+	return s.toWorkflowResponse(ctx, workflow), nil
 }
 
 // UpdateWorkflow 更新审批工作流
@@ -177,7 +177,7 @@ func (s *ApprovalService) UpdateWorkflow(ctx context.Context, id int, req *dto.U
 		return nil, fmt.Errorf("failed to get updated workflow: %w", err)
 	}
 
-	return s.toWorkflowResponse(workflow), nil
+	return s.toWorkflowResponse(ctx, workflow), nil
 }
 
 // DeleteWorkflow 删除审批工作流
@@ -274,7 +274,7 @@ func (s *ApprovalService) GetWorkflow(ctx context.Context, id int, tenantID int)
 		return nil, fmt.Errorf("failed to get approval workflow: %w", err)
 	}
 
-	return s.toWorkflowResponse(workflow), nil
+	return s.toWorkflowResponse(ctx, workflow), nil
 }
 
 // GetApprovalRecords 获取审批记录
@@ -544,7 +544,7 @@ func (s *ApprovalService) handleApprovalDelegated(ctx context.Context, record *e
 }
 
 // 辅助方法：转换为响应DTO
-func (s *ApprovalService) toWorkflowResponse(workflow *ent.ApprovalWorkflow) *dto.ApprovalWorkflowResponse {
+func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.ApprovalWorkflow) *dto.ApprovalWorkflowResponse {
 	nodes := make([]dto.ApprovalNodeResponse, 0)
 	if workflow.Nodes != nil {
 		for i, nodeMap := range workflow.Nodes {
@@ -596,10 +596,14 @@ func (s *ApprovalService) toWorkflowResponse(workflow *ent.ApprovalWorkflow) *dt
 				}
 			}
 
-			// TODO: 获取审批人姓名
-			node.ApproverNames = make([]string, len(node.ApproverIDs))
+			// 获取审批人姓名
 			for i, id := range node.ApproverIDs {
-				node.ApproverNames[i] = fmt.Sprintf("用户%d", id) // 临时，需要查询用户表
+				userEntity, _ := s.client.User.Get(ctx, id)
+				if userEntity != nil {
+					node.ApproverNames[i] = userEntity.Name
+				} else {
+					node.ApproverNames[i] = fmt.Sprintf("用户%d", id)
+				}
 			}
 
 			nodes = append(nodes, node)

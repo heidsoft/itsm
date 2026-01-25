@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"itsm-backend/ent"
+	"itsm-backend/ent/workflowtask"
 	"time"
 
 	"go.uber.org/zap"
@@ -140,51 +141,54 @@ func (was *WorkflowAutomationService) SmartRouteTask(ctx context.Context, task *
 func (was *WorkflowAutomationService) CheckAutoEscalation(ctx context.Context, tenantID int) error {
 	was.logger.Infow("Checking auto escalation", "tenant_id", tenantID)
 
-	// TODO: 实现自动升级检查逻辑
-	// 当前使用模拟数据，待workflowtask ent schema完善后启用
-	was.logger.Infow("Auto escalation check skipped - schema not implemented", "tenant_id", tenantID)
-	return nil
+	// 查询待处理的任务
+	tasks, err := was.client.WorkflowTask.Query().
+		Where(workflowtask.TenantID(tenantID)).
+		Where(workflowtask.StatusIn("pending", "in_progress")).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get pending tasks: %w", err)
+	}
 
-	// 获取所有待处理的任务
-	// tasks, err := was.client.WorkflowTask.Query().
-	// 	Where(workflowtask.TenantID(tenantID)).
-	// 	Where(workflowtask.StatusIn("pending", "in_progress")).
-	// 	All(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get pending tasks: %w", err)
-	// }
+	if len(tasks) == 0 {
+		was.logger.Infow("No pending tasks found for escalation check", "tenant_id", tenantID)
+		return nil
+	}
 
 	// 获取自动升级规则
-	// rules, err := was.getAutoEscalationRules(ctx, tenantID)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get auto escalation rules: %w", err)
-	// }
+	rules, err := was.getAutoEscalationRules(ctx, tenantID)
+	if err != nil {
+		return fmt.Errorf("failed to get auto escalation rules: %w", err)
+	}
 
 	// 按优先级排序规则
-	// sortedRules := was.sortAutoEscalationRulesByPriority(rules)
+	sortedRules := was.sortAutoEscalationRulesByPriority(rules)
 
-	// escalatedCount := 0
-	// for _, task := range tasks {
-	// 	for _, rule := range sortedRules {
-	// 		if !rule.IsActive {
-	// 			continue
-	// 		}
+	// 已升级任务计数
+	escalatedCount := 0
 
-	// 		if was.shouldEscalate(task, rule) {
-	// 			err := was.executeEscalation(ctx, task, rule)
-	// 			if err != nil {
-	// 				was.logger.Errorw("Failed to execute escalation", "error", err, "task_id", task.TaskID, "rule_id", rule.ID)
-	// 				continue
-	// 			}
+	// 检查每个任务是否需要升级
+	for _, task := range tasks {
+		for _, rule := range sortedRules {
+			if !rule.IsActive {
+				continue
+			}
 
-	// 			escalatedCount++
-	// 			was.logger.Infow("Task escalated", "task_id", task.TaskID, "escalate_to", rule.EscalateTo, "rule_id", rule.ID)
-	// 			break
-	// 		}
-	// 	}
-	// }
+			if was.shouldEscalate(task, rule) {
+				err := was.executeEscalation(ctx, task, rule)
+				if err != nil {
+					was.logger.Errorw("Failed to execute escalation", "error", err, "task_id", task.TaskID, "rule_id", rule.ID)
+					continue
+				}
 
-	// was.logger.Infow("Auto escalation check completed", "escalated_count", escalatedCount, "tenant_id", tenantID)
+				escalatedCount++
+				was.logger.Infow("Task escalated", "task_id", task.TaskID, "escalate_to", rule.EscalateTo, "rule_id", rule.ID)
+				break // 只应用第一个匹配的规则
+			}
+		}
+	}
+
+	was.logger.Infow("Auto escalation check completed", "escalated_count", escalatedCount, "tenant_id", tenantID)
 	return nil
 }
 
@@ -459,4 +463,64 @@ func (was *WorkflowAutomationService) StartAutoEscalationTimer(ctx context.Conte
 			}
 		}
 	}()
+}
+
+// GetEscalationCandidates 获取可升级的任务候选人
+func (was *WorkflowAutomationService) GetEscalationCandidates(ctx context.Context, tenantID int) ([]*ent.WorkflowTask, error) {
+	// 获取所有待处理和进行中的任务
+	tasks, err := was.client.WorkflowTask.Query().
+		Where(workflowtask.TenantID(tenantID)).
+		Where(workflowtask.StatusIn("pending", "in_progress")).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tasks: %w", err)
+	}
+
+	// 获取升级规则
+	rules, err := was.getAutoEscalationRules(ctx, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get escalation rules: %w", err)
+	}
+
+	// 过滤出需要升级的任务
+	var candidates []*ent.WorkflowTask
+	for _, task := range tasks {
+		for _, rule := range rules {
+			if rule.IsActive && was.shouldEscalate(task, rule) {
+				candidates = append(candidates, task)
+				break
+			}
+		}
+	}
+
+	return candidates, nil
+}
+
+// ManualEscalate 手动触发升级
+func (was *WorkflowAutomationService) ManualEscalate(ctx context.Context, taskID string, escalateTo string, reason string, tenantID int) error {
+	was.logger.Infow("Manual escalation triggered", "task_id", taskID, "escalate_to", escalateTo, "tenant_id", tenantID)
+
+	// 查找任务
+	task, err := was.client.WorkflowTask.Query().
+		Where(workflowtask.TaskIDEQ(taskID)).
+		Where(workflowtask.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("task not found: %s", taskID)
+		}
+		return fmt.Errorf("failed to get task: %w", err)
+	}
+
+	// 更新任务分配
+	_, err = was.client.WorkflowTask.UpdateOne(task).
+		SetAssignee(escalateTo).
+		SetComment(fmt.Sprintf("手动升级到 %s: %s", escalateTo, reason)).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update task: %w", err)
+	}
+
+	was.logger.Infow("Manual escalation completed", "task_id", taskID, "escalate_to", escalateTo)
+	return nil
 }

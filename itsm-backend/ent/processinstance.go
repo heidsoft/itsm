@@ -5,6 +5,7 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ type ProcessInstance struct {
 	// 流程定义Key
 	ProcessDefinitionKey string `json:"process_definition_key,omitempty"`
 	// 流程定义ID
-	ProcessDefinitionID string `json:"process_definition_id,omitempty"`
+	ProcessDefinitionID int `json:"process_definition_id,omitempty"`
 	// 实例状态：running, suspended, completed, terminated
 	Status string `json:"status,omitempty"`
 	// 当前活动ID
@@ -55,8 +56,64 @@ type ProcessInstance struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProcessInstanceQuery when eager-loading is set.
+	Edges        ProcessInstanceEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ProcessInstanceEdges holds the relations/edges for other nodes in the graph.
+type ProcessInstanceEdges struct {
+	// 流程任务
+	ProcessTasks []*ProcessTask `json:"process_tasks,omitempty"`
+	// 流程变量
+	ProcessVariables []*ProcessVariable `json:"process_variables,omitempty"`
+	// 执行历史
+	ExecutionHistory []*ProcessExecutionHistory `json:"execution_history,omitempty"`
+	// Definition holds the value of the definition edge.
+	Definition *ProcessDefinition `json:"definition,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [4]bool
+}
+
+// ProcessTasksOrErr returns the ProcessTasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessInstanceEdges) ProcessTasksOrErr() ([]*ProcessTask, error) {
+	if e.loadedTypes[0] {
+		return e.ProcessTasks, nil
+	}
+	return nil, &NotLoadedError{edge: "process_tasks"}
+}
+
+// ProcessVariablesOrErr returns the ProcessVariables value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessInstanceEdges) ProcessVariablesOrErr() ([]*ProcessVariable, error) {
+	if e.loadedTypes[1] {
+		return e.ProcessVariables, nil
+	}
+	return nil, &NotLoadedError{edge: "process_variables"}
+}
+
+// ExecutionHistoryOrErr returns the ExecutionHistory value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessInstanceEdges) ExecutionHistoryOrErr() ([]*ProcessExecutionHistory, error) {
+	if e.loadedTypes[2] {
+		return e.ExecutionHistory, nil
+	}
+	return nil, &NotLoadedError{edge: "execution_history"}
+}
+
+// DefinitionOrErr returns the Definition value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProcessInstanceEdges) DefinitionOrErr() (*ProcessDefinition, error) {
+	if e.Definition != nil {
+		return e.Definition, nil
+	} else if e.loadedTypes[3] {
+		return nil, &NotFoundError{label: processdefinition.Label}
+	}
+	return nil, &NotLoadedError{edge: "definition"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -66,9 +123,9 @@ func (*ProcessInstance) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case processinstance.FieldVariables, processinstance.FieldStateSnapshot:
 			values[i] = new([]byte)
-		case processinstance.FieldID, processinstance.FieldTenantID:
+		case processinstance.FieldID, processinstance.FieldProcessDefinitionID, processinstance.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case processinstance.FieldProcessInstanceID, processinstance.FieldBusinessKey, processinstance.FieldProcessDefinitionKey, processinstance.FieldProcessDefinitionID, processinstance.FieldStatus, processinstance.FieldCurrentActivityID, processinstance.FieldCurrentActivityName, processinstance.FieldSuspendedReason, processinstance.FieldInitiator, processinstance.FieldParentProcessInstanceID, processinstance.FieldRootProcessInstanceID:
+		case processinstance.FieldProcessInstanceID, processinstance.FieldBusinessKey, processinstance.FieldProcessDefinitionKey, processinstance.FieldStatus, processinstance.FieldCurrentActivityID, processinstance.FieldCurrentActivityName, processinstance.FieldSuspendedReason, processinstance.FieldInitiator, processinstance.FieldParentProcessInstanceID, processinstance.FieldRootProcessInstanceID:
 			values[i] = new(sql.NullString)
 		case processinstance.FieldStartTime, processinstance.FieldEndTime, processinstance.FieldSuspendedTime, processinstance.FieldCreatedAt, processinstance.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -112,10 +169,10 @@ func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
 				pi.ProcessDefinitionKey = value.String
 			}
 		case processinstance.FieldProcessDefinitionID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_definition_id", values[i])
 			} else if value.Valid {
-				pi.ProcessDefinitionID = value.String
+				pi.ProcessDefinitionID = int(value.Int64)
 			}
 		case processinstance.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -224,6 +281,26 @@ func (pi *ProcessInstance) Value(name string) (ent.Value, error) {
 	return pi.selectValues.Get(name)
 }
 
+// QueryProcessTasks queries the "process_tasks" edge of the ProcessInstance entity.
+func (pi *ProcessInstance) QueryProcessTasks() *ProcessTaskQuery {
+	return NewProcessInstanceClient(pi.config).QueryProcessTasks(pi)
+}
+
+// QueryProcessVariables queries the "process_variables" edge of the ProcessInstance entity.
+func (pi *ProcessInstance) QueryProcessVariables() *ProcessVariableQuery {
+	return NewProcessInstanceClient(pi.config).QueryProcessVariables(pi)
+}
+
+// QueryExecutionHistory queries the "execution_history" edge of the ProcessInstance entity.
+func (pi *ProcessInstance) QueryExecutionHistory() *ProcessExecutionHistoryQuery {
+	return NewProcessInstanceClient(pi.config).QueryExecutionHistory(pi)
+}
+
+// QueryDefinition queries the "definition" edge of the ProcessInstance entity.
+func (pi *ProcessInstance) QueryDefinition() *ProcessDefinitionQuery {
+	return NewProcessInstanceClient(pi.config).QueryDefinition(pi)
+}
+
 // Update returns a builder for updating this ProcessInstance.
 // Note that you need to call ProcessInstance.Unwrap() before calling this method if this ProcessInstance
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -257,7 +334,7 @@ func (pi *ProcessInstance) String() string {
 	builder.WriteString(pi.ProcessDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_id=")
-	builder.WriteString(pi.ProcessDefinitionID)
+	builder.WriteString(fmt.Sprintf("%v", pi.ProcessDefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(pi.Status)

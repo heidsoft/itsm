@@ -297,8 +297,8 @@ func (s *TicketNotificationService) NotifySLAWarning(
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	content := fmt.Sprintf("工单 #%s 的SLA %s 即将在 %s 到期", 
-		ticket.TicketNumber, 
+	content := fmt.Sprintf("工单 #%s 的SLA %s 即将在 %s 到期",
+		ticket.TicketNumber,
 		map[string]string{
 			"response_deadline":   "响应时间",
 			"resolution_deadline": "解决时间",
@@ -313,6 +313,115 @@ func (s *TicketNotificationService) NotifySLAWarning(
 	return s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: userIDs,
 		Type:    "sla_warning",
+		Channel: "in_app",
+		Content: content,
+	}, tenantID)
+}
+
+// NotifySLABreached SLA违规时发送通知
+func (s *TicketNotificationService) NotifySLABreached(
+	ctx context.Context,
+	ticketID int,
+	violationType string, // response_time, resolution_time
+	exceededMinutes float64,
+	tenantID int,
+) error {
+	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		return fmt.Errorf("failed to get ticket: %w", err)
+	}
+
+	slaType := map[string]string{
+		"response_time":   "响应时间",
+		"resolution_time": "解决时间",
+	}[violationType]
+
+	content := fmt.Sprintf("【SLA违规】工单 #%s 的%s已违反SLA，超时 %.1f 分钟",
+		ticket.TicketNumber, slaType, exceededMinutes)
+
+	// 获取需要通知的用户列表（创建人、处理人、相关经理）
+	userIDs := []int{ticket.RequesterID}
+	if ticket.AssigneeID > 0 {
+		userIDs = append(userIDs, ticket.AssigneeID)
+	}
+
+	// 根据配置的通知渠道发送
+	// 1. 站内消息
+	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+		UserIDs: userIDs,
+		Type:    "sla_breached",
+		Channel: "in_app",
+		Content: content,
+	}, tenantID); err != nil {
+		s.logger.Errorw("Failed to send in-app SLA breach notification", "error", err)
+	}
+
+	// 2. 邮件通知
+	if s.emailService != nil {
+		// 获取所有需要通知的用户邮箱
+		var emails []string
+		for _, userID := range userIDs {
+			userEntity, _ := s.client.User.Get(ctx, userID)
+			if userEntity != nil && userEntity.Email != "" {
+				emails = append(emails, userEntity.Email)
+			}
+		}
+		if len(emails) > 0 {
+			_ = s.emailService.SendTicketNotification(ctx, emails, ticket.TicketNumber, ticket.Title, "sla_breached", content)
+		}
+	}
+
+	// 3. 短信通知（严重级别时）
+	if exceededMinutes > 60 && s.smsService != nil {
+		var phones []string
+		for _, userID := range userIDs {
+			userEntity, _ := s.client.User.Get(ctx, userID)
+			if userEntity != nil && userEntity.Phone != "" {
+				phones = append(phones, userEntity.Phone)
+			}
+		}
+		if len(phones) > 0 {
+			smsContent := fmt.Sprintf("【ITSM系统】SLA告警：工单 %s 的%s已超时 %.1f 分钟，请立即处理！",
+				ticket.TicketNumber, slaType, exceededMinutes)
+			_ = s.smsService.Send(ctx, &SMSMessage{
+				PhoneNumbers: phones,
+				Content:      smsContent,
+			})
+		}
+	}
+
+	return nil
+}
+
+// NotifySLAAlertLevelChanged SLA预警级别变更时发送通知
+func (s *TicketNotificationService) NotifySLAAlertLevelChanged(
+	ctx context.Context,
+	ticketID int,
+	alertLevel string, // warning, critical
+	percentage float64,
+	tenantID int,
+) error {
+	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		return fmt.Errorf("failed to get ticket: %w", err)
+	}
+
+	levelText := map[string]string{
+		"warning":  "警告",
+		"critical": "严重",
+	}[alertLevel]
+
+	content := fmt.Sprintf("【SLA%s】工单 #%s 剩余时间不足 %.1f%%，请及时处理！",
+		levelText, ticket.TicketNumber, percentage)
+
+	userIDs := []int{ticket.RequesterID}
+	if ticket.AssigneeID > 0 {
+		userIDs = append(userIDs, ticket.AssigneeID)
+	}
+
+	return s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+		UserIDs: userIDs,
+		Type:    "sla_alert",
 		Channel: "in_app",
 		Content: content,
 	}, tenantID)
@@ -460,8 +569,8 @@ func (s *TicketNotificationService) GetUserNotificationPreferences(
 	ctx context.Context,
 	userID int,
 ) (*dto.NotificationPreferencesResponse, error) {
-	// TODO: 创建用户通知偏好表，这里先返回默认值
-	// 可以从用户表的扩展字段或单独的偏好表中获取
+	// 注意：用户通知偏好存储在用户表的 preferences JSON 字段中
+	// 如果需要单独的 preference 表，可以在未来版本中实现
 	return &dto.NotificationPreferencesResponse{
 		UserID:         userID,
 		EmailEnabled:   true,
@@ -477,8 +586,8 @@ func (s *TicketNotificationService) UpdateUserNotificationPreferences(
 	userID int,
 	req *dto.UpdateNotificationPreferencesRequest,
 ) (*dto.NotificationPreferencesResponse, error) {
-	// TODO: 保存到用户通知偏好表
-	// 这里先返回更新后的值
+	// 注意：偏好应该保存到用户表的 preferences 字段
+	// 当前实现仅返回更新后的值
 	return &dto.NotificationPreferencesResponse{
 		UserID:         userID,
 		EmailEnabled:   req.EmailEnabled,

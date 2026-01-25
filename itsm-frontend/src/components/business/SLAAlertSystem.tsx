@@ -97,9 +97,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const loadAlertRules = useCallback(async () => {
     try {
       setLoading(true);
-      // TODO: 调用实际API
-      // const data = await SLAApi.getAlertRules({ sla_definition_id: slaDefinitionId });
-      
+      // 注意：SLA预警规则API尚未实现，当前使用模拟数据
+      // 未来可通过 SLAApi.getAlertRules() 获取实际数据
+
       // 模拟数据
       const mockRules: AlertRule[] = [
         {
@@ -157,9 +157,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   // 加载预警历史
   const loadAlertHistory = useCallback(async () => {
     try {
-      // TODO: 调用实际API
-      // const data = await SLAApi.getAlertHistory({ sla_definition_id: slaDefinitionId });
-      
+      // 注意：SLA预警历史API尚未实现，当前使用模拟数据
+      // 未来可通过 SLAApi.getAlertHistory() 获取实际数据
+
       // 模拟数据
       const mockHistory: AlertHistory[] = [
         {
@@ -213,13 +213,13 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       };
 
       if (editingRule) {
-        // TODO: 更新规则
+        // 注意：更新规则API尚未实现
         // await SLAApi.updateAlertRule(editingRule.id, ruleData);
-        antMessage.success('预警规则已更新');
+        antMessage.success('预警规则已更新（模拟）');
       } else {
-        // TODO: 创建规则
+        // 注意：创建规则API尚未实现
         // await SLAApi.createAlertRule(ruleData);
-        antMessage.success('预警规则已创建');
+        antMessage.success('预警规则已创建（模拟）');
       }
 
       setRuleModalVisible(false);
@@ -236,9 +236,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const handleDeleteRule = useCallback(
     async (id: number) => {
       try {
-        // TODO: 调用实际API
+        // 注意：删除规则API尚未实现
         // await SLAApi.deleteAlertRule(id);
-        antMessage.success('预警规则已删除');
+        antMessage.success('预警规则已删除（模拟）');
         loadAlertRules();
       } catch (error) {
         console.error('Failed to delete alert rule:', error);
@@ -252,9 +252,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const handleToggleRuleStatus = useCallback(
     async (id: number, isActive: boolean) => {
       try {
-        // TODO: 调用实际API
+        // 注意：切换状态API尚未实现
         // await SLAApi.updateAlertRule(id, { is_active: !isActive });
-        antMessage.success(`预警规则已${!isActive ? '启用' : '禁用'}`);
+        antMessage.success(`预警规则已${!isActive ? '启用' : '禁用'}（模拟）`);
         loadAlertRules();
       } catch (error) {
         console.error('Failed to toggle rule status:', error);

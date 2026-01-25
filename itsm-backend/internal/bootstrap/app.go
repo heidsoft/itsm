@@ -206,11 +206,6 @@ func NewApplication() *Application {
 	slaServiceDomain := sla.NewService(slaRepo, sugar)
 	slaHandler := sla.NewHandler(slaServiceDomain)
 
-	// Legacy SLA Service & Controller (for additional endpoints)
-	slaService := service.NewSLAService(client, sugar)
-	slaAlertService := service.NewSLAAlertService(client, sugar)
-	slaController := controller.NewSLAController(slaService, slaAlertService)
-
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, rootCauseService, aiTelemetryService)
@@ -228,7 +223,22 @@ func NewApplication() *Application {
 	userService := service.NewUserService(client, sugar)
 	userController := controller.NewUserController(userService, sugar)
 
+	// SLA Monitor & Alert Services (legacy, for background tasks)
+	slaMonitorService := service.NewSLAMonitorService(client, sugar)
+	slaAlertService := service.NewSLAAlertService(client, sugar)
+	escalationService := service.NewEscalationService(client, sugar)
+	// Wire up notification service
+	slaMonitorService.SetNotificationService(ticketNotificationService)
+	slaAlertService.SetNotificationService(ticketNotificationService)
+	escalationService.SetNotificationService(ticketNotificationService)
+
 	// 7. 设置路由
+	// 根据配置设置 Gin 运行模式
+	if cfg.Server.Mode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	} else if cfg.Server.Mode == "test" {
+		gin.SetMode(gin.TestMode)
+	}
 	r := gin.Default()
 	if err := r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
 		sugar.Warnw("failed to set trusted proxies, falling back to default", "error", err)
@@ -278,11 +288,6 @@ func NewApplication() *Application {
 		AIHandler:             aiHandler, // Added AI domain handler
 		CommonHandler:         commonHandler,
 		RoleHandler:           roleHandler,
-
-		// Legacy SLA Controller (for metrics, violations, monitoring)
-		SLAController:      slaController,
-		SLAService:         slaService,
-		SLAAlertService:    slaAlertService,
 	}
 	router.SetupRoutes(r, routerConfig)
 
@@ -336,6 +341,42 @@ func (app *Application) startBackgroundTasks() {
 			}
 			for _, t := range tenants {
 				_ = pipeline.RunOnce(ctx, t.ID, 50)
+			}
+		}
+	}()
+
+	// SLA Monitoring and Escalation background tasks
+	go func() {
+		slaMonitorService := service.NewSLAMonitorService(app.DBClient, app.Logger)
+		escalationService := service.NewEscalationService(app.DBClient, app.Logger)
+
+		ctx := context.Background()
+		// Run SLA check every 5 minutes
+		slaTicker := time.NewTicker(5 * time.Minute)
+		defer slaTicker.Stop()
+
+		// Run escalation check every 15 minutes
+		escalationTicker := time.NewTicker(15 * time.Minute)
+		defer escalationTicker.Stop()
+
+		for {
+			select {
+			case <-slaTicker.C:
+				tenants, err := app.DBClient.Tenant.Query().All(ctx)
+				if err != nil {
+					continue
+				}
+				for _, t := range tenants {
+					_ = slaMonitorService.CheckSLAViolations(ctx, t.ID)
+				}
+			case <-escalationTicker.C:
+				tenants, err := app.DBClient.Tenant.Query().All(ctx)
+				if err != nil {
+					continue
+				}
+				for _, t := range tenants {
+					_ = escalationService.ProcessEscalations(ctx, t.ID)
+				}
 			}
 		}
 	}()

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/processinstance"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -182,6 +184,26 @@ func (pdc *ProcessDefinitionCreate) SetNillableUpdatedAt(t *time.Time) *ProcessD
 	return pdc
 }
 
+// AddProcessInstanceIDs adds the "process_instances" edge to the ProcessInstance entity by IDs.
+func (pdc *ProcessDefinitionCreate) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionCreate {
+	pdc.mutation.AddProcessInstanceIDs(ids...)
+	return pdc
+}
+
+// AddProcessInstances adds the "process_instances" edges to the ProcessInstance entity.
+func (pdc *ProcessDefinitionCreate) AddProcessInstances(p ...*ProcessInstance) *ProcessDefinitionCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdc.AddProcessInstanceIDs(ids...)
+}
+
+// SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
+func (pdc *ProcessDefinitionCreate) SetDeployment(p *ProcessDeployment) *ProcessDefinitionCreate {
+	return pdc.SetDeploymentID(p.ID)
+}
+
 // Mutation returns the ProcessDefinitionMutation object of the builder.
 func (pdc *ProcessDefinitionCreate) Mutation() *ProcessDefinitionMutation {
 	return pdc.mutation
@@ -305,6 +327,9 @@ func (pdc *ProcessDefinitionCreate) check() error {
 	if _, ok := pdc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessDefinition.updated_at"`)}
 	}
+	if len(pdc.mutation.DeploymentIDs()) == 0 {
+		return &ValidationError{Name: "deployment", err: errors.New(`ent: missing required edge "ProcessDefinition.deployment"`)}
+	}
 	return nil
 }
 
@@ -367,10 +392,6 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 		_spec.SetField(processdefinition.FieldIsLatest, field.TypeBool, value)
 		_node.IsLatest = value
 	}
-	if value, ok := pdc.mutation.DeploymentID(); ok {
-		_spec.SetField(processdefinition.FieldDeploymentID, field.TypeInt, value)
-		_node.DeploymentID = value
-	}
 	if value, ok := pdc.mutation.DeploymentName(); ok {
 		_spec.SetField(processdefinition.FieldDeploymentName, field.TypeString, value)
 		_node.DeploymentName = value
@@ -390,6 +411,39 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 	if value, ok := pdc.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdefinition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := pdc.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.ProcessInstancesTable,
+			Columns: []string{processdefinition.ProcessInstancesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pdc.mutation.DeploymentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processdefinition.DeploymentTable,
+			Columns: []string{processdefinition.DeploymentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdeployment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.DeploymentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

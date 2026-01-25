@@ -41,8 +41,29 @@ type ProcessDeployment struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ProcessDeploymentQuery when eager-loading is set.
+	Edges        ProcessDeploymentEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ProcessDeploymentEdges holds the relations/edges for other nodes in the graph.
+type ProcessDeploymentEdges struct {
+	// 流程定义
+	Definitions []*ProcessDefinition `json:"definitions,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// DefinitionsOrErr returns the Definitions value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessDeploymentEdges) DefinitionsOrErr() ([]*ProcessDefinition, error) {
+	if e.loadedTypes[0] {
+		return e.Definitions, nil
+	}
+	return nil, &NotLoadedError{edge: "definitions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -166,6 +187,11 @@ func (pd *ProcessDeployment) assignValues(columns []string, values []any) error 
 // This includes values selected through modifiers, order, etc.
 func (pd *ProcessDeployment) Value(name string) (ent.Value, error) {
 	return pd.selectValues.Get(name)
+}
+
+// QueryDefinitions queries the "definitions" edge of the ProcessDeployment entity.
+func (pd *ProcessDeployment) QueryDefinitions() *ProcessDefinitionQuery {
+	return NewProcessDeploymentClient(pd.config).QueryDefinitions(pd)
 }
 
 // Update returns a builder for updating this ProcessDeployment.

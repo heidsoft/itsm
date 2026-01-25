@@ -62,7 +62,7 @@ func (wvs *WorkflowVersionService) CreateVersion(ctx context.Context, workflowID
 		SetVersion(version).
 		SetBpmnXML(bpmnXML).
 		SetStatus("draft").
-		SetCreatedBy("system"). // TODO: 从上下文获取用户
+		SetCreatedBy("system"). // 用户ID需要从调用方传入或从上下文获取
 		SetChangeLog(changeLog).
 		SetIsCurrent(true).
 		Save(ctx)

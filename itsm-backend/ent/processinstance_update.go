@@ -7,7 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processvariable"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -78,15 +82,15 @@ func (piu *ProcessInstanceUpdate) SetNillableProcessDefinitionKey(s *string) *Pr
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (piu *ProcessInstanceUpdate) SetProcessDefinitionID(s string) *ProcessInstanceUpdate {
-	piu.mutation.SetProcessDefinitionID(s)
+func (piu *ProcessInstanceUpdate) SetProcessDefinitionID(i int) *ProcessInstanceUpdate {
+	piu.mutation.SetProcessDefinitionID(i)
 	return piu
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition_id" field if the given value is not nil.
-func (piu *ProcessInstanceUpdate) SetNillableProcessDefinitionID(s *string) *ProcessInstanceUpdate {
-	if s != nil {
-		piu.SetProcessDefinitionID(*s)
+func (piu *ProcessInstanceUpdate) SetNillableProcessDefinitionID(i *int) *ProcessInstanceUpdate {
+	if i != nil {
+		piu.SetProcessDefinitionID(*i)
 	}
 	return piu
 }
@@ -350,9 +354,134 @@ func (piu *ProcessInstanceUpdate) SetUpdatedAt(t time.Time) *ProcessInstanceUpda
 	return piu
 }
 
+// AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by IDs.
+func (piu *ProcessInstanceUpdate) AddProcessTaskIDs(ids ...int) *ProcessInstanceUpdate {
+	piu.mutation.AddProcessTaskIDs(ids...)
+	return piu
+}
+
+// AddProcessTasks adds the "process_tasks" edges to the ProcessTask entity.
+func (piu *ProcessInstanceUpdate) AddProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piu.AddProcessTaskIDs(ids...)
+}
+
+// AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by IDs.
+func (piu *ProcessInstanceUpdate) AddProcessVariableIDs(ids ...int) *ProcessInstanceUpdate {
+	piu.mutation.AddProcessVariableIDs(ids...)
+	return piu
+}
+
+// AddProcessVariables adds the "process_variables" edges to the ProcessVariable entity.
+func (piu *ProcessInstanceUpdate) AddProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piu.AddProcessVariableIDs(ids...)
+}
+
+// AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
+func (piu *ProcessInstanceUpdate) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdate {
+	piu.mutation.AddExecutionHistoryIDs(ids...)
+	return piu
+}
+
+// AddExecutionHistory adds the "execution_history" edges to the ProcessExecutionHistory entity.
+func (piu *ProcessInstanceUpdate) AddExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piu.AddExecutionHistoryIDs(ids...)
+}
+
+// SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
+func (piu *ProcessInstanceUpdate) SetDefinitionID(id int) *ProcessInstanceUpdate {
+	piu.mutation.SetDefinitionID(id)
+	return piu
+}
+
+// SetDefinition sets the "definition" edge to the ProcessDefinition entity.
+func (piu *ProcessInstanceUpdate) SetDefinition(p *ProcessDefinition) *ProcessInstanceUpdate {
+	return piu.SetDefinitionID(p.ID)
+}
+
 // Mutation returns the ProcessInstanceMutation object of the builder.
 func (piu *ProcessInstanceUpdate) Mutation() *ProcessInstanceMutation {
 	return piu.mutation
+}
+
+// ClearProcessTasks clears all "process_tasks" edges to the ProcessTask entity.
+func (piu *ProcessInstanceUpdate) ClearProcessTasks() *ProcessInstanceUpdate {
+	piu.mutation.ClearProcessTasks()
+	return piu
+}
+
+// RemoveProcessTaskIDs removes the "process_tasks" edge to ProcessTask entities by IDs.
+func (piu *ProcessInstanceUpdate) RemoveProcessTaskIDs(ids ...int) *ProcessInstanceUpdate {
+	piu.mutation.RemoveProcessTaskIDs(ids...)
+	return piu
+}
+
+// RemoveProcessTasks removes "process_tasks" edges to ProcessTask entities.
+func (piu *ProcessInstanceUpdate) RemoveProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piu.RemoveProcessTaskIDs(ids...)
+}
+
+// ClearProcessVariables clears all "process_variables" edges to the ProcessVariable entity.
+func (piu *ProcessInstanceUpdate) ClearProcessVariables() *ProcessInstanceUpdate {
+	piu.mutation.ClearProcessVariables()
+	return piu
+}
+
+// RemoveProcessVariableIDs removes the "process_variables" edge to ProcessVariable entities by IDs.
+func (piu *ProcessInstanceUpdate) RemoveProcessVariableIDs(ids ...int) *ProcessInstanceUpdate {
+	piu.mutation.RemoveProcessVariableIDs(ids...)
+	return piu
+}
+
+// RemoveProcessVariables removes "process_variables" edges to ProcessVariable entities.
+func (piu *ProcessInstanceUpdate) RemoveProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piu.RemoveProcessVariableIDs(ids...)
+}
+
+// ClearExecutionHistory clears all "execution_history" edges to the ProcessExecutionHistory entity.
+func (piu *ProcessInstanceUpdate) ClearExecutionHistory() *ProcessInstanceUpdate {
+	piu.mutation.ClearExecutionHistory()
+	return piu
+}
+
+// RemoveExecutionHistoryIDs removes the "execution_history" edge to ProcessExecutionHistory entities by IDs.
+func (piu *ProcessInstanceUpdate) RemoveExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdate {
+	piu.mutation.RemoveExecutionHistoryIDs(ids...)
+	return piu
+}
+
+// RemoveExecutionHistory removes "execution_history" edges to ProcessExecutionHistory entities.
+func (piu *ProcessInstanceUpdate) RemoveExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piu.RemoveExecutionHistoryIDs(ids...)
+}
+
+// ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
+func (piu *ProcessInstanceUpdate) ClearDefinition() *ProcessInstanceUpdate {
+	piu.mutation.ClearDefinition()
+	return piu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -413,6 +542,9 @@ func (piu *ProcessInstanceUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.tenant_id": %w`, err)}
 		}
 	}
+	if piu.mutation.DefinitionCleared() && len(piu.mutation.DefinitionIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ProcessInstance.definition"`)
+	}
 	return nil
 }
 
@@ -439,9 +571,6 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 	}
 	if value, ok := piu.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processinstance.FieldProcessDefinitionKey, field.TypeString, value)
-	}
-	if value, ok := piu.mutation.ProcessDefinitionID(); ok {
-		_spec.SetField(processinstance.FieldProcessDefinitionID, field.TypeString, value)
 	}
 	if value, ok := piu.mutation.Status(); ok {
 		_spec.SetField(processinstance.FieldStatus, field.TypeString, value)
@@ -526,6 +655,170 @@ func (piu *ProcessInstanceUpdate) sqlSave(ctx context.Context) (n int, err error
 	if value, ok := piu.mutation.UpdatedAt(); ok {
 		_spec.SetField(processinstance.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if piu.mutation.ProcessTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.RemovedProcessTasksIDs(); len(nodes) > 0 && !piu.mutation.ProcessTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.ProcessTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if piu.mutation.ProcessVariablesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.RemovedProcessVariablesIDs(); len(nodes) > 0 && !piu.mutation.ProcessVariablesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if piu.mutation.ExecutionHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.RemovedExecutionHistoryIDs(); len(nodes) > 0 && !piu.mutation.ExecutionHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if piu.mutation.DefinitionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processinstance.DefinitionTable,
+			Columns: []string{processinstance.DefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piu.mutation.DefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processinstance.DefinitionTable,
+			Columns: []string{processinstance.DefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, piu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processinstance.Label}
@@ -595,15 +888,15 @@ func (piuo *ProcessInstanceUpdateOne) SetNillableProcessDefinitionKey(s *string)
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (piuo *ProcessInstanceUpdateOne) SetProcessDefinitionID(s string) *ProcessInstanceUpdateOne {
-	piuo.mutation.SetProcessDefinitionID(s)
+func (piuo *ProcessInstanceUpdateOne) SetProcessDefinitionID(i int) *ProcessInstanceUpdateOne {
+	piuo.mutation.SetProcessDefinitionID(i)
 	return piuo
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition_id" field if the given value is not nil.
-func (piuo *ProcessInstanceUpdateOne) SetNillableProcessDefinitionID(s *string) *ProcessInstanceUpdateOne {
-	if s != nil {
-		piuo.SetProcessDefinitionID(*s)
+func (piuo *ProcessInstanceUpdateOne) SetNillableProcessDefinitionID(i *int) *ProcessInstanceUpdateOne {
+	if i != nil {
+		piuo.SetProcessDefinitionID(*i)
 	}
 	return piuo
 }
@@ -867,9 +1160,134 @@ func (piuo *ProcessInstanceUpdateOne) SetUpdatedAt(t time.Time) *ProcessInstance
 	return piuo
 }
 
+// AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by IDs.
+func (piuo *ProcessInstanceUpdateOne) AddProcessTaskIDs(ids ...int) *ProcessInstanceUpdateOne {
+	piuo.mutation.AddProcessTaskIDs(ids...)
+	return piuo
+}
+
+// AddProcessTasks adds the "process_tasks" edges to the ProcessTask entity.
+func (piuo *ProcessInstanceUpdateOne) AddProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piuo.AddProcessTaskIDs(ids...)
+}
+
+// AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by IDs.
+func (piuo *ProcessInstanceUpdateOne) AddProcessVariableIDs(ids ...int) *ProcessInstanceUpdateOne {
+	piuo.mutation.AddProcessVariableIDs(ids...)
+	return piuo
+}
+
+// AddProcessVariables adds the "process_variables" edges to the ProcessVariable entity.
+func (piuo *ProcessInstanceUpdateOne) AddProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piuo.AddProcessVariableIDs(ids...)
+}
+
+// AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
+func (piuo *ProcessInstanceUpdateOne) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdateOne {
+	piuo.mutation.AddExecutionHistoryIDs(ids...)
+	return piuo
+}
+
+// AddExecutionHistory adds the "execution_history" edges to the ProcessExecutionHistory entity.
+func (piuo *ProcessInstanceUpdateOne) AddExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piuo.AddExecutionHistoryIDs(ids...)
+}
+
+// SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
+func (piuo *ProcessInstanceUpdateOne) SetDefinitionID(id int) *ProcessInstanceUpdateOne {
+	piuo.mutation.SetDefinitionID(id)
+	return piuo
+}
+
+// SetDefinition sets the "definition" edge to the ProcessDefinition entity.
+func (piuo *ProcessInstanceUpdateOne) SetDefinition(p *ProcessDefinition) *ProcessInstanceUpdateOne {
+	return piuo.SetDefinitionID(p.ID)
+}
+
 // Mutation returns the ProcessInstanceMutation object of the builder.
 func (piuo *ProcessInstanceUpdateOne) Mutation() *ProcessInstanceMutation {
 	return piuo.mutation
+}
+
+// ClearProcessTasks clears all "process_tasks" edges to the ProcessTask entity.
+func (piuo *ProcessInstanceUpdateOne) ClearProcessTasks() *ProcessInstanceUpdateOne {
+	piuo.mutation.ClearProcessTasks()
+	return piuo
+}
+
+// RemoveProcessTaskIDs removes the "process_tasks" edge to ProcessTask entities by IDs.
+func (piuo *ProcessInstanceUpdateOne) RemoveProcessTaskIDs(ids ...int) *ProcessInstanceUpdateOne {
+	piuo.mutation.RemoveProcessTaskIDs(ids...)
+	return piuo
+}
+
+// RemoveProcessTasks removes "process_tasks" edges to ProcessTask entities.
+func (piuo *ProcessInstanceUpdateOne) RemoveProcessTasks(p ...*ProcessTask) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piuo.RemoveProcessTaskIDs(ids...)
+}
+
+// ClearProcessVariables clears all "process_variables" edges to the ProcessVariable entity.
+func (piuo *ProcessInstanceUpdateOne) ClearProcessVariables() *ProcessInstanceUpdateOne {
+	piuo.mutation.ClearProcessVariables()
+	return piuo
+}
+
+// RemoveProcessVariableIDs removes the "process_variables" edge to ProcessVariable entities by IDs.
+func (piuo *ProcessInstanceUpdateOne) RemoveProcessVariableIDs(ids ...int) *ProcessInstanceUpdateOne {
+	piuo.mutation.RemoveProcessVariableIDs(ids...)
+	return piuo
+}
+
+// RemoveProcessVariables removes "process_variables" edges to ProcessVariable entities.
+func (piuo *ProcessInstanceUpdateOne) RemoveProcessVariables(p ...*ProcessVariable) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piuo.RemoveProcessVariableIDs(ids...)
+}
+
+// ClearExecutionHistory clears all "execution_history" edges to the ProcessExecutionHistory entity.
+func (piuo *ProcessInstanceUpdateOne) ClearExecutionHistory() *ProcessInstanceUpdateOne {
+	piuo.mutation.ClearExecutionHistory()
+	return piuo
+}
+
+// RemoveExecutionHistoryIDs removes the "execution_history" edge to ProcessExecutionHistory entities by IDs.
+func (piuo *ProcessInstanceUpdateOne) RemoveExecutionHistoryIDs(ids ...int) *ProcessInstanceUpdateOne {
+	piuo.mutation.RemoveExecutionHistoryIDs(ids...)
+	return piuo
+}
+
+// RemoveExecutionHistory removes "execution_history" edges to ProcessExecutionHistory entities.
+func (piuo *ProcessInstanceUpdateOne) RemoveExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return piuo.RemoveExecutionHistoryIDs(ids...)
+}
+
+// ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
+func (piuo *ProcessInstanceUpdateOne) ClearDefinition() *ProcessInstanceUpdateOne {
+	piuo.mutation.ClearDefinition()
+	return piuo
 }
 
 // Where appends a list predicates to the ProcessInstanceUpdate builder.
@@ -943,6 +1361,9 @@ func (piuo *ProcessInstanceUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.tenant_id": %w`, err)}
 		}
 	}
+	if piuo.mutation.DefinitionCleared() && len(piuo.mutation.DefinitionIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "ProcessInstance.definition"`)
+	}
 	return nil
 }
 
@@ -986,9 +1407,6 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 	}
 	if value, ok := piuo.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processinstance.FieldProcessDefinitionKey, field.TypeString, value)
-	}
-	if value, ok := piuo.mutation.ProcessDefinitionID(); ok {
-		_spec.SetField(processinstance.FieldProcessDefinitionID, field.TypeString, value)
 	}
 	if value, ok := piuo.mutation.Status(); ok {
 		_spec.SetField(processinstance.FieldStatus, field.TypeString, value)
@@ -1072,6 +1490,170 @@ func (piuo *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 	}
 	if value, ok := piuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(processinstance.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if piuo.mutation.ProcessTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.RemovedProcessTasksIDs(); len(nodes) > 0 && !piuo.mutation.ProcessTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.ProcessTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessTasksTable,
+			Columns: []string{processinstance.ProcessTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if piuo.mutation.ProcessVariablesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.RemovedProcessVariablesIDs(); len(nodes) > 0 && !piuo.mutation.ProcessVariablesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ProcessVariablesTable,
+			Columns: []string{processinstance.ProcessVariablesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if piuo.mutation.ExecutionHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.RemovedExecutionHistoryIDs(); len(nodes) > 0 && !piuo.mutation.ExecutionHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.ExecutionHistoryTable,
+			Columns: []string{processinstance.ExecutionHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if piuo.mutation.DefinitionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processinstance.DefinitionTable,
+			Columns: []string{processinstance.DefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := piuo.mutation.DefinitionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   processinstance.DefinitionTable,
+			Columns: []string{processinstance.DefinitionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &ProcessInstance{config: piuo.config}
 	_spec.Assign = _node.assignValues

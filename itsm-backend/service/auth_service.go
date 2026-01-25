@@ -15,16 +15,18 @@ import (
 )
 
 type AuthService struct {
-	client    *ent.Client
-	jwtSecret string
-	logger    *zap.SugaredLogger
+	client          *ent.Client
+	jwtSecret       string
+	logger          *zap.SugaredLogger
+	tokenBlacklist  *TokenBlacklistService
 }
 
-func NewAuthService(client *ent.Client, jwtSecret string, logger *zap.SugaredLogger) *AuthService {
+func NewAuthService(client *ent.Client, jwtSecret string, logger *zap.SugaredLogger, blacklistService *TokenBlacklistService) *AuthService {
 	return &AuthService{
-		client:    client,
-		jwtSecret: jwtSecret,
-		logger:    logger,
+		client:         client,
+		jwtSecret:      jwtSecret,
+		logger:         logger,
+		tokenBlacklist: blacklistService,
 	}
 }
 
@@ -286,16 +288,33 @@ func (s *AuthService) GetUserInfo(ctx context.Context, userID int) (*dto.UserInf
 
 // Logout 用户登出
 func (s *AuthService) Logout(ctx context.Context, userID int) error {
-	// 记录登出日志
 	s.logger.Infow("User logged out", "user_id", userID)
 
-	// 注意：JWT 是无状态的，无法主动失效
-	// 在生产环境中，可以考虑以下方案：
-	// 1. 使用 Redis 维护 token 黑名单
-	// 2. 使用短期 access token + 长期 refresh token
-	// 3. 使用 token 版本号机制
-	//
-	// 当前实现只记录日志，实际的 token 失效依赖客户端清除 token
+	// 如果启用了黑名单服务，撤销用户的所有token
+	if s.tokenBlacklist != nil {
+		if err := s.tokenBlacklist.RevokeUserTokens(ctx, userID); err != nil {
+			s.logger.Warnw("Failed to revoke user tokens", "user_id", userID, "error", err)
+			// 不影响登出流程
+		}
+	}
 
 	return nil
+}
+
+// RevokeUserTokens 撤销用户的所有Token（登出所有设备）
+func (s *AuthService) RevokeUserTokens(ctx context.Context, userID int) error {
+	if s.tokenBlacklist == nil {
+		return fmt.Errorf("token blacklist service not configured")
+	}
+
+	return s.tokenBlacklist.RevokeUserTokens(ctx, userID)
+}
+
+// AddTokenToBlacklist 将特定Token加入黑名单
+func (s *AuthService) AddTokenToBlacklist(tokenString string, expiresAt time.Time) error {
+	if s.tokenBlacklist == nil {
+		return fmt.Errorf("token blacklist service not configured")
+	}
+
+	return s.tokenBlacklist.AddToBlacklist(tokenString, expiresAt)
 }
