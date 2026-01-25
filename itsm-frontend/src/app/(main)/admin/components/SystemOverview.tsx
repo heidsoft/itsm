@@ -4,15 +4,21 @@ import React from 'react';
 import { Card, Col, Row, Statistic, Typography, theme, Avatar } from 'antd';
 import { Users, Workflow, BookOpen, AlertCircle, TrendingUp, BarChart3 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { AdminStats } from '../hooks/useAdminData';
 
 const { Paragraph, Title } = Typography;
 
-export const SystemOverview: React.FC = () => {
+interface SystemOverviewProps {
+    stats?: AdminStats;
+    loading?: boolean;
+}
+
+export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }) => {
     const { t } = useI18n();
     const systemStats = [
         {
             title: t('admin.activeUsers'),
-            value: '1,234',
+            value: stats?.activeUsers ?? '1,234',
             change: '+12%',
             changeValue: '+132',
             icon: Users,
@@ -22,7 +28,7 @@ export const SystemOverview: React.FC = () => {
         },
         {
             title: t('admin.runningWorkflows'),
-            value: '45',
+            value: stats?.runningWorkflows ?? '45',
             change: '+6.7%',
             changeValue: '+3',
             icon: Workflow,
@@ -32,7 +38,7 @@ export const SystemOverview: React.FC = () => {
         },
         {
             title: t('admin.serviceCatalogItems'),
-            value: '89',
+            value: stats?.serviceCatalogItems ?? '89',
             change: '+5.9%',
             changeValue: '+5',
             icon: BookOpen,
@@ -42,7 +48,7 @@ export const SystemOverview: React.FC = () => {
         },
         {
             title: t('admin.systemAlerts'),
-            value: '2',
+            value: stats?.systemAlerts ?? '2',
             change: '-33%',
             changeValue: '-1',
             icon: AlertCircle,
@@ -107,6 +113,7 @@ export const SystemOverview: React.FC = () => {
                 <Statistic
                     title={stat.title}
                     value={stat.value}
+                    loading={loading}
                     valueStyle={{ color: token.colorText, fontSize: 28, fontWeight: 700 }}
                 />
                 <Paragraph

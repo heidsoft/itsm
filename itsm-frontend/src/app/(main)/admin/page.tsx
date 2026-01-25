@@ -31,7 +31,7 @@ const AdminDashboardSkeleton: React.FC = () => {
 
 const AdminDashboard = () => {
   const { token } = theme.useToken();
-  const { loading } = useAdminData();
+  const { loading, stats } = useAdminData();
   const { t } = useI18n();
 
   if (loading) {
@@ -42,7 +42,7 @@ const AdminDashboard = () => {
     <div style={{ padding: token.paddingLG }}>
       <AdminHeader />
       <div style={{ marginBottom: token.marginLG }}>
-        <SystemOverview />
+        <SystemOverview stats={stats} loading={loading} />
       </div>
       <Row gutter={[24, 24]} style={{ marginBottom: token.marginLG }}>
         <Col xs={24} lg={8}>

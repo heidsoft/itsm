@@ -87,7 +87,7 @@ const getMenuConfig = (t: any) => ({
       description: t('serviceCatalog.description'),
     },
     {
-      key: '/knowledge-base',
+      key: '/knowledge',
       icon: <HelpCircle style={iconStyle} />,
       label: '知识库',
       path: '/knowledge',
@@ -95,7 +95,7 @@ const getMenuConfig = (t: any) => ({
       description: t('knowledgeBase.description'),
     },
     {
-      key: '/sla',
+      key: '/sla-dashboard',
       icon: <Calendar style={iconStyle} />,
       label: 'SLA监控',
       path: '/sla-dashboard',

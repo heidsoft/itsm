@@ -97,58 +97,12 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const loadAlertRules = useCallback(async () => {
     try {
       setLoading(true);
-      // 注意：SLA预警规则API尚未实现，当前使用模拟数据
-      // 未来可通过 SLAApi.getAlertRules() 获取实际数据
-
-      // 模拟数据
-      const mockRules: AlertRule[] = [
-        {
-          id: 1,
-          name: 'P1工单-严重预警',
-          sla_definition_id: 1,
-          alert_level: 'severe',
-          threshold_percentage: 95,
-          notification_channels: ['email', 'sms', 'in_app'],
-          escalation_enabled: true,
-          escalation_levels: [
-            { level: 1, threshold: 95, notify_users: [1, 2] },
-            { level: 2, threshold: 98, notify_users: [3, 4] },
-          ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          name: 'P1工单-警告预警',
-          sla_definition_id: 1,
-          alert_level: 'warning',
-          threshold_percentage: 85,
-          notification_channels: ['email', 'in_app'],
-          escalation_enabled: false,
-          escalation_levels: [],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          name: 'P1工单-提醒预警',
-          sla_definition_id: 1,
-          alert_level: 'warning',
-          threshold_percentage: 70,
-          notification_channels: ['in_app'],
-          escalation_enabled: false,
-          escalation_levels: [],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      setAlertRules(mockRules);
+      const data = await SLAApi.getAlertRules({ sla_definition_id: slaDefinitionId });
+      setAlertRules(data);
     } catch (error) {
       console.error('Failed to load alert rules:', error);
       antMessage.error('加载预警规则失败');
+      setAlertRules([]);
     } finally {
       setLoading(false);
     }
@@ -157,44 +111,14 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   // 加载预警历史
   const loadAlertHistory = useCallback(async () => {
     try {
-      // 注意：SLA预警历史API尚未实现，当前使用模拟数据
-      // 未来可通过 SLAApi.getAlertHistory() 获取实际数据
-
-      // 模拟数据
-      const mockHistory: AlertHistory[] = [
-        {
-          id: 1,
-          ticket_id: 1001,
-          ticket_number: 'T-2024-001',
-          ticket_title: '数据库连接超时',
-          alert_rule_id: 1,
-          alert_rule_name: 'P1工单-严重预警',
-          alert_level: 'severe',
-          threshold_percentage: 95,
-          actual_percentage: 96.5,
-          notification_sent: true,
-          escalation_level: 1,
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 2,
-          ticket_id: 1002,
-          ticket_number: 'T-2024-002',
-          ticket_title: '网络设备故障',
-          alert_rule_id: 2,
-          alert_rule_name: 'P1工单-警告预警',
-          alert_level: 'warning',
-          threshold_percentage: 85,
-          actual_percentage: 87.2,
-          notification_sent: true,
-          escalation_level: 0,
-          created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          resolved_at: new Date().toISOString(),
-        },
-      ];
-      setAlertHistory(mockHistory);
+      // 调用实际API
+      const { default: SLAApi } = await import('@/lib/api/sla-api');
+      const data = await SLAApi.getAlertHistory({ sla_definition_id: slaDefinitionId });
+      setAlertHistory(data.items);
     } catch (error) {
       console.error('Failed to load alert history:', error);
+      // 失败时设置为空数组，不使用Mock数据
+      setAlertHistory([]);
     }
   }, [slaDefinitionId]);
 
@@ -212,14 +136,25 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         sla_definition_id: slaDefinitionId || values.sla_definition_id,
       };
 
+      const { default: SLAApi } = await import('@/lib/api/sla-api');
+
       if (editingRule) {
-        // 注意：更新规则API尚未实现
-        // await SLAApi.updateAlertRule(editingRule.id, ruleData);
-        antMessage.success('预警规则已更新（模拟）');
+        await SLAApi.updateAlertRule(editingRule.id, ruleData);
+        antMessage.success('预警规则已更新');
       } else {
-        // 注意：创建规则API尚未实现
-        // await SLAApi.createAlertRule(ruleData);
-        antMessage.success('预警规则已创建（模拟）');
+        // 确保必要的字段存在
+        const createData = {
+          name: ruleData.name!,
+          sla_definition_id: ruleData.sla_definition_id!,
+          alert_level: ruleData.alert_level!,
+          threshold_percentage: Number(ruleData.threshold_percentage),
+          notification_channels: ruleData.notification_channels!,
+          escalation_enabled: ruleData.escalation_enabled,
+          escalation_levels: ruleData.escalation_levels,
+          is_active: ruleData.is_active !== false, // 默认为 true
+        };
+        await SLAApi.createAlertRule(createData);
+        antMessage.success('预警规则已创建');
       }
 
       setRuleModalVisible(false);
@@ -236,9 +171,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const handleDeleteRule = useCallback(
     async (id: number) => {
       try {
-        // 注意：删除规则API尚未实现
-        // await SLAApi.deleteAlertRule(id);
-        antMessage.success('预警规则已删除（模拟）');
+        const { default: SLAApi } = await import('@/lib/api/sla-api');
+        await SLAApi.deleteAlertRule(id);
+        antMessage.success('预警规则已删除');
         loadAlertRules();
       } catch (error) {
         console.error('Failed to delete alert rule:', error);
@@ -252,9 +187,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
   const handleToggleRuleStatus = useCallback(
     async (id: number, isActive: boolean) => {
       try {
-        // 注意：切换状态API尚未实现
-        // await SLAApi.updateAlertRule(id, { is_active: !isActive });
-        antMessage.success(`预警规则已${!isActive ? '启用' : '禁用'}（模拟）`);
+        const { default: SLAApi } = await import('@/lib/api/sla-api');
+        await SLAApi.updateAlertRule(id, { is_active: !isActive });
+        antMessage.success(`预警规则已${!isActive ? '启用' : '禁用'}`);
         loadAlertRules();
       } catch (error) {
         console.error('Failed to toggle rule status:', error);
@@ -350,9 +285,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       dataIndex: 'escalation_enabled',
       key: 'escalation_enabled',
       render: (enabled: boolean) => (
-        <Tag color={enabled ? 'green' : 'default'}>
-          {enabled ? '已启用' : '未启用'}
-        </Tag>
+        <Tag color={enabled ? 'green' : 'default'}>{enabled ? '已启用' : '未启用'}</Tag>
       ),
     },
     {
@@ -432,9 +365,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           <Text
             style={{
               color:
-                record.actual_percentage >= record.threshold_percentage
-                  ? '#ff4d4f'
-                  : '#52c41a',
+                record.actual_percentage >= record.threshold_percentage ? '#ff4d4f' : '#52c41a',
             }}
           >
             实际: {record.actual_percentage.toFixed(1)}%
@@ -447,10 +378,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       dataIndex: 'notification_sent',
       key: 'notification_sent',
       render: (sent: boolean) => (
-        <Badge
-          status={sent ? 'success' : 'default'}
-          text={sent ? '已发送' : '未发送'}
-        />
+        <Badge status={sent ? 'success' : 'default'} text={sent ? '已发送' : '未发送'} />
       ),
     },
     {
@@ -463,18 +391,13 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       title: '触发时间',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (date: string) =>
-        format(new Date(date), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
+      render: (date: string) => format(new Date(date), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
     },
     {
       title: '状态',
       key: 'status',
       render: (_: any, record: AlertHistory) =>
-        record.resolved_at ? (
-          <Tag color='green'>已解决</Tag>
-        ) : (
-          <Tag color='orange'>进行中</Tag>
-        ),
+        record.resolved_at ? <Tag color='green'>已解决</Tag> : <Tag color='orange'>进行中</Tag>,
     },
   ];
 
@@ -488,11 +411,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
               <SettingOutlined />
               <span>预警规则配置</span>
             </div>
-            <Button
-              type='primary'
-              icon={<PlusOutlined />}
-              onClick={() => handleOpenRuleModal()}
-            >
+            <Button type='primary' icon={<PlusOutlined />} onClick={() => handleOpenRuleModal()}>
               创建预警规则
             </Button>
           </div>
@@ -531,7 +450,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: total => `共 ${total} 条记录`,
           }}
         />
       </Card>
@@ -575,11 +494,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
               { type: 'number', min: 0, max: 100, message: '阈值必须在0-100之间' },
             ]}
           >
-            <Input
-              type='number'
-              placeholder='例如：70, 85, 95'
-              addonAfter='%'
-            />
+            <Input type='number' placeholder='例如：70, 85, 95' addonAfter='%' />
           </Form.Item>
           <Form.Item
             name='notification_channels'
@@ -592,11 +507,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
               <Option value='in_app'>站内消息</Option>
             </Select>
           </Form.Item>
-          <Form.Item
-            name='escalation_enabled'
-            label='启用升级机制'
-            valuePropName='checked'
-          >
+          <Form.Item name='escalation_enabled' label='启用升级机制' valuePropName='checked'>
             <Switch />
           </Form.Item>
           <Form.Item
@@ -628,4 +539,3 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
     </div>
   );
 };
-

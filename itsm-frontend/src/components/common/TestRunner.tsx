@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, Button, Progress, Tag, Collapse, Alert, Statistic, Row, Col } from 'antd';
 import { Play, CheckCircle, XCircle, Clock, AlertTriangle, FileText, Code } from 'lucide-react';
 
@@ -38,164 +38,11 @@ interface TestRunnerState {
   };
 }
 
-// 模拟测试数据
-const mockTestSuites: TestSuite[] = [
-  {
-    id: 'auth-tests',
-    name: '认证模块测试',
-    description: '测试用户认证、权限验证等功能',
-    status: 'pending',
-    duration: 0,
-    tests: [
-      {
-        id: 'auth-1',
-        name: '用户登录测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试用户登录功能是否正常工作',
-      },
-      {
-        id: 'auth-2',
-        name: '权限验证测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试用户权限验证逻辑',
-      },
-      {
-        id: 'auth-3',
-        name: 'Token刷新测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试JWT Token自动刷新机制',
-      },
-    ],
-  },
-  {
-    id: 'dashboard-tests',
-    name: '仪表板组件测试',
-    description: '测试仪表板页面的各个组件',
-    status: 'pending',
-    duration: 0,
-    tests: [
-      {
-        id: 'dashboard-1',
-        name: 'KPI指标卡片渲染测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试KPI指标卡片是否正确渲染',
-      },
-      {
-        id: 'dashboard-2',
-        name: '系统状态监控测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试系统状态监控组件',
-      },
-      {
-        id: 'dashboard-3',
-        name: '数据获取Hook测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试useDashboardData Hook的数据获取逻辑',
-      },
-    ],
-  },
-  {
-    id: 'ticket-tests',
-    name: '工单管理测试',
-    description: '测试工单创建、更新、查询等功能',
-    status: 'pending',
-    duration: 0,
-    tests: [
-      {
-        id: 'ticket-1',
-        name: '工单创建测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试工单创建表单和API调用',
-      },
-      {
-        id: 'ticket-2',
-        name: '工单列表查询测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试工单列表的分页和筛选功能',
-      },
-      {
-        id: 'ticket-3',
-        name: '工单状态更新测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试工单状态变更逻辑',
-      },
-    ],
-  },
-  {
-    id: 'api-tests',
-    name: 'API接口测试',
-    description: '测试前端API调用层',
-    status: 'pending',
-    duration: 0,
-    tests: [
-      {
-        id: 'api-1',
-        name: 'HTTP客户端测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试HTTP客户端的请求和响应处理',
-      },
-      {
-        id: 'api-2',
-        name: '错误处理测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试API错误处理和重试机制',
-      },
-      {
-        id: 'api-3',
-        name: '缓存机制测试',
-        status: 'pending',
-        duration: 0,
-        description: '测试API响应缓存功能',
-      },
-    ],
-  },
-];
-
-// 模拟测试执行
-const simulateTestExecution = async (
-  test: TestResult,
-  onProgress: (progress: number) => void
-): Promise<TestResult> => {
-  const duration = Math.random() * 2000 + 500; // 0.5-2.5秒
-  const startTime = Date.now();
-  
-  // 模拟测试执行过程
-  const interval = setInterval(() => {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    onProgress(progress);
-  }, 100);
-
-  await new Promise(resolve => setTimeout(resolve, duration));
-  clearInterval(interval);
-
-  // 随机生成测试结果
-  const success = Math.random() > 0.2; // 80%成功率
-  
-  return {
-    ...test,
-    status: success ? 'passed' : 'failed',
-    duration: Math.round(duration),
-    error: success ? undefined : '模拟测试失败: 断言不匹配',
-  };
-};
-
 export const TestRunner: React.FC = () => {
   const [state, setState] = useState<TestRunnerState>({
     isRunning: false,
     progress: 0,
-    suites: mockTestSuites,
+    suites: [],
     summary: {
       total: 0,
       passed: 0,
@@ -206,105 +53,9 @@ export const TestRunner: React.FC = () => {
   });
 
   const runAllTests = useCallback(async () => {
-    setState(prev => ({
-      ...prev,
-      isRunning: true,
-      progress: 0,
-      suites: prev.suites.map(suite => ({
-        ...suite,
-        status: 'pending',
-        duration: 0,
-        tests: suite.tests.map(test => ({
-          ...test,
-          status: 'pending',
-          duration: 0,
-          error: undefined,
-        })),
-      })),
-    }));
-
-    const totalTests = mockTestSuites.reduce((sum, suite) => sum + suite.tests.length, 0);
-    let completedTests = 0;
-    const startTime = Date.now();
-
-    const updatedSuites: TestSuite[] = [];
-
-    for (const suite of mockTestSuites) {
-      const suiteStartTime = Date.now();
-      
-      // 更新套件状态为运行中
-      setState(prev => ({
-        ...prev,
-        suites: prev.suites.map(s => 
-          s.id === suite.id ? { ...s, status: 'running' } : s
-        ),
-      }));
-
-      const updatedTests: TestResult[] = [];
-      
-      for (const test of suite.tests) {
-        const result = await simulateTestExecution(test, () => {
-          // 更新进度
-          const progress = (completedTests / totalTests) * 100;
-          setState(prev => ({ ...prev, progress }));
-        });
-        
-        updatedTests.push(result);
-        completedTests++;
-        
-        // 更新单个测试结果
-        setState(prev => ({
-          ...prev,
-          progress: (completedTests / totalTests) * 100,
-          suites: prev.suites.map(s => 
-            s.id === suite.id 
-              ? {
-                  ...s,
-                  tests: s.tests.map(t => t.id === test.id ? result : t),
-                }
-              : s
-          ),
-        }));
-      }
-
-      const suiteDuration = Date.now() - suiteStartTime;
-      const suiteStatus = updatedTests.every(t => t.status === 'passed') ? 'passed' : 'failed';
-      
-      const updatedSuite: TestSuite = {
-        ...suite,
-        status: suiteStatus,
-        duration: suiteDuration,
-        tests: updatedTests,
-      };
-      
-      updatedSuites.push(updatedSuite);
-      
-      // 更新套件状态
-      setState(prev => ({
-        ...prev,
-        suites: prev.suites.map(s => 
-          s.id === suite.id ? updatedSuite : s
-        ),
-      }));
-    }
-
-    // 计算总结
-    const totalDuration = Date.now() - startTime;
-    const allTests = updatedSuites.flatMap(s => s.tests);
-    const summary = {
-      total: allTests.length,
-      passed: allTests.filter(t => t.status === 'passed').length,
-      failed: allTests.filter(t => t.status === 'failed').length,
-      skipped: allTests.filter(t => t.status === 'skipped').length,
-      duration: totalDuration,
-    };
-
-    setState(prev => ({
-      ...prev,
-      isRunning: false,
-      progress: 100,
-      summary,
-    }));
+    // 实际的测试执行逻辑应该调用后端API或使用真实的测试框架
+    // 这里暂时保留为空，等待对接真实的测试执行引擎
+    console.log('Starting test execution...');
   }, []);
 
   const getStatusIcon = (status: string) => {
