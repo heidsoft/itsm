@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
+import { ticketService } from '@/lib/services/ticket-service';
 import type { DashboardData } from '../types/dashboard.types';
 
 export function useDashboardData() {
@@ -20,20 +21,51 @@ export function useDashboardData() {
   } = useQuery({
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
-      try {
-        return await DashboardAPI.getOverview();
-      } catch (err) {
-        console.warn('Dashboard API调用失败，将使用Mock数据:', err);
-        // 返回 null，让组件使用 Mock 数据
-        return null;
+      // 并行请求 Dashboard 概览和真实的工单统计
+      const [overviewResult, statsResult] = await Promise.allSettled([
+        DashboardAPI.getOverview(),
+        ticketService.getTicketStats()
+      ]);
+
+      let dashboardData = getMockData(); // 默认使用 Mock 数据兜底
+
+      // 处理 Dashboard Overview 数据
+      if (overviewResult.status === 'fulfilled') {
+        dashboardData = { ...dashboardData, ...overviewResult.value };
+      } else {
+        console.warn('Dashboard Overview API调用失败，使用Mock结构:', overviewResult.reason);
       }
+
+      // 处理真实工单统计数据（高优先级覆盖）
+      if (statsResult.status === 'fulfilled') {
+        const stats = statsResult.value;
+        // 使用真实数据更新 KPI 指标
+        dashboardData.kpiMetrics = dashboardData.kpiMetrics.map(metric => {
+          switch (metric.id) {
+            case 'total-tickets':
+              return { ...metric, value: stats.total, description: '实时工单总数' };
+            case 'pending-tickets':
+              return { ...metric, value: stats.pending, description: '实时待处理' };
+            case 'in-progress-tickets':
+              return { ...metric, value: stats.in_progress, description: '实时处理中' };
+            case 'completed-tickets':
+              return { ...metric, value: stats.resolved + stats.closed, description: '实时已完成' };
+            case 'overdue-tickets':
+               return { ...metric, value: stats.overdue || 0, description: '实时超时工单' };
+            default:
+              return metric;
+          }
+        });
+      } else {
+        console.warn('Ticket Stats API调用失败:', statsResult.reason);
+      }
+
+      return dashboardData;
     },
     refetchInterval: autoRefresh ? refreshInterval : false,
     staleTime: 10000, // 10秒内数据被认为是新鲜的
-    retry: 1, // 减少重试次数，快速回退到 Mock 数据
+    retry: 1,
     retryDelay: 1000,
-    // 即使 API 失败也不抛出错误，而是返回 null
-    throwOnError: false,
   });
 
   // 更新最后更新时间
@@ -43,27 +75,8 @@ export function useDashboardData() {
     }
   }, [data]);
 
-  // 兼容旧的Mock数据结构 - 如果API还没实现，使用Mock数据
-  useEffect(() => {
-    if (isError && error) {
-      console.warn('Dashboard API调用失败，考虑回退到Mock数据:', error);
-    }
-  }, [isError, error]);
-
-  // 合并API数据和Mock数据，确保所有字段都有默认值
-  const mergedData = data ? {
-    ...getMockData(), // 先使用Mock数据作为基础
-    ...data, // 然后用API数据覆盖
-    // 确保可选字段有默认值
-    peakHours: data.peakHours || getMockData().peakHours || [],
-    typeDistribution: data.typeDistribution || getMockData().typeDistribution || [],
-    responseTimeDistribution: data.responseTimeDistribution || getMockData().responseTimeDistribution || [],
-    teamWorkload: data.teamWorkload || getMockData().teamWorkload || [],
-    priorityDistribution: data.priorityDistribution || getMockData().priorityDistribution || [],
-  } : getMockData();
-
   return {
-    data: mergedData,
+    data,
     loading: isLoading,
     error: error?.message ?? null,
     lastUpdated,
@@ -86,49 +99,49 @@ function getMockData(): DashboardData {
       {
         id: 'total-tickets',
         title: '总工单数',
-        value: 1248,
+        value: 0, // 默认为0，等待真实数据覆盖
         unit: '个',
         color: '#3b82f6',
         trend: 'up' as const,
-        change: 12.5,
+        change: 0,
         changeType: 'increase' as const,
-        description: '本月累计工单',
+        description: '加载中...',
       },
       {
         id: 'pending-tickets',
         title: '待处理工单',
-        value: 156,
+        value: 0,
         unit: '个',
         color: '#f59e0b',
         trend: 'down' as const,
-        change: 8.3,
+        change: 0,
         changeType: 'decrease' as const,
-        description: '需要立即处理',
-        alert: 156 > 200 ? 'warning' : null,
+        description: '加载中...',
+        alert: null,
       },
       {
         id: 'in-progress-tickets',
         title: '处理中工单',
-        value: 89,
+        value: 0,
         unit: '个',
         color: '#06b6d4',
         trend: 'up' as const,
-        change: 15.2,
+        change: 0,
         changeType: 'increase' as const,
-        description: '正在处理中',
+        description: '加载中...',
       },
       {
         id: 'completed-tickets',
         title: '已完成工单',
-        value: 945,
+        value: 0,
         unit: '个',
         color: '#10b981',
         trend: 'up' as const,
-        change: 18.5,
+        change: 0,
         changeType: 'increase' as const,
-        description: '本月完成',
+        description: '加载中...',
       },
-      // 第2行：时间与质量指标
+      // 第2行：时间与质量指标 (暂时保持Mock，因为没有简单API对应)
       {
         id: 'avg-first-response',
         title: '平均首次响应时间',
@@ -138,7 +151,7 @@ function getMockData(): DashboardData {
         trend: 'down' as const,
         change: 0.8,
         changeType: 'decrease' as const,
-        description: '响应速度提升',
+        description: '模拟数据',
         target: 4,
       },
       {
@@ -150,7 +163,7 @@ function getMockData(): DashboardData {
         trend: 'down' as const,
         change: 1.2,
         changeType: 'decrease' as const,
-        description: '解决效率提升',
+        description: '模拟数据',
         target: 8,
       },
       {
@@ -162,20 +175,20 @@ function getMockData(): DashboardData {
         trend: 'up' as const,
         change: 2.1,
         changeType: 'increase' as const,
-        description: '服务水平提升',
+        description: '模拟数据',
         target: 95,
         alert: 92.5 >= 95 ? 'success' : 'warning',
       },
       {
         id: 'overdue-tickets',
         title: '超时工单',
-        value: 18,
+        value: 0,
         unit: '个',
         color: '#ef4444',
         trend: 'up' as const,
-        change: 3,
+        change: 0,
         changeType: 'increase' as const,
-        description: 'SLA违规工单',
+        description: '实时超时工单',
         alert: 'error',
       },
     ],

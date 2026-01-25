@@ -16,15 +16,15 @@ import {
   Modal,
 } from 'antd';
 import {
-  UserOutlined,
-  SearchOutlined,
-  LogoutOutlined,
-  BellOutlined,
-  DownOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+  User,
+  Search,
+  LogOut,
+  Bell,
+  ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+} from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import styles from './Header.module.css';
@@ -33,6 +33,10 @@ import { globalSearchApi, GlobalSearchResult } from '@/lib/api/global-search-api
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
+
+// 图标样式
+const iconStyle = { width: 16, height: 16 };
+const headerIconStyle = { width: 20, height: 20 };
 
 interface HeaderProps {
   collapsed: boolean;
@@ -79,13 +83,13 @@ export const Header: React.FC<HeaderProps> = ({
     {
       key: 'profile',
       label: t('header.profile'),
-      icon: <UserOutlined />,
+      icon: <User style={iconStyle} />,
       onClick: () => router.push('/profile'),
     },
     {
       key: 'settings',
       label: t('header.settings'),
-      icon: <SettingOutlined />,
+      icon: <Settings style={iconStyle} />,
       onClick: () => router.push('/settings'),
     },
     {
@@ -94,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
     {
       key: 'logout',
       label: t('header.logout'),
-      icon: <LogoutOutlined />,
+      icon: <LogOut style={iconStyle} />,
       onClick: handleLogout,
     },
   ];
@@ -244,7 +248,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 折叠按钮 */}
         <Button
           type='text'
-          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          icon={
+            collapsed ? (
+              <PanelLeftOpen style={headerIconStyle} />
+            ) : (
+              <PanelLeftClose style={headerIconStyle} />
+            )
+          }
           onClick={() => onCollapse(!collapsed)}
           className={styles.collapseButton}
         />
@@ -260,10 +270,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <React.Fragment key={index}>
                   {index > 0 && <Text className={styles.breadcrumbSeparator}>/</Text>}
                   {item.href ? (
-                    <Text
-                      className={styles.breadcrumbLink}
-                      onClick={() => router.push(item.href!)}
-                    >
+                    <Text className={styles.breadcrumbLink} onClick={() => router.push(item.href!)}>
                       {item.title}
                     </Text>
                   ) : (
@@ -281,7 +288,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 搜索框 */}
         <Input
           placeholder={t('header.searchPlaceholder')}
-          prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
+          prefix={<Search style={{ width: 16, height: 16, color: '#9ca3af' }} />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
           onPressEnter={() => handleSearch(searchValue)}
@@ -294,7 +301,7 @@ export const Header: React.FC<HeaderProps> = ({
           <Badge count={unreadCount} size='small' offset={[-2, 2]}>
             <Button
               type='text'
-              icon={<BellOutlined />}
+              icon={<Bell style={headerIconStyle} />}
               onClick={() => setNotificationsOpen(true)}
               className={styles.notificationButton}
             />
@@ -319,7 +326,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {user?.role === 'admin' ? t('header.admin') : t('header.user')}
               </Text>
             </div>
-            <DownOutlined style={{ color: '#9ca3af' }} />
+            <ChevronDown style={{ width: 14, height: 14, color: '#9ca3af' }} />
           </div>
         </Dropdown>
       </div>
@@ -328,7 +335,7 @@ export const Header: React.FC<HeaderProps> = ({
       <Drawer
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BellOutlined style={{ color: '#3b82f6', fontSize: 20 }} />
+            <Bell style={{ color: '#3b82f6', width: 20, height: 20 }} />
             <span>{t('header.notificationCenter')}</span>
             {unreadCount > 0 && <Badge count={unreadCount} size='small' />}
           </div>
@@ -352,8 +359,8 @@ export const Header: React.FC<HeaderProps> = ({
                         item.priority === 'urgent'
                           ? '#ef4444'
                           : item.priority === 'high'
-                          ? '#f59e0b'
-                          : '#3b82f6',
+                            ? '#f59e0b'
+                            : '#3b82f6',
                     }}
                   >
                     {item.type === 'ticket' ? 'T' : item.type === 'system' ? 'S' : 'SLA'}
@@ -361,7 +368,12 @@ export const Header: React.FC<HeaderProps> = ({
                 }
                 title={
                   <div className={styles.notificationTitle}>
-                    <Text style={{ fontWeight: item.read ? '400' : '600', color: item.read ? '#6b7280' : '#1f2937' }}>
+                    <Text
+                      style={{
+                        fontWeight: item.read ? '400' : '600',
+                        color: item.read ? '#6b7280' : '#1f2937',
+                      }}
+                    >
                       {item.title}
                     </Text>
                     <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
@@ -375,7 +387,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {notifications.length === 0 && (
           <div className={styles.emptyNotifications}>
-            <BellOutlined style={{ fontSize: 48, marginBottom: '16px', opacity: 0.5 }} />
+            <Bell style={{ width: 48, height: 48, marginBottom: '16px', opacity: 0.5 }} />
             <Text>{t('header.noNotifications')}</Text>
           </div>
         )}

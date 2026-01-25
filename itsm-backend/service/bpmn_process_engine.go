@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/workflowtask"
 
 	"go.uber.org/zap"
 )
@@ -103,12 +104,12 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 // registerProcessFunctions 注册流程相关的内置函数
 func (e *CustomProcessEngine) registerProcessFunctions() {
 	// 获取任务列表
-	e.exprEngine.RegisterFunction("getTasks", func(assignee string) []interface{} {
+	e.exprEngine.RegisterFunction("getTasks", func(ctx context.Context, assignee string) []interface{} {
 		// 从数据库查询任务
-		tasks, err := e.client.UserTask.Query().
-			Where(usertask.Assignee(assignee)).
-			Where(usertask.CompletedAtIsNil()).
-			All(e.ctx)
+		tasks, err := e.client.WorkflowTask.Query().
+			Where(workflowtask.Assignee(assignee)).
+			Where(workflowtask.CompletedAtIsNil()).
+			All(ctx)
 		if err != nil {
 			e.logger.Warnw("Failed to query tasks", "error", err)
 			return []interface{}{}
@@ -116,9 +117,9 @@ func (e *CustomProcessEngine) registerProcessFunctions() {
 		result := make([]interface{}, len(tasks))
 		for i, task := range tasks {
 			result[i] = map[string]interface{}{
-				"id":         task.ID,
-				"name":       task.Name,
-				"process_id": task.ProcessInstanceID,
+				"id":          task.TaskID,
+				"name":        task.Name,
+				"instance_id": task.InstanceID,
 			}
 		}
 		return result

@@ -35,7 +35,7 @@ import {
   type TicketFilterParams,
 } from '../../lib/services/ticket-service';
 import { useAuthStore } from '@/lib/store/auth-store';
-import type { PaginatedResponse } from '../../lib/services/api-service';
+import type { TicketListResponse } from '@/app/lib/api-config';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -70,8 +70,8 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         search: searchText || undefined,
       };
 
-      const response: PaginatedResponse<Ticket> = await ticketService.getTickets(params);
-      setTickets(response.data);
+      const response: TicketListResponse = await ticketService.listTickets(params);
+      setTickets(response.tickets);
       setTotal(response.total);
     } catch (error) {
       message.error('获取工单列表失败');
@@ -213,8 +213,8 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
     () => [
       {
         title: '工单号',
-        dataIndex: 'ticket_number',
-        key: 'ticket_number',
+        dataIndex: 'ticketNumber',
+        key: 'ticketNumber',
         width: 120,
         render: (text: string) => <span className='font-mono text-sm'>{text}</span>,
       },
@@ -261,20 +261,20 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
       },
       {
         title: '处理人',
-        dataIndex: 'assignee_name',
-        key: 'assignee_name',
+        dataIndex: 'assignee',
+        key: 'assignee',
         width: 100,
-        render: (text: string) => (
+        render: (assignee: any) => (
           <span>
             <UserOutlined className='mr-1' />
-            {text || '未分配'}
+            {assignee?.name || '未分配'}
           </span>
         ),
       },
       {
         title: '创建时间',
-        dataIndex: 'created_at',
-        key: 'created_at',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
         width: 150,
         render: (text: string) => (
           <span>

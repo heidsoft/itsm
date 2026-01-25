@@ -24,7 +24,9 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         run: npm install
@@ -44,7 +46,9 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         run: npm install
@@ -64,7 +68,9 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         run: npm install
@@ -85,7 +91,9 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         run: npm install

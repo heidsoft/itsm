@@ -193,9 +193,22 @@ export class AuthService {
           role: String(u?.role || 'end_user'),
           email: String(u?.email || ''),
           name: String(u?.name || u?.full_name || ''),
+          tenantId: u?.tenant_id ? Number(u.tenant_id) : undefined,
+          department: u?.department,
+          permissions: u?.permissions,
+          createdAt: u?.created_at,
+          updatedAt: u?.updated_at,
         },
         data.access_token,
-        { id: 1, name: "默认租户", code: "default" } as Tenant
+        { 
+          id: 1, 
+          name: "默认租户", 
+          code: "default",
+          type: 'standard',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        } as Tenant
       );
       
       // 验证状态是否正确设置

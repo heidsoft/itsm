@@ -37,7 +37,7 @@ import 'dayjs/locale/zh-cn';
 
 import { useRouter } from 'next/navigation';
 import type { Ticket } from '@/lib/api/types';
-import { useTicketListStore } from '@/lib/store/ticket-list-store';
+import { useTickets } from '@/lib/hooks/useTickets';
 
 dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
@@ -71,7 +71,7 @@ const PRIORITY_CONFIG = {
 
 const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const router = useRouter();
-  const { tickets, loading, fetchTickets, updateTicket, deleteTicket } = useTicketListStore();
+  const { tickets, loading, fetchTickets, updateTicket, deleteTicket } = useTickets();
   
   const [searchValue, setSearchValue] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -263,11 +263,11 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           )}
 
           {/* 截止时间 */}
-          {ticket.due_date && (
+          {ticket.dueDate && (
             <div className="flex items-center mt-1">
               <CalendarOutlined className="mr-1 text-xs text-red-500" />
               <Text className="text-xs text-red-500">
-                截止: {dayjs(ticket.due_date).format('MM-DD HH:mm')}
+                截止: {dayjs(ticket.dueDate).format('MM-DD HH:mm')}
               </Text>
             </div>
           )}

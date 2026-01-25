@@ -14,8 +14,8 @@ import type { ConfigurationItem, CIType } from '@/modules/cmdb/types';
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
-var modalConfirmSpy: jest.Mock;
-var formValues: Record<string, unknown> = {};
+let modalConfirmSpy: jest.Mock;
+let formValues: Record<string, unknown> = {};
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({

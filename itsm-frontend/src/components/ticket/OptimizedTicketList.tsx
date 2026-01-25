@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 
 import { EnhancedTable, EnhancedTableColumn, EnhancedTableAction } from '../ui/EnhancedTable';
 import type { Ticket } from '@/lib/api/types';
-import { useTicketListStore } from '@/lib/store/ticket-list-store';
+import { useTickets } from '@/lib/hooks/useTickets';
 
 const { Text } = Typography;
 
@@ -62,50 +62,58 @@ export default function OptimizedTicketList({
   const {
     tickets,
     loading,
-    total,
-    page,
-    pageSize: storePageSize,
-    selectedTickets,
+    pagination,
     fetchTickets,
     batchDeleteTickets,
-    setFilters,
-    setPage,
-    setPageSize,
-    deselectAll,
-    selectTicket,
-  } = useTicketListStore();
+    updateFilters,
+    updatePagination,
+  } = useTickets();
+
+  // 本地状态
+  const [selectedTickets, setSelectedTickets] = useState<Set<number>>(new Set());
+
+  const total = pagination?.total || 0;
+  const page = pagination?.current || 1;
+  const storePageSize = pagination?.pageSize || 20;
+
+  // 选择操作
+  const selectTicket = useCallback((id: number) => {
+    setSelectedTickets(prev => new Set(prev).add(id));
+  }, []);
+  const deselectAll = useCallback(() => {
+    setSelectedTickets(new Set());
+  }, []);
 
   useEffect(() => {
     if (pageSize !== storePageSize) {
-      setPageSize(pageSize);
+      updatePagination(page, pageSize);
     }
-  }, [pageSize, setPageSize, storePageSize]);
+  }, [pageSize, updatePagination, page, pageSize]);
 
   useEffect(() => {
     if (externalFilters && Object.keys(externalFilters).length > 0) {
-      setFilters(externalFilters);
+      updateFilters(externalFilters);
     }
     fetchTickets();
-  }, [externalFilters, fetchTickets, setFilters]);
+  }, [externalFilters, fetchTickets, updateFilters]);
 
   // 处理搜索
   const handleSearch = useCallback((value: string) => {
-    setFilters({ keyword: value });
-    setPage(1);
-    fetchTickets({ keyword: value, page: 1 });
-  }, [fetchTickets, setFilters, setPage]);
+    updateFilters({ keyword: value });
+    updatePagination(1, storePageSize);
+    fetchTickets();
+  }, [updateFilters, updatePagination, fetchTickets, storePageSize]);
 
   // 处理分页
   const handlePaginationChange = useCallback((page: number, size: number) => {
-    setPage(page);
-    setPageSize(size);
-    fetchTickets({ page, page_size: size, size });
-  }, [fetchTickets, setPage, setPageSize]);
+    updatePagination(page, size);
+    fetchTickets();
+  }, [updatePagination, fetchTickets]);
 
   // 处理行选择
   const handleSelectionChange = useCallback((selectedRowKeys: React.Key[], selectedRows: Ticket[]) => {
     deselectAll();
-    selectedRows.forEach((row) => selectTicket(row));
+    selectedRows.forEach((row) => selectTicket(row.id));
   }, [deselectAll, selectTicket]);
 
   // 表格列配置
@@ -364,7 +372,7 @@ export default function OptimizedTicketList({
           onChange: handlePaginationChange,
         }}
         selection={{
-          selectedRowKeys: selectedTickets.map(ticket => ticket.id),
+          selectedRowKeys: Array.from(selectedTickets),
           onChange: handleSelectionChange,
         }}
         searchable={{

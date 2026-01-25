@@ -8,7 +8,6 @@ import {
   ReloadOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
-import AppLayout from "./AppLayout";
 
 // 企业级页面模板接口
 interface EnterprisePageTemplateProps {
@@ -99,24 +98,49 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
   );
 
   return (
-    <AppLayout
-      title={title}
-      breadcrumb={breadcrumb}
-      showBackButton={showBackButton}
-      extra={extra}
-    >
-      <div className={`space-y-6 ${className}`}>
+    <div className={`page-container ${className}`}>
+      {/* 页面头部区域 */}
+      <div
+        style={{
+          marginBottom: 24,
+          paddingBottom: 16,
+          borderBottom: '1px solid #e5e7eb',
+        }}
+      >
         {/* 面包屑导航 */}
-        {breadcrumb.length > 0 && (
-          <Breadcrumb className="mb-4">
-            {breadcrumb.map((item, index) => (
-              <Breadcrumb.Item key={index}>
-                {item.href ? <a href={item.href}>{item.title}</a> : item.title}
-              </Breadcrumb.Item>
-            ))}
-          </Breadcrumb>
+        {(showBackButton || breadcrumb.length > 0) && (
+          <div className="flex items-center mb-4">
+             {showBackButton && (
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                className="mr-2"
+                onClick={() => window.history.back()}
+              >
+                返回
+              </Button>
+            )}
+            {breadcrumb.length > 0 && (
+              <Breadcrumb>
+                {breadcrumb.map((item, index) => (
+                  <Breadcrumb.Item key={index}>
+                    {item.href ? <a href={item.href}>{item.title}</a> : item.title}
+                  </Breadcrumb.Item>
+                ))}
+              </Breadcrumb>
+            )}
+          </div>
         )}
 
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">{title}</h1>
+          </div>
+          {extra && <div>{extra}</div>}
+        </div>
+      </div>
+
+      <div className="space-y-6">
         {/* 统计卡片 */}
         {showStats && stats && <div className="mb-6">{stats}</div>}
 
@@ -128,7 +152,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
           <div className="enterprise-fade-in">{content || children}</div>
         )}
       </div>
-    </AppLayout>
+    </div>
   );
 };
 

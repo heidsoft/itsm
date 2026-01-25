@@ -26,7 +26,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { ReloadOutlined, CheckCircle, CloseCircle, Clock } from '@ant-design/icons';
+import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -151,7 +151,7 @@ const SLAPerformanceReport = () => {
                   valueStyle={{
                     color: avgCompliance >= 95 ? '#52c41a' : avgCompliance >= 85 ? '#faad14' : '#ff4d4f'
                   }}
-                  prefix={<CheckCircle />}
+                  prefix={<CheckCircleOutlined />}
                 />
               </Card>
             </Col>
@@ -161,7 +161,7 @@ const SLAPerformanceReport = () => {
                   title="达标次数"
                   value={totalMet}
                   valueStyle={{ color: COLORS.met }}
-                  prefix={<CheckCircle />}
+                  prefix={<CheckCircleOutlined />}
                 />
               </Card>
             </Col>
@@ -171,7 +171,7 @@ const SLAPerformanceReport = () => {
                   title="违规次数"
                   value={totalBreached}
                   valueStyle={{ color: COLORS.breached }}
-                  prefix={<CloseCircle />}
+                  prefix={<CloseCircleOutlined />}
                 />
               </Card>
             </Col>
@@ -237,11 +237,11 @@ const SLAPerformanceReport = () => {
                     />
                     <div className="flex justify-between mt-2 text-sm text-gray-500">
                       <span>
-                        <CheckCircle className="inline mr-1" style={{ color: COLORS.met }} />
+                        <CheckCircleOutlined className="inline mr-1" style={{ color: COLORS.met }} />
                         {sla.met}%
                       </span>
                       <span>
-                        <CloseCircle className="inline mr-1" style={{ color: COLORS.breached }} />
+                        <CloseCircleOutlined className="inline mr-1" style={{ color: COLORS.breached }} />
                         {sla.breached}%
                       </span>
                     </div>

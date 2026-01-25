@@ -90,7 +90,7 @@ jest.mock('@/lib/hooks/useDashboardData', () => ({
 }));
 
 // Mock auth store
-jest.mock('@/lib/store/unified-auth-store', () => ({
+jest.mock('@/lib/store/auth-store', () => ({
   useAuthStore: () => ({
     user: {
       id: 1,
