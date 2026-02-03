@@ -283,10 +283,10 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           {priority === 'low'
             ? '低'
             : priority === 'medium'
-            ? '中'
-            : priority === 'high'
-            ? '高'
-            : '紧急'}
+              ? '中'
+              : priority === 'high'
+                ? '高'
+                : '紧急'}
         </Tag>
       ),
     },
@@ -434,10 +434,12 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               value={metrics?.complianceRate || 0}
               precision={1}
               suffix='%'
-              valueStyle={{
-                color: isFullscreen ? '#fff' : getComplianceColor(metrics?.complianceRate || 0),
-                fontSize: isFullscreen ? '48px' : '32px',
-                fontWeight: 'bold',
+              styles={{
+                content: {
+                  color: isFullscreen ? '#fff' : getComplianceColor(metrics?.complianceRate || 0),
+                  fontSize: isFullscreen ? '48px' : '32px',
+                  fontWeight: 'bold',
+                },
               }}
               prefix={<CheckCircleOutlined />}
             />
@@ -472,10 +474,12 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               value={metrics?.violationRate || 0}
               precision={1}
               suffix='%'
-              valueStyle={{
-                color: isFullscreen ? '#ff4d4f' : '#ff4d4f',
-                fontSize: isFullscreen ? '48px' : '32px',
-                fontWeight: 'bold',
+              styles={{
+                content: {
+                  color: isFullscreen ? '#ff4d4f' : '#ff4d4f',
+                  fontSize: isFullscreen ? '48px' : '32px',
+                  fontWeight: 'bold',
+                },
               }}
               prefix={<CloseCircleOutlined />}
             />
@@ -511,10 +515,12 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                 </Text>
               }
               value={metrics?.atRiskTickets || 0}
-              valueStyle={{
-                color: isFullscreen ? '#faad14' : '#faad14',
-                fontSize: isFullscreen ? '48px' : '32px',
-                fontWeight: 'bold',
+              styles={{
+                content: {
+                  color: isFullscreen ? '#faad14' : '#faad14',
+                  fontSize: isFullscreen ? '48px' : '32px',
+                  fontWeight: 'bold',
+                },
               }}
               prefix={<WarningOutlined />}
             />
@@ -552,10 +558,12 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               value={metrics?.averageResponseTime || 0}
               precision={1}
               suffix='小时'
-              valueStyle={{
-                color: isFullscreen ? '#1890ff' : '#1890ff',
-                fontSize: isFullscreen ? '48px' : '32px',
-                fontWeight: 'bold',
+              styles={{
+                content: {
+                  color: isFullscreen ? '#1890ff' : '#1890ff',
+                  fontSize: isFullscreen ? '48px' : '32px',
+                  fontWeight: 'bold',
+                },
               }}
               prefix={<ClockCircleOutlined />}
             />

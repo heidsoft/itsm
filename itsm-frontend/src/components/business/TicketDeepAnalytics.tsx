@@ -409,7 +409,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             <Statistic
               title='已解决'
               value={summaryData.resolved || 0}
-              valueStyle={{ color: '#3f8600' }}
+              styles={{ content: { color: '#3f8600' } }}
               prefix={<CheckCircleOutlined />}
             />
           </Card>
@@ -421,7 +421,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               value={summaryData.avg_response_time || 0}
               precision={1}
               suffix='小时'
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -432,7 +432,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               value={summaryData.sla_compliance || 0}
               precision={1}
               suffix='%'
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>

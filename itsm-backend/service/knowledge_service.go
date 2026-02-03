@@ -178,3 +178,27 @@ func (ks *KnowledgeService) GetCategories(ctx context.Context, tenantID int) ([]
 
 	return categories, nil
 }
+
+// LikeArticle 点赞知识库文章
+func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantID int) error {
+	// 检查文章是否存在
+	exist, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(id),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Exist(ctx)
+	
+	if err != nil {
+		return fmt.Errorf("检查文章失败: %w", err)
+	}
+	if !exist {
+		return fmt.Errorf("文章不存在")
+	}
+
+	// 由于 Schema 中暂时没有 LikeCount 字段，这里仅记录日志
+	// TODO: 在 Schema 中添加 LikeCount 字段和 UserLike 关联表
+	ks.logger.Infof("用户 %d 点赞了文章 %d", userID, id)
+	
+	return nil
+}

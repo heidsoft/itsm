@@ -154,29 +154,9 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       try {
         // 注意：影响分析API尚未实现
         // 未来可通过 TicketRelationsApi.analyzeImpact(ticket.id) 获取实际数据
-
-        // 模拟影响分析数据
-        const mockImpact: DependencyImpact[] = [
-          {
-            ticket_id: 1001,
-            ticket_number: 'T-2024-001',
-            ticket_title: '数据库连接超时',
-            impact_level: 'high',
-            impact_type: 'blocked',
-            affected_fields: ['status', 'progress'],
-            estimated_delay_hours: 24,
-          },
-          {
-            ticket_id: 1002,
-            ticket_number: 'T-2024-002',
-            ticket_title: '网络设备故障',
-            impact_level: 'medium',
-            impact_type: 'delayed',
-            affected_fields: ['priority'],
-            estimated_delay_hours: 12,
-          },
-        ];
-        setImpactAnalysis(mockImpact);
+        
+        // 暂时返回空数据，禁止使用mock数据
+        setImpactAnalysis([]);
       } catch (error) {
         console.error('Failed to load impact analysis:', error);
       }
@@ -681,7 +661,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                         <Statistic
                           title='阻塞中'
                           value={stats.blocking}
-                          valueStyle={{ color: '#ff4d4f' }}
+                          styles={{ content: { color: '#ff4d4f' } }}
                           prefix={<WarningOutlined />}
                         />
                       </Card>
@@ -691,7 +671,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                         <Statistic
                           title='硬依赖'
                           value={stats.hardDeps}
-                          valueStyle={{ color: '#faad14' }}
+                          styles={{ content: { color: '#faad14' } }}
                           prefix={<LinkOutlined />}
                         />
                       </Card>
@@ -701,7 +681,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                         <Statistic
                           title='高影响'
                           value={stats.highImpact}
-                          valueStyle={{ color: '#ff4d4f' }}
+                          styles={{ content: { color: '#ff4d4f' } }}
                           prefix={<WarningOutlined />}
                         />
                       </Card>

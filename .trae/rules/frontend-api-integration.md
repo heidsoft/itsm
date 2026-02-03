@@ -17,11 +17,21 @@
     - Ensure all API calls point to the correct backend endpoints (typically `/api/v1/...`).
     - Verify endpoint paths, HTTP methods (GET, POST, PUT, DELETE), and request/response payloads against the backend API definition.
 
-3.  **Data Initialization**:
+3.  **Backend API Alignment (404 Handling)**:
+    - If a frontend API call returns a **404 Not Found**:
+        1.  **Verify Frontend Request**: Check if the URL path, HTTP method, and parameters in the frontend code match the expected API design.
+        2.  **Verify Backend Implementation**:
+            -   Check `router.go` or route registration files to ensure the route exists and is registered correctly.
+            -   Verify that the controller and handler functions are implemented and linked.
+        3.  **Action**:
+            -   If the backend is missing the endpoint, **implement the endpoint in the backend** to match the frontend requirement. Do NOT revert the frontend to use mock data.
+            -   If the path is mismatched, correct the frontend path or alias the backend route to match.
+
+4.  **Data Initialization**:
     - Initialize component state with empty values (e.g., `[]` for arrays, `null` or default objects for details) rather than mock data.
     - Use loading states (`isLoading`) to indicate data fetching progress.
 
-4.  **Scope**:
+5.  **Scope**:
     - This rule applies to all functional modules including but not limited to:
         - Ticket Management
         - SLA Monitoring
@@ -35,3 +45,4 @@
 - [ ] Search for and remove `mockData`, `DEMO_DATA`, etc. in component files.
 - [ ] Review `catch` blocks in API service calls to ensure they don't load mock data.
 - [ ] Verify that `useQuery` or `useEffect` hooks fetch data from the configured API client.
+- [ ] If 404 occurs, verify backend `router.go` and implement missing endpoints instead of using mocks.

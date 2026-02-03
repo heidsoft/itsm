@@ -8,11 +8,6 @@ import { message } from 'antd';
 import { BatchOperationsApi } from '@/lib/api/batch-operations-api';
 import type {
   BatchOperationRequest,
-  BatchOperationResponse,
-  BatchOperationProgress,
-  BatchOperationLog,
-  BatchOperationStats,
-  BatchOperationPermissions,
   BatchExportConfig,
 } from '@/types/batch-operations';
 
@@ -22,8 +17,10 @@ export const BATCH_OPERATION_KEYS = {
   all: ['batch-operations'] as const,
   progress: (operationId: string) =>
     [...BATCH_OPERATION_KEYS.all, 'progress', operationId] as const,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   logs: (filters?: any) =>
     [...BATCH_OPERATION_KEYS.all, 'logs', filters] as const,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stats: (filters?: any) =>
     [...BATCH_OPERATION_KEYS.all, 'stats', filters] as const,
   permissions: () => [...BATCH_OPERATION_KEYS.all, 'permissions'] as const,
@@ -55,6 +52,7 @@ export function useBatchAssignMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量分配失败：${error.message || '未知错误'}`);
     },
@@ -81,6 +79,7 @@ export function useBatchUpdateStatusMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量更新失败：${error.message || '未知错误'}`);
     },
@@ -106,6 +105,7 @@ export function useBatchUpdatePriorityMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量更新优先级失败：${error.message || '未知错误'}`);
     },
@@ -121,6 +121,7 @@ export function useBatchUpdateFieldsMutation() {
   return useMutation({
     mutationFn: (data: {
       ticketIds: number[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       customFields: Record<string, any>;
       comment?: string;
     }) => BatchOperationsApi.batchUpdateFields(data),
@@ -131,6 +132,7 @@ export function useBatchUpdateFieldsMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量更新字段失败：${error.message || '未知错误'}`);
     },
@@ -177,6 +179,7 @@ export function useBatchRemoveTagsMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量删除标签失败：${error.message || '未知错误'}`);
     },
@@ -200,6 +203,7 @@ export function useBatchDeleteMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量删除失败：${error.message || '未知错误'}`);
     },
@@ -260,6 +264,7 @@ export function useBatchExportMutation() {
   return useMutation({
     mutationFn: (data: {
       ticketIds?: number[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       filters?: Record<string, any>;
       config: BatchExportConfig;
     }) => BatchOperationsApi.batchExportTickets(data),
@@ -275,6 +280,7 @@ export function useBatchExportMutation() {
       document.body.removeChild(a);
       message.success('导出成功！');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`导出失败：${error.message || '未知错误'}`);
     },
@@ -295,6 +301,7 @@ export function useUndoBatchOperationMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`撤销失败：${error.message || '未知错误'}`);
     },
@@ -317,6 +324,7 @@ export function useBatchOperationMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       message.error(`批量操作失败：${error.message || '未知错误'}`);
     },
@@ -423,7 +431,7 @@ export function useExportStatusQuery(exportId: string, enabled: boolean = true) 
 
 // ==================== 导出所有 Hooks ====================
 
-export default {
+const BatchOperationHooks = {
   // Mutations
   useBatchAssignMutation,
   useBatchUpdateStatusMutation,
@@ -446,4 +454,6 @@ export default {
   useMyBatchOperationStatsQuery,
   useExportStatusQuery,
 };
+
+export default BatchOperationHooks;
 

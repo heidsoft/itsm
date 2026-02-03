@@ -1,0 +1,91 @@
+PASS src/components/workflow/__tests__/BPMNDesigner.test.tsx
+  BPMNDesigner
+    ✓ should render toolbar container (200 ms)
+    ✓ should render zoom controls section (60 ms)
+    ✓ should call onSave when save is triggered (43 ms)
+    ✓ should call onDeploy when deploy is triggered (39 ms)
+    ✓ should accept custom height prop (140 ms)
+    ✓ should have a main container (62 ms)
+    ✓ should render with flex layout (45 ms)
+
+--------------------------------|---------|----------|---------|---------|-------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------------------------|---------|----------|---------|---------|-------------------
+All files                       |       0 |        0 |       0 |       0 |                   
+ common                         |       0 |        0 |       0 |       0 |                   
+  ActivityListCard.tsx          |       0 |        0 |       0 |       0 | 3-72              
+  ErrorBoundary.tsx             |       0 |        0 |       0 |       0 | 3-238             
+  GlobalErrorBoundary.tsx       |       0 |        0 |       0 |       0 | 3-271             
+  KPICard.tsx                   |       0 |        0 |       0 |       0 | 3-71              
+  LazyComponents.tsx            |       0 |        0 |       0 |       0 | 3-177             
+  LazyImage.tsx                 |       0 |        0 |       0 |       0 | 3-312             
+  LoadingStateManager.tsx       |       0 |        0 |       0 |       0 | 3-328             
+  PerformanceMonitor.tsx        |       0 |        0 |       0 |       0 | 3-516             
+  PriorityBadge.tsx             |       0 |        0 |       0 |       0 | 3-13              
+  SatisfactionDashboard.tsx     |       0 |        0 |       0 |       0 | 3-513             
+  SearchFilters.tsx             |       0 |        0 |       0 |       0 | 3-77              
+  SkeletonLoading.tsx           |       0 |        0 |       0 |       0 | 3-264             
+  StatusBadge.tsx               |       0 |        0 |       0 |       0 | 3-13              
+  SystemAlertCard.tsx           |       0 |        0 |       0 |       0 | 3-124             
+  TestRunner.tsx                |       0 |        0 |       0 |       0 | 3-281             
+  TicketListCard.tsx            |       0 |        0 |       0 |       0 | 3-186             
+  UserSelect.tsx                |       0 |        0 |       0 |       0 | 3-93              
+ ui                             |       0 |        0 |       0 |       0 |                   
+  AccessibilityEnhanced.tsx     |       0 |        0 |       0 |       0 | 3-234             
+  AccessibilityUtils.tsx        |       0 |        0 |       0 |       0 | 3-454             
+  Badge.tsx                     |       0 |        0 |       0 |       0 | 1-189             
+  Button.tsx                    |       0 |        0 |       0 |       0 | 3-236             
+  Card.tsx                      |       0 |        0 |       0 |       0 | 3-369             
+  ComponentLibrary.tsx          |       0 |      100 |       0 |       0 | 3-339             
+  DataTable.tsx                 |       0 |        0 |       0 |       0 | 1-274             
+  DatePicker.tsx                |       0 |        0 |       0 |       0 | 4-631             
+  EnhancedCard.tsx              |       0 |        0 |       0 |       0 | 3-377             
+  EnhancedFeedback.tsx          |       0 |        0 |       0 |       0 | 3-393             
+  EnhancedInput.tsx             |       0 |        0 |       0 |       0 | 3-406             
+  EnhancedTable.tsx             |       0 |        0 |       0 |       0 | 3-541             
+  EnterpriseButton.tsx          |       0 |        0 |       0 |       0 | 4-261             
+  EnterpriseCard.tsx            |       0 |        0 |       0 |       0 | 4-255             
+  EnterpriseTable.tsx           |       0 |        0 |       0 |       0 | 4-245             
+  FormField.tsx                 |       0 |        0 |       0 |       0 | 1-117             
+  Input.tsx                     |       0 |        0 |       0 |       0 | 3-432             
+  InteractionFeedback.tsx       |       0 |        0 |       0 |       0 | 3-431             
+  InteractionPatterns.tsx       |       0 |        0 |       0 |       0 | 3-533             
+  LoadingEmptyError.example.tsx |       0 |        0 |       0 |       0 | 1-180             
+  LoadingEmptyError.tsx         |       0 |        0 |       0 |       0 | 3-324             
+  LoadingSkeleton.tsx           |       0 |        0 |       0 |       0 | 3-185             
+  LoadingSpinner.tsx            |       0 |        0 |       0 |       0 | 3-85              
+  LoadingState.tsx              |       0 |        0 |       0 |       0 | 3-218             
+  MobileTabBar.tsx              |       0 |        0 |       0 |       0 | 3-381             
+  Modal.tsx                     |       0 |        0 |       0 |       0 | 1-258             
+  NotificationContainer.tsx     |       0 |      100 |       0 |       0 | 3-43              
+  OptimizedImage.tsx            |       0 |        0 |       0 |       0 | 6-357             
+  ResponsiveDashboard.tsx       |       0 |        0 |       0 |       0 | 3-479             
+  ResponsiveTable.tsx           |       0 |        0 |       0 |       0 | 4-322             
+  Select.tsx                    |       0 |        0 |       0 |       0 | 3-447             
+  SkeletonLoading.tsx           |       0 |        0 |       0 |       0 | 3-341             
+  SmartForm.tsx                 |       0 |        0 |       0 |       0 | 3-388             
+  Table.tsx                     |       0 |        0 |       0 |       0 | 4-425             
+  Toast.tsx                     |       0 |        0 |       0 |       0 | 1-243             
+  TouchFeedback.tsx             |       0 |        0 |       0 |       0 | 3-309             
+  UnifiedFilters.tsx            |       0 |        0 |       0 |       0 | 3-156             
+  UnifiedForm.tsx               |       0 |        0 |       0 |       0 | 7-564             
+  UnifiedTable.tsx              |       0 |        0 |       0 |       0 | 6-474             
+  VirtualList.tsx               |       0 |        0 |       0 |       0 | 1-56              
+  auth-guard.tsx                |       0 |        0 |       0 |       0 | 3-44              
+  icons.tsx                     |       0 |        0 |       0 |       0 | 1-401             
+  incident-list.tsx             |       0 |        0 |       0 |       0 | 4-529             
+  index.ts                      |       0 |      100 |     100 |       0 | 10-133            
+  login-form.tsx                |       0 |        0 |       0 |       0 | 3-198             
+--------------------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 0% ( 0/2924 )
+Branches     : 0% ( 0/2200 )
+Functions    : 0% ( 0/804 )
+Lines        : 0% ( 0/2537 )
+================================================================================
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        8.658 s
+Ran all test suites matching /src\/components\/workflow\/__tests__\/BPMNDesigner.test.tsx/i.

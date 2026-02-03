@@ -9,8 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
+
+	"github.com/gin-gonic/gin"
 )
 
 // RateLimiter 请求限流器
@@ -209,7 +210,7 @@ func XSSProtectionMiddleware() gin.HandlerFunc {
 		c.Header("X-Content-Type-Options", "nosniff")
 		c.Header("X-Frame-Options", "DENY")
 		c.Header("X-XSS-Protection", "1; mode=block")
-		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
+		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self';")
 
 		c.Next()
 	}
@@ -251,7 +252,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		
 		// 内容安全策略
-		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:")
+		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' https:")
 		
 		// 引用策略
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")

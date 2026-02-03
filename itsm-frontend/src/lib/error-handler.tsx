@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { message, notification } from 'antd';
-import { ApiError, OperationResult } from '@/types/api';
+import { ApiError } from '@/types/api';
 
 // 错误类型枚举
 export enum ErrorType {
@@ -188,12 +188,14 @@ export class ErrorHandler {
     }
 
     // 控制台输出
-    console.error('ErrorHandler:', errorInfo);
+    // console.error('ErrorHandler:', errorInfo);
   }
 
   // 显示用户通知
   private showUserNotification(errorInfo: ErrorInfo): void {
-    const { type, severity, message: errorMessage } = errorInfo;
+    const { severity, message: errorMessage } = errorInfo;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _type = errorInfo.type;
 
     // 根据严重程度选择通知方式
     switch (severity) {
@@ -237,7 +239,7 @@ export class ErrorHandler {
         body: JSON.stringify(errorInfo),
       });
     } catch (error) {
-      console.error('Failed to report error:', error);
+      // console.error('Failed to report error:', error);
     }
   }
 

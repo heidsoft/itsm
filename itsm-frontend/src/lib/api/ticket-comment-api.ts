@@ -49,6 +49,7 @@ export class TicketCommentApi {
    * 获取工单评论列表
    */
   static async getComments(ticketId: number): Promise<ListTicketCommentsResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
     const data = response?.data || response;
     const comments = Array.isArray(data?.comments) ? data.comments : Array.isArray(data) ? data : [];

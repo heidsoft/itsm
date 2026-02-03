@@ -12,12 +12,11 @@ import { useAdminData } from './hooks/useAdminData';
 import { useI18n } from '@/lib/i18n';
 
 const AdminDashboardSkeleton: React.FC = () => {
-  const { token } = theme.useToken();
   return (
-    <div style={{ padding: token.paddingLG }}>
-      <Skeleton.Input style={{ width: '100%', height: '120px', marginBottom: token.marginLG }} active />
+    <div className="p-6">
+      <Skeleton.Input className="w-full h-32 mb-6" active />
       <Skeleton active paragraph={{ rows: 4 }} />
-      <Row gutter={[24, 24]} style={{ marginTop: token.marginLG }}>
+      <Row gutter={[24, 24]} className="mt-6">
         <Col xs={24} lg={8}>
           <Skeleton active paragraph={{ rows: 6 }} />
         </Col>
@@ -30,7 +29,6 @@ const AdminDashboardSkeleton: React.FC = () => {
 };
 
 const AdminDashboard = () => {
-  const { token } = theme.useToken();
   const { loading, stats } = useAdminData();
   const { t } = useI18n();
 
@@ -39,12 +37,12 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div style={{ padding: token.paddingLG }}>
+    <div className="p-6">
       <AdminHeader />
-      <div style={{ marginBottom: token.marginLG }}>
+      <div className="mb-6">
         <SystemOverview stats={stats} loading={loading} />
       </div>
-      <Row gutter={[24, 24]} style={{ marginBottom: token.marginLG }}>
+      <Row gutter={[24, 24]} className="mb-6">
         <Col xs={24} lg={8}>
           <SystemHealth />
         </Col>
@@ -52,7 +50,7 @@ const AdminDashboard = () => {
           <RecentActivity />
         </Col>
       </Row>
-      <div style={{ marginBottom: token.marginLG }}>
+      <div className="mb-6">
         <QuickActions />
       </div>
       <SystemInfo />

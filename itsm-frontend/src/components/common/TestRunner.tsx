@@ -143,21 +143,21 @@ export const TestRunner: React.FC = () => {
               <Statistic
                 title="总测试数"
                 value={state.summary.total}
-                valueStyle={{ color: '#1890ff' }}
+                styles={{ content: { color: '#1890ff' } }}
               />
             </Col>
             <Col span={6}>
               <Statistic
                 title="通过"
                 value={state.summary.passed}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Col>
             <Col span={6}>
               <Statistic
                 title="失败"
                 value={state.summary.failed}
-                valueStyle={{ color: '#f5222d' }}
+                styles={{ content: { color: '#f5222d' } }}
               />
             </Col>
             <Col span={6}>
@@ -165,7 +165,7 @@ export const TestRunner: React.FC = () => {
                 title="执行时间"
                 value={state.summary.duration}
                 suffix="ms"
-                valueStyle={{ color: '#722ed1' }}
+                styles={{ content: { color: '#722ed1' } }}
               />
             </Col>
           </Row>

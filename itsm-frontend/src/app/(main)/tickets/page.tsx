@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Typography, Space, Button, Tabs, Badge, Alert } from 'antd';
-import { 
-  PlusOutlined, 
-  TableOutlined, 
-  AppstoreOutlined, 
+import {
+  PlusOutlined,
+  TableOutlined,
+  AppstoreOutlined,
   BarChartOutlined,
   SearchOutlined,
-  BellOutlined 
+  BellOutlined,
 } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -31,23 +31,32 @@ export default function TicketsPage() {
   });
 
   // 从URL参数获取当前标签页
-  React.useEffect(() => {
+  useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['list', 'kanban', 'analytics', 'search'].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
 
-  // 模拟获取工单统计数据
-  React.useEffect(() => {
-    // 这里应该调用API获取实际统计数据
-    setTicketStats({
-      total: 847,
-      open: 124,
-      overdue: 18,
-      today: 23,
-    });
+  // 获取工单统计数据
+  const fetchTicketStats = useCallback(async () => {
+    try {
+      const { ticketService } = await import('@/lib/services/ticket-service');
+      const stats = await ticketService.getTicketStats();
+      setTicketStats({
+        total: stats.total,
+        open: stats.open,
+        overdue: stats.overdue || 0,
+        today: 0, // 暂时没有今日新增的API
+      });
+    } catch (error) {
+      console.error('Failed to fetch ticket stats:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTicketStats();
+  }, [fetchTicketStats]);
 
   // 处理标签页切换
   const handleTabChange = (tab: string) => {
@@ -79,24 +88,20 @@ export default function TicketsPage() {
               <Title level={2} style={{ marginBottom: 0 }}>
                 工单管理
               </Title>
-              <Text type='secondary'>
-                全功能工单管理系统 - 支持列表、看板、分析多种视图
-              </Text>
+              <Text type='secondary'>全功能工单管理系统 - 支持列表、看板、分析多种视图</Text>
             </div>
             <Space>
-              <Button 
-                icon={<SearchOutlined />} 
+              <Button
+                icon={<SearchOutlined />}
                 onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
               >
                 高级搜索
               </Button>
-              <Badge count={ticketStats.overdue} size="small">
-                <Button icon={<BellOutlined />}>
-                  SLA预警
-                </Button>
+              <Badge count={ticketStats.overdue} size='small'>
+                <Button icon={<BellOutlined />}>SLA预警</Button>
               </Badge>
               <Link href='/tickets/create'>
-                <Button type='primary' icon={<PlusOutlined />} size="large">
+                <Button type='primary' icon={<PlusOutlined />}>
                   新建工单
                 </Button>
               </Link>
@@ -105,7 +110,7 @@ export default function TicketsPage() {
 
           {/* 统计数据栏 */}
           <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mt-4'>
-            <Card size="small">
+            <Card size='small' className='rounded-lg shadow-sm'>
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>总工单</Text>
@@ -114,7 +119,7 @@ export default function TicketsPage() {
                 <TableOutlined className='text-2xl text-blue-500' />
               </div>
             </Card>
-            <Card size="small">
+            <Card size='small' className='rounded-lg shadow-sm'>
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>待处理</Text>
@@ -123,7 +128,7 @@ export default function TicketsPage() {
                 <BellOutlined className='text-2xl text-orange-500' />
               </div>
             </Card>
-            <Card size="small">
+            <Card size='small' className='rounded-lg shadow-sm'>
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>超时工单</Text>
@@ -132,7 +137,7 @@ export default function TicketsPage() {
                 <BellOutlined className='text-2xl text-red-500' />
               </div>
             </Card>
-            <Card size="small">
+            <Card size='small' className='rounded-lg shadow-sm'>
               <div className='flex items-center justify-between'>
                 <div>
                   <Text type='secondary'>今日新增</Text>
@@ -149,10 +154,7 @@ export default function TicketsPage() {
       {showAdvancedSearch && (
         <div className='bg-gray-50 border-b border-gray-200'>
           <div className='w-full px-6 py-4'>
-            <TicketAdvancedSearch
-              onSearch={handleAdvancedSearch}
-              onReset={handleSearchReset}
-            />
+            <TicketAdvancedSearch onSearch={handleAdvancedSearch} onReset={handleSearchReset} />
           </div>
         </div>
       )}
@@ -161,25 +163,25 @@ export default function TicketsPage() {
       <div className='w-full px-6 py-6'>
         {/* 功能提示 */}
         <Alert
-          message="🎉 工单管理功能已全面升级"
-          description="现在支持列表视图、看板视图、高级搜索、统计分析等完整功能，提供更高效的工单管理体验。"
-          type="success"
+          message='工单管理功能已全面升级'
+          description='现在支持列表视图、看板视图、高级搜索、统计分析等完整功能，提供更高效的工单管理体验。'
+          type='success'
           showIcon
           closable
-          className="mb-4"
+          className='mb-4 rounded-lg'
         />
 
         {/* 标签页导航 */}
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
-          size="large"
-          className="mb-6"
+          size='large'
+          className='mb-6'
           items={[
             {
               key: 'list',
               label: (
-                <span>
+                <span className='flex items-center gap-2'>
                   <TableOutlined />
                   列表视图
                 </span>
@@ -188,7 +190,7 @@ export default function TicketsPage() {
             {
               key: 'kanban',
               label: (
-                <span>
+                <span className='flex items-center gap-2'>
                   <AppstoreOutlined />
                   看板视图
                 </span>
@@ -197,7 +199,7 @@ export default function TicketsPage() {
             {
               key: 'analytics',
               label: (
-                <span>
+                <span className='flex items-center gap-2'>
                   <BarChartOutlined />
                   数据分析
                 </span>
@@ -207,31 +209,24 @@ export default function TicketsPage() {
         />
 
         {/* 标签页内容 */}
-        {activeTab === 'list' && (
-          <TicketList 
-            showHeader={false}
-            pageSize={20}
-          />
-        )}
-        
+        {activeTab === 'list' && <TicketList showHeader={false} pageSize={20} />}
+
         {activeTab === 'kanban' && (
-          <TicketKanban 
-            onTicketSelect={(ticket) => router.push(`/tickets/${ticket.id}`)}
-          />
+          <TicketKanban onTicketSelect={ticket => router.push(`/tickets/${ticket.id}`)} />
         )}
-        
+
         {activeTab === 'analytics' && (
-          <div className="bg-white rounded-lg p-4">
-            <div className="text-center py-8">
-              <BarChartOutlined className="text-4xl text-gray-400 mb-4" />
-              <Title level={4} type="secondary">数据分析功能</Title>
-              <Text type="secondary">
-                完整的数据分析功能已迁移至专门的统计页面
-              </Text>
-              <div className="mt-4">
-                <Button 
-                  type="primary" 
-                  size="large"
+          <div className='bg-white rounded-lg p-4 shadow-sm border border-gray-200'>
+            <div className='text-center py-8'>
+              <BarChartOutlined className='text-4xl text-gray-400 mb-4' />
+              <Title level={4} type='secondary'>
+                数据分析功能
+              </Title>
+              <Text type='secondary'>完整的数据分析功能已迁移至专门的统计页面</Text>
+              <div className='mt-4'>
+                <Button
+                  type='primary'
+                  size='large'
                   onClick={() => router.push('/tickets/analytics')}
                 >
                   查看详细分析
@@ -243,17 +238,15 @@ export default function TicketsPage() {
       </div>
 
       {/* 快捷操作浮动按钮 */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Space direction="vertical" size="middle">
+      <div className='fixed bottom-6 right-6 z-50'>
+        <Space orientation='vertical' size='middle'>
           <Button
-            type="primary"
-            shape="circle"
-            size="large"
+            type='primary'
+            shape='circle'
+            size='large'
             icon={<PlusOutlined />}
             onClick={() => router.push('/tickets/create')}
-            style={{
-              boxShadow: '0 4px 12px rgba(24, 144, 255, 0.4)',
-            }}
+            className='shadow-lg hover:scale-110 transition-transform'
           />
         </Space>
       </div>

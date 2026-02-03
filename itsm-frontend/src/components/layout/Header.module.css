@@ -187,3 +187,9 @@
   padding: 40px 20px;
   color: #9ca3af;
 }
+
+.userMenuPlaceholder {
+  width: 120px;
+  height: 36px;
+  border-radius: 8px;
+}

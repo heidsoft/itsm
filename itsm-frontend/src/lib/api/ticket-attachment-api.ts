@@ -76,7 +76,7 @@ export class TicketAttachmentApi {
             } else {
               reject(new Error(response.message || '上传失败'));
             }
-          } catch (error) {
+          } catch (_error) {
             reject(new Error('响应格式错误'));
           }
         } else {

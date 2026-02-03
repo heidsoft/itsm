@@ -117,6 +117,9 @@ export interface Ticket {
   tags?: string[];
   dueDate?: string;
   escalationLevel?: number;
+  source?: string;
+  businessValue?: string;
+  customFields?: Record<string, unknown>;
 }
 
 // 附件接口
@@ -247,6 +250,7 @@ export interface Role {
   permissions: string[];
   status?: 'active' | 'inactive';
   isSystem?: boolean;
+  is_system?: boolean; // Compatible with backend snake_case
   userCount?: number;
   createdAt: string;
   updatedAt: string;

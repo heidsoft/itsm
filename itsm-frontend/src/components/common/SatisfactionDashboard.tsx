@@ -96,101 +96,48 @@ export const SatisfactionDashboard: React.FC = () => {
 
   const loadSatisfactionData = async () => {
     try {
-      // 模拟API调用
-      const mockData: SatisfactionData = {
-        overallScore: 4.2,
-        totalResponses: 1247,
-        responseRate: 78.5,
-        trend: "up",
-        categoryScores: [
-          { category: "系统问题", score: 4.1, count: 456, trend: "up" },
-          { category: "网络问题", score: 4.3, count: 234, trend: "stable" },
-          { category: "数据库问题", score: 4.0, count: 189, trend: "down" },
-          { category: "硬件问题", score: 4.5, count: 156, trend: "up" },
-          { category: "软件问题", score: 4.2, count: 212, trend: "up" },
-        ],
-        monthlyTrend: [
-          { month: "2024-01", score: 4.1, responses: 156 },
-          { month: "2024-02", score: 4.2, responses: 189 },
-          { month: "2024-03", score: 4.3, responses: 234 },
-          { month: "2024-04", score: 4.2, responses: 267 },
-          { month: "2024-05", score: 4.4, responses: 298 },
-          { month: "2024-06", score: 4.2, responses: 1247 },
-        ],
-        agentPerformance: [
-          {
-            agent: "张三",
-            avatar: "张",
-            score: 4.5,
-            tickets: 156,
-            responseTime: 2.3,
-            satisfaction: 92.3,
-          },
-          {
-            agent: "李四",
-            avatar: "李",
-            score: 4.2,
-            tickets: 134,
-            responseTime: 3.1,
-            satisfaction: 87.6,
-          },
-          {
-            agent: "王五",
-            avatar: "王",
-            score: 4.3,
-            tickets: 189,
-            responseTime: 2.8,
-            satisfaction: 89.4,
-          },
-          {
-            agent: "赵六",
-            avatar: "赵",
-            score: 4.1,
-            tickets: 98,
-            responseTime: 4.2,
-            satisfaction: 84.7,
-          },
-        ],
-        recentFeedback: [
-          {
-            id: 1,
-            ticketNumber: "T-2024-001",
-            title: "数据库连接超时问题",
-            score: 5,
-            comment: "处理速度很快，技术人员专业，问题得到完美解决！",
-            agent: "张三",
-            category: "数据库问题",
-            date: "2024-01-15",
-            tags: ["专业", "快速", "满意"],
-          },
-          {
-            id: 2,
-            ticketNumber: "T-2024-002",
-            title: "系统登录异常",
-            score: 4,
-            comment: "响应及时，解决方案有效，但处理时间稍长",
-            agent: "李四",
-            category: "系统问题",
-            date: "2024-01-14",
-            tags: ["及时", "有效"],
-          },
-          {
-            id: 3,
-            ticketNumber: "T-2024-003",
-            title: "网络连接问题",
-            score: 3,
-            comment: "问题解决了，但沟通不够清晰，希望改进",
-            agent: "王五",
-            category: "网络问题",
-            date: "2024-01-13",
-            tags: ["已解决"],
-          },
-        ],
+      const { TicketRatingApi } = await import('@/lib/api/ticket-rating-api');
+      
+      // 计算日期范围
+      const endDate = new Date();
+      const startDate = new Date();
+      const days = parseInt(timeRange[0]); // "7d" -> 7
+      if (!isNaN(days)) {
+        startDate.setDate(endDate.getDate() - days);
+      }
+      
+      const stats = await TicketRatingApi.getRatingStats({
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString()
+      });
+
+      const data: SatisfactionData = {
+        overallScore: stats.average_rating || 0,
+        totalResponses: stats.total_ratings || 0,
+        responseRate: 0, // API暂不支持
+        trend: "stable", // API暂不支持
+        categoryScores: Object.values(stats.by_category || {}).map((c: any) => ({
+          category: c.category_name,
+          score: c.average_rating,
+          count: c.total_ratings,
+          trend: "stable"
+        })),
+        monthlyTrend: [], // API暂不支持
+        agentPerformance: Object.values(stats.by_assignee || {}).map((a: any) => ({
+          agent: a.assignee_name,
+          avatar: a.assignee_name?.[0] || 'U',
+          score: a.average_rating,
+          tickets: a.total_ratings,
+          responseTime: 0,
+          satisfaction: (a.average_rating / 5) * 100
+        })),
+        recentFeedback: [] // API暂不支持列表查询
       };
 
-      setSatisfactionData(mockData);
+      setSatisfactionData(data);
     } catch (error) {
       console.error("加载满意度数据失败:", error);
+      // 失败时不显示mock数据
     } finally {
       setLoading(false);
     }

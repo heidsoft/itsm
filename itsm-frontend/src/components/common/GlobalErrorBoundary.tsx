@@ -2,14 +2,8 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Result, Button, Card, Collapse, Typography } from 'antd';
-import {
-  BugOutlined,
-  ReloadOutlined,
-  HomeOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+import { BugOutlined, ReloadOutlined, HomeOutlined, WarningOutlined } from '@ant-design/icons';
 
-const { Panel } = Collapse;
 const { Paragraph, Text } = Typography;
 
 interface Props {
@@ -116,7 +110,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             }}
           >
             <Result
-              status="error"
+              status='error'
               icon={<BugOutlined style={{ fontSize: 72, color: '#ff4d4f' }} />}
               title={
                 <span>
@@ -124,30 +118,21 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   页面遇到了一些问题
                 </span>
               }
-              subTitle="我们已经记录了这个错误，开发团队会尽快修复。您可以尝试刷新页面或返回首页。"
+              subTitle='我们已经记录了这个错误，开发团队会尽快修复。您可以尝试刷新页面或返回首页。'
               extra={[
                 <Button
-                  key="reload"
-                  type="primary"
+                  key='reload'
+                  type='primary'
                   icon={<ReloadOutlined />}
                   onClick={this.handleReload}
-                  size="large"
+                  size='large'
                 >
                   刷新页面
                 </Button>,
-                <Button
-                  key="home"
-                  icon={<HomeOutlined />}
-                  onClick={this.handleGoHome}
-                  size="large"
-                >
+                <Button key='home' icon={<HomeOutlined />} onClick={this.handleGoHome} size='large'>
                   返回首页
                 </Button>,
-                <Button
-                  key="reset"
-                  onClick={this.handleReset}
-                  size="large"
-                >
+                <Button key='reset' onClick={this.handleReset} size='large'>
                   尝试恢复
                 </Button>,
               ]}
@@ -158,85 +143,87 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   <Collapse
                     bordered={false}
                     style={{ background: '#f5f5f5' }}
-                  >
-                    <Panel
-                      header={
-                        <Text strong>
-                          <BugOutlined style={{ marginRight: 8 }} />
-                          开发者信息 (仅开发环境显示)
-                        </Text>
-                      }
-                      key="1"
-                    >
-                      <div style={{ marginBottom: 16 }}>
-                        <Text strong>错误次数: </Text>
-                        <Text type="danger">{errorCount}</Text>
-                      </div>
+                    items={[
+                      {
+                        key: '1',
+                        label: (
+                          <Text strong>
+                            <BugOutlined style={{ marginRight: 8 }} />
+                            开发者信息 (仅开发环境显示)
+                          </Text>
+                        ),
+                        children: (
+                          <>
+                            <div style={{ marginBottom: 16 }}>
+                              <Text strong>错误次数: </Text>
+                              <Text type='danger'>{errorCount}</Text>
+                            </div>
 
-                      <div style={{ marginBottom: 16 }}>
-                        <Text strong>错误消息:</Text>
-                        <Paragraph
-                          code
-                          copyable
-                          style={{
-                            background: '#fff',
-                            padding: 12,
-                            borderRadius: 4,
-                            marginTop: 8,
-                          }}
-                        >
-                          {error.message}
-                        </Paragraph>
-                      </div>
+                            <div style={{ marginBottom: 16 }}>
+                              <Text strong>错误消息:</Text>
+                              <Paragraph
+                                code
+                                copyable
+                                style={{
+                                  background: '#fff',
+                                  padding: 12,
+                                  borderRadius: 4,
+                                  marginTop: 8,
+                                }}
+                              >
+                                {error.message}
+                              </Paragraph>
+                            </div>
 
-                      <div style={{ marginBottom: 16 }}>
-                        <Text strong>错误堆栈:</Text>
-                        <Paragraph
-                          code
-                          copyable
-                          style={{
-                            background: '#fff',
-                            padding: 12,
-                            borderRadius: 4,
-                            marginTop: 8,
-                            maxHeight: 200,
-                            overflow: 'auto',
-                          }}
-                        >
-                          {error.stack}
-                        </Paragraph>
-                      </div>
+                            <div style={{ marginBottom: 16 }}>
+                              <Text strong>错误堆栈:</Text>
+                              <Paragraph
+                                code
+                                copyable
+                                style={{
+                                  background: '#fff',
+                                  padding: 12,
+                                  borderRadius: 4,
+                                  marginTop: 8,
+                                  maxHeight: 200,
+                                  overflow: 'auto',
+                                }}
+                              >
+                                {error.stack}
+                              </Paragraph>
+                            </div>
 
-                      {errorInfo && (
-                        <div>
-                          <Text strong>组件堆栈:</Text>
-                          <Paragraph
-                            code
-                            copyable
-                            style={{
-                              background: '#fff',
-                              padding: 12,
-                              borderRadius: 4,
-                              marginTop: 8,
-                              maxHeight: 200,
-                              overflow: 'auto',
-                            }}
-                          >
-                            {errorInfo.componentStack}
-                          </Paragraph>
-                        </div>
-                      )}
-                    </Panel>
-                  </Collapse>
+                            {errorInfo && (
+                              <div>
+                                <Text strong>组件堆栈:</Text>
+                                <Paragraph
+                                  code
+                                  copyable
+                                  style={{
+                                    background: '#fff',
+                                    padding: 12,
+                                    borderRadius: 4,
+                                    marginTop: 8,
+                                    maxHeight: 200,
+                                    overflow: 'auto',
+                                  }}
+                                >
+                                  {errorInfo.componentStack}
+                                </Paragraph>
+                              </div>
+                            )}
+                          </>
+                        ),
+                      },
+                    ]}
+                  />
                 </div>
               )}
 
               {/* 生产环境提示 */}
               {process.env.NODE_ENV === 'production' && (
                 <div style={{ marginTop: 24 }}>
-                  <Text type="secondary">
-                    错误ID: {Date.now().toString(36).toUpperCase()}
-                  </Text>
+                  <Text type='secondary'>错误ID: {Date.now().toString(36).toUpperCase()}</Text>
                 </div>
               )}
             </Result>
@@ -269,4 +256,3 @@ export const withErrorBoundary = <P extends object>(
 };
 
 export default GlobalErrorBoundary;
-

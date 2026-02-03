@@ -78,7 +78,7 @@ const ProblemList: React.FC = () => {
       setData(resp.problems || []);
       setTotal(resp.total || 0);
     } catch (error) {
-      console.error('Failed to load problems:', error);
+      // console.error('Failed to load problems:', error);
       message.error('加载问题列表失败');
     } finally {
       setLoading(false);
@@ -87,6 +87,7 @@ const ProblemList: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const handleSearch = () => {
@@ -186,63 +187,77 @@ const ProblemList: React.FC = () => {
   ];
 
   return (
-    <Card variant='borderless'>
-      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
-        <Form.Item name='keyword'>
-          <Input placeholder='搜索标题或内容' allowClear prefix={<SearchOutlined />} />
-        </Form.Item>
-        <Form.Item name='status'>
-          <Select placeholder='状态' style={{ width: 120 }} allowClear>
-            {Object.entries(ProblemStatusLabels).map(([value, label]) => (
-              <Option key={value} value={value}>
-                {label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name='priority'>
-          <Select placeholder='优先级' style={{ width: 120 }} allowClear>
-            {Object.entries(ProblemPriorityLabels).map(([value, label]) => (
-              <Option key={value} value={value}>
-                {label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type='primary' onClick={handleSearch}>
-              查询
-            </Button>
-            <Button onClick={handleReset}>重置</Button>
-          </Space>
-        </Form.Item>
-        <div style={{ flex: 1, textAlign: 'right' }}>
-          <Button
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/problems/create')}
-          >
-            新建问题
-          </Button>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">问题管理</h1>
+          <p className="text-gray-500 mt-1">识别、分析和消除事件发生的根本原因</p>
         </div>
-      </Form>
+        <Button
+          type='primary'
+          icon={<PlusOutlined />}
+          onClick={() => router.push('/problems/create')}
+          size="large"
+        >
+          新建问题
+        </Button>
+      </div>
 
-      <Table
-        rowKey='id'
-        columns={columns as any}
-        dataSource={data}
-        loading={loading}
-        pagination={{
-          current: query.page,
-          pageSize: query.page_size,
-          total: total,
-          onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
-          showSizeChanger: true,
-          showTotal: t => `共 ${t} 条记录`,
-        }}
-      />
-    </Card>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Form form={form} layout='inline' className="mb-6 flex-wrap gap-y-4">
+          <Form.Item name='keyword' className="mb-0">
+            <Input 
+              placeholder='搜索标题或内容' 
+              allowClear 
+              prefix={<SearchOutlined className="text-gray-400" />} 
+              className="w-64"
+            />
+          </Form.Item>
+          <Form.Item name='status' className="mb-0">
+            <Select placeholder='状态' className="w-32" allowClear>
+              {Object.entries(ProblemStatusLabels).map(([value, label]) => (
+                <Option key={value} value={value}>
+                  {label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name='priority' className="mb-0">
+            <Select placeholder='优先级' className="w-32" allowClear>
+              {Object.entries(ProblemPriorityLabels).map(([value, label]) => (
+                <Option key={value} value={value}>
+                  {label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <Space>
+              <Button type='primary' ghost onClick={handleSearch}>
+                查询
+              </Button>
+              <Button onClick={handleReset}>重置</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
+        <Table
+          rowKey='id'
+          columns={columns as any}
+          dataSource={data}
+          loading={loading}
+          pagination={{
+            current: query.page,
+            pageSize: query.page_size,
+            total: total,
+            onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
+            showSizeChanger: true,
+            showTotal: t => `共 ${t} 条记录`,
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
+    </div>
   );
 };
 

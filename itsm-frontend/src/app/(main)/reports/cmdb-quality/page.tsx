@@ -142,7 +142,7 @@ const CMDBQualityReport = () => {
                   title="平均完整度"
                   value={avgCompleteness}
                   suffix="%"
-                  valueStyle={{ color: COLORS.completeness }}
+                  styles={{ content: { color: COLORS.completeness } }}
                 />
               </Card>
             </Col>
@@ -152,7 +152,7 @@ const CMDBQualityReport = () => {
                   title="平均准确度"
                   value={avgAccuracy}
                   suffix="%"
-                  valueStyle={{ color: COLORS.accuracy }}
+                  styles={{ content: { color: COLORS.accuracy } }}
                 />
               </Card>
             </Col>
@@ -162,7 +162,7 @@ const CMDBQualityReport = () => {
                   title="平均一致度"
                   value={avgConsistency}
                   suffix="%"
-                  valueStyle={{ color: COLORS.consistency }}
+                  styles={{ content: { color: COLORS.consistency } }}
                 />
               </Card>
             </Col>

@@ -29,6 +29,7 @@ const ArticleDetail: React.FC = () => {
         if (id) {
             loadDetail();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadDetail = async () => {
@@ -37,7 +38,7 @@ const ArticleDetail: React.FC = () => {
             const data = await KnowledgeApi.getArticle(id!);
             setArticle(data);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载文章详情失败');
         } finally {
             setLoading(false);

@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Skeleton,
+  Select,
 } from 'antd';
 import { RefreshCw, Settings, LayoutDashboard, Zap, LineChart, TrendingUp } from 'lucide-react';
 import { KPICards } from './components/KPICards';
@@ -94,18 +95,20 @@ export default function DashboardPage() {
           onClick={e => e.stopPropagation()}
         >
           <span className='text-sm font-medium'>刷新间隔</span>
-          <select
+          <Select
             value={refreshInterval}
-            onChange={e => handleRefreshIntervalChange(Number(e.target.value))}
-            className='px-2 py-1 border border-gray-300 rounded text-xs font-medium'
+            onChange={value => handleRefreshIntervalChange(Number(value))}
+            className='w-[100px]'
+            size='small'
             disabled={!autoRefresh}
             onClick={e => e.stopPropagation()}
-          >
-            <option value={10000}>10秒</option>
-            <option value={30000}>30秒</option>
-            <option value={60000}>1分钟</option>
-            <option value={300000}>5分钟</option>
-          </select>
+            options={[
+              { value: 10000, label: '10秒' },
+              { value: 30000, label: '30秒' },
+              { value: 60000, label: '1分钟' },
+              { value: 300000, label: '5分钟' },
+            ]}
+          />
         </div>
       ),
     },
@@ -138,15 +141,9 @@ export default function DashboardPage() {
   // 错误状态
   if (error) {
     return (
-      <Card
-        className='text-center py-16 border-0'
-        style={{
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
-        }}
-      >
-        <div className='text-red-500 mb-4'>
-          <LayoutDashboard style={{ fontSize: 64 }} />
+      <Card className='text-center py-16 rounded-xl border-0 shadow-sm' variant='borderless'>
+        <div className='text-red-500 mb-4 flex justify-center'>
+          <LayoutDashboard size={64} />
         </div>
         <h3 className='text-xl font-bold text-gray-900 mb-2'>仪表盘加载失败</h3>
         <p className='text-gray-600 mb-6'>{error}</p>
@@ -155,10 +152,7 @@ export default function DashboardPage() {
           size='large'
           onClick={() => refresh()}
           icon={<RefreshCw />}
-          style={{
-            height: '44px',
-            borderRadius: '8px',
-          }}
+          className='h-11 rounded-lg'
         >
           重新加载
         </Button>
@@ -183,7 +177,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className='enterprise-dashboard-container'>
+    <div className='p-6 min-h-screen bg-gray-50'>
       {/* 简化顶部工具栏 */}
       <div className='flex items-center justify-between mb-6 pb-4 border-b border-gray-200'>
         <div>
@@ -225,13 +219,13 @@ export default function DashboardPage() {
             <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
           </div>
 
-          <Divider style={{ margin: '32px 0' }} />
+          <Divider className='my-8' />
 
           {/* 快速操作区域 */}
           <div className='mb-6'>
             <div className='mb-4'>
               <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
-                <Zap style={{ fontSize: 22, color: '#f97316' }} />
+                <Zap className='text-orange-500 w-5 h-5' />
                 快速操作
               </h2>
               <p className='text-sm text-gray-600'>常用功能快捷入口，提升工作效率</p>
@@ -245,20 +239,18 @@ export default function DashboardPage() {
             />
           </div>
 
-          <Divider style={{ margin: '32px 0' }} />
+          <Divider className='my-8' />
 
           {/* 图表分析区域 */}
           <div className='mb-6'>
             <Card
-              className='border-0 shadow-sm'
-              style={{
-                borderRadius: '12px',
-              }}
+              className='rounded-xl border-0 shadow-sm'
+              variant='borderless'
               styles={{ body: { padding: '24px' } }}
             >
               <div className='mb-5'>
                 <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
-                  <LineChart style={{ fontSize: 22, color: '#3b82f6' }} />
+                  <LineChart className='text-blue-500 w-5 h-5' />
                   数据分析与趋势
                 </h2>
                 <p className='text-sm text-gray-600'>系统性能和业务趋势的可视化分析</p>

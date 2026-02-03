@@ -125,62 +125,13 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
       if (data) {
         setPredictionReport(data);
         onPredictionChange?.(data);
-        return;
+      } else {
+        setPredictionReport(null);
       }
-      
-      // 如果API返回空，使用模拟数据
-      const mockData: PredictionData[] = [];
-      const today = new Date();
-      for (let i = 30; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        mockData.push({
-          date: format(date, 'yyyy-MM-dd'),
-          actual: i < 20 ? Math.floor(Math.random() * 50) + 20 : undefined,
-          predicted: Math.floor(Math.random() * 50) + 20,
-          upper_bound: Math.floor(Math.random() * 50) + 30,
-          lower_bound: Math.floor(Math.random() * 50) + 10,
-          confidence: 85 + Math.random() * 10,
-        });
-      }
-
-      const mockMetrics: PredictionMetrics = {
-        accuracy: 87.5,
-        mape: 12.3,
-        rmse: 4.2,
-        trend: 'up',
-        trend_strength: 0.75,
-        next_week_prediction: 145,
-        next_month_prediction: 620,
-        risk_level: 'medium',
-        risk_factors: ['节假日影响', '季节性波动', '系统升级'],
-      };
-
-      const mockReport: PredictionReport = {
-        period: `${timeRange[0]} 至 ${timeRange[1]}`,
-        summary: '根据历史数据分析，预计未来一个月工单数量将呈上升趋势，建议提前准备资源。',
-        key_findings: [
-          '工单数量在过去30天呈上升趋势，增长率为15%',
-          '预计下周工单数量将达到145个，较本周增长8%',
-          '预计下月工单数量将达到620个，较本月增长12%',
-          '高风险时段集中在工作日9-11点和14-16点',
-        ],
-        recommendations: [
-          '建议增加处理人员，特别是高峰时段',
-          '建议优化自动化流程，减少人工处理时间',
-          '建议提前准备常见问题解决方案，提升响应速度',
-          '建议监控系统性能，预防潜在问题',
-        ],
-        metrics: mockMetrics,
-        data: mockData,
-        generated_at: format(new Date(), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
-      };
-
-      setPredictionReport(mockReport);
-      onPredictionChange?.(mockReport);
     } catch (error) {
       console.error('Failed to load prediction:', error);
       antMessage.error('加载预测数据失败');
+      setPredictionReport(null);
     } finally {
       setLoading(false);
     }
@@ -351,7 +302,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   value={predictionReport.metrics.accuracy}
                   precision={1}
                   suffix='%'
-                  valueStyle={{ color: '#3f8600' }}
+                  styles={{ content: { color: '#3f8600' } }}
                   prefix={<CheckCircleOutlined />}
                 />
               </Card>
@@ -362,7 +313,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   title='下周预测'
                   value={predictionReport.metrics.next_week_prediction}
                   suffix='个工单'
-                  valueStyle={{ color: '#1890ff' }}
+                  styles={{ content: { color: '#1890ff' } }}
                   prefix={<CalendarOutlined />}
                 />
               </Card>
@@ -373,7 +324,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   title='下月预测'
                   value={predictionReport.metrics.next_month_prediction}
                   suffix='个工单'
-                  valueStyle={{ color: '#faad14' }}
+                  styles={{ content: { color: '#faad14' } }}
                   prefix={<CalendarOutlined />}
                 />
               </Card>

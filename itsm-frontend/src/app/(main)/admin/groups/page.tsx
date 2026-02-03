@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 import React, { useState } from 'react';
-import { App, Modal, message } from 'antd';
+import { App, Modal } from 'antd';
 // 用户组数据类型定义
 interface Group {
   id: number;
@@ -27,68 +27,9 @@ interface Group {
   status: 'active' | 'inactive';
 }
 
-// 模拟用户组数据
-const mockGroups: Group[] = [
-  {
-    id: 1,
-    name: 'IT管理员组',
-    description: '拥有系统完全管理权限的用户组',
-    type: 'system',
-    memberCount: 3,
-    permissions: ['系统管理', '用户管理', '配置管理', '审计日志'],
-    createdAt: '2023-01-01',
-    updatedAt: '2024-01-15',
-    status: 'active',
-  },
-  {
-    id: 2,
-    name: '服务台组',
-    description: '负责处理日常IT服务请求的用户组',
-    type: 'custom',
-    memberCount: 8,
-    permissions: ['工单管理', '服务目录', '知识库'],
-    createdAt: '2023-02-15',
-    updatedAt: '2024-01-10',
-    status: 'active',
-  },
-  {
-    id: 3,
-    name: '业务用户组',
-    description: '普通业务用户，可以提交服务请求',
-    type: 'custom',
-    memberCount: 45,
-    permissions: ['提交请求', '查看状态', '知识库查看'],
-    createdAt: '2023-03-01',
-    updatedAt: '2024-01-12',
-    status: 'active',
-  },
-  {
-    id: 4,
-    name: '审批者组',
-    description: '负责审批各类服务请求的用户组',
-    type: 'custom',
-    memberCount: 12,
-    permissions: ['审批管理', '报告查看', '工单查看'],
-    createdAt: '2023-04-10',
-    updatedAt: '2024-01-08',
-    status: 'active',
-  },
-  {
-    id: 5,
-    name: '临时项目组',
-    description: '临时项目成员组（已停用）',
-    type: 'custom',
-    memberCount: 0,
-    permissions: ['项目管理', '文档管理'],
-    createdAt: '2023-08-15',
-    updatedAt: '2023-12-20',
-    status: 'inactive',
-  },
-];
-
 const GroupManagement = () => {
-  const { message } = App.useApp();
-  const [groups, setGroups] = useState<Group[]>(mockGroups);
+  const { message, modal } = App.useApp();
+  const [groups, setGroups] = useState<Group[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -96,6 +37,35 @@ const GroupManagement = () => {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // 加载用户组数据
+  React.useEffect(() => {
+    loadGroups();
+  }, []);
+
+  const loadGroups = async () => {
+    try {
+      const { RoleAPI } = await import('@/lib/api/role-api');
+      const response = await RoleAPI.getRoles({ size: 100 }); // 获取所有角色
+      
+      const mappedGroups: Group[] = response.roles.map((role: any) => ({
+        id: role.id,
+        name: role.name,
+        description: role.description || '',
+        type: role.isSystem ? 'system' : 'custom',
+        memberCount: role.userCount || 0,
+        permissions: role.permissions || [],
+        createdAt: role.createdAt,
+        updatedAt: role.updatedAt,
+        status: role.status || 'active'
+      }));
+      
+      setGroups(mappedGroups);
+    } catch (error) {
+      console.error('加载用户组失败:', error);
+      message.error('加载用户组失败');
+    }
+  };
 
   // 过滤用户组
   const filteredGroups = groups.filter(group => {
@@ -174,7 +144,7 @@ const GroupManagement = () => {
       message.warning('系统组不能删除！');
       return;
     }
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: '确定要删除这个用户组吗？',
       okText: '确认',

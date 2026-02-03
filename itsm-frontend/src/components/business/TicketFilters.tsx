@@ -2,8 +2,26 @@
 // @ts-nocheck
 
 import React, { useMemo, useCallback } from 'react';
-import { Card, Select, Input, DatePicker, Button, Space, Row, Col, Skeleton, Tag, Badge } from 'antd';
-import { SearchOutlined, ReloadOutlined, FilterOutlined, ClearOutlined, CloseOutlined } from '@ant-design/icons';
+import {
+  Card,
+  Select,
+  Input,
+  DatePicker,
+  Button,
+  Space,
+  Row,
+  Col,
+  Skeleton,
+  Tag,
+  Badge,
+} from 'antd';
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  FilterOutlined,
+  ClearOutlined,
+  CloseOutlined,
+} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { TicketViewSelector } from './TicketViewSelector';
 import { TicketView } from '@/lib/api/ticket-view-api';
@@ -44,29 +62,29 @@ const DEFAULT_VALUE: TicketFilterState = {
 
 const TicketFiltersSkeleton: React.FC = () => (
   <Card className='mb-4' styles={{ body: { padding: '16px' } }}>
-    <Space direction='vertical' style={{ width: '100%' }} size='middle'>
+    <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
       <Row gutter={[12, 12]} align='middle'>
-                <Col xs={24} sm={24} md={8} lg={6}>
-                    <Skeleton.Input active style={{ width: '100%' }} />
-                </Col>
-                <Col xs={12} sm={8} md={4} lg={3}>
-                    <Skeleton.Input active style={{ width: '100%' }} />
-                </Col>
-                <Col xs={12} sm={8} md={4} lg={3}>
-                    <Skeleton.Input active style={{ width: '100%' }} />
-                </Col>
-                <Col xs={24} sm={12} md={6} lg={5}>
-                    <Skeleton.Input active style={{ width: '100%' }} />
-                </Col>
-                <Col xs={12} sm={8} md={4} lg={3}>
-                    <Skeleton.Input active style={{ width: '100%' }} />
-                </Col>
-                <Col xs={12} sm={8} md={6} lg={4}>
-                    <Skeleton.Button active />
-                </Col>
-            </Row>
-        </Space>
-    </Card>
+        <Col xs={24} sm={24} md={8} lg={6}>
+          <Skeleton.Input active style={{ width: '100%' }} />
+        </Col>
+        <Col xs={12} sm={8} md={4} lg={3}>
+          <Skeleton.Input active style={{ width: '100%' }} />
+        </Col>
+        <Col xs={12} sm={8} md={4} lg={3}>
+          <Skeleton.Input active style={{ width: '100%' }} />
+        </Col>
+        <Col xs={24} sm={12} md={6} lg={5}>
+          <Skeleton.Input active style={{ width: '100%' }} />
+        </Col>
+        <Col xs={12} sm={8} md={4} lg={3}>
+          <Skeleton.Input active style={{ width: '100%' }} />
+        </Col>
+        <Col xs={12} sm={8} md={6} lg={4}>
+          <Skeleton.Button active />
+        </Col>
+      </Row>
+    </Space>
+  </Card>
 );
 
 // 组件策略：使用Ant Design组件提升UI质量
@@ -156,7 +174,7 @@ function TicketFilters({
   // 计算已应用的筛选条件
   const activeFilters = useMemo(() => {
     const active: Array<{ key: string; label: string; value: string }> = [];
-    
+
     if (filters?.status && filters.status !== 'all') {
       const statusLabels: Record<string, string> = {
         open: '待处理',
@@ -164,9 +182,13 @@ function TicketFilters({
         resolved: '已解决',
         closed: '已关闭',
       };
-      active.push({ key: 'status', label: '状态', value: statusLabels[filters.status] || filters.status });
+      active.push({
+        key: 'status',
+        label: '状态',
+        value: statusLabels[filters.status] || filters.status,
+      });
     }
-    
+
     if (filters?.priority && filters.priority !== 'all') {
       const priorityLabels: Record<string, string> = {
         p1: 'P1-紧急',
@@ -174,45 +196,52 @@ function TicketFilters({
         p3: 'P3-中',
         p4: 'P4-低',
       };
-      active.push({ key: 'priority', label: '优先级', value: priorityLabels[filters.priority] || filters.priority });
+      active.push({
+        key: 'priority',
+        label: '优先级',
+        value: priorityLabels[filters.priority] || filters.priority,
+      });
     }
-    
+
     if (filters?.keyword && filters.keyword.trim()) {
       active.push({ key: 'keyword', label: '关键词', value: filters.keyword });
     }
-    
+
     if (filters?.dateStart && filters?.dateEnd) {
-      active.push({ 
-        key: 'dateRange', 
-        label: '日期范围', 
-        value: `${filters.dateStart} 至 ${filters.dateEnd}` 
+      active.push({
+        key: 'dateRange',
+        label: '日期范围',
+        value: `${filters.dateStart} 至 ${filters.dateEnd}`,
       });
     }
-    
+
     return active;
   }, [filters]);
 
   // 移除单个筛选条件
-  const handleRemoveFilter = useCallback((key: string) => {
-    if (key === 'status') {
-      onFilterChange({ status: 'all' });
-    } else if (key === 'priority') {
-      onFilterChange({ priority: 'all' });
-    } else if (key === 'keyword') {
-      setLocalKeyword('');
-      onFilterChange({ keyword: '' });
-    } else if (key === 'dateRange') {
-      onFilterChange({ dateStart: '', dateEnd: '' });
-    }
-  }, [onFilterChange]);
+  const handleRemoveFilter = useCallback(
+    (key: string) => {
+      if (key === 'status') {
+        onFilterChange({ status: 'all' });
+      } else if (key === 'priority') {
+        onFilterChange({ priority: 'all' });
+      } else if (key === 'keyword') {
+        setLocalKeyword('');
+        onFilterChange({ keyword: '' });
+      } else if (key === 'dateRange') {
+        onFilterChange({ dateStart: '', dateEnd: '' });
+      }
+    },
+    [onFilterChange]
+  );
 
-    if (loading) {
-        return <TicketFiltersSkeleton />;
-    }
+  if (loading) {
+    return <TicketFiltersSkeleton />;
+  }
 
   return (
     <Card className='mb-4' styles={{ body: { padding: '16px' } }} data-testid='ticket-filters'>
-      <Space direction='vertical' style={{ width: '100%' }} size='middle'>
+      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
         {/* 视图选择器和筛选预设 */}
         <Row gutter={[12, 12]}>
           {onViewChange && (

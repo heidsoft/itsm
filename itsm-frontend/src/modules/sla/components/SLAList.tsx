@@ -34,7 +34,7 @@ const SLAList: React.FC = () => {
             setData(resp.items || []);
             setTotal(resp.total || 0);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载 SLA 列表失败');
         } finally {
             setLoading(false);
@@ -43,6 +43,7 @@ const SLAList: React.FC = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagination]);
 
     const handleToggleActive = async (record: SLADefinition, checked: boolean) => {
@@ -151,14 +152,14 @@ const SLAList: React.FC = () => {
     ];
 
     return (
-        <Card bordered={false}>
-            <Breadcrumb style={{ marginBottom: 16 }}>
+        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+            <Breadcrumb className="mb-4">
                 <Breadcrumb.Item>首页</Breadcrumb.Item>
                 <Breadcrumb.Item>服务级别管理</Breadcrumb.Item>
                 <Breadcrumb.Item>SLA 定义</Breadcrumb.Item>
             </Breadcrumb>
 
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+            <div className="flex justify-between mb-4">
                 <Space>
                     <Button
                         type="primary"

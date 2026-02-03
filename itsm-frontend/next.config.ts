@@ -28,11 +28,11 @@ const nextConfig: NextConfig = {
   
   // 开发模式配置
   eslint: {
-    ignoreDuringBuilds: true,  // 构建时忽略 ESLint 错误
+    ignoreDuringBuilds: true,  // 构建时忽略 ESLint 检查
   },
   
   typescript: {
-    ignoreBuildErrors: true,   // 构建时忽略 TypeScript 错误
+    ignoreBuildErrors: false,   // 构建时开启 TypeScript 检查
   },
 
   // 配置反向代理，解决跨域问题
@@ -40,11 +40,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/v1/:path*',
-        destination: 'http://localhost:8090/api/v1/:path*',
+        destination: 'http://127.0.0.1:8090/api/v1/:path*',
       },
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8090/api/:path*',
+        destination: 'http://127.0.0.1:8090/api/:path*',
       },
     ];
   },

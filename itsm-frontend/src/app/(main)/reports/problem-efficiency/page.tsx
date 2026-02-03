@@ -247,7 +247,7 @@ const ProblemEfficiencyPage = () => {
                 <Statistic
                   title="已解决问题"
                   value={stats?.resolved || 0}
-                  valueStyle={{ color: '#52c41a' }}
+                  styles={{ content: { color: '#52c41a' } }}
                   prefix={<CheckCircle size={20} />}
                 />
               </Card>
@@ -257,7 +257,7 @@ const ProblemEfficiencyPage = () => {
                 <Statistic
                   title="处理中"
                   value={stats?.in_progress || 0}
-                  valueStyle={{ color: '#faad14' }}
+                  styles={{ content: { color: '#faad14' } }}
                   prefix={<Clock size={20} />}
                 />
               </Card>
@@ -267,7 +267,7 @@ const ProblemEfficiencyPage = () => {
                 <Statistic
                   title="高优先级"
                   value={stats?.high_priority || 0}
-                  valueStyle={{ color: '#ff4d4f' }}
+                  styles={{ content: { color: '#ff4d4f' } }}
                   prefix={<XCircle size={20} />}
                 />
               </Card>

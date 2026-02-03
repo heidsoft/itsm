@@ -131,7 +131,7 @@ export function UnifiedFilters({
 
   return (
     <Card className={className} styles={{ body: { padding: '16px' } }}>
-      <Space direction='vertical' style={{ width: '100%' }} size='middle'>
+      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
         <Row gutter={[12, 12]} align='middle'>
           {/* 关键词搜索 */}
           {showKeyword && (

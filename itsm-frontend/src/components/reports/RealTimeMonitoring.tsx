@@ -400,7 +400,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
                 <Statistic
                   value={metric.value}
                   suffix={metric.unit}
-                  valueStyle={{
+                  styles={{ content: {
                     color: getStatusColor(metric.status),
                     fontSize: '20px',
                   }}

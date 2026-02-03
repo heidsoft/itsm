@@ -203,7 +203,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
           }
           className='shadow-sm'
         >
-          <Space direction='vertical' style={{ width: '100%' }} size='middle'>
+          <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
             <TextArea
               value={newComment}
               onChange={e => setNewComment(e.target.value)}

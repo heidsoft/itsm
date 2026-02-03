@@ -192,289 +192,297 @@ export default function ProfilePage() {
 
   return (
     <div className='max-w-6xl mx-auto p-6'>
-      <PageHeader
-        title={t('profile.title') || '个人资料'}
-        description={t('profile.subtitle') || '管理您的个人信息和偏好设置'}
-        extra={
-          <Button
-            icon={editing ? <Save /> : <Edit />}
-            type={editing ? 'primary' : 'default'}
-            onClick={() => setEditing(!editing)}
-          >
-            {editing ? t('profile.save') || '保存' : t('profile.edit') || '编辑'}
-          </Button>
-        }
-      />
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{t('profile.title') || '个人资料'}</h1>
+          <p className="text-gray-500 mt-1">{t('profile.subtitle') || '管理您的个人信息和偏好设置'}</p>
+        </div>
+        <Button
+          icon={editing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+          type={editing ? 'primary' : 'default'}
+          onClick={() => setEditing(!editing)}
+        >
+          {editing ? t('profile.save') || '保存' : t('profile.edit') || '编辑'}
+        </Button>
+      </div>
 
       <Row gutter={[24, 24]}>
         {/* 左侧：个人信息 */}
         <Col xs={24} lg={16}>
-          <Tabs defaultActiveKey='profile' size='large'>
-            <TabPane
-              tab={
-                <span>
-                  <User size={16} className='mr-2' />
-                  {t('profile.basicInfo')}
-                </span>
-              }
-              key='profile'
-            >
-              <Card>
-                <Form
-                  form={profileForm}
-                  layout='vertical'
-                  onFinish={handleProfileUpdate}
-                  disabled={!editing}
-                >
-                  <Row gutter={16}>
-                    <Col span={24} className='text-center mb-6'>
-                      <div className='relative inline-block'>
-                        <Avatar
-                          size={120}
-                          src={profile.avatar}
-                          icon={<User size={60} />}
-                          className='border-4 border-gray-100 shadow-lg'
+          <Tabs 
+            defaultActiveKey='profile' 
+            size='large'
+            items={[
+              {
+                key: 'profile',
+                label: (
+                  <span className="flex items-center">
+                    <User size={16} className='mr-2' />
+                    {t('profile.basicInfo')}
+                  </span>
+                ),
+                children: (
+                  <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+                    <Form
+                      form={profileForm}
+                      layout='vertical'
+                      onFinish={handleProfileUpdate}
+                      disabled={!editing}
+                    >
+                      <Row gutter={16}>
+                        <Col span={24} className='text-center mb-6'>
+                          <div className='relative inline-block'>
+                            <Avatar
+                              size={120}
+                              src={profile.avatar}
+                              icon={<User size={60} />}
+                              className='border-4 border-gray-100 shadow-lg'
+                            />
+                            {editing && (
+                              <Button
+                                type='primary'
+                                shape='circle'
+                                icon={<Camera size={16} />}
+                                size='small'
+                                className='absolute bottom-0 right-0'
+                              />
+                            )}
+                          </div>
+                          <div className='mt-4'>
+                            <Title level={4} className='!mb-2'>
+                              {profile.name}
+                            </Title>
+                            <Tag color={getRoleColor(profile.role)}>{profile.role}</Tag>
+                          </div>
+                        </Col>
+                      </Row>
+
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Form.Item
+                            name='name'
+                            label={t('profile.name')}
+                            rules={[{ required: true, message: t('profile.enterName') }]}
+                          >
+                            <Input prefix={<User size={16} className="text-gray-400" />} placeholder={t('profile.enterName')} />
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <Form.Item
+                            name='username'
+                            label={t('profile.username')}
+                            rules={[{ required: true, message: t('profile.enterUsername') }]}
+                          >
+                            <Input prefix={<User size={16} className="text-gray-400" />} placeholder={t('profile.enterUsername')} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Form.Item
+                            name='email'
+                            label={t('profile.email')}
+                            rules={[
+                              { required: true, message: t('profile.enterEmail') },
+                              { type: 'email', message: t('profile.validEmail') },
+                            ]}
+                          >
+                            <Input prefix={<Mail size={16} className="text-gray-400" />} placeholder={t('profile.enterEmail')} />
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <Form.Item
+                            name='phone'
+                            label={t('profile.phone')}
+                            rules={[{ required: true, message: t('profile.enterPhone') }]}
+                          >
+                            <Input prefix={<Phone size={16} className="text-gray-400" />} placeholder={t('profile.enterPhone')} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Form.Item
+                            name='department'
+                            label={t('profile.department')}
+                            rules={[{ required: true, message: t('profile.selectDepartment') }]}
+                          >
+                            <Select 
+                              placeholder={t('profile.selectDepartment')}
+                              suffixIcon={<Building size={16} className="text-gray-400" />}
+                            >
+                              <Option value='IT支持部'>IT支持部</Option>
+                              <Option value='系统运维部'>系统运维部</Option>
+                              <Option value='网络管理部'>网络管理部</Option>
+                              <Option value='安全运维部'>安全运维部</Option>
+                            </Select>
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <Form.Item label={t('profile.tenant')} name='tenant'>
+                            <Input prefix={<Building size={16} className="text-gray-400" />} disabled />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+
+                      {editing && (
+                        <div className='text-center mt-6'>
+                          <Space size='middle'>
+                            <Button onClick={() => setEditing(false)}>{t('profile.cancel')}</Button>
+                            <Button type='primary' htmlType='submit' loading={loading}>
+                              {t('profile.saveChanges')}
+                            </Button>
+                          </Space>
+                        </div>
+                      )}
+                    </Form>
+                  </Card>
+                )
+              },
+              {
+                key: 'security',
+                label: (
+                  <span className="flex items-center">
+                    <Key size={16} className='mr-2' />
+                    {t('profile.securitySettings')}
+                  </span>
+                ),
+                children: (
+                  <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+                    <Form form={passwordForm} layout='vertical' onFinish={handlePasswordChange}>
+                      <Alert
+                        message={t('profile.passwordHint')}
+                        description={t('profile.passwordHintDesc')}
+                        type='info'
+                        showIcon
+                        className='mb-6'
+                      />
+
+                      <Form.Item
+                        name='currentPassword'
+                        label={t('profile.currentPassword')}
+                        rules={[{ required: true, message: t('profile.enterCurrentPassword') }]}
+                      >
+                        <Input.Password
+                          prefix={<Key size={16} className="text-gray-400" />}
+                          placeholder={t('profile.enterCurrentPassword')}
+                          visibilityToggle={{
+                            visible: passwordVisible,
+                            onVisibleChange: setPasswordVisible,
+                          }}
                         />
-                        {editing && (
-                          <Button
-                            type='primary'
-                            shape='circle'
-                            icon={<Camera size={16} />}
-                            size='small'
-                            className='absolute bottom-0 right-0'
-                          />
-                        )}
-                      </div>
-                      <div className='mt-4'>
-                        <Title level={4} className='mb-2'>
-                          {profile.name}
-                        </Title>
-                        <Tag color={getRoleColor(profile.role)}>{profile.role}</Tag>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name='name'
-                        label={t('profile.name')}
-                        rules={[{ required: true, message: t('profile.enterName') }]}
-                      >
-                        <Input prefix={<User />} placeholder={t('profile.enterName')} />
                       </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name='username'
-                        label={t('profile.username')}
-                        rules={[{ required: true, message: t('profile.enterUsername') }]}
-                      >
-                        <Input prefix={<User />} placeholder={t('profile.enterUsername')} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
                       <Form.Item
-                        name='email'
-                        label={t('profile.email')}
+                        name='newPassword'
+                        label={t('profile.newPassword')}
                         rules={[
-                          { required: true, message: t('profile.enterEmail') },
-                          { type: 'email', message: t('profile.validEmail') },
+                          { required: true, message: t('profile.enterNewPassword') },
+                          { min: 8, message: t('profile.passwordMinLength') },
                         ]}
                       >
-                        <Input prefix={<Mail />} placeholder={t('profile.enterEmail')} />
+                        <Input.Password
+                          prefix={<Key size={16} className="text-gray-400" />}
+                          placeholder={t('profile.enterNewPassword')}
+                          visibilityToggle={{
+                            visible: passwordVisible,
+                            onVisibleChange: setPasswordVisible,
+                          }}
+                        />
                       </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name='phone'
-                        label={t('profile.phone')}
-                        rules={[{ required: true, message: t('profile.enterPhone') }]}
-                      >
-                        <Input prefix={<Phone />} placeholder={t('profile.enterPhone')} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
                       <Form.Item
-                        name='department'
-                        label={t('profile.department')}
-                        rules={[{ required: true, message: t('profile.selectDepartment') }]}
+                        name='confirmPassword'
+                        label={t('profile.confirmPassword')}
+                        dependencies={['newPassword']}
+                        rules={[
+                          { required: true, message: t('profile.confirmNewPassword') },
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              if (!value || getFieldValue('newPassword') === value) {
+                                return Promise.resolve();
+                              }
+                              return Promise.reject(new Error(t('profile.passwordMismatch')));
+                            },
+                          }),
+                        ]}
                       >
-                        <Select prefix={<Building />} placeholder={t('profile.selectDepartment')}>
-                          <Option value='IT支持部'>IT支持部</Option>
-                          <Option value='系统运维部'>系统运维部</Option>
-                          <Option value='网络管理部'>网络管理部</Option>
-                          <Option value='安全运维部'>安全运维部</Option>
-                        </Select>
+                        <Input.Password
+                          prefix={<Key size={16} className="text-gray-400" />}
+                          placeholder={t('profile.confirmNewPassword')}
+                          visibilityToggle={{
+                            visible: passwordVisible,
+                            onVisibleChange: setPasswordVisible,
+                          }}
+                        />
                       </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item label={t('profile.tenant')} name='tenant'>
-                        <Input prefix={<Building />} disabled />
-                      </Form.Item>
-                    </Col>
-                  </Row>
 
-                  {editing && (
-                    <div className='text-center mt-6'>
-                      <Space size='middle'>
-                        <Button onClick={() => setEditing(false)}>{t('profile.cancel')}</Button>
+                      <div className='text-center'>
                         <Button type='primary' htmlType='submit' loading={loading}>
                           {t('profile.saveChanges')}
                         </Button>
-                      </Space>
-                    </div>
-                  )}
-                </Form>
-              </Card>
-            </TabPane>
+                      </div>
+                    </Form>
+                  </Card>
+                )
+              },
+              {
+                key: 'preferences',
+                label: (
+                  <span className="flex items-center">
+                    <Bell size={16} className='mr-2' />
+                    {t('profile.preferences')}
+                  </span>
+                ),
+                children: (
+                  <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+                    <Form form={preferencesForm} layout='vertical' onFinish={handlePreferencesUpdate}>
+                      <Form.Item
+                        name='notifications'
+                        label={t('profile.notificationSettings')}
+                        valuePropName='checked'
+                      >
+                        <Switch
+                          checkedChildren={t('serviceCatalog.enabled')}
+                          unCheckedChildren={t('serviceCatalog.disabled')}
+                        />
+                      </Form.Item>
 
-            <TabPane
-              tab={
-                <span>
-                  <Key size={16} className='mr-2' />
-                  {t('profile.securitySettings')}
-                </span>
+                      <Form.Item name='language' label={t('profile.languageSettings')}>
+                        <Select placeholder={t('profile.languageSettings')}>
+                          <Option value='zh-CN'>简体中文</Option>
+                          <Option value='en-US'>English</Option>
+                        </Select>
+                      </Form.Item>
+
+                      <Form.Item name='theme' label={t('profile.themeSettings')}>
+                        <Select placeholder={t('profile.themeSettings')}>
+                          <Option value='light'>Light</Option>
+                          <Option value='dark'>Dark</Option>
+                          <Option value='auto'>Auto</Option>
+                        </Select>
+                      </Form.Item>
+
+                      <div className='text-center'>
+                        <Button type='primary' htmlType='submit'>
+                          {t('profile.saveChanges')}
+                        </Button>
+                      </div>
+                    </Form>
+                  </Card>
+                )
               }
-              key='security'
-            >
-              <Card>
-                <Form form={passwordForm} layout='vertical' onFinish={handlePasswordChange}>
-                  <Alert
-                    message={t('profile.passwordHint')}
-                    description={t('profile.passwordHintDesc')}
-                    type='info'
-                    showIcon
-                    className='mb-6'
-                  />
-
-                  <Form.Item
-                    name='currentPassword'
-                    label={t('profile.currentPassword')}
-                    rules={[{ required: true, message: t('profile.enterCurrentPassword') }]}
-                  >
-                    <Input.Password
-                      prefix={<Key />}
-                      placeholder={t('profile.enterCurrentPassword')}
-                      visibilityToggle={{
-                        visible: passwordVisible,
-                        onVisibleChange: setPasswordVisible,
-                      }}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name='newPassword'
-                    label={t('profile.newPassword')}
-                    rules={[
-                      { required: true, message: t('profile.enterNewPassword') },
-                      { min: 8, message: t('profile.passwordMinLength') },
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<Key />}
-                      placeholder={t('profile.enterNewPassword')}
-                      visibilityToggle={{
-                        visible: passwordVisible,
-                        onVisibleChange: setPasswordVisible,
-                      }}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name='confirmPassword'
-                    label={t('profile.confirmPassword')}
-                    dependencies={['newPassword']}
-                    rules={[
-                      { required: true, message: t('profile.confirmNewPassword') },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('newPassword') === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject(new Error(t('profile.passwordMismatch')));
-                        },
-                      }),
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<Key />}
-                      placeholder={t('profile.confirmNewPassword')}
-                      visibilityToggle={{
-                        visible: passwordVisible,
-                        onVisibleChange: setPasswordVisible,
-                      }}
-                    />
-                  </Form.Item>
-
-                  <div className='text-center'>
-                    <Button type='primary' htmlType='submit' loading={loading}>
-                      {t('profile.saveChanges')}
-                    </Button>
-                  </div>
-                </Form>
-              </Card>
-            </TabPane>
-
-            <TabPane
-              tab={
-                <span>
-                  <Bell size={16} className='mr-2' />
-                  {t('profile.preferences')}
-                </span>
-              }
-              key='preferences'
-            >
-              <Card>
-                <Form form={preferencesForm} layout='vertical' onFinish={handlePreferencesUpdate}>
-                  <Form.Item
-                    name='notifications'
-                    label={t('profile.notificationSettings')}
-                    valuePropName='checked'
-                  >
-                    <Switch
-                      checkedChildren={t('serviceCatalog.enabled')}
-                      unCheckedChildren={t('serviceCatalog.disabled')}
-                    />
-                  </Form.Item>
-
-                  <Form.Item name='language' label={t('profile.languageSettings')}>
-                    <Select placeholder={t('profile.languageSettings')}>
-                      <Option value='zh-CN'>简体中文</Option>
-                      <Option value='en-US'>English</Option>
-                    </Select>
-                  </Form.Item>
-
-                  <Form.Item name='theme' label={t('profile.themeSettings')}>
-                    <Select placeholder={t('profile.themeSettings')}>
-                      <Option value='light'>Light</Option>
-                      <Option value='dark'>Dark</Option>
-                      <Option value='auto'>Auto</Option>
-                    </Select>
-                  </Form.Item>
-
-                  <div className='text-center'>
-                    <Button type='primary' htmlType='submit'>
-                      {t('profile.saveChanges')}
-                    </Button>
-                  </div>
-                </Form>
-              </Card>
-            </TabPane>
-          </Tabs>
+            ]}
+          />
         </Col>
 
         {/* 右侧：统计信息和账户状态 */}
         <Col xs={24} lg={8}>
           <div className='space-y-6'>
             {/* 账户状态 */}
-            <Card title={t('profile.accountStatus')}>
+            <Card title={t('profile.accountStatus')} className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
               <div className='space-y-4'>
                 <div className='flex items-center justify-between'>
                   <Text>{t('profile.accountStatus')}</Text>
@@ -493,20 +501,20 @@ export default function ProfilePage() {
 
             {/* 工作统计 */}
             {stats && (
-              <Card title={t('profile.workStats')}>
+              <Card title={t('profile.workStats')} className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
                 <div className='space-y-4'>
                   <div className='text-center'>
                     <Statistic
                       title={t('profile.totalTickets')}
                       value={stats.totalTickets}
-                      prefix={<User />}
+                      prefix={<User size={16} />}
                     />
                   </div>
                   <div className='text-center'>
                     <Statistic
                       title={t('profile.resolvedTickets')}
                       value={stats.resolvedTickets}
-                      prefix={<User />}
+                      prefix={<User size={16} />}
                       suffix={`/ ${stats.totalTickets}`}
                     />
                     <Progress
@@ -528,7 +536,7 @@ export default function ProfilePage() {
                       value={stats.satisfactionScore}
                       precision={1}
                       suffix='/5.0'
-                      valueStyle={{
+                      styles={{ content: {
                         color: getSatisfactionColor(stats.satisfactionScore),
                       }}
                     />
@@ -545,15 +553,15 @@ export default function ProfilePage() {
             )}
 
             {/* 快速操作 */}
-            <Card title={t('profile.quickActions')}>
+            <Card title={t('profile.quickActions')} className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
               <div className='space-y-2'>
-                <Button block icon={<Shield />}>
+                <Button block icon={<Shield size={16} />}>
                   {t('profile.viewPermissions')}
                 </Button>
-                <Button block icon={<Bell />}>
+                <Button block icon={<Bell size={16} />}>
                   {t('profile.notificationSettings')}
                 </Button>
-                <Button block icon={<User />}>
+                <Button block icon={<User size={16} />}>
                   {t('profile.switchAccount')}
                 </Button>
               </div>

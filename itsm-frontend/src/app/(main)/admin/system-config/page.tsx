@@ -441,9 +441,9 @@ export default function SystemConfiguration() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className='p-6'>
       <div className='mb-6'>
-        <Title level={2} className='!mb-2'>
+        <Title level={2} className='!mb-2 !text-gray-900'>
           <Settings className='inline-block w-6 h-6 mr-2' />
           系统配置
         </Title>
@@ -453,27 +453,27 @@ export default function SystemConfiguration() {
       {/* 系统状态统计 */}
       <Row gutter={[16, 16]} className='mb-6'>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
             <Statistic
               title='系统运行时间'
               value={systemStats.uptime}
               prefix={<Clock className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
             <Statistic
               title='当前连接数'
               value={systemStats.connections}
               prefix={<Network className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
             <div className='flex items-center justify-between'>
               <div>
                 <div className='text-sm text-gray-500'>磁盘使用率</div>
@@ -485,7 +485,7 @@ export default function SystemConfiguration() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
             <div className='flex items-center justify-between'>
               <div>
                 <div className='text-sm text-gray-500'>内存使用率</div>
@@ -511,7 +511,7 @@ export default function SystemConfiguration() {
       )}
 
       {/* 配置表单 */}
-      <Card className='enterprise-card'>
+      <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
         <Form
           form={form}
           layout='vertical'

@@ -289,7 +289,10 @@ class HttpClient {
           this.clearToken();
           if (typeof window !== 'undefined') {
             localStorage.removeItem('refresh_token');
-            window.location.href = '/login';
+            // Only redirect if not already on login page to avoid loops
+            if (!window.location.pathname.startsWith('/login')) {
+              window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+            }
           }
           throw new Error('Authentication failed');
         }

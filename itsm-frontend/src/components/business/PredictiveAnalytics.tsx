@@ -91,87 +91,80 @@ export const PredictiveAnalytics: React.FC = () => {
   }, [timeRange]);
 
   const loadPredictiveData = async () => {
+    setLoading(true);
     try {
-      // 模拟API调用
-      const mockMetrics: PredictiveMetrics = {
+      const { TicketPredictionApi } = await import('@/lib/api/ticket-prediction-api');
+      const { SLAApi } = await import('@/lib/api/sla-api');
+
+      // 计算日期范围
+      const endDate = new Date();
+      const startDate = new Date();
+      const rangeDays = parseInt(timeRange[0]);
+      startDate.setDate(endDate.getDate() - rangeDays);
+
+      const dateRange: [string, string] = [
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+      ];
+
+      // 并行请求数据
+      const [predictionReport, slaMonitoring] = await Promise.all([
+        TicketPredictionApi.getTrendPrediction({
+          time_range: dateRange,
+          prediction_period: rangeDays <= 30 ? 'week' : 'month',
+          model_type: 'arima'
+        }),
+        SLAApi.getSLAMonitoring({
+          start_time: dateRange[0],
+          end_time: dateRange[1]
+        })
+      ]);
+
+      // 转换预测数据
+      const mappedMetrics: PredictiveMetrics = {
         ticketVolume: {
-          current: 156,
-          predicted: 189,
-          trend: "up",
-          confidence: 87.5,
+          current: predictionReport.data[predictionReport.data.length - 1]?.actual || 0,
+          predicted: predictionReport.metrics.next_week_prediction || 0,
+          trend: predictionReport.metrics.trend || 'stable',
+          confidence: (predictionReport.metrics.accuracy || 0) * 100,
         },
         resourceDemand: {
-          current: 12,
-          predicted: 15,
-          shortage: 3,
-          recommendation: "建议增加2名技术支持人员和1名系统管理员",
+          // 暂时没有资源需求API，使用默认值或从预测中推断
+          current: 0,
+          predicted: 0,
+          shortage: 0,
+          recommendation: "暂无资源建议",
         },
         slaBreachRisk: {
-          riskLevel: "medium",
-          probability: 23.4,
-          affectedTickets: 8,
-          mitigation: "优先处理高风险工单，加强资源分配",
+          riskLevel: slaMonitoring.violation_rate > 20 ? 'high' : slaMonitoring.violation_rate > 10 ? 'medium' : 'low',
+          probability: slaMonitoring.violation_rate || 0,
+          affectedTickets: slaMonitoring.at_risk_tickets || 0,
+          mitigation: slaMonitoring.at_risk_tickets > 0 ? "建议优先处理即将违约的工单" : "当前SLA风险较低",
         },
         seasonalPatterns: {
-          peakPeriods: ["周一上午", "月末", "季度末"],
-          lowPeriods: ["周末", "节假日"],
-          recommendations: [
-            "周一增加值班人员",
-            "月末提前准备资源",
-            "季度末加强监控",
-          ],
+          peakPeriods: [], // API暂不支持
+          lowPeriods: [], // API暂不支持
+          recommendations: predictionReport.recommendations || [],
         },
       };
 
-      const mockTrendData: TrendData[] = [
-        { date: "2024-01-01", actual: 45, predicted: 42, confidence: 0.85 },
-        { date: "2024-01-02", actual: 52, predicted: 48, confidence: 0.87 },
-        { date: "2024-01-03", actual: 38, predicted: 41, confidence: 0.89 },
-        { date: "2024-01-04", actual: 61, predicted: 58, confidence: 0.86 },
-        { date: "2024-01-05", actual: 55, predicted: 52, confidence: 0.88 },
-        { date: "2024-01-06", actual: 42, predicted: 39, confidence: 0.9 },
-        { date: "2024-01-07", actual: 48, predicted: 45, confidence: 0.87 },
-        { date: "2024-01-08", actual: 67, predicted: 64, confidence: 0.85 },
-        { date: "2024-01-09", actual: 58, predicted: 55, confidence: 0.88 },
-        { date: "2024-01-10", actual: 72, predicted: 69, confidence: 0.86 },
-      ];
+      const mappedTrendData: TrendData[] = predictionReport.data.map(d => ({
+        date: d.date,
+        actual: d.actual || 0,
+        predicted: d.predicted,
+        confidence: d.confidence || 0.85
+      }));
 
-      const mockResourceData: ResourceData[] = [
-        {
-          role: "技术支持",
-          current: 5,
-          required: 7,
-          gap: 2,
-          utilization: 85,
-        },
-        {
-          role: "系统管理员",
-          current: 3,
-          required: 4,
-          gap: 1,
-          utilization: 92,
-        },
-        {
-          role: "网络工程师",
-          current: 2,
-          required: 2,
-          gap: 0,
-          utilization: 78,
-        },
-        {
-          role: "数据库管理员",
-          current: 2,
-          required: 2,
-          gap: 0,
-          utilization: 88,
-        },
-      ];
+      // 暂时清空资源数据，直到有真实API
+      setResourceData([]); 
 
-      setMetrics(mockMetrics);
-      setTrendData(mockTrendData);
-      setResourceData(mockResourceData);
+      setMetrics(mappedMetrics);
+      setTrendData(mappedTrendData);
     } catch (error) {
       console.error("加载预测数据失败:", error);
+      // 出错时不显示Mock数据，保持空状态或显示错误
+      setMetrics(null);
+      setTrendData([]);
     } finally {
       setLoading(false);
     }
@@ -286,7 +279,7 @@ export const PredictiveAnalytics: React.FC = () => {
               title="SLA违约风险"
               value={`${metrics?.slaBreachRisk.probability}%`}
               prefix={<AlertTriangle />}
-              valueStyle={{
+              styles={{ content: {
                 color: getRiskColor(metrics?.slaBreachRisk.riskLevel || "low"),
               }}
               suffix={

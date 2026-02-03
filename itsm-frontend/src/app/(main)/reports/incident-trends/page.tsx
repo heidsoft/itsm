@@ -227,7 +227,7 @@ const IncidentTrendsPage = () => {
             <Statistic
               title="新增事件"
               value={stats.created}
-              valueStyle={{ color: colors.primary }}
+              styles={{ content: { color: colors.primary } }}
               prefix={<TrendingUp size={20} />}
             />
           </Card>
@@ -237,7 +237,7 @@ const IncidentTrendsPage = () => {
             <Statistic
               title="已解决事件"
               value={stats.resolved}
-              valueStyle={{ color: colors.success }}
+              styles={{ content: { color: colors.success } }}
               prefix={<CheckCircle size={20} />}
             />
           </Card>

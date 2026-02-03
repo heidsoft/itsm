@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layout,
   Button,
@@ -63,6 +63,23 @@ export const Header: React.FC<HeaderProps> = ({
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchResults, setSearchResults] = useState<GlobalSearchResult | null>(null);
   const { t } = useI18n();
+  const [isClient, setIsClient] = useState(false);
+
+  // 处理 hydration 问题
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 用户显示名称（处理空值）
+  const displayName = user?.name || user?.username || '';
+  // 用户首字母
+  const userInitial = displayName.charAt(0).toUpperCase() || 'U';
+  // 用户角色显示
+  const roleText = user?.role === 'admin'
+    ? t('header.admin')
+    : user?.role === 'super_admin'
+      ? t('header.superAdmin')
+      : t('header.user');
 
   const handleLogout = () => {
     logout();
@@ -309,26 +326,35 @@ export const Header: React.FC<HeaderProps> = ({
         </Tooltip>
 
         {/* 用户菜单 */}
-        <Dropdown
-          menu={{ items: userMenuItems }}
-          placement='bottomRight'
-          trigger={['click']}
-          open={userMenuOpen}
-          onOpenChange={setUserMenuOpen}
-        >
-          <div className={styles.userMenu}>
-            <Avatar size={28} className={styles.userAvatar}>
-              {user?.name?.[0] || user?.username?.[0] || 'U'}
-            </Avatar>
-            <div className={styles.userInfo}>
-              <Text className={styles.userName}>{user?.name || user?.username}</Text>
-              <Text className={styles.userRole}>
-                {user?.role === 'admin' ? t('header.admin') : t('header.user')}
-              </Text>
-            </div>
-            <ChevronDown style={{ width: 14, height: 14, color: '#9ca3af' }} />
-          </div>
-        </Dropdown>
+        {isClient ? (
+          user ? (
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement='bottomRight'
+              trigger={['click']}
+              open={userMenuOpen}
+              onOpenChange={setUserMenuOpen}
+            >
+              <div className={styles.userMenu}>
+                <Avatar size={28} className={styles.userAvatar}>
+                  {userInitial}
+                </Avatar>
+                <div className={styles.userInfo}>
+                  <Text className={styles.userName}>{displayName}</Text>
+                  <Text className={styles.userRole}>{roleText}</Text>
+                </div>
+                <ChevronDown style={{ width: 14, height: 14, color: '#9ca3af' }} />
+              </div>
+            </Dropdown>
+          ) : (
+            <Button type='primary' onClick={() => router.push('/login')}>
+              {t('header.login')}
+            </Button>
+          )
+        ) : (
+          // Hydration 期间显示占位符
+          <div className={styles.userMenuPlaceholder} />
+        )}
       </div>
 
       {/* 通知抽屉 */}
@@ -341,7 +367,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         }
         placement='right'
-        width={400}
+        size="default"
+        style={{ width: 400 }}
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
         className={styles.notificationDrawer}

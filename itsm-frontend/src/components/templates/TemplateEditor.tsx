@@ -482,7 +482,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             {fields.length === 0 ? (
               <Empty description="请先在字段设计步骤中添加字段" />
             ) : (
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space orientation="vertical" style={{ width: '100%' }}>
                 {fields.map((field) => (
                   <Form.Item
                     key={field.id}
@@ -532,7 +532,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           rules={[{ required: true, message: '请选择可见性' }]}
         >
           <Radio.Group>
-            <Space direction="vertical">
+            <Space orientation="vertical">
               <Radio value="public">
                 <strong>公开</strong> - 所有用户都可以使用
               </Radio>

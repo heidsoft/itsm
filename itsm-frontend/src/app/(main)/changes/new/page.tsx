@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { App, message } from 'antd';
+import { App } from 'antd';
 
 const CreateChangePage = () => {
   const router = useRouter();

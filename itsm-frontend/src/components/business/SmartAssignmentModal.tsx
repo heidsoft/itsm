@@ -133,24 +133,24 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
       destroyOnHidden
     >
       <Spin spinning={loading}>
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
+        <Space orientation='vertical' style={{ width: '100%' }} size='large'>
           {/* 说明信息 */}
           <Alert
-            message="智能分配说明"
-            description="系统将根据处理人的技能匹配度、当前工作负载、历史处理记录等因素，为您推荐最合适的处理人。"
-            type="info"
+            message='智能分配说明'
+            description='系统将根据处理人的技能匹配度、当前工作负载、历史处理记录等因素，为您推荐最合适的处理人。'
+            type='info'
             icon={<InfoCircleOutlined />}
             showIcon
           />
 
           {/* 自动分配按钮 */}
           <Card>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation='vertical' style={{ width: '100%' }}>
               <Text strong>快速操作</Text>
               <Button
-                type="primary"
+                type='primary'
                 icon={<ThunderboltOutlined />}
-                size="large"
+                size='large'
                 block
                 loading={autoAssigning}
                 onClick={handleAutoAssign}
@@ -158,7 +158,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
               >
                 使用智能推荐自动分配
               </Button>
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text type='secondary' style={{ fontSize: 12 }}>
                 系统将自动分配给评分最高的推荐处理人
               </Text>
             </Space>
@@ -168,34 +168,25 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
 
           {/* 推荐列表 */}
           {recommendations.length === 0 ? (
-            <Empty description="暂无推荐处理人" />
+            <Empty description='暂无推荐处理人' />
           ) : (
             <List
               dataSource={recommendations}
               renderItem={(item, index) => (
                 <List.Item
                   actions={[
-                    <Button
-                      type="primary"
-                      onClick={() => handleSelectAssignee(item.user_id)}
-                    >
+                    <Button type='primary' onClick={() => handleSelectAssignee(item.user_id)}>
                       选择
                     </Button>,
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        src={item.user_avatar}
-                        icon={<UserOutlined />}
-                        size="large"
-                      />
-                    }
+                    avatar={<Avatar src={item.user_avatar} icon={<UserOutlined />} size='large' />}
                     title={
                       <Space>
                         <Text strong>{item.user_name}</Text>
                         {index === 0 && (
-                          <Tag color="gold" icon={<CheckCircleOutlined />}>
+                          <Tag color='gold' icon={<CheckCircleOutlined />}>
                             最佳推荐
                           </Tag>
                         )}
@@ -205,31 +196,28 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                       </Space>
                     }
                     description={
-                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Paragraph
-                          ellipsis={{ rows: 2, expandable: false }}
-                          style={{ margin: 0 }}
-                        >
-                          <Text type="secondary">{item.reason}</Text>
+                      <Space orientation='vertical' size='small' style={{ width: '100%' }}>
+                        <Paragraph ellipsis={{ rows: 2, expandable: false }} style={{ margin: 0 }}>
+                          <Text type='secondary'>{item.reason}</Text>
                         </Paragraph>
-                        <Space size="middle">
+                        <Space size='middle'>
                           {item.factors.skill_match !== undefined && (
-                            <Tooltip title="技能匹配度">
-                              <Text type="secondary" style={{ fontSize: 12 }}>
+                            <Tooltip title='技能匹配度'>
+                              <Text type='secondary' style={{ fontSize: 12 }}>
                                 技能: {item.factors.skill_match}%
                               </Text>
                             </Tooltip>
                           )}
                           {item.factors.workload !== undefined && (
-                            <Tooltip title="工作负载">
-                              <Text type="secondary" style={{ fontSize: 12 }}>
+                            <Tooltip title='工作负载'>
+                              <Text type='secondary' style={{ fontSize: 12 }}>
                                 负载: {item.factors.workload}%
                               </Text>
                             </Tooltip>
                           )}
                           {item.factors.history_success !== undefined && (
-                            <Tooltip title="历史成功率">
-                              <Text type="secondary" style={{ fontSize: 12 }}>
+                            <Tooltip title='历史成功率'>
+                              <Text type='secondary' style={{ fontSize: 12 }}>
                                 成功率: {item.factors.history_success}%
                               </Text>
                             </Tooltip>
@@ -238,7 +226,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
                         <Progress
                           percent={item.score}
                           strokeColor={getScoreColor(item.score)}
-                          size="small"
+                          size='small'
                           showInfo={false}
                         />
                       </Space>
@@ -253,4 +241,3 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
     </Modal>
   );
 };
-

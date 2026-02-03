@@ -2,12 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Space, Typography, Button, Table, Tag, message } from 'antd';
+import { Card, Space, Button, Table, Tag, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 
 import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
-
-const { Title, Text } = Typography;
 
 function statusTag(status: string) {
   const map: Record<string, { color: string; label: string }> = {
@@ -57,22 +55,22 @@ export default function PendingApprovalsPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        <Card>
-          <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+      <Space orientation="vertical" size={16} className="w-full">
+        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+          <div className="flex items-center justify-between w-full">
             <div>
-              <Title level={2} style={{ marginBottom: 0 }}>
+              <h2 className="text-2xl font-bold text-gray-900 mb-0">
                 我的待办审批
-              </Title>
-              <Text type="secondary">V0：按角色返回当前需要我处理的服务请求</Text>
+              </h2>
+              <p className="text-gray-500 mt-1 mb-0">V0：按角色返回当前需要我处理的服务请求</p>
             </div>
             <Button icon={<ReloadOutlined />} onClick={() => load(page, size)} loading={loading}>
               刷新
             </Button>
-          </Space>
+          </div>
         </Card>
 
-        <Card>
+        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
           <Table<ServiceRequest>
             rowKey="id"
             loading={loading}

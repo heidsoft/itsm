@@ -429,7 +429,7 @@ const SLADefinitionManagement = () => {
               title='SLA定义总数'
               value={stats.total}
               prefix={<Target className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -439,7 +439,7 @@ const SLADefinitionManagement = () => {
               title='已启用'
               value={stats.active}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -449,7 +449,7 @@ const SLADefinitionManagement = () => {
               title='草稿状态'
               value={stats.draft}
               prefix={<Edit className='w-5 h-5' />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -460,7 +460,7 @@ const SLADefinitionManagement = () => {
               value={stats.avgAvailability}
               suffix='%'
               prefix={<TrendingUp className='w-5 h-5' />}
-              valueStyle={{ color: '#722ed1' }}
+              styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>

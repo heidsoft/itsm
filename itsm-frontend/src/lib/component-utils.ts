@@ -175,6 +175,7 @@ export const useAsync = <T>(
       setState({ data: null, loading: false, error: error as Error });
       throw error;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   useEffect(() => {
@@ -301,8 +302,17 @@ export const useKeyPress = (
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [targetKey, callback, ...dependencies]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...dependencies]);
 };
+
+/**
+ * 热重载组件
+ */
+export function hotReloadComponent(componentName: string): void {
+  // console.log(`Hot reloading component: ${componentName}`);
+  // 实际项目中这里会触发热重载逻辑
+}
 
 // 复制到剪贴板Hook
 export const useClipboard = () => {

@@ -1,0 +1,360 @@
+FAIL src/app/(auth)/login/__tests__/page.test.tsx
+  LoginPage
+    渲染测试
+      ✕ 应该渲染登录表单的所有必需元素 (97 ms)
+      ✕ 应该渲染用户名和密码字段的图标 (12 ms)
+      ✕ 应该具有正确的表单结构 (12 ms)
+    表单交互
+      ✕ 应该允许用户在用户名和密码字段中输入 (16 ms)
+      ✕ 应该处理表单提交 (12 ms)
+    认证流程
+      ✕ 应该处理成功登录 (11 ms)
+      ✕ 应该处理登录失败并显示错误信息 (9 ms)
+    边界情况
+      ✕ 应该处理AuthService返回undefined (10 ms)
+
+  ● LoginPage › 渲染测试 › 应该渲染登录表单的所有必需元素
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      189 |   describe('渲染测试', () => {
+      190 |     it('应该渲染登录表单的所有必需元素', () => {
+    > 191 |       render(<LoginPage />);
+          |             ^
+      192 |
+      193 |       expect(screen.getByTestId('login-card')).toBeInTheDocument();
+      194 |       expect(screen.getByTestId('login-title')).toHaveTextContent('登录');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:191:13)
+
+  ● LoginPage › 渲染测试 › 应该渲染用户名和密码字段的图标
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      199 |
+      200 |     it('应该渲染用户名和密码字段的图标', () => {
+    > 201 |       render(<LoginPage />);
+          |             ^
+      202 |
+      203 |       expect(screen.getByTestId('user-icon')).toBeInTheDocument();
+      204 |       expect(screen.getByTestId('lock-icon')).toBeInTheDocument();
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:201:13)
+
+  ● LoginPage › 渲染测试 › 应该具有正确的表单结构
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      206 |
+      207 |     it('应该具有正确的表单结构', () => {
+    > 208 |       render(<LoginPage />);
+          |             ^
+      209 |
+      210 |       expect(screen.getByRole('form')).toBeInTheDocument();
+      211 |       expect(screen.getByTestId('input-密码')).toHaveAttribute('type', 'password');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:208:13)
+
+  ● LoginPage › 表单交互 › 应该允许用户在用户名和密码字段中输入
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      216 |     it('应该允许用户在用户名和密码字段中输入', async () => {
+      217 |       const user = userEvent.setup();
+    > 218 |       render(<LoginPage />);
+          |             ^
+      219 |
+      220 |       const usernameInput = screen.getByTestId('input-用户名');
+      221 |       const passwordInput = screen.getByTestId('input-密码');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:218:13)
+
+  ● LoginPage › 表单交互 › 应该处理表单提交
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      236 |       });
+      237 |
+    > 238 |       render(<LoginPage />);
+          |             ^
+      239 |
+      240 |       const usernameInput = screen.getByTestId('input-用户名');
+      241 |       const passwordInput = screen.getByTestId('input-密码');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:238:13)
+
+  ● LoginPage › 认证流程 › 应该处理成功登录
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      259 |       });
+      260 |
+    > 261 |       render(<LoginPage />);
+          |             ^
+      262 |
+      263 |       const usernameInput = screen.getByTestId('input-用户名');
+      264 |       const passwordInput = screen.getByTestId('input-密码');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:261:13)
+
+  ● LoginPage › 认证流程 › 应该处理登录失败并显示错误信息
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      284 |       mockLogin.mockRejectedValue(new Error(errorMessage));
+      285 |
+    > 286 |       render(<LoginPage />);
+          |             ^
+      287 |
+      288 |       const usernameInput = screen.getByTestId('input-用户名');
+      289 |       const passwordInput = screen.getByTestId('input-密码');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:286:13)
+
+  ● LoginPage › 边界情况 › 应该处理AuthService返回undefined
+
+    Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+    Check the render method of `LoginPage`.
+
+      305 |       mockLogin.mockResolvedValue(undefined);
+      306 |
+    > 307 |       render(<LoginPage />);
+          |             ^
+      308 |
+      309 |       const usernameInput = screen.getByTestId('input-用户名');
+      310 |       const passwordInput = screen.getByTestId('input-密码');
+
+      at createFiberFromTypeAndProps (node_modules/react-dom/cjs/react-dom-client.development.js:5021:28)
+      at createFiberFromElement (node_modules/react-dom/cjs/react-dom-client.development.js:5035:14)
+      at reconcileChildFibersImpl (node_modules/react-dom/cjs/react-dom-client.development.js:6920:31)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+      at reconcileChildren (node_modules/react-dom/cjs/react-dom-client.development.js:9701:13)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:12049:13)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:307:13)
+
+--------------------------------|---------|----------|---------|---------|-------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------------------------|---------|----------|---------|---------|-------------------
+All files                       |       0 |        0 |       0 |       0 |                   
+ common                         |       0 |        0 |       0 |       0 |                   
+  ActivityListCard.tsx          |       0 |        0 |       0 |       0 | 3-72              
+  ErrorBoundary.tsx             |       0 |        0 |       0 |       0 | 3-238             
+  GlobalErrorBoundary.tsx       |       0 |        0 |       0 |       0 | 3-271             
+  KPICard.tsx                   |       0 |        0 |       0 |       0 | 3-71              
+  LazyComponents.tsx            |       0 |        0 |       0 |       0 | 3-177             
+  LazyImage.tsx                 |       0 |        0 |       0 |       0 | 3-312             
+  LoadingStateManager.tsx       |       0 |        0 |       0 |       0 | 3-328             
+  PerformanceMonitor.tsx        |       0 |        0 |       0 |       0 | 3-516             
+  PriorityBadge.tsx             |       0 |        0 |       0 |       0 | 3-13              
+  SatisfactionDashboard.tsx     |       0 |        0 |       0 |       0 | 3-513             
+  SearchFilters.tsx             |       0 |        0 |       0 |       0 | 3-77              
+  SkeletonLoading.tsx           |       0 |        0 |       0 |       0 | 3-264             
+  StatusBadge.tsx               |       0 |        0 |       0 |       0 | 3-13              
+  SystemAlertCard.tsx           |       0 |        0 |       0 |       0 | 3-124             
+  TestRunner.tsx                |       0 |        0 |       0 |       0 | 3-281             
+  TicketListCard.tsx            |       0 |        0 |       0 |       0 | 3-186             
+  UserSelect.tsx                |       0 |        0 |       0 |       0 | 3-93              
+ ui                             |       0 |        0 |       0 |       0 |                   
+  AccessibilityEnhanced.tsx     |       0 |        0 |       0 |       0 | 3-234             
+  AccessibilityUtils.tsx        |       0 |        0 |       0 |       0 | 3-454             
+  Badge.tsx                     |       0 |        0 |       0 |       0 | 1-189             
+  Button.tsx                    |       0 |        0 |       0 |       0 | 3-236             
+  Card.tsx                      |       0 |        0 |       0 |       0 | 3-369             
+  ComponentLibrary.tsx          |       0 |      100 |       0 |       0 | 3-339             
+  DataTable.tsx                 |       0 |        0 |       0 |       0 | 1-274             
+  DatePicker.tsx                |       0 |        0 |       0 |       0 | 4-631             
+  EnhancedCard.tsx              |       0 |        0 |       0 |       0 | 3-377             
+  EnhancedFeedback.tsx          |       0 |        0 |       0 |       0 | 3-393             
+  EnhancedInput.tsx             |       0 |        0 |       0 |       0 | 3-406             
+  EnhancedTable.tsx             |       0 |        0 |       0 |       0 | 3-541             
+  EnterpriseButton.tsx          |       0 |        0 |       0 |       0 | 4-261             
+  EnterpriseCard.tsx            |       0 |        0 |       0 |       0 | 4-255             
+  EnterpriseTable.tsx           |       0 |        0 |       0 |       0 | 4-245             
+  FormField.tsx                 |       0 |        0 |       0 |       0 | 1-117             
+  Input.tsx                     |       0 |        0 |       0 |       0 | 3-432             
+  InteractionFeedback.tsx       |       0 |        0 |       0 |       0 | 3-431             
+  InteractionPatterns.tsx       |       0 |        0 |       0 |       0 | 3-533             
+  LoadingEmptyError.example.tsx |       0 |        0 |       0 |       0 | 1-180             
+  LoadingEmptyError.tsx         |       0 |        0 |       0 |       0 | 3-324             
+  LoadingSkeleton.tsx           |       0 |        0 |       0 |       0 | 3-185             
+  LoadingSpinner.tsx            |       0 |        0 |       0 |       0 | 3-85              
+  LoadingState.tsx              |       0 |        0 |       0 |       0 | 3-218             
+  MobileTabBar.tsx              |       0 |        0 |       0 |       0 | 3-381             
+  Modal.tsx                     |       0 |        0 |       0 |       0 | 1-258             
+  NotificationContainer.tsx     |       0 |      100 |       0 |       0 | 3-43              
+  OptimizedImage.tsx            |       0 |        0 |       0 |       0 | 6-357             
+  ResponsiveDashboard.tsx       |       0 |        0 |       0 |       0 | 3-479             
+  ResponsiveTable.tsx           |       0 |        0 |       0 |       0 | 4-322             
+  Select.tsx                    |       0 |        0 |       0 |       0 | 3-447             
+  SkeletonLoading.tsx           |       0 |        0 |       0 |       0 | 3-341             
+  SmartForm.tsx                 |       0 |        0 |       0 |       0 | 3-388             
+  Table.tsx                     |       0 |        0 |       0 |       0 | 4-425             
+  Toast.tsx                     |       0 |        0 |       0 |       0 | 1-243             
+  TouchFeedback.tsx             |       0 |        0 |       0 |       0 | 3-309             
+  UnifiedFilters.tsx            |       0 |        0 |       0 |       0 | 3-156             
+  UnifiedForm.tsx               |       0 |        0 |       0 |       0 | 7-564             
+  UnifiedTable.tsx              |       0 |        0 |       0 |       0 | 6-474             
+  VirtualList.tsx               |       0 |        0 |       0 |       0 | 1-56              
+  auth-guard.tsx                |       0 |        0 |       0 |       0 | 3-44              
+  icons.tsx                     |       0 |        0 |       0 |       0 | 1-401             
+  incident-list.tsx             |       0 |        0 |       0 |       0 | 4-529             
+  index.ts                      |       0 |      100 |     100 |       0 | 10-133            
+  login-form.tsx                |       0 |        0 |       0 |       0 | 3-198             
+--------------------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 0% ( 0/2924 )
+Branches     : 0% ( 0/2200 )
+Functions    : 0% ( 0/804 )
+Lines        : 0% ( 0/2537 )
+================================================================================
+Test Suites: 1 failed, 1 total
+Tests:       8 failed, 8 total
+Snapshots:   0 total
+Time:        7.251 s
+Ran all test suites matching /login\/__tests__\/page.test.tsx/i.

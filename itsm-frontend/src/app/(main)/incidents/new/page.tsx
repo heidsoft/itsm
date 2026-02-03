@@ -5,13 +5,12 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { App, message } from 'antd';
+import { App } from 'antd';
 import { incidentService } from '@/lib/services/incident-service';
+import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
 
-interface ConfigItem {
-  id: string;
-  name: string;
-  type: string;
+interface ConfigItem extends Pick<ConfigurationItem, 'id' | 'name' | 'ci_type' | 'status'> {
+  id: number;
 }
 
 export default function NewIncidentPage() {
@@ -22,25 +21,21 @@ export default function NewIncidentPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<ConfigItem[]>([]);
 
-  // Mock data for configuration items
-  const mockCIs: ConfigItem[] = [
-    { id: '1', name: 'Web Server 01', type: 'Server' },
-    { id: '2', name: 'Database Server', type: 'Database' },
-    { id: '3', name: 'Load Balancer', type: 'Network' },
-    { id: '4', name: 'Application Server', type: 'Server' },
-  ];
-
   useEffect(() => {
     if (searchTerm.trim()) {
-      // Simulate API call
-      setTimeout(() => {
-        const results = mockCIs.filter(
-          ci =>
-            ci.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            ci.type.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setSearchResults(results);
-      }, 300);
+      const fetchCIs = async () => {
+        try {
+          const { default: CMDBApi } = await import('@/lib/api/cmdb-api');
+          const results = await CMDBApi.searchCIs({ keyword: searchTerm });
+          setSearchResults(results.items);
+        } catch (error) {
+          console.error('Failed to search CIs:', error);
+          setSearchResults([]);
+        }
+      };
+      
+      const timeoutId = setTimeout(fetchCIs, 300);
+      return () => clearTimeout(timeoutId);
     } else {
       setSearchResults([]);
     }
@@ -53,7 +48,7 @@ export default function NewIncidentPage() {
     setSearchTerm('');
   };
 
-  const handleRemoveCI = (ciId: string) => {
+  const handleRemoveCI = (ciId: number) => {
     setSelectedCIs(selectedCIs.filter(ci => ci.id !== ciId));
   };
 

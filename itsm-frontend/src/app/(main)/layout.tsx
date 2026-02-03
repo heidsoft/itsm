@@ -71,9 +71,8 @@ export default function MainLayout({
     <ConfigProvider locale={zhCN}>
       <App>
         <Layout
+          className="min-h-screen bg-[#f5f7fb]"
           style={{
-            minHeight: '100vh',
-            background: '#f5f7fb',
             paddingLeft: isMobile
               ? 0
               : collapsed
@@ -86,25 +85,20 @@ export default function MainLayout({
           <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
           {/* 主区域 */}
-          <Layout style={{ background: '#f5f7fb', minHeight: '100vh' }}>
+          <Layout className="bg-[#f5f7fb] min-h-screen">
             {/* 顶部导航栏 */}
             <Header collapsed={collapsed} onCollapse={setCollapsed} showBreadcrumb={true} />
 
             {/* 内容区域 */}
             <Content
               onClick={handleContentClick}
+              className="bg-[#f5f7fb] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none"
               style={{
-                background: '#f5f7fb',
                 minHeight: LAYOUT_CONFIG.content.minHeight,
-                boxShadow: 'none',
-                width: 'auto',
-                minWidth: 0,
-                maxWidth: '100%',
-                overflowX: 'hidden',
               }}
             >
               <div
-                className='main-content'
+                className="main-content"
                 style={{
                   padding: isMobile ? `${LAYOUT_CONFIG.content.paddingMobile}px` : '16px',
                 }}
@@ -114,15 +108,7 @@ export default function MainLayout({
             </Content>
 
             {/* 页脚（可选） */}
-            <footer
-              style={{
-                textAlign: 'center',
-                padding: '16px',
-                background: 'transparent',
-                color: '#9ca3af',
-                fontSize: '12px',
-              }}
-            >
+            <footer className="text-center p-4 bg-transparent text-gray-400 text-xs">
               ITSM Platform ©{new Date().getFullYear()} - IT服务管理平台
             </footer>
           </Layout>
@@ -132,13 +118,8 @@ export default function MainLayout({
         {!collapsed && isMobile && (
           <div
             onClick={() => setCollapsed(true)}
+            className="fixed inset-0 bg-black/45"
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.45)',
               zIndex: LAYOUT_CONFIG.zIndex.sider - 1,
             }}
           />

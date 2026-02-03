@@ -198,7 +198,7 @@ const TicketDetailPage: React.FC = () => {
               </Button>
             </Link>
             <div>
-              <Title level={2} className='mb-1'>
+              <Title level={2} className='!mb-1 !text-gray-900'>
                 工单详情 #{ticket.id}
               </Title>
               <Text type='secondary'>{ticket.title}</Text>
@@ -240,8 +240,8 @@ const TicketDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <Card>
-        <Space direction='vertical' size={16} style={{ width: '100%' }}>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Space orientation='vertical' size={16} style={{ width: '100%' }}>
           <Descriptions column={2} bordered size='middle'>
             <Descriptions.Item label='标题'>{ticket.title}</Descriptions.Item>
             <Descriptions.Item label='编号'>{ticket.ticket_number}</Descriptions.Item>
@@ -261,10 +261,10 @@ const TicketDetailPage: React.FC = () => {
             <Button danger onClick={handleReject}>
               拒绝
             </Button>
-            <Button icon={<UserCheck />} onClick={handleAssign} loading={loadingUsers}>
+            <Button icon={<UserCheck size={16} />} onClick={handleAssign} loading={loadingUsers}>
               分配
             </Button>
-            <Button icon={<Edit />} onClick={handleUpdate}>
+            <Button icon={<Edit size={16} />} onClick={handleUpdate}>
               编辑
             </Button>
           </Space>

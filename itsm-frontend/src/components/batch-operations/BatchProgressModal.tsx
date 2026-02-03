@@ -105,7 +105,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           <Spin size="large" />
         </div>
       ) : (
-        <Space direction="vertical" size="large" className="w-full">
+        <Space orientation="vertical" size="large" className="w-full">
           {/* 进度条 */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -136,7 +136,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
               <Statistic
                 title="成功"
                 value={progress.successCount}
-                valueStyle={{ color: '#3f8600' }}
+                styles={{ content: { color: '#3f8600' } }}
                 prefix={<CheckCircleOutlined />}
               />
             </Col>
@@ -144,7 +144,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
               <Statistic
                 title="失败"
                 value={progress.failedCount}
-                valueStyle={{ color: '#cf1322' }}
+                styles={{ content: { color: '#cf1322' } }}
                 prefix={<CloseCircleOutlined />}
               />
             </Col>

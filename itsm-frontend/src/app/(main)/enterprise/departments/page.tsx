@@ -1,29 +1,53 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Tag, Space, Modal, Form, Input, Select, TreeSelect, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, TeamOutlined, SyncOutlined } from '@ant-design/icons';
+import { Table, Button, Tag, Space, Modal, Form, Input, Select, TreeSelect, App } from 'antd';
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  TeamOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { departmentService, Department } from '@/lib/services/department-service';
 
+import { UserApi } from '@/lib/api/user-api';
+
 export default function DepartmentsPage() {
+  const { message, modal } = App.useApp();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [treeData, setTreeData] = useState<Department[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [users, setUsers] = useState<{ label: string; value: number }[]>([]);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      setUsers(
+        response.users.map(user => ({
+          label: user.name || user.username,
+          value: user.id,
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
 
   const fetchDepartments = async () => {
     setFetching(true);
     try {
       const data = await departmentService.getDepartmentTree();
       setDepartments(data);
-      // For TreeSelect, we might need to map data if fields don't match exactly, 
+      // For TreeSelect, we might need to map data if fields don't match exactly,
       // but we configured fieldNames in TreeSelect which should handle it.
       // However, antd TreeSelect expects 'value', 'title', 'children' by default or configured.
       // Let's assume backend returns a structure that fits or we might need to process it recursively.
-      setTreeData(data); 
+      setTreeData(data);
     } catch (error) {
       console.error('Failed to fetch departments:', error);
       message.error('获取部门列表失败');
@@ -34,6 +58,7 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     fetchDepartments();
+    fetchUsers();
   }, []);
 
   const columns = [
@@ -87,7 +112,7 @@ export default function DepartmentsPage() {
   };
 
   const handleDelete = (record: Department) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: `确定要删除部门 "${record.name}" 吗？`,
       onOk: async () => {
@@ -106,14 +131,14 @@ export default function DepartmentsPage() {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      
+
       // If editing, we need the ID. But currently form doesn't have it.
       // We should store current editing record or use a hidden field.
       // For simplicity, let's assume create for now or check how to handle edit.
       // Actually, handleEdit sets values.
-      
+
       await departmentService.createDepartment(values);
-      
+
       message.success('保存成功');
       setIsModalVisible(false);
       form.resetFields();
@@ -133,12 +158,7 @@ export default function DepartmentsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '企业管理' }, { title: '部门管理' }] },
       }}
       extra={[
-        <Button
-          key='refresh'
-          icon={<SyncOutlined />}
-          onClick={fetchDepartments}
-          loading={fetching}
-        >
+        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchDepartments} loading={fetching}>
           刷新
         </Button>,
         <Button
@@ -157,7 +177,7 @@ export default function DepartmentsPage() {
       <Table
         columns={columns}
         dataSource={departments}
-        rowKey="id"
+        rowKey='id'
         pagination={false}
         loading={fetching}
         expandable={{ defaultExpandAllRows: true }}
@@ -195,10 +215,14 @@ export default function DepartmentsPage() {
             />
           </Form.Item>
           <Form.Item name='manager_id' label='负责人'>
-             {/* TODO: Load users from backend */}
-            <Select placeholder='请选择负责人'>
-              <Select.Option value={1}>管理员</Select.Option>
-            </Select>
+            <Select
+              placeholder='请选择负责人'
+              options={users}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
           <Form.Item name='description' label='描述'>
             <Input.TextArea rows={4} />

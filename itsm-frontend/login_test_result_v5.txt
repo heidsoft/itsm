@@ -1,0 +1,2087 @@
+FAIL src/app/(auth)/login/__tests__/page.test.tsx
+  LoginPage
+    渲染测试
+      ✕ 应该渲染登录表单的所有必需元素 (78 ms)
+      ✕ 应该渲染用户名和密码字段的图标 (21 ms)
+      ✕ 应该具有正确的表单结构 (467 ms)
+    表单交互
+      ✕ 应该允许用户在用户名和密码字段中输入 (22 ms)
+      ✕ 应该处理表单提交 (17 ms)
+    认证流程
+      ✕ 应该处理成功登录 (16 ms)
+      ✕ 应该处理登录失败并显示错误信息 (16 ms)
+    边界情况
+      ✕ 应该处理AuthService返回undefined (16 ms)
+
+  ● LoginPage › 渲染测试 › 应该渲染登录表单的所有必需元素
+
+    TestingLibraryElementError: Found multiple elements by: [data-testid="login-title"]
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    [36m<h1[39m
+      [33mdata-testid[39m=[32m"login-title"[39m
+      [33mlevel[39m=[32m"1"[39m
+      [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+    [36m>[39m
+      [0mITSM Pro[0m
+    [36m</h1>[39m
+
+    Ignored nodes: comments, script, style
+    [36m<h1[39m
+      [33mdata-testid[39m=[32m"login-title"[39m
+      [33mlevel[39m=[32m"2"[39m
+      [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+    [36m>[39m
+      [0m欢迎回来[0m
+    [36m</h1>[39m
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      196 |
+      197 |       expect(screen.getByTestId('login-card')).toBeInTheDocument();
+    > 198 |       expect(screen.getByTestId('login-title')).toHaveTextContent('登录');
+          |                     ^
+      199 |       expect(screen.getByTestId('input-用户名')).toBeInTheDocument();
+      200 |       expect(screen.getByTestId('input-密码')).toBeInTheDocument();
+      201 |       expect(screen.getByTestId('login-button')).toBeInTheDocument();
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:198:21)
+
+  ● LoginPage › 渲染测试 › 应该渲染用户名和密码字段的图标
+
+    TestingLibraryElementError: Unable to find an element by: [data-testid="user-icon"]
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      205 |       render(<LoginPage />);
+      206 |
+    > 207 |       expect(screen.getByTestId('user-icon')).toBeInTheDocument();
+          |                     ^
+      208 |       expect(screen.getByTestId('lock-icon')).toBeInTheDocument();
+      209 |     });
+      210 |
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:207:21)
+
+  ● LoginPage › 渲染测试 › 应该具有正确的表单结构
+
+    TestingLibraryElementError: Unable to find an accessible element with the role "form"
+
+    Here are the accessible roles:
+
+      heading:
+
+      Name "ITSM Pro":
+      [36m<h1[39m
+        [33mdata-testid[39m=[32m"login-title"[39m
+        [33mlevel[39m=[32m"1"[39m
+        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+      [36m/>[39m
+
+      Name "欢迎回来":
+      [36m<h1[39m
+        [33mdata-testid[39m=[32m"login-title"[39m
+        [33mlevel[39m=[32m"2"[39m
+        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      textbox:
+
+      Name "":
+      [36m<input[39m
+        [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+        [33mplaceholder[39m=[32m"请输入用户名"[39m
+        [33mprefix[39m=[32m"[object Object]"[39m
+        [33mtype[39m=[32m"text"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      checkbox:
+
+      Name "记住我":
+      [36m<input[39m
+        [33mtype[39m=[32m"checkbox"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+      button:
+
+      Name "忘记密码？":
+      [36m<button[39m
+        [33mdata-testid[39m=[32m"login-button"[39m
+        [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+        [33mtype[39m=[32m"link"[39m
+      [36m/>[39m
+
+      Name "登录":
+      [36m<button[39m
+        [33mdata-testid[39m=[32m"login-button"[39m
+        [33micon[39m=[32m"[object Object]"[39m
+        [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+        [33mtype[39m=[32m"primary"[39m
+      [36m/>[39m
+
+      Name "SSO 单点登录":
+      [36m<button[39m
+        [33mdata-testid[39m=[32m"login-button"[39m
+        [33micon[39m=[32m"[object Object]"[39m
+        [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m/>[39m
+
+      Name "立即注册":
+      [36m<button[39m
+        [33mdata-testid[39m=[32m"login-button"[39m
+        [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+        [33mtype[39m=[32m"link"[39m
+      [36m/>[39m
+
+      --------------------------------------------------
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      212 |       render(<LoginPage />);
+      213 |
+    > 214 |       expect(screen.getByRole('form')).toBeInTheDocument();
+          |                     ^
+      215 |       expect(screen.getByTestId('input-密码')).toHaveAttribute('type', 'password');
+      216 |     });
+      217 |   });
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByRole (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:214:21)
+
+  ● LoginPage › 表单交互 › 应该允许用户在用户名和密码字段中输入
+
+    TestingLibraryElementError: Unable to find an element by: [data-testid="input-用户名"]
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      222 |       render(<LoginPage />);
+      223 |
+    > 224 |       const usernameInput = screen.getByTestId('input-用户名');
+          |                                    ^
+      225 |       const passwordInput = screen.getByTestId('input-密码');
+      226 |
+      227 |       await user.type(usernameInput, 'testuser');
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:224:36)
+
+  ● LoginPage › 表单交互 › 应该处理表单提交
+
+    TestingLibraryElementError: Unable to find an element by: [data-testid="input-用户名"]
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      242 |       render(<LoginPage />);
+      243 |
+    > 244 |       const usernameInput = screen.getByTestId('input-用户名');
+          |                                    ^
+      245 |       const passwordInput = screen.getByTestId('input-密码');
+      246 |       const loginButton = screen.getByTestId('login-button');
+      247 |
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:244:36)
+
+  ● LoginPage › 认证流程 › 应该处理成功登录
+
+    TestingLibraryElementError: Unable to find an element by: [data-testid="input-用户名"]
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      265 |       render(<LoginPage />);
+      266 |
+    > 267 |       const usernameInput = screen.getByTestId('input-用户名');
+          |                                    ^
+      268 |       const passwordInput = screen.getByTestId('input-密码');
+      269 |       const loginButton = screen.getByTestId('login-button');
+      270 |
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:267:36)
+
+  ● LoginPage › 认证流程 › 应该处理登录失败并显示错误信息
+
+    TestingLibraryElementError: Unable to find an element by: [data-testid="input-用户名"]
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      290 |       render(<LoginPage />);
+      291 |
+    > 292 |       const usernameInput = screen.getByTestId('input-用户名');
+          |                                    ^
+      293 |       const passwordInput = screen.getByTestId('input-密码');
+      294 |       const loginButton = screen.getByTestId('login-button');
+      295 |
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:292:36)
+
+  ● LoginPage › 边界情况 › 应该处理AuthService返回undefined
+
+    TestingLibraryElementError: Unable to find an element by: [data-testid="input-用户名"]
+
+    Ignored nodes: comments, script, style
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<div[39m
+            [33mstyle[39m=[32m"min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mstyle[39m=[32m"width: 100%; max-width: 1000px;"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"row"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mstyle[39m=[32m"padding: 40px 32px; border-radius: 12px; height: 480px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(20px);"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"position: relative; z-index: 1;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"1"[39m
+                        [33mstyle[39m=[32m"color: white; margin-bottom: 12px; font-size: 28px; font-weight: 700;"[39m
+                      [36m>[39m
+                        [0mITSM Pro[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.9); font-size: 14px; display: block; margin-bottom: 32px;"[39m
+                      [36m>[39m
+                        [0m智能IT服务管理平台[0m
+                      [36m</span>[39m
+                      [36m<div[39m
+                        [33mdata-testid[39m=[32m"space"[39m
+                        [33mdirection[39m=[32m"vertical"[39m
+                        [33mstyle[39m=[32m"width: 100%;"[39m
+                      [36m>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"shield-icon"[39m
+                            [36m>[39m
+                              [0mShield[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m企业级安全[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0m多层安全防护[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<div[39m
+                            [33mstyle[39m=[32m"width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center;"[39m
+                          [36m>[39m
+                            [36m<div[39m
+                              [33mdata-testid[39m=[32m"arrow-right-icon"[39m
+                            [36m>[39m
+                              [0mArrowRight[0m
+                            [36m</div>[39m
+                          [36m</div>[39m
+                          [36m<div>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: white; font-weight: 600; font-size: 14px; display: block;"[39m
+                            [36m>[39m
+                              [0m智能自动化[0m
+                            [36m</span>[39m
+                            [36m<span[39m
+                              [33mdata-testid[39m=[32m"text-default"[39m
+                              [33mstyle[39m=[32m"color: rgba(255, 255, 255, 0.8); font-size: 12px;"[39m
+                            [36m>[39m
+                              [0mAI驱动流程[0m
+                            [36m</span>[39m
+                          [36m</div>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"col"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"login-card"[39m
+                    [33mstyle[39m=[32m"border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);"[39m
+                    [33mstyles[39m=[32m"[object Object]"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-bottom: 24px;"[39m
+                    [36m>[39m
+                      [36m<h1[39m
+                        [33mdata-testid[39m=[32m"login-title"[39m
+                        [33mlevel[39m=[32m"2"[39m
+                        [33mstyle[39m=[32m"margin-bottom: 8px; color: rgb(15, 23, 42); font-size: 24px;"[39m
+                      [36m>[39m
+                        [0m欢迎回来[0m
+                      [36m</h1>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(71, 85, 105); font-size: 14px;"[39m
+                      [36m>[39m
+                        [0m请登录您的账户以继续使用服务[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<form[39m
+                      [33mform[39m=[32m"[object Object]"[39m
+                      [33mlayout[39m=[32m"vertical"[39m
+                    [36m>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入用户名"[39m
+                          [33mplaceholder[39m=[32m"请输入用户名"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"text"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<input[39m
+                          [33mdata-testid[39m=[32m"input-请输入密码"[39m
+                          [33mplaceholder[39m=[32m"请输入密码"[39m
+                          [33mprefix[39m=[32m"[object Object]"[39m
+                          [33mtype[39m=[32m"password"[39m
+                        [36m/>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<div[39m
+                          [33mclass[39m=[32m"flex"[39m
+                        [36m>[39m
+                          [36m<label>[39m
+                            [36m<input[39m
+                              [33mtype[39m=[32m"checkbox"[39m
+                            [36m/>[39m
+                            [0m记住我[0m
+                          [36m</label>[39m
+                          [36m<button[39m
+                            [33mdata-testid[39m=[32m"login-button"[39m
+                            [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                            [33mtype[39m=[32m"link"[39m
+                          [36m>[39m
+                            [0m忘记密码？[0m
+                          [36m</button>[39m
+                        [36m</div>[39m
+                      [36m</div>[39m
+                      [36m<div>[39m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33micon[39m=[32m"[object Object]"[39m
+                          [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px; font-weight: 600;"[39m
+                          [33mtype[39m=[32m"primary"[39m
+                        [36m>[39m
+                          [0m登录[0m
+                        [36m</button>[39m
+                      [36m</div>[39m
+                    [36m</form>[39m
+                    [36m<div>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m或[0m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                    [36m<button[39m
+                      [33mdata-testid[39m=[32m"login-button"[39m
+                      [33micon[39m=[32m"[object Object]"[39m
+                      [33mstyle[39m=[32m"width: 100%; height: 40px; border-radius: 6px; font-size: 14px;"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0mSSO 单点登录[0m
+                    [36m</button>[39m
+                    [36m<div[39m
+                      [33mstyle[39m=[32m"text-align: center; margin-top: 20px;"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mdata-testid[39m=[32m"text-default"[39m
+                        [33mstyle[39m=[32m"color: rgb(100, 116, 139); font-size: 12px;"[39m
+                      [36m>[39m
+                        [0m还没有账户？[0m
+                        [0m [0m
+                        [36m<button[39m
+                          [33mdata-testid[39m=[32m"login-button"[39m
+                          [33mstyle[39m=[32m"padding: 0px; height: auto; font-size: 12px;"[39m
+                          [33mtype[39m=[32m"link"[39m
+                        [36m>[39m
+                          [0m立即注册[0m
+                        [36m</button>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+      311 |       render(<LoginPage />);
+      312 |
+    > 313 |       const usernameInput = screen.getByTestId('input-用户名');
+          |                                    ^
+      314 |       const passwordInput = screen.getByTestId('input-密码');
+      315 |       const loginButton = screen.getByTestId('login-button');
+      316 |
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:37:19)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+      at node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+      at node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+      at Object.getByTestId (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)../../../../../../login/__tests__/page.test.tsx:313:36)
+
+--------------------------------|---------|----------|---------|---------|-------------------
+File                            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+--------------------------------|---------|----------|---------|---------|-------------------
+All files                       |       0 |        0 |       0 |       0 |                   
+ common                         |       0 |        0 |       0 |       0 |                   
+  ActivityListCard.tsx          |       0 |        0 |       0 |       0 | 3-72              
+  ErrorBoundary.tsx             |       0 |        0 |       0 |       0 | 3-238             
+  GlobalErrorBoundary.tsx       |       0 |        0 |       0 |       0 | 3-271             
+  KPICard.tsx                   |       0 |        0 |       0 |       0 | 3-71              
+  LazyComponents.tsx            |       0 |        0 |       0 |       0 | 3-177             
+  LazyImage.tsx                 |       0 |        0 |       0 |       0 | 3-312             
+  LoadingStateManager.tsx       |       0 |        0 |       0 |       0 | 3-328             
+  PerformanceMonitor.tsx        |       0 |        0 |       0 |       0 | 3-516             
+  PriorityBadge.tsx             |       0 |        0 |       0 |       0 | 3-13              
+  SatisfactionDashboard.tsx     |       0 |        0 |       0 |       0 | 3-513             
+  SearchFilters.tsx             |       0 |        0 |       0 |       0 | 3-77              
+  SkeletonLoading.tsx           |       0 |        0 |       0 |       0 | 3-264             
+  StatusBadge.tsx               |       0 |        0 |       0 |       0 | 3-13              
+  SystemAlertCard.tsx           |       0 |        0 |       0 |       0 | 3-124             
+  TestRunner.tsx                |       0 |        0 |       0 |       0 | 3-281             
+  TicketListCard.tsx            |       0 |        0 |       0 |       0 | 3-186             
+  UserSelect.tsx                |       0 |        0 |       0 |       0 | 3-93              
+ ui                             |       0 |        0 |       0 |       0 |                   
+  AccessibilityEnhanced.tsx     |       0 |        0 |       0 |       0 | 3-234             
+  AccessibilityUtils.tsx        |       0 |        0 |       0 |       0 | 3-454             
+  Badge.tsx                     |       0 |        0 |       0 |       0 | 1-189             
+  Button.tsx                    |       0 |        0 |       0 |       0 | 3-236             
+  Card.tsx                      |       0 |        0 |       0 |       0 | 3-369             
+  ComponentLibrary.tsx          |       0 |      100 |       0 |       0 | 3-339             
+  DataTable.tsx                 |       0 |        0 |       0 |       0 | 1-274             
+  DatePicker.tsx                |       0 |        0 |       0 |       0 | 4-631             
+  EnhancedCard.tsx              |       0 |        0 |       0 |       0 | 3-377             
+  EnhancedFeedback.tsx          |       0 |        0 |       0 |       0 | 3-393             
+  EnhancedInput.tsx             |       0 |        0 |       0 |       0 | 3-406             
+  EnhancedTable.tsx             |       0 |        0 |       0 |       0 | 3-541             
+  EnterpriseButton.tsx          |       0 |        0 |       0 |       0 | 4-261             
+  EnterpriseCard.tsx            |       0 |        0 |       0 |       0 | 4-255             
+  EnterpriseTable.tsx           |       0 |        0 |       0 |       0 | 4-245             
+  FormField.tsx                 |       0 |        0 |       0 |       0 | 1-117             
+  Input.tsx                     |       0 |        0 |       0 |       0 | 3-432             
+  InteractionFeedback.tsx       |       0 |        0 |       0 |       0 | 3-431             
+  InteractionPatterns.tsx       |       0 |        0 |       0 |       0 | 3-533             
+  LoadingEmptyError.example.tsx |       0 |        0 |       0 |       0 | 1-180             
+  LoadingEmptyError.tsx         |       0 |        0 |       0 |       0 | 3-324             
+  LoadingSkeleton.tsx           |       0 |        0 |       0 |       0 | 3-185             
+  LoadingSpinner.tsx            |       0 |        0 |       0 |       0 | 3-85              
+  LoadingState.tsx              |       0 |        0 |       0 |       0 | 3-218             
+  MobileTabBar.tsx              |       0 |        0 |       0 |       0 | 3-381             
+  Modal.tsx                     |       0 |        0 |       0 |       0 | 1-258             
+  NotificationContainer.tsx     |       0 |      100 |       0 |       0 | 3-43              
+  OptimizedImage.tsx            |       0 |        0 |       0 |       0 | 6-357             
+  ResponsiveDashboard.tsx       |       0 |        0 |       0 |       0 | 3-479             
+  ResponsiveTable.tsx           |       0 |        0 |       0 |       0 | 4-322             
+  Select.tsx                    |       0 |        0 |       0 |       0 | 3-447             
+  SkeletonLoading.tsx           |       0 |        0 |       0 |       0 | 3-341             
+  SmartForm.tsx                 |       0 |        0 |       0 |       0 | 3-388             
+  Table.tsx                     |       0 |        0 |       0 |       0 | 4-425             
+  Toast.tsx                     |       0 |        0 |       0 |       0 | 1-243             
+  TouchFeedback.tsx             |       0 |        0 |       0 |       0 | 3-309             
+  UnifiedFilters.tsx            |       0 |        0 |       0 |       0 | 3-156             
+  UnifiedForm.tsx               |       0 |        0 |       0 |       0 | 7-564             
+  UnifiedTable.tsx              |       0 |        0 |       0 |       0 | 6-474             
+  VirtualList.tsx               |       0 |        0 |       0 |       0 | 1-56              
+  auth-guard.tsx                |       0 |        0 |       0 |       0 | 3-44              
+  icons.tsx                     |       0 |        0 |       0 |       0 | 1-401             
+  incident-list.tsx             |       0 |        0 |       0 |       0 | 4-529             
+  index.ts                      |       0 |      100 |     100 |       0 | 10-133            
+  login-form.tsx                |       0 |        0 |       0 |       0 | 3-198             
+--------------------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 0% ( 0/2924 )
+Branches     : 0% ( 0/2200 )
+Functions    : 0% ( 0/804 )
+Lines        : 0% ( 0/2537 )
+================================================================================
+Test Suites: 1 failed, 1 total
+Tests:       8 failed, 8 total
+Snapshots:   0 total
+Time:        8.742 s
+Ran all test suites matching /login\/__tests__\/page.test.tsx/i.

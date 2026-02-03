@@ -242,7 +242,7 @@ const TicketAnalytics: React.FC = () => {
                     title='总工单数'
                     value={analyticsData.total_tickets}
                     prefix={<RiseOutlined style={{ color: '#1890ff' }} />}
-                    valueStyle={{ color: '#1890ff' }}
+                    styles={{ content: { color: '#1890ff' } }}
                   />
                 </Card>
               </Col>
@@ -252,7 +252,7 @@ const TicketAnalytics: React.FC = () => {
                     title='待处理工单'
                     value={analyticsData.open_tickets}
                     prefix={<RiseOutlined style={{ color: '#fa8c16' }} />}
-                    valueStyle={{ color: '#fa8c16' }}
+                    styles={{ content: { color: '#fa8c16' } }}
                   />
                 </Card>
               </Col>
@@ -262,7 +262,7 @@ const TicketAnalytics: React.FC = () => {
                     title='已解决工单'
                     value={analyticsData.resolved_tickets}
                     prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
-                    valueStyle={{ color: '#52c41a' }}
+                    styles={{ content: { color: '#52c41a' } }}
                   />
                 </Card>
               </Col>
@@ -272,7 +272,7 @@ const TicketAnalytics: React.FC = () => {
                     title='超时工单'
                     value={analyticsData.overdue_tickets}
                     prefix={<FallOutlined style={{ color: '#ff4d4f' }} />}
-                    valueStyle={{ color: '#ff4d4f' }}
+                    styles={{ content: { color: '#ff4d4f' } }}
                   />
                 </Card>
               </Col>

@@ -25,34 +25,6 @@ interface Improvement {
   createdAt: string;
 }
 
-// 模拟改进计划数据
-const mockImprovements: Improvement[] = [
-  {
-    id: 'IMP-001',
-    title: '优化云资源申请流程',
-    status: '进行中',
-    owner: '产品部',
-    target: '将云资源交付时间缩短20%',
-    createdAt: '2025-05-01',
-  },
-  {
-    id: 'IMP-002',
-    title: '提升服务台首次解决率',
-    status: '待评估',
-    owner: '服务台经理',
-    target: '将首次解决率提升至85%',
-    createdAt: '2025-04-10',
-  },
-  {
-    id: 'IMP-003',
-    title: '自动化安全漏洞扫描与修复',
-    status: '已完成',
-    owner: '安全团队',
-    target: '自动化覆盖率达到90%',
-    createdAt: '2025-03-01',
-  },
-];
-
 const ImprovementStatusBadge = ({ status }: { status: ImprovementStatus }) => {
   const colors: Record<ImprovementStatus, string> = {
     进行中: 'bg-blue-100 text-blue-800',
@@ -67,7 +39,50 @@ const ImprovementStatusBadge = ({ status }: { status: ImprovementStatus }) => {
 };
 
 const ImprovementListPage = () => {
+  const [improvements, setImprovements] = useState<Improvement[]>([]);
   const [filter, setFilter] = useState('全部');
+
+  // 加载改进计划
+  React.useEffect(() => {
+    loadImprovements();
+  }, []);
+
+  const loadImprovements = async () => {
+    try {
+      const { TicketApi } = await import('@/lib/api/ticket-api');
+      // 假设改进计划是一种特殊类型的工单
+      const response = await TicketApi.getTickets({ type: 'improvement', page: 1, size: 100 });
+      
+      const mappedImprovements: Improvement[] = response.tickets.map((ticket: any) => ({
+        id: ticket.ticketNumber || `IMP-${ticket.id}`,
+        title: ticket.title,
+        status: mapStatus(ticket.status),
+        owner: ticket.assignee?.name || '未分配',
+        target: ticket.description || '无目标描述',
+        createdAt: new Date(ticket.createdAt).toLocaleDateString()
+      }));
+      
+      setImprovements(mappedImprovements);
+    } catch (error) {
+      console.error('加载改进计划失败:', error);
+      // 失败时保持空列表，不显示mock数据
+    }
+  };
+
+  const mapStatus = (ticketStatus: string): ImprovementStatus => {
+    switch (ticketStatus) {
+      case 'open': return '待评估';
+      case 'in_progress': return '进行中';
+      case 'resolved':
+      case 'closed': return '已完成';
+      default: return '待评估';
+    }
+  };
+
+  const filteredImprovements = improvements.filter(imp => {
+    if (filter === '全部') return true;
+    return imp.status === filter;
+  });
 
   return (
     <div className='p-10 bg-gray-50 min-h-full'>
@@ -129,29 +144,37 @@ const ImprovementListPage = () => {
             </tr>
           </thead>
           <tbody className='bg-white divide-y divide-gray-200'>
-            {mockImprovements.map(imp => (
-              <tr key={imp.id} className='hover:bg-gray-50'>
-                <td className='px-6 py-4 whitespace-nowrap'>
-                  <Link
-                    href={`/improvements/${imp.id}`}
-                    className='text-blue-600 font-semibold hover:underline'
-                  >
-                    {imp.id}
-                  </Link>
-                </td>
-                <td className='px-6 py-4 whitespace-nowrap max-w-sm truncate'>{imp.title}</td>
-                <td className='px-6 py-4 whitespace-nowrap'>
-                  <ImprovementStatusBadge status={imp.status} />
-                </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-700'>{imp.owner}</td>
-                <td className='px-6 py-4 whitespace-nowrap max-w-sm truncate text-sm text-gray-700'>
-                  {imp.target}
-                </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                  {imp.createdAt}
+            {filteredImprovements.length > 0 ? (
+              filteredImprovements.map(imp => (
+                <tr key={imp.id} className='hover:bg-gray-50'>
+                  <td className='px-6 py-4 whitespace-nowrap'>
+                    <Link
+                      href={`/improvements/${imp.id}`}
+                      className='text-blue-600 font-semibold hover:underline'
+                    >
+                      {imp.id}
+                    </Link>
+                  </td>
+                  <td className='px-6 py-4 whitespace-nowrap max-w-sm truncate'>{imp.title}</td>
+                  <td className='px-6 py-4 whitespace-nowrap'>
+                    <ImprovementStatusBadge status={imp.status} />
+                  </td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-700'>{imp.owner}</td>
+                  <td className='px-6 py-4 whitespace-nowrap max-w-sm truncate text-sm text-gray-700'>
+                    {imp.target}
+                  </td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                    {imp.createdAt}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                  暂无改进计划
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

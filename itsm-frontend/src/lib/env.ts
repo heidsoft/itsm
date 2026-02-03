@@ -43,6 +43,7 @@ export const env = {
 };
 
 // 日志工具
+/* eslint-disable no-console */
 export const logger = {
   // 开发环境日志
   debug: (...args: unknown[]) => {

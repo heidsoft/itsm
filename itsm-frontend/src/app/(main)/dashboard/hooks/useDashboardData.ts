@@ -35,6 +35,7 @@ export function useDashboardData() {
       } else {
         console.error('Dashboard Overview API调用失败:', overviewResult.reason);
         // 不再回退到 Mock 数据
+        // 如果 API 失败，尝试从 error 中获取 mock 数据（如果之前有的话），或者保持空数据
       }
 
       // 处理真实工单统计数据（高优先级覆盖）

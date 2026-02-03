@@ -1,10 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useCallback } from "react";
-import { Form, Space, Divider } from "antd";
-import { Button, Input, PasswordInput } from "@/components/ui";
-import { theme } from "antd";
-import { cn } from "@/lib/utils";
+import React, { useState, useCallback } from 'react';
+import { Form, Input, Checkbox, Button, Typography, Alert, Space, Divider, theme } from 'antd';
+import { PasswordInput } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 const { token } = theme.useToken();
 
@@ -17,7 +16,7 @@ export interface AuthFieldConfig {
   /** 字段标签 */
   label: string;
   /** 字段类型 */
-  type: "text" | "email" | "password" | "tel" | "url";
+  type: 'text' | 'email' | 'password' | 'tel' | 'url';
   /** 占位符文本 */
   placeholder?: string;
   /** 是否必填 */
@@ -29,7 +28,7 @@ export interface AuthFieldConfig {
   /** 后缀图标 */
   suffix?: React.ReactNode;
   /** 帮助文本 */
-  helpText?: string;
+  helperText?: string;
   /** 是否显示密码强度 */
   showPasswordStrength?: boolean;
   /** 是否可清除 */
@@ -43,9 +42,11 @@ export interface AuthButtonConfig {
   /** 按钮文本 */
   text: string;
   /** 按钮类型 */
-  type?: "primary" | "secondary" | "outline" | "ghost";
+  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  /** 按钮变体 (兼容旧代码) */
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   /** 按钮尺寸 */
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   /** 是否全宽 */
   fullWidth?: boolean;
   /** 是否显示加载状态 */
@@ -55,7 +56,7 @@ export interface AuthButtonConfig {
   /** 图标 */
   icon?: React.ReactNode;
   /** 图标位置 */
-  iconPosition?: "left" | "right";
+  iconPlacement?: 'start' | 'end';
   /** 点击回调 */
   onClick?: () => void;
 }
@@ -110,7 +111,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   secondaryButton,
   extraActions,
   showDivider = false,
-  dividerText = "或",
+  dividerText = '或',
   onSubmit,
   onValidationFailed,
   onValuesChange,
@@ -140,7 +141,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         setLoading(true);
         await onSubmit?.(values);
       } catch (err) {
-        console.error("Form submission error:", err);
+        console.error('Form submission error:', err);
       } finally {
         setLoading(false);
       }
@@ -163,56 +164,50 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       placeholder: field.placeholder,
       required: field.required,
       disabled: loading,
-      size: "lg" as const,
+      size: 'lg' as const,
       prefix: field.prefix,
       suffix: field.suffix,
       clearable: field.clearable,
     };
 
     switch (field.type) {
-      case "password":
+      case 'password':
         return (
           <PasswordInput
             {...commonProps}
             showStrength={field.showPasswordStrength}
-            helperText={field.helpText}
+            helperText={field.helperText}
           />
         );
       default:
-        return (
-          <Input
-            {...commonProps}
-            type={field.type}
-            helperText={field.helpText}
-          />
-        );
+        return <Input {...commonProps} type={field.type} helperText={field.helperText} />;
     }
   };
 
   return (
-    <div className={cn("w-full max-w-md", className)}>
+    <div className={cn('w-full max-w-md', className)}>
       {/* 移动端Logo */}
       {showMobileLogo && (
-        <div className="lg:hidden text-center mb-8">
+        <div className='lg:hidden text-center mb-8'>
           <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
+            className='inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4'
             style={{ backgroundColor: token.colorPrimary }}
           >
             <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              className='w-8 h-8 text-white'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeLinecap='round'
+                strokeLinejoin='round'
                 strokeWidth={2}
-                d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+                d='M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01'
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold" style={{ color: token.colorText }}>
+          <h1 className='text-2xl font-bold' style={{ color: token.colorText }}>
             ITSM Pro
           </h1>
           <p style={{ color: token.colorTextSecondary }}>智能IT服务管理平台</p>
@@ -221,7 +216,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
       {/* 表单卡片 */}
       <div
-        className="bg-white rounded-lg shadow-lg border"
+        className='bg-white rounded-lg shadow-lg border'
         style={{
           borderRadius: token.borderRadiusLG,
           boxShadow: token.boxShadowSecondary,
@@ -231,71 +226,62 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       >
         {/* 表单标题 */}
         {(title || subtitle) && (
-          <div className="text-center mb-6">
+          <div className='text-center mb-6'>
             {title && (
-              <h2
-                className="text-xl font-semibold mb-2"
-                style={{ color: token.colorText }}
-              >
+              <h2 className='text-xl font-semibold mb-2' style={{ color: token.colorText }}>
                 {title}
               </h2>
             )}
-            {subtitle && (
-              <p style={{ color: token.colorTextSecondary }}>{subtitle}</p>
-            )}
+            {subtitle && <p style={{ color: token.colorTextSecondary }}>{subtitle}</p>}
           </div>
         )}
 
         {/* 错误提示 */}
         {error && (
           <div
-            className="mb-4 p-3 rounded-md flex items-center space-x-2"
+            className='mb-4 p-3 rounded-md flex items-center space-x-2'
             style={{
               backgroundColor: token.colorErrorBg,
               border: `1px solid ${token.colorErrorBorder}`,
             }}
           >
             <div
-              className="w-4 h-4 rounded-full flex-shrink-0"
+              className='w-4 h-4 rounded-full flex-shrink-0'
               style={{ backgroundColor: token.colorError }}
             />
-            <span style={{ color: token.colorError, fontSize: token.fontSizeSM }}>
-              {error}
-            </span>
+            <span style={{ color: token.colorError, fontSize: token.fontSizeSM }}>{error}</span>
           </div>
         )}
 
         {/* 成功提示 */}
         {success && (
           <div
-            className="mb-4 p-3 rounded-md flex items-center space-x-2"
+            className='mb-4 p-3 rounded-md flex items-center space-x-2'
             style={{
               backgroundColor: token.colorSuccessBg,
               border: `1px solid ${token.colorSuccessBorder}`,
             }}
           >
             <div
-              className="w-4 h-4 rounded-full flex-shrink-0"
+              className='w-4 h-4 rounded-full flex-shrink-0'
               style={{ backgroundColor: token.colorSuccess }}
             />
-            <span style={{ color: token.colorSuccess, fontSize: token.fontSizeSM }}>
-              {success}
-            </span>
+            <span style={{ color: token.colorSuccess, fontSize: token.fontSizeSM }}>{success}</span>
           </div>
         )}
 
         {/* 表单 */}
         <Form
           form={form}
-          layout="vertical"
+          layout='vertical'
           onFinish={handleSubmit}
           onFinishFailed={handleValidationFailed}
           onValuesChange={handleValuesChange}
           initialValues={initialValues}
-          className="space-y-4"
+          className='space-y-4'
         >
           {/* 表单字段 */}
-          {fields.map((field) => (
+          {fields.map(field => (
             <Form.Item
               key={field.name}
               name={field.name}
@@ -308,16 +294,22 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           ))}
 
           {/* 主要按钮 */}
-          <Form.Item className="mb-0">
+          <Form.Item className='mb-0'>
             <Button
-              type="submit"
-              variant={primaryButton.type || "primary"}
-              size={primaryButton.size || "lg"}
-              fullWidth={primaryButton.fullWidth !== false}
+              type='primary'
+              htmlType='submit'
+              size={
+                primaryButton.size === 'lg'
+                  ? 'large'
+                  : primaryButton.size === 'sm'
+                    ? 'small'
+                    : 'middle'
+              }
+              block={primaryButton.fullWidth !== false}
               loading={loading || primaryButton.loading}
               disabled={primaryButton.disabled}
               icon={primaryButton.icon}
-              iconPosition={primaryButton.iconPosition}
+              iconPlacement={primaryButton.iconPlacement}
               style={{
                 marginTop: token.marginLG,
                 height: token.controlHeightLG,
@@ -337,14 +329,30 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
         {/* 次要按钮 */}
         {secondaryButton && (
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space orientation='vertical' size='middle' style={{ width: '100%' }}>
             <Button
-              variant={secondaryButton.type || "outline"}
-              size={secondaryButton.size || "lg"}
-              fullWidth={secondaryButton.fullWidth !== false}
+              type={
+                secondaryButton.type === 'primary'
+                  ? 'primary'
+                  : secondaryButton.type === 'text'
+                    ? 'text'
+                    : secondaryButton.type === 'link'
+                      ? 'link'
+                      : secondaryButton.type === 'dashed'
+                        ? 'dashed'
+                        : 'default'
+              }
+              size={
+                secondaryButton.size === 'lg'
+                  ? 'large'
+                  : secondaryButton.size === 'sm'
+                    ? 'small'
+                    : 'middle'
+              }
+              block={secondaryButton.fullWidth !== false}
               disabled={loading || secondaryButton.disabled}
               icon={secondaryButton.icon}
-              iconPosition={secondaryButton.iconPosition}
+              iconPlacement={secondaryButton.iconPlacement}
               onClick={secondaryButton.onClick}
               style={{ height: token.controlHeightLG }}
             >
@@ -354,9 +362,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         )}
 
         {/* 其他操作 */}
-        {extraActions && (
-          <div className="mt-4">{extraActions}</div>
-        )}
+        {extraActions && <div className='mt-4'>{extraActions}</div>}
       </div>
     </div>
   );

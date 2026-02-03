@@ -326,7 +326,7 @@ export const useAriaLiveRegion = (politeness: 'polite' | 'assertive' = 'polite')
   return { liveRegionRef, updateLiveRegion };
 };
 
-export default {
+const AccessibilityHooks = {
   useKeyboardShortcuts,
   useFocusTrap,
   useScreenReaderAnnounce,
@@ -335,3 +335,5 @@ export default {
   usePrefersReducedMotion,
   useAriaLiveRegion,
 };
+
+export default AccessibilityHooks;

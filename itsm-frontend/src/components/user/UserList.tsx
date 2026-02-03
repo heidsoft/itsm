@@ -324,7 +324,7 @@ const UserList: React.FC<UserListProps> = ({
       key: 'contact',
       width: 200,
       render: (_, record) => (
-        <Space direction='vertical' size='small'>
+        <Space orientation='vertical' size='small'>
           <Space size='small'>
             <MailOutlined style={{ color: '#999' }} />
             <span>{record.email}</span>

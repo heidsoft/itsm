@@ -38,7 +38,7 @@ const ProblemDetail: React.FC = () => {
             const problem = await ProblemApi.getProblem(id);
             setData(problem);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载问题详情失败');
         } finally {
             setLoading(false);
@@ -47,6 +47,7 @@ const ProblemDetail: React.FC = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const handleUpdateStatus = async (status: ProblemStatus) => {
@@ -61,17 +62,17 @@ const ProblemDetail: React.FC = () => {
     };
 
     if (loading) {
-        return <Card bordered={false}><Skeleton active /></Card>;
+        return <Card variant="borderless"><Skeleton active /></Card>;
     }
 
     if (!data) {
-        return <Card bordered={false}>未找到该问题</Card>;
+        return <Card variant="borderless">未找到该问题</Card>;
     }
 
     return (
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Space orientation="vertical" style={{ width: '100%' }} size="middle">
             {/* 操作栏 */}
-            <Card bordered={false} bodyStyle={{ padding: '16px 24px' }}>
+            <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Space>
                         <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/problems')}>
@@ -108,7 +109,7 @@ const ProblemDetail: React.FC = () => {
                 </div>
             </Card>
 
-            <Card bordered={false} title="基本信息">
+            <Card variant="borderless" title="基本信息">
                 <Descriptions column={2}>
                     <Descriptions.Item label="创建人ID">{data.created_by}</Descriptions.Item>
                     <Descriptions.Item label="负责人ID">{data.assignee_id || '-'}</Descriptions.Item>

@@ -60,7 +60,7 @@ export function ApprovalChainStatsCards({ stats, loading = false }: ApprovalChai
                 title={card.title}
                 value={card.value}
                 prefix={card.icon}
-                valueStyle={{ color: card.color }}
+                styles={{ content: { color: card.color } }}
               />
             </Card>
           </Col>

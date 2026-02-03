@@ -372,7 +372,7 @@ const WorkflowVersionsPage = () => {
               title="总版本数"
               value={versions.length}
               prefix={<GitBranch className="w-5 h-5" />}
-              valueStyle={{ color: "#1890ff" }}
+              styles={{ content: { color: "#1890ff" } }}
             />
           </Card>
         </Col>
@@ -382,7 +382,7 @@ const WorkflowVersionsPage = () => {
               title="激活版本"
               value={versions.filter((v) => v.status === "active").length}
               prefix={<CheckCircle className="w-5 h-5" />}
-              valueStyle={{ color: "#52c41a" }}
+              styles={{ content: { color: "#52c41a" } }}
             />
           </Card>
         </Col>
@@ -392,7 +392,7 @@ const WorkflowVersionsPage = () => {
               title="草稿版本"
               value={versions.filter((v) => v.status === "draft").length}
               prefix={<Clock className="w-5 h-5" />}
-              valueStyle={{ color: "#faad14" }}
+              styles={{ content: { color: "#faad14" } }}
             />
           </Card>
         </Col>
@@ -402,7 +402,7 @@ const WorkflowVersionsPage = () => {
               title="归档版本"
               value={versions.filter((v) => v.status === "archived").length}
               prefix={<AlertCircle className="w-5 h-5" />}
-              valueStyle={{ color: "#666" }}
+              styles={{ content: { color: "#666" } }}
             />
           </Card>
         </Col>

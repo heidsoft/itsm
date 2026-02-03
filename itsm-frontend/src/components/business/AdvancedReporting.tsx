@@ -752,7 +752,7 @@ const AdvancedReporting: React.FC = () => {
                             title={widget.title}
                             value={95.6}
                             suffix='%'
-                            valueStyle={{ color: '#52c41a' }}
+                            styles={{ content: { color: '#52c41a' } }}
                           />
                         </div>
                       )}

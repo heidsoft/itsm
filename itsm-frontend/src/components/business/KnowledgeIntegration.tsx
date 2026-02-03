@@ -129,101 +129,45 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
   };
 
   const loadRecommendations = async () => {
-    // 模拟推荐数据
-    const mockRecommendations: SolutionRecommendation[] = [
-      {
-        id: 1,
-        title: '常见网络连接问题解决方案',
-        summary: '针对网络连接异常的详细排查步骤和解决方案',
-        relevance: 95,
-        category: '网络故障',
-        tags: ['网络', '连接', '故障排除'],
-        viewCount: 1250,
-        rating: 4.8,
-        lastUpdated: '2024-01-15',
-      },
-      {
-        id: 2,
-        title: '系统性能优化指南',
-        summary: '系统运行缓慢时的性能优化方法和工具使用',
-        relevance: 87,
-        category: '系统优化',
-        tags: ['性能', '优化', '系统'],
-        viewCount: 890,
-        rating: 4.6,
-        lastUpdated: '2024-01-10',
-      },
-    ];
-    setRecommendations(mockRecommendations);
+    try {
+      const { KnowledgeBaseApi } = await import('@/lib/api/knowledge-base-api');
+      const data = await KnowledgeBaseApi.getRecommendations(undefined, 5);
+      // Map API response to component type if necessary
+      const mapped: SolutionRecommendation[] = data.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        summary: item.summary || '',
+        relevance: item.relevance || 0,
+        category: item.category || 'General',
+        tags: item.tags || [],
+        viewCount: item.viewCount || 0,
+        rating: item.rating || 0,
+        lastUpdated: item.updatedAt || new Date().toISOString(),
+      }));
+      setRecommendations(mapped);
+    } catch (error) {
+      console.error('Failed to load recommendations:', error);
+    }
   };
 
   const loadAssociations = async () => {
-    // 模拟关联数据
-    const mockAssociations: KnowledgeAssociation[] = [
-      {
-        id: 1,
-        articleId: 1,
-        articleTitle: '常见网络连接问题解决方案',
-        associationType: 'auto',
-        associatedAt: '2024-01-20',
-        associatedBy: '系统',
-      },
-    ];
-    setAssociations(mockAssociations);
+    // API暂不支持获取关联，暂时置空
+    setAssociations([]);
   };
 
   const loadAIRecommendations = async () => {
-    // 模拟AI推荐数据
-    const mockAIRecommendations: AIRecommendation[] = [
-      {
-        type: 'category',
-        value: '网络故障',
-        confidence: 92,
-        reasoning: '基于工单描述中的网络连接问题关键词',
-      },
-      {
-        type: 'priority',
-        value: '高',
-        confidence: 85,
-        reasoning: '网络问题影响用户正常工作',
-      },
-      {
-        type: 'tags',
-        value: '网络,连接,故障',
-        confidence: 88,
-        reasoning: '工单内容与网络连接问题高度相关',
-      },
-    ];
-    setAiRecommendations(mockAIRecommendations);
+    // API暂不支持AI推荐，暂时置空
+    setAiRecommendations([]);
   };
 
   const loadRelatedArticles = async () => {
-    // 模拟相关文章数据
-    const mockRelatedArticles: KnowledgeArticle[] = [
-      {
-        id: 3,
-        title: '网络设备配置检查清单',
-        summary: '网络故障时的设备配置检查步骤',
-        category: '网络故障',
-        tags: ['网络', '配置', '检查'],
-        viewCount: 650,
-        rating: 4.5,
-        lastUpdated: '2024-01-08',
-        content: '详细的网络设备配置检查步骤...',
-      },
-      {
-        id: 4,
-        title: '故障排除最佳实践',
-        summary: 'IT故障排除的标准流程和方法',
-        category: '故障排除',
-        tags: ['故障排除', '流程', '方法'],
-        viewCount: 1200,
-        rating: 4.7,
-        lastUpdated: '2024-01-12',
-        content: '故障排除的标准流程...',
-      },
-    ];
-    setRelatedArticles(mockRelatedArticles);
+    try {
+      const { KnowledgeBaseApi } = await import('@/lib/api/knowledge-base-api');
+      const data = await KnowledgeBaseApi.getRecentArticles({ limit: 5 });
+      setRelatedArticles(data);
+    } catch (error) {
+      console.error('Failed to load related articles:', error);
+    }
   };
 
   // 搜索知识库
@@ -234,24 +178,18 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
     }
 
     try {
-      // 模拟搜索API调用
-      const mockSearchResults: KnowledgeArticle[] = [
-        {
-          id: 5,
-          title: '网络故障诊断工具使用指南',
-          summary: '各种网络诊断工具的使用方法和技巧',
-          category: '网络故障',
-          tags: ['网络', '诊断', '工具'],
-          viewCount: 800,
-          rating: 4.6,
-          lastUpdated: '2024-01-05',
-          content: '网络诊断工具的详细使用说明...',
-        },
-      ];
-      setSearchResults(mockSearchResults);
+      // 调用实际API
+      const { KnowledgeBaseApi } = await import('@/lib/api/knowledge-base-api');
+      const response = await KnowledgeBaseApi.search({
+        keyword: searchKeywords,
+        page: 1,
+        pageSize: 10,
+      });
+      setSearchResults(response.items);
       message.success('搜索完成');
     } catch (error) {
       message.error('搜索失败');
+      setSearchResults([]);
     }
   };
 

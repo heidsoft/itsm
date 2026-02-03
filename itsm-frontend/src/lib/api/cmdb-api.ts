@@ -164,6 +164,21 @@ export class CMDBApi {
   }
 
   /**
+   * 搜索配置项 (DDD架构)
+   */
+  static async searchCIs(query: {
+    keyword?: string;
+    ci_type?: string;
+    status?: string;
+  }): Promise<{ items: ConfigurationItem[]; total: number }> {
+    const result = await this.getCIs(query);
+    return {
+      items: result.cis,
+      total: result.total
+    };
+  }
+
+  /**
    * 获取CI类型列表 (DDD架构)
    */
   static async getCMDBTypes(): Promise<any> {

@@ -36,6 +36,7 @@ import {
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import type { ArticleVersion } from '@/types/knowledge-base';
 import { format } from 'date-fns';
+import DOMPurify from 'dompurify';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -478,7 +479,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
               <Card size="small">
                 <div 
                   className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: previewVersion.content }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewVersion.content) }}
                 />
               </Card>
             </div>

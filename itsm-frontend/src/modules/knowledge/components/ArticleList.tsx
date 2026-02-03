@@ -54,7 +54,7 @@ const ArticleList: React.FC = () => {
       const res = await KnowledgeApi.getCategories();
       setCategories(res || []);
     } catch (e) {
-      console.error(e);
+      // console.error(e);
     }
   };
 
@@ -69,7 +69,7 @@ const ArticleList: React.FC = () => {
       setData(resp.articles || []);
       setTotal(resp.total || 0);
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       message.error('加载文章列表失败');
     } finally {
       setLoading(false);
@@ -79,6 +79,7 @@ const ArticleList: React.FC = () => {
   useEffect(() => {
     loadCategories();
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const handleSearch = () => {
@@ -169,65 +170,75 @@ const ArticleList: React.FC = () => {
   ];
 
   return (
-    <Card bordered={false}>
-      <Breadcrumb style={{ marginBottom: 16 }}>
-        <Breadcrumb.Item>首页</Breadcrumb.Item>
-        <Breadcrumb.Item>知识库</Breadcrumb.Item>
-        <Breadcrumb.Item>文章列表</Breadcrumb.Item>
-      </Breadcrumb>
-
-      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
-        <Form.Item name='search'>
-          <Input placeholder='搜索标题/内容' allowClear prefix={<SearchOutlined />} />
-        </Form.Item>
-        <Form.Item name='category'>
-          <Select placeholder='分类' style={{ width: 140 }} allowClear>
-            {Array.isArray(categories) &&
-              categories.map(c => (
-                <Option key={c} value={c}>
-                  {c}
-                </Option>
-              ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name='status'>
-          <Select placeholder='状态' style={{ width: 110 }} allowClear>
-            <Option value='published'>已发布</Option>
-            <Option value='draft'>草稿</Option>
-          </Select>
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type='primary' onClick={handleSearch}>
-              查询
-            </Button>
-            <Button icon={<ReloadOutlined />} onClick={loadData} />
-          </Space>
-        </Form.Item>
-        <div style={{ flex: 1, textAlign: 'right' }}>
-          <Button
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/knowledge/articles/create')}
-          >
-            新建文章
-          </Button>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
+          <p className="text-gray-500 mt-1">创建、维护和分享解决方案与最佳实践</p>
         </div>
-      </Form>
+        <Button
+          type='primary'
+          icon={<PlusOutlined />}
+          onClick={() => router.push('/knowledge/articles/create')}
+          size="large"
+        >
+          新建文章
+        </Button>
+      </div>
 
-      <Table
-        rowKey='id'
-        columns={columns as any}
-        dataSource={data}
-        loading={loading}
-        pagination={{
-          current: query.page,
-          pageSize: query.page_size,
-          total: total,
-          onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
-        }}
-      />
-    </Card>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Form form={form} layout='inline' className="mb-6 flex-wrap gap-y-4">
+          <Form.Item name='search' className="mb-0">
+            <Input 
+              placeholder='搜索标题/内容' 
+              allowClear 
+              prefix={<SearchOutlined className="text-gray-400" />} 
+              className="w-64"
+            />
+          </Form.Item>
+          <Form.Item name='category' className="mb-0">
+            <Select placeholder='分类' className="w-36" allowClear>
+              {Array.isArray(categories) &&
+                categories.map(c => (
+                  <Option key={c} value={c}>
+                    {c}
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name='status' className="mb-0">
+            <Select placeholder='状态' className="w-28" allowClear>
+              <Option value='published'>已发布</Option>
+              <Option value='draft'>草稿</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <Space>
+              <Button type='primary' ghost onClick={handleSearch}>
+                查询
+              </Button>
+              <Button icon={<ReloadOutlined />} onClick={loadData} />
+            </Space>
+          </Form.Item>
+        </Form>
+
+        <Table
+          rowKey='id'
+          columns={columns as any}
+          dataSource={data}
+          loading={loading}
+          pagination={{
+            current: query.page,
+            pageSize: query.page_size,
+            total: total,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+            onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
+    </div>
   );
 };
 

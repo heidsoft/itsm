@@ -196,6 +196,10 @@ func NewApplication() *Application {
 	// CMDB Controller (新增)
 	cmdbController := controller.NewCMDBController(service.NewCMDBService(client))
 
+	// Analytics & Prediction Controllers
+	analyticsController := controller.NewAnalyticsController(analyticsService)
+	predictionController := controller.NewPredictionController(predictionService)
+
 	// Domain: Knowledge (DDD)
 	knowledgeRepo := knowledge.NewEntRepository(client)
 	knowledgeServiceDomain := knowledge.NewService(knowledgeRepo, sugar)
@@ -275,6 +279,8 @@ func NewApplication() *Application {
 		ProblemController:        problemController,
 		ChangeController:         changeController,
 		ChangeApprovalController: changeApprovalController,
+		AnalyticsController:      analyticsController,
+		PredictionController:     predictionController,
 
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,

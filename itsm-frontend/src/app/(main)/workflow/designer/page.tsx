@@ -20,6 +20,7 @@ import {
   Timeline,
   Badge,
   Alert,
+  Checkbox,
 } from 'antd';
 import {
   ArrowLeft,
@@ -39,7 +40,6 @@ import { WorkflowAPI } from '@/lib/api/workflow-api';
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 interface WorkflowDesignerPageProps {
   params: Promise<{ id?: string }>;
@@ -173,7 +173,27 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 
     try {
       // 使用新的BPMN API
-      const response = await WorkflowAPI.getProcessDefinition(id) as any;
+      const response = (await WorkflowAPI.getProcessDefinition(id)) as any;
+
+      let xmlContent = '';
+      if (response.bpmn_xml) {
+        try {
+          // 尝试Base64解码，如果失败则假设是原始XML
+          // 简单的启发式检查：如果包含 <?xml 或 <bpmn:definitions 则可能是原始文本
+          if (
+            response.bpmn_xml.trim().startsWith('<?xml') ||
+            response.bpmn_xml.trim().startsWith('<bpmn:definitions')
+          ) {
+            xmlContent = response.bpmn_xml;
+          } else {
+            xmlContent = atob(response.bpmn_xml);
+          }
+        } catch (e) {
+          console.warn('XML Base64 decode failed, using raw content', e);
+          xmlContent = response.bpmn_xml;
+        }
+      }
+
       setWorkflow({
         id: response.key || response.id,
         name: response.name,
@@ -181,7 +201,7 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
         version: response.version.toString(),
         category: response.category || response.type || 'general',
         status: response.is_active ? 'active' : 'inactive',
-        xml: '', // BPMN XML需要从部署的资源中获取
+        xml: xmlContent,
         created_at: response.created_at || new Date().toISOString(),
         updated_at: response.updated_at || new Date().toISOString(),
         created_by: '系统', // 从用户信息中获取
@@ -196,8 +216,8 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
           exclude_holidays: true,
         },
       });
-      // 这里需要从部署资源中获取BPMN XML
-      setCurrentXML(getDefaultBPMNXML());
+
+      setCurrentXML(xmlContent || getDefaultBPMNXML());
     } catch (error) {
       console.error('加载工作流失败:', error);
       message.error('加载工作流失败');
@@ -475,15 +495,9 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
   };
 
   return (
-    <Layout style={{ height: '100vh' }}>
-      <Header
-        style={{
-          background: '#fff',
-          padding: '0 24px',
-          borderBottom: '1px solid #f0f0f0',
-        }}
-      >
-        <div className='flex items-center justify-between h-full'>
+    <Layout className='h-screen'>
+      <Header className='bg-white px-6 border-b border-gray-100 flex items-center justify-between h-16 leading-none'>
+        <div className='flex items-center justify-between w-full h-full'>
           <div className='flex items-center'>
             <Button
               type='text'
@@ -494,22 +508,30 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
               返回
             </Button>
             <div>
-              <Title level={4} className='!mb-0'>
+              <Title level={4} className='!mb-0 !text-base'>
                 {workflow?.name || '工作流设计器'}
               </Title>
-              <div className='flex items-center gap-2'>
-                <Tag color={getStatusColor(workflow?.status || 'draft')}>
-                  {getStatusIcon(workflow?.status || 'draft')}
-                  {workflow?.status === 'active'
-                    ? '已激活'
-                    : workflow?.status === 'draft'
-                    ? '草稿'
-                    : workflow?.status === 'inactive'
-                    ? '未激活'
-                    : '已归档'}
+              <div className='flex items-center gap-2 mt-1'>
+                <Tag color={getStatusColor(workflow?.status || 'draft')} className='mr-0'>
+                  <span className='flex items-center gap-1'>
+                    {getStatusIcon(workflow?.status || 'draft')}
+                    {workflow?.status === 'active'
+                      ? '已激活'
+                      : workflow?.status === 'draft'
+                        ? '草稿'
+                        : workflow?.status === 'inactive'
+                          ? '未激活'
+                          : '已归档'}
+                  </span>
                 </Tag>
-                <Text type='secondary'>版本 {workflow?.version}</Text>
-                {workflow?.category && <Tag color='blue'>{workflow.category}</Tag>}
+                <Text type='secondary' className='text-xs'>
+                  版本 {workflow?.version}
+                </Text>
+                {workflow?.category && (
+                  <Tag color='blue' className='ml-2'>
+                    {workflow.category}
+                  </Tag>
+                )}
               </div>
             </div>
           </div>
@@ -549,209 +571,185 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
       </Header>
 
       <Layout>
-        <Content style={{ padding: '24px' }}>
-          <Tabs activeKey={activeTab} onChange={setActiveTab}>
-            <TabPane tab='流程设计' key='designer'>
-              <div style={{ height: 'calc(100vh - 200px)' }}>
-                <BPMNDesigner
-                  xml={currentXML}
-                  onSave={handleSave}
-                  onChange={xml => {
-                    setCurrentXML(xml);
-                    setHasChanges(true);
-                  }}
-                />
-              </div>
-            </TabPane>
+        <Content className='p-6 bg-gray-50'>
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={[
+              {
+                key: 'designer',
+                label: '流程设计',
+                children: (
+                  <div className='h-[calc(100vh-200px)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+                    <BPMNDesigner
+                      xml={currentXML}
+                      onSave={handleSave}
+                      onChange={xml => {
+                        setCurrentXML(xml);
+                        setHasChanges(true);
+                      }}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: 'versions',
+                label: '版本历史',
+                children: (
+                  <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+                    <div className='flex justify-between items-center mb-6'>
+                      <Title level={5} className='!mb-0'>
+                        版本历史
+                      </Title>
+                      <Button
+                        type='primary'
+                        icon={<GitBranch className='w-4 h-4' />}
+                        onClick={() => setShowVersionModal(true)}
+                      >
+                        创建新版本
+                      </Button>
+                    </div>
 
-            <TabPane tab='版本历史' key='versions'>
-              <Card>
-                <div className='flex justify-between items-center mb-4'>
-                  <Title level={5}>版本历史</Title>
-                  <Button
-                    type='primary'
-                    icon={<GitBranch className='w-4 h-4' />}
-                    onClick={() => setShowVersionModal(true)}
-                  >
-                    创建新版本
-                  </Button>
-                </div>
-
-                <Timeline>
-                  {workflowVersions.map(version => (
-                    <Timeline.Item
-                      key={version.id}
-                      dot={
-                        <Badge
-                          status={version.status === 'active' ? 'success' : 'default'}
-                          text={version.status === 'active' ? '当前' : ''}
-                        />
-                      }
-                    >
-                      <div className='flex justify-between items-center'>
-                        <div>
-                          <Text strong>版本 {version.version}</Text>
-                          <div className='text-sm text-gray-500'>{version.change_log}</div>
-                          <div className='text-xs text-gray-400'>
-                            {new Date(version.created_at).toLocaleString()} - {version.created_by}
+                    <Timeline className='mt-4'>
+                      {workflowVersions.map(version => (
+                        <Timeline.Item
+                          key={version.id}
+                          dot={
+                            <Badge
+                              status={version.status === 'active' ? 'success' : 'default'}
+                              text={version.status === 'active' ? '当前' : ''}
+                            />
+                          }
+                        >
+                          <div className='flex justify-between items-center ml-2'>
+                            <div>
+                              <Text strong>版本 {version.version}</Text>
+                              <div className='text-sm text-gray-500 mt-1'>{version.change_log}</div>
+                              <div className='text-xs text-gray-400 mt-1'>
+                                {new Date(version.created_at).toLocaleString()} -{' '}
+                                {version.created_by}
+                              </div>
+                            </div>
+                            <Space>
+                              <Button
+                                size='small'
+                                icon={<Eye className='w-3 h-3' />}
+                                onClick={() => handleSwitchVersion(version.id)}
+                              >
+                                查看
+                              </Button>
+                              {version.status !== 'active' && (
+                                <Button
+                                  size='small'
+                                  type='primary'
+                                  onClick={() => handleSwitchVersion(version.id)}
+                                >
+                                  切换到此版本
+                                </Button>
+                              )}
+                            </Space>
                           </div>
-                        </div>
-                        <Space>
-                          <Button
-                            size='small'
-                            icon={<Eye className='w-3 h-3' />}
-                            onClick={() => handleSwitchVersion(version.id)}
-                          >
-                            查看
-                          </Button>
-                          {version.status !== 'active' && (
-                            <Button
-                              size='small'
-                              type='primary'
-                              onClick={() => handleSwitchVersion(version.id)}
+                        </Timeline.Item>
+                      ))}
+                    </Timeline>
+                  </Card>
+                ),
+              },
+              {
+                key: 'config',
+                label: '流程配置',
+                children: (
+                  <Row gutter={[24, 24]}>
+                    <Col span={12}>
+                      <Card
+                        title='审批配置'
+                        className='h-full rounded-lg shadow-sm border border-gray-200'
+                        variant="borderless"
+                      >
+                        <div className='space-y-6'>
+                          <div>
+                            <Text strong className='block mb-2'>
+                              审批类型
+                            </Text>
+                            <Select
+                              value={approvalConfig.approval_type}
+                              onChange={value =>
+                                setApprovalConfig(prev => ({
+                                  ...prev,
+                                  approval_type: value,
+                                }))
+                              }
+                              className='w-full'
                             >
-                              切换到此版本
-                            </Button>
-                          )}
-                        </Space>
-                      </div>
-                    </Timeline.Item>
-                  ))}
-                </Timeline>
-              </Card>
-            </TabPane>
+                              <Option value='single'>单人审批</Option>
+                              <Option value='parallel'>并行审批</Option>
+                              <Option value='sequential'>串行审批</Option>
+                              <Option value='conditional'>条件审批</Option>
+                            </Select>
+                          </div>
 
-            <TabPane tab='流程配置' key='config'>
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Card title='审批配置' className='h-full'>
-                    <div className='space-y-4'>
-                      <div>
-                        <Text strong>审批类型</Text>
-                        <div className='mt-2'>
-                          <Select
-                            value={approvalConfig.approval_type}
-                            onChange={value =>
-                              setApprovalConfig(prev => ({
-                                ...prev,
-                                approval_type: value,
-                              }))
-                            }
-                            style={{ width: '100%' }}
-                          >
-                            <Option value='single'>单人审批</Option>
-                            <Option value='parallel'>并行审批</Option>
-                            <Option value='sequential'>串行审批</Option>
-                            <Option value='conditional'>条件审批</Option>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Text strong>审批人</Text>
-                        <div className='mt-2'>
-                          <Select
-                            mode='multiple'
-                            placeholder='选择审批人'
-                            value={approvalConfig.approvers}
-                            onChange={value =>
-                              setApprovalConfig(prev => ({
-                                ...prev,
-                                approvers: value,
-                              }))
-                            }
-                            style={{ width: '100%' }}
-                          >
-                            <Option value='user1'>张三</Option>
-                            <Option value='user2'>李四</Option>
-                            <Option value='user3'>王五</Option>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Text strong>自动审批角色</Text>
-                        <div className='mt-2'>
-                          <Select
-                            mode='multiple'
-                            placeholder='选择角色'
-                            value={approvalConfig.auto_approve_roles}
-                            onChange={value =>
-                              setApprovalConfig(prev => ({
-                                ...prev,
-                                auto_approve_roles: value,
-                              }))
-                            }
-                            style={{ width: '100%' }}
-                          >
-                            <Option value='admin'>管理员</Option>
-                            <Option value='manager'>经理</Option>
-                            <Option value='supervisor'>主管</Option>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-
-                <Col span={12}>
-                  <Card title='SLA配置' className='h-full'>
-                    <div className='space-y-4'>
-                      <div>
-                        <Text strong>响应时间</Text>
-                        <div className='mt-2'>
-                          <Input
-                            type='number'
-                            suffix='小时'
-                            value={workflow?.sla_config?.response_time_hours}
-                            onChange={e =>
-                              setWorkflow(prev =>
-                                prev
-                                  ? {
-                                      ...prev,
-                                      sla_config: {
-                                        ...prev.sla_config!,
-                                        response_time_hours: parseInt(e.target.value) || 24,
-                                      },
-                                    }
-                                  : null
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Text strong>解决时间</Text>
-                        <div className='mt-2'>
-                          <Input
-                            type='number'
-                            suffix='小时'
-                            value={workflow?.sla_config?.resolution_time_hours}
-                            onChange={e =>
-                              setWorkflow(prev =>
-                                prev
-                                  ? {
-                                      ...prev,
-                                      sla_config: {
-                                        ...prev.sla_config!,
-                                        resolution_time_hours: parseInt(e.target.value) || 72,
-                                      },
-                                    }
-                                  : null
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Text strong>工作时间设置</Text>
-                        <div className='mt-2 space-y-2'>
                           <div>
-                            <input
-                              type='checkbox'
-                              checked={workflow?.sla_config?.business_hours_only}
+                            <Text strong className='block mb-2'>
+                              审批人
+                            </Text>
+                            <Select
+                              mode='multiple'
+                              placeholder='选择审批人'
+                              value={approvalConfig.approvers}
+                              onChange={value =>
+                                setApprovalConfig(prev => ({
+                                  ...prev,
+                                  approvers: value,
+                                }))
+                              }
+                              className='w-full'
+                            >
+                              <Option value='user1'>张三</Option>
+                              <Option value='user2'>李四</Option>
+                              <Option value='user3'>王五</Option>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Text strong className='block mb-2'>
+                              自动审批角色
+                            </Text>
+                            <Select
+                              mode='multiple'
+                              placeholder='选择角色'
+                              value={approvalConfig.auto_approve_roles}
+                              onChange={value =>
+                                setApprovalConfig(prev => ({
+                                  ...prev,
+                                  auto_approve_roles: value,
+                                }))
+                              }
+                              className='w-full'
+                            >
+                              <Option value='admin'>管理员</Option>
+                              <Option value='manager'>经理</Option>
+                              <Option value='supervisor'>主管</Option>
+                            </Select>
+                          </div>
+                        </div>
+                      </Card>
+                    </Col>
+
+                    <Col span={12}>
+                      <Card
+                        title='SLA配置'
+                        className='h-full rounded-lg shadow-sm border border-gray-200'
+                        variant="borderless"
+                      >
+                        <div className='space-y-6'>
+                          <div>
+                            <Text strong className='block mb-2'>
+                              响应时间
+                            </Text>
+                            <Input
+                              type='number'
+                              suffix='小时'
+                              value={workflow?.sla_config?.response_time_hours}
                               onChange={e =>
                                 setWorkflow(prev =>
                                   prev
@@ -759,19 +757,23 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
                                         ...prev,
                                         sla_config: {
                                           ...prev.sla_config!,
-                                          business_hours_only: e.target.checked,
+                                          response_time_hours: parseInt(e.target.value) || 24,
                                         },
                                       }
                                     : null
                                 )
                               }
                             />
-                            <Text className='ml-2'>仅工作时间</Text>
                           </div>
+
                           <div>
-                            <input
-                              type='checkbox'
-                              checked={workflow?.sla_config?.exclude_weekends}
+                            <Text strong className='block mb-2'>
+                              解决时间
+                            </Text>
+                            <Input
+                              type='number'
+                              suffix='小时'
+                              value={workflow?.sla_config?.resolution_time_hours}
                               onChange={e =>
                                 setWorkflow(prev =>
                                   prev
@@ -779,23 +781,70 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
                                         ...prev,
                                         sla_config: {
                                           ...prev.sla_config!,
-                                          exclude_weekends: e.target.checked,
+                                          resolution_time_hours: parseInt(e.target.value) || 72,
                                         },
                                       }
                                     : null
                                 )
                               }
                             />
-                            <Text className='ml-2'>排除周末</Text>
+                          </div>
+
+                          <div>
+                            <Text strong className='block mb-2'>
+                              工作时间设置
+                            </Text>
+                            <div className='space-y-3'>
+                              <div className='flex items-center'>
+                                <Checkbox
+                                  checked={workflow?.sla_config?.business_hours_only}
+                                  onChange={e =>
+                                    setWorkflow(prev =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            sla_config: {
+                                              ...prev.sla_config!,
+                                              business_hours_only: e.target.checked,
+                                            },
+                                          }
+                                        : null
+                                    )
+                                  }
+                                >
+                                  仅工作时间
+                                </Checkbox>
+                              </div>
+                              <div className='flex items-center'>
+                                <Checkbox
+                                  checked={workflow?.sla_config?.exclude_weekends}
+                                  onChange={e =>
+                                    setWorkflow(prev =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            sla_config: {
+                                              ...prev.sla_config!,
+                                              exclude_weekends: e.target.checked,
+                                            },
+                                          }
+                                        : null
+                                    )
+                                  }
+                                >
+                                  排除周末
+                                </Checkbox>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-              </Row>
-            </TabPane>
-          </Tabs>
+                      </Card>
+                    </Col>
+                  </Row>
+                ),
+              },
+            ]}
+          />
         </Content>
       </Layout>
 
@@ -843,54 +892,66 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
         cancelText='取消'
       >
         <Form form={form} layout='vertical' initialValues={workflow || {}}>
-          <Tabs>
-            <TabPane tab='审批配置' key='approval'>
-              <Form.Item
-                label='审批类型'
-                name={['approval_config', 'approval_type']}
-                rules={[{ required: true, message: '请选择审批类型' }]}
-              >
-                <Select>
-                  <Option value='single'>单人审批</Option>
-                  <Option value='parallel'>并行审批</Option>
-                  <Option value='sequential'>串行审批</Option>
-                  <Option value='conditional'>条件审批</Option>
-                </Select>
-              </Form.Item>
+          <Tabs
+            items={[
+              {
+                key: 'approval',
+                label: '审批配置',
+                children: (
+                  <>
+                    <Form.Item
+                      label='审批类型'
+                      name={['approval_config', 'approval_type']}
+                      rules={[{ required: true, message: '请选择审批类型' }]}
+                    >
+                      <Select>
+                        <Option value='single'>单人审批</Option>
+                        <Option value='parallel'>并行审批</Option>
+                        <Option value='sequential'>串行审批</Option>
+                        <Option value='conditional'>条件审批</Option>
+                      </Select>
+                    </Form.Item>
 
-              <Form.Item label='审批人' name={['approval_config', 'approvers']}>
-                <Select mode='multiple' placeholder='选择审批人'>
-                  <Option value='user1'>张三</Option>
-                  <Option value='user2'>李四</Option>
-                  <Option value='user3'>王五</Option>
-                </Select>
-              </Form.Item>
-            </TabPane>
+                    <Form.Item label='审批人' name={['approval_config', 'approvers']}>
+                      <Select mode='multiple' placeholder='选择审批人'>
+                        <Option value='user1'>张三</Option>
+                        <Option value='user2'>李四</Option>
+                        <Option value='user3'>王五</Option>
+                      </Select>
+                    </Form.Item>
+                  </>
+                )
+              },
+              {
+                key: 'sla',
+                label: 'SLA配置',
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col span={12}>
+                        <Form.Item label='响应时间(小时)' name={['sla_config', 'response_time_hours']}>
+                          <Input type='number' />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item label='解决时间(小时)' name={['sla_config', 'resolution_time_hours']}>
+                          <Input type='number' />
+                        </Form.Item>
+                      </Col>
+                    </Row>
 
-            <TabPane tab='SLA配置' key='sla'>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label='响应时间(小时)' name={['sla_config', 'response_time_hours']}>
-                    <Input type='number' />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label='解决时间(小时)' name={['sla_config', 'resolution_time_hours']}>
-                    <Input type='number' />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Form.Item
-                label='工作时间设置'
-                name={['sla_config', 'business_hours_only']}
-                valuePropName='checked'
-              >
-                <input type='checkbox' />
-                <Text className='ml-2'>仅工作时间</Text>
-              </Form.Item>
-            </TabPane>
-          </Tabs>
+                    <Form.Item
+                      label='工作时间设置'
+                      name={['sla_config', 'business_hours_only']}
+                      valuePropName='checked'
+                    >
+                      <Checkbox>仅工作时间</Checkbox>
+                    </Form.Item>
+                  </>
+                )
+              }
+            ]}
+          />
         </Form>
       </Modal>
     </Layout>

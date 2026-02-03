@@ -26,6 +26,7 @@ const SLADetail: React.FC = () => {
         if (id) {
             loadDetail();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadDetail = async () => {
@@ -34,18 +35,22 @@ const SLADetail: React.FC = () => {
             const res = await SLAApi.getDefinition(id!);
             setData(res);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载 SLA 详情失败');
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <Card><Skeleton active /></Card>;
+    if (loading) return (
+        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+            <Skeleton active />
+        </Card>
+    );
 
     if (!data) {
         return (
-            <Card>
+            <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
                 <Result
                     status="404"
                     title="404"
@@ -57,16 +62,18 @@ const SLADetail: React.FC = () => {
     }
 
     return (
-        <div style={{ padding: '0 0 24px' }}>
-            <Breadcrumb style={{ marginBottom: 16 }}>
+        <div className="pb-6">
+            <Breadcrumb className="mb-4">
                 <Breadcrumb.Item>首页</Breadcrumb.Item>
                 <Breadcrumb.Item>服务级别管理</Breadcrumb.Item>
-                <Breadcrumb.Item onClick={() => router.push('/sla')}>SLA 定义</Breadcrumb.Item>
+                <Breadcrumb.Item onClick={() => router.push('/sla')} className="cursor-pointer">SLA 定义</Breadcrumb.Item>
                 <Breadcrumb.Item>详情</Breadcrumb.Item>
             </Breadcrumb>
 
             <Card
-                title={data.name}
+                className="rounded-lg shadow-sm border border-gray-200"
+                variant="borderless"
+                title={<span className="text-lg font-bold">{data.name}</span>}
                 extra={
                     <Button
                         type="primary"
@@ -77,7 +84,7 @@ const SLADetail: React.FC = () => {
                     </Button>
                 }
             >
-                <Descriptions bordered column={2}>
+                <Descriptions bordered column={2} className="mb-6">
                     <Descriptions.Item label="名称">{data.name}</Descriptions.Item>
                     <Descriptions.Item label="服务类型">{data.service_type || '-'}</Descriptions.Item>
                     <Descriptions.Item label="优先级">
@@ -94,16 +101,16 @@ const SLADetail: React.FC = () => {
                 </Descriptions>
 
                 <Divider orientation="left">适用条件</Divider>
-                <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4 }}>
+                <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto mb-6">
                     {JSON.stringify(data.conditions, null, 2)}
                 </pre>
 
                 <Divider orientation="left">升级规则</Divider>
-                <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4 }}>
+                <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto">
                     {JSON.stringify(data.escalation_rules, null, 2)}
                 </pre>
 
-                <div style={{ marginTop: 24 }}>
+                <div className="mt-6">
                     <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sla')}>
                         返回列表
                     </Button>

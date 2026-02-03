@@ -174,7 +174,7 @@ const LoadingStateManagerComponent: React.FC<LoadingStateManagerProps> = ({
       <Empty
         image={<Inbox className="text-gray-400" size={64} />}
         description={
-          <Space direction="vertical" size="small">
+          <Space orientation="vertical" size="small">
             <Text className="text-gray-600">{emptyText}</Text>
             <Text className="text-gray-400 text-sm">{emptyDescription}</Text>
           </Space>

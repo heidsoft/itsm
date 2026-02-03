@@ -1021,7 +1021,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
             className="h-full"
             styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}
           >
-            <Space direction="vertical" style={{ width: '100%' }} size="small">
+            <Space orientation="vertical" style={{ width: '100%' }} size="small">
               {filteredFieldTypes.map((typeConfig) => (
                 <Card
                   key={typeConfig.type}

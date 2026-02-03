@@ -302,12 +302,18 @@ const TicketTemplatesPage = () => {
   const loadTemplates = async () => {
     setLoading(true);
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const allTemplates = templateCategories.flatMap(cat => cat.templates) as TicketTemplate[];
-      setTemplates(allTemplates);
+      // 调用实际API
+      const { default: TicketApi } = await import('@/lib/api/ticket-api');
+      const response = await TicketApi.getTemplates({
+        page: 1,
+        page_size: 100,
+        category: selectedCategory !== 'all' ? selectedCategory : undefined,
+      });
+      setTemplates(response.items);
     } catch (error) {
-      message.error('Failed to load templates');
+      console.error('Failed to load templates:', error);
+      message.error('加载模板失败');
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -507,7 +513,7 @@ const TicketTemplatesPage = () => {
             <Statistic
               title="Active Templates"
               value={templates.filter(t => t.isActive).length}
-              valueStyle={{ color: "#52c41a" }}
+              styles={{ content: { color: "#52c41a" } }}
               prefix={<CheckCircle size={16} />}
             />
           </Card>

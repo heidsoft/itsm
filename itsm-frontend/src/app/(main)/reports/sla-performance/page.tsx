@@ -148,7 +148,7 @@ const SLAPerformanceReport = () => {
                   title="平均合规率"
                   value={avgCompliance}
                   suffix="%"
-                  valueStyle={{
+                  styles={{ content: {
                     color: avgCompliance >= 95 ? '#52c41a' : avgCompliance >= 85 ? '#faad14' : '#ff4d4f'
                   }}
                   prefix={<CheckCircleOutlined />}
@@ -160,7 +160,7 @@ const SLAPerformanceReport = () => {
                 <Statistic
                   title="达标次数"
                   value={totalMet}
-                  valueStyle={{ color: COLORS.met }}
+                  styles={{ content: { color: COLORS.met } }}
                   prefix={<CheckCircleOutlined />}
                 />
               </Card>
@@ -170,7 +170,7 @@ const SLAPerformanceReport = () => {
                 <Statistic
                   title="违规次数"
                   value={totalBreached}
-                  valueStyle={{ color: COLORS.breached }}
+                  styles={{ content: { color: COLORS.breached } }}
                   prefix={<CloseCircleOutlined />}
                 />
               </Card>

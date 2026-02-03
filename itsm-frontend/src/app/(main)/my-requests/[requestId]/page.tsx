@@ -174,7 +174,7 @@ export default function MyRequestDetailPage() {
 
   return (
     <div className='max-w-4xl mx-auto p-6'>
-      <Space direction='vertical' size={16} style={{ width: '100%' }}>
+      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         <Card>
           <Space align='center'>
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/my-requests')}>
@@ -245,7 +245,7 @@ export default function MyRequestDetailPage() {
             detail?.status === 'it_approved') && (
             <>
               <Title level={4}>审批操作</Title>
-              <Space direction='vertical' style={{ width: '100%' }}>
+              <Space orientation='vertical' style={{ width: '100%' }}>
                 <Input.TextArea
                   value={comment}
                   onChange={e => setComment(e.target.value)}

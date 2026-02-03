@@ -8,21 +8,18 @@
 import React, { useState, useEffect } from 'react';
 import {
     Table, Tag, Button, Tabs, Card, Space, Tooltip,
-    Pagination, Input, Select, DatePicker, message
+    message
 } from 'antd';
 import {
-    SearchOutlined, EyeOutlined, CheckCircleOutlined,
-    SyncOutlined, ClockCircleOutlined
+    EyeOutlined, CheckCircleOutlined,
+    SyncOutlined
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { ServiceRequestApi } from '../api';
-import { ServiceRequestStatus, ApprovalStatus } from '../constants';
+import { ServiceRequestStatus } from '../constants';
 import type { ServiceRequest, ServiceRequestQuery } from '../types';
-
-const { TabPane } = Tabs;
-const { Option } = Select;
 
 // 状态标签颜色映射
 const statusColors: Record<string, string> = {
@@ -70,7 +67,7 @@ const ServiceRequestList: React.FC = () => {
             setData(resp.requests);
             setTotal(resp.total);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载服务请求失败');
         } finally {
             setLoading(false);
@@ -79,6 +76,7 @@ const ServiceRequestList: React.FC = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query, activeTab]);
 
     // 处理Tab切换
@@ -98,12 +96,12 @@ const ServiceRequestList: React.FC = () => {
             title: '标题',
             dataIndex: 'title',
             render: (text: string, record: ServiceRequest) => (
-                <Space direction="vertical" size={0}>
-                    <span style={{ fontWeight: 500 }}>{text || `请求 #${record.id}`}</span>
-                    <span style={{ fontSize: '12px', color: '#888' }}>
+                <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">{text || `请求 #${record.id}`}</span>
+                    <span className="text-xs text-gray-500">
                         {record.catalog?.name || '未知服务'}
                     </span>
-                </Space>
+                </div>
             ),
         },
         {
@@ -142,6 +140,7 @@ const ServiceRequestList: React.FC = () => {
                         <Button
                             type="text"
                             icon={<EyeOutlined />}
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                             onClick={() => router.push(`/service-requests/${record.id}`)}
                         />
                     </Tooltip>
@@ -149,7 +148,8 @@ const ServiceRequestList: React.FC = () => {
                         <Tooltip title="审批">
                             <Button
                                 type="text"
-                                icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                                icon={<CheckCircleOutlined />}
+                                className="text-green-600 hover:text-green-800 hover:bg-green-50"
                                 onClick={() => router.push(`/service-requests/${record.id}`)}
                             />
                         </Tooltip>
@@ -160,14 +160,18 @@ const ServiceRequestList: React.FC = () => {
     ];
 
     return (
-        <Card bodyStyle={{ padding: '0 24px 24px' }} bordered={false}>
-            <Tabs activeKey={activeTab} onChange={handleTabChange} size="large">
-                <TabPane tab="我的请求" key="my-requests" />
-                <TabPane tab="待办审批" key="approvals" />
-            </Tabs>
-
-            {/* 工具栏: 搜索和筛选 (后续实现) */}
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+            <div className="flex justify-between items-center mb-4">
+                <Tabs 
+                    activeKey={activeTab} 
+                    onChange={handleTabChange} 
+                    size="large"
+                    className="flex-1"
+                    items={[
+                        { label: '我的请求', key: 'my-requests' },
+                        { label: '待办审批', key: 'approvals' },
+                    ]}
+                />
                 <Button icon={<SyncOutlined />} onClick={loadData}>刷新</Button>
             </div>
 

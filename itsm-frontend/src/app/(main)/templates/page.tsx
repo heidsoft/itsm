@@ -506,7 +506,7 @@ const TicketTemplatePage: React.FC = () => {
               title='总模板数'
               value={stats.total}
               prefix={<FileText className='w-5 h-5' />}
-              valueStyle={{ color: '#3b82f6' }}
+              styles={{ content: { color: '#3b82f6' } }}
             />
           </Card>
         </Col>
@@ -516,7 +516,7 @@ const TicketTemplatePage: React.FC = () => {
               title='启用模板'
               value={stats.active}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#10b981' }}
+              styles={{ content: { color: '#10b981' } }}
             />
           </Card>
         </Col>
@@ -526,7 +526,7 @@ const TicketTemplatePage: React.FC = () => {
               title='模板分类'
               value={stats.categories}
               prefix={<Settings className='w-5 h-5' />}
-              valueStyle={{ color: '#f59e0b' }}
+              styles={{ content: { color: '#f59e0b' } }}
             />
           </Card>
         </Col>
@@ -725,7 +725,7 @@ const TicketTemplatePage: React.FC = () => {
 
               {formFields.length === 0 ? (
                 <div className='text-center py-8 text-gray-500'>
-                  暂无表单字段，点击"添加字段"开始配置
+                  暂无表单字段，点击「添加字段」开始配置
                 </div>
               ) : (
                 <DragDropContext
@@ -858,7 +858,7 @@ const TicketTemplatePage: React.FC = () => {
 
               {workflowSteps.length === 0 ? (
                 <div className='text-center py-8 text-gray-500'>
-                  暂无工作流步骤，点击"添加步骤"开始配置
+                  暂无工作流步骤，点击「添加步骤」开始配置
                 </div>
               ) : (
                 <DragDropContext

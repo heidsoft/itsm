@@ -118,114 +118,14 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
         setAnalysisReport(report);
         onAnalysisComplete?.(report);
         antMessage.success('根因分析完成');
-        return;
+      } else {
+        setAnalysisReport(null);
+        antMessage.info('未发现明确的根因');
       }
-      
-      // 如果API返回空，使用模拟数据
-      const mockRootCauses: RootCause[] = [
-        {
-          id: 'rc1',
-          title: '数据库连接池耗尽',
-          description: '系统检测到数据库连接池在高峰期耗尽，导致多个工单无法正常处理。',
-          confidence: 0.92,
-          category: 'database',
-          evidence: [
-            {
-              type: 'log',
-              content: 'ERROR: Connection pool exhausted at 2024-01-15 14:30:00',
-              timestamp: '2024-01-15 14:30:00',
-              relevance: 0.95,
-            },
-            {
-              type: 'metric',
-              content: '数据库连接数达到最大值 100/100',
-              timestamp: '2024-01-15 14:28:00',
-              relevance: 0.88,
-            },
-            {
-              type: 'ticket',
-              content: 'T-2024-001: 系统响应缓慢',
-              timestamp: '2024-01-15 14:25:00',
-              relevance: 0.82,
-            },
-          ],
-          related_tickets: [
-            { id: 1001, number: 'T-2024-001', title: '系统响应缓慢', similarity: 0.89 },
-            { id: 1002, number: 'T-2024-002', title: '无法连接数据库', similarity: 0.85 },
-            { id: 1003, number: 'T-2024-003', title: '应用超时', similarity: 0.78 },
-          ],
-          impact_scope: {
-            affected_tickets: 15,
-            affected_users: 120,
-            affected_systems: ['CRM系统', '订单系统'],
-          },
-          recommendations: [
-            '增加数据库连接池大小',
-            '优化数据库查询性能',
-            '实施连接池监控和告警',
-            '考虑使用读写分离',
-          ],
-          status: 'identified',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'rc2',
-          title: '网络带宽不足',
-          description: '在业务高峰期，网络带宽使用率达到95%，导致系统响应延迟。',
-          confidence: 0.78,
-          category: 'network',
-          evidence: [
-            {
-              type: 'metric',
-              content: '网络带宽使用率: 95%',
-              timestamp: '2024-01-15 14:20:00',
-              relevance: 0.85,
-            },
-            {
-              type: 'event',
-              content: '网络流量异常增长',
-              timestamp: '2024-01-15 14:15:00',
-              relevance: 0.75,
-            },
-          ],
-          related_tickets: [
-            { id: 1004, number: 'T-2024-004', title: '网络访问缓慢', similarity: 0.82 },
-          ],
-          impact_scope: {
-            affected_tickets: 8,
-            affected_users: 65,
-            affected_systems: ['所有系统'],
-          },
-          recommendations: [
-            '升级网络带宽',
-            '优化网络流量分配',
-            '实施流量限流策略',
-          ],
-          status: 'identified',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-
-      const mockReport: RootCauseAnalysisReport = {
-        ticket_id: ticketId,
-        ticket_number: `T-${ticketId}`,
-        ticket_title: '系统响应缓慢',
-        analysis_date: format(new Date(), 'yyyy-MM-dd', { locale: zhCN }),
-        root_causes: mockRootCauses,
-        analysis_summary: '系统自动分析识别出2个可能的根本原因：数据库连接池耗尽（置信度92%）和网络带宽不足（置信度78%）。建议优先处理数据库连接池问题。',
-        confidence_score: 0.85,
-        analysis_method: 'automatic',
-        generated_at: format(new Date(), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
-      };
-
-      setAnalysisReport(mockReport);
-      onAnalysisComplete?.(mockReport);
-      antMessage.success('根因分析完成');
     } catch (error) {
       console.error('Failed to perform analysis:', error);
       antMessage.error('根因分析失败');
+      setAnalysisReport(null);
     } finally {
       setAnalyzing(false);
     }

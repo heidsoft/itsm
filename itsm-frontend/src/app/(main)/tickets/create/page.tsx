@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Form, Input, Select, Button, Space, Typography, message } from 'antd';
+import { Card, Form, Input, Select, Button, Space, Typography, App } from 'antd';
 import { ArrowLeft } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
 
@@ -13,6 +13,7 @@ type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
 export default function CreateTicketPage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +41,7 @@ export default function CreateTicketPage() {
 
         return (
     <div className='max-w-4xl mx-auto p-6'>
-      <Space direction='vertical' size={16} style={{ width: '100%' }}>
+      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         <Card>
           <Space align='center'>
             <Button icon={<ArrowLeft className='w-4 h-4' />} onClick={() => router.back()}>

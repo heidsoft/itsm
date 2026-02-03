@@ -1,6 +1,7 @@
 package router
 
 import (
+	"runtime"
 	"time"
 
 	"itsm-backend/common"
@@ -69,6 +70,8 @@ type RouterConfig struct {
 	ChangeController         *controller.ChangeController
 	ChangeApprovalController *controller.ChangeApprovalController
 	ProvisioningController   *controller.ProvisioningController
+	AnalyticsController      *controller.AnalyticsController
+	PredictionController     *controller.PredictionController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
@@ -212,6 +215,52 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/reopen", config.TicketWorkflowController.ReopenTicket)
 				tickets.GET("/:id/workflow/state", config.TicketWorkflowController.GetTicketWorkflowState)
 			}
+
+			// 工单评分
+			if config.TicketRatingController != nil {
+				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
+				tickets.GET("/:id/rating", config.TicketRatingController.GetRating)
+				tickets.GET("/rating-stats", config.TicketRatingController.GetRatingStats)
+			}
+
+			// 工单分析与预测 (Alias for frontend compatibility)
+			if config.AIHandler != nil {
+				tickets.POST("/analytics/deep", config.AIHandler.GetDeepAnalytics)
+				tickets.POST("/prediction/trend", config.AIHandler.GetTrendPrediction)
+			}
+
+			if config.AnalyticsController != nil {
+				tickets.POST("/analytics/export", config.AnalyticsController.ExportAnalytics)
+			}
+
+			if config.PredictionController != nil {
+				tickets.POST("/prediction/export", config.PredictionController.ExportPredictionReport)
+			}
+		}
+
+		// ==================== System Configs ====================
+		sysConfigs := tenant.(*gin.RouterGroup).Group("/system-configs")
+		{
+			sysConfigs.GET("/status", func(c *gin.Context) {
+				// 返回简单的系统状态信息
+				// 实际项目中可以集成 prometheus 或 gopsutil
+				var m runtime.MemStats
+				runtime.ReadMemStats(&m)
+
+				c.JSON(200, gin.H{
+					"cpu": gin.H{
+						"usage": 0, // 需要额外库支持
+						"cores": runtime.NumCPU(),
+					},
+					"memory": gin.H{
+						"used":  m.Alloc / 1024 / 1024,
+						"total": m.Sys / 1024 / 1024,
+						"usage": float64(m.Alloc) / float64(m.Sys) * 100,
+					},
+					"goroutines": runtime.NumGoroutine(),
+					"timestamp":  time.Now(),
+				})
+			})
 		}
 
 		// ==================== Incidents (DDD) ====================
@@ -317,14 +366,34 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Knowledge Base (DDD) ====================
 		if config.KnowledgeHandler != nil {
-			kb := tenant.(*gin.RouterGroup).Group("/knowledge-articles")
+			// Old route for backward compatibility if needed, but we prefer the new structure
+			// kb := tenant.(*gin.RouterGroup).Group("/knowledge-articles") ...
+
+			knowledgeGrp := tenant.(*gin.RouterGroup).Group("/knowledge")
 			{
-				kb.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
-				kb.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
-				kb.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
-				kb.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
-				kb.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
-				kb.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
+				// Articles
+				articles := knowledgeGrp.Group("/articles")
+				{
+					articles.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
+					articles.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
+					articles.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
+					articles.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
+					articles.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
+					
+					// Comments
+					articles.GET("/:id/comments", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticleComments)
+					articles.POST("/:id/comments", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.AddArticleComment)
+				}
+
+				// Categories
+				knowledgeGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
+				
+				// Search
+				knowledgeGrp.POST("/search", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.SearchArticles)
+				
+				// Recommendations
+				knowledgeGrp.GET("/recommendations", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecommendations)
+				knowledgeGrp.GET("/recent", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecentArticles)
 			}
 		}
 

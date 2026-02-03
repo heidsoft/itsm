@@ -191,7 +191,7 @@ const ChangeSuccessReport = () => {
                 <Statistic
                   title="变更总数"
                   value={data.totalChanges}
-                  valueStyle={{ color: '#1890ff' }}
+                  styles={{ content: { color: '#1890ff' } }}
                 />
               </Card>
             </Col>
@@ -200,7 +200,7 @@ const ChangeSuccessReport = () => {
                 <Statistic
                   title="已完成"
                   value={data.byStatus.find(s => s.name === '已完成')?.value || 0}
-                  valueStyle={{ color: '#52c41a' }}
+                  styles={{ content: { color: '#52c41a' } }}
                 />
               </Card>
             </Col>
@@ -209,7 +209,7 @@ const ChangeSuccessReport = () => {
                 <Statistic
                   title="实施中"
                   value={data.byStatus.find(s => s.name === '实施中')?.value || 0}
-                  valueStyle={{ color: '#1890ff' }}
+                  styles={{ content: { color: '#1890ff' } }}
                 />
               </Card>
             </Col>
@@ -219,7 +219,7 @@ const ChangeSuccessReport = () => {
                   title="成功率"
                   value={data.successRate}
                   suffix="%"
-                  valueStyle={{ color: data.successRate >= 80 ? '#52c41a' : '#ff4d4f' }}
+                  styles={{ content: { color: data.successRate >= 80 ? '#52c41a' : '#ff4d4f' } }}
                 />
               </Card>
             </Col>

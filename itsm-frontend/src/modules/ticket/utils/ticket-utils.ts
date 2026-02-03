@@ -663,10 +663,12 @@ export class ValidationUtils {
 
 // ==================== 导出 ====================
 
-export default {
+const TicketUtilsExport = {
   StateUtils,
   TicketUtils,
   DataUtils,
   FormatUtils,
   ValidationUtils,
 };
+
+export default TicketUtilsExport;

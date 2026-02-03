@@ -74,19 +74,7 @@ const TicketDashboardPage = () => {
   // 获取概览数据
   const getOverviewData = () => {
     if (dashboardData?.overview) return dashboardData.overview;
-    if (ticketStats) {
-      return {
-        totalTickets: ticketStats.total || 0,
-        pendingTickets: (ticketStats.open || 0) + (ticketStats.in_progress || 0),
-        resolvedTickets: (ticketStats.resolved || 0) + (ticketStats.closed || 0),
-        avgResponseTime: 0,
-        avgResolutionTime: 0,
-        customerSatisfaction: 0,
-        monthlyGrowth: 0,
-        openTickets: ticketStats.open || 0,
-        slaCompliance: 0,
-      };
-    }
+    // 不再回退到 ticketStats，完全依赖 API 数据
     return {
       totalTickets: 0,
       pendingTickets: 0,
@@ -131,7 +119,7 @@ const TicketDashboardPage = () => {
             <Statistic
               title="待处理工单"
               value={overview.openTickets}
-              valueStyle={{ color: "#faad14" }}
+              styles={{ content: { color: "#faad14" } }}
               prefix={<Clock size={16} />}
             />
           </Card>
@@ -141,7 +129,7 @@ const TicketDashboardPage = () => {
             <Statistic
               title="已解决工单"
               value={overview.resolvedTickets}
-              valueStyle={{ color: "#52c41a" }}
+              styles={{ content: { color: "#52c41a" } }}
               prefix={<CheckCircle size={16} />}
             />
           </Card>
@@ -153,7 +141,7 @@ const TicketDashboardPage = () => {
               value={slaData.compliance_rate}
               suffix="%"
               prefix={<TrendingUp size={16} style={{ color: "#3b82f6" }} />}
-              valueStyle={{
+              styles={{ content: {
                 color: slaData.compliance_rate >= 95 ? "#52c41a" : "#faad14",
               }}
             />
