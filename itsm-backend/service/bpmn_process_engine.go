@@ -461,7 +461,7 @@ type CreateProcessDefinitionRequest struct {
 	Name             string                 `json:"name" binding:"required"`
 	Description      string                 `json:"description"`
 	Category         string                 `json:"category"`
-	BPMNXML          []byte                 `json:"bpmn_xml" binding:"required"`
+	BPMNXML          string                 `json:"bpmn_xml" binding:"required"`
 	ProcessVariables map[string]interface{} `json:"process_variables"`
 	TenantID         int                    `json:"tenant_id" binding:"required"`
 }
@@ -470,7 +470,7 @@ type UpdateProcessDefinitionRequest struct {
 	Name             string                 `json:"name"`
 	Description      string                 `json:"description"`
 	Category         string                 `json:"category"`
-	BPMNXML          []byte                 `json:"bpmn_xml"`
+	BPMNXML          string                 `json:"bpmn_xml"`
 	ProcessVariables map[string]interface{} `json:"process_variables"`
 	IsActive         *bool                  `json:"is_active"`
 }
@@ -550,7 +550,7 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetName(req.Name).
 		SetDescription(req.Description).
 		SetCategory(req.Category).
-		SetBpmnXML(req.BPMNXML).
+		SetBpmnXML([]byte(req.BPMNXML)).
 		SetProcessVariables(req.ProcessVariables).
 		SetVersion("1.0.0").
 		SetIsActive(true).
@@ -608,8 +608,8 @@ func (s *bpmnProcessDefinitionService) UpdateProcessDefinition(ctx context.Conte
 	if req.Category != "" {
 		update.SetCategory(req.Category)
 	}
-	if req.BPMNXML != nil {
-		update.SetBpmnXML(req.BPMNXML)
+	if req.BPMNXML != "" {
+		update.SetBpmnXML([]byte(req.BPMNXML))
 	}
 	if req.ProcessVariables != nil {
 		update.SetProcessVariables(req.ProcessVariables)

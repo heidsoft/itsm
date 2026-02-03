@@ -1,22 +1,8 @@
 'use client';
 
 import React from 'react';
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  Zap,
-} from 'lucide-react';
-import {
-  Card,
-  Typography,
-  Space,
-  Button,
-  Badge,
-  Timeline,
-  Input,
-  Divider,
-} from 'antd';
+import { CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
+import { Card, Typography, Space, Button, Badge, Timeline, Input, Divider } from 'antd';
 import { Ticket, WorkflowStep, SLAInfo } from '@/app/lib/api-config';
 import { TicketRatingSection } from '@/components/business/TicketRatingSection';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -73,15 +59,11 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
             {isEditing ? (
               <TextArea
                 value={editedTicket.description}
-                onChange={(e) =>
-                  onEditedTicketChange({ description: e.target.value })
-                }
+                onChange={e => onEditedTicketChange({ description: e.target.value })}
                 rows={4}
               />
             ) : (
-              <Paragraph className='whitespace-pre-wrap'>
-                {ticket.description}
-              </Paragraph>
+              <Paragraph className='whitespace-pre-wrap'>{ticket.description}</Paragraph>
             )}
           </Card>
 
@@ -91,15 +73,11 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
               {isEditing ? (
                 <TextArea
                   value={editedTicket.resolution}
-                  onChange={(e) =>
-                    onEditedTicketChange({ resolution: e.target.value })
-                  }
+                  onChange={e => onEditedTicketChange({ resolution: e.target.value })}
                   rows={3}
                 />
               ) : (
-                <Paragraph className='whitespace-pre-wrap'>
-                  {ticket.resolution}
-                </Paragraph>
+                <Paragraph className='whitespace-pre-wrap'>{ticket.resolution}</Paragraph>
               )}
             </Card>
           )}
@@ -108,15 +86,15 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
           {workflowSteps.length > 0 && (
             <Card title='处理流程' className='shadow-sm'>
               <Timeline>
-                {workflowSteps.map((step) => (
+                {workflowSteps.map(step => (
                   <Timeline.Item
                     key={step.id}
                     color={
                       step.status === 'completed'
                         ? 'green'
                         : step.status === 'in_progress'
-                        ? 'blue'
-                        : 'gray'
+                          ? 'blue'
+                          : 'gray'
                     }
                     dot={
                       step.status === 'completed' ? (
@@ -128,18 +106,12 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                   >
                     <div className='flex items-center justify-between'>
                       <div>
-                        <Typography.Text strong>
-                          {step.step_name}
-                        </Typography.Text>
+                        <Typography.Text strong>{step.step_name}</Typography.Text>
                         {step.assignee && (
-                          <div className='text-sm text-gray-500'>
-                            负责人: {step.assignee.name}
-                          </div>
+                          <div className='text-sm text-gray-500'>负责人: {step.assignee.name}</div>
                         )}
                         {step.comments && (
-                          <div className='text-sm text-gray-600 mt-1'>
-                            {step.comments}
-                          </div>
+                          <div className='text-sm text-gray-600 mt-1'>{step.comments}</div>
                         )}
                       </div>
                       <div className='text-right'>
@@ -148,15 +120,15 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                             step.status === 'completed'
                               ? 'success'
                               : step.status === 'in_progress'
-                              ? 'processing'
-                              : 'default'
+                                ? 'processing'
+                                : 'default'
                           }
                           text={
                             step.status === 'completed'
                               ? '已完成'
                               : step.status === 'in_progress'
-                              ? '进行中'
-                              : '待处理'
+                                ? '进行中'
+                                : '待处理'
                           }
                         />
                         {step.completed_at && (
@@ -178,7 +150,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
           {/* 审批操作 */}
           {canApprove && ticket.status === '待审批' && (
             <Card title='审批操作' className='shadow-sm'>
-              <Space direction='vertical' className='w-full'>
+              <Space orientation='vertical' className='w-full'>
                 <Button
                   type='primary'
                   icon={<CheckCircle />}
@@ -187,12 +159,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                 >
                   批准
                 </Button>
-                <Button
-                  danger
-                  icon={<XCircle />}
-                  onClick={onReject}
-                  className='w-full'
-                >
+                <Button danger icon={<XCircle />} onClick={onReject} className='w-full'>
                   拒绝
                 </Button>
               </Space>
@@ -201,7 +168,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
 
           {/* 分配操作 */}
           <Card title='分配工单' className='shadow-sm'>
-            <Space direction='vertical' className='w-full' style={{ width: '100%' }}>
+            <Space orientation='vertical' className='w-full' style={{ width: '100%' }}>
               <Button
                 type='primary'
                 icon={<Zap />}
@@ -214,14 +181,10 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
               <Divider style={{ margin: '8px 0' }}>或手动分配</Divider>
               <Input
                 value={assigneeInput}
-                onChange={(e) => onAssigneeInputChange(e.target.value)}
+                onChange={e => onAssigneeInputChange(e.target.value)}
                 placeholder='输入负责人姓名'
               />
-              <Button
-                onClick={onManualAssign}
-                disabled={!assigneeInput.trim()}
-                className='w-full'
-              >
+              <Button onClick={onManualAssign} disabled={!assigneeInput.trim()} className='w-full'>
                 手动分配
               </Button>
             </Space>
@@ -233,7 +196,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
             ticketStatus={ticket.status}
             requesterId={ticket.requester_id}
             canRate={canEdit}
-            onRatingSubmitted={(newRating) => {
+            onRatingSubmitted={newRating => {
               console.log('Rating submitted:', newRating);
             }}
           />
@@ -252,25 +215,19 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                   <Typography.Text type='secondary' className='text-sm'>
                     响应时间
                   </Typography.Text>
-                  <div className='font-medium'>
-                    {slaInfo.response_time} 分钟
-                  </div>
+                  <div className='font-medium'>{slaInfo.response_time} 分钟</div>
                 </div>
                 <div>
                   <Typography.Text type='secondary' className='text-sm'>
                     解决时间
                   </Typography.Text>
-                  <div className='font-medium'>
-                    {slaInfo.resolution_time} 分钟
-                  </div>
+                  <div className='font-medium'>{slaInfo.resolution_time} 分钟</div>
                 </div>
                 <div>
                   <Typography.Text type='secondary' className='text-sm'>
                     到期时间
                   </Typography.Text>
-                  <div className='font-medium'>
-                    {formatDateTime(slaInfo.due_time)}
-                  </div>
+                  <div className='font-medium'>{formatDateTime(slaInfo.due_time)}</div>
                 </div>
                 <div>
                   <Typography.Text type='secondary' className='text-sm'>
@@ -281,15 +238,15 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
                       slaInfo.status === 'active'
                         ? 'processing'
                         : slaInfo.status === 'breached'
-                        ? 'error'
-                        : 'success'
+                          ? 'error'
+                          : 'success'
                     }
                     text={
                       slaInfo.status === 'active'
                         ? '进行中'
                         : slaInfo.status === 'breached'
-                        ? '已违反'
-                        : '已完成'
+                          ? '已违反'
+                          : '已完成'
                     }
                   />
                 </div>

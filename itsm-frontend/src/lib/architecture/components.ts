@@ -39,9 +39,9 @@ export interface ComponentProp {
   name: string;
   type: string;
   required: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   description: string;
-  examples: any[];
+  examples: unknown[];
 }
 
 // 组件示例
@@ -49,7 +49,7 @@ export interface ComponentExample {
   title: string;
   description: string;
   code: string;
-  props: Record<string, any>;
+  props: Record<string, unknown>;
 }
 
 // 组件注册表
@@ -79,7 +79,7 @@ export function getComponentsByModule(module: string): ComponentMetadata[] {
 }
 
 // 组件工厂接口
-export interface ComponentFactory<T = any> {
+export interface ComponentFactory<T = unknown> {
   create: (props: T) => ReactNode;
   validate: (props: T) => boolean;
   getDefaultProps: () => Partial<T>;
@@ -196,14 +196,16 @@ export function hotReloadComponent(componentName: string): void {
   if (!metadata) return;
 
   // 清除组件缓存
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof window !== 'undefined' && (window as any).__REACT_HOT_LOADER__) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).__REACT_HOT_LOADER__.invalidate();
   }
 
-  console.log(`Hot reloading component: ${componentName}`);
+  // console.log(`Hot reloading component: ${componentName}`);
 }
 
-export default {
+const ComponentUtils = {
   ComponentType,
   registerComponent,
   getComponentMetadata,
@@ -216,3 +218,5 @@ export default {
   getComponentUsageStats,
   hotReloadComponent,
 };
+
+export default ComponentUtils;

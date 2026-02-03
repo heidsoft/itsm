@@ -711,7 +711,7 @@ const WorkflowManagementPage = () => {
               title={t('workflow.totalWorkflows')}
               value={stats.total}
               prefix={<FileText className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
             <div className='mt-2 text-xs text-gray-500'>
               {t('workflow.active')} {stats.active} | {t('workflow.draft')} {stats.draft} |{' '}
@@ -725,7 +725,7 @@ const WorkflowManagementPage = () => {
               title={t('workflow.runningInstances')}
               value={stats.running}
               prefix={<Clock className='w-5 h-5' />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
             <div className='mt-2 text-xs text-gray-500'>
               {t('workflow.todayNewInstances', { count: stats.todayInstances })}
@@ -738,7 +738,7 @@ const WorkflowManagementPage = () => {
               title={t('workflow.completedInstances')}
               value={stats.completed}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
             <div className='mt-2 text-xs text-gray-500'>
               {t('workflow.completionRate')}{' '}
@@ -756,7 +756,7 @@ const WorkflowManagementPage = () => {
               value={stats.avgExecutionTime}
               suffix={t('workflow.minutes')}
               prefix={<BarChart3 className='w-5 h-5' />}
-              valueStyle={{ color: '#722ed1' }}
+              styles={{ content: { color: '#722ed1' } }}
             />
             <div className='mt-2 text-xs text-gray-500'>
               {stats.avgExecutionTime < 60 ? t('workflow.goodEfficiency') : t('workflow.optimizableSpace')}

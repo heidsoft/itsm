@@ -114,7 +114,7 @@ export class TemplateApi {
   /**
    * 获取模板版本历史
    */
-  static async getTemplateVersions(templateId: string): Promise<Array<any>> {
+  static async getTemplateVersions(templateId: string): Promise<Array<unknown>> {
     return httpClient.get(`/api/v1/templates/${templateId}/versions`);
   }
 
@@ -138,7 +138,7 @@ export class TemplateApi {
     templateId: string,
     versionA: string,
     versionB: string
-  ): Promise<any> {
+  ): Promise<unknown> {
     return httpClient.get(`/api/v1/templates/${templateId}/compare`, {
       version_a: versionA,
       version_b: versionB,
@@ -494,7 +494,7 @@ export class TemplateApi {
   /**
    * 获取常用字段模板
    */
-  static async getCommonFields(): Promise<Array<any>> {
+  static async getCommonFields(): Promise<Array<unknown>> {
     return httpClient.get('/api/v1/templates/common-fields');
   }
 
@@ -505,8 +505,8 @@ export class TemplateApi {
    */
   static async generatePreview(
     templateId: string,
-    sampleData?: Record<string, any>
-  ): Promise<any> {
+    sampleData?: Record<string, unknown>
+  ): Promise<unknown> {
     return httpClient.post(`/api/v1/templates/${templateId}/preview`, {
       sample_data: sampleData,
     });
@@ -517,12 +517,12 @@ export class TemplateApi {
    */
   static async testAutomation(
     templateId: string,
-    testData: Record<string, any>
+    testData: Record<string, unknown>
   ): Promise<{
-    autoAssign: any;
-    autoNotify: any;
-    autoTag: any;
-    approvalWorkflow: any;
+    autoAssign: unknown;
+    autoNotify: unknown;
+    autoTag: unknown;
+    approvalWorkflow: unknown;
   }> {
     return httpClient.post(`/api/v1/templates/${templateId}/test-automation`, {
       test_data: testData,

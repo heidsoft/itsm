@@ -54,51 +54,51 @@ interface ApprovalNode {
   id: string;
   level: number;
   name: string;
-  approver_type: 'user' | 'role' | 'department' | 'dynamic';
-  approver_ids: number[];
-  approver_names: string[];
-  approval_mode: 'sequential' | 'parallel' | 'any' | 'all';
-  minimum_approvals?: number;
-  timeout_hours?: number;
+  approverType: 'user' | 'role' | 'department' | 'dynamic';
+  approverIds: number[];
+  approverNames: string[];
+  approvalMode: 'sequential' | 'parallel' | 'any' | 'all';
+  minimumApprovals?: number;
+  timeoutHours?: number;
   conditions?: Array<{
     field: string;
     operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains';
     value: any;
   }>;
-  allow_reject: boolean;
-  allow_delegate: boolean;
-  reject_action: 'end' | 'return' | 'custom';
-  return_to_level?: number;
+  allowReject: boolean;
+  allowDelegate: boolean;
+  rejectAction: 'end' | 'return' | 'custom';
+  returnToLevel?: number;
 }
 
 interface ApprovalWorkflow {
   id: number;
   name: string;
   description: string;
-  ticket_type?: string;
+  ticketType?: string;
   priority?: string;
   nodes: ApprovalNode[];
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ApprovalRecord {
   id: number;
-  ticket_id: number;
-  ticket_number: string;
-  ticket_title: string;
-  workflow_id: number;
-  workflow_name: string;
-  current_level: number;
-  total_levels: number;
-  approver_id: number;
-  approver_name: string;
+  ticketId: number;
+  ticketNumber: string;
+  ticketTitle: string;
+  workflowId: number;
+  workflowName: string;
+  currentLevel: number;
+  totalLevels: number;
+  approverId: number;
+  approverName: string;
   status: 'pending' | 'approved' | 'rejected' | 'delegated' | 'timeout';
   action?: string;
   comment?: string;
-  created_at: string;
-  processed_at?: string;
+  createdAt: string;
+  processedAt?: string;
 }
 
 interface TicketMultiLevelApprovalProps {
@@ -134,9 +134,9 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       // 调用实际API
       const data = await TicketApprovalApi.getWorkflows({
         page: 1,
-        page_size: 100,
+        pageSize: 100,
       });
-      
+
       if (data && data.items && data.items.length > 0) {
         setWorkflows(data.items);
         if (workflowId) {
@@ -147,50 +147,50 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         }
         return;
       }
-      
+
       // 如果API返回空，使用模拟数据
       const mockWorkflows: ApprovalWorkflow[] = [
         {
           id: 1,
           name: '标准工单审批流程',
           description: '适用于一般工单的标准审批流程',
-          ticket_type: 'service_request',
+          ticketType: 'service_request',
           nodes: [
             {
               id: 'node1',
               level: 1,
               name: '直属主管审批',
-              approver_type: 'role',
-              approver_ids: [1],
-              approver_names: ['直属主管'],
-              approval_mode: 'any',
-              timeout_hours: 24,
-              allow_reject: true,
-              allow_delegate: true,
-              reject_action: 'end',
+              approverType: 'role',
+              approverIds: [1],
+              approverNames: ['直属主管'],
+              approvalMode: 'any',
+              timeoutHours: 24,
+              allowReject: true,
+              allowDelegate: true,
+              rejectAction: 'end',
             },
             {
               id: 'node2',
               level: 2,
               name: '部门经理审批',
-              approver_type: 'role',
-              approver_ids: [2],
-              approver_names: ['部门经理'],
-              approval_mode: 'any',
-              timeout_hours: 48,
-              allow_reject: true,
-              allow_delegate: false,
-              reject_action: 'return',
-              return_to_level: 1,
+              approverType: 'role',
+              approverIds: [2],
+              approverNames: ['部门经理'],
+              approvalMode: 'any',
+              timeoutHours: 48,
+              allowReject: true,
+              allowDelegate: false,
+              rejectAction: 'return',
+              returnToLevel: 1,
             },
           ],
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
       ];
       setWorkflows(mockWorkflows);
-      
+
       if (workflowId) {
         const workflow = mockWorkflows.find(w => w.id === workflowId);
         if (workflow) {
@@ -208,35 +208,35 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
   // 加载审批记录
   const loadApprovalRecords = useCallback(async () => {
     if (!ticket?.id) return;
-    
+
     try {
       // 调用实际API
       const data = await TicketApprovalApi.getApprovalRecords({
-        ticket_id: ticket.id,
+        ticketId: ticket.id,
         page: 1,
-        page_size: 100,
+        pageSize: 100,
       });
-      
+
       if (data && data.items && data.items.length > 0) {
         setApprovalRecords(data.items);
         return;
       }
-      
+
       // 如果API返回空，使用模拟数据
       const mockRecords: ApprovalRecord[] = [
         {
           id: 1,
-          ticket_id: ticket.id,
-          ticket_number: ticket.ticket_number || `T-${ticket.id}`,
-          ticket_title: ticket.title,
-          workflow_id: 1,
-          workflow_name: '标准工单审批流程',
-          current_level: 1,
-          total_levels: 2,
-          approver_id: 1,
-          approver_name: '张三',
+          ticketId: ticket.id,
+          ticketNumber: ticket.ticketNumber || `T-${ticket.id}`,
+          ticketTitle: ticket.title,
+          workflowId: 1,
+          workflowName: '标准工单审批流程',
+          currentLevel: 1,
+          totalLevels: 2,
+          approverId: 1,
+          approverName: '张三',
           status: 'pending',
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         },
       ];
       setApprovalRecords(mockRecords);
@@ -294,7 +294,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         const updatedNodes = editingNode
           ? currentWorkflow.nodes.map(n => (n.id === editingNode.id ? nodeData : n))
           : [...currentWorkflow.nodes, nodeData];
-        
+
         setCurrentWorkflow({
           ...currentWorkflow,
           nodes: updatedNodes,
@@ -348,12 +348,10 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     },
     {
       title: '状态',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'default'}>
-          {isActive ? '启用' : '禁用'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'default'}>{isActive ? '启用' : '禁用'}</Tag>
       ),
     },
     {
@@ -410,8 +408,8 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
   const recordColumns: ColumnsType<ApprovalRecord> = [
     {
       title: '工单编号',
-      dataIndex: 'ticket_number',
-      key: 'ticket_number',
+      dataIndex: 'ticketNumber',
+      key: 'ticketNumber',
       render: (text: string) => (
         <Text strong style={{ color: '#1890ff' }}>
           {text}
@@ -420,40 +418,41 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     },
     {
       title: '工单标题',
-      dataIndex: 'ticket_title',
-      key: 'ticket_title',
+      dataIndex: 'ticketTitle',
+      key: 'ticketTitle',
     },
     {
       title: '工作流',
-      dataIndex: 'workflow_name',
-      key: 'workflow_name',
+      dataIndex: 'workflowName',
+      key: 'workflowName',
     },
     {
       title: '审批级别',
       key: 'level',
       render: (_: any, record: ApprovalRecord) => (
         <Text>
-          {record.current_level} / {record.total_levels}
+          {record.currentLevel} / {record.totalLevels}
         </Text>
       ),
     },
     {
       title: '审批人',
-      dataIndex: 'approver_name',
-      key: 'approver_name',
+      dataIndex: 'approverName',
+      key: 'approverName',
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => {
-        const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-          pending: { color: 'orange', text: '待审批', icon: <ClockCircleOutlined /> },
-          approved: { color: 'green', text: '已批准', icon: <CheckCircleOutlined /> },
-          rejected: { color: 'red', text: '已拒绝', icon: <CloseCircleOutlined /> },
-          delegated: { color: 'blue', text: '已委派', icon: <UserOutlined /> },
-          timeout: { color: 'default', text: '超时', icon: <ClockCircleOutlined /> },
-        };
+        const statusConfig: Record<string, { color: string; text: string; icon: React.ReactNode }> =
+          {
+            pending: { color: 'orange', text: '待审批', icon: <ClockCircleOutlined /> },
+            approved: { color: 'green', text: '已批准', icon: <CheckCircleOutlined /> },
+            rejected: { color: 'red', text: '已拒绝', icon: <CloseCircleOutlined /> },
+            delegated: { color: 'blue', text: '已委派', icon: <UserOutlined /> },
+            timeout: { color: 'default', text: '超时', icon: <ClockCircleOutlined /> },
+          };
         const config = statusConfig[status] || { color: 'default', text: status, icon: null };
         return (
           <Tag color={config.color} icon={config.icon}>
@@ -464,10 +463,9 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) =>
-        format(new Date(date), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date: string) => format(new Date(date), 'yyyy-MM-dd HH:mm:ss', { locale: zhCN }),
     },
   ];
 
@@ -486,7 +484,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       <Card>
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={key => setActiveTab(key as 'workflow' | 'history' | 'stats')}
           type='card'
           size='large'
           items={[
@@ -549,10 +547,10 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                                 nodeForm.resetFields();
                                 nodeForm.setFieldsValue({
                                   level: currentWorkflow.nodes.length + 1,
-                                  approval_mode: 'any',
-                                  allow_reject: true,
-                                  allow_delegate: false,
-                                  reject_action: 'end',
+                                  approvalMode: 'any',
+                                  allowReject: true,
+                                  allowDelegate: false,
+                                  rejectAction: 'end',
                                 });
                                 setNodeModalVisible(true);
                               }}
@@ -572,30 +570,45 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                               index === 0
                                 ? 'green'
                                 : index === currentWorkflow.nodes.length - 1
-                                ? 'red'
-                                : 'blue'
+                                  ? 'red'
+                                  : 'blue'
                             }
                           >
                             <div className='flex items-start justify-between'>
                               <div className='flex-1'>
                                 <div className='flex items-center gap-2 mb-2'>
-                                  <Text strong>级别 {node.level}: {node.name}</Text>
-                                  <Tag color='blue'>{node.approval_mode === 'sequential' ? '串行' : node.approval_mode === 'parallel' ? '并行' : node.approval_mode === 'any' ? '任一' : '全部'}</Tag>
-                                  {node.timeout_hours && (
-                                    <Tag color='orange'>超时: {node.timeout_hours}小时</Tag>
+                                  <Text strong>
+                                    级别 {node.level}: {node.name}
+                                  </Text>
+                                  <Tag color='blue'>
+                                    {node.approvalMode === 'sequential'
+                                      ? '串行'
+                                      : node.approvalMode === 'parallel'
+                                        ? '并行'
+                                        : node.approvalMode === 'any'
+                                          ? '任一'
+                                          : '全部'}
+                                  </Tag>
+                                  {node.timeoutHours && (
+                                    <Tag color='orange'>超时: {node.timeoutHours}小时</Tag>
                                   )}
                                 </div>
                                 <div className='text-sm text-gray-600 space-y-1'>
                                   <div>
-                                    审批人类型: <Tag>{node.approver_type === 'user' ? '用户' : node.approver_type === 'role' ? '角色' : node.approver_type === 'department' ? '部门' : '动态'}</Tag>
+                                    审批人类型:{' '}
+                                    <Tag>
+                                      {node.approverType === 'user'
+                                        ? '用户'
+                                        : node.approverType === 'role'
+                                          ? '角色'
+                                          : node.approverType === 'department'
+                                            ? '部门'
+                                            : '动态'}
+                                    </Tag>
                                   </div>
-                                  <div>
-                                    审批人: {node.approver_names.join(', ') || '未配置'}
-                                  </div>
+                                  <div>审批人: {node.approverNames.join(', ') || '未配置'}</div>
                                   {node.conditions && node.conditions.length > 0 && (
-                                    <div>
-                                      条件: {node.conditions.length} 个条件
-                                    </div>
+                                    <div>条件: {node.conditions.length} 个条件</div>
                                   )}
                                 </div>
                               </div>
@@ -652,7 +665,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                   pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
-                    showTotal: (total) => `共 ${total} 条记录`,
+                    showTotal: total => `共 ${total} 条记录`,
                   }}
                 />
               ),
@@ -681,7 +694,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                         <Statistic
                           title='待审批'
                           value={stats.pending}
-                          valueStyle={{ color: '#faad14' }}
+                          styles={{ content: { color: '#faad14' } }}
                           prefix={<ClockCircleOutlined />}
                         />
                       </Card>
@@ -691,7 +704,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                         <Statistic
                           title='已批准'
                           value={stats.approved}
-                          valueStyle={{ color: '#3f8600' }}
+                          styles={{ content: { color: '#3f8600' } }}
                           prefix={<CheckCircleOutlined />}
                         />
                       </Card>
@@ -703,7 +716,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                           value={stats.approvalRate}
                           precision={1}
                           suffix='%'
-                          valueStyle={{ color: '#1890ff' }}
+                          styles={{ content: { color: '#1890ff' } }}
                           prefix={<BarChartOutlined />}
                         />
                       </Card>
@@ -739,7 +752,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
           <Form.Item name='description' label='描述'>
             <TextArea rows={3} placeholder='工作流描述（可选）' />
           </Form.Item>
-          <Form.Item name='ticket_type' label='适用工单类型'>
+          <Form.Item name='ticketType' label='适用工单类型'>
             <Select placeholder='请选择工单类型' allowClear>
               <Option value='incident'>事件</Option>
               <Option value='service_request'>服务请求</Option>
@@ -755,7 +768,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               <Option value='urgent'>紧急</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='is_active' label='启用状态' valuePropName='checked' initialValue={true}>
+          <Form.Item name='isActive' label='启用状态' valuePropName='checked' initialValue={true}>
             <Switch />
           </Form.Item>
         </Form>
@@ -795,7 +808,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             </Col>
           </Row>
           <Form.Item
-            name='approver_type'
+            name='approverType'
             label='审批人类型'
             rules={[{ required: true, message: '请选择审批人类型' }]}
           >
@@ -807,7 +820,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             </Radio.Group>
           </Form.Item>
           <Form.Item
-            name='approval_mode'
+            name='approvalMode'
             label='审批模式'
             rules={[{ required: true, message: '请选择审批模式' }]}
           >
@@ -818,23 +831,33 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
               <Option value='all'>全部（所有人都需通过）</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='timeout_hours' label='超时时间（小时）'>
+          <Form.Item name='timeoutHours' label='超时时间（小时）'>
             <InputNumber min={1} max={720} style={{ width: '100%' }} />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='allow_reject' label='允许拒绝' valuePropName='checked' initialValue={true}>
+              <Form.Item
+                name='allowReject'
+                label='允许拒绝'
+                valuePropName='checked'
+                initialValue={true}
+              >
                 <Switch />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='allow_delegate' label='允许委派' valuePropName='checked' initialValue={false}>
+              <Form.Item
+                name='allowDelegate'
+                label='允许委派'
+                valuePropName='checked'
+                initialValue={false}
+              >
                 <Switch />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
-            name='reject_action'
+            name='rejectAction'
             label='拒绝后的操作'
             rules={[{ required: true, message: '请选择拒绝后的操作' }]}
           >
@@ -849,4 +872,3 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     </div>
   );
 };
-

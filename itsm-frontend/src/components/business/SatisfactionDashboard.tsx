@@ -51,7 +51,7 @@ const SatisfactionDashboard: React.FC = () => {
                 value={metrics.overall}
                 precision={1}
                 suffix='/ 5.0'
-                valueStyle={{ color: getSatisfactionColor(metrics.overall) }}
+                styles={{ content: { color: getSatisfactionColor(metrics.overall) } }}
                 prefix={<Star className='w-5 h-5' />}
               />
               <Progress
@@ -74,7 +74,7 @@ const SatisfactionDashboard: React.FC = () => {
                 value={metrics.responseTime}
                 precision={1}
                 suffix='/ 5.0'
-                valueStyle={{ color: getSatisfactionColor(metrics.responseTime) }}
+                styles={{ content: { color: getSatisfactionColor(metrics.responseTime) } }}
                 prefix={<MessageSquare className='w-5 h-5' />}
               />
               <Progress
@@ -94,7 +94,7 @@ const SatisfactionDashboard: React.FC = () => {
                 value={metrics.resolutionQuality}
                 precision={1}
                 suffix='/ 5.0'
-                valueStyle={{ color: getSatisfactionColor(metrics.resolutionQuality) }}
+                styles={{ content: { color: getSatisfactionColor(metrics.resolutionQuality) } }}
                 prefix={<ThumbsUp className='w-5 h-5' />}
               />
               <Progress
@@ -114,7 +114,7 @@ const SatisfactionDashboard: React.FC = () => {
                 value={metrics.communication}
                 precision={1}
                 suffix='/ 5.0'
-                valueStyle={{ color: getSatisfactionColor(metrics.communication) }}
+                styles={{ content: { color: getSatisfactionColor(metrics.communication) } }}
                 prefix={<Users className='w-5 h-5' />}
               />
               <Progress

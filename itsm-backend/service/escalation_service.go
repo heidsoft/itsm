@@ -7,8 +7,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 
@@ -135,12 +135,16 @@ func (e *EscalationService) escalateToLevel(ctx context.Context, alert *ent.SLAA
 			alert.TicketNumber, alert.TicketTitle, level)
 
 		for _, userID := range notifyUsers {
-			_ = e.notificationSvc.SendNotification(ctx, alert.TicketID, &dto.SendTicketNotificationRequest{
+			err := e.notificationSvc.SendNotification(ctx, alert.TicketID, &dto.SendTicketNotificationRequest{
 				UserIDs: []int{userID},
 				Type:    "sla_escalated",
 				Channel: "in_app",
 				Content: content,
 			}, tenantID)
+			
+			if err != nil {
+				e.logger.Errorw("Failed to send SLA escalation notification", "user_id", userID, "error", err)
+			}
 		}
 	}
 
@@ -216,12 +220,14 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 				t.TicketNumber, t.Title)
 
 			for _, userID := range userIDs {
-				_ = e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
+				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
 					UserIDs: []int{userID},
 					Type:    "long_pending",
 					Channel: "in_app",
 					Content: content,
-				}, tenantID)
+				}, tenantID); err != nil {
+					e.logger.Errorw("Failed to send long pending notification", "ticket_id", t.ID, "user_id", userID, "error", err)
+				}
 			}
 
 			// 通知管理员
@@ -230,12 +236,14 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 				IDs(ctx)
 
 			for _, adminID := range admins {
-				_ = e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
+				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
 					UserIDs: []int{adminID},
 					Type:    "long_pending_admin",
 					Channel: "in_app",
 					Content: content,
-				}, tenantID)
+				}, tenantID); err != nil {
+					e.logger.Errorw("Failed to send long pending admin notification", "ticket_id", t.ID, "admin_id", adminID, "error", err)
+				}
 			}
 
 			e.logger.Infow("Long pending ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
@@ -283,12 +291,14 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 					t.TicketNumber, t.Title)
 
 				for _, adminID := range admins {
-					_ = e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
+					if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
 						UserIDs: []int{adminID},
 						Type:    "unassigned",
 						Channel: "in_app",
 						Content: content,
-					}, tenantID)
+					}, tenantID); err != nil {
+						e.logger.Errorw("Failed to send unassigned notification", "ticket_id", t.ID, "admin_id", adminID, "error", err)
+					}
 				}
 
 				e.logger.Infow("Unassigned ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
@@ -331,12 +341,14 @@ func (e *EscalationService) EscalateTicket(ctx context.Context, ticketID int, re
 			ticket.TicketNumber, ticket.Title, reason)
 
 		for _, userID := range notifyUsers {
-			_ = e.notificationSvc.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+			if err := e.notificationSvc.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 				UserIDs: []int{userID},
 				Type:    "manual_escalation",
 				Channel: "in_app",
 				Content: content,
-			}, tenantID)
+			}, tenantID); err != nil {
+				e.logger.Errorw("Failed to send manual escalation notification", "ticket_id", ticketID, "user_id", userID, "error", err)
+			}
 		}
 	}
 

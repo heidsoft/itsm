@@ -336,7 +336,7 @@ export type FontSizeKey = keyof typeof fontSize;
 export type LineHeightKey = keyof typeof lineHeight;
 export type FontWeightKey = keyof typeof fontWeight;
 
-export default {
+export const spacingSystem = {
   spacing,
   semanticSpacing,
   grid,
@@ -349,3 +349,5 @@ export default {
   animation,
   responsive,
 };
+
+export default spacingSystem;

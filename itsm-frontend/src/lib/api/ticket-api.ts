@@ -1,4 +1,5 @@
 import { httpClient } from './http-client';
+import { handleApiRequest } from './base-api-handler';
 import {
   Ticket,
   TicketListResponse,
@@ -9,32 +10,50 @@ import {
 export class TicketApi {
   // Get ticket list
   static async getTickets(params?: GetTicketsParams & { [key: string]: unknown }): Promise<TicketListResponse> {
-    return httpClient.get<TicketListResponse>('/api/v1/tickets', params);
+    return handleApiRequest(
+      httpClient.get<TicketListResponse>('/api/v1/tickets', params),
+      { errorMessage: 'Failed to fetch tickets', silent: true }
+    );
   }
 
   // Create ticket
   static async createTicket(data: CreateTicketRequest): Promise<Ticket> {
-    return httpClient.post<Ticket>('/api/v1/tickets', data);
+    return handleApiRequest(
+      httpClient.post<Ticket>('/api/v1/tickets', data),
+      { errorMessage: 'Failed to create ticket', showSuccess: true }
+    );
   }
 
   // Get ticket details
   static async getTicket(id: number): Promise<Ticket> {
-    return httpClient.get<Ticket>(`/api/v1/tickets/${id}`);
+    return handleApiRequest(
+      httpClient.get<Ticket>(`/api/v1/tickets/${id}`),
+      { errorMessage: 'Failed to fetch ticket details' }
+    );
   }
 
   // Update ticket status
   static async updateTicketStatus(id: number, status: string): Promise<Ticket> {
-    return httpClient.put<Ticket>(`/api/v1/tickets/${id}/status`, { status });
+    return handleApiRequest(
+      httpClient.put<Ticket>(`/api/v1/tickets/${id}/status`, { status }),
+      { errorMessage: 'Failed to update ticket status', showSuccess: true }
+    );
   }
 
   // Update ticket information
   static async updateTicket(id: number, data: Partial<Ticket>): Promise<Ticket> {
-    return httpClient.patch<Ticket>(`/api/v1/tickets/${id}`, data);
+    return handleApiRequest(
+      httpClient.patch<Ticket>(`/api/v1/tickets/${id}`, data),
+      { errorMessage: 'Failed to update ticket', showSuccess: true }
+    );
   }
 
   // Delete ticket
   static async deleteTicket(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/tickets/${id}`);
+    return handleApiRequest(
+      httpClient.delete(`/api/v1/tickets/${id}`),
+      { errorMessage: 'Failed to delete ticket', showSuccess: true }
+    );
   }
 
   // Approve ticket - 使用后端实际的 workflow/approve 端点
@@ -123,6 +142,7 @@ export class TicketApi {
   // Get subtasks (child tickets)
   static async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
     const response = await httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(`/api/v1/tickets/${parentTicketId}/subtasks`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (response as any).tickets || (response as any).data || response || [];
   }
 

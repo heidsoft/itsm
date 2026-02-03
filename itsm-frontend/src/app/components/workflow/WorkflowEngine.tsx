@@ -803,7 +803,8 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       <Drawer
         title='工作流详情'
         placement='right'
-        width={800}
+        size="large"
+        style={{ width: 800 }}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
       >

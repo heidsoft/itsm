@@ -13,7 +13,6 @@ import type {
   KnowledgeSearchResult,
   ArticleRecommendation,
   ArticleVersion,
-  CollaborationSession,
   KnowledgeBaseStats,
   ArticleAnalytics,
   CreateArticleRequest,

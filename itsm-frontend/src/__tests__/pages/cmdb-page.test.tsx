@@ -1,6 +1,7 @@
 /**
  * CMDB 页面测试
  */
+/* eslint-disable react/display-name */
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
@@ -57,7 +58,7 @@ jest.mock('antd', () => {
     );
   };
 
-  Form.Item = ({ label, name, children }: any) => {
+  const FormItem = ({ label, name, children }: any) => {
     const context = React.useContext(FormContext);
     if (!React.isValidElement(children)) {
       return label ? (
@@ -88,6 +89,8 @@ jest.mock('antd', () => {
 
     return label ? <label>{label}{inputElement}</label> : inputElement;
   };
+  FormItem.displayName = 'Form.Item';
+  Form.Item = FormItem;
 
   Form.useForm = () => [
     {
@@ -102,7 +105,11 @@ jest.mock('antd', () => {
   ];
 
   const Input = ({ allowClear, ...rest }: any) => <input {...rest} />;
-  Input.TextArea = ({ allowClear, ...rest }: any) => <textarea {...rest} />;
+  Input.TextArea = ({ allowClear, ...rest }: any) => {
+    const TextArea = (props: any) => <textarea {...props} />;
+    TextArea.displayName = 'Input.TextArea';
+    return <TextArea {...rest} />;
+  };
 
   const Select = ({
     children,
@@ -122,7 +129,11 @@ jest.mock('antd', () => {
       {children}
     </select>
   );
-  Select.Option = ({ value, children }: any) => <option value={value}>{children}</option>;
+  Select.Option = ({ value, children }: any) => {
+    const Option = (props: any) => <option value={props.value}>{props.children}</option>;
+    Option.displayName = 'Select.Option';
+    return <Option value={value}>{children}</Option>;
+  };
 
   const Button = ({
     children,
@@ -168,15 +179,23 @@ jest.mock('antd', () => {
   );
 
   const Tabs = ({ children }: any) => <div>{children}</div>;
-  Tabs.TabPane = ({ children }: any) => <div>{children}</div>;
+  Tabs.TabPane = ({ children }: any) => {
+    const TabPane = () => <div>{children}</div>;
+    TabPane.displayName = 'Tabs.TabPane';
+    return <TabPane />;
+  };
 
   const Descriptions = ({ children }: any) => <div>{children}</div>;
-  Descriptions.Item = ({ label, children }: any) => (
-    <div>
-      <span>{label}</span>
-      {children}
-    </div>
-  );
+  Descriptions.Item = ({ label, children }: any) => {
+    const Item = ({ label: l, children: c }: any) => (
+      <div>
+        <span>{l}</span>
+        {c}
+      </div>
+    );
+    Item.displayName = 'Descriptions.Item';
+    return <Item label={label}>{children}</Item>;
+  };
 
   const Card = ({ children }: any) => <div>{children}</div>;
   const Space = ({ children }: any) => <div>{children}</div>;

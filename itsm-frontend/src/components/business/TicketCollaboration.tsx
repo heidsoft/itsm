@@ -216,7 +216,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
       {/* 消息输入框 */}
       {canCollaborate && (
         <Card size='small'>
-          <Space direction='vertical' className='w-full' size='small'>
+          <Space orientation='vertical' className='w-full' size='small'>
             <TextArea
               value={newMessage}
               onChange={e => handleInputChange(e.target.value)}

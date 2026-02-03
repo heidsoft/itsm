@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, message } from 'antd';
+import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, App } from 'antd';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/modules/cmdb/api';
@@ -20,6 +20,7 @@ const providerOptions = [
 
 export default function CloudResourcePage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [bindForm] = Form.useForm();
   const [loading, setLoading] = useState(false);

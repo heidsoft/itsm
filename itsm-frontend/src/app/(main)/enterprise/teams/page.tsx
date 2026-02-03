@@ -24,12 +24,29 @@ import {
 import { PageContainer } from '@ant-design/pro-components';
 import { teamService, Team } from '@/lib/services/team-service';
 
+import { UserApi } from '@/lib/api/user-api';
+
 export default function TeamsPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [fetching, setFetching] = useState(false);
+  const [users, setUsers] = useState<{ label: string; value: number }[]>([]);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      setUsers(
+        response.users.map((user) => ({
+          label: user.name || user.username,
+          value: user.id,
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
 
   const fetchTeams = async () => {
     setFetching(true);
@@ -46,6 +63,7 @@ export default function TeamsPage() {
 
   useEffect(() => {
     fetchTeams();
+    fetchUsers();
   }, []);
 
   const columns = [
@@ -195,16 +213,25 @@ export default function TeamsPage() {
             <Input placeholder='请输入团队代码' />
           </Form.Item>
           <Form.Item name='manager_id' label='负责人'>
-            {/* TODO: Load users */}
-            <Select placeholder='请选择负责人'>
-              <Select.Option value={1}>管理员</Select.Option>
-            </Select>
+            <Select 
+              placeholder='请选择负责人' 
+              options={users} 
+              showSearch 
+              filterOption={(input, option) => 
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
           <Form.Item name='members' label='成员'>
-            {/* TODO: Load users */}
-            <Select mode='multiple' placeholder='请选择成员'>
-              <Select.Option value={1}>管理员</Select.Option>
-            </Select>
+            <Select 
+              mode='multiple' 
+              placeholder='请选择成员' 
+              options={users}
+              showSearch
+              filterOption={(input, option) => 
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
           <Form.Item name='description' label='描述'>
             <Input.TextArea rows={4} />

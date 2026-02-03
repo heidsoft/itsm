@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"strconv"
 	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
+
 	// "itsm-backend/ent/processdeployment" // 暂时不使用，因为ProcessDeployment没有ProcessDefinitionID字段
 	"go.uber.org/zap"
 )
@@ -73,15 +75,15 @@ type VersionComparison struct {
 
 // ChangeDetail 变更详情
 type ChangeDetail struct {
-	Type          string `json:"type"`                    // "added", "removed", "modified"
-	ChangeType    string `json:"change_type"`             // 变更类型
-	ElementType   string `json:"element_type"`            // "task", "gateway", "event", "flow"
-	ElementID     string `json:"element_id"`
-	ElementName   string `json:"element_name"`
-	Description   string `json:"description"`
-	Impact        string `json:"impact"`                  // "low", "medium", "high", "critical"
-	OldValue      string `json:"old_value,omitempty"`     // 旧值
-	NewValue      string `json:"new_value,omitempty"`     // 新值
+	Type        string `json:"type"`         // "added", "removed", "modified"
+	ChangeType  string `json:"change_type"`  // 变更类型
+	ElementType string `json:"element_type"` // "task", "gateway", "event", "flow"
+	ElementID   string `json:"element_id"`
+	ElementName string `json:"element_name"`
+	Description string `json:"description"`
+	Impact      string `json:"impact"`              // "low", "medium", "high", "critical"
+	OldValue    string `json:"old_value,omitempty"` // 旧值
+	NewValue    string `json:"new_value,omitempty"` // 新值
 }
 
 // CreateVersion 创建新版本
@@ -232,7 +234,7 @@ func (s *BPMNVersionService) ListVersions(ctx context.Context, processKey string
 }
 
 // ActivateVersion 激活指定版本
-func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey string, version int, tenantID int) error {
+func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey string, version int, tenantID int) (err error) {
 	// 开始事务
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -241,7 +243,8 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 	defer func() {
 		if v := recover(); v != nil {
 			tx.Rollback()
-			panic(v)
+			err = fmt.Errorf("panic recovered in ActivateVersion: %v", v)
+			s.logger.Errorw("Panic recovered in ActivateVersion", "error", v)
 		}
 	}()
 
@@ -388,22 +391,60 @@ func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]Change
 	baseLen := len(baseXML)
 	targetLen := len(targetXML)
 
-	if baseLen == targetLen {
-		// 长度相同，视为无变化（简化处理）
+	if baseLen == targetLen && baseXML == targetXML {
+		// 完全相同
 		return []ChangeDetail{}, []string{}
 	}
 
-	// 有变化但不确定具体内容
-	changeDetail := ChangeDetail{
-		ElementID:   "root",
-		ElementType: "process",
-		ChangeType:  "modified",
-		OldValue:    fmt.Sprintf("length:%d", baseLen),
-		NewValue:    fmt.Sprintf("length:%d", targetLen),
+	var changes []ChangeDetail
+
+	// 解析基础XML
+	type Process struct {
+		ID    string `xml:"id,attr"`
+		Name  string `xml:"name,attr"`
+		Tasks []struct {
+			ID   string `xml:"id,attr"`
+			Name string `xml:"name,attr"`
+		} `xml:"process>userTask"`
+	}
+	type Definitions struct {
+		Process Process `xml:"process"`
 	}
 
-	// TODO: 实现完整的XML解析比较（未来版本）
-	return []ChangeDetail{changeDetail}, []string{}
+	var baseDef Definitions
+	if err := xml.Unmarshal([]byte(baseXML), &baseDef); err == nil {
+		var targetDef Definitions
+		if err := xml.Unmarshal([]byte(targetXML), &targetDef); err == nil {
+			// 比较Task数量
+			if len(baseDef.Process.Tasks) != len(targetDef.Process.Tasks) {
+				changes = append(changes, ChangeDetail{
+					Type:        "modified",
+					ChangeType:  "structure",
+					ElementType: "process",
+					ElementID:   baseDef.Process.ID,
+					ElementName: baseDef.Process.Name,
+					Description: fmt.Sprintf("Task count changed from %d to %d", len(baseDef.Process.Tasks), len(targetDef.Process.Tasks)),
+					Impact:      "high",
+				})
+			}
+		}
+	}
+
+	// 如果无法详细解析或没有发现特定差异但内容不同，添加通用变更记录
+	if len(changes) == 0 {
+		changeDetail := ChangeDetail{
+			ElementID:   "root",
+			ElementType: "process",
+			ChangeType:  "modified",
+			OldValue:    fmt.Sprintf("length:%d", baseLen),
+			NewValue:    fmt.Sprintf("length:%d", targetLen),
+			Description: "BPMN XML content has changed",
+			Impact:      "medium",
+		}
+		changes = append(changes, changeDetail)
+	}
+
+	return changes, []string{}
 }
 
 // assessCompatibility 评估兼容性

@@ -7,11 +7,13 @@ import LoginPage from '../page';
 // Create mock functions before any imports
 const mockLogin = jest.fn();
 const mockPush = jest.fn();
+const mockSuccess = jest.fn();
+const mockError = jest.fn();
 
 // Mock auth service
 jest.mock('@/lib/services/auth-service', () => ({
   AuthService: {
-    login: mockLogin,
+    login: (...args: any[]) => mockLogin(...args),
   },
 }));
 
@@ -26,43 +28,91 @@ jest.mock('next/navigation', () => ({
 // Mock Ant Design components
 jest.mock('antd', () => {
   const actual = jest.requireActual('antd');
+
+  const MockForm = ({
+    children,
+    onFinish,
+    ...props
+  }: {
+    children: React.ReactNode;
+    onFinish?: (values: Record<string, string>) => void;
+    [key: string]: unknown;
+  }) => (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        onFinish?.({});
+      }}
+      {...props}
+    >
+      {children}
+    </form>
+  );
+
+  // Attach static methods to MockForm
+  MockForm.useForm = () => [
+    {
+      validateFields: jest.fn().mockResolvedValue({}),
+      getFieldsValue: jest.fn(),
+      setFieldsValue: jest.fn(),
+      resetFields: jest.fn(),
+    },
+  ];
+
+  MockForm.Item = ({ children }: any) => <div>{children}</div>;
+
   return {
     ...actual,
-    Form: ({
-      children,
-      onFinish,
-      ...props
-    }: {
-      children: React.ReactNode;
-      onFinish?: (values: Record<string, string>) => void;
-      [key: string]: unknown;
-    }) => (
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          onFinish?.({});
-        }}
-        {...props}
-      >
-        {children}
-      </form>
-    ),
-    Input: ({
-      placeholder,
-      type,
-      ...props
-    }: {
-      placeholder?: string;
-      type?: string;
-      [key: string]: unknown;
-    }) => (
-      <input
-        placeholder={placeholder}
-        type={type || 'text'}
-        data-testid={`input-${placeholder?.toLowerCase()}`}
-        {...props}
-      />
-    ),
+    message: {
+      success: (...args: any[]) => mockSuccess(...args),
+      error: (...args: any[]) => mockError(...args),
+    },
+    Form: MockForm,
+    Input: (() => {
+      const MockInput = ({
+        placeholder,
+        type,
+        prefix,
+        ...props
+      }: {
+        placeholder?: string;
+        type?: string;
+        prefix?: React.ReactNode;
+        [key: string]: unknown;
+      }) => (
+        <div>
+          {prefix}
+          <input
+            placeholder={placeholder}
+            type={type || 'text'}
+            data-testid={`input-${placeholder?.toLowerCase()}`}
+            {...props}
+          />
+        </div>
+      );
+
+      MockInput.Password = ({
+        placeholder,
+        prefix,
+        ...props
+      }: {
+        placeholder?: string;
+        prefix?: React.ReactNode;
+        [key: string]: unknown;
+      }) => (
+        <div>
+          {prefix}
+          <input
+            type='password'
+            placeholder={placeholder}
+            data-testid={`input-${placeholder?.toLowerCase()}`}
+            {...props}
+          />
+        </div>
+      );
+
+      return MockInput;
+    })(),
     Button: ({
       children,
       loading,
@@ -94,7 +144,9 @@ jest.mock('antd', () => {
     ),
     Typography: {
       Title: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-        <h1 data-testid='login-title' {...props}>{children}</h1>
+        <h1 data-testid='login-title' {...props}>
+          {children}
+        </h1>
       ),
       Text: ({
         children,
@@ -105,12 +157,28 @@ jest.mock('antd', () => {
         type?: string;
         [key: string]: unknown;
       }) => (
-        <span data-testid={`text-${type || 'default'}`} {...props}>{children}</span>
+        <span data-testid={`text-${type || 'default'}`} {...props}>
+          {children}
+        </span>
       ),
     },
     Space: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-      <div data-testid='space' {...props}>{children}</div>
+      <div data-testid='space' {...props}>
+        {children}
+      </div>
     ),
+    ConfigProvider: ({ children }: any) => <div>{children}</div>,
+    Alert: ({ message }: any) => <div data-testid='alert'>{message}</div>,
+    Divider: ({ children }: any) => <div>{children}</div>,
+    Checkbox: ({ children, ...props }: any) => (
+      <label>
+        <input type='checkbox' {...props} />
+        {children}
+      </label>
+    ),
+    Row: ({ children }: any) => <div className='row'>{children}</div>,
+    Col: ({ children }: any) => <div className='col'>{children}</div>,
+    Flex: ({ children }: any) => <div className='flex'>{children}</div>,
   };
 });
 
@@ -118,6 +186,10 @@ jest.mock('antd', () => {
 jest.mock('lucide-react', () => ({
   Lock: () => <div data-testid='lock-icon'>Lock</div>,
   User: () => <div data-testid='user-icon'>User</div>,
+  Shield: () => <div data-testid='shield-icon'>Shield</div>,
+  ArrowRight: () => <div data-testid='arrow-right-icon'>ArrowRight</div>,
+  Eye: () => <div data-testid='eye-icon'>Eye</div>,
+  EyeOff: () => <div data-testid='eye-off-icon'>EyeOff</div>,
 }));
 
 describe('LoginPage', () => {
@@ -133,10 +205,11 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       expect(screen.getByTestId('login-card')).toBeInTheDocument();
-      expect(screen.getByTestId('login-title')).toHaveTextContent('登录');
-      expect(screen.getByTestId('input-用户名')).toBeInTheDocument();
-      expect(screen.getByTestId('input-密码')).toBeInTheDocument();
-      expect(screen.getByTestId('login-button')).toBeInTheDocument();
+      // Check for the main heading
+      expect(screen.getByText('欢迎回来')).toBeInTheDocument();
+      expect(screen.getByTestId('input-请输入用户名')).toBeInTheDocument();
+      expect(screen.getByTestId('input-请输入密码')).toBeInTheDocument();
+      expect(screen.getAllByTestId('login-button')[0]).toBeInTheDocument();
     });
 
     it('应该渲染用户名和密码字段的图标', () => {
@@ -150,7 +223,7 @@ describe('LoginPage', () => {
       render(<LoginPage />);
 
       expect(screen.getByRole('form')).toBeInTheDocument();
-      expect(screen.getByTestId('input-密码')).toHaveAttribute('type', 'password');
+      expect(screen.getByTestId('input-请输入密码')).toHaveAttribute('type', 'password');
     });
   });
 
@@ -159,8 +232,8 @@ describe('LoginPage', () => {
       const user = userEvent.setup();
       render(<LoginPage />);
 
-      const usernameInput = screen.getByTestId('input-用户名');
-      const passwordInput = screen.getByTestId('input-密码');
+      const usernameInput = screen.getByTestId('input-请输入用户名');
+      const passwordInput = screen.getByTestId('input-请输入密码');
 
       await user.type(usernameInput, 'testuser');
       await user.type(passwordInput, 'testpass');
@@ -179,9 +252,10 @@ describe('LoginPage', () => {
 
       render(<LoginPage />);
 
-      const usernameInput = screen.getByTestId('input-用户名');
-      const passwordInput = screen.getByTestId('input-密码');
-      const loginButton = screen.getByTestId('login-button');
+      const usernameInput = screen.getByTestId('input-请输入用户名');
+      const passwordInput = screen.getByTestId('input-请输入密码');
+      // The button with "登录" text is the submit button
+      const loginButton = screen.getByRole('button', { name: '登录' });
 
       await user.type(usernameInput, 'testuser');
       await user.type(passwordInput, 'testpass');
@@ -202,9 +276,9 @@ describe('LoginPage', () => {
 
       render(<LoginPage />);
 
-      const usernameInput = screen.getByTestId('input-用户名');
-      const passwordInput = screen.getByTestId('input-密码');
-      const loginButton = screen.getByTestId('login-button');
+      const usernameInput = screen.getByTestId('input-请输入用户名');
+      const passwordInput = screen.getByTestId('input-请输入密码');
+      const loginButton = screen.getByRole('button', { name: '登录' });
 
       await user.type(usernameInput, 'testuser');
       await user.type(passwordInput, 'testpass');
@@ -213,7 +287,7 @@ describe('LoginPage', () => {
       await waitFor(() => {
         expect(mockSuccess).toHaveBeenCalledWith('登录成功');
       });
-      
+
       // Should redirect to dashboard
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/dashboard');
@@ -227,16 +301,16 @@ describe('LoginPage', () => {
 
       render(<LoginPage />);
 
-      const usernameInput = screen.getByTestId('input-用户名');
-      const passwordInput = screen.getByTestId('input-密码');
-      const loginButton = screen.getByTestId('login-button');
+      const usernameInput = screen.getByTestId('input-请输入用户名');
+      const passwordInput = screen.getByTestId('input-请输入密码');
+      const loginButton = screen.getByRole('button', { name: '登录' });
 
       await user.type(usernameInput, 'wronguser');
       await user.type(passwordInput, 'wrongpass');
       await user.click(loginButton);
 
       await waitFor(() => {
-        expect(mockError).toHaveBeenCalledWith(errorMessage);
+        expect(screen.getByTestId('alert')).toHaveTextContent(errorMessage);
       });
     });
   });
@@ -248,9 +322,9 @@ describe('LoginPage', () => {
 
       render(<LoginPage />);
 
-      const usernameInput = screen.getByTestId('input-用户名');
-      const passwordInput = screen.getByTestId('input-密码');
-      const loginButton = screen.getByTestId('login-button');
+      const usernameInput = screen.getByTestId('input-请输入用户名');
+      const passwordInput = screen.getByTestId('input-请输入密码');
+      const loginButton = screen.getByRole('button', { name: '登录' });
 
       await user.type(usernameInput, 'testuser');
       await user.type(passwordInput, 'testpass');

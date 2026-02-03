@@ -137,7 +137,7 @@ registerModule(CORE_MODULES.TICKET, ticketModuleConfig);
  * 工单管理模块初始化函数
  */
 export function initializeTicketModule() {
-  console.log('初始化工单管理模块...');
+  // console.log('初始化工单管理模块...');
   
   // 注册组件
   // 这里可以添加组件注册逻辑
@@ -148,14 +148,14 @@ export function initializeTicketModule() {
   // 设置API拦截器
   // 这里可以添加API拦截器设置逻辑
   
-  console.log('工单管理模块初始化完成');
+  // console.log('工单管理模块初始化完成');
 }
 
 /**
  * 工单管理模块清理函数
  */
 export function cleanupTicketModule() {
-  console.log('清理工单管理模块...');
+  // console.log('清理工单管理模块...');
   
   // 清理状态
   // 这里可以添加状态清理逻辑
@@ -163,12 +163,14 @@ export function cleanupTicketModule() {
   // 清理缓存
   // 这里可以添加缓存清理逻辑
   
-  console.log('工单管理模块清理完成');
+  // console.log('工单管理模块清理完成');
 }
 
 // ==================== 默认导出 ====================
-export default {
+const TicketModule = {
   initializeTicketModule,
   cleanupTicketModule,
   ticketModuleConfig,
 };
+
+export default TicketModule;

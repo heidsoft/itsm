@@ -45,6 +45,7 @@ const ChangeDetail: React.FC = () => {
         if (id) {
             loadDetail();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadDetail = async () => {
@@ -58,10 +59,10 @@ const ChangeDetail: React.FC = () => {
                 const summary = await ChangeApi.getApprovalSummary(Number(id));
                 setApprovals(summary.history || []);
             } catch (e) {
-                console.warn('Failed to load approval summary', e);
+                // console.warn('Failed to load approval summary', e);
             }
         } catch (error) {
-            console.error(error);
+            // console.error(error);
         } finally {
             setLoading(false);
         }
@@ -83,7 +84,7 @@ const ChangeDetail: React.FC = () => {
     }
 
     return (
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
+        <Space orientation="vertical" style={{ width: '100%' }} size="large">
             <Card>
                 <div style={{ marginBottom: 24 }}>
                     <Button

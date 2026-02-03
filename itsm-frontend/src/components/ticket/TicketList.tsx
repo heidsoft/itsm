@@ -107,7 +107,6 @@ const TicketList: React.FC<TicketListProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
-  const initialFiltersRef = React.useRef(initialFilters);
 
   // 选择操作
   const selectTicket = useCallback((id: number) => {
@@ -403,9 +402,9 @@ const TicketList: React.FC<TicketListProps> = ({
   );
 
   return (
-    <div className='ticket-list'>
+    <div className='ticket-list space-y-4'>
       {showHeader && (
-        <Card>
+        <Card className="rounded-lg shadow-sm">
           <Row gutter={[16, 16]} align='middle'>
             <Col flex='auto'>
               <Space size='middle'>
@@ -522,7 +521,7 @@ const TicketList: React.FC<TicketListProps> = ({
         />
       )}
 
-      <Card style={{ marginTop: showHeader ? 16 : 0 }}>
+      <Card className="rounded-lg shadow-sm">
         <Table<Ticket>
           columns={columns}
           dataSource={tickets}

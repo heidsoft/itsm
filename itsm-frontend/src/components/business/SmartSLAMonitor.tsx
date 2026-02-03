@@ -250,7 +250,7 @@ export const SmartSLAMonitor: React.FC = () => {
             <Statistic
               title="按时完成"
               value={slaMetrics?.onTime}
-              valueStyle={{ color: "#3f8600" }}
+              styles={{ content: { color: "#3f8600" } }}
               prefix={<CheckCircle />}
             />
           </Col>
@@ -258,7 +258,7 @@ export const SmartSLAMonitor: React.FC = () => {
             <Statistic
               title="有风险"
               value={slaMetrics?.atRisk}
-              valueStyle={{ color: "#faad14" }}
+              styles={{ content: { color: "#faad14" } }}
               prefix={<AlertTriangle />}
             />
           </Col>
@@ -266,7 +266,7 @@ export const SmartSLAMonitor: React.FC = () => {
             <Statistic
               title="已超时"
               value={slaMetrics?.breached}
-              valueStyle={{ color: "#cf1322" }}
+              styles={{ content: { color: "#cf1322" } }}
               prefix={<AlertTriangle />}
             />
           </Col>

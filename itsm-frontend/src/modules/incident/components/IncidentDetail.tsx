@@ -36,7 +36,7 @@ const IncidentDetail: React.FC = () => {
             const resp = await IncidentApi.getIncident(id);
             setData(resp);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载事件详情失败');
         } finally {
             setLoading(false);
@@ -45,6 +45,7 @@ const IncidentDetail: React.FC = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const handleEscalate = () => {
@@ -53,17 +54,17 @@ const IncidentDetail: React.FC = () => {
     };
 
     if (loading) {
-        return <Card bordered={false}><Skeleton active /></Card>;
+        return <Card variant="borderless"><Skeleton active /></Card>;
     }
 
     if (!data) {
-        return <Card bordered={false}>未找到事件</Card>;
+        return <Card variant="borderless">未找到事件</Card>;
     }
 
     return (
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        <Space orientation="vertical" style={{ width: '100%' }} size="middle">
             {/* 头部操作栏 */}
-            <Card bordered={false} bodyStyle={{ padding: '16px 24px' }}>
+            <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                         <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>
@@ -96,7 +97,7 @@ const IncidentDetail: React.FC = () => {
             </Card>
 
             {/* 基本信息 */}
-            <Card bordered={false} title="基本信息">
+            <Card variant="borderless" title="基本信息">
                 <Descriptions column={2}>
                     <Descriptions.Item label="报告人ID">{data.reporter_id}</Descriptions.Item>
                     <Descriptions.Item label="负责人ID">{data.assignee_id || '-'}</Descriptions.Item>
@@ -131,7 +132,7 @@ const IncidentDetail: React.FC = () => {
 
             {/* 解决记录 (如果有) */}
             {(data.resolution_steps && data.resolution_steps.length > 0) && (
-                <Card bordered={false} title="处理流程">
+                <Card variant="borderless" title="处理流程">
                     <Timeline>
                         {data.resolution_steps.map((step, index) => (
                             <Timeline.Item key={index}>

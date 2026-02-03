@@ -20,12 +20,16 @@ fi
 mkdir -p logs nginx/conf.d monitoring scripts
 
 # 生成基础配置
-cat > .env << 'EOF'
-DATABASE_URL=postgres://postgres:password@postgres:5432/itsm_cmdb?sslmode=disable
+# 生成随机密码如果未设置
+DB_PASSWORD=${POSTGRES_PASSWORD:-$(openssl rand -base64 12)}
+
+cat > .env << EOF
+DATABASE_URL=postgres://postgres:${DB_PASSWORD}@postgres:5432/itsm_cmdb?sslmode=disable
 REDIS_URL=redis://redis:6379
 PORT=8080
 GIN_MODE=release
 NEXT_PUBLIC_API_URL=http://localhost:8080
+POSTGRES_PASSWORD=${DB_PASSWORD}
 EOF
 
 # 启动基础服务

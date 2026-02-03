@@ -123,7 +123,10 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 				SetAction(action).
 				SetRequestBody(requestBody)
 
-			_ = auditCreate.Exec(c.Request.Context())
+			err := auditCreate.Exec(c.Request.Context())
+			if err != nil && globalLogger != nil {
+				globalLogger.Errorw("Failed to save audit log", "error", err)
+			}
 
 			// 记录结构化日志
 			logFields := []interface{}{

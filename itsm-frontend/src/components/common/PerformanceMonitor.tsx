@@ -87,82 +87,78 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  // 模拟获取性能指标数据
+  // 获取性能指标数据
   const fetchMetrics = useCallback(async () => {
     setLoading(true);
     try {
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { SystemConfigAPI } = await import('@/lib/api/system-config-api');
+      const response = await SystemConfigAPI.getSystemStatus();
       
-      // 生成模拟数据
-      const mockMetrics: PerformanceMetrics = {
+      // 使用后端返回的数据，如果没有则使用默认值0，严禁使用随机Mock数据
+      const metricsData: PerformanceMetrics = {
         cpu: {
-          usage: Math.random() * 80 + 10, // 10-90%
-          cores: 8,
-          temperature: Math.random() * 20 + 45 // 45-65°C
+          usage: response.cpu?.usage || 0,
+          cores: response.cpu?.cores || 1,
+          temperature: response.cpu?.temperature
         },
         memory: {
-          used: Math.random() * 6 + 2, // 2-8GB
-          total: 16,
-          usage: 0
+          used: response.memory?.used || 0,
+          total: response.memory?.total || 0,
+          usage: response.memory?.usage || 0
         },
         disk: {
-          used: Math.random() * 200 + 50, // 50-250GB
-          total: 500,
-          usage: 0
+          used: response.disk?.used || 0,
+          total: response.disk?.total || 0,
+          usage: response.disk?.usage || 0
         },
         network: {
-          inbound: Math.random() * 100 + 10, // 10-110 Mbps
-          outbound: Math.random() * 50 + 5, // 5-55 Mbps
-          latency: Math.random() * 50 + 10 // 10-60ms
+          inbound: response.network?.inbound || 0,
+          outbound: response.network?.outbound || 0,
+          latency: response.network?.latency || 0
         },
         response: {
-          avgResponseTime: Math.random() * 200 + 50, // 50-250ms
-          p95ResponseTime: Math.random() * 500 + 200, // 200-700ms
-          errorRate: Math.random() * 2 // 0-2%
+          avgResponseTime: response.response?.avgResponseTime || 0,
+          p95ResponseTime: response.response?.p95ResponseTime || 0,
+          errorRate: response.response?.errorRate || 0
         },
         database: {
-          connections: Math.floor(Math.random() * 80 + 10), // 10-90
-          maxConnections: 100,
-          queryTime: Math.random() * 100 + 10 // 10-110ms
+          connections: response.database?.connections || 0,
+          maxConnections: response.database?.maxConnections || 100,
+          queryTime: response.database?.queryTime || 0
         }
       };
 
-      // 计算使用率百分比
-      mockMetrics.memory.usage = (mockMetrics.memory.used / mockMetrics.memory.total) * 100;
-      mockMetrics.disk.usage = (mockMetrics.disk.used / mockMetrics.disk.total) * 100;
-
-      setMetrics(mockMetrics);
+      setMetrics(metricsData);
       setLastUpdate(new Date());
 
       // 生成告警
       const newAlerts: SystemAlert[] = [];
       
-      if (mockMetrics.cpu.usage > 80) {
+      if (metricsData.cpu.usage > 80) {
         newAlerts.push({
           id: `cpu-${Date.now()}`,
           type: 'warning',
-          message: `CPU使用率过高: ${mockMetrics.cpu.usage.toFixed(1)}%`,
+          message: `CPU使用率过高: ${metricsData.cpu.usage.toFixed(1)}%`,
           timestamp: new Date().toISOString(),
           resolved: false
         });
       }
 
-      if (mockMetrics.memory.usage > 85) {
+      if (metricsData.memory.usage > 85) {
         newAlerts.push({
           id: `memory-${Date.now()}`,
           type: 'error',
-          message: `内存使用率过高: ${mockMetrics.memory.usage.toFixed(1)}%`,
+          message: `内存使用率过高: ${metricsData.memory.usage.toFixed(1)}%`,
           timestamp: new Date().toISOString(),
           resolved: false
         });
       }
 
-      if (mockMetrics.response.errorRate > 1) {
+      if (metricsData.response.errorRate > 1) {
         newAlerts.push({
           id: `error-${Date.now()}`,
           type: 'error',
-          message: `错误率过高: ${mockMetrics.response.errorRate.toFixed(2)}%`,
+          message: `错误率过高: ${metricsData.response.errorRate.toFixed(2)}%`,
           timestamp: new Date().toISOString(),
           resolved: false
         });
@@ -171,6 +167,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       setAlerts(prev => [...newAlerts, ...prev.slice(0, 10)]); // 保留最新10条告警
     } catch (error) {
       console.error('获取性能指标失败:', error);
+      // 出错时不显示错误UI，保持加载状态或空状态
     } finally {
       setLoading(false);
     }
@@ -244,7 +241,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               value={metrics.cpu.usage}
               precision={1}
               suffix="%"
-              valueStyle={{ color: getStatusColor(metrics.cpu.usage, 'cpu') }}
+              styles={{ content: { color: getStatusColor(metrics.cpu.usage, 'cpu') } }}
             />
           </Col>
           <Col span={6}>
@@ -253,7 +250,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               value={metrics.memory.usage}
               precision={1}
               suffix="%"
-              valueStyle={{ color: getStatusColor(metrics.memory.usage, 'memory') }}
+              styles={{ content: { color: getStatusColor(metrics.memory.usage, 'memory') } }}
             />
           </Col>
           <Col span={6}>
@@ -262,7 +259,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               value={metrics.disk.usage}
               precision={1}
               suffix="%"
-              valueStyle={{ color: getStatusColor(metrics.disk.usage, 'disk') }}
+              styles={{ content: { color: getStatusColor(metrics.disk.usage, 'disk') } }}
             />
           </Col>
           <Col span={6}>
@@ -271,9 +268,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               value={metrics.response.avgResponseTime}
               precision={0}
               suffix="ms"
-              valueStyle={{ 
+              styles={{ content: { 
                 color: metrics.response.avgResponseTime > 200 ? '#faad14' : '#52c41a' 
-              }}
+              }}}
             />
           </Col>
         </Row>
@@ -402,7 +399,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
         {/* 网络和性能指标 */}
         <Col xs={24} lg={8}>
-          <Space direction="vertical" size="middle" className="w-full">
+          <Space orientation="vertical" size="middle" className="w-full">
             {/* 网络监控 */}
             <Card size="small" title={
               <div className="flex items-center space-x-2">
@@ -417,7 +414,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                     value={metrics.network.inbound}
                     precision={1}
                     suffix="Mbps"
-                    valueStyle={{ fontSize: '16px' }}
+                    styles={{ content: { fontSize: '16px' } }}
                   />
                 </Col>
                 <Col span={12}>
@@ -426,7 +423,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                     value={metrics.network.outbound}
                     precision={1}
                     suffix="Mbps"
-                    valueStyle={{ fontSize: '16px' }}
+                    styles={{ content: { fontSize: '16px' } }}
                   />
                 </Col>
                 <Col span={24}>
@@ -447,7 +444,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                 <span>应用性能</span>
               </div>
             }>
-              <Space direction="vertical" size="small" className="w-full">
+              <Space orientation="vertical" size="small" className="w-full">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">平均响应时间:</span>
                   <Tag color={metrics.response.avgResponseTime > 200 ? 'orange' : 'green'}>

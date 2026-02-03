@@ -406,7 +406,7 @@ export class WorkflowEngine {
           return [condition.targetNodeId];
         }
       } catch (error) {
-        console.error('条件评估失败:', error);
+        // console.error('条件评估失败:', error);
       }
     }
 

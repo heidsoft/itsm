@@ -43,11 +43,11 @@ export const KPICard: React.FC<KPICardProps> = ({
           }
           value={value}
           suffix={suffix}
-          valueStyle={{
+          styles={{ content: {
             color: "white",
             fontSize: "32px",
             fontWeight: "700",
-          }}
+          }}}
         />
         <div className="mt-3 flex items-center justify-center space-x-2 bg-white/10 rounded-full px-3 py-1">
           {trend === "up" ? (

@@ -83,10 +83,16 @@ func (q *ToolQueue) worker() {
 			res, err = q.tools.Execute(ctx, job.TenantID, inv.ToolName, args)
 		}
 		if err != nil {
-			_, _ = q.client.ToolInvocation.UpdateOneID(inv.ID).SetStatus("failed").SetError(err.Error()).Save(ctx)
+			if _, updateErr := q.client.ToolInvocation.UpdateOneID(inv.ID).SetStatus("failed").SetError(err.Error()).Save(ctx); updateErr != nil {
+				// log failure to update tool invocation status
+				// fmt.Printf("Failed to update tool invocation status to failed: %v\n", updateErr)
+			}
 		} else {
 			out, _ := json.Marshal(res)
-			_, _ = q.client.ToolInvocation.UpdateOneID(inv.ID).SetStatus("done").SetResult(string(out)).Save(ctx)
+			if _, updateErr := q.client.ToolInvocation.UpdateOneID(inv.ID).SetStatus("done").SetResult(string(out)).Save(ctx); updateErr != nil {
+				// log failure to update tool invocation status
+				// fmt.Printf("Failed to update tool invocation status to done: %v\n", updateErr)
+			}
 		}
 		cancel()
 	}

@@ -153,7 +153,7 @@ const ReportsPage: React.FC = () => {
                     title="总工单数"
                     value={analyticsData.summary.total}
                     prefix={<FileText className="w-4 h-4" />}
-                    valueStyle={{ color: '#1890ff' }}
+                    styles={{ content: { color: '#1890ff' } }}
                   />
                 </Card>
               </Col>
@@ -163,7 +163,7 @@ const ReportsPage: React.FC = () => {
                     title="已解决"
                     value={analyticsData.summary.resolved}
                     prefix={<CheckCircle className="w-4 h-4" />}
-                    valueStyle={{ color: '#52c41a' }}
+                    styles={{ content: { color: '#52c41a' } }}
                     suffix={
                       <Text type="secondary">
                         ({((analyticsData.summary.resolved / analyticsData.summary.total) * 100).toFixed(1)}%)
@@ -179,7 +179,7 @@ const ReportsPage: React.FC = () => {
                     value={analyticsData.summary.avg_response_time}
                     suffix="小时"
                     prefix={<Clock className="w-4 h-4" />}
-                    valueStyle={{ color: '#fa8c16' }}
+                    styles={{ content: { color: '#fa8c16' } }}
                   />
                 </Card>
               </Col>
@@ -190,9 +190,9 @@ const ReportsPage: React.FC = () => {
                     value={analyticsData.summary.sla_compliance}
                     suffix="%"
                     prefix={<Target className="w-4 h-4" />}
-                    valueStyle={{ 
+                    styles={{ content: { 
                       color: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#f5222d' 
-                    }}
+                    }}}
                   />
                 </Card>
               </Col>
@@ -291,7 +291,7 @@ const ReportsPage: React.FC = () => {
       children: (
         <div className="space-y-6">
           <Card title="报告导出中心">
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
               <div>
                 <Title level={4}>选择导出格式</Title>
                 <Space wrap>
@@ -321,7 +321,7 @@ const ReportsPage: React.FC = () => {
 
               <div>
                 <Title level={4}>时间范围</Title>
-                <Space direction="vertical">
+                <Space orientation="vertical">
                   <div>
                     <Text type="secondary">开始日期: {timeRange[0]}</Text>
                   </div>

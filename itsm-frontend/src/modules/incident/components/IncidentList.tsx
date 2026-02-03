@@ -66,7 +66,7 @@ const IncidentList: React.FC = () => {
             setData(resp.items);
             setTotal(resp.total);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载事件列表失败');
         } finally {
             setLoading(false);
@@ -75,6 +75,7 @@ const IncidentList: React.FC = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query.page, query.size, query.scope]);
 
     const handleSearch = () => {

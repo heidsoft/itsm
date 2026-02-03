@@ -30,7 +30,7 @@ export const useAdminData = () => {
           WorkflowAPI.getWorkflows({ page: 1, pageSize: 1 }) // 只需获取总数，或者如果有专门的统计API更好
         ]);
 
-        let newStats: Partial<AdminStats> = {};
+        const newStats: Partial<AdminStats> = {};
 
         // 处理用户统计
         if (userStats.status === 'fulfilled') {

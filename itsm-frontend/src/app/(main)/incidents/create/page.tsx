@@ -20,7 +20,7 @@ export default function CreateIncidentPage() {
                     返回列表
                 </Button>
             </div>
-            <Card bordered={false}>
+            <Card variant="borderless">
                 <Result
                     status="info"
                     title="创建事件功能开发中"

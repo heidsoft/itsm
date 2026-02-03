@@ -137,7 +137,7 @@ export class ReportsApi {
   static async exportReport(params: {
     reportId: string;
     format: 'pdf' | 'excel' | 'csv' | 'html';
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
   }): Promise<Blob> {
     const response = await httpClient.request({
       method: 'POST',
@@ -292,11 +292,11 @@ export class ReportsApi {
       apiEndpoint?: string;
       datasetId?: string;
     };
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
     limit?: number;
   }): Promise<{
     columns: string[];
-    rows: any[][];
+    rows: unknown[][];
     total: number;
   }> {
     return httpClient.post('/api/v1/reports/preview', params);

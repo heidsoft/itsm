@@ -1,5 +1,8 @@
 'use client';
 
+import React from 'react';
+import { Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
@@ -10,40 +13,43 @@ interface LoadingSpinnerProps {
 
 /**
  * 加载旋转器组件
- * 用于显示加载状态
+ * 基于 Ant Design Spin 组件
  */
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'md',
   className,
   color = 'primary',
 }) => {
-  const sizeClasses = {
-    xs: 'w-3 h-3',
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
-    xl: 'w-12 h-12',
+  const getSize = () => {
+    switch (size) {
+      case 'xs': return 12;
+      case 'sm': return 16;
+      case 'md': return 24;
+      case 'lg': return 32;
+      case 'xl': return 48;
+      default: return 24;
+    }
   };
 
-  const colorClasses = {
-    primary: 'text-blue-600',
-    secondary: 'text-gray-600',
-    white: 'text-white',
+  const getColorClass = () => {
+    switch (color) {
+      case 'primary': return 'text-blue-600';
+      case 'secondary': return 'text-gray-600';
+      case 'white': return 'text-white';
+      default: return 'text-blue-600';
+    }
   };
 
   return (
-    <div
-      className={cn(
-        'animate-spin rounded-full border-2 border-current border-t-transparent',
-        sizeClasses[size],
-        colorClasses[color],
-        className
-      )}
-      role="status"
-      aria-label="加载中"
-    >
-      <span className="sr-only">加载中...</span>
-    </div>
+    <Spin 
+      indicator={
+        <LoadingOutlined 
+          style={{ fontSize: getSize() }} 
+          spin 
+          className={cn(getColorClass(), className)}
+        />
+      } 
+    />
   );
 };
 

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Clock, ArrowLeft, Info, AlertCircle } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { ServiceItem, ServiceStatus } from '@/types/service-catalog';
-import { App, message } from 'antd';
+import { App } from 'antd';
 
 const ServiceRequestPage = () => {
   const params = useParams();

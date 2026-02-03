@@ -390,7 +390,7 @@ export const IncidentManagement: React.FC = () => {
               title='进行中'
               value={incidents.filter(i => i.status === 'in_progress').length}
               prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -400,7 +400,7 @@ export const IncidentManagement: React.FC = () => {
               title='已解决'
               value={incidents.filter(i => i.status === 'resolved').length}
               prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -410,7 +410,7 @@ export const IncidentManagement: React.FC = () => {
               title='严重事件'
               value={incidents.filter(i => i.severity === 'critical').length}
               prefix={<ExclamationCircleOutlined />}
-              valueStyle={{ color: '#f5222d' }}
+              styles={{ content: { color: '#f5222d' } }}
             />
           </Card>
         </Col>
@@ -1025,7 +1025,7 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
               <Statistic
                 title='是否超时'
                 value={impactAnalysis.time_impact.is_overdue ? '是' : '否'}
-                valueStyle={{
+                styles={{ content: {
                   color: impactAnalysis.time_impact.is_overdue ? '#f5222d' : '#52c41a',
                 }}
               />
@@ -1276,7 +1276,7 @@ const IncidentMonitoringPanel: React.FC<{
                   title='进行中'
                   value={monitoringData.open_incidents}
                   prefix={<ClockCircleOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
+                  styles={{ content: { color: '#1890ff' } }}
                 />
               </Card>
             </Col>
@@ -1286,7 +1286,7 @@ const IncidentMonitoringPanel: React.FC<{
                   title='已解决'
                   value={monitoringData.resolved_incidents}
                   prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#52c41a' }}
+                  styles={{ content: { color: '#52c41a' } }}
                 />
               </Card>
             </Col>
@@ -1298,7 +1298,7 @@ const IncidentMonitoringPanel: React.FC<{
                   suffix='%'
                   precision={1}
                   prefix={<BarChartOutlined />}
-                  valueStyle={{ color: '#52c41a' }}
+                  styles={{ content: { color: '#52c41a' } }}
                 />
               </Card>
             </Col>
@@ -1325,7 +1325,7 @@ const IncidentMonitoringPanel: React.FC<{
                 }
               />
             ) : (
-              <Alert message='暂无严重事件' type='success' showIcon />
+              <Alert description='暂无严重事件' type='success' showIcon />
             )}
           </Card>
         </div>

@@ -48,80 +48,51 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
 
   return (
     <Card
-      style={{ height: '100%' }}
+      className="h-full rounded-lg shadow-sm border border-gray-200"
+      variant="borderless"
       styles={{
         body: {
           padding: 24,
         },
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 8,
-            backgroundColor: '#e6f7ff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 16,
-          }}
-        >
-          <IconComponent size={24} style={{ color: '#1890ff' }} />
+      <div className="flex items-start mb-4">
+        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mr-4">
+          <IconComponent size={24} className="text-blue-500" />
         </div>
-        <div style={{ flex: 1 }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-            }}
-          >
-            <Title level={4} style={{ margin: 0, fontSize: 16 }}>
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <Title level={4} className="!m-0 !text-base">
               {catalog.name}
             </Title>
-            <Tag color={getPriorityColor(catalog.priority || '')} style={{ margin: 0 }}>
+            <Tag color={getPriorityColor(catalog.priority || '')} className="!m-0">
               {catalog.priority || '—'}
             </Tag>
           </div>
-          <Text type='secondary' style={{ fontSize: 12, marginTop: 4, display: 'block' }}>
+          <Text type='secondary' className="!text-xs mt-1 block">
             {catalog.category}
           </Text>
         </div>
       </div>
 
-      <Text style={{ marginBottom: 16, display: 'block', minHeight: 40 }}>
+      <Text className="mb-4 block min-h-[40px]">
         {catalog.shortDescription || (catalog as any).description || ''}
       </Text>
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: 16,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Clock size={14} style={{ marginRight: 4, color: '#666' }} />
-          <Text type='secondary' style={{ fontSize: 12 }}>
+      <div className="flex justify-between items-center mt-4">
+        <div className="flex items-center">
+          <Clock size={14} className="mr-1 text-gray-500" />
+          <Text type='secondary' className="!text-xs">
             {catalog.sla_time || catalog.estimated_time || ''}
           </Text>
         </div>
         <div>
-          <Rate disabled defaultValue={catalog.rating || 4.5} count={5} style={{ fontSize: 12 }} />
+          <Rate disabled defaultValue={catalog.rating || 4.5} count={5} className="!text-xs" />
         </div>
       </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          paddingTop: 16,
-          borderTop: '1px solid #f0f0f0',
-        }}
-      >
-        <Link href={`/service-catalog/request/${catalog.id}`} style={{ textDecoration: 'none' }}>
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <Link href={`/service-catalog/request/${catalog.id}`} className="no-underline">
           <Button type='primary' block icon={<ArrowRight size={16} />}>
             {t('serviceCatalog.applyService')}
           </Button>

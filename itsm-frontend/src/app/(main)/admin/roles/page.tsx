@@ -484,7 +484,7 @@ export default function RoleManagement() {
               title='启用角色'
               value={stats.activeRoles}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -494,7 +494,7 @@ export default function RoleManagement() {
               title='禁用角色'
               value={stats.inactiveRoles}
               prefix={<XCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -504,7 +504,7 @@ export default function RoleManagement() {
               title='关联用户'
               value={stats.totalUsers}
               prefix={<Users className='w-5 h-5' />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>

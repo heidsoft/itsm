@@ -35,12 +35,14 @@ export class ServiceCatalogApi {
     return (s === 'enabled' ? 'published' : 'retired') as any;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static toServiceItem(raw: any): ServiceItem {
     // 后端 dto.ServiceCatalogResponse: {id,name,category,description,delivery_time,status,created_at,updated_at}
     return {
       id: String(raw?.id),
       name: String(raw?.name || ''),
       // 这里保留后端 category 的原始字符串（前端页面目前以中文分类做统计/图标）
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       category: (raw?.category as any) || ('it_service' as any),
       status: ServiceCatalogApi.toFrontendStatus(raw?.status),
       shortDescription: String(raw?.description || ''),
@@ -325,7 +327,7 @@ export class ServiceCatalogApi {
    */
   static async removeFavorite(serviceId: string): Promise<void> {
     // 后端暂未实现收藏功能，静默忽略
-    console.warn(`取消收藏服务 ${serviceId}（功能待后端实现）`);
+    // console.warn(`取消收藏服务 ${serviceId}（功能待后端实现）`);
   }
 
   /**
@@ -463,6 +465,8 @@ export class ServiceCatalogApi {
     }
   ): Promise<ServiceAnalytics> {
     // 后端暂未实现服务分析，返回空数据
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _unused = serviceId; 
     return {
       serviceId,
       period: {

@@ -17,7 +17,7 @@ export interface ServiceRequest {
     | 'cancelled';
   title?: string;
   reason?: string;
-  form_data?: Record<string, any>;
+  form_data?: Record<string, unknown>;
   cost_center?: string;
   data_classification?: 'public' | 'internal' | 'confidential';
   needs_public_ip?: boolean;
@@ -54,7 +54,7 @@ export interface CreateServiceRequestRequest {
   catalog_id: number;
   title?: string;
   reason?: string;
-  form_data?: Record<string, any>;
+  form_data?: Record<string, unknown>;
   cost_center?: string;
   data_classification?: 'public' | 'internal' | 'confidential';
   needs_public_ip?: boolean;
@@ -117,7 +117,7 @@ class ServiceRequestAPI {
       
       return data.data; // Backend response format: { code, message, data }
     } catch (error) {
-      console.error('API request failed:', error);
+      // console.error('API request failed:', error);
       throw error;
     }
   }
@@ -221,8 +221,8 @@ export interface ProvisioningTask {
   provider: string;
   resource_type: string;
   status: 'pending' | 'running' | 'succeeded' | 'failed';
-  payload?: Record<string, any>;
-  result?: Record<string, any>;
+  payload?: Record<string, unknown>;
+  result?: Record<string, unknown>;
   error_message?: string;
   created_at: string;
   updated_at: string;

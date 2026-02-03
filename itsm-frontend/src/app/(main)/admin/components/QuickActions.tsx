@@ -294,7 +294,7 @@ export const QuickActions: React.FC = () => {
         />
         {t('admin.quickActions')}
       </Title>
-      <Space direction='vertical' size='large' style={{ width: '100%' }}>
+      <Space orientation='vertical' size='large' style={{ width: '100%' }}>
         {Object.entries(quickActionGroups).map(([key, group]) => (
           <QuickActionGroup key={key} group={group} actions={group.actions} />
         ))}

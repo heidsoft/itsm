@@ -177,7 +177,8 @@ export class SLAApi {
       time_remaining: number;
       sla_definition: string;
       created_at: string;
-    }>;
+  }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }> {
     const requestBody: any = {};
     if (params?.start_time) requestBody.start_time = params.start_time;
@@ -247,8 +248,10 @@ export class SLAApi {
     // 注意：后端目前似乎没有直接的 /api/v1/sla/alerts 端点，可能需要从 monitoring 或 alert-history 获取
     // 这里暂时假设后端会增加此端点，或者我们使用 alert-history 替代
     // 根据 PRD，告警历史是 /api/v1/sla/alert-history
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const history = await httpClient.get<{items: any[]}>('/api/v1/sla/alert-history', { page: 1, page_size: 10 });
-    return history.items.map(item => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return history.items.map((item: any) => ({
       ticket_id: item.ticket_id,
       ticket_title: item.ticket_title || `Ticket #${item.ticket_id}`,
       priority: item.priority || 'medium',
@@ -283,7 +286,7 @@ export class SLAApi {
       notify_users: number[];
     }>;
     is_active: boolean;
-  }): Promise<any> {
+  }): Promise<unknown> {
     return httpClient.post('/api/v1/sla/alert-rules', data);
   }
 
@@ -331,7 +334,7 @@ export class SLAApi {
     page?: number;
     page_size?: number;
   }): Promise<{
-    items: any[];
+    items: unknown[];
     total: number;
     page: number;
     page_size: number;

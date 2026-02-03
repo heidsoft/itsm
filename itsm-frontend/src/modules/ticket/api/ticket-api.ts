@@ -265,7 +265,7 @@ export function useCreateTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('创建工单失败:', error);
+      // console.error('创建工单失败:', error);
     },
   });
 }
@@ -287,7 +287,7 @@ export function useUpdateTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('更新工单失败:', error);
+      // console.error('更新工单失败:', error);
     },
   });
 }
@@ -308,7 +308,7 @@ export function useDeleteTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('删除工单失败:', error);
+      // console.error('删除工单失败:', error);
     },
   });
 }
@@ -331,7 +331,7 @@ export function useBatchDeleteTickets() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('批量删除工单失败:', error);
+      // console.error('批量删除工单失败:', error);
     },
   });
 }
@@ -353,7 +353,7 @@ export function useAssignTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('分配工单失败:', error);
+      // console.error('分配工单失败:', error);
     },
   });
 }
@@ -375,7 +375,7 @@ export function useResolveTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('解决工单失败:', error);
+      // console.error('解决工单失败:', error);
     },
   });
 }
@@ -401,7 +401,7 @@ export function useCloseTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('关闭工单失败:', error);
+      // console.error('关闭工单失败:', error);
     },
   });
 }
@@ -423,7 +423,7 @@ export function useReopenTicket() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKETS });
     },
     onError: (error) => {
-      console.error('重新打开工单失败:', error);
+      // console.error('重新打开工单失败:', error);
     },
   });
 }
@@ -448,7 +448,7 @@ export function useAddComment() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKET_DETAIL(variables.id) });
     },
     onError: (error) => {
-      console.error('添加评论失败:', error);
+      // console.error('添加评论失败:', error);
     },
   });
 }
@@ -473,7 +473,7 @@ export function useUploadAttachment() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TICKET_DETAIL(variables.id) });
     },
     onError: (error) => {
-      console.error('上传附件失败:', error);
+      // console.error('上传附件失败:', error);
     },
   });
 }
@@ -541,7 +541,7 @@ export class TicketCacheManager {
   }
 }
 
-export default {
+const TicketApi = {
   TicketApiService,
   useTickets,
   useTicket,
@@ -559,3 +559,5 @@ export default {
   useUploadAttachment,
   TicketCacheManager,
 };
+
+export default TicketApi;

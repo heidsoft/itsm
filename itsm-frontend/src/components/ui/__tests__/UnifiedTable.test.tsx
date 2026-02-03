@@ -14,7 +14,7 @@ const mockData = [
   { id: 3, name: '测试项目3', status: 'active', createdAt: '2024-01-03' },
 ];
 
-type MockDataType = typeof mockData[0];
+type MockDataType = (typeof mockData)[0];
 
 const mockColumns: TableColumn<MockDataType>[] = [
   {
@@ -184,6 +184,8 @@ describe('UnifiedTable', () => {
           current: 1,
           pageSize: 10,
           total: 3,
+          showTotal: (total: number, range: [number, number]) =>
+            `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
         }}
         onPaginationChange={mockOnPaginationChange}
       />
@@ -214,8 +216,10 @@ describe('UnifiedTable', () => {
       <UnifiedTable
         dataSource={mockData}
         columns={mockColumns}
-        selectedRowKeys={[1, 2]}
-        onBatchDelete={mockOnBatchDelete}
+        rowSelection={{
+          selectedRowKeys: [1, 2],
+          onChange: jest.fn(),
+        }}
         batchActions={[
           {
             key: 'delete',
@@ -233,13 +237,16 @@ describe('UnifiedTable', () => {
   });
 
   it('should handle row selection', () => {
-    const mockOnRowSelectionChange = jest.fn();
+    const mockOnChange = jest.fn();
 
     render(
       <UnifiedTable
         dataSource={mockData}
         columns={mockColumns}
-        onRowSelectionChange={mockOnRowSelectionChange}
+        rowSelection={{
+          selectedRowKeys: [],
+          onChange: mockOnChange,
+        }}
       />
     );
 

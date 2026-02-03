@@ -101,12 +101,12 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
               value={averageSLA}
               precision={1}
               suffix='%'
-              valueStyle={{
+              styles={{ content: {
                 fontSize: '48px',
                 fontWeight: 'bold',
                 color: getProgressColor(averageSLA),
                 marginBottom: '24px',
-              }}
+              }}}
             />
             <Progress
               type='dashboard'

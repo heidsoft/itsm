@@ -6,6 +6,7 @@ export const translations = {
       settings: '设置',
       logout: '退出登录',
       logoutSuccess: '退出登录成功',
+      login: '登录',
       searchPlaceholder: '搜索...',
       notificationCenter: '通知中心',
       newTicketAssigned: '新工单分配',
@@ -30,6 +31,7 @@ export const translations = {
       searchResults: '搜索结果',
       noResults: '未找到相关结果',
       admin: '管理员',
+      superAdmin: '超级管理员',
       user: '用户',
     },
     dashboard: {
@@ -663,6 +665,7 @@ export const translations = {
       settings: 'Settings',
       logout: 'Logout',
       logoutSuccess: 'Logout successfully',
+      login: 'Login',
       searchPlaceholder: 'Search...',
       notificationCenter: 'Notification Center',
       newTicketAssigned: 'New Ticket Assigned',
@@ -687,6 +690,7 @@ export const translations = {
       searchResults: 'Search Results',
       noResults: 'No results found',
       admin: 'Admin',
+      superAdmin: 'Super Admin',
       user: 'User',
     },
     dashboard: {

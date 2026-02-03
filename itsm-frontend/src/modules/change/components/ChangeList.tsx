@@ -78,7 +78,7 @@ const ChangeList: React.FC = () => {
       setData(resp.changes || []);
       setTotal(resp.total || 0);
     } catch (error) {
-      console.error('Failed to load changes:', error);
+      // console.error('Failed to load changes:', error);
       message.error('加载变更列表失败');
     } finally {
       setLoading(false);
@@ -87,6 +87,7 @@ const ChangeList: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const handleSearch = () => {
@@ -166,61 +167,77 @@ const ChangeList: React.FC = () => {
   ];
 
   return (
-    <Card variant='borderless'>
-      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
-        <Form.Item name='search'>
-          <Input placeholder='搜索标题' allowClear prefix={<SearchOutlined />} />
-        </Form.Item>
-        <Form.Item name='status'>
-          <Select placeholder='状态' style={{ width: 120 }} allowClear>
-            {Object.entries(ChangeStatusLabels).map(([value, label]) => (
-              <Option key={value} value={value}>
-                {label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name='type'>
-          <Select placeholder='类型' style={{ width: 120 }} allowClear>
-            {Object.entries(ChangeTypeLabels).map(([value, label]) => (
-              <Option key={value} value={value}>
-                {label}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type='primary' onClick={handleSearch}>
-              查询
-            </Button>
-            <Button icon={<SyncOutlined />} onClick={loadData} />
-          </Space>
-        </Form.Item>
-        <div style={{ flex: 1, textAlign: 'right' }}>
-          <Button
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/changes/create')}
-          >
-            新建变更
-          </Button>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">变更管理</h1>
+          <p className="text-gray-500 mt-1">管理IT基础架构和服务的变更请求，最小化变更风险</p>
         </div>
-      </Form>
+        <Button
+          type='primary'
+          icon={<PlusOutlined />}
+          onClick={() => router.push('/changes/create')}
+          size="large"
+        >
+          新建变更
+        </Button>
+      </div>
 
-      <Table
-        rowKey='id'
-        columns={columns as any}
-        dataSource={data}
-        loading={loading}
-        pagination={{
-          current: query.page,
-          pageSize: query.page_size,
-          total: total,
-          onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
-        }}
-      />
-    </Card>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Form form={form} layout='inline' className="mb-6 flex-wrap gap-y-4">
+          <Form.Item name='search' className="mb-0">
+            <Input 
+              placeholder='搜索标题' 
+              allowClear 
+              prefix={<SearchOutlined className="text-gray-400" />} 
+              className="w-64"
+            />
+          </Form.Item>
+          <Form.Item name='status' className="mb-0">
+            <Select placeholder='状态' className="w-32" allowClear>
+              {Object.entries(ChangeStatusLabels).map(([value, label]) => (
+                <Option key={value} value={value}>
+                  {label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name='type' className="mb-0">
+            <Select placeholder='类型' className="w-32" allowClear>
+              {Object.entries(ChangeTypeLabels).map(([value, label]) => (
+                <Option key={value} value={value}>
+                  {label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item className="mb-0">
+            <Space>
+              <Button type='primary' ghost onClick={handleSearch}>
+                查询
+              </Button>
+              <Button icon={<SyncOutlined />} onClick={loadData} />
+            </Space>
+          </Form.Item>
+        </Form>
+
+        <Table
+          rowKey='id'
+          columns={columns as any}
+          dataSource={data}
+          loading={loading}
+          pagination={{
+            current: query.page,
+            pageSize: query.page_size,
+            total: total,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+            onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
+    </div>
   );
 };
 

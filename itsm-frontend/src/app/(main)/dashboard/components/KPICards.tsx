@@ -26,32 +26,32 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
   const getTrendIcon = () => {
     switch (metric.trend) {
       case 'up':
-        return <ArrowUp style={{ width: 16, height: 16, color: '#10b981' }} />; // Smaller icon
+        return <ArrowUp className='w-4 h-4 text-green-500' />;
       case 'down':
-        return <ArrowDown style={{ width: 16, height: 16, color: '#ef4444' }} />; // Smaller icon
+        return <ArrowDown className='w-4 h-4 text-red-500' />;
       default:
-        return <Minus style={{ width: 16, height: 16, color: '#9ca3af' }} />; // Smaller icon
+        return <Minus className='w-4 h-4 text-gray-400' />;
     }
   };
 
   // 获取默认图标
   const getDefaultIcon = () => {
-    const iconStyle = { width: 28, height: 28 }; // Slightly larger icon
+    const iconClass = 'w-7 h-7';
     switch (metric.id) {
       case 'total-tickets':
-        return <LayoutDashboard style={iconStyle} />;
+        return <LayoutDashboard className={iconClass} />;
       case 'open-tickets':
-        return <AlertTriangle style={iconStyle} />;
+        return <AlertTriangle className={iconClass} />;
       case 'resolved-tickets':
-        return <CheckCircle style={iconStyle} />;
+        return <CheckCircle className={iconClass} />;
       case 'sla-compliance':
-        return <Clock style={iconStyle} />;
+        return <Clock className={iconClass} />;
       case 'avg-resolution':
-        return <Clock style={iconStyle} />;
+        return <Clock className={iconClass} />;
       case 'user-satisfaction':
-        return <User style={iconStyle} />;
+        return <User className={iconClass} />;
       default:
-        return <LayoutDashboard style={iconStyle} />;
+        return <LayoutDashboard className={iconClass} />;
     }
   };
 
@@ -69,15 +69,8 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
   return (
     <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6}>
       <Card
-        className='enterprise-kpi-card h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group'
-        style={{
-          borderRadius: 8, // antdTheme.token.borderRadiusLG
-          background: '#ffffff', // antdTheme.token.colorBgContainer
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)', // designSystem.boxShadow.base
-          borderColor: '#e2e8f0', // antdTheme.token.colorBorder
-          borderWidth: 1,
-          borderStyle: 'solid',
-        }}
+        className='h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200'
+        variant="borderless"
         styles={{
           body: {
             padding: '20px',
@@ -110,8 +103,8 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
                   metric.trend === 'up'
                     ? 'text-green-500' // antdTheme.token.colorSuccess
                     : metric.trend === 'down'
-                    ? 'text-red-500' // antdTheme.token.colorError
-                    : 'text-gray-500' // antdTheme.token.colorTextSecondary
+                      ? 'text-red-500' // antdTheme.token.colorError
+                      : 'text-gray-500' // antdTheme.token.colorTextSecondary
                 }`}
               >
                 {getTrendIcon()}
@@ -159,15 +152,15 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
                       metric.changeType === 'increase'
                         ? '#10b981' // antdTheme.token.colorSuccess
                         : metric.changeType === 'decrease'
-                        ? '#ef4444' // antdTheme.token.colorError
-                        : '#6b7280', // antdTheme.token.colorTextSecondary
+                          ? '#ef4444' // antdTheme.token.colorError
+                          : '#6b7280', // antdTheme.token.colorTextSecondary
                   }}
                 >
                   {metric.changeType === 'increase'
                     ? '↑'
                     : metric.changeType === 'decrease'
-                    ? '↓'
-                    : '—'}{' '}
+                      ? '↓'
+                      : '—'}{' '}
                   {Math.abs(metric.change)}%
                 </span>
               </span>
@@ -189,13 +182,7 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
         <Row gutter={[16, 16]}>
           {Array.from({ length: 6 }).map((_, index) => (
             <Col key={index} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
-              <Card
-                className='h-44 border-0'
-                style={{
-                  borderRadius: 8, // antdTheme.token.borderRadiusLG
-                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)', // designSystem.boxShadow.base
-                }}
-              >
+              <Card className='h-44 rounded-lg shadow-sm border border-gray-200' variant="borderless">
                 <div className='flex items-center justify-center h-full'>
                   <div className='text-center'>
                     <Spin size='large' />
@@ -214,17 +201,12 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
     return (
       <div className='mb-6'>
         <Card
-          className='text-center py-12 border-0'
-          style={{
-            borderRadius: 8, // antdTheme.token.borderRadiusLG
-            background: '#f8fafc', // antdTheme.token.colorBgLayout
-            boxShadow: 'none', // No shadow for empty state background
-            border: '1px dashed #cbd5e1', // designSystem.colors.neutral[300]
-          }}
+          className='text-center py-12 rounded-lg bg-gray-50 border border-dashed border-gray-300'
+          variant="borderless"
         >
           <div className='text-gray-500'>
             <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4'>
-              <DashboardOutlined style={{ fontSize: 32, color: '#9ca3af' }} />
+              <DashboardOutlined className='text-3xl text-gray-400' />
             </div>
             <p className='text-base font-medium text-gray-700 mb-1'>暂无KPI数据</p>
             <p className='text-sm text-gray-500'>系统正在收集数据，请稍后查看</p>

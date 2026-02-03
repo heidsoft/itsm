@@ -2,7 +2,7 @@ database:
   host: localhost
   port: 5432
   user: dev
-  password: "${DB_PASSWORD:123456!@#$%^}"  # Use env: DB_PASSWORD, default for dev
+  password: "${DB_PASSWORD:StrongPassword123!}"  # Use env: DB_PASSWORD, default for dev
   dbname: itsm
   sslmode: disable
 
@@ -18,7 +18,7 @@ server:
   mode: "${SERVER_MODE:release}"  # Use env: SERVER_MODE, default release
 
 jwt:
-  secret: "${JWT_SECRET:your-secret-key-change-in-production}"  # Use env: JWT_SECRET
+  secret: "${JWT_SECRET:ChangeThisToARandomSecretInProduction!}"  # Use env: JWT_SECRET
   expire_time: 900        # 15分钟 (access token)
   refresh_expire_time: 604800  # 7天 (refresh token)
 
@@ -55,3 +55,16 @@ sms:
     app_id: "${TENCENT_SMS_APP_ID:}"
     sign_name: "${TENCENT_SMS_SIGN_NAME:ITSM}"
     endpoint: "sms.tencentcloudapi.com"
+
+# Security settings (Legacy, use 'jwt' section above)
+security:
+  jwt_secret: "${JWT_SECRET}" # Reference to main config or env
+  token_expiry: 24h
+  refresh_token_expiry: 168h
+  bcrypt_cost: 10
+
+# Admin user settings
+admin:
+  username: "admin"
+  password: "${ADMIN_PASSWORD:CHANGE_THIS_PASSWORD_IMMEDIATELY}" # 生产环境请务必修改
+  email: "admin@example.com"

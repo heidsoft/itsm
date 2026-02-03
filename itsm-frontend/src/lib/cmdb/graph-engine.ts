@@ -378,7 +378,9 @@ export class GraphEngine {
     nodes: GraphNode[],
     edges: GraphEdge[]
   ): RelationshipGraph['stats'] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nodesByType: Record<CIType, number> = {} as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const edgesByType: Record<RelationType, number> = {} as any;
 
     nodes.forEach((node) => {

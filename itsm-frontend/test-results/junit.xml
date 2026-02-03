@@ -1,0 +1,2572 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="110" failures="14" errors="0" time="12.802">
+  <testsuite name="src/app/lib/__tests__/ticket-approval.test.ts" errors="0" failures="1" skipped="0" timestamp="2026-02-02T13:49:59" time="1.289" tests="8">
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should fetch approval workflows successfully" time="0.025">
+    </testcase>
+    <testcase classname="TicketApprovalApi › getWorkflows" name="should handle empty workflow list" time="0.002">
+    </testcase>
+    <testcase classname="TicketApprovalApi › createWorkflow" name="should create approval workflow successfully" time="0.004">
+    </testcase>
+    <testcase classname="TicketApprovalApi › submitApproval" name="should submit approval successfully" time="0.002">
+    </testcase>
+    <testcase classname="TicketApprovalApi › submitApproval" name="should handle rejection action" time="0.003">
+    </testcase>
+    <testcase classname="TicketApprovalApi › submitApproval" name="should handle delegation action" time="0.001">
+    </testcase>
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="getApprovalRecords returns correct data" time="0.105">
+      <failure>Error: success
+    at HttpClient.requestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/http-client.ts:314:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at Object.&lt;anonymous&gt; (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/lib/__tests__/ticket-approval.test.ts:244:22)</failure>
+    </testcase>
+    <testcase classname="TicketApprovalApi › getApprovalRecords" name="should filter by status" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/components/__tests__/TicketCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-02-02T13:50:00" time="0.691" tests="28">
+    <testcase classname="TicketCard › Rendering" name="should render ticket card with basic information" time="0.062">
+    </testcase>
+    <testcase classname="TicketCard › Rendering" name="should display priority badge correctly" time="0.01">
+    </testcase>
+    <testcase classname="TicketCard › Rendering" name="should show appropriate icon for priority" time="0.016">
+    </testcase>
+    <testcase classname="TicketCard › Rendering" name="should display clock icon and last update time" time="0.006">
+    </testcase>
+    <testcase classname="TicketCard › Priority Variants" name="should render P1 priority correctly with Zap icon" time="0.01">
+    </testcase>
+    <testcase classname="TicketCard › Priority Variants" name="should render P2 priority correctly with AlertCircle icon" time="0.009">
+    </testcase>
+    <testcase classname="TicketCard › Priority Variants" name="should render P3 priority correctly with Info icon" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › Priority Variants" name="should render P4 priority correctly with ChevronsDown icon" time="0.01">
+    </testcase>
+    <testcase classname="TicketCard › P1 Priority Alert Behavior" name="should play alert sound for P1 priority tickets" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › P1 Priority Alert Behavior" name="should add pulse animation class for P1 priority" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › P1 Priority Alert Behavior" name="should not play sound for non-P1 priorities" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › Type Variants" name="should display custom type when provided" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › Type Variants" name="should use default type when not provided" time="0.008">
+    </testcase>
+    <testcase classname="TicketCard › ID Variants" name="should handle string ID" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › ID Variants" name="should handle numeric ID" time="0.006">
+    </testcase>
+    <testcase classname="TicketCard › Styling and Layout" name="should have proper CSS classes for layout" time="0.008">
+    </testcase>
+    <testcase classname="TicketCard › Styling and Layout" name="should have hover effects" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › Styling and Layout" name="should have priority-based border color" time="0.007">
+    </testcase>
+    <testcase classname="TicketCard › Accessibility" name="should have proper semantic structure" time="0.068">
+    </testcase>
+    <testcase classname="TicketCard › Accessibility" name="应该支持键盘导航" time="0.01">
+    </testcase>
+    <testcase classname="TicketCard › Edge Cases" name="should handle very long titles" time="0.006">
+    </testcase>
+    <testcase classname="TicketCard › Edge Cases" name="should handle empty status" time="0.006">
+    </testcase>
+    <testcase classname="TicketCard › Edge Cases" name="should handle invalid priority gracefully" time="0.005">
+    </testcase>
+    <testcase classname="TicketCard › Performance" name="should not re-render unnecessarily" time="0.01">
+    </testcase>
+    <testcase classname="TicketCard › Performance" name="should handle priority changes correctly" time="0.008">
+    </testcase>
+    <testcase classname="TicketCard › Audio Error Handling" name="should handle audio play errors gracefully" time="0.005">
+    </testcase>
+    <testcase classname="TicketCard › Component Lifecycle" name="should clean up animation classes on unmount" time="0.006">
+    </testcase>
+    <testcase classname="TicketCard › Component Lifecycle" name="should handle priority changes during component lifecycle" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/components/__tests__/LoadingEmptyError.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-02-02T13:50:01" time="0.345" tests="17">
+    <testcase classname="LoadingEmptyError Component › Loading State" name="should render loading spinner with default text" time="0.014">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Loading State" name="should render loading spinner with custom text" time="0.006">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Loading State" name="should apply custom minHeight and className" time="0.006">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Empty State" name="should render empty state with default configuration" time="0.007">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Empty State" name="should render empty state with custom configuration" time="0.014">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Empty State" name="should not render action button when showAction is false" time="0.005">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Empty State" name="should render custom icon when provided" time="0.005">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Error State" name="should render error state with default configuration" time="0.01">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Error State" name="should render error state with custom configuration and retry action" time="0.01">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Error State" name="should not render retry button when showRetry is false" time="0.012">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Success State" name="should render children when state is success" time="0.003">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Success State" name="should render success configuration when provided" time="0.007">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Success State" name="should render both success config and children" time="0.006">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Custom Styling" name="should apply custom className to different states" time="0.013">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Custom Styling" name="should apply custom minHeight to loading and empty states" time="0.009">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Edge Cases" name="should return null for invalid state" time="0.003">
+    </testcase>
+    <testcase classname="LoadingEmptyError Component › Edge Cases" name="should handle missing onAction gracefully" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/lib/__tests__/api-integration.test.ts" errors="0" failures="3" skipped="0" timestamp="2026-02-02T13:49:59" time="4.847" tests="19">
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should fetch tickets successfully" time="0.025">
+      <failure>Error: expect(received).toEqual(expected) // deep equality
+
+- Expected  - 2
++ Received  + 2
+
+@@ -1,11 +1,11 @@
+  Object {
+    &quot;page&quot;: 1,
+-   &quot;page_size&quot;: 20,
++   &quot;pageSize&quot;: 20,
+    &quot;tickets&quot;: Array [
+      Object {
+-       &quot;created_at&quot;: &quot;2024-01-01T10:00:00Z&quot;,
++       &quot;createdAt&quot;: &quot;2024-01-01T10:00:00Z&quot;,
+        &quot;description&quot;: &quot;用户无法正常登录&quot;,
+        &quot;id&quot;: 1,
+        &quot;priority&quot;: &quot;high&quot;,
+        &quot;status&quot;: &quot;open&quot;,
+        &quot;title&quot;: &quot;系统登录问题&quot;,
+    at Object.toEqual (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/lib/__tests__/api-integration.test.ts:67:24)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle API error responses" time="0.122">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should handle network errors" time="0.015">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › getTickets" name="should include query parameters correctly" time="0.004">
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should create ticket successfully" time="0.006">
+      <failure>Error: expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 1
+
+@@ -1,7 +1,7 @@
+  Object {
+-   &quot;created_at&quot;: &quot;2024-01-01T10:00:00Z&quot;,
++   &quot;createdAt&quot;: &quot;2024-01-01T10:00:00Z&quot;,
+    &quot;description&quot;: &quot;工单描述&quot;,
+    &quot;id&quot;: 1,
+    &quot;priority&quot;: &quot;medium&quot;,
+    &quot;status&quot;: &quot;open&quot;,
+    &quot;title&quot;: &quot;新工单&quot;,
+    at Object.toEqual (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/lib/__tests__/api-integration.test.ts:162:24)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="API Integration Tests › TicketApi › createTicket" name="should handle validation errors" time="0.018">
+    </testcase>
+    <testcase classname="API Integration Tests › DashboardAPI › getDashboardConfig" name="should fetch dashboard config successfully" time="0.003">
+    </testcase>
+    <testcase classname="API Integration Tests › DashboardAPI › getTicketStats" name="should fetch ticket statistics successfully" time="0.006">
+      <failure>Error: expect(received).toEqual(expected) // deep equality
+
+- Expected  - 2
++ Received  + 2
+
+  Object {
+-   &quot;by_priority&quot;: Object {
++   &quot;byPriority&quot;: Object {
+      &quot;critical&quot;: 5,
+      &quot;high&quot;: 25,
+      &quot;low&quot;: 50,
+      &quot;medium&quot;: 70,
+    },
+-   &quot;in_progress&quot;: 10,
++   &quot;inProgress&quot;: 10,
+    &quot;open&quot;: 45,
+    &quot;resolved&quot;: 95,
+    &quot;total&quot;: 150,
+  }
+    at Object.toEqual (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/lib/__tests__/api-integration.test.ts:269:24)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)</failure>
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle HTTP error status codes" time="0.007">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle malformed JSON responses" time="0.011">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle timeout errors" time="0.171">
+    </testcase>
+    <testcase classname="API Integration Tests › Error Handling" name="should handle CORS errors" time="0.007">
+    </testcase>
+    <testcase classname="API Integration Tests › Authentication Integration" name="should include authorization header when token exists" time="0.002">
+    </testcase>
+    <testcase classname="API Integration Tests › Authentication Integration" name="should handle token expiration" time="0.007">
+    </testcase>
+    <testcase classname="API Integration Tests › Authentication Integration" name="should handle unauthorized access" time="0.057">
+    </testcase>
+    <testcase classname="API Integration Tests › Performance and Caching" name="should handle concurrent requests" time="0.003">
+    </testcase>
+    <testcase classname="API Integration Tests › Performance and Caching" name="should handle large response payloads" time="0.011">
+    </testcase>
+    <testcase classname="API Integration Tests › Data Validation" name="should handle missing response fields" time="0.002">
+    </testcase>
+    <testcase classname="API Integration Tests › Data Validation" name="should validate response data structure" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/components/workflow/__tests__/BPMNDesigner.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-02-02T13:49:59" time="5.22" tests="7">
+    <testcase classname="BPMNDesigner" name="should render toolbar container" time="0.336">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should render zoom controls section" time="0.102">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should call onSave when save is triggered" time="0.075">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should call onDeploy when deploy is triggered" time="0.063">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should accept custom height prop" time="0.111">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should have a main container" time="0.073">
+    </testcase>
+    <testcase classname="BPMNDesigner" name="should render with flex layout" time="0.054">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx" errors="0" failures="4" skipped="0" timestamp="2026-02-02T13:49:59" time="7.968" tests="5">
+    <testcase classname="ApprovalChainStatsCards" name="should render all stat cards correctly" time="0.498">
+      <failure>TestingLibraryElementError: Unable to find an element with the text: 2.5. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;mb-6&quot;
+    &gt;
+      &lt;h4
+        class=&quot;ant-typography mb-4 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+      &gt;
+        审批链统计
+      &lt;/h4&gt;
+      &lt;div
+        class=&quot;ant-row css-dev-only-do-not-override-1d8anct css-var-root&quot;
+        style=&quot;margin-inline: -8px; row-gap: 16px;&quot;
+      &gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-statistic css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-statistic-header&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;ant-statistic-title&quot;
+                  &gt;
+                    总审批链数
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div
+                  class=&quot;ant-statistic-content&quot;
+                  style=&quot;color: rgb(24, 144, 255);&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-prefix&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;setting&quot;
+                      class=&quot;anticon anticon-setting text-blue-500&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=&quot;true&quot;
+                        data-icon=&quot;setting&quot;
+                        fill=&quot;currentColor&quot;
+                        focusable=&quot;false&quot;
+                        height=&quot;1em&quot;
+                        viewBox=&quot;64 64 896 896&quot;
+                        width=&quot;1em&quot;
+                      &gt;
+                        &lt;path
+                          d=&quot;M924.8 625.7l-65.5-56c3.1-19 4.7-38.4 4.7-57.8s-1.6-38.8-4.7-57.8l65.5-56a32.03 32.03 0 009.3-35.2l-.9-2.6a443.74 443.74 0 00-79.7-137.9l-1.8-2.1a32.12 32.12 0 00-35.1-9.5l-81.3 28.9c-30-24.6-63.5-44-99.7-57.6l-15.7-85a32.05 32.05 0 00-25.8-25.7l-2.7-.5c-52.1-9.4-106.9-9.4-159 0l-2.7.5a32.05 32.05 0 00-25.8 25.7l-15.8 85.4a351.86 351.86 0 00-99 57.4l-81.9-29.1a32 32 0 00-35.1 9.5l-1.8 2.1a446.02 446.02 0 00-79.7 137.9l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.3 56.6c-3.1 18.8-4.6 38-4.6 57.1 0 19.2 1.5 38.4 4.6 57.1L99 625.5a32.03 32.03 0 00-9.3 35.2l.9 2.6c18.1 50.4 44.9 96.9 79.7 137.9l1.8 2.1a32.12 32.12 0 0035.1 9.5l81.9-29.1c29.8 24.5 63.1 43.9 99 57.4l15.8 85.4a32.05 32.05 0 0025.8 25.7l2.7.5a449.4 449.4 0 00159 0l2.7-.5a32.05 32.05 0 0025.8-25.7l15.7-85a350 350 0 0099.7-57.6l81.3 28.9a32 32 0 0035.1-9.5l1.8-2.1c34.8-41.1 61.6-87.5 79.7-137.9l.9-2.6c4.5-12.3.8-26.3-9.3-35zM788.3 465.9c2.5 15.1 3.8 30.6 3.8 46.1s-1.3 31-3.8 46.1l-6.6 40.1 74.7 63.9a370.03 370.03 0 01-42.6 73.6L721 702.8l-31.4 25.8c-23.9 19.6-50.5 35-79.3 45.8l-38.1 14.3-17.9 97a377.5 377.5 0 01-85 0l-17.9-97.2-37.8-14.5c-28.5-10.8-55-26.2-78.7-45.7l-31.4-25.9-93.4 33.2c-17-22.9-31.2-47.6-42.6-73.6l75.5-64.5-6.5-40c-2.4-14.9-3.7-30.3-3.7-45.5 0-15.3 1.2-30.6 3.7-45.5l6.5-40-75.5-64.5c11.3-26.1 25.6-50.7 42.6-73.6l93.4 33.2 31.4-25.9c23.7-19.5 50.2-34.9 78.7-45.7l37.9-14.3 17.9-97.2c28.1-3.2 56.8-3.2 85 0l17.9 97 38.1 14.3c28.7 10.8 55.4 26.2 79.3 45.8l31.4 25.8 92.8-32.9c17 22.9 31.2 47.6 42.6 73.6L781.8 426l6.5 39.9zM512 326c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm79.2 255.2A111.6 111.6 0 01512 614c-29.9 0-58-11.7-79.2-32.8A111.6 111.6 0 01400 502c0-29.9 11.7-58 32.8-79.2C454 401.6 482.1 390 512 390c29.9 0 58 11.6 79.2 32.8A111.6 111.6 0 01624 502c0 29.9-11.7 58-32.8 79.2z&quot;
+                        /&gt;
+                      &lt;/svg&gt;
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-value&quot;
+                  &gt;
+                    &lt;span
+                      class=&quot;ant-statistic-content-value-int&quot;
+                    &gt;
+                      100
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-statistic css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-statistic-header&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;ant-statistic-title&quot;
+                  &gt;
+                    活跃审批链
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div
+                  class=&quot;ant-statistic-content&quot;
+                  style=&quot;color: rgb(82, 196, 26);&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-prefix&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;check-circle&quot;
+                      class=&quot;anticon anticon-check-circle text-green-500&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=&quot;t...
+    at Object.getElementError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:37:19)
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+    at Object.getByText (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx:32:19)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should show loading state" time="0.691">
+      <failure>TestingLibraryElementError: Unable to find an element with the role &quot;img&quot;
+
+Here are the available roles:
+
+  heading:
+
+  Name &quot;审批链统计&quot;:
+  &lt;h4
+    class=&quot;ant-typography mb-4 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+  /&gt;
+
+  --------------------------------------------------
+  list:
+
+  Name &quot;&quot;:
+  &lt;ul
+    class=&quot;ant-skeleton-paragraph&quot;
+  /&gt;
+
+  Name &quot;&quot;:
+  &lt;ul
+    class=&quot;ant-skeleton-paragraph&quot;
+  /&gt;
+
+  Name &quot;&quot;:
+  &lt;ul
+    class=&quot;ant-skeleton-paragraph&quot;
+  /&gt;
+
+  Name &quot;&quot;:
+  &lt;ul
+    class=&quot;ant-skeleton-paragraph&quot;
+  /&gt;
+
+  --------------------------------------------------
+  listitem:
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li
+    style=&quot;width: 61%;&quot;
+  /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li
+    style=&quot;width: 61%;&quot;
+  /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li
+    style=&quot;width: 61%;&quot;
+  /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li /&gt;
+
+  Name &quot;&quot;:
+  &lt;li
+    style=&quot;width: 61%;&quot;
+  /&gt;
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;mb-6&quot;
+    &gt;
+      &lt;h4
+        class=&quot;ant-typography mb-4 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+      &gt;
+        审批链统计
+      &lt;/h4&gt;
+      &lt;div
+        class=&quot;ant-row css-dev-only-do-not-override-1d8anct css-var-root&quot;
+        style=&quot;margin-inline: -8px; row-gap: 16px;&quot;
+      &gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-loading ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-skeleton ant-skeleton-active css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-skeleton-section&quot;
+                &gt;
+                  &lt;ul
+                    class=&quot;ant-skeleton-paragraph&quot;
+                  &gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li
+                      style=&quot;width: 61%;&quot;
+                    /&gt;
+                  &lt;/ul&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-loading ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-skeleton ant-skeleton-active css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-skeleton-section&quot;
+                &gt;
+                  &lt;ul
+                    class=&quot;ant-skeleton-paragraph&quot;
+                  &gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li
+                      style=&quot;width: 61%;&quot;
+                    /&gt;
+                  &lt;/ul&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-loading ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-skeleton ant-skeleton-active css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-skeleton-section&quot;
+                &gt;
+                  &lt;ul
+                    class=&quot;ant-skeleton-paragraph&quot;
+                  &gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li
+                      style=&quot;width: 61%;&quot;
+                    /&gt;
+                  &lt;/ul&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-loading ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-skeleton ant-skeleton-active css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-skeleton-section&quot;
+                &gt;
+                  &lt;ul
+                    class=&quot;ant-skeleton-paragraph&quot;
+                  &gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li /&gt;
+                    &lt;li
+                      style=&quot;width: 61%;&quot;
+                    /&gt;
+                  &lt;/ul&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+    at Object.getElementError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:37:19)
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+    at Object.getAllByRole (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx:39:26)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should display correct icons" time="0.087">
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should handle zero values" time="0.095">
+      <failure>TestingLibraryElementError: Found multiple elements with the text: 0
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+&lt;span
+  class=&quot;ant-statistic-content-value-int&quot;
+&gt;
+  0
+&lt;/span&gt;
+
+Ignored nodes: comments, script, style
+&lt;span
+  class=&quot;ant-statistic-content-value-int&quot;
+&gt;
+  0
+&lt;/span&gt;
+
+Ignored nodes: comments, script, style
+&lt;span
+  class=&quot;ant-statistic-content-value-int&quot;
+&gt;
+  0
+&lt;/span&gt;
+
+Ignored nodes: comments, script, style
+&lt;span
+  class=&quot;ant-statistic-content-value-int&quot;
+&gt;
+  0
+&lt;/span&gt;
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;mb-6&quot;
+    &gt;
+      &lt;h4
+        class=&quot;ant-typography mb-4 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+      &gt;
+        审批链统计
+      &lt;/h4&gt;
+      &lt;div
+        class=&quot;ant-row css-dev-only-do-not-override-1d8anct css-var-root&quot;
+        style=&quot;margin-inline: -8px; row-gap: 16px;&quot;
+      &gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-statistic css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-statistic-header&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;ant-statistic-title&quot;
+                  &gt;
+                    总审批链数
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div
+                  class=&quot;ant-statistic-content&quot;
+                  style=&quot;color: rgb(24, 144, 255);&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-prefix&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;setting&quot;
+                      class=&quot;anticon anticon-setting text-blue-500&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=&quot;true&quot;
+                        data-icon=&quot;setting&quot;
+                        fill=&quot;currentColor&quot;
+                        focusable=&quot;false&quot;
+                        height=&quot;1em&quot;
+                        viewBox=&quot;64 64 896 896&quot;
+                        width=&quot;1em&quot;
+                      &gt;
+                        &lt;path
+                          d=&quot;M924.8 625.7l-65.5-56c3.1-19 4.7-38.4 4.7-57.8s-1.6-38.8-4.7-57.8l65.5-56a32.03 32.03 0 009.3-35.2l-.9-2.6a443.74 443.74 0 00-79.7-137.9l-1.8-2.1a32.12 32.12 0 00-35.1-9.5l-81.3 28.9c-30-24.6-63.5-44-99.7-57.6l-15.7-85a32.05 32.05 0 00-25.8-25.7l-2.7-.5c-52.1-9.4-106.9-9.4-159 0l-2.7.5a32.05 32.05 0 00-25.8 25.7l-15.8 85.4a351.86 351.86 0 00-99 57.4l-81.9-29.1a32 32 0 00-35.1 9.5l-1.8 2.1a446.02 446.02 0 00-79.7 137.9l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.3 56.6c-3.1 18.8-4.6 38-4.6 57.1 0 19.2 1.5 38.4 4.6 57.1L99 625.5a32.03 32.03 0 00-9.3 35.2l.9 2.6c18.1 50.4 44.9 96.9 79.7 137.9l1.8 2.1a32.12 32.12 0 0035.1 9.5l81.9-29.1c29.8 24.5 63.1 43.9 99 57.4l15.8 85.4a32.05 32.05 0 0025.8 25.7l2.7.5a449.4 449.4 0 00159 0l2.7-.5a32.05 32.05 0 0025.8-25.7l15.7-85a350 350 0 0099.7-57.6l81.3 28.9a32 32 0 0035.1-9.5l1.8-2.1c34.8-41.1 61.6-87.5 79.7-137.9l.9-2.6c4.5-12.3.8-26.3-9.3-35zM788.3 465.9c2.5 15.1 3.8 30.6 3.8 46.1s-1.3 31-3.8 46.1l-6.6 40.1 74.7 63.9a370.03 370.03 0 01-42.6 73.6L721 702.8l-31.4 25.8c-23.9 19.6-50.5 35-79.3 45.8l-38.1 14.3-17.9 97a377.5 377.5 0 01-85 0l-17.9-97.2-37.8-14.5c-28.5-10.8-55-26.2-78.7-45.7l-31.4-25.9-93.4 33.2c-17-22.9-31.2-47.6-42.6-73.6l75.5-64.5-6.5-40c-2.4-14.9-3.7-30.3-3.7-45.5 0-15.3 1.2-30.6 3.7-45.5l6.5-40-75.5-64.5c11.3-26.1 25.6-50.7 42.6-73.6l93.4 33.2 31.4-25.9c23.7-19.5 50.2-34.9 78.7-45.7l37.9-14.3 17.9-97.2c28.1-3.2 56.8-3.2 85 0l17.9 97 38.1 14.3c28.7 10.8 55.4 26.2 79.3 45.8l31.4 25.8 92.8-32.9c17 22.9 31.2 47.6 42.6 73.6L781.8 426l6.5 39.9zM512 326c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm79.2 255.2A111.6 111.6 0 01512 614c-29.9 0-58-11.7-79.2-32.8A111.6 111.6 0 01400 502c0-29.9 11.7-58 32.8-79.2C454 401.6 482.1 390 512 390c29.9 0 58 11.6 79.2 32.8A111.6 111.6 0 01624 502c0 29.9-11.7 58-32.8 79.2z&quot;
+                        /&gt;
+                      &lt;/svg&gt;
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-value&quot;
+                  &gt;
+                    &lt;span
+                      class=&quot;ant-statistic-content-value-int&quot;
+                    &gt;
+                      0
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-statistic css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-statistic-header&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;ant-statistic-title&quot;
+                  &gt;
+                    活跃审批链
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div
+                  class=&quot;ant-statistic-content&quot;
+                  style=&quot;color: rgb(82, 196, 26);&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-prefix&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;check-circle&quot;
+                      class=&quot;anticon anticon-check-circle text-green-500&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=&quot;tru...
+    at Object.getElementError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:37:19)
+    at getElementError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+    at getMultipleElementsFoundError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+    at Object.getByText (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx:64:19)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="ApprovalChainStatsCards" name="should handle large numbers" time="0.089">
+      <failure>TestingLibraryElementError: Unable to find an element with the text: 999999. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;mb-6&quot;
+    &gt;
+      &lt;h4
+        class=&quot;ant-typography mb-4 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+      &gt;
+        审批链统计
+      &lt;/h4&gt;
+      &lt;div
+        class=&quot;ant-row css-dev-only-do-not-override-1d8anct css-var-root&quot;
+        style=&quot;margin-inline: -8px; row-gap: 16px;&quot;
+      &gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-statistic css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-statistic-header&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;ant-statistic-title&quot;
+                  &gt;
+                    总审批链数
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div
+                  class=&quot;ant-statistic-content&quot;
+                  style=&quot;color: rgb(24, 144, 255);&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-prefix&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;setting&quot;
+                      class=&quot;anticon anticon-setting text-blue-500&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=&quot;true&quot;
+                        data-icon=&quot;setting&quot;
+                        fill=&quot;currentColor&quot;
+                        focusable=&quot;false&quot;
+                        height=&quot;1em&quot;
+                        viewBox=&quot;64 64 896 896&quot;
+                        width=&quot;1em&quot;
+                      &gt;
+                        &lt;path
+                          d=&quot;M924.8 625.7l-65.5-56c3.1-19 4.7-38.4 4.7-57.8s-1.6-38.8-4.7-57.8l65.5-56a32.03 32.03 0 009.3-35.2l-.9-2.6a443.74 443.74 0 00-79.7-137.9l-1.8-2.1a32.12 32.12 0 00-35.1-9.5l-81.3 28.9c-30-24.6-63.5-44-99.7-57.6l-15.7-85a32.05 32.05 0 00-25.8-25.7l-2.7-.5c-52.1-9.4-106.9-9.4-159 0l-2.7.5a32.05 32.05 0 00-25.8 25.7l-15.8 85.4a351.86 351.86 0 00-99 57.4l-81.9-29.1a32 32 0 00-35.1 9.5l-1.8 2.1a446.02 446.02 0 00-79.7 137.9l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.3 56.6c-3.1 18.8-4.6 38-4.6 57.1 0 19.2 1.5 38.4 4.6 57.1L99 625.5a32.03 32.03 0 00-9.3 35.2l.9 2.6c18.1 50.4 44.9 96.9 79.7 137.9l1.8 2.1a32.12 32.12 0 0035.1 9.5l81.9-29.1c29.8 24.5 63.1 43.9 99 57.4l15.8 85.4a32.05 32.05 0 0025.8 25.7l2.7.5a449.4 449.4 0 00159 0l2.7-.5a32.05 32.05 0 0025.8-25.7l15.7-85a350 350 0 0099.7-57.6l81.3 28.9a32 32 0 0035.1-9.5l1.8-2.1c34.8-41.1 61.6-87.5 79.7-137.9l.9-2.6c4.5-12.3.8-26.3-9.3-35zM788.3 465.9c2.5 15.1 3.8 30.6 3.8 46.1s-1.3 31-3.8 46.1l-6.6 40.1 74.7 63.9a370.03 370.03 0 01-42.6 73.6L721 702.8l-31.4 25.8c-23.9 19.6-50.5 35-79.3 45.8l-38.1 14.3-17.9 97a377.5 377.5 0 01-85 0l-17.9-97.2-37.8-14.5c-28.5-10.8-55-26.2-78.7-45.7l-31.4-25.9-93.4 33.2c-17-22.9-31.2-47.6-42.6-73.6l75.5-64.5-6.5-40c-2.4-14.9-3.7-30.3-3.7-45.5 0-15.3 1.2-30.6 3.7-45.5l6.5-40-75.5-64.5c11.3-26.1 25.6-50.7 42.6-73.6l93.4 33.2 31.4-25.9c23.7-19.5 50.2-34.9 78.7-45.7l37.9-14.3 17.9-97.2c28.1-3.2 56.8-3.2 85 0l17.9 97 38.1 14.3c28.7 10.8 55.4 26.2 79.3 45.8l31.4 25.8 92.8-32.9c17 22.9 31.2 47.6 42.6 73.6L781.8 426l6.5 39.9zM512 326c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm79.2 255.2A111.6 111.6 0 01512 614c-29.9 0-58-11.7-79.2-32.8A111.6 111.6 0 01400 502c0-29.9 11.7-58 32.8-79.2C454 401.6 482.1 390 512 390c29.9 0 58 11.6 79.2 32.8A111.6 111.6 0 01624 502c0 29.9-11.7 58-32.8 79.2z&quot;
+                        /&gt;
+                      &lt;/svg&gt;
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-value&quot;
+                  &gt;
+                    &lt;span
+                      class=&quot;ant-statistic-content-value-int&quot;
+                    &gt;
+                      999,999
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-lg-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          style=&quot;padding-inline: 8px;&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-card ant-card-bordered h-full css-dev-only-do-not-override-1d8anct css-var-root&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-card-body&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-statistic css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  class=&quot;ant-statistic-header&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;ant-statistic-title&quot;
+                  &gt;
+                    活跃审批链
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div
+                  class=&quot;ant-statistic-content&quot;
+                  style=&quot;color: rgb(82, 196, 26);&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-statistic-content-prefix&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;check-circle&quot;
+                      class=&quot;anticon anticon-check-circle text-green-500&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=...
+    at Object.getElementError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:37:19)
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+    at Object.getByText (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(main)/admin/approval-chains/components/__tests__/ApprovalChainStats.test.tsx:78:19)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/(auth)/login/__tests__/page.test.tsx" errors="0" failures="4" skipped="0" timestamp="2026-02-02T13:49:59" time="8.732" tests="8">
+    <testcase classname="LoginPage › 渲染测试" name="应该渲染登录表单的所有必需元素" time="0.115">
+    </testcase>
+    <testcase classname="LoginPage › 渲染测试" name="应该渲染用户名和密码字段的图标" time="0.029">
+    </testcase>
+    <testcase classname="LoginPage › 渲染测试" name="应该具有正确的表单结构" time="0.837">
+      <failure>TestingLibraryElementError: Unable to find an accessible element with the role &quot;form&quot;
+
+Here are the accessible roles:
+
+  heading:
+
+  Name &quot;ITSM Pro&quot;:
+  &lt;h1
+    class=&quot;!text-white !mb-3 !text-3xl !font-bold&quot;
+    data-testid=&quot;login-title&quot;
+    level=&quot;1&quot;
+  /&gt;
+
+  Name &quot;欢迎回来&quot;:
+  &lt;h1
+    class=&quot;!mb-2 !text-gray-900 !text-2xl&quot;
+    data-testid=&quot;login-title&quot;
+    level=&quot;2&quot;
+  /&gt;
+
+  --------------------------------------------------
+  textbox:
+
+  Name &quot;&quot;:
+  &lt;input
+    data-testid=&quot;input-请输入用户名&quot;
+    placeholder=&quot;请输入用户名&quot;
+    type=&quot;text&quot;
+  /&gt;
+
+  --------------------------------------------------
+  checkbox:
+
+  Name &quot;记住我&quot;:
+  &lt;input
+    type=&quot;checkbox&quot;
+  /&gt;
+
+  --------------------------------------------------
+  button:
+
+  Name &quot;忘记密码？&quot;:
+  &lt;button
+    class=&quot;p-0 h-auto text-xs&quot;
+    data-testid=&quot;login-button&quot;
+    type=&quot;link&quot;
+  /&gt;
+
+  Name &quot;登录&quot;:
+  &lt;button
+    class=&quot;w-full h-10 rounded-md text-sm font-semibold&quot;
+    data-testid=&quot;login-button&quot;
+    icon=&quot;[object Object]&quot;
+    type=&quot;primary&quot;
+  /&gt;
+
+  Name &quot;SSO 单点登录&quot;:
+  &lt;button
+    class=&quot;w-full h-10 rounded-md text-sm&quot;
+    data-testid=&quot;login-button&quot;
+    icon=&quot;[object Object]&quot;
+    type=&quot;button&quot;
+  /&gt;
+
+  Name &quot;立即注册&quot;:
+  &lt;button
+    class=&quot;p-0 h-auto text-xs&quot;
+    data-testid=&quot;login-button&quot;
+    type=&quot;link&quot;
+  /&gt;
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div&gt;
+      &lt;div
+        class=&quot;min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50&quot;
+      &gt;
+        &lt;div
+          class=&quot;w-full max-w-[1000px]&quot;
+        &gt;
+          &lt;div
+            class=&quot;row&quot;
+          &gt;
+            &lt;div
+              class=&quot;col&quot;
+            &gt;
+              &lt;div
+                class=&quot;bg-gradient-to-br from-blue-600 to-blue-700 p-10 px-8 rounded-xl h-[480px] flex flex-col justify-center relative overflow-hidden&quot;
+              &gt;
+                &lt;div
+                  class=&quot;absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl&quot;
+                /&gt;
+                &lt;div
+                  class=&quot;relative z-10&quot;
+                &gt;
+                  &lt;h1
+                    class=&quot;!text-white !mb-3 !text-3xl !font-bold&quot;
+                    data-testid=&quot;login-title&quot;
+                    level=&quot;1&quot;
+                  &gt;
+                    ITSM Pro
+                  &lt;/h1&gt;
+                  &lt;span
+                    class=&quot;!text-white/90 !text-sm block !mb-8&quot;
+                    data-testid=&quot;text-default&quot;
+                  &gt;
+                    智能IT服务管理平台
+                  &lt;/span&gt;
+                  &lt;div
+                    class=&quot;w-full&quot;
+                    data-testid=&quot;space&quot;
+                    orientation=&quot;vertical&quot;
+                  &gt;
+                    &lt;div
+                      class=&quot;flex&quot;
+                    &gt;
+                      &lt;div
+                        class=&quot;w-8 h-8 bg-white/20 rounded-md flex items-center justify-center&quot;
+                      &gt;
+                        &lt;div
+                          data-testid=&quot;shield-icon&quot;
+                        &gt;
+                          Shield
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+                      &lt;div&gt;
+                        &lt;span
+                          class=&quot;!text-white !font-semibold !text-sm block&quot;
+                          data-testid=&quot;text-default&quot;
+                        &gt;
+                          企业级安全
+                        &lt;/span&gt;
+                        &lt;span
+                          class=&quot;!text-white/80 !text-xs&quot;
+                          data-testid=&quot;text-default&quot;
+                        &gt;
+                          多层安全防护
+                        &lt;/span&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div
+                      class=&quot;flex&quot;
+                    &gt;
+                      &lt;div
+                        class=&quot;w-8 h-8 bg-white/20 rounded-md flex items-center justify-center&quot;
+                      &gt;
+                        &lt;div
+                          data-testid=&quot;arrow-right-icon&quot;
+                        &gt;
+                          ArrowRight
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+                      &lt;div&gt;
+                        &lt;span
+                          class=&quot;!text-white !font-semibold !text-sm block&quot;
+                          data-testid=&quot;text-default&quot;
+                        &gt;
+                          智能自动化
+                        &lt;/span&gt;
+                        &lt;span
+                          class=&quot;!text-white/80 !text-xs&quot;
+                          data-testid=&quot;text-default&quot;
+                        &gt;
+                          AI驱动流程
+                        &lt;/span&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div
+              class=&quot;col&quot;
+            &gt;
+              &lt;div
+                class=&quot;rounded-xl shadow-xl border-none&quot;
+                data-testid=&quot;login-card&quot;
+                styles=&quot;[object Object]&quot;
+              &gt;
+                &lt;div
+                  class=&quot;text-center mb-6&quot;
+                &gt;
+                  &lt;h1
+                    class=&quot;!mb-2 !text-gray-900 !text-2xl&quot;
+                    data-testid=&quot;login-title&quot;
+                    level=&quot;2&quot;
+                  &gt;
+                    欢迎回来
+                  &lt;/h1&gt;
+                  &lt;span
+                    class=&quot;!text-gray-500 !text-sm&quot;
+                    data-testid=&quot;text-default&quot;
+                  &gt;
+                    请登录您的账户以继续使用服务
+                  &lt;/span&gt;
+                &lt;/div&gt;
+                &lt;form
+                  form=&quot;[object Object]&quot;
+                  layout=&quot;vertical&quot;
+                &gt;
+                  &lt;div&gt;
+                    &lt;div&gt;
+                      &lt;div
+                        data-testid=&quot;user-icon&quot;
+                      &gt;
+                        User
+                      &lt;/div&gt;
+                      &lt;input
+                        data-testid=&quot;input-请输入用户名&quot;
+                        placeholder=&quot;请输入用户名&quot;
+                        type=&quot;text&quot;
+                      /&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                  &lt;div&gt;
+                    &lt;div&gt;
+                      &lt;div
+                        data-testid=&quot;lock-icon&quot;
+                      &gt;
+                        Lock
+                      &lt;/div&gt;
+                      &lt;input
+                        data-testid=&quot;input-请输入密码&quot;
+                        placeholder=&quot;请输入密码&quot;
+                        type=&quot;password&quot;
+                      /&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                  &lt;div&gt;
+                    &lt;div
+                      class=&quot;flex&quot;
+                    &gt;
+                      &lt;label&gt;
+                        &lt;input
+                          type=&quot;checkbox&quot;
+                        /&gt;
+                        记住我
+                      &lt;/label&gt;
+                      &lt;button
+                        class=&quot;p-0 h-auto text-xs&quot;
+                        data-testid=&quot;login-button&quot;
+                        type=&quot;link&quot;
+                      &gt;
+                        忘记密码？
+                      &lt;/button&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                  &lt;div&gt;
+                    &lt;button
+                      class=&quot;w-full h-10 rounded-md text-sm font-semibold&quot;
+                      data-testid=&quot;login-button&quot;
+                      icon=&quot;[object Object]&quot;
+                      type=&quot;primary&quot;
+                    &gt;
+                      登录
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/form&gt;
+                &lt;div&gt;
+                  &lt;span
+                    class=&quot;text-gray-400 text-xs&quot;
+                    data-testid=&quot;text-default&quot;
+                  &gt;
+                    或
+                  &lt;/span&gt;
+                &lt;/div&gt;
+                &lt;button
+                  class=&quot;w-full h-10 rounded-md text-sm&quot;
+                  data-testid=&quot;login-button&quot;
+                  icon=&quot;[object Object]&quot;
+                  type=&quot;button&quot;
+                &gt;
+                  SSO 单点登录
+                &lt;/button&gt;
+                &lt;div
+                  class=&quot;text-center mt-5&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;text-gray-400 text-xs&quot;
+                    data-testid=&quot;text-default&quot;
+                  &gt;
+                    还没有账户？
+                     
+                    &lt;button
+                      class=&quot;p-0 h-auto text-xs&quot;
+                      data-testid=&quot;login-button&quot;
+                      type=&quot;link&quot;
+                    &gt;
+                      立即注册
+                    &lt;/button&gt;
+                  &lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+    at Object.getElementError (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:37:19)
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+    at /Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+    at Object.getByRole (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)/login/__tests__/page.test.tsx:225:21)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="LoginPage › 表单交互" name="应该允许用户在用户名和密码字段中输入" time="0.207">
+    </testcase>
+    <testcase classname="LoginPage › 表单交互" name="应该处理表单提交" time="0.321">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;testuser&quot;, &quot;testpass&quot;
+Received: undefined, undefined
+
+Number of calls: 1
+    at Object.toHaveBeenCalledWith (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)/login/__tests__/page.test.tsx:264:25)</failure>
+    </testcase>
+    <testcase classname="LoginPage › 认证流程" name="应该处理成功登录" time="1.239">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;登录成功&quot;
+
+Number of calls: 0
+
+Ignored nodes: comments, script, style
+&lt;html&gt;
+  &lt;head /&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      &lt;div&gt;
+        &lt;div
+          class=&quot;min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50&quot;
+        &gt;
+          &lt;div
+            class=&quot;w-full max-w-[1000px]&quot;
+          &gt;
+            &lt;div
+              class=&quot;row&quot;
+            &gt;
+              &lt;div
+                class=&quot;col&quot;
+              &gt;
+                &lt;div
+                  class=&quot;bg-gradient-to-br from-blue-600 to-blue-700 p-10 px-8 rounded-xl h-[480px] flex flex-col justify-center relative overflow-hidden&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl&quot;
+                  /&gt;
+                  &lt;div
+                    class=&quot;relative z-10&quot;
+                  &gt;
+                    &lt;h1
+                      class=&quot;!text-white !mb-3 !text-3xl !font-bold&quot;
+                      data-testid=&quot;login-title&quot;
+                      level=&quot;1&quot;
+                    &gt;
+                      ITSM Pro
+                    &lt;/h1&gt;
+                    &lt;span
+                      class=&quot;!text-white/90 !text-sm block !mb-8&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      智能IT服务管理平台
+                    &lt;/span&gt;
+                    &lt;div
+                      class=&quot;w-full&quot;
+                      data-testid=&quot;space&quot;
+                      orientation=&quot;vertical&quot;
+                    &gt;
+                      &lt;div
+                        class=&quot;flex&quot;
+                      &gt;
+                        &lt;div
+                          class=&quot;w-8 h-8 bg-white/20 rounded-md flex items-center justify-center&quot;
+                        &gt;
+                          &lt;div
+                            data-testid=&quot;shield-icon&quot;
+                          &gt;
+                            Shield
+                          &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div&gt;
+                          &lt;span
+                            class=&quot;!text-white !font-semibold !text-sm block&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            企业级安全
+                          &lt;/span&gt;
+                          &lt;span
+                            class=&quot;!text-white/80 !text-xs&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            多层安全防护
+                          &lt;/span&gt;
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+                      &lt;div
+                        class=&quot;flex&quot;
+                      &gt;
+                        &lt;div
+                          class=&quot;w-8 h-8 bg-white/20 rounded-md flex items-center justify-center&quot;
+                        &gt;
+                          &lt;div
+                            data-testid=&quot;arrow-right-icon&quot;
+                          &gt;
+                            ArrowRight
+                          &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div&gt;
+                          &lt;span
+                            class=&quot;!text-white !font-semibold !text-sm block&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            智能自动化
+                          &lt;/span&gt;
+                          &lt;span
+                            class=&quot;!text-white/80 !text-xs&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            AI驱动流程
+                          &lt;/span&gt;
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;col&quot;
+              &gt;
+                &lt;div
+                  class=&quot;rounded-xl shadow-xl border-none&quot;
+                  data-testid=&quot;login-card&quot;
+                  styles=&quot;[object Object]&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;text-center mb-6&quot;
+                  &gt;
+                    &lt;h1
+                      class=&quot;!mb-2 !text-gray-900 !text-2xl&quot;
+                      data-testid=&quot;login-title&quot;
+                      level=&quot;2&quot;
+                    &gt;
+                      欢迎回来
+                    &lt;/h1&gt;
+                    &lt;span
+                      class=&quot;!text-gray-500 !text-sm&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      请登录您的账户以继续使用服务
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                  &lt;form
+                    form=&quot;[object Object]&quot;
+                    layout=&quot;vertical&quot;
+                  &gt;
+                    &lt;div&gt;
+                      &lt;div&gt;
+                        &lt;div
+                          data-testid=&quot;user-icon&quot;
+                        &gt;
+                          User
+                        &lt;/div&gt;
+                        &lt;input
+                          data-testid=&quot;input-请输入用户名&quot;
+                          placeholder=&quot;请输入用户名&quot;
+                          type=&quot;text&quot;
+                        /&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;div&gt;
+                        &lt;div
+                          data-testid=&quot;lock-icon&quot;
+                        &gt;
+                          Lock
+                        &lt;/div&gt;
+                        &lt;input
+                          data-testid=&quot;input-请输入密码&quot;
+                          placeholder=&quot;请输入密码&quot;
+                          type=&quot;password&quot;
+                        /&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;div
+                        class=&quot;flex&quot;
+                      &gt;
+                        &lt;label&gt;
+                          &lt;input
+                            type=&quot;checkbox&quot;
+                          /&gt;
+                          记住我
+                        &lt;/label&gt;
+                        &lt;button
+                          class=&quot;p-0 h-auto text-xs&quot;
+                          data-testid=&quot;login-button&quot;
+                          type=&quot;link&quot;
+                        &gt;
+                          忘记密码？
+                        &lt;/button&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;button
+                        class=&quot;w-full h-10 rounded-md text-sm font-semibold&quot;
+                        data-testid=&quot;login-button&quot;
+                        icon=&quot;[object Object]&quot;
+                        type=&quot;primary&quot;
+                      &gt;
+                        登录
+                      &lt;/button&gt;
+                    &lt;/div&gt;
+                  &lt;/form&gt;
+                  &lt;div&gt;
+                    &lt;span
+                      class=&quot;text-gray-400 text-xs&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      或
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                  &lt;button
+                    class=&quot;w-full h-10 rounded-md text-sm&quot;
+                    data-testid=&quot;login-button&quot;
+                    icon=&quot;[object Object]&quot;
+                    type=&quot;button&quot;
+                  &gt;
+                    SSO 单点登录
+                  &lt;/button&gt;
+                  &lt;div
+                    class=&quot;text-center mt-5&quot;
+                  &gt;
+                    &lt;span
+                      class=&quot;text-gray-400 text-xs&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      还没有账户？
+                       
+                      &lt;button
+                        class=&quot;p-0 h-auto text-xs&quot;
+                        data-testid=&quot;login-button&quot;
+                        type=&quot;link&quot;
+                      &gt;
+                        立即注册
+                      &lt;/button&gt;
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+    at toHaveBeenCalledWith (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)/login/__tests__/page.test.tsx:288:29)
+    at runWithExpensiveErrorDiagnosticsDisabled (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:47:12)
+    at checkCallback (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+    at checkRealTimersCallback (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+    at Timeout.task [as _onTimeout] (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jsdom/lib/jsdom/browser/Window.js:520:19)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7)</failure>
+    </testcase>
+    <testcase classname="LoginPage › 认证流程" name="应该处理登录失败并显示错误信息" time="1.335">
+      <failure>Error: expect(element).toHaveTextContent()
+
+Expected element to have text content:
+  用户名或密码错误
+Received:
+  登录失败
+
+Ignored nodes: comments, script, style
+&lt;html&gt;
+  &lt;head /&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      &lt;div&gt;
+        &lt;div
+          class=&quot;min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50&quot;
+        &gt;
+          &lt;div
+            class=&quot;w-full max-w-[1000px]&quot;
+          &gt;
+            &lt;div
+              class=&quot;row&quot;
+            &gt;
+              &lt;div
+                class=&quot;col&quot;
+              &gt;
+                &lt;div
+                  class=&quot;bg-gradient-to-br from-blue-600 to-blue-700 p-10 px-8 rounded-xl h-[480px] flex flex-col justify-center relative overflow-hidden&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl&quot;
+                  /&gt;
+                  &lt;div
+                    class=&quot;relative z-10&quot;
+                  &gt;
+                    &lt;h1
+                      class=&quot;!text-white !mb-3 !text-3xl !font-bold&quot;
+                      data-testid=&quot;login-title&quot;
+                      level=&quot;1&quot;
+                    &gt;
+                      ITSM Pro
+                    &lt;/h1&gt;
+                    &lt;span
+                      class=&quot;!text-white/90 !text-sm block !mb-8&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      智能IT服务管理平台
+                    &lt;/span&gt;
+                    &lt;div
+                      class=&quot;w-full&quot;
+                      data-testid=&quot;space&quot;
+                      orientation=&quot;vertical&quot;
+                    &gt;
+                      &lt;div
+                        class=&quot;flex&quot;
+                      &gt;
+                        &lt;div
+                          class=&quot;w-8 h-8 bg-white/20 rounded-md flex items-center justify-center&quot;
+                        &gt;
+                          &lt;div
+                            data-testid=&quot;shield-icon&quot;
+                          &gt;
+                            Shield
+                          &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div&gt;
+                          &lt;span
+                            class=&quot;!text-white !font-semibold !text-sm block&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            企业级安全
+                          &lt;/span&gt;
+                          &lt;span
+                            class=&quot;!text-white/80 !text-xs&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            多层安全防护
+                          &lt;/span&gt;
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+                      &lt;div
+                        class=&quot;flex&quot;
+                      &gt;
+                        &lt;div
+                          class=&quot;w-8 h-8 bg-white/20 rounded-md flex items-center justify-center&quot;
+                        &gt;
+                          &lt;div
+                            data-testid=&quot;arrow-right-icon&quot;
+                          &gt;
+                            ArrowRight
+                          &lt;/div&gt;
+                        &lt;/div&gt;
+                        &lt;div&gt;
+                          &lt;span
+                            class=&quot;!text-white !font-semibold !text-sm block&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            智能自动化
+                          &lt;/span&gt;
+                          &lt;span
+                            class=&quot;!text-white/80 !text-xs&quot;
+                            data-testid=&quot;text-default&quot;
+                          &gt;
+                            AI驱动流程
+                          &lt;/span&gt;
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;col&quot;
+              &gt;
+                &lt;div
+                  class=&quot;rounded-xl shadow-xl border-none&quot;
+                  data-testid=&quot;login-card&quot;
+                  styles=&quot;[object Object]&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;text-center mb-6&quot;
+                  &gt;
+                    &lt;h1
+                      class=&quot;!mb-2 !text-gray-900 !text-2xl&quot;
+                      data-testid=&quot;login-title&quot;
+                      level=&quot;2&quot;
+                    &gt;
+                      欢迎回来
+                    &lt;/h1&gt;
+                    &lt;span
+                      class=&quot;!text-gray-500 !text-sm&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      请登录您的账户以继续使用服务
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                  &lt;div
+                    data-testid=&quot;alert&quot;
+                  &gt;
+                    登录失败
+                  &lt;/div&gt;
+                  &lt;form
+                    form=&quot;[object Object]&quot;
+                    layout=&quot;vertical&quot;
+                  &gt;
+                    &lt;div&gt;
+                      &lt;div&gt;
+                        &lt;div
+                          data-testid=&quot;user-icon&quot;
+                        &gt;
+                          User
+                        &lt;/div&gt;
+                        &lt;input
+                          data-testid=&quot;input-请输入用户名&quot;
+                          placeholder=&quot;请输入用户名&quot;
+                          type=&quot;text&quot;
+                        /&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;div&gt;
+                        &lt;div
+                          data-testid=&quot;lock-icon&quot;
+                        &gt;
+                          Lock
+                        &lt;/div&gt;
+                        &lt;input
+                          data-testid=&quot;input-请输入密码&quot;
+                          placeholder=&quot;请输入密码&quot;
+                          type=&quot;password&quot;
+                        /&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;div
+                        class=&quot;flex&quot;
+                      &gt;
+                        &lt;label&gt;
+                          &lt;input
+                            type=&quot;checkbox&quot;
+                          /&gt;
+                          记住我
+                        &lt;/label&gt;
+                        &lt;button
+                          class=&quot;p-0 h-auto text-xs&quot;
+                          data-testid=&quot;login-button&quot;
+                          type=&quot;link&quot;
+                        &gt;
+                          忘记密码？
+                        &lt;/button&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;button
+                        class=&quot;w-full h-10 rounded-md text-sm font-semibold&quot;
+                        data-testid=&quot;login-button&quot;
+                        icon=&quot;[object Object]&quot;
+                        type=&quot;primary&quot;
+                      &gt;
+                        登录
+                      &lt;/button&gt;
+                    &lt;/div&gt;
+                  &lt;/form&gt;
+                  &lt;div&gt;
+                    &lt;span
+                      class=&quot;text-gray-400 text-xs&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      或
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                  &lt;button
+                    class=&quot;w-full h-10 rounded-md text-sm&quot;
+                    data-testid=&quot;login-button&quot;
+                    icon=&quot;[object Object]&quot;
+                    type=&quot;button&quot;
+                  &gt;
+                    SSO 单点登录
+                  &lt;/button&gt;
+                  &lt;div
+                    class=&quot;text-center mt-5&quot;
+                  &gt;
+                    &lt;span
+                      class=&quot;text-gray-400 text-xs&quot;
+                      data-testid=&quot;text-default&quot;
+                    &gt;
+                      还没有账户？
+                       
+                      &lt;button
+                        class=&quot;p-0 h-auto text-xs&quot;
+                        data-testid=&quot;login-button&quot;
+                        type=&quot;link&quot;
+                      &gt;
+                        立即注册
+                      &lt;/button&gt;
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+    at toHaveTextContent (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/app/(auth)/login/__tests__/page.test.tsx:313:45)
+    at runWithExpensiveErrorDiagnosticsDisabled (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/config.js:47:12)
+    at checkCallback (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+    at checkRealTimersCallback (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+    at Timeout.task [as _onTimeout] (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jsdom/lib/jsdom/browser/Window.js:520:19)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7)</failure>
+    </testcase>
+    <testcase classname="LoginPage › 边界情况" name="应该处理AuthService返回undefined" time="0.246">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/__tests__/pages/dashboard-page.test.tsx" errors="0" failures="1" skipped="0" timestamp="2026-02-02T13:49:59" time="8.865" tests="6">
+    <testcase classname="DashboardPage › 页面渲染" name="应该正确渲染仪表盘页面" time="1.748">
+      <failure>Error: Found multiple elements by: [data-testid=&quot;card&quot;]
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+&lt;div
+  class=&quot;h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200&quot;
+  data-testid=&quot;card&quot;
+&gt;
+  &lt;div
+    class=&quot;flex flex-col h-full&quot;
+  &gt;
+    &lt;div
+      class=&quot;flex items-start justify-between mb-4&quot;
+    &gt;
+      &lt;div
+        class=&quot;w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200&quot;
+        style=&quot;background-color: rgba(59, 130, 246, 0.082);&quot;
+      &gt;
+        &lt;div
+          style=&quot;color: rgb(59, 130, 246);&quot;
+        &gt;
+          &lt;div
+            data-testid=&quot;icon-dashboard&quot;
+          /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div
+        class=&quot;text-sm font-semibold flex items-center gap-1 text-green-500&quot;
+      &gt;
+        &lt;div
+          data-testid=&quot;icon-arrow-up&quot;
+        /&gt;
+        +
+        12.5
+        %
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;mb-3&quot;
+    &gt;
+      &lt;h3
+        class=&quot;text-base font-semibold text-gray-800 leading-tight line-clamp-2&quot;
+      &gt;
+         
+        总工单数
+      &lt;/h3&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;flex-1 flex flex-col justify-center mb-3&quot;
+    &gt;
+      &lt;div
+        class=&quot;flex items-baseline gap-2&quot;
+      &gt;
+        &lt;span
+          class=&quot;text-4xl font-bold leading-none&quot;
+          style=&quot;color: rgb(59, 130, 246);&quot;
+        &gt;
+          1,250
+        &lt;/span&gt;
+        &lt;span
+          class=&quot;text-base font-medium text-gray-500&quot;
+        &gt;
+          个
+        &lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;mt-auto pt-3 border-t border-gray-100&quot;
+    &gt;
+      &lt;span
+        class=&quot;text-xs text-gray-500&quot;
+      &gt;
+        相比上期
+        &lt;span
+          class=&quot;ml-2 font-semibold&quot;
+          style=&quot;color: rgb(16, 185, 129);&quot;
+        &gt;
+          ↑
+           
+          12.5
+          %
+        &lt;/span&gt;
+      &lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+Ignored nodes: comments, script, style
+&lt;div
+  class=&quot;h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200&quot;
+  data-testid=&quot;card&quot;
+&gt;
+  &lt;div
+    class=&quot;flex flex-col h-full&quot;
+  &gt;
+    &lt;div
+      class=&quot;flex items-start justify-between mb-4&quot;
+    &gt;
+      &lt;div
+        class=&quot;w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200&quot;
+        style=&quot;background-color: rgba(245, 158, 11, 0.082);&quot;
+      &gt;
+        &lt;div
+          style=&quot;color: rgb(245, 158, 11);&quot;
+        &gt;
+          &lt;div
+            data-testid=&quot;icon-dashboard&quot;
+          /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div
+        class=&quot;text-sm font-semibold flex items-center gap-1 text-red-500&quot;
+      &gt;
+        &lt;div
+          data-testid=&quot;icon-arrow-down&quot;
+        /&gt;
+        +
+        8.3
+        %
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;mb-3&quot;
+    &gt;
+      &lt;h3
+        class=&quot;text-base font-semibold text-gray-800 leading-tight line-clamp-2&quot;
+      &gt;
+         
+        待处理工单
+      &lt;/h3&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;flex-1 flex flex-col justify-center mb-3&quot;
+    &gt;
+      &lt;div
+        class=&quot;flex items-baseline gap-2&quot;
+      &gt;
+        &lt;span
+          class=&quot;text-4xl font-bold leading-none&quot;
+          style=&quot;color: rgb(245, 158, 11);&quot;
+        &gt;
+          320
+        &lt;/span&gt;
+        &lt;span
+          class=&quot;text-base font-medium text-gray-500&quot;
+        &gt;
+          个
+        &lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;mt-auto pt-3 border-t border-gray-100&quot;
+    &gt;
+      &lt;span
+        class=&quot;text-xs text-gray-500&quot;
+      &gt;
+        相比上期
+        &lt;span
+          class=&quot;ml-2 font-semibold&quot;
+          style=&quot;color: rgb(239, 68, 68);&quot;
+        &gt;
+          ↓
+           
+          8.3
+          %
+        &lt;/span&gt;
+      &lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+Ignored nodes: comments, script, style
+&lt;div
+  class=&quot;rounded-xl border-0 shadow-sm&quot;
+  data-testid=&quot;card&quot;
+&gt;
+  &lt;div
+    class=&quot;mb-5&quot;
+  &gt;
+    &lt;h2
+      class=&quot;text-lg font-bold text-gray-900 mb-1 flex items-center gap-2&quot;
+    &gt;
+      &lt;div
+        data-testid=&quot;icon-line-chart&quot;
+      /&gt;
+      数据分析与趋势
+    &lt;/h2&gt;
+    &lt;p
+      class=&quot;text-sm text-gray-600&quot;
+    &gt;
+      系统性能和业务趋势的可视化分析
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div
+    class=&quot;ant-tabs ant-tabs-top ant-tabs-large css-dev-only-do-not-override-1d8anct css-var-root ant-tabs-css-var&quot;
+  &gt;
+    &lt;div
+      aria-orientation=&quot;horizontal&quot;
+      class=&quot;ant-tabs-nav&quot;
+      role=&quot;tablist&quot;
+    &gt;
+      &lt;div
+        class=&quot;ant-tabs-nav-wrap&quot;
+      &gt;
+        &lt;div
+          class=&quot;ant-tabs-nav-list&quot;
+          style=&quot;transform: translate(0px, 0px);&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-tabs-tab ant-tabs-tab-active&quot;
+            data-node-key=&quot;all&quot;
+          &gt;
+            &lt;div
+              aria-controls=&quot;rc-tabs-test-panel-all&quot;
+              aria-selected=&quot;true&quot;
+              class=&quot;ant-tabs-tab-btn&quot;
+              id=&quot;rc-tabs-test-tab-all&quot;
+              role=&quot;tab&quot;
+              tabindex=&quot;0&quot;
+            &gt;
+              &lt;span
+                class=&quot;flex items-center gap-2&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;icon-dashboard&quot;
+                /&gt;
+                全部图表
+              &lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div
+            class=&quot;ant-tabs-tab&quot;
+            data-node-key=&quot;tickets&quot;
+          &gt;
+            &lt;div
+              aria-controls=&quot;rc-tabs-test-panel-tickets&quot;
+              aria-selected=&quot;false&quot;
+              class=&quot;ant-tabs-tab-btn&quot;
+              id=&quot;rc-tabs-test-tab-tickets&quot;
+              role=&quot;tab&quot;
+              tabindex=&quot;-1&quot;
+            &gt;
+              &lt;span
+                class=&quot;flex items-center gap-2&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;icon-line-chart&quot;
+                /&gt;
+                工单与事件
+              &lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div
+            class=&quot;ant-tabs-tab&quot;
+            data-node-key=&quot;performance&quot;
+          &gt;
+            &lt;div
+              aria-controls=&quot;rc-tabs-test-panel-performance&quot;
+              aria-selected=&quot;false&quot;
+              class=&quot;ant-tabs-tab-btn&quot;
+              id=&quot;rc-tabs-test-tab-performance&quot;
+              role=&quot;tab&quot;
+              tabindex=&quot;-1&quot;
+            &gt;
+              &lt;span
+                class=&quot;flex items-center gap-2&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;icon-trending-up&quot;
+                /&gt;
+                性能与满意度
+              &lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div
+            class=&quot;ant-tabs-ink-bar ant-tabs-ink-bar-animated&quot;
+            style=&quot;width: 0px; left: 0px; transform: translateX(-50%);&quot;
+          /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div
+        class=&quot;ant-tabs-nav-operations ant-tabs-nav-operations-hidden&quot;
+      &gt;
+        &lt;button
+          aria-controls=&quot;rc-tabs-test-more-popup&quot;
+          aria-expanded=&quot;false&quot;
+          aria-haspopup=&quot;listbox&quot;
+          class=&quot;ant-tabs-nav-more&quot;
+          id=&quot;rc-tabs-test-more&quot;
+          style=&quot;visibility: hidden; order: 1;&quot;
+          type=&quot;button&quot;
+        &gt;
+          &lt;span
+            aria-label=&quot;ellipsis&quot;
+            class=&quot;anticon anticon-ellipsis&quot;
+            role=&quot;img&quot;
+          &gt;
+            &lt;svg
+              aria-hidden=&quot;true&quot;
+              data-icon=&quot;ellipsis&quot;
+              fill=&quot;currentColor&quot;
+              focusable=&quot;false&quot;
+              height=&quot;1em&quot;
+              viewBox=&quot;64 64 896 896&quot;
+              width=&quot;1em&quot;
+            &gt;
+              &lt;path
+                d=&quot;M176 511a56 56 0 10112 0 56 56 0 10-112 0zm280 0a56 56 0 10112 0 56 56 0 10-112 0zm280 0a56 56 0 10112 0 56 56 0 10-112 0z&quot;
+              /&gt;
+            &lt;/svg&gt;
+          &lt;/span&gt;
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div
+      class=&quot;ant-tabs-content-holder&quot;
+    &gt;
+      &lt;div
+        class=&quot;ant-tabs-content ant-tabs-content-top&quot;
+      &gt;
+        &lt;div
+          aria-hidden=&quot;false&quot;
+          aria-labelledby=&quot;rc-tabs-test-tab-all&quot;
+          class=&quot;ant-tabs-tabpane ant-tabs-tabpane-active&quot;
+          id=&quot;rc-tabs-test-panel-all&quot;
+          role=&quot;tabpanel&quot;
+          tabindex=&quot;0&quot;
+        &gt;
+          &lt;div
+            class=&quot;pt-4&quot;
+          &gt;
+            &lt;div
+              data-testid=&quot;charts-section&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;ticket-trend-chart&quot;
+                &gt;
+                  TicketTrendChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;incident-distribution-chart&quot;
+                &gt;
+                  IncidentDistributionChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;response-time-chart&quot;
+                &gt;
+                  ResponseTimeChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;team-workload-chart&quot;
+                &gt;
+                  TeamWorkloadChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;sla-compliance-chart&quot;
+                &gt;
+                  SLAComplianceChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;peak-hours-chart&quot;
+                &gt;
+                  PeakHoursChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-col ant-col-xs-24 ant-col-lg-12 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;user-satisfaction-chart&quot;
+                &gt;
+                  UserSatisfactionChart
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;p-6 min-h-screen bg-gray-50&quot;
+    &gt;
+      &lt;div
+        class=&quot;flex items-center justify-between mb-6 pb-4 border-b border-gray-200&quot;
+      &gt;
+        &lt;div&gt;
+          &lt;h1
+            class=&quot;text-2xl font-bold text-gray-900 flex items-center gap-2&quot;
+          &gt;
+            ITSM 运营仪表盘
+            &lt;span
+              class=&quot;ant-badge ant-badge-status ant-badge-not-a-wrapper css-dev-only-do-not-override-1d8anct css-var-root&quot;
+            &gt;
+              &lt;span
+                class=&quot;ant-badge-status-dot ant-badge-status-success&quot;
+              /&gt;
+              &lt;span
+                class=&quot;ant-badge-status-text&quot;
+              &gt;
+                在线
+              &lt;/span&gt;
+            &lt;/span&gt;
+          &lt;/h1&gt;
+          &lt;p
+            class=&quot;text-sm text-gray-600 mt-1&quot;
+          &gt;
+            实时监控系统运行状态和关键业务指标
+          &lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div
+          class=&quot;ant-space css-dev-only-do-not-override-1d8anct ant-space-horizontal ant-space-align-center ant-space-gap-row-middle ant-space-gap-col-middle css-var-root&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-space-item&quot;
+          &gt;
+            &lt;span
+              class=&quot;text-sm text-gray-500&quot;
+            &gt;
+              更新于 
+              21:50:06
+            &lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div
+            class=&quot;ant-space-item&quot;
+          &gt;
+            &lt;button
+              class=&quot;ant-btn css-dev-only-do-not-override-1d8anct css-var-root ant-btn-default ant-btn-color-default ant-btn-variant-outlined&quot;
+              type=&quot;button&quot;
+            &gt;
+              &lt;span
+                class=&quot;ant-btn-icon&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;icon-refresh&quot;
+                /&gt;
+              &lt;/span&gt;
+              &lt;span&gt;
+                刷新
+              &lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+          &lt;div
+            class=&quot;ant-space-item&quot;
+          &gt;
+            &lt;button
+              class=&quot;ant-btn css-dev-only-do-not-override-1d8anct css-var-root ant-btn-default ant-btn-color-default ant-btn-variant-outlined ant-dropdown-trigger&quot;
+              type=&quot;button&quot;
+            &gt;
+              &lt;span
+                class=&quot;ant-btn-icon&quot;
+              &gt;
+                &lt;div
+                  data-testid=&quot;icon-settings&quot;
+                /&gt;
+              &lt;/span&gt;
+              &lt;span&gt;
+                设置
+              &lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div
+        class=&quot;mb-6&quot;
+      &gt;
+        &lt;div
+          class=&quot;mb-6&quot;
+        &gt;
+          &lt;div
+            class=&quot;ant-row css-dev-only-do-not-override-1d8anct css-var-root&quot;
+            style=&quot;margin-inline: -8px; row-gap: 16px;&quot;
+          &gt;
+            &lt;div
+              class=&quot;ant-col ant-col-xs-24 ant-col-sm-12 ant-col-md-12 ant-col-lg-8 ant-col-xl-6 ant-col-xxl-6 css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              style=&quot;padding-inline: 8px;&quot;
+            &gt;
+              &lt;div
+                class=&quot;h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200&quot;
+                data-testid=&quot;card&quot;
+              &gt;
+                &lt;div
+                  class=&quot;flex flex-col h-full&quot;
+                &gt;
+                  &lt;div
+                    class=&quot;flex items-start justify-between mb-4&quot;
+                  &gt;
+                    &lt;div
+                      class=&quot;w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200&quot;
+                      style=&quot;background-color: rgba(59, 130, 246, 0.082);&quot;
+                    &gt;
+                      &lt;div
+                        style=&quot;color: rgb(59, 130, 246);&quot;
+                      &gt;
+                        &lt;div
+                          data-testid=&quot;icon-dashboard&quot;
+                        /&gt;
+                      &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div
+                      class=&quot;text-sm font-semibold flex items-center gap-1 text-green-500&quot;
+                    &gt;
+                      &lt;div
+                        data-testid=&quot;icon-arrow-up&quot;
+                      /&gt;
+                      +
+                      12.5
+                      %
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                  &lt;div
+                    class=&quot;mb-3&quot;
+                  &gt;
+                    &lt;h3
+                      class=&quot;text-base font-semibold text-gray-800 leading-tight line-clamp-2&quot;
+                    &gt;
+                       
+                      总工单数
+                    &lt;/h3&gt;
+                  &lt;/div&gt;
+                  &lt;div
+                    class=&quot;flex-1 flex flex-col justify-center mb-3&quot;
+                  &gt;
+                    &lt;div
+                      class=&quot;flex items-baseline gap-2&quot;
+                    &gt;
+                      &lt;span
+                        class=&quot;text-4xl font-bold leading-none&quot;
+                        style=&quot;color: rgb(59, 130, 246);&quot;
+                      &gt;
+                        1,250
+                      &lt;/span&gt;
+                      &lt;span
+                        class=&quot;t...
+    at waitForWrapper (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+    at Object.&lt;anonymous&gt; (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/__tests__/pages/dashboard-page.test.tsx:239:20)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="DashboardPage › 页面渲染" name="应该显示仪表盘标题" time="0.159">
+    </testcase>
+    <testcase classname="DashboardPage › KPI 指标卡片" name="应该显示总工单数" time="0.173">
+    </testcase>
+    <testcase classname="DashboardPage › KPI 指标卡片" name="应该显示未解决工单数" time="0.18">
+    </testcase>
+    <testcase classname="DashboardPage › 加载状态" name="应该显示加载状态" time="0.095">
+    </testcase>
+    <testcase classname="DashboardPage › 错误处理" name="应该显示错误信息" time="0.025">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/__tests__/pages/tickets-page.test.tsx" errors="0" failures="1" skipped="0" timestamp="2026-02-02T13:49:59" time="9.208" tests="5">
+    <testcase classname="TicketsPage › 页面渲染" name="应该正确渲染工单列表页面" time="0.81">
+    </testcase>
+    <testcase classname="TicketsPage › 页面渲染" name="应该显示工单数据" time="0.248">
+    </testcase>
+    <testcase classname="TicketsPage › 页面渲染" name="应该显示工单编号" time="0.249">
+    </testcase>
+    <testcase classname="TicketsPage › 筛选功能" name="应该渲染筛选区域" time="1.18">
+      <failure>Error: Found multiple elements with the text: /高级搜索/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+&lt;span&gt;
+  高级搜索
+&lt;/span&gt;
+
+Ignored nodes: comments, script, style
+&lt;div
+  class=&quot;ant-alert-description&quot;
+&gt;
+  现在支持列表视图、看板视图、高级搜索、统计分析等完整功能，提供更高效的工单管理体验。
+&lt;/div&gt;
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+&lt;body&gt;
+  &lt;div&gt;
+    &lt;div
+      class=&quot;min-h-screen bg-gray-50&quot;
+    &gt;
+      &lt;div
+        class=&quot;bg-white border-b border-gray-200&quot;
+      &gt;
+        &lt;div
+          class=&quot;w-full px-6 py-4&quot;
+        &gt;
+          &lt;div
+            class=&quot;flex items-center justify-between&quot;
+          &gt;
+            &lt;div&gt;
+              &lt;h2
+                class=&quot;ant-typography css-dev-only-do-not-override-1d8anct css-var-root&quot;
+                style=&quot;margin-bottom: 0px;&quot;
+              &gt;
+                工单管理
+              &lt;/h2&gt;
+              &lt;span
+                class=&quot;ant-typography ant-typography-secondary css-dev-only-do-not-override-1d8anct css-var-root&quot;
+              &gt;
+                全功能工单管理系统 - 支持列表、看板、分析多种视图
+              &lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div
+              class=&quot;ant-space css-dev-only-do-not-override-1d8anct ant-space-horizontal ant-space-align-center ant-space-gap-row-small ant-space-gap-col-small css-var-root&quot;
+            &gt;
+              &lt;div
+                class=&quot;ant-space-item&quot;
+              &gt;
+                &lt;button
+                  class=&quot;ant-btn css-dev-only-do-not-override-1d8anct css-var-root ant-btn-default ant-btn-color-default ant-btn-variant-outlined&quot;
+                  type=&quot;button&quot;
+                &gt;
+                  &lt;span
+                    class=&quot;ant-btn-icon&quot;
+                  &gt;
+                    &lt;span
+                      aria-label=&quot;search&quot;
+                      class=&quot;anticon anticon-search&quot;
+                      role=&quot;img&quot;
+                    &gt;
+                      &lt;svg
+                        aria-hidden=&quot;true&quot;
+                        data-icon=&quot;search&quot;
+                        fill=&quot;currentColor&quot;
+                        focusable=&quot;false&quot;
+                        height=&quot;1em&quot;
+                        viewBox=&quot;64 64 896 896&quot;
+                        width=&quot;1em&quot;
+                      &gt;
+                        &lt;path
+                          d=&quot;M909.6 854.5L649.9 594.8C690.2 542.7 712 479 712 412c0-80.2-31.3-155.4-87.9-212.1-56.6-56.7-132-87.9-212.1-87.9s-155.5 31.3-212.1 87.9C143.2 256.5 112 331.8 112 412c0 80.1 31.3 155.5 87.9 212.1C256.5 680.8 331.8 712 412 712c67 0 130.6-21.8 182.7-62l259.7 259.6a8.2 8.2 0 0011.6 0l43.6-43.5a8.2 8.2 0 000-11.6zM570.4 570.4C528 612.7 471.8 636 412 636s-116-23.3-158.4-65.6C211.3 528 188 471.8 188 412s23.3-116.1 65.6-158.4C296 211.3 352.2 188 412 188s116.1 23.2 158.4 65.6S636 352.2 636 412s-23.3 116.1-65.6 158.4z&quot;
+                        /&gt;
+                      &lt;/svg&gt;
+                    &lt;/span&gt;
+                  &lt;/span&gt;
+                  &lt;span&gt;
+                    高级搜索
+                  &lt;/span&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-space-item&quot;
+              &gt;
+                &lt;span
+                  class=&quot;ant-badge css-dev-only-do-not-override-1d8anct css-var-root&quot;
+                &gt;
+                  &lt;button
+                    class=&quot;ant-btn css-dev-only-do-not-override-1d8anct css-var-root ant-btn-default ant-btn-color-default ant-btn-variant-outlined&quot;
+                    type=&quot;button&quot;
+                  &gt;
+                    &lt;span
+                      class=&quot;ant-btn-icon&quot;
+                    &gt;
+                      &lt;span
+                        aria-label=&quot;bell&quot;
+                        class=&quot;anticon anticon-bell&quot;
+                        role=&quot;img&quot;
+                      &gt;
+                        &lt;svg
+                          aria-hidden=&quot;true&quot;
+                          data-icon=&quot;bell&quot;
+                          fill=&quot;currentColor&quot;
+                          focusable=&quot;false&quot;
+                          height=&quot;1em&quot;
+                          viewBox=&quot;64 64 896 896&quot;
+                          width=&quot;1em&quot;
+                        &gt;
+                          &lt;path
+                            d=&quot;M816 768h-24V428c0-141.1-104.3-257.7-240-277.1V112c0-22.1-17.9-40-40-40s-40 17.9-40 40v38.9c-135.7 19.4-240 136-240 277.1v340h-24c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h216c0 61.8 50.2 112 112 112s112-50.2 112-112h216c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM512 888c-26.5 0-48-21.5-48-48h96c0 26.5-21.5 48-48 48zM304 768V428c0-55.6 21.6-107.8 60.9-147.1S456.4 220 512 220c55.6 0 107.8 21.6 147.1 60.9S720 372.4 720 428v340H304z&quot;
+                          /&gt;
+                        &lt;/svg&gt;
+                      &lt;/span&gt;
+                    &lt;/span&gt;
+                    &lt;span&gt;
+                      SLA预警
+                    &lt;/span&gt;
+                  &lt;/button&gt;
+                  &lt;sup
+                    class=&quot;ant-scroll-number ant-badge-count ant-badge-count-sm&quot;
+                    data-show=&quot;true&quot;
+                    title=&quot;1&quot;
+                  &gt;
+                    &lt;bdi&gt;
+                      &lt;span
+                        class=&quot;ant-scroll-number-only&quot;
+                        style=&quot;transition: none;&quot;
+                      &gt;
+                        &lt;span
+                          class=&quot;ant-scroll-number-only-unit current&quot;
+                        &gt;
+                          1
+                        &lt;/span&gt;
+                      &lt;/span&gt;
+                    &lt;/bdi&gt;
+                  &lt;/sup&gt;
+                &lt;/span&gt;
+              &lt;/div&gt;
+              &lt;div
+                class=&quot;ant-space-item&quot;
+              &gt;
+                &lt;a
+                  href=&quot;/tickets/create&quot;
+               ...
+    at waitForWrapper (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/@testing-library/dom/dist/wait-for.js:163:27)
+    at Object.&lt;anonymous&gt; (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/__tests__/pages/tickets-page.test.tsx:186:20)
+    at Promise.then.completed (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:316:40)
+    at _runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at _runTestsForDescribeBlock (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/heidsoft/Downloads/research/itsm/itsm-frontend/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="TicketsPage › 权限控制" name="应该根据权限显示创建按钮" time="0.159">
+    </testcase>
+  </testsuite>
+  <testsuite name="src/app/components/__tests__/TicketFilters.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-02-02T13:49:59" time="10.426" tests="7">
+    <testcase classname="TicketFilters 组件" name="应渲染所有过滤控件并展示默认值" time="0.651">
+    </testcase>
+    <testcase classname="TicketFilters 组件" name="状态过滤变化时应调用 onFilterChange" time="0.747">
+    </testcase>
+    <testcase classname="TicketFilters 组件" name="优先级过滤变化时应调用 onFilterChange" time="0.364">
+    </testcase>
+    <testcase classname="TicketFilters 组件" name="关键字输入后点击应用应调用 onFilterChange，包含 keyword" time="1.064">
+    </testcase>
+    <testcase classname="TicketFilters 组件" name="设置日期范围后点击应用应包含 dateStart 与 dateEnd" time="0.313">
+    </testcase>
+    <testcase classname="TicketFilters 组件" name="排序变化时应调用 onFilterChange" time="0.31">
+    </testcase>
+    <testcase classname="TicketFilters 组件" name="重置按钮应将过滤条件恢复默认并调用 onFilterChange" time="0.476">
+    </testcase>
+  </testsuite>
+</testsuites>

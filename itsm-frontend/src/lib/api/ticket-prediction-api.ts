@@ -46,12 +46,12 @@ export interface PredictionReport {
 export class TicketPredictionApi {
   // 获取趋势预测
   static async getTrendPrediction(params: PredictionRequest): Promise<PredictionReport> {
-    return httpClient.post<PredictionReport>('/api/tickets/prediction/trend', params);
+    return httpClient.post<PredictionReport>('/api/v1/tickets/prediction/trend', params);
   }
 
   // 导出预测报告
   static async exportPredictionReport(params: PredictionRequest, format: 'excel' | 'pdf'): Promise<Blob> {
-    return httpClient.post<Blob>(`/api/tickets/prediction/export?format=${format}`, params, {
+    return httpClient.post<Blob>(`/api/v1/tickets/prediction/export?format=${format}`, params, {
       responseType: 'blob',
     });
   }

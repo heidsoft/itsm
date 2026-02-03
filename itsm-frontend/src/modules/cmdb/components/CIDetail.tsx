@@ -39,6 +39,7 @@ const CIDetail: React.FC = () => {
         if (id) {
             loadDetail();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadDetail = async () => {
@@ -51,7 +52,7 @@ const CIDetail: React.FC = () => {
             setCi(ciData);
             setTypes(typeData || []);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             message.error('加载资产详情失败');
         } finally {
             setLoading(false);
@@ -97,7 +98,7 @@ const CIDetail: React.FC = () => {
                         返回列表
                     </Button>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <Space direction="vertical" size={0}>
+                        <Space orientation="vertical" size={0}>
                             <Title level={3} style={{ margin: 0 }}>{ci.name}</Title>
                             <Text type="secondary">配置项 ID: {ci.id}</Text>
                         </Space>

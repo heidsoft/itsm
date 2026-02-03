@@ -413,7 +413,7 @@ const ServiceCatalogManagement = () => {
               title='总服务数'
               value={stats.total}
               prefix={<BookOpen className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -423,7 +423,7 @@ const ServiceCatalogManagement = () => {
               title='启用服务'
               value={stats.enabled}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -433,7 +433,7 @@ const ServiceCatalogManagement = () => {
               title='禁用服务'
               value={stats.disabled}
               prefix={<AlertCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
@@ -443,7 +443,7 @@ const ServiceCatalogManagement = () => {
               title='服务分类'
               value={stats.categories}
               prefix={<Filter className='w-5 h-5' />}
-              valueStyle={{ color: '#722ed1' }}
+              styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>

@@ -114,7 +114,7 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
                     title={stat.title}
                     value={stat.value}
                     loading={loading}
-                    valueStyle={{ color: token.colorText, fontSize: 28, fontWeight: 700 }}
+                    styles={{ content: { color: token.colorText, fontSize: 28, fontWeight: 700 } }}
                 />
                 <Paragraph
                     type='secondary'

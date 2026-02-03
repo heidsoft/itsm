@@ -9,15 +9,16 @@ export interface AutomationRule {
   id: number;
   name: string;
   description?: string;
+  type?: string;
   priority: number;
   conditions: Array<{
     field: string;
     operator: string;
-    value: any;
+    value: unknown;
   }>;
   actions: Array<{
     type: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   is_active: boolean;
   execution_count: number;
@@ -38,15 +39,16 @@ export interface AutomationRule {
 export interface CreateAutomationRuleRequest {
   name: string;
   description?: string;
+  type?: string;
   priority: number;
   conditions: Array<{
     field: string;
     operator: string;
-    value: any;
+    value: unknown;
   }>;
   actions: Array<{
     type: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   is_active: boolean;
 }
@@ -54,15 +56,16 @@ export interface CreateAutomationRuleRequest {
 export interface UpdateAutomationRuleRequest {
   name?: string;
   description?: string;
+  type?: string;
   priority?: number;
   conditions?: Array<{
     field: string;
     operator: string;
-    value: any;
+    value: unknown;
   }>;
   actions?: Array<{
     type: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   is_active?: boolean;
 }

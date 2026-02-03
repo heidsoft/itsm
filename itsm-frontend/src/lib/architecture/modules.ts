@@ -100,7 +100,7 @@ export function getModuleExports(moduleType: ModuleType): string[] {
   return config?.exports || [];
 }
 
-export default {
+const ModuleUtils = {
   CORE_MODULES,
   SHARED_MODULES,
   registerModule,
@@ -108,3 +108,5 @@ export default {
   checkModuleDependencies,
   getModuleExports,
 };
+
+export default ModuleUtils;

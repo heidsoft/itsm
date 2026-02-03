@@ -421,7 +421,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               title="总违规数"
               value={stats.total}
               prefix={<AlertTriangle size={20} />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -431,7 +431,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               title="待处理"
               value={stats.open}
               prefix={<XCircle size={20} />}
-              valueStyle={{ color: '#ff4d4f' }}
+              styles={{ content: { color: '#ff4d4f' } }}
             />
             <Progress
               percent={stats.total > 0 ? (stats.open / stats.total) * 100 : 0}
@@ -448,7 +448,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               title="已解决"
               value={stats.resolved}
               prefix={<CheckCircle size={20} />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
             <Progress
               percent={stats.total > 0 ? (stats.resolved / stats.total) * 100 : 0}
@@ -465,7 +465,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               title="严重违规"
               value={stats.critical}
               prefix={<Bell size={20} />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -586,7 +586,8 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             SLA告警规则配置
           </Space>
         }
-        width={600}
+        size="large"
+        style={{ width: 600 }}
         open={showRuleDrawer}
         onClose={() => setShowRuleDrawer(false)}
         extra={

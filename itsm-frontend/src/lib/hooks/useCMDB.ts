@@ -241,7 +241,7 @@ export function useRunDiscoveryRuleMutation() {
   });
 }
 
-export default {
+const CMDBHooks = {
   useCIsQuery,
   useCIQuery,
   useCIRelationshipsQuery,
@@ -261,3 +261,5 @@ export default {
   useDeleteRelationshipMutation,
   useRunDiscoveryRuleMutation,
 };
+
+export default CMDBHooks;

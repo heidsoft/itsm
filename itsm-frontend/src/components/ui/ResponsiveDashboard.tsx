@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Row, Col, Typography, Space, Button, Dropdown, Skeleton } from 'antd';
+import { Row, Col, Typography, Space, Button, Dropdown, Skeleton, Card } from 'antd';
 import {
   SettingOutlined,
   ReloadOutlined,
@@ -13,8 +13,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-
-import { EnhancedCard, StatsCard, InfoCard } from './EnhancedCard';
 
 const { Title, Text } = Typography;
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -144,7 +142,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
   // 生成布局配置
   const generateLayouts = useMemo(() => {
     const layoutsMap: any = {};
-    
+
     Object.keys(cols).forEach(breakpoint => {
       layoutsMap[breakpoint] = widgets.map(widget => ({
         i: widget.id,
@@ -180,12 +178,12 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     if (widget.refreshable && onWidgetRefresh) {
       actions.push(
         <Button
-          key="refresh"
-          type="text"
-          size="small"
+          key='refresh'
+          type='text'
+          size='small'
           icon={<ReloadOutlined />}
           onClick={() => onWidgetRefresh(widget.id)}
-          title="刷新"
+          title='刷新'
         />
       );
     }
@@ -193,12 +191,12 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     if (widget.configurable && onWidgetConfigure) {
       actions.push(
         <Button
-          key="configure"
-          type="text"
-          size="small"
+          key='configure'
+          type='text'
+          size='small'
           icon={<SettingOutlined />}
           onClick={() => onWidgetConfigure(widget.id)}
-          title="配置"
+          title='配置'
         />
       );
     }
@@ -206,19 +204,19 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     if (editable && widget.removable && onWidgetRemove) {
       actions.push(
         <Button
-          key="remove"
-          type="text"
-          size="small"
+          key='remove'
+          type='text'
+          size='small'
           danger
           onClick={() => onWidgetRemove(widget.id)}
-          title="移除"
+          title='移除'
         >
           ×
         </Button>
       );
     }
 
-    return actions.length > 0 ? <Space size="small">{actions}</Space> : null;
+    return actions.length > 0 ? <Space size='small'>{actions}</Space> : null;
   };
 
   // 渲染单个widget
@@ -228,14 +226,9 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
     if (loading) {
       return (
-        <EnhancedCard
-          title={widget.title}
-          extra={actions}
-          variant="outlined"
-          className="h-full"
-        >
+        <Card title={widget.title} extra={actions} className='h-full'>
           <Skeleton active paragraph={{ rows: 4 }} />
-        </EnhancedCard>
+        </Card>
       );
     }
 
@@ -243,54 +236,56 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
       <motion.div
         key={widget.id}
         variants={widgetVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="h-full"
+        initial='hidden'
+        animate='visible'
+        exit='exit'
+        className='h-full'
       >
-        <EnhancedCard
+        <Card
           title={widget.title}
           extra={actions}
-          variant="outlined"
           hoverable
-          shadow="hover"
-          className="h-full"
-          bodyStyle={{ height: 'calc(100% - 60px)', overflow: 'auto' }}
+          className='h-full'
+          styles={{ body: { height: 'calc(100% - 60px)', overflow: 'auto' } }}
         >
           <Component {...widget.props} />
-        </EnhancedCard>
+        </Card>
       </motion.div>
     );
   };
 
   // 渲染工具栏
   const renderToolbar = () => (
-    <div className="flex justify-between items-center mb-6">
+    <div className='flex justify-between items-center mb-6'>
       <div>
-        <Title level={2} className="!mb-1">
+        <Title level={2} className='!mb-1'>
           {mergedConfig.title}
         </Title>
-        {mergedConfig.description && (
-          <Text type="secondary">{mergedConfig.description}</Text>
-        )}
+        {mergedConfig.description && <Text type='secondary'>{mergedConfig.description}</Text>}
       </div>
       <Space>
         <Button
           icon={<FilterOutlined />}
-          onClick={() => {/* 打开过滤器 */}}
+          onClick={() => {
+            /* 打开过滤器 */
+          }}
         >
           过滤
         </Button>
         <Button
           icon={<ReloadOutlined />}
-          onClick={() => {/* 刷新所有 */}}
+          onClick={() => {
+            /* 刷新所有 */
+          }}
           loading={loading}
         >
           刷新
         </Button>
         <Button
           icon={<DownloadOutlined />}
-          onClick={() => {/* 导出数据 */}}
+          onClick={() => {
+            /* 导出数据 */
+          }}
         >
           导出
         </Button>
@@ -316,14 +311,14 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
               ],
             }}
           >
-            <Button icon={<SettingOutlined />}>
-              设置
-            </Button>
+            <Button icon={<SettingOutlined />}>设置</Button>
           </Dropdown>
         )}
         <Button
           icon={<FullscreenOutlined />}
-          onClick={() => {/* 进入全屏 */}}
+          onClick={() => {
+            /* 进入全屏 */
+          }}
         >
           全屏
         </Button>
@@ -347,7 +342,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
     return (
       <ResponsiveGridLayout
-        className="responsive-dashboard-grid"
+        className='responsive-dashboard-grid'
         layouts={layouts.lg ? layouts : generateLayouts}
         breakpoints={breakpoints}
         cols={cols}
@@ -360,7 +355,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
         containerPadding={[0, 0]}
         useCSSTransforms={true}
         preventCollision={false}
-        compactType="vertical"
+        compactType='vertical'
       >
         {widgets.map(renderWidget)}
       </ResponsiveGridLayout>
@@ -369,17 +364,10 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
   // 瀑布流布局渲染
   const renderMasonryLayout = () => (
-    <div className="masonry-layout">
+    <div className='masonry-layout'>
       <Row gutter={[16, 16]}>
         {widgets.map(widget => (
-          <Col
-            key={widget.id}
-            xs={24}
-            sm={12}
-            md={8}
-            lg={6}
-            xl={6}
-          >
+          <Col key={widget.id} xs={24} sm={12} md={8} lg={6} xl={6}>
             {renderWidget(widget)}
           </Col>
         ))}
@@ -391,9 +379,9 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
   const renderFlexLayout = () => (
     <motion.div
       variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex-layout space-y-4"
+      initial='hidden'
+      animate='visible'
+      className='flex-layout space-y-4'
     >
       {widgets.map(renderWidget)}
     </motion.div>
@@ -415,10 +403,8 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
   return (
     <div className={`responsive-dashboard ${className || ''}`}>
       {renderToolbar()}
-      
-      <AnimatePresence mode="wait">
-        {renderLayout()}
-      </AnimatePresence>
+
+      <AnimatePresence mode='wait'>{renderLayout()}</AnimatePresence>
 
       <style jsx global>{`
         .responsive-dashboard-grid {
@@ -466,7 +452,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
           .responsive-dashboard .ant-typography-h2 {
             font-size: 1.5rem !important;
           }
-          
+
           .responsive-dashboard .ant-btn {
             padding: 4px 8px;
           }

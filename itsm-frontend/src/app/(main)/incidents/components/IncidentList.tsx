@@ -3,7 +3,7 @@
 import React from 'react';
 import { Table, Tag, Button, Space, Badge } from 'antd';
 import { Eye, Edit, MoreHorizontal, AlertTriangle } from 'lucide-react';
-import { Incident } from '@/lib/api/incident-api';
+import { Incident } from '@/lib/api/types';
 import { useI18n } from '@/lib/i18n';
 
 interface IncidentListProps {
@@ -231,7 +231,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   ];
 
   return (
-    <div className='bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden'>
+    <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
       <Table
         rowSelection={{
           selectedRowKeys,
@@ -243,7 +243,6 @@ export const IncidentList: React.FC<IncidentListProps> = ({
         loading={loading}
         pagination={false}
         scroll={{ x: 1200 }}
-        className='[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:border-b-2 [&_.ant-table-thead>tr>th]:border-gray-200 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-thead>tr>th]:text-gray-700 [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-b [&_.ant-table-tbody>tr>td]:border-gray-100 [&_.ant-table-tbody>tr>td]:py-4'
       />
     </div>
   );

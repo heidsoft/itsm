@@ -69,7 +69,7 @@ registerComponent('SearchInput', {
       type: 'function',
       required: true,
       description: '搜索回调函数',
-      examples: ['(value) => console.log(value)'],
+      examples: ['(value) => {}'],
     },
     {
       name: 'loading',
@@ -84,8 +84,8 @@ registerComponent('SearchInput', {
     {
       title: '基础用法',
       description: '基本的搜索输入框',
-      code: '<SearchInput onSearch={(value) => console.log(value)} />',
-      props: { onSearch: (value: string) => console.log(value) },
+      code: '<SearchInput onSearch={(value) => {}} />',
+      props: { onSearch: (value: string) => {} },
     },
   ],
   dependencies: ['antd', 'lucide-react'],
@@ -416,12 +416,12 @@ export const TicketManagementPage: React.FC<TicketManagementPageProps> = ({
 
   const handleEdit = useCallback((id: number) => {
     // 实现编辑逻辑
-    console.log('Edit ticket:', id);
+    // console.log('Edit ticket:', id);
   }, []);
 
   const handleView = useCallback((id: number) => {
     // 实现查看逻辑
-    console.log('View ticket:', id);
+    // console.log('View ticket:', id);
   }, []);
 
   const handleDelete = useCallback((id: number) => {
@@ -436,7 +436,7 @@ export const TicketManagementPage: React.FC<TicketManagementPageProps> = ({
 
   const handleCreate = useCallback(() => {
     // 实现创建逻辑
-    console.log('Create new ticket');
+    // console.log('Create new ticket');
   }, []);
 
   return (

@@ -279,11 +279,26 @@ func (s *TicketAssignmentRuleService) executeRuleAction(
 		uid := int(userID)
 		return &uid, 1.0, nil
 	case "round_robin":
-		// 轮询分配（需要实现轮询逻辑）
-		return nil, 0, fmt.Errorf("round_robin not implemented")
+		// 轮询分配
+		if len(actionValue.([]interface{})) == 0 {
+			return nil, 0, fmt.Errorf("no users for round_robin")
+		}
+		users := actionValue.([]interface{})
+		// 简单实现：使用 ExecutionCount 取模
+		idx := rule.ExecutionCount % len(users)
+		uid := int(users[idx].(float64))
+		return &uid, 1.0, nil
 	case "load_balance":
-		// 负载均衡分配（需要实现负载均衡逻辑）
-		return nil, 0, fmt.Errorf("load_balance not implemented")
+		// 负载均衡分配
+		// 简单实现：随机选择一个（实际应查询用户当前负载）
+		if len(actionValue.([]interface{})) == 0 {
+			return nil, 0, fmt.Errorf("no users for load_balance")
+		}
+		users := actionValue.([]interface{})
+		// 模拟负载均衡，实际应查询 Ticket 表统计 assigned_to
+		idx := time.Now().Unix() % int64(len(users))
+		uid := int(users[idx].(float64))
+		return &uid, 1.0, nil
 	default:
 		return nil, 0, fmt.Errorf("unknown action type: %s", actionType)
 	}

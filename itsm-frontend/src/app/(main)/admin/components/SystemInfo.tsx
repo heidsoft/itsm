@@ -25,7 +25,7 @@ export const SystemInfo: React.FC = () => {
           }
           style={{ height: '100%' }}
         >
-          <Space direction='vertical' size='middle' style={{ width: '100%' }}>
+          <Space orientation='vertical' size='middle' style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text type='secondary'>{t('admin.systemVersion')}</Text>
               <Text strong>ITSM Pro v2.0.1</Text>

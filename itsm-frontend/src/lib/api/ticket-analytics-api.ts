@@ -9,7 +9,7 @@ export interface AnalyticsConfig {
   metrics: string[];
   chart_type: 'line' | 'bar' | 'pie' | 'area' | 'table';
   time_range: [string, string];
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   group_by?: string;
 }
 
@@ -18,7 +18,7 @@ export interface AnalyticsDataPoint {
   value: number;
   count?: number;
   avg_time?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AnalyticsSummary {

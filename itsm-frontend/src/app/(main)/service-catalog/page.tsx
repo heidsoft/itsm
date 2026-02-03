@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Empty, Form, Skeleton } from 'antd';
+import { Row, Col, Empty, Form, Skeleton, App } from 'antd';
 import { useServiceCatalogData } from './hooks/useServiceCatalogData';
 import { ServiceCatalogStats } from './components/ServiceCatalogStats';
 import { ServiceCatalogFilters } from './components/ServiceCatalogFilters';
 import { ServiceItemCard } from './components/ServiceItemCard';
 import { CreateServiceModal } from './components/CreateServiceModal';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { message } from 'antd';
 import { useI18n } from '@/lib/i18n';
 import { CMDBApi } from '@/modules/cmdb/api';
 import type { CIType, CloudService } from '@/modules/cmdb/types';
@@ -28,6 +27,7 @@ const ServiceCatalogSkeleton: React.FC = () => (
 );
 
 export default function ServiceCatalogPage() {
+  const { message } = App.useApp();
   const { t } = useI18n();
   const {
     catalogs,
@@ -63,7 +63,7 @@ export default function ServiceCatalogPage() {
       }
     };
     loadOptions();
-  }, []);
+  }, [message]);
 
   const handleCreateService = () => {
     setCreateModalVisible(true);

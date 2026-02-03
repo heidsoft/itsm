@@ -161,6 +161,46 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// GetArticleComments handles GET /api/v1/knowledge/articles/:id/comments
+func (h *Handler) GetArticleComments(c *gin.Context) {
+	// Stub implementation
+	common.Success(c, gin.H{
+		"comments": []interface{}{},
+		"total":    0,
+	})
+}
+
+// AddArticleComment handles POST /api/v1/knowledge/articles/:id/comments
+func (h *Handler) AddArticleComment(c *gin.Context) {
+	// Stub implementation
+	common.Success(c, gin.H{
+		"id":        "stub_comment_id",
+		"content":   "This is a stub comment",
+		"createdAt": "2024-01-01T00:00:00Z",
+	})
+}
+
+// SearchArticles handles POST /api/v1/knowledge/search
+func (h *Handler) SearchArticles(c *gin.Context) {
+	// Stub implementation
+	common.Success(c, gin.H{
+		"items": []interface{}{},
+		"total": 0,
+	})
+}
+
+// GetRecommendations handles GET /api/v1/knowledge/recommendations
+func (h *Handler) GetRecommendations(c *gin.Context) {
+	// Stub implementation
+	common.Success(c, []interface{}{})
+}
+
+// GetRecentArticles handles GET /api/v1/knowledge/recent
+func (h *Handler) GetRecentArticles(c *gin.Context) {
+	// Stub implementation
+	common.Success(c, []interface{}{})
+}
+
 // GetCategories handles GET /api/v1/knowledge-articles/categories
 func (h *Handler) GetCategories(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
@@ -173,3 +213,4 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	common.Success(c, list)
 }
+

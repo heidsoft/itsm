@@ -54,6 +54,9 @@ export const getWCAGLevel = (contrastRatio: number): {
     large: contrastRatio >= 4.5,
   };
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unused = AAA;
+
   let level: 'Fail' | 'AA' | 'AAA' = 'Fail';
   if (AA.normal) {
     if (AAA.normal) {

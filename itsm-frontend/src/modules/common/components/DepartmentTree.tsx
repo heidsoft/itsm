@@ -36,6 +36,7 @@ const DepartmentTree: React.FC = () => {
 
     useEffect(() => {
         fetchTree();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

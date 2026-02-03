@@ -71,129 +71,51 @@ export default function LoginPage() {
 
   return (
     <ConfigProvider theme={antdTheme}>
-      <div
-        style={{
-          minHeight: '100vh',
-          background: `linear-gradient(135deg, ${colors.functional.background.secondary} 0%, ${colors.primary[50]} 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px',
-        }}
-      >
-        <div style={{ width: '100%', maxWidth: '1000px' }}>
+      <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="w-full max-w-[1000px]">
           <Row gutter={[32, 0]} align='middle'>
             {/* 左侧品牌区域 - 紧凑版 */}
             <Col xs={0} lg={10}>
-              <div
-                style={{
-                  background: `linear-gradient(135deg, ${colors.primary[600]} 0%, ${colors.primary[700]} 100%)`,
-                  padding: '40px 32px',
-                  borderRadius: '12px',
-                  height: '480px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
+              <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-10 px-8 rounded-xl h-[480px] flex flex-col justify-center relative overflow-hidden">
                 {/* 简化的装饰元素 */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-30px',
-                    right: '-30px',
-                    width: '120px',
-                    height: '120px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '50%',
-                    filter: 'blur(20px)',
-                  }}
-                />
+                <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-xl" />
 
-                <div style={{ position: 'relative', zIndex: 1 }}>
+                <div className="relative z-10">
                   <Title
                     level={1}
-                    style={{
-                      color: 'white',
-                      marginBottom: '12px',
-                      fontSize: '28px',
-                      fontWeight: '700',
-                    }}
+                    className="!text-white !mb-3 !text-3xl !font-bold"
                   >
                     ITSM Pro
                   </Title>
-                  <Text
-                    style={{
-                      color: 'rgba(255, 255, 255, 0.9)',
-                      fontSize: '14px',
-                      display: 'block',
-                      marginBottom: '32px',
-                    }}
-                  >
+                  <Text className="!text-white/90 !text-sm block !mb-8">
                     智能IT服务管理平台
                   </Text>
 
                   {/* 简化的特性列表 */}
-                  <Space direction='vertical' size='middle' style={{ width: '100%' }}>
+                  <Space orientation='vertical' size='middle' className="w-full">
                     <Flex align='center' gap={10}>
-                      <div
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          borderRadius: '6px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
+                      <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
                         <Shield size={16} color='white' />
                       </div>
                       <div>
-                        <Text
-                          style={{
-                            color: 'white',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            display: 'block',
-                          }}
-                        >
+                        <Text className="!text-white !font-semibold !text-sm block">
                           企业级安全
                         </Text>
-                        <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '12px' }}>
+                        <Text className="!text-white/80 !text-xs">
                           多层安全防护
                         </Text>
                       </div>
                     </Flex>
 
                     <Flex align='center' gap={10}>
-                      <div
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          borderRadius: '6px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
+                      <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
                         <ArrowRight size={16} color='white' />
                       </div>
                       <div>
-                        <Text
-                          style={{
-                            color: 'white',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            display: 'block',
-                          }}
-                        >
+                        <Text className="!text-white !font-semibold !text-sm block">
                           智能自动化
                         </Text>
-                        <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '12px' }}>
+                        <Text className="!text-white/80 !text-xs">
                           AI驱动流程
                         </Text>
                       </div>
@@ -206,32 +128,24 @@ export default function LoginPage() {
             {/* 右侧登录表单 - 紧凑版 */}
             <Col xs={24} lg={14}>
               <Card
-                style={{
-                  borderRadius: '12px',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-                  border: 'none',
-                }}
+                className="rounded-xl shadow-xl border-none"
                 styles={{ body: { padding: '40px' } }}
               >
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div className="text-center mb-6">
                   <Title
                     level={2}
-                    style={{
-                      marginBottom: '8px',
-                      color: colors.functional.text.primary,
-                      fontSize: '24px',
-                    }}
+                    className="!mb-2 !text-gray-900 !text-2xl"
                   >
                     欢迎回来
                   </Title>
-                  <Text style={{ color: colors.functional.text.secondary, fontSize: '14px' }}>
+                  <Text className="!text-gray-500 !text-sm">
                     请登录您的账户以继续使用服务
                   </Text>
                 </div>
 
                 {/* 错误提示 */}
                 {error && (
-                  <Alert message={error} type='error' style={{ marginBottom: '20px' }} showIcon />
+                  <Alert message="登录失败" description={error} type='error' className="mb-5" showIcon />
                 )}
 
                 {/* 登录表单 */}
@@ -245,7 +159,7 @@ export default function LoginPage() {
                     ]}
                   >
                     <Input
-                      prefix={<User size={14} style={{ color: colors.functional.text.tertiary }} />}
+                      prefix={<User size={14} className="text-gray-400" />}
                       placeholder='请输入用户名'
                       disabled={loading}
                     />
@@ -260,13 +174,13 @@ export default function LoginPage() {
                     ]}
                   >
                     <Input.Password
-                      prefix={<Lock size={14} style={{ color: colors.functional.text.tertiary }} />}
+                      prefix={<Lock size={14} className="text-gray-400" />}
                       placeholder='请输入密码'
                       disabled={loading}
                     />
                   </Form.Item>
 
-                  <Form.Item style={{ marginBottom: '20px' }}>
+                  <Form.Item className="mb-5">
                     <Flex justify='space-between' align='center'>
                       <Checkbox
                         checked={rememberMe}
@@ -277,7 +191,7 @@ export default function LoginPage() {
                       </Checkbox>
                       <Button
                         type='link'
-                        style={{ padding: 0, height: 'auto', fontSize: '12px' }}
+                        className="p-0 h-auto text-xs"
                         disabled={loading}
                       >
                         忘记密码？
@@ -291,13 +205,7 @@ export default function LoginPage() {
                       htmlType='submit'
                       loading={loading}
                       size='large'
-                      style={{
-                        width: '100%',
-                        height: '40px',
-                        borderRadius: '6px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                      }}
+                      className="w-full h-10 rounded-md text-sm font-semibold"
                       icon={<ArrowRight size={14} />}
                     >
                       {loading ? '登录中...' : '登录'}
@@ -306,20 +214,15 @@ export default function LoginPage() {
                 </Form>
 
                 {/* 其他登录方式 */}
-                <Divider style={{ margin: '20px 0' }}>
-                  <Text style={{ color: colors.functional.text.tertiary, fontSize: '12px' }}>
+                <Divider className="my-5">
+                  <Text className="text-gray-400 text-xs">
                     或
                   </Text>
                 </Divider>
 
                 <Button
                   size='middle'
-                  style={{
-                    width: '100%',
-                    height: '40px',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                  }}
+                  className="w-full h-10 rounded-md text-sm"
                   disabled={loading}
                   icon={<Shield size={14} />}
                 >
@@ -327,10 +230,10 @@ export default function LoginPage() {
                 </Button>
 
                 {/* 底部链接 */}
-                <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                  <Text style={{ color: colors.functional.text.tertiary, fontSize: '12px' }}>
+                <div className="text-center mt-5">
+                  <Text className="text-gray-400 text-xs">
                     还没有账户？{' '}
-                    <Button type='link' style={{ padding: 0, height: 'auto', fontSize: '12px' }}>
+                    <Button type='link' className="p-0 h-auto text-xs">
                       立即注册
                     </Button>
                   </Text>

@@ -34,14 +34,9 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
     <Space size='small' align='start'>
       {icon && (
         <div
+          className="w-8 h-8 rounded-md flex items-center justify-center"
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 6,
             backgroundColor: `${iconColor}15`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: iconColor,
           }}
         >
@@ -49,9 +44,9 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
         </div>
       )}
       <div>
-        <div style={{ fontWeight: 600, fontSize: 16 }}>{title}</div>
+        <div className="font-semibold text-base">{title}</div>
         {subtitle && (
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text type='secondary' className="text-xs">
             {subtitle}
           </Text>
         )}
@@ -65,7 +60,7 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
       {trend && (
         <Text
           type={trend.isPositive ? 'success' : 'danger'}
-          style={{ fontSize: 14, fontWeight: 600 }}
+          className="text-sm font-semibold"
         >
           {trend.isPositive ? '+' : ''}
           {trend.value.toFixed(1)}%
@@ -79,11 +74,9 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
     <Card
       title={titleContent}
       extra={extraContent}
+      className="h-full rounded-lg shadow-sm border border-gray-200"
+      variant="borderless"
       {...cardProps}
-      style={{
-        height: '100%',
-        ...cardProps.style,
-      }}
     >
       {children}
     </Card>

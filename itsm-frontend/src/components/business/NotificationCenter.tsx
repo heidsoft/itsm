@@ -717,7 +717,8 @@ const NotificationCenter: React.FC<{
         </div>
       }
       placement='right'
-      width={800}
+      size="large"
+      style={{ width: 800 }}
       open={open}
       onClose={onClose}
       styles={{
@@ -746,7 +747,7 @@ const NotificationCenter: React.FC<{
                   <Statistic
                     title='未读'
                     value={stats.unread}
-                    valueStyle={{ color: '#1890ff' }}
+                    styles={{ content: { color: '#1890ff' } }}
                     prefix={<AlertCircle className='w-4 h-4' />}
                   />
                 </Card>
@@ -756,7 +757,7 @@ const NotificationCenter: React.FC<{
                   <Statistic
                     title='今日发送'
                     value={stats.sent_today}
-                    valueStyle={{ color: '#52c41a' }}
+                    styles={{ content: { color: '#52c41a' } }}
                     prefix={<CheckCircle className='w-4 h-4' />}
                   />
                 </Card>
@@ -767,7 +768,7 @@ const NotificationCenter: React.FC<{
                     title='发送成功率'
                     value={stats.delivery_rate}
                     suffix='%'
-                    valueStyle={{ color: '#52c41a' }}
+                    styles={{ content: { color: '#52c41a' } }}
                     prefix={<Progress type='circle' size={24} percent={stats.delivery_rate} />}
                   />
                 </Card>

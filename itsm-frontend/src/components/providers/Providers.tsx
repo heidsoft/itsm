@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { AuthService } from '@/lib/services/auth-service';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { NotificationContainer } from '@/components/ui/NotificationContainer';
 
 /**
  * 全局提供者组件
@@ -46,7 +45,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <NotificationContainer />
     </>
   );
 }

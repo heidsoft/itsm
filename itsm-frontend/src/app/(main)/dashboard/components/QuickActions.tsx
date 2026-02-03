@@ -56,12 +56,7 @@ const EnterpriseQuickActionCard: React.FC<{
   return (
     <Col xs={24} sm={12} md={6} lg={6}>
       <Card
-        className='enterprise-action-card h-full cursor-pointer border-0 hover:shadow-2xl transition-all duration-300 group overflow-hidden'
-        style={{
-          borderRadius: '12px',
-          background: '#ffffff',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)',
-        }}
+        className='enterprise-action-card h-full cursor-pointer border-0 hover:shadow-2xl transition-all duration-300 group overflow-hidden rounded-xl bg-white shadow-sm'
         styles={{
           body: {
             padding: '24px',
@@ -114,7 +109,7 @@ const EnterpriseQuickActionCard: React.FC<{
                 borderColor: action.color,
               }}
               icon={<ArrowRightOutlined />}
-              iconPosition='end'
+              iconPlacement='end'
             >
               <span className='group-hover/btn:mr-1 transition-all duration-300'>立即开始</span>
             </Button>
@@ -144,7 +139,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
           {showTitle && !compact && (
             <div className='mb-4'>
               <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
-                <ThunderboltOutlined style={{ fontSize: 20, color: '#3b82f6' }} />
+                <ThunderboltOutlined className="text-xl text-blue-500" />
                 快速操作
               </h2>
               <p className='text-sm text-gray-600'>常用任务和快捷方式</p>
@@ -154,13 +149,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
           <Row gutter={[16, 16]}>
             {Array.from({ length: 4 }).map((_, index) => (
               <Col key={index} xs={24} sm={12} md={6}>
-                <Card
-                  className='h-48 border-0'
-                  style={{
-                    borderRadius: '12px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
-                  }}
-                >
+                <Card className='h-48 border-0 rounded-xl shadow-sm'>
                   <div className='flex items-center justify-center h-full'>
                     <Spin size='large' />
                   </div>
@@ -182,13 +171,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
             </div>
           )}
 
-          <Card
-            className='text-center py-12 border-0'
-            style={{
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
-            }}
-          >
+          <Card className='text-center py-12 border-0 rounded-xl shadow-sm'>
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无快速操作' />
           </Card>
         </div>
@@ -200,7 +183,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
         {showTitle && !compact && (
           <div className='mb-4'>
             <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
-              <ThunderboltOutlined style={{ fontSize: 20, color: '#3b82f6' }} />
+              <ThunderboltOutlined className="text-xl text-blue-500" />
               快速操作
             </h2>
             <p className='text-sm text-gray-600'>常用任务和快捷方式</p>

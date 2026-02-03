@@ -390,7 +390,7 @@ const WorkflowInstancesPage = () => {
               title='总实例'
               value={stats.total}
               prefix={<Activity className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -400,7 +400,7 @@ const WorkflowInstancesPage = () => {
               title='运行中'
               value={stats.running}
               prefix={<PlayCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -410,7 +410,7 @@ const WorkflowInstancesPage = () => {
               title='已完成'
               value={stats.completed}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -420,7 +420,7 @@ const WorkflowInstancesPage = () => {
               title='已暂停'
               value={stats.suspended}
               prefix={<PauseCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>

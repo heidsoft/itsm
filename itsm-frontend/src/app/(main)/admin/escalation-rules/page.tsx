@@ -513,7 +513,7 @@ const EscalationRuleManagement = () => {
               title='升级规则总数'
               value={stats.total}
               prefix={<Zap className='w-5 h-5' />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -523,7 +523,7 @@ const EscalationRuleManagement = () => {
               title='已启用'
               value={stats.active}
               prefix={<CheckCircle className='w-5 h-5' />}
-              valueStyle={{ color: '#52c41a' }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -533,7 +533,7 @@ const EscalationRuleManagement = () => {
               title='草稿状态'
               value={stats.draft}
               prefix={<Edit className='w-5 h-5' />}
-              valueStyle={{ color: '#faad14' }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -543,7 +543,7 @@ const EscalationRuleManagement = () => {
               title='总触发次数'
               value={stats.totalUsage}
               prefix={<Activity className='w-5 h-5' />}
-              valueStyle={{ color: '#f5222d' }}
+              styles={{ content: { color: '#f5222d' } }}
             />
           </Card>
         </Col>

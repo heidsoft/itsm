@@ -43,7 +43,7 @@ export interface UseTicketsReturn {
   filters: Partial<TicketQueryFilters>;
   
   // Actions
-  fetchTickets: () => Promise<void>;
+  fetchTickets: (customFilters?: Partial<TicketQueryFilters>) => Promise<void>;
   fetchStats: () => Promise<void>;
   refreshData: () => Promise<void>;
   updateFilters: (newFilters: Partial<TicketQueryFilters>) => void;
@@ -75,20 +75,21 @@ export const useTickets = (): UseTicketsReturn => {
   const [filters, setFilters] = useState<Partial<TicketQueryFilters>>({});
 
   // Fetch tickets
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = useCallback(async (customFilters?: Partial<TicketQueryFilters>) => {
     setLoading(true);
     setError(null);
     
     try {
+      const currentFilters = customFilters || filters;
       const response = await ticketService.listTickets({
         page: pagination.current,
         page_size: pagination.pageSize,
-        status: filters.status,
-        priority: filters.priority,
-        type: filters.type,
-        category: filters.category,
-        assignee_id: filters.assignee_id,
-        keyword: filters.keyword,
+        status: currentFilters.status,
+        priority: currentFilters.priority,
+        type: currentFilters.type,
+        category: currentFilters.category,
+        assignee_id: currentFilters.assignee_id,
+        keyword: currentFilters.keyword,
       });
       
       setTickets(response.tickets);

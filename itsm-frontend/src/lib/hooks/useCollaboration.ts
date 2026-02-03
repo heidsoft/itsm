@@ -395,7 +395,7 @@ export function useUnwatchTicketMutation() {
 
 // ==================== 导出所有 Hooks ====================
 
-export default {
+const CollaborationHooks = {
   // Query Hooks
   useCommentsQuery,
   useCommentQuery,
@@ -419,4 +419,6 @@ export default {
   useWatchTicketMutation,
   useUnwatchTicketMutation,
 };
+
+export default CollaborationHooks;
 

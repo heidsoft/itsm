@@ -145,7 +145,7 @@ export function useApplyClassificationMutation() {
   });
 }
 
-export default {
+const ChangeClassificationHooks = {
   useClassificationsQuery,
   useClassificationQuery,
   useClassificationSuggestionQuery,
@@ -157,4 +157,6 @@ export default {
   useAnalyzeImpactMutation,
   useApplyClassificationMutation,
 };
+
+export default ChangeClassificationHooks;
 

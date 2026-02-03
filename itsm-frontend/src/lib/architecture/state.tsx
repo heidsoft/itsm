@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
  * ITSM前端架构 - 统一状态管理系统
- * 
+ *
  * 状态管理策略：
  * 1. Zustand - 客户端状态管理
  * 2. React Query - 服务端状态管理
@@ -31,7 +31,7 @@ export interface StateConfig {
 }
 
 // 状态管理器接口
-export interface StateManager<T = any> {
+export interface StateManager<T = unknown> {
   getState: () => T;
   setState: (state: Partial<T>) => void;
   subscribe: (callback: (state: T) => void) => () => void;
@@ -56,12 +56,14 @@ export class ClientStateManager<T> implements StateManager<T> {
           }),
           {
             name: config.name,
-            storage: config.storage ? 
-              createJSONStorage(() => 
-                config.storage === 'localStorage' ? localStorage : sessionStorage
-              ) : undefined,
-            partialize: (state) => {
+            storage: config.storage
+              ? createJSONStorage(() =>
+                  config.storage === 'localStorage' ? localStorage : sessionStorage
+                )
+              : undefined,
+            partialize: state => {
               // 选择性持久化
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const { setState, reset, ...persistedState } = state as any;
               return persistedState;
             },
@@ -143,7 +145,7 @@ export class StateSyncManager {
     if (typeof window !== 'undefined') {
       // 监听storage变化
       window.addEventListener('storage', this.handleStorageChange.bind(this));
-      
+
       // 监听自定义同步事件
       window.addEventListener('state-sync', this.handleCustomSync.bind(this));
     }
@@ -153,10 +155,10 @@ export class StateSyncManager {
     if (event.key?.startsWith('itsm-state-')) {
       const stateName = event.key.replace('itsm-state-', '');
       const listeners = this.listeners.get(stateName);
-      
+
       if (listeners && event.newValue) {
         try {
-          const data = JSON.parse(event.newValue);
+          const { data } = JSON.parse(event.newValue);
           listeners.forEach(callback => callback(data));
         } catch (error) {
           console.error('Failed to parse synced state:', error);
@@ -168,7 +170,7 @@ export class StateSyncManager {
   private handleCustomSync(event: CustomEvent): void {
     const { stateName, data } = event.detail;
     const listeners = this.listeners.get(stateName);
-    
+
     if (listeners) {
       listeners.forEach(callback => callback(data));
     }
@@ -179,9 +181,9 @@ export class StateSyncManager {
     if (!this.listeners.has(stateName)) {
       this.listeners.set(stateName, new Set());
     }
-    
+
     this.listeners.get(stateName)!.add(callback);
-    
+
     return () => {
       const listeners = this.listeners.get(stateName);
       if (listeners) {
@@ -198,15 +200,20 @@ export class StateSyncManager {
     if (typeof window !== 'undefined') {
       // 通过storage事件同步到其他标签页
       const storageKey = `itsm-state-${stateName}`;
-      localStorage.setItem(storageKey, JSON.stringify({
-        data,
-        timestamp: Date.now(),
-      }));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        })
+      );
 
       // 通过自定义事件同步到当前标签页
-      window.dispatchEvent(new CustomEvent('state-sync', {
-        detail: { stateName, data }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('state-sync', {
+          detail: { stateName, data },
+        })
+      );
     }
   }
 }
@@ -229,7 +236,7 @@ export class StateManagerFactory {
 
     // 如果启用同步，订阅状态变化
     if (config.sync) {
-      manager.subscribe((state) => {
+      manager.subscribe(state => {
         this.syncManager.broadcast(config.name, state);
       });
     }
@@ -266,11 +273,7 @@ export const stateManagerFactory = new StateManagerFactory();
 export function StateProvider({ children }: { children: ReactNode }) {
   const queryClient = stateManagerFactory.getServerManager().getQueryClient();
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
 // 状态管理Hook
@@ -279,20 +282,13 @@ export function useStateManager<T>(name: string): StateManager<T> | undefined {
 }
 
 // 服务端状态Hook
-export function useServerState<T>(
-  queryKey: string[],
-  queryFn: () => Promise<T>,
-  options?: any
-) {
+export function useServerState<T>(queryKey: string[], queryFn: () => Promise<T>, options?: any) {
   const serverManager = stateManagerFactory.getServerManager();
   return serverManager.useQuery(queryKey, queryFn, options);
 }
 
 // 服务端变更Hook
-export function useServerMutation<T, V>(
-  mutationFn: (variables: V) => Promise<T>,
-  options?: any
-) {
+export function useServerMutation<T, V>(mutationFn: (variables: V) => Promise<T>, options?: any) {
   const serverManager = stateManagerFactory.getServerManager();
   return serverManager.useMutation<T, Error, V>(mutationFn, options);
 }
@@ -300,19 +296,16 @@ export function useServerMutation<T, V>(
 // 状态同步Hook
 export function useStateSync<T>(stateName: string, callback: (data: T) => void) {
   const syncManager = stateManagerFactory.getSyncManager();
-  
+
   return syncManager.subscribe(stateName, callback);
 }
 
 // 状态优化工具
 export class StateOptimizer {
   // 防抖状态更新
-  static debounce<T>(
-    setState: (state: T) => void,
-    delay: number = 300
-  ): (state: T) => void {
+  static debounce<T>(setState: (state: T) => void, delay: number = 300): (state: T) => void {
     let timeoutId: NodeJS.Timeout;
-    
+
     return (state: T) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => setState(state), delay);
@@ -320,12 +313,9 @@ export class StateOptimizer {
   }
 
   // 节流状态更新
-  static throttle<T>(
-    setState: (state: T) => void,
-    delay: number = 100
-  ): (state: T) => void {
+  static throttle<T>(setState: (state: T) => void, delay: number = 100): (state: T) => void {
     let lastCall = 0;
-    
+
     return (state: T) => {
       const now = Date.now();
       if (now - lastCall >= delay) {
@@ -336,19 +326,15 @@ export class StateOptimizer {
   }
 
   // 选择性状态更新
-  static selectiveUpdate<T>(
-    currentState: T,
-    newState: Partial<T>,
-    keys: (keyof T)[]
-  ): T {
+  static selectiveUpdate<T>(currentState: T, newState: Partial<T>, keys: (keyof T)[]): T {
     const updatedState = { ...currentState };
-    
+
     keys.forEach(key => {
       if (key in newState) {
         updatedState[key] = newState[key] as T[keyof T];
       }
     });
-    
+
     return updatedState;
   }
 }
