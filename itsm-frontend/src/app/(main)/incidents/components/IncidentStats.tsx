@@ -6,23 +6,34 @@ import { AlertTriangle, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 interface IncidentStatsProps {
-  metrics: {
+  metrics?: {
     total_incidents: number;
     critical_incidents: number;
     major_incidents: number;
     avg_resolution_time: number;
   };
+  className?: string;
 }
 
-export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics }) => {
+export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className }) => {
   const { t } = useI18n();
-  
+
   if (!metrics) {
-    return null;
+    return (
+      <div className={`mb-6 ${className || ''}`}>
+        <Row gutter={[16, 16]}>
+          {[1, 2, 3, 4].map(i => (
+            <Col key={i} xs={24} sm={12} md={6} lg={6}>
+              <Card loading className='rounded-lg' />
+            </Col>
+          ))}
+        </Row>
+      </div>
+    );
   }
 
   return (
-    <div className='mb-6'>
+    <div className={`mb-6 ${className || ''}`}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6} lg={6}>
           <Card

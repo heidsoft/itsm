@@ -403,7 +403,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
                   styles={{ content: {
                     color: getStatusColor(metric.status),
                     fontSize: '20px',
-                  }}
+                  }}}
                 />
               </div>
               <Progress

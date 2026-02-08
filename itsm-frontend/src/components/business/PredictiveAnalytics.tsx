@@ -279,7 +279,7 @@ export const PredictiveAnalytics: React.FC = () => {
               title="SLA违约风险"
               value={`${metrics?.slaBreachRisk.probability}%`}
               prefix={<AlertTriangle />}
-              styles={{ content: {
+              style={{
                 color: getRiskColor(metrics?.slaBreachRisk.riskLevel || "low"),
               }}
               suffix={

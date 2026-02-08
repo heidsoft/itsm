@@ -29,9 +29,11 @@ import {
   LinkOutlined,
   BarChartOutlined,
   UnorderedListOutlined,
-  ListOutlined,
-  GanttChartOutlined,
 } from '@ant-design/icons';
+import {
+  List,
+  GanttChart,
+} from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { Ticket } from '@/lib/services/ticket-service';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
@@ -417,14 +419,14 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
             <Button.Group>
               <Button
                 type={viewMode === 'list' ? 'primary' : 'default'}
-                icon={<ListOutlined />}
+                icon={<List />}
                 onClick={() => setViewMode('list')}
               >
                 列表
               </Button>
               <Button
                 type={viewMode === 'gantt' ? 'primary' : 'default'}
-                icon={<GanttChartOutlined />}
+                icon={<GanttChart />}
                 onClick={() => setViewMode('gantt')}
               >
                 甘特图

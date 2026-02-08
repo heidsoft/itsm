@@ -3,9 +3,9 @@
  * Provides consistent API request handling across the application
  */
 
-import { apiConfig } from './api-config';
+import { API_BASE_URL } from './api-config';
 
-const BASE_URL = apiConfig.baseURL;
+const BASE_URL = API_BASE_URL;
 
 // API Response type
 export interface ApiResponse<T> {

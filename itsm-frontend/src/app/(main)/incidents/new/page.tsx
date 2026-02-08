@@ -6,7 +6,7 @@ import { ArrowLeft, Search, X } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { App } from 'antd';
-import { incidentService } from '@/lib/services/incident-service';
+import { incidentService, IncidentPriority, IncidentSource } from '@/lib/services/incident-service';
 import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
 
 interface ConfigItem extends Pick<ConfigurationItem, 'id' | 'name' | 'ci_type' | 'status'> {
@@ -60,9 +60,9 @@ export default function NewIncidentPage() {
     const data = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
-      priority: formData.get('priority') as string,
+      priority: formData.get('priority') as IncidentPriority,
       type: formData.get('type') as string,
-      source: 'manual',
+      source: 'manual' as IncidentSource,
       affected_cis: selectedCIs.map(ci => ci.id),
     };
 
@@ -143,7 +143,7 @@ export default function NewIncidentPage() {
                       <div className='flex items-center justify-between'>
                         <div>
                           <div className='font-medium text-sm'>{ci.name}</div>
-                          <div className='text-xs text-gray-500'>{ci.type}</div>
+                          <div className='text-xs text-gray-500'>{ci.ci_type}</div>
                         </div>
                       </div>
                     </div>

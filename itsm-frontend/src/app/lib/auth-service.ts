@@ -1,5 +1,5 @@
 import { API_BASE_URL, Tenant } from './api-config';
-import { useAuthStore } from './store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import logger from './logger';
 
 export class AuthService {
@@ -179,10 +179,10 @@ export class AuthService {
           id: 1,
           name: '默认租户',
           code: 'default',
-          type: 'trial',
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          type: 'trial' as const,
+          status: 'active' as const,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         } as Tenant
       );
 

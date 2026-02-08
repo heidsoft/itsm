@@ -9,10 +9,10 @@ const { Search } = Input;
 const { Option } = Select;
 
 interface IncidentFiltersProps {
-  loading: boolean;
-  onSearch: (value: string) => void;
-  onFilterChange: (key: string, value: string) => void;
-  onRefresh: () => void;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  onFilterChange?: (key: string, value: string) => void;
+  onRefresh?: () => void;
 }
 
 export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
@@ -34,7 +34,7 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
               <Search
                 placeholder={t('incidents.searchPlaceholder')}
                 allowClear
-                onSearch={onSearch}
+                onSearch={onSearch || (() => {})}
                 size='large'
                 enterButton
                 className='rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
@@ -48,7 +48,7 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 placeholder={t('incidents.selectStatus')}
                 size='large'
                 allowClear
-                onChange={value => onFilterChange('status', value)}
+                onChange={value => onFilterChange?.('status', value)}
                 className='w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
               >
                 <Option value='open'>
@@ -85,7 +85,7 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 placeholder={t('incidents.selectPriority')}
                 size='large'
                 allowClear
-                onChange={value => onFilterChange('priority', value)}
+                onChange={value => onFilterChange?.('priority', value)}
                 className='w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
               >
                 <Option value='low'>
@@ -122,7 +122,7 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 placeholder={t('incidents.selectSource')}
                 size='large'
                 allowClear
-                onChange={value => onFilterChange('source', value)}
+                onChange={value => onFilterChange?.('source', value)}
                 className='w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
               >
                 <Option value='email'>📧 {t('incidents.sourceEmail')}</Option>
@@ -137,7 +137,7 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
               <label className='text-sm font-medium text-gray-700'>{t('incidents.actions')}</label>
               <Button
                 icon={<SearchOutlined />}
-                onClick={onRefresh}
+                onClick={onRefresh || (() => {})}
                 loading={loading}
                 size='large'
                 className='w-full bg-gradient-to-r from-blue-500 to-indigo-600 border-0 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-lg font-medium'

@@ -85,7 +85,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
                 getSLAStatus(metrics?.slaCompliance || 0).color === 'success'
                   ? '#52c41a'
                   : '#1890ff',
-            }}
+            }}}
           />
           <div className='mt-2'>
             <Progress

@@ -867,22 +867,28 @@ const AdvancedReporting: React.FC = () => {
           </Button>,
           <Dropdown
             key='export'
-            overlay={
-              <Menu>
-                <Menu.Item key='excel' onClick={() => handleExportReport('excel')}>
-                  <Download className='w-4 h-4 mr-2' />
-                  导出Excel
-                </Menu.Item>
-                <Menu.Item key='csv' onClick={() => handleExportReport('csv')}>
-                  <Download className='w-4 h-4 mr-2' />
-                  导出CSV
-                </Menu.Item>
-                <Menu.Item key='pdf' onClick={() => handleExportReport('pdf')}>
-                  <Download className='w-4 h-4 mr-2' />
-                  导出PDF
-                </Menu.Item>
-              </Menu>
-            }
+            menu={{
+              items: [
+                {
+                  key: 'excel',
+                  icon: <Download className='w-4 h-4 mr-2' />,
+                  label: '导出Excel',
+                  onClick: () => handleExportReport('excel'),
+                },
+                {
+                  key: 'csv',
+                  icon: <Download className='w-4 h-4 mr-2' />,
+                  label: '导出CSV',
+                  onClick: () => handleExportReport('csv'),
+                },
+                {
+                  key: 'pdf',
+                  icon: <Download className='w-4 h-4 mr-2' />,
+                  label: '导出PDF',
+                  onClick: () => handleExportReport('pdf'),
+                },
+              ],
+            }}
           >
             <Button type='primary' icon={<Download className='w-4 h-4' />}>
               导出数据

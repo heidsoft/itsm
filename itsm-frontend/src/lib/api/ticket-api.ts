@@ -506,6 +506,22 @@ export class TicketApi {
       data
     });
   }
+
+  // Get ticket templates
+  static async getTemplates(params?: { page?: number; page_size?: number; category?: string }): Promise<{
+    items: Array<{
+      id: number;
+      name: string;
+      description: string;
+      category: string;
+      content: Record<string, unknown>;
+      created_at: string;
+      updated_at: string;
+    }>;
+    total: number;
+  }> {
+    return httpClient.get('/api/v1/ticket-templates', params);
+  }
 }
 
 export default TicketApi;

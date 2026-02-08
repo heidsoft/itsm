@@ -30,10 +30,9 @@ import {
   Sparkles,
   Plus,
   CheckCircle,
-  ClockCircle,
   AlertCircle,
-  RobotOutlined,
 } from 'lucide-react';
+import { RobotOutlined } from '@ant-design/icons';
 
 // 解决方案推荐接口
 interface SolutionRecommendation {
@@ -43,9 +42,9 @@ interface SolutionRecommendation {
   relevance: number;
   category: string;
   tags: string[];
-  viewCount: number;
+  view_count: number;
   rating: number;
-  lastUpdated: string;
+  updated_at: string;
 }
 
 // 知识库关联接口
@@ -70,13 +69,24 @@ interface AIRecommendation {
 interface KnowledgeArticle {
   id: number;
   title: string;
-  summary: string;
-  category: string;
-  tags: string[];
-  viewCount: number;
-  rating: number;
-  lastUpdated: string;
-  content: string;
+  content?: string;
+  summary?: string;
+  category_id?: number;
+  category_name?: string;
+  category?: string;
+  tags?: string[];
+  author_id?: number;
+  author?: {
+    id: number;
+    username: string;
+    name: string;
+  };
+  view_count: number;
+  helpful_count?: number;
+  status?: 'draft' | 'published' | 'archived';
+  created_at: string;
+  updated_at?: string;
+  rating?: number;
 }
 
 // 知识库集成组件属性
@@ -140,9 +150,9 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
         relevance: item.relevance || 0,
         category: item.category || 'General',
         tags: item.tags || [],
-        viewCount: item.viewCount || 0,
+        view_count: item.view_count || 0,
         rating: item.rating || 0,
-        lastUpdated: item.updatedAt || new Date().toISOString(),
+        updated_at: item.updatedAt || new Date().toISOString(),
       }));
       setRecommendations(mapped);
     } catch (error) {
@@ -164,7 +174,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
     try {
       const { KnowledgeBaseApi } = await import('@/lib/api/knowledge-base-api');
       const data = await KnowledgeBaseApi.getRecentArticles({ limit: 5 });
-      setRelatedArticles(data);
+      setRelatedArticles(data as unknown as KnowledgeArticle[]);
     } catch (error) {
       console.error('Failed to load related articles:', error);
     }
@@ -181,11 +191,11 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
       // 调用实际API
       const { KnowledgeBaseApi } = await import('@/lib/api/knowledge-base-api');
       const response = await KnowledgeBaseApi.search({
-        keyword: searchKeywords,
+        query: searchKeywords.join(' '),
         page: 1,
         pageSize: 10,
       });
-      setSearchResults(response.items);
+      setSearchResults(response.articles.map(a => a.article) as unknown as KnowledgeArticle[]);
       message.success('搜索完成');
     } catch (error) {
       message.error('搜索失败');
@@ -280,11 +290,11 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                       <p className='text-gray-600'>{item.summary}</p>
                       <div className='flex items-center space-x-2 text-sm text-gray-500'>
                         <span>相关度: {item.relevance}%</span>
-                        <span>浏览量: {item.viewCount}</span>
-                        <span>更新: {item.lastUpdated}</span>
+                        <span>浏览量: {item.view_count}</span>
+                        <span>更新: {item.updated_at}</span>
                       </div>
                       <div className='flex flex-wrap gap-1'>
-                        {item.tags.map(tag => (
+                        {(item.tags || []).map(tag => (
                           <Tag key={tag}>{tag}</Tag>
                         ))}
                       </div>
@@ -462,11 +472,11 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                     <div className='space-y-2'>
                       <p className='text-gray-600'>{item.summary}</p>
                       <div className='flex items-center space-x-2 text-sm text-gray-500'>
-                        <span>浏览量: {item.viewCount}</span>
-                        <span>更新: {item.lastUpdated}</span>
+                        <span>浏览量: {item.view_count}</span>
+                        <span>更新: {item.updated_at}</span>
                       </div>
                       <div className='flex flex-wrap gap-1'>
-                        {item.tags.map(tag => (
+                        {(item.tags || []).map(tag => (
                           <Tag key={tag}>{tag}</Tag>
                         ))}
                       </div>
@@ -545,7 +555,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                         <div className='space-y-2'>
                           <p className='text-gray-600'>{item.summary}</p>
                           <div className='flex items-center space-x-2 text-sm text-gray-500'>
-                            <span>浏览量: {item.viewCount}</span>
+                            <span>浏览量: {item.view_count}</span>
                             <span>评分: {item.rating}</span>
                           </div>
                         </div>

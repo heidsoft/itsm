@@ -88,18 +88,19 @@ export interface GetTenantsParams {
 // 工单相关接口（添加租户ID）
 export interface Ticket {
   id: number;
+  ticket_number: string;
   title: string;
   description: string;
   status: string;
   priority: string;
   type?: string;
   formFields?: Record<string, unknown>;
-  ticketNumber: string;
-  requesterId: number;
-  assigneeId?: number;
-  tenantId: number;
-  createdAt: string;
-  updatedAt: string;
+  requester_id: number;
+  assignee_id?: number;
+  tenant_id?: number;
+  created_at: string;
+  updated_at: string;
+  closed_at?: string;
   requester?: User;
   assignee?: User;
   tenant?: Tenant;
@@ -109,46 +110,47 @@ export interface Ticket {
   impact?: string;
   urgency?: string;
   resolution?: string;
-  workNotes?: string;
+  work_notes?: string;
   attachments?: Attachment[];
-  workflowSteps?: WorkflowStep[];
+  workflow_steps?: WorkflowStep[];
   comments?: Comment[];
-  slaInfo?: SLAInfo;
+  sla_info?: SLAInfo;
   tags?: string[];
+  due_time?: string;
   dueDate?: string;
-  escalationLevel?: number;
+  escalation_level?: number;
   source?: string;
-  businessValue?: string;
-  customFields?: Record<string, unknown>;
+  business_value?: string;
+  custom_fields?: Record<string, unknown>;
 }
 
 // 附件接口
 export interface Attachment {
   id: number;
   filename: string;
-  originalName: string;
-  fileSize: number;
-  mimeType: string;
+  original_name: string;
+  file_size: number;
+  mime_type: string;
   url: string;
-  uploadedBy: number;
-  uploadedAt: string;
+  uploaded_by: number;
+  uploaded_at: string;
   uploader?: User;
 }
 
 // 工作流步骤接口
 export interface WorkflowStep {
   id: number;
-  stepName: string;
-  stepOrder: number;
+  step_name: string;
+  step_order: number;
   status: 'pending' | 'in_progress' | 'completed' | 'skipped';
-  assigneeId?: number;
+  assignee_id?: number;
   assignee?: User;
-  startedAt?: string;
-  completedAt?: string;
+  started_at?: string;
+  completed_at?: string;
   comments?: string;
-  requiredApproval: boolean;
-  approvalStatus?: 'pending' | 'approved' | 'rejected';
-  approvalComments?: string;
+  required_approval: boolean;
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  approval_comments?: string;
 }
 
 // 评论接口
@@ -156,22 +158,22 @@ export interface Comment {
   id: number;
   content: string;
   type: 'comment' | 'work_note' | 'system';
-  createdBy: number;
-  createdAt: string;
-  updatedAt?: string;
+  created_by: number;
+  created_at: string;
+  updated_at?: string;
   author?: User;
-  isInternal: boolean;
+  is_internal: boolean;
 }
 
 // SLA信息接口
 export interface SLAInfo {
-  slaId: number;
-  slaName: string;
-  responseTime: number; // 分钟
-  resolutionTime: number; // 分钟
-  startTime: string;
-  dueTime: string;
-  breachTime?: string;
+  sla_id: number;
+  sla_name: string;
+  response_time: number; // 分钟
+  resolution_time: number; // 分钟
+  start_time: string;
+  due_time: string;
+  breach_time?: string;
   status: 'active' | 'breached' | 'completed';
 }
 

@@ -7,7 +7,7 @@ import { IncidentList } from './components/IncidentList';
 import { IncidentFilters } from './components/IncidentFilters';
 import { IncidentStats } from './components/IncidentStats';
 import { Incident } from '@/lib/api/types';
-import { incidentApi } from '@/lib/api/incident-api';
+import { IncidentAPI } from '@/lib/api/incident-api';
 
 export default function IncidentsPage() {
   const [loading, setLoading] = useState(false);
@@ -23,11 +23,11 @@ export default function IncidentsPage() {
     setLoading(true);
     try {
       // TODO: Replace with actual API call with filters
-      const response = await incidentApi.list({
+      const response = await IncidentAPI.listIncidents({
         page,
-        page_size: pageSize,
+        pageSize,
       });
-      setIncidents(response.items);
+      setIncidents((response.incidents || response.data || []) as unknown as Incident[]);
       setTotal(response.total);
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
@@ -61,7 +61,7 @@ export default function IncidentsPage() {
         </Button>
       </div>
 
-      <IncidentStats className='mb-6' />
+      <IncidentStats />
 
       <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
         <div className='mb-4 flex justify-between items-center'>

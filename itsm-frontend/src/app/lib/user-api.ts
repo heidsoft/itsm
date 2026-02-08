@@ -5,6 +5,7 @@
 
 import type { User, UserFilters, CreateUserRequest, UpdateUserRequest, UserListResponse, UserStats } from '@/types/user';
 import { apiClient } from './api-client';
+import { API_BASE_URL } from './api-config';
 
 export interface ListUsersParams {
   page?: number;
@@ -164,7 +165,7 @@ class UserAPI {
     }
 
     const token = localStorage.getItem('access_token') || localStorage.getItem('token') || '';
-    const response = await fetch(`${apiConfig.baseURL}/users/export?${queryParams.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/users/export?${queryParams.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -196,7 +197,7 @@ class UserAPI {
     });
 
     const token = localStorage.getItem('access_token') || localStorage.getItem('token') || '';
-    const response = await fetch(`${apiConfig.baseURL}/users/import`, {
+    const response = await fetch(`${API_BASE_URL}/users/import`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Form, Input, Checkbox, Button, Typography, Alert, Space, Divider, theme } from 'antd';
-import { PasswordInput } from '@/components/ui';
+import { Form, Input as AntInput, Checkbox, Button, Typography, Alert, Space, Divider, theme } from 'antd';
+import { PasswordInput, Input as CustomInput } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 const { token } = theme.useToken();
@@ -168,6 +168,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       prefix: field.prefix,
       suffix: field.suffix,
       clearable: field.clearable,
+      helperText: field.helperText,
     };
 
     switch (field.type) {
@@ -180,7 +181,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           />
         );
       default:
-        return <Input {...commonProps} type={field.type} helperText={field.helperText} />;
+        const { helperText, ...inputProps } = commonProps;
+        return <CustomInput {...inputProps} type={field.type} />;
     }
   };
 

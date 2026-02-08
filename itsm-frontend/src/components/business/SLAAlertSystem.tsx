@@ -114,7 +114,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       // 调用实际API
       const { default: SLAApi } = await import('@/lib/api/sla-api');
       const data = await SLAApi.getAlertHistory({ sla_definition_id: slaDefinitionId });
-      setAlertHistory(data.items);
+      setAlertHistory((data.items || []) as unknown as AlertHistory[]);
     } catch (error) {
       console.error('Failed to load alert history:', error);
       // 失败时设置为空数组，不使用Mock数据

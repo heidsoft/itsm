@@ -446,3 +446,24 @@ export interface FileUploadOptions {
   onProgress?: (progress: UploadProgress) => void;
   additionalData?: Record<string, string>;
 }
+
+// ==================== API URL 和工具函数 ====================
+
+export const API_URLS = {
+  INCIDENTS: () => '/api/v1/incidents',
+  INCIDENT: (id: number) => `/api/v1/incidents/${id}`,
+};
+
+export function normalizePaginationParams(params: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {};
+  if (params.page !== undefined) normalized.page = params.page;
+  if (params.pageSize !== undefined) normalized.page_size = params.pageSize;
+  return normalized;
+}
+
+export function normalizeDateRangeParams(params: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {};
+  if (params.date_from !== undefined) normalized.date_from = params.date_from;
+  if (params.date_to !== undefined) normalized.date_to = params.date_to;
+  return normalized;
+}

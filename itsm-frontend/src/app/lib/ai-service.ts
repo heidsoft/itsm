@@ -3,7 +3,7 @@
  * 支持工单分类、处理人推荐、解决方案建议等AI功能
  */
 
-import { httpClient } from './http-client';
+import { httpClient } from '@/lib/api/http-client';
 import logger from './logger';
 
 // AI服务响应类型定义
@@ -141,7 +141,7 @@ export class AIService {
    */
   static async recommendAssignee(request: AssigneeRecommendationRequest): Promise<AssigneeRecommendation[]> {
     try {
-      logger.debug('AIService.recommendAssignee', { ticketType: request.ticketType });
+      logger.debug('AIService.recommendAssignee', { ticketId: request.ticketId, category: request.category });
 
       const response = await httpClient.post<AssigneeRecommendation[]>(
         `${this.API_BASE}/recommend-assignee`,

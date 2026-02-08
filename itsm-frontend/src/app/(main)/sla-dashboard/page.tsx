@@ -59,7 +59,7 @@ const SLADashboardPage = () => {
       priority: string;
       sla_definition: string;
       time_remaining: number;
-      alert_level: 'warning' | 'critical';
+      alert_level: 'warning' | 'critical' | 'severe';
       created_at: string;
     }>
   >([]);
@@ -93,7 +93,7 @@ const SLADashboardPage = () => {
   // 加载SLA违规
   const loadSLAViolations = async () => {
     try {
-      const response = await SLAApi.getSLAViolations({ page: 1, page_size: 10, status: 'open' });
+      const response = await SLAApi.getSLAViolations({ page: 1, page_size: 10 });
       setSlaViolations(response.items);
     } catch (error) {
       console.error('加载SLA违规失败:', error);

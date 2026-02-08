@@ -1,15 +1,11 @@
 import { httpClient } from './http-client';
 import {
   API_URLS,
-  StandardPaginationParams,
-  StandardApiResponse,
-  PaginatedApiResponse,
+  ListQueryParams,
   normalizePaginationParams,
   normalizeDateRangeParams,
-  BatchRequest,
-  BatchResponse,
+  PaginationResponse,
 } from './types';
-import { PaginationRequest, PaginationResponse } from './api-config';
 
 // 事件管理API接口
 export interface Incident {
@@ -18,6 +14,7 @@ export interface Incident {
   description: string;
   status: string;
   priority: string;
+  severity: string;
   source: string;
   type: string;
   incident_number: string;
@@ -55,12 +52,41 @@ export interface Incident {
   confirmed_at?: string;
   resolved_at?: string;
   closed_at?: string;
+  escalated_at?: string;
   created_at: string;
   updated_at: string;
   // 新增字段
   category?: string;
   subcategory?: string;
   resolution?: string;
+  escalation_level?: number;
+  impact_analysis?: {
+    business_impact?: {
+      affected_users?: number;
+      revenue_impact?: number;
+      service_availability?: number;
+    };
+    technical_impact?: string;
+    affected_users?: number;
+    affected_services?: string[];
+    estimated_resolution_time?: number;
+    is_overdue?: boolean;
+    hours_since_creation?: number;
+    time_impact?: {
+      is_overdue?: boolean;
+      hours_since_creation?: number;
+      response_deadline?: string;
+      resolution_deadline?: string;
+    };
+    metrics?: {
+      total_count?: number;
+      critical_count?: number;
+      resolved_count?: number;
+      average_value?: number;
+      max_value?: number;
+      min_value?: number;
+    };
+  };
 }
 
 export interface CreateIncidentRequest {
@@ -200,7 +226,7 @@ export interface UpdateIncidentStatusRequest {
   suspend_reason?: string;
 }
 
-export interface ListIncidentsRequest extends PaginationRequest {
+export interface ListIncidentsRequest extends ListQueryParams {
   status?: string;
   priority?: string;
   source?: string;

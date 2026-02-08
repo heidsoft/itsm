@@ -73,8 +73,20 @@ const TicketDashboardPage = () => {
 
   // 获取概览数据
   const getOverviewData = () => {
-    if (dashboardData?.overview) return dashboardData.overview;
-    // 不再回退到 ticketStats，完全依赖 API 数据
+    if (dashboardData?.overview) {
+      const o = dashboardData.overview;
+      return {
+        totalTickets: o.total_tickets,
+        pendingTickets: o.pending_tickets,
+        resolvedTickets: o.resolved_today,
+        avgResponseTime: o.avg_response_time,
+        avgResolutionTime: o.avg_resolution_time,
+        customerSatisfaction: 0,
+        monthlyGrowth: 0,
+        openTickets: o.pending_tickets,
+        slaCompliance: 0,
+      };
+    }
     return {
       totalTickets: 0,
       pendingTickets: 0,
@@ -143,7 +155,7 @@ const TicketDashboardPage = () => {
               prefix={<TrendingUp size={16} style={{ color: "#3b82f6" }} />}
               styles={{ content: {
                 color: slaData.compliance_rate >= 95 ? "#52c41a" : "#faad14",
-              }}
+              }}}
             />
             <Progress
               percent={slaData.compliance_rate}
@@ -325,9 +337,9 @@ const TicketDashboardPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <Text strong>{activity.description || activity.type}</Text>
-                    {activity.ticket_id && (
+                    {'ticket_id' in activity && (activity as any).ticket_id && (
                       <div className="text-sm text-gray-500">
-                        工单 #{activity.ticket_id}
+                        工单 #{(activity as any).ticket_id}
                       </div>
                     )}
                   </div>

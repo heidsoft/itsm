@@ -28,7 +28,7 @@ import {
 import {
   ticketCategoryService,
   type CategoryTreeItem,
-} from "../lib/services/ticket-category-service";
+} from "../../lib/services/ticket-category-service";
 
 const { Option } = Select;
 const { Text, Title } = Typography;

@@ -55,7 +55,6 @@ import {
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
-import { IncidentAPI, type Incident, type ListIncidentsRequest } from '@/lib/api/incident-api';
 import { httpClient } from '@/lib/api/http-client';
 
 dayjs.extend(relativeTime);
@@ -68,34 +67,6 @@ const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
 // 事件接口定义
-interface Incident {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  severity: string;
-  incident_number: string;
-  reporter_id: number;
-  assignee_id?: number;
-  category?: string;
-  subcategory?: string;
-  impact_analysis?: any;
-  root_cause?: any;
-  resolution_steps?: any[];
-  detected_at: string;
-  resolved_at?: string;
-  closed_at?: string;
-  escalated_at?: string;
-  escalation_level: number;
-  is_automated: boolean;
-  source: string;
-  metadata?: any;
-  tenant_id: number;
-  created_at: string;
-  updated_at: string;
-}
-
 interface IncidentEvent {
   id: number;
   incident_id: number;
@@ -328,7 +299,7 @@ export const IncidentManagement: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
-      render: (_, record: Incident) => (
+      render: (_: any, record: Incident) => (
         <Space>
           <Tooltip title='查看详情'>
             <Button
@@ -557,14 +528,14 @@ const IncidentDetailDrawer: React.FC<{
     setLoading(true);
     try {
       const [eventsData, alertsData, metricsData] = await Promise.all([
-        httpClient.get(`/api/v1/incidents/${incident.id}/events`).catch(() => ({ data: [] })),
-        httpClient.get(`/api/v1/incidents/${incident.id}/alerts`).catch(() => ({ data: [] })),
-        httpClient.get(`/api/v1/incidents/${incident.id}/metrics`).catch(() => ({ data: [] })),
+        httpClient.get<any[]>(`/api/v1/incidents/${incident.id}/events`).catch(() => []),
+        httpClient.get<any[]>(`/api/v1/incidents/${incident.id}/alerts`).catch(() => []),
+        httpClient.get<any>(`/api/v1/incidents/${incident.id}/metrics`).catch(() => ({})),
       ]);
 
-      setEvents(Array.isArray(eventsData) ? eventsData : eventsData?.data || []);
-      setAlerts(Array.isArray(alertsData) ? alertsData : alertsData?.data || []);
-      setMetrics(metricsData?.data || metricsData || {});
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+      setAlerts(Array.isArray(alertsData) ? alertsData : []);
+      setMetrics((metricsData as any)?.data || metricsData || {});
     } catch (error) {
       console.error('获取事件详情失败:', error);
       message.error('获取事件详情失败');
@@ -758,14 +729,14 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
       </Card>
 
       {/* 升级信息 */}
-      {incident.escalation_level > 0 && (
+      {(incident.escalation_level ?? 0) > 0 && (
         <Card title='升级信息'>
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <div className='mb-4'>
                 <Text strong>升级级别</Text>
                 <div className='mt-1'>
-                  <Badge count={incident.escalation_level} style={{ backgroundColor: '#f50' }} />
+                  <Badge count={incident.escalation_level ?? 0} style={{ backgroundColor: '#f50' }} />
                 </div>
               </div>
             </Col>
@@ -1025,7 +996,7 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
               <Statistic
                 title='是否超时'
                 value={impactAnalysis.time_impact.is_overdue ? '是' : '否'}
-                styles={{ content: {
+                style={{
                   color: impactAnalysis.time_impact.is_overdue ? '#f5222d' : '#52c41a',
                 }}
               />

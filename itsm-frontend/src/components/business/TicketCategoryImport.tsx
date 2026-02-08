@@ -29,7 +29,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import {
   ticketCategoryService,
   type CreateCategoryRequest,
-} from "../lib/services/ticket-category-service";
+} from "../../lib/services/ticket-category-service";
 
 const { Text, Title } = Typography;
 const { Dragger } = Upload;

@@ -62,9 +62,9 @@ export const useProblemsData = () => {
       const statsData = await problemService.getProblemStats();
       setStats({
         total: statsData.total || 0,
-        open: statsData.by_status?.open || 0,
-        inProgress: statsData.by_status?.in_progress || 0,
-        resolved: statsData.by_status?.resolved || 0,
+        open: statsData.open || 0,
+        inProgress: statsData.in_progress || 0,
+        resolved: statsData.resolved || 0,
       });
     } catch {
       message.error('获取统计数据失败');

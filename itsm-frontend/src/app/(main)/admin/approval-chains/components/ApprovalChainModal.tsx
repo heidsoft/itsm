@@ -34,7 +34,7 @@ import { FormField } from '@/types/common';
 const { TextArea } = Input;
 const { Option } = Select;
 const { Text, Title } = Typography;
-const { Step } = Steps;
+// Step removed - antd 5+ uses items prop instead
 
 interface ApprovalChainModalProps {
   visible: boolean;
@@ -251,11 +251,11 @@ export function ApprovalChainModal({
       width={800}
       destroyOnHidden
     >
-      <Steps current={currentStep} className='mb-6'>
-        {stepItems.map((item, index) => (
-          <Step key={index} title={item.title} description={item.description} />
-        ))}
-      </Steps>
+      <Steps current={currentStep} className='mb-6' items={stepItems.map((item, index) => ({
+        key: index,
+        title: item.title,
+        description: item.description,
+      }))} />
 
       {currentStep === 0 && (
         <Form form={form} layout='vertical' preserve={false}>

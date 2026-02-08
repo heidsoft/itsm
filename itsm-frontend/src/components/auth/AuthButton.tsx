@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
  * 认证按钮属性接口
  * 继承 Ant Design Button 属性，但覆盖部分属性以保持 API 兼容
  */
-export interface AuthButtonProps extends Omit<AntButtonProps, 'type' | 'size'> {
+export interface AuthButtonProps {
   /** 按钮类型 */
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
   /** 按钮尺寸 */
@@ -17,13 +17,29 @@ export interface AuthButtonProps extends Omit<AntButtonProps, 'type' | 'size'> {
   fullWidth?: boolean;
   /** 是否显示波纹效果 (Antd 默认支持) */
   ripple?: boolean;
+  /** 其他 Ant Design Button 属性 */
+  children?: React.ReactNode;
+  onClick?: React.MouseEventHandler<HTMLElement>;
+  disabled?: boolean;
+  loading?: boolean;
+  block?: boolean;
+  danger?: boolean;
+  ghost?: boolean;
+  href?: string;
+  htmlType?: 'button' | 'submit' | 'reset';
+  icon?: React.ReactNode;
+  shape?: 'default' | 'circle' | 'round';
+  target?: string;
+  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
  * 认证按钮组件
  * 基于 Ant Design Button 的封装，提供统一的认证页面按钮样式
  */
-export const AuthButton = forwardRef<HTMLElement, AuthButtonProps>(
+export const AuthButton = forwardRef<HTMLButtonElement, AuthButtonProps>(
   (
     { children, variant = 'primary', size = 'lg', fullWidth = false, className, style, ...props },
     ref

@@ -100,12 +100,12 @@ const SLADetail: React.FC = () => {
                     <Descriptions.Item label="描述" span={2}>{data.description || '无'}</Descriptions.Item>
                 </Descriptions>
 
-                <Divider orientation="left">适用条件</Divider>
+                <Divider>适用条件</Divider>
                 <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto mb-6">
                     {JSON.stringify(data.conditions, null, 2)}
                 </pre>
 
-                <Divider orientation="left">升级规则</Divider>
+                <Divider>升级规则</Divider>
                 <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto">
                     {JSON.stringify(data.escalation_rules, null, 2)}
                 </pre>

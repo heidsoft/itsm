@@ -370,7 +370,7 @@ const EditCIPage: React.FC = () => {
           </Select>
         </Form.Item>
 
-        <Divider orientation="left">云资源信息</Divider>
+        <Divider>云资源信息</Divider>
 
         <Form.Item label="云厂商" name="cloud_provider">
           <Select placeholder="请选择云厂商" allowClear>
@@ -425,7 +425,7 @@ const EditCIPage: React.FC = () => {
 
         {schemaFields.length > 0 && (
           <>
-            <Divider orientation="left">云资源动态属性</Divider>
+            <Divider>云资源动态属性</Divider>
             <div style={{ marginBottom: 12, color: '#8c8c8c' }}>
               动态属性仅支持枚举选择。
             </div>

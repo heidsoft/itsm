@@ -65,7 +65,7 @@ export interface CreateIncidentRequest {
   title: string;
   description: string;
   priority: IncidentPriority;
-  category: string;
+  category?: string;
   assignee_id?: number;
   source?: IncidentSource;
   impact?: string;

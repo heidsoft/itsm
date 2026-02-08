@@ -5,7 +5,7 @@
  */
 
 import React, { useMemo, useCallback } from 'react';
-import { Table, Tag, Button, Space, Tooltip, Dropdown, Menu, Switch } from 'antd';
+import { Table, Tag, Button, Space, Tooltip, Dropdown, Switch } from 'antd';
 import {
   EditOutlined,
   DeleteOutlined,
@@ -107,40 +107,43 @@ export function ApprovalChainTable({
         title: '操作',
         width: 120,
         render: (_: unknown, record: ApprovalChain) => {
-          const menu = (
-            <Menu>
-              <Menu.Item key='view' icon={<EyeOutlined />} onClick={() => onView(record)}>
-                查看详情
-              </Menu.Item>
-              <Menu.Item key='edit' icon={<EditOutlined />} onClick={() => onEdit(record)}>
-                编辑
-              </Menu.Item>
-              <Menu.Item key='copy' icon={<CopyOutlined />} onClick={() => onCopy(record)}>
-                复制
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item key='toggle' onClick={() => onToggleStatus(record)}>
-                {record.isActive ? (
-                  <>
-                    <PauseCircleOutlined /> 停用
-                  </>
-                ) : (
-                  <>
-                    <PlayCircleOutlined /> 启用
-                  </>
-                )}
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                key='delete'
-                icon={<DeleteOutlined />}
-                danger
-                onClick={() => onDelete(record)}
-              >
-                删除
-              </Menu.Item>
-            </Menu>
-          );
+          const menuProps = {
+            items: [
+              {
+                key: 'view',
+                icon: <EyeOutlined />,
+                label: '查看详情',
+                onClick: () => onView(record),
+              },
+              {
+                key: 'edit',
+                icon: <EditOutlined />,
+                label: '编辑',
+                onClick: () => onEdit(record),
+              },
+              {
+                key: 'copy',
+                icon: <CopyOutlined />,
+                label: '复制',
+                onClick: () => onCopy(record),
+              },
+              { type: 'divider' as const },
+              {
+                key: 'toggle',
+                icon: record.isActive ? <PauseCircleOutlined /> : <PlayCircleOutlined />,
+                label: record.isActive ? '停用' : '启用',
+                onClick: () => onToggleStatus(record),
+              },
+              { type: 'divider' as const },
+              {
+                key: 'delete',
+                icon: <DeleteOutlined />,
+                label: '删除',
+                danger: true,
+                onClick: () => onDelete(record),
+              },
+            ],
+          };
 
           return (
             <Space>
@@ -160,7 +163,7 @@ export function ApprovalChainTable({
                   size='small'
                 />
               </Tooltip>
-              <Dropdown overlay={menu} trigger={['click']}>
+              <Dropdown menu={menuProps} trigger={['click']}>
                 <Button type='text' icon={<MoreOutlined />} size='small' />
               </Dropdown>
             </Space>

@@ -108,7 +108,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       const response = await SLAApi.getSLAViolations({
         page: 1,
         page_size: 100,
-        status: filters.status || undefined,
+        is_resolved: filters.status === 'resolved' ? true : filters.status === 'open' ? false : undefined,
       });
 
       const processedViolations: SLAViolation[] = response.items.map(violation => ({
@@ -206,10 +206,11 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       return;
     }
 
+    const isResolved = status === 'resolved';
     try {
       await Promise.all(
-        selectedRowKeys.map(id => 
-          SLAApi.updateSLAViolationStatus(Number(id), status)
+        selectedRowKeys.map(id =>
+          SLAApi.updateSLAViolationStatus(Number(id), isResolved)
         )
       );
       message.success(`成功更新 ${selectedRowKeys.length} 条记录`);

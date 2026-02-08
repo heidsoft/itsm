@@ -538,7 +538,7 @@ export default function ProfilePage() {
                       suffix='/5.0'
                       styles={{ content: {
                         color: getSatisfactionColor(stats.satisfactionScore),
-                      }}
+                      }}}
                     />
                   </div>
                   <div className='text-center'>

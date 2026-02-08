@@ -105,8 +105,8 @@ const IncidentTrendsPage = () => {
         setPriorityData(analyticsRes.priority_distribution);
       } else {
         setPriorityData([
-          { name: '低', value: statsRes.low_priority || 0, color: priorityColors.low },
-          { name: '中', value: statsRes.medium_priority || 0, color: priorityColors.medium },
+          { name: '低', value: 0, color: priorityColors.low },
+          { name: '中', value: 0, color: priorityColors.medium },
           { name: '高', value: statsRes.high_priority || 0, color: priorityColors.high },
           { name: '紧急', value: statsRes.urgent || 0, color: priorityColors.urgent },
         ]);

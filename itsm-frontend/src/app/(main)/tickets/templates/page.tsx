@@ -309,7 +309,7 @@ const TicketTemplatesPage = () => {
         page_size: 100,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
       });
-      setTemplates(response.items);
+      setTemplates(response.items as unknown as TicketTemplate[]);
     } catch (error) {
       console.error('Failed to load templates:', error);
       message.error('加载模板失败');

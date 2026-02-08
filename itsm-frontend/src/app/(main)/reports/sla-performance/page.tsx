@@ -150,7 +150,7 @@ const SLAPerformanceReport = () => {
                   suffix="%"
                   styles={{ content: {
                     color: avgCompliance >= 95 ? '#52c41a' : avgCompliance >= 85 ? '#faad14' : '#ff4d4f'
-                  }}
+                  }}}
                   prefix={<CheckCircleOutlined />}
                 />
               </Card>
