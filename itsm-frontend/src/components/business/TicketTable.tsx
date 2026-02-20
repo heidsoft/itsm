@@ -254,7 +254,7 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
             <VirtualizedTicketList
               tickets={tickets}
               loading={loading}
-              selectedRowKeys={(selectedRowKeys || []) as string[]}
+              selectedRowKeys={(selectedRowKeys || []).map(key => Number(key))}
               onRowSelectionChange={handleRowSelectionChange}
               onEditTicket={onEditTicket}
               onViewActivity={onViewActivity}

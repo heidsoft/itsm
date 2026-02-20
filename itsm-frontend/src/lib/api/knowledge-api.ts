@@ -59,4 +59,34 @@ export class KnowledgeApi {
   static categories() {
     return httpClient.get<string[]>('/api/v1/knowledge-articles/categories');
   }
+
+  // ==================== 兼容别名（旧代码使用） ====================
+
+  /** @deprecated 使用 list */
+  static getArticles(params?: ListKnowledgeArticlesParams) {
+    return this.list(params);
+  }
+
+  /** @deprecated 使用 get */
+  static getArticle(id: number) {
+    return this.get(id);
+  }
+
+  /** @deprecated 使用 categories */
+  static getCategories() {
+    return this.categories();
+  }
+
+  /** @deprecated 使用 remove */
+  static deleteArticle(id: number) {
+    return this.remove(id);
+  }
+
+  /** @deprecated 使用 list */
+  static get articles() {
+    return {
+      list: (params?: ListKnowledgeArticlesParams) => this.list(params),
+      items: (params?: ListKnowledgeArticlesParams) => this.list(params).then((r: any) => r.articles || r.items || []),
+    };
+  }
 }

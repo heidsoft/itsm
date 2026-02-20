@@ -14,7 +14,7 @@ import {
   Badge,
   Tag as AntTag,
 } from 'antd';
-import { Ticket } from '@/app/lib/api-config';
+import { Ticket } from '@/lib/api/api-config';
 
 const { Title, Text } = Typography;
 
@@ -86,7 +86,7 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
                 {ticket.title}
               </Title>
               <Text type='secondary'>
-                {ticket.type || 'Service Request'} #{ticket.ticket_number || ticket.id}
+                {ticket.type || 'Service Request'} #{ticket.ticketNumber || ticket.id}
               </Text>
             </div>
           </div>
@@ -156,7 +156,7 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
             </Text>
             <div className='flex items-center space-x-1 mt-1'>
               <Calendar className='w-3 h-3 text-gray-400' />
-              <Text className='text-sm'>{formatDateTime(ticket.created_at)}</Text>
+              <Text className='text-sm'>{formatDateTime(ticket.createdAt)}</Text>
             </div>
           </div>
           <div>
@@ -165,7 +165,7 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
             </Text>
             <div className='flex items-center space-x-1 mt-1'>
               <Clock className='w-3 h-3 text-gray-400' />
-              <Text className='text-sm'>{formatDateTime(ticket.updated_at)}</Text>
+              <Text className='text-sm'>{formatDateTime(ticket.updatedAt)}</Text>
             </div>
           </div>
           <div>

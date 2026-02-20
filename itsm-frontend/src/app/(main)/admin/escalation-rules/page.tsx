@@ -21,7 +21,8 @@ import {
   Target,
 } from 'lucide-react';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { SLAApi } from '@/lib/api/sla-api';
 import {
   Card,
   Table,
@@ -71,100 +72,6 @@ interface EscalationLevel {
   action: string;
 }
 
-// 模拟升级规则数据
-const mockEscalationRules: EscalationRule[] = [
-  {
-    id: 'ESC-001',
-    name: 'P1事件升级规则',
-    description: '针对P1级别紧急事件的自动升级规则，确保关键问题得到及时处理',
-    triggerCondition: '工单状态为"进行中"且优先级为P1',
-    priority: 'P1',
-    serviceType: '关键业务系统',
-    escalationLevels: [
-      {
-        level: 1,
-        timeThreshold: '15分钟',
-        escalateTo: '高级工程师',
-        notificationMethod: ['邮件', '短信', '企业微信'],
-        action: '自动分配给高级工程师组',
-      },
-      {
-        level: 2,
-        timeThreshold: '1小时',
-        escalateTo: '技术经理',
-        notificationMethod: ['邮件', '短信', '电话'],
-        action: '通知技术经理并创建紧急会议',
-      },
-      {
-        level: 3,
-        timeThreshold: '4小时',
-        escalateTo: 'CTO',
-        notificationMethod: ['邮件', '电话'],
-        action: '升级至CTO并启动应急响应流程',
-      },
-    ],
-    status: 'active',
-    createdAt: '2024-01-15',
-    updatedAt: '2024-06-01',
-    createdBy: '张三',
-    usageCount: 45,
-    lastTriggered: '2024-01-20 15:30',
-  },
-  {
-    id: 'ESC-002',
-    name: 'P2事件升级规则',
-    description: '针对P2级别高优先级事件的升级规则',
-    triggerCondition: '工单状态为"进行中"且优先级为P2',
-    priority: 'P2',
-    serviceType: '一般业务系统',
-    escalationLevels: [
-      {
-        level: 1,
-        timeThreshold: '30分钟',
-        escalateTo: '高级工程师',
-        notificationMethod: ['邮件', '企业微信'],
-        action: '自动分配给高级工程师组',
-      },
-      {
-        level: 2,
-        timeThreshold: '2小时',
-        escalateTo: '技术经理',
-        notificationMethod: ['邮件', '短信'],
-        action: '通知技术经理',
-      },
-    ],
-    status: 'active',
-    createdAt: '2024-01-20',
-    updatedAt: '2024-05-15',
-    createdBy: '李四',
-    usageCount: 28,
-    lastTriggered: '2024-01-18 09:15',
-  },
-  {
-    id: 'ESC-003',
-    name: '服务请求超时升级',
-    description: '服务请求长时间未处理的升级规则',
-    triggerCondition: '服务请求状态为"待处理"超过预定时间',
-    priority: 'P3',
-    serviceType: '服务请求',
-    escalationLevels: [
-      {
-        level: 1,
-        timeThreshold: '24小时',
-        escalateTo: '服务台主管',
-        notificationMethod: ['邮件'],
-        action: '通知服务台主管',
-      },
-    ],
-    status: 'draft',
-    createdAt: '2024-01-25',
-    updatedAt: '2024-01-25',
-    createdBy: '王五',
-    usageCount: 0,
-    lastTriggered: '从未触发',
-  },
-];
-
 // 优先级配置
 const PRIORITY_CONFIG = {
   P1: { label: 'P1 - 紧急', color: 'error', bgColor: '#fff2f0' },
@@ -203,7 +110,7 @@ const NOTIFICATION_CONFIG = {
 
 const EscalationRuleManagement = () => {
   const { message } = App.useApp();
-  const [escalationRules, setEscalationRules] = useState(mockEscalationRules);
+  const [escalationRules, setEscalationRules] = useState<EscalationRule[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -213,6 +120,40 @@ const EscalationRuleManagement = () => {
   const [showDetailDrawer, setShowDetailDrawer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+
+  // 加载升级规则数据
+  const loadEscalationRules = async () => {
+    setLoading(true);
+    try {
+      const data = await SLAApi.getAlertRules();
+      const rules = (data || []).map((item: any) => ({
+        id: String(item.id),
+        name: item.name || '未命名规则',
+        description: item.description || '',
+        triggerCondition: item.condition || '',
+        priority: item.priority || 'P3',
+        serviceType: item.service_type || '全部',
+        escalationLevels: item.escalation_levels || [],
+        status: (item.is_active ? 'active' : 'inactive') as 'active' | 'inactive' | 'draft',
+        createdAt: item.created_at || new Date().toISOString(),
+        updatedAt: item.updated_at || new Date().toISOString(),
+        createdBy: '系统',
+        usageCount: item.usage_count || 0,
+        lastTriggered: item.last_triggered || '',
+      }));
+      setEscalationRules(rules);
+    } catch (error) {
+      console.error('Failed to load escalation rules:', error);
+      message.error('加载升级规则失败');
+      setEscalationRules([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEscalationRules();
+  }, []);
 
   // 统计信息
   const stats = {
@@ -269,9 +210,15 @@ const EscalationRuleManagement = () => {
   };
 
   // 处理删除
-  const handleDelete = (ruleId: string) => {
-    setEscalationRules(prev => prev.filter(rule => rule.id !== ruleId));
-    message.success('升级规则已删除');
+  const handleDelete = async (ruleId: string) => {
+    try {
+      await SLAApi.deleteAlertRule(Number(ruleId));
+      setEscalationRules(prev => prev.filter(rule => rule.id !== ruleId));
+      message.success('升级规则已删除');
+    } catch (error) {
+      console.error('Failed to delete rule:', error);
+      message.error('删除失败');
+    }
   };
 
   // 查看详情
@@ -286,10 +233,25 @@ const EscalationRuleManagement = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 转换表单值格式
+      const apiData = {
+        name: values.name,
+        description: values.description || '',
+        priority: values.priority || 'P3',
+        service_type: values.serviceType || 'all',
+        condition: values.triggerCondition || '',
+        is_active: values.status === 'active',
+        sla_definition_id: 1, // 默认SLA定义
+        alert_level: 'warning' as const,
+        threshold_percentage: 80,
+        notification_channels: ['email'],
+        escalation_enabled: true,
+        escalation_levels: [],
+      };
 
       if (selectedRule) {
         // 编辑
+        await SLAApi.updateAlertRule(Number(selectedRule.id), apiData);
         setEscalationRules(prev =>
           prev.map(rule =>
             rule.id === selectedRule.id
@@ -304,8 +266,9 @@ const EscalationRuleManagement = () => {
         message.success('升级规则更新成功');
       } else {
         // 新建
+        const result = (await SLAApi.createAlertRule(apiData)) as { id?: number } | null;
         const newRule: EscalationRule = {
-          id: `ESC-${String(escalationRules.length + 1).padStart(3, '0')}`,
+          id: String(result?.id || Date.now()),
           ...values,
           status: 'draft',
           createdBy: '当前用户',

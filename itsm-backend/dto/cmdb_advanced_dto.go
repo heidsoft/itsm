@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
 )
 
@@ -27,88 +26,6 @@ type CITypeResponse struct {
 	TenantID        int                    `json:"tenant_id"`
 	CreatedAt       time.Time              `json:"created_at"`
 	UpdatedAt       time.Time              `json:"updated_at"`
-}
-
-// CI关系相关DTO
-type CreateCIRelationshipRequest struct {
-	SourceCIID         int                    `json:"source_ci_id" binding:"required"`
-	TargetCIID         int                    `json:"target_ci_id" binding:"required"`
-	RelationshipTypeID int                    `json:"relationship_type_id" binding:"required"`
-	Properties         map[string]interface{} `json:"properties"`
-	EffectiveFrom      time.Time              `json:"effective_from"`
-	EffectiveTo        *time.Time             `json:"effective_to"`
-	TenantID           int                    `json:"tenant_id"`
-}
-
-type CIRelationshipResponse struct {
-	ID                 int                    `json:"id"`
-	SourceCIID         int                    `json:"source_ci_id"`
-	TargetCIID         int                    `json:"target_ci_id"`
-	RelationshipTypeID int                    `json:"relationship_type_id"`
-	Properties         map[string]interface{} `json:"properties"`
-	EffectiveFrom      time.Time              `json:"effective_from"`
-	EffectiveTo        *time.Time             `json:"effective_to"`
-	TenantID           int                    `json:"tenant_id"`
-	CreatedAt          time.Time              `json:"created_at"`
-	UpdatedAt          time.Time              `json:"updated_at"`
-}
-
-// 服务图谱相关DTO
-type GetServiceMapRequest struct {
-	RootCIID int `json:"root_ci_id" binding:"required"`
-	Depth    int `json:"depth" binding:"min=1,max=10"`
-	TenantID int `json:"tenant_id"`
-}
-
-type ServiceMapNode struct {
-	ID       int                    `json:"id"`
-	Name     string                 `json:"name"`
-	Type     string                 `json:"type"`
-	Level    int                    `json:"level"`
-	Metadata map[string]interface{} `json:"metadata"`
-}
-
-type ServiceMapEdge struct {
-	ID       int                    `json:"id"`
-	SourceID int                    `json:"source_id"`
-	TargetID int                    `json:"target_id"`
-	Type     string                 `json:"type"`
-	Metadata map[string]interface{} `json:"metadata"`
-}
-
-type ServiceMapData struct {
-	RootCI   *ServiceMapNode        `json:"root_ci"`
-	Nodes    []*ServiceMapNode      `json:"nodes"`
-	Edges    []*ServiceMapEdge      `json:"edges"`
-	Metadata map[string]interface{} `json:"metadata"`
-}
-
-type ServiceMapResponse struct {
-	RootCI   *ServiceMapNode        `json:"root_ci"`
-	Nodes    []*ServiceMapNode      `json:"nodes"`
-	Edges    []*ServiceMapEdge      `json:"edges"`
-	Metadata map[string]interface{} `json:"metadata"`
-}
-
-// 影响分析相关DTO
-type AnalyzeImpactRequest struct {
-	SourceCIID int `json:"source_ci_id" binding:"required"`
-	Depth      int `json:"depth" binding:"min=1,max=10"`
-	TenantID   int `json:"tenant_id"`
-}
-
-type ImpactedCI struct {
-	CI           *ent.ConfigurationItem `json:"ci"`
-	ImpactLevel  int                    `json:"impact_level"`
-	Relationship *ent.CIRelationship    `json:"relationship"`
-}
-
-type ImpactAnalysisResponse struct {
-	SourceCI          *ent.ConfigurationItem `json:"source_ci"`
-	UpstreamImpacts   []*ImpactedCI          `json:"upstream_impacts"`
-	DownstreamImpacts []*ImpactedCI          `json:"downstream_impacts"`
-	ImpactLevel       string                 `json:"impact_level"`
-	AnalysisTime      time.Time              `json:"analysis_time"`
 }
 
 // 生命周期管理DTO
@@ -172,7 +89,7 @@ type CIAttributeDefinitionResponse struct {
 	ReferenceType   string                 `json:"reference_type"`
 	DisplayOrder    int                    `json:"display_order"`
 	IsSearchable    bool                   `json:"is_searchable"`
-	IsSystem        bool                   `json:"is_system"` // 添加这个字段
+	IsSystem        bool                   `json:"is_system"`
 	IsActive        bool                   `json:"is_active"`
 	CITypeID        int                    `json:"ci_type_id"`
 	TenantID        int                    `json:"tenant_id"`

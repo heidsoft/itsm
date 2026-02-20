@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { AuthService } from '@/lib/services/auth-service';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const { Content } = Layout;
 
@@ -24,20 +25,26 @@ export default function MainLayout({
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
-  // 处理客户端挂载
+  // 处理客户端挂载和认证检查
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const checkAuth = () => {
+      const authenticated = AuthService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setCheckingAuth(false);
 
-  // 认证检查
-  useEffect(() => {
-    if (mounted && !AuthService.isAuthenticated()) {
-      router.push('/login');
-    }
-  }, [mounted, router]);
+      if (!authenticated && mounted) {
+        router.push('/login');
+      }
+    };
+
+    setMounted(true);
+    checkAuth();
+  }, [router]);
 
   // 响应式布局：在移动端自动折叠侧边栏
   useEffect(() => {
@@ -63,6 +70,20 @@ export default function MainLayout({
 
   // 未挂载时显示 loading（避免服务端渲染问题）
   if (!mounted) {
+    return null;
+  }
+
+  // 正在检查认证状态时显示 loading
+  if (checkingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // 未认证时不渲染布局，直接重定向（由上面的 useEffect 处理）
+  if (!isAuthenticated) {
     return null;
   }
 

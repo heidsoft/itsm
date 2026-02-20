@@ -6,7 +6,8 @@ import { FileText, Save, X } from 'lucide-react';
 import { Button, Space, Typography, App, Tabs, Divider } from 'antd';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { TicketNotificationApi, TicketNotification } from '@/lib/api/ticket-notification-api';
-import { Ticket, Attachment, Comment, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
+import { Ticket, Attachment, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
+import { Comment } from '@/types/comment';
 import {
   TicketDetailHeader,
   TicketOverviewTab,
@@ -20,6 +21,14 @@ import { TicketDependencyManager } from './TicketDependencyManager';
 import { TicketMultiLevelApproval } from './TicketMultiLevelApproval';
 import { TicketRootCauseAnalysis } from './TicketRootCauseAnalysis';
 import { SmartAssignmentModal } from './SmartAssignmentModal';
+
+// Subtask类型定义（与TicketSubtasks组件保持一致）
+interface Subtask extends Ticket {
+  parent_id: number;
+  dependency_type?: 'blocks' | 'blocked_by' | 'depends_on' | 'relates_to';
+  order?: number;
+  estimated_hours?: number;
+}
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -182,8 +191,8 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
     console.log('Delete subtask:', id);
   };
 
-  const handleViewSubtask = (id: number) => {
-    console.log('View subtask:', id);
+  const handleViewSubtask = (subtask: Subtask) => {
+    console.log('View subtask:', subtask.id);
   };
 
   return (

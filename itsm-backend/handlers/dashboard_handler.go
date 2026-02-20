@@ -599,3 +599,17 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 	c.JSON(http.StatusOK, activities)
 }
 
+// GetStats 获取仪表盘统计数据（兼容前端 /api/v1/dashboard/stats）
+// @Summary 获取仪表盘统计数据
+// @Description 获取仪表盘核心统计数据
+// @Tags Dashboard
+// @Accept json
+// @Produce json
+// @Success 200 {object} DashboardOverview
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/dashboard/stats [get]
+func (h *DashboardHandler) GetStats(c *gin.Context) {
+	// 直接复用 GetOverview 的逻辑
+	h.GetOverview(c)
+}
+

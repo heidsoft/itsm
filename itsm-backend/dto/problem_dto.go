@@ -6,19 +6,19 @@ import "time"
 type CreateProblemRequest struct {
 	Title       string `json:"title" binding:"required,min=2,max=200"`
 	Description string `json:"description" binding:"required,min=10,max=5000"`
-	Priority    string `json:"priority" binding:"required,oneof=low medium high critical"`
-	Category    string `json:"category" binding:"required"`
-	RootCause   string `json:"root_cause" binding:"required"`
-	Impact      string `json:"impact" binding:"required"`
-	CreatedBy   int    `json:"created_by" binding:"required"`
+	Priority    string `json:"priority" binding:"required"`
+	Category    string `json:"category"`
+	RootCause   string `json:"root_cause"`
+	Impact      string `json:"impact"`
+	ImpactScope string `json:"impact_scope"` // 影响范围
 }
 
 // UpdateProblemRequest 更新问题请求
 type UpdateProblemRequest struct {
 	Title       string `json:"title" binding:"omitempty,min=2,max=200"`
 	Description string `json:"description" binding:"omitempty,min=10,max=5000"`
-	Priority    string `json:"priority" binding:"omitempty,oneof=low medium high critical"`
-	Status      string `json:"status" binding:"omitempty,oneof=open in_progress resolved closed"`
+	Priority    string `json:"priority" binding:"omitempty"`
+	Status      string `json:"status" binding:"omitempty"`
 	Category    string `json:"category" binding:"omitempty"`
 	RootCause   string `json:"root_cause" binding:"omitempty"`
 	Impact      string `json:"impact" binding:"omitempty"`

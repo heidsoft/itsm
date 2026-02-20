@@ -55,9 +55,29 @@ func IDLTE(id int) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldLTE(FieldID, id))
 }
 
-// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
-func Type(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEQ(FieldType, v))
+// RelationshipType applies equality check predicate on the "relationship_type" field. It's identical to RelationshipTypeEQ.
+func RelationshipType(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldRelationshipType, v))
+}
+
+// SourceCiID applies equality check predicate on the "source_ci_id" field. It's identical to SourceCiIDEQ.
+func SourceCiID(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldSourceCiID, v))
+}
+
+// TargetCiID applies equality check predicate on the "target_ci_id" field. It's identical to TargetCiIDEQ.
+func TargetCiID(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldTargetCiID, v))
+}
+
+// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
+func IsActive(v bool) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsDiscovered applies equality check predicate on the "is_discovered" field. It's identical to IsDiscoveredEQ.
+func IsDiscovered(v bool) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldIsDiscovered, v))
 }
 
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
@@ -65,84 +85,179 @@ func Description(v string) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldEQ(FieldDescription, v))
 }
 
-// ParentID applies equality check predicate on the "parent_id" field. It's identical to ParentIDEQ.
-func ParentID(v int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEQ(FieldParentID, v))
-}
-
-// ChildID applies equality check predicate on the "child_id" field. It's identical to ChildIDEQ.
-func ChildID(v int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEQ(FieldChildID, v))
-}
-
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldEQ(FieldCreatedAt, v))
 }
 
-// TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEQ(FieldType, v))
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNEQ(FieldType, v))
+// RelationshipTypeEQ applies the EQ predicate on the "relationship_type" field.
+func RelationshipTypeEQ(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldRelationshipType, v))
 }
 
-// TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldIn(FieldType, vs...))
+// RelationshipTypeNEQ applies the NEQ predicate on the "relationship_type" field.
+func RelationshipTypeNEQ(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldRelationshipType, v))
 }
 
-// TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNotIn(FieldType, vs...))
+// RelationshipTypeIn applies the In predicate on the "relationship_type" field.
+func RelationshipTypeIn(vs ...string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldRelationshipType, vs...))
 }
 
-// TypeGT applies the GT predicate on the "type" field.
-func TypeGT(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldGT(FieldType, v))
+// RelationshipTypeNotIn applies the NotIn predicate on the "relationship_type" field.
+func RelationshipTypeNotIn(vs ...string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldRelationshipType, vs...))
 }
 
-// TypeGTE applies the GTE predicate on the "type" field.
-func TypeGTE(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldGTE(FieldType, v))
+// RelationshipTypeGT applies the GT predicate on the "relationship_type" field.
+func RelationshipTypeGT(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldGT(FieldRelationshipType, v))
 }
 
-// TypeLT applies the LT predicate on the "type" field.
-func TypeLT(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldLT(FieldType, v))
+// RelationshipTypeGTE applies the GTE predicate on the "relationship_type" field.
+func RelationshipTypeGTE(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldGTE(FieldRelationshipType, v))
 }
 
-// TypeLTE applies the LTE predicate on the "type" field.
-func TypeLTE(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldLTE(FieldType, v))
+// RelationshipTypeLT applies the LT predicate on the "relationship_type" field.
+func RelationshipTypeLT(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldLT(FieldRelationshipType, v))
 }
 
-// TypeContains applies the Contains predicate on the "type" field.
-func TypeContains(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldContains(FieldType, v))
+// RelationshipTypeLTE applies the LTE predicate on the "relationship_type" field.
+func RelationshipTypeLTE(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldLTE(FieldRelationshipType, v))
 }
 
-// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
-func TypeHasPrefix(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldHasPrefix(FieldType, v))
+// RelationshipTypeContains applies the Contains predicate on the "relationship_type" field.
+func RelationshipTypeContains(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldContains(FieldRelationshipType, v))
 }
 
-// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
-func TypeHasSuffix(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldHasSuffix(FieldType, v))
+// RelationshipTypeHasPrefix applies the HasPrefix predicate on the "relationship_type" field.
+func RelationshipTypeHasPrefix(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldHasPrefix(FieldRelationshipType, v))
 }
 
-// TypeEqualFold applies the EqualFold predicate on the "type" field.
-func TypeEqualFold(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEqualFold(FieldType, v))
+// RelationshipTypeHasSuffix applies the HasSuffix predicate on the "relationship_type" field.
+func RelationshipTypeHasSuffix(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldHasSuffix(FieldRelationshipType, v))
 }
 
-// TypeContainsFold applies the ContainsFold predicate on the "type" field.
-func TypeContainsFold(v string) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldContainsFold(FieldType, v))
+// RelationshipTypeEqualFold applies the EqualFold predicate on the "relationship_type" field.
+func RelationshipTypeEqualFold(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEqualFold(FieldRelationshipType, v))
+}
+
+// RelationshipTypeContainsFold applies the ContainsFold predicate on the "relationship_type" field.
+func RelationshipTypeContainsFold(v string) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldContainsFold(FieldRelationshipType, v))
+}
+
+// SourceCiIDEQ applies the EQ predicate on the "source_ci_id" field.
+func SourceCiIDEQ(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldSourceCiID, v))
+}
+
+// SourceCiIDNEQ applies the NEQ predicate on the "source_ci_id" field.
+func SourceCiIDNEQ(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldSourceCiID, v))
+}
+
+// SourceCiIDIn applies the In predicate on the "source_ci_id" field.
+func SourceCiIDIn(vs ...int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldSourceCiID, vs...))
+}
+
+// SourceCiIDNotIn applies the NotIn predicate on the "source_ci_id" field.
+func SourceCiIDNotIn(vs ...int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldSourceCiID, vs...))
+}
+
+// TargetCiIDEQ applies the EQ predicate on the "target_ci_id" field.
+func TargetCiIDEQ(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldTargetCiID, v))
+}
+
+// TargetCiIDNEQ applies the NEQ predicate on the "target_ci_id" field.
+func TargetCiIDNEQ(v int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldTargetCiID, v))
+}
+
+// TargetCiIDIn applies the In predicate on the "target_ci_id" field.
+func TargetCiIDIn(vs ...int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldTargetCiID, vs...))
+}
+
+// TargetCiIDNotIn applies the NotIn predicate on the "target_ci_id" field.
+func TargetCiIDNotIn(vs ...int) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldTargetCiID, vs...))
+}
+
+// StrengthEQ applies the EQ predicate on the "strength" field.
+func StrengthEQ(v Strength) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldStrength, v))
+}
+
+// StrengthNEQ applies the NEQ predicate on the "strength" field.
+func StrengthNEQ(v Strength) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldStrength, v))
+}
+
+// StrengthIn applies the In predicate on the "strength" field.
+func StrengthIn(vs ...Strength) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldStrength, vs...))
+}
+
+// StrengthNotIn applies the NotIn predicate on the "strength" field.
+func StrengthNotIn(vs ...Strength) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldStrength, vs...))
+}
+
+// ImpactLevelEQ applies the EQ predicate on the "impact_level" field.
+func ImpactLevelEQ(v ImpactLevel) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldImpactLevel, v))
+}
+
+// ImpactLevelNEQ applies the NEQ predicate on the "impact_level" field.
+func ImpactLevelNEQ(v ImpactLevel) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldImpactLevel, v))
+}
+
+// ImpactLevelIn applies the In predicate on the "impact_level" field.
+func ImpactLevelIn(vs ...ImpactLevel) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldImpactLevel, vs...))
+}
+
+// ImpactLevelNotIn applies the NotIn predicate on the "impact_level" field.
+func ImpactLevelNotIn(vs ...ImpactLevel) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldImpactLevel, vs...))
+}
+
+// IsActiveEQ applies the EQ predicate on the "is_active" field.
+func IsActiveEQ(v bool) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
+func IsActiveNEQ(v bool) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldIsActive, v))
+}
+
+// IsDiscoveredEQ applies the EQ predicate on the "is_discovered" field.
+func IsDiscoveredEQ(v bool) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldIsDiscovered, v))
+}
+
+// IsDiscoveredNEQ applies the NEQ predicate on the "is_discovered" field.
+func IsDiscoveredNEQ(v bool) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldIsDiscovered, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.
@@ -220,44 +335,14 @@ func DescriptionContainsFold(v string) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// ParentIDEQ applies the EQ predicate on the "parent_id" field.
-func ParentIDEQ(v int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEQ(FieldParentID, v))
+// MetadataIsNil applies the IsNil predicate on the "metadata" field.
+func MetadataIsNil() predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIsNull(FieldMetadata))
 }
 
-// ParentIDNEQ applies the NEQ predicate on the "parent_id" field.
-func ParentIDNEQ(v int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNEQ(FieldParentID, v))
-}
-
-// ParentIDIn applies the In predicate on the "parent_id" field.
-func ParentIDIn(vs ...int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldIn(FieldParentID, vs...))
-}
-
-// ParentIDNotIn applies the NotIn predicate on the "parent_id" field.
-func ParentIDNotIn(vs ...int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNotIn(FieldParentID, vs...))
-}
-
-// ChildIDEQ applies the EQ predicate on the "child_id" field.
-func ChildIDEQ(v int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldEQ(FieldChildID, v))
-}
-
-// ChildIDNEQ applies the NEQ predicate on the "child_id" field.
-func ChildIDNEQ(v int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNEQ(FieldChildID, v))
-}
-
-// ChildIDIn applies the In predicate on the "child_id" field.
-func ChildIDIn(vs ...int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldIn(FieldChildID, vs...))
-}
-
-// ChildIDNotIn applies the NotIn predicate on the "child_id" field.
-func ChildIDNotIn(vs ...int) predicate.CIRelationship {
-	return predicate.CIRelationship(sql.FieldNotIn(FieldChildID, vs...))
+// MetadataNotNil applies the NotNil predicate on the "metadata" field.
+func MetadataNotNil() predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotNull(FieldMetadata))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -300,21 +385,61 @@ func CreatedAtLTE(v time.Time) predicate.CIRelationship {
 	return predicate.CIRelationship(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// HasParent applies the HasEdge predicate on the "parent" edge.
-func HasParent() predicate.CIRelationship {
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldNotIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldGT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldGTE(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldLT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.CIRelationship {
+	return predicate.CIRelationship(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasSourceCi applies the HasEdge predicate on the "source_ci" edge.
+func HasSourceCi() predicate.CIRelationship {
 	return predicate.CIRelationship(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, SourceCiTable, SourceCiColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasParentWith applies the HasEdge predicate on the "parent" edge with a given conditions (other predicates).
-func HasParentWith(preds ...predicate.ConfigurationItem) predicate.CIRelationship {
+// HasSourceCiWith applies the HasEdge predicate on the "source_ci" edge with a given conditions (other predicates).
+func HasSourceCiWith(preds ...predicate.ConfigurationItem) predicate.CIRelationship {
 	return predicate.CIRelationship(func(s *sql.Selector) {
-		step := newParentStep()
+		step := newSourceCiStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -323,21 +448,21 @@ func HasParentWith(preds ...predicate.ConfigurationItem) predicate.CIRelationshi
 	})
 }
 
-// HasChild applies the HasEdge predicate on the "child" edge.
-func HasChild() predicate.CIRelationship {
+// HasTargetCi applies the HasEdge predicate on the "target_ci" edge.
+func HasTargetCi() predicate.CIRelationship {
 	return predicate.CIRelationship(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ChildTable, ChildColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, TargetCiTable, TargetCiColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasChildWith applies the HasEdge predicate on the "child" edge with a given conditions (other predicates).
-func HasChildWith(preds ...predicate.ConfigurationItem) predicate.CIRelationship {
+// HasTargetCiWith applies the HasEdge predicate on the "target_ci" edge with a given conditions (other predicates).
+func HasTargetCiWith(preds ...predicate.ConfigurationItem) predicate.CIRelationship {
 	return predicate.CIRelationship(func(s *sql.Selector) {
-		step := newChildStep()
+		step := newTargetCiStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

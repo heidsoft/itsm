@@ -145,7 +145,7 @@ export default function LoginPage() {
 
                 {/* 错误提示 */}
                 {error && (
-                  <Alert message="登录失败" description={error} type='error' className="mb-5" showIcon />
+                  <Alert title="登录失败" description={error} type='error' className="mb-5" showIcon />
                 )}
 
                 {/* 登录表单 */}

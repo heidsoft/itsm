@@ -9,8 +9,8 @@ import { ServiceItemCard } from './components/ServiceItemCard';
 import { CreateServiceModal } from './components/CreateServiceModal';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { useI18n } from '@/lib/i18n';
-import { CMDBApi } from '@/modules/cmdb/api';
-import type { CIType, CloudService } from '@/modules/cmdb/types';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const ServiceCatalogSkeleton: React.FC = () => (
   <div>

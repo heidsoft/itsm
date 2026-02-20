@@ -103,7 +103,7 @@ export function useCIChangeHistoryQuery(
 ) {
   return useQuery({
     queryKey: [...CMDB_KEYS.ciChanges(ciId), params],
-    queryFn: () => CMDBApi.getCIChangeHistory(ciId, params),
+    queryFn: () => CMDBApi.getCIChangeHistory(Number(ciId), params),
     enabled: enabled && !!ciId,
     staleTime: 60000,
   });

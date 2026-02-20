@@ -131,17 +131,20 @@ export interface TicketHierarchy {
  * 工单依赖
  */
 export interface TicketDependency {
-  id: string;
-  ticketId: number;
-  dependsOnTicketId: number;
-  dependsOnTicketNumber: string;
-  dependsOnTicketTitle: string;
-  dependsOnTicketStatus: string;
-  dependencyType: 'hard' | 'soft';       // 硬依赖/软依赖
-  isBlocking: boolean;                   // 是否当前阻塞
-  canStart: boolean;                     // 是否可以开始
-  estimatedUnblockDate?: Date;           // 预计解除阻塞日期
-  createdAt: Date;
+  id: number;
+  source_ticket_id: number;
+  source_ticket_number: string;
+  source_ticket_title: string;
+  target_ticket_id: number;
+  target_ticket_number: string;
+  target_ticket_title: string;
+  relation_type: TicketRelationType;
+  dependency_type: 'hard' | 'soft';       // 硬依赖/软依赖
+  is_blocking: boolean;                   // 是否当前阻塞
+  description?: string;
+  created_at: string;                     // 改为string以匹配API响应
+  created_by: number;
+  created_by_name: string;
 }
 
 /**
@@ -202,6 +205,7 @@ export interface BatchCreateRelationsRequest {
  */
 export interface UpdateRelationRequest {
   description?: string;
+  relationType?: string;
   metadata?: Record<string, any>;
 }
 

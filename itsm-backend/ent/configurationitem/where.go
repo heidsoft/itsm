@@ -2122,21 +2122,21 @@ func HasIncidentsWith(preds ...predicate.Incident) predicate.ConfigurationItem {
 	})
 }
 
-// HasParentRelations applies the HasEdge predicate on the "parent_relations" edge.
-func HasParentRelations() predicate.ConfigurationItem {
+// HasOutgoingRelations applies the HasEdge predicate on the "outgoing_relations" edge.
+func HasOutgoingRelations() predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ParentRelationsTable, ParentRelationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, OutgoingRelationsTable, OutgoingRelationsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasParentRelationsWith applies the HasEdge predicate on the "parent_relations" edge with a given conditions (other predicates).
-func HasParentRelationsWith(preds ...predicate.CIRelationship) predicate.ConfigurationItem {
+// HasOutgoingRelationsWith applies the HasEdge predicate on the "outgoing_relations" edge with a given conditions (other predicates).
+func HasOutgoingRelationsWith(preds ...predicate.CIRelationship) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newParentRelationsStep()
+		step := newOutgoingRelationsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -2145,21 +2145,21 @@ func HasParentRelationsWith(preds ...predicate.CIRelationship) predicate.Configu
 	})
 }
 
-// HasChildRelations applies the HasEdge predicate on the "child_relations" edge.
-func HasChildRelations() predicate.ConfigurationItem {
+// HasIncomingRelations applies the HasEdge predicate on the "incoming_relations" edge.
+func HasIncomingRelations() predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ChildRelationsTable, ChildRelationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, IncomingRelationsTable, IncomingRelationsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasChildRelationsWith applies the HasEdge predicate on the "child_relations" edge with a given conditions (other predicates).
-func HasChildRelationsWith(preds ...predicate.CIRelationship) predicate.ConfigurationItem {
+// HasIncomingRelationsWith applies the HasEdge predicate on the "incoming_relations" edge with a given conditions (other predicates).
+func HasIncomingRelationsWith(preds ...predicate.CIRelationship) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(func(s *sql.Selector) {
-		step := newChildRelationsStep()
+		step := newIncomingRelationsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

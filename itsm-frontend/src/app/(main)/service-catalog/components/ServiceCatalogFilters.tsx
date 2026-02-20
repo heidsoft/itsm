@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, Row, Col, Input, Select, Button } from 'antd';
 import { Search, PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import type { CIType, CloudService } from '@/modules/cmdb/types';
+import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const { Search: SearchInput } = Input;
 const { Option } = Select;

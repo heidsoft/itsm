@@ -1,6 +1,6 @@
 'use client';
 
-import DepartmentTree from '@/modules/common/components/DepartmentTree';
+import DepartmentTree from '@/components/common/DepartmentTree';
 
 export default function OrganizationPage() {
     return <DepartmentTree />;

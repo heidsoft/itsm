@@ -59,7 +59,9 @@ jest.mock('antd', () => {
     },
   ];
 
-  MockForm.Item = ({ children }: any) => <div>{children}</div>;
+  const MockFormItem = ({ children }: any) => <div>{children}</div>;
+  MockFormItem.displayName = 'MockFormItem';
+  MockForm.Item = MockFormItem;
 
   return {
     ...actual,
@@ -90,8 +92,9 @@ jest.mock('antd', () => {
           />
         </div>
       );
+      MockInput.displayName = 'MockInput';
 
-      MockInput.Password = ({
+      const MockPasswordInput = ({
         placeholder,
         prefix,
         ...props
@@ -110,7 +113,8 @@ jest.mock('antd', () => {
           />
         </div>
       );
-
+      MockPasswordInput.displayName = 'MockPasswordInput';
+      MockInput.Password = MockPasswordInput;
       return MockInput;
     })(),
     Button: ({

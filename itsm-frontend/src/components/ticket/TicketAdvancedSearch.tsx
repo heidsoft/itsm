@@ -162,6 +162,7 @@ const SEARCH_TEMPLATES = [
   },
 ];
 
+// 提取各面板内容为常量（在组件外部使用会有类型问题，需要内联）
 const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   onSearch,
   onReset,
@@ -171,6 +172,156 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const [form] = Form.useForm();
   const [activeTemplate, setActiveTemplate] = useState<string>('');
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
+
+  // 快速日期范围（需要在面板定义之前）
+  const quickDateRanges: RangePickerProps['ranges'] = {
+    '今天': [dayjs().startOf('day'), dayjs().endOf('day')],
+    '昨天': [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
+    '本周': [dayjs().startOf('week'), dayjs().endOf('week')],
+    '上周': [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
+    '本月': [dayjs().startOf('month'), dayjs().endOf('month')],
+    '上月': [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')],
+    '最近7天': [dayjs().subtract(7, 'day'), dayjs()],
+    '最近30天': [dayjs().subtract(30, 'day'), dayjs()],
+  };
+
+  // 面板内容
+  const basicInfoPanel = (
+    <Row gutter={[16, 0]}>
+      <Col span={6}>
+        <Form.Item label="关键字搜索" name="keyword">
+          <Input placeholder="标题、描述、工单号..." prefix={<SearchOutlined />} />
+        </Form.Item>
+      </Col>
+      <Col span={6}>
+        <Form.Item label="工单号" name="ticket_number">
+          <Input placeholder="精确工单号" />
+        </Form.Item>
+      </Col>
+      <Col span={6}>
+        <Form.Item label="工单标题" name="title">
+          <Input placeholder="工单标题" />
+        </Form.Item>
+      </Col>
+      <Col span={6}>
+        <Form.Item label="工单描述" name="description">
+          <TextArea rows={1} placeholder="工单描述" />
+        </Form.Item>
+      </Col>
+    </Row>
+  );
+
+  const statusPanel = (
+    <Row gutter={[16, 0]}>
+      <Col span={6}>
+        <Form.Item label="状态" name="status">
+          <Select mode="multiple" placeholder="选择状态" allowClear>
+            {TICKET_STATUS_OPTIONS.map(option => (
+              <Option key={option.value} value={option.value}>
+                <Tag color={option.color}>{option.label}</Tag>
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+      <Col span={6}>
+        <Form.Item label="优先级" name="priority">
+          <Select mode="multiple" placeholder="选择优先级" allowClear>
+            {TICKET_PRIORITY_OPTIONS.map(option => (
+              <Option key={option.value} value={option.value}>
+                <Tag color={option.color}>{option.label}</Tag>
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+      <Col span={6}>
+        <Form.Item label="工单类型" name="type">
+          <Select mode="multiple" placeholder="选择类型" allowClear>
+            {TICKET_TYPE_OPTIONS.map(option => (
+              <Option key={option.value} value={option.value}>
+                {option.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+      <Col span={6}>
+        <Form.Item label="来源" name="source">
+          <Select mode="multiple" placeholder="选择来源" allowClear>
+            {TICKET_SOURCE_OPTIONS.map(option => (
+              <Option key={option.value} value={option.value}>
+                {option.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Col>
+    </Row>
+  );
+
+  const timePanel = (
+    <Row gutter={[16, 0]}>
+      <Col span={12}>
+        <Form.Item label="创建时间" name="created_range">
+          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
+            if (dates && dates[0] && dates[1]) {
+              form.setFieldsValue({ created_after: dates[0].format('YYYY-MM-DD'), created_before: dates[1].format('YYYY-MM-DD') });
+            } else {
+              form.setFieldsValue({ created_after: undefined, created_before: undefined });
+            }
+          }} />
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item label="更新时间" name="updated_range">
+          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
+            if (dates && dates[0] && dates[1]) {
+              form.setFieldsValue({ updated_after: dates[0].format('YYYY-MM-DD'), updated_before: dates[1].format('YYYY-MM-DD') });
+            } else {
+              form.setFieldsValue({ updated_after: undefined, updated_before: undefined });
+            }
+          }} />
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item label="截止时间" name="due_range">
+          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
+            if (dates && dates[0] && dates[1]) {
+              form.setFieldsValue({ due_after: dates[0].format('YYYY-MM-DD'), due_before: dates[1].format('YYYY-MM-DD') });
+            } else {
+              form.setFieldsValue({ due_after: undefined, due_before: undefined });
+            }
+          }} />
+        </Form.Item>
+      </Col>
+      <Col span={12}>
+        <Form.Item label="解决时间" name="resolved_range">
+          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
+            if (dates && dates[0] && dates[1]) {
+              form.setFieldsValue({ resolved_after: dates[0].format('YYYY-MM-DD'), resolved_before: dates[1].format('YYYY-MM-DD') });
+            } else {
+              form.setFieldsValue({ resolved_after: undefined, resolved_before: undefined });
+            }
+          }} />
+        </Form.Item>
+      </Col>
+    </Row>
+  );
+
+  const slaPanel = (
+    <Row gutter={[16, 0]}>
+      <Col span={6}>
+        <Form.Item label="SLA状态" name="sla_status">
+          <Select placeholder="选择SLA状态" allowClear>
+            <Option value="breach">已超时</Option>
+            <Option value="warning">即将超时</Option>
+            <Option value="normal">正常</Option>
+          </Select>
+        </Form.Item>
+      </Col>
+    </Row>
+  );
 
   // 应用搜索模板
   const applyTemplate = useCallback((template: typeof SEARCH_TEMPLATES[0]) => {
@@ -219,18 +370,6 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
     onReset();
   }, [form, onReset]);
 
-  // 快速日期范围
-  const quickDateRanges: RangePickerProps['ranges'] = {
-    '今天': [dayjs().startOf('day'), dayjs().endOf('day')],
-    '昨天': [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
-    '本周': [dayjs().startOf('week'), dayjs().endOf('week')],
-    '上周': [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
-    '本月': [dayjs().startOf('month'), dayjs().endOf('month')],
-    '上月': [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')],
-    '最近7天': [dayjs().subtract(7, 'day'), dayjs()],
-    '最近30天': [dayjs().subtract(30, 'day'), dayjs()],
-  };
-
   return (
     <Card 
       title={
@@ -275,195 +414,16 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         initialValues={initialValues}
         onFinish={handleSearch}
       >
-        <Collapse defaultActiveKey={['basic']} ghost>
-          {/* 基础信息 */}
-          <Panel header="基础信息" key="basic">
-            <Row gutter={[16, 0]}>
-              <Col span={6}>
-                <Form.Item label="关键字搜索" name="keyword">
-                  <Input
-                    placeholder="标题、描述、工单号..."
-                    prefix={<SearchOutlined />}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="工单号" name="ticket_number">
-                  <Input placeholder="精确工单号" />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="工单标题" name="title">
-                  <Input placeholder="工单标题" />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="工单描述" name="description">
-                  <TextArea rows={1} placeholder="工单描述" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Panel>
-
-          {/* 状态分类 */}
-          <Panel header="状态和分类" key="status">
-            <Row gutter={[16, 0]}>
-              <Col span={6}>
-                <Form.Item label="状态" name="status">
-                  <Select mode="multiple" placeholder="选择状态" allowClear>
-                    {TICKET_STATUS_OPTIONS.map(option => (
-                      <Option key={option.value} value={option.value}>
-                        <Tag color={option.color}>{option.label}</Tag>
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="优先级" name="priority">
-                  <Select mode="multiple" placeholder="选择优先级" allowClear>
-                    {TICKET_PRIORITY_OPTIONS.map(option => (
-                      <Option key={option.value} value={option.value}>
-                        <Tag color={option.color}>{option.label}</Tag>
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="工单类型" name="type">
-                  <Select mode="multiple" placeholder="选择类型" allowClear>
-                    {TICKET_TYPE_OPTIONS.map(option => (
-                      <Option key={option.value} value={option.value}>
-                        {option.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item label="来源" name="source">
-                  <Select mode="multiple" placeholder="选择来源" allowClear>
-                    {TICKET_SOURCE_OPTIONS.map(option => (
-                      <Option key={option.value} value={option.value}>
-                        {option.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Panel>
-
-          {/* 时间范围 */}
-          <Panel header="时间范围" key="time">
-            <Row gutter={[16, 0]}>
-              <Col span={12}>
-                <Form.Item label="创建时间" name="created_range">
-                  <RangePicker
-                    style={{ width: '100%' }}
-                    ranges={quickDateRanges}
-                    format="YYYY-MM-DD"
-                    onChange={(dates) => {
-                      if (dates && dates[0] && dates[1]) {
-                        form.setFieldsValue({
-                          created_after: dates[0].format('YYYY-MM-DD'),
-                          created_before: dates[1].format('YYYY-MM-DD'),
-                        });
-                      } else {
-                        form.setFieldsValue({
-                          created_after: undefined,
-                          created_before: undefined,
-                        });
-                      }
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="更新时间" name="updated_range">
-                  <RangePicker
-                    style={{ width: '100%' }}
-                    ranges={quickDateRanges}
-                    format="YYYY-MM-DD"
-                    onChange={(dates) => {
-                      if (dates && dates[0] && dates[1]) {
-                        form.setFieldsValue({
-                          updated_after: dates[0].format('YYYY-MM-DD'),
-                          updated_before: dates[1].format('YYYY-MM-DD'),
-                        });
-                      } else {
-                        form.setFieldsValue({
-                          updated_after: undefined,
-                          updated_before: undefined,
-                        });
-                      }
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="截止时间" name="due_range">
-                  <RangePicker
-                    style={{ width: '100%' }}
-                    ranges={quickDateRanges}
-                    format="YYYY-MM-DD"
-                    onChange={(dates) => {
-                      if (dates && dates[0] && dates[1]) {
-                        form.setFieldsValue({
-                          due_after: dates[0].format('YYYY-MM-DD'),
-                          due_before: dates[1].format('YYYY-MM-DD'),
-                        });
-                      } else {
-                        form.setFieldsValue({
-                          due_after: undefined,
-                          due_before: undefined,
-                        });
-                      }
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="解决时间" name="resolved_range">
-                  <RangePicker
-                    style={{ width: '100%' }}
-                    ranges={quickDateRanges}
-                    format="YYYY-MM-DD"
-                    onChange={(dates) => {
-                      if (dates && dates[0] && dates[1]) {
-                        form.setFieldsValue({
-                          resolved_after: dates[0].format('YYYY-MM-DD'),
-                          resolved_before: dates[1].format('YYYY-MM-DD'),
-                        });
-                      } else {
-                        form.setFieldsValue({
-                          resolved_after: undefined,
-                          resolved_before: undefined,
-                        });
-                      }
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Panel>
-
-          {/* SLA相关 */}
-          <Panel header="SLA监控" key="sla">
-            <Row gutter={[16, 0]}>
-              <Col span={6}>
-                <Form.Item label="SLA状态" name="sla_status">
-                  <Select placeholder="选择SLA状态" allowClear>
-                    <Option value="breach">已超时</Option>
-                    <Option value="warning">即将超时</Option>
-                    <Option value="normal">正常</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Panel>
-        </Collapse>
+        <Collapse
+          defaultActiveKey={['basic']}
+          ghost
+          items={[
+            { key: 'basic', label: '基础信息', children: basicInfoPanel },
+            { key: 'status', label: '状态和分类', children: statusPanel },
+            { key: 'time', label: '时间范围', children: timePanel },
+            { key: 'sla', label: 'SLA监控', children: slaPanel },
+          ]}
+        />
 
         {/* 操作按钮 */}
         <div className="flex justify-between items-center mt-6">

@@ -16,12 +16,24 @@ const (
 	FieldID = "id"
 	// FieldSLADefinitionID holds the string denoting the sla_definition_id field in the database.
 	FieldSLADefinitionID = "sla_definition_id"
+	// FieldTicketType holds the string denoting the ticket_type field in the database.
+	FieldTicketType = "ticket_type"
+	// FieldSLAName holds the string denoting the sla_name field in the database.
+	FieldSLAName = "sla_name"
 	// FieldTicketID holds the string denoting the ticket_id field in the database.
 	FieldTicketID = "ticket_id"
 	// FieldViolationType holds the string denoting the violation_type field in the database.
 	FieldViolationType = "violation_type"
 	// FieldViolationTime holds the string denoting the violation_time field in the database.
 	FieldViolationTime = "violation_time"
+	// FieldExpectedTime holds the string denoting the expected_time field in the database.
+	FieldExpectedTime = "expected_time"
+	// FieldActualTime holds the string denoting the actual_time field in the database.
+	FieldActualTime = "actual_time"
+	// FieldOverdueMinutes holds the string denoting the overdue_minutes field in the database.
+	FieldOverdueMinutes = "overdue_minutes"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// FieldSeverity holds the string denoting the severity field in the database.
@@ -64,9 +76,15 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldSLADefinitionID,
+	FieldTicketType,
+	FieldSLAName,
 	FieldTicketID,
 	FieldViolationType,
 	FieldViolationTime,
+	FieldExpectedTime,
+	FieldActualTime,
+	FieldOverdueMinutes,
+	FieldStatus,
 	FieldDescription,
 	FieldSeverity,
 	FieldIsResolved,
@@ -90,12 +108,20 @@ func ValidColumn(column string) bool {
 var (
 	// SLADefinitionIDValidator is a validator for the "sla_definition_id" field. It is called by the builders before save.
 	SLADefinitionIDValidator func(int) error
+	// DefaultTicketType holds the default value on creation for the "ticket_type" field.
+	DefaultTicketType string
+	// DefaultSLAName holds the default value on creation for the "sla_name" field.
+	DefaultSLAName string
 	// TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
 	TicketIDValidator func(int) error
 	// ViolationTypeValidator is a validator for the "violation_type" field. It is called by the builders before save.
 	ViolationTypeValidator func(string) error
 	// DefaultViolationTime holds the default value on creation for the "violation_time" field.
 	DefaultViolationTime func() time.Time
+	// DefaultOverdueMinutes holds the default value on creation for the "overdue_minutes" field.
+	DefaultOverdueMinutes int
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
 	// DefaultSeverity holds the default value on creation for the "severity" field.
 	DefaultSeverity string
 	// DefaultIsResolved holds the default value on creation for the "is_resolved" field.
@@ -123,6 +149,16 @@ func BySLADefinitionID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSLADefinitionID, opts...).ToFunc()
 }
 
+// ByTicketType orders the results by the ticket_type field.
+func ByTicketType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTicketType, opts...).ToFunc()
+}
+
+// BySLAName orders the results by the sla_name field.
+func BySLAName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAName, opts...).ToFunc()
+}
+
 // ByTicketID orders the results by the ticket_id field.
 func ByTicketID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTicketID, opts...).ToFunc()
@@ -136,6 +172,26 @@ func ByViolationType(opts ...sql.OrderTermOption) OrderOption {
 // ByViolationTime orders the results by the violation_time field.
 func ByViolationTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldViolationTime, opts...).ToFunc()
+}
+
+// ByExpectedTime orders the results by the expected_time field.
+func ByExpectedTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpectedTime, opts...).ToFunc()
+}
+
+// ByActualTime orders the results by the actual_time field.
+func ByActualTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActualTime, opts...).ToFunc()
+}
+
+// ByOverdueMinutes orders the results by the overdue_minutes field.
+func ByOverdueMinutes(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOverdueMinutes, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.

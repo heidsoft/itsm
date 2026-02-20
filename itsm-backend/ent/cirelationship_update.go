@@ -29,16 +29,100 @@ func (cru *CIRelationshipUpdate) Where(ps ...predicate.CIRelationship) *CIRelati
 	return cru
 }
 
-// SetType sets the "type" field.
-func (cru *CIRelationshipUpdate) SetType(s string) *CIRelationshipUpdate {
-	cru.mutation.SetType(s)
+// SetRelationshipType sets the "relationship_type" field.
+func (cru *CIRelationshipUpdate) SetRelationshipType(s string) *CIRelationshipUpdate {
+	cru.mutation.SetRelationshipType(s)
 	return cru
 }
 
-// SetNillableType sets the "type" field if the given value is not nil.
-func (cru *CIRelationshipUpdate) SetNillableType(s *string) *CIRelationshipUpdate {
+// SetNillableRelationshipType sets the "relationship_type" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableRelationshipType(s *string) *CIRelationshipUpdate {
 	if s != nil {
-		cru.SetType(*s)
+		cru.SetRelationshipType(*s)
+	}
+	return cru
+}
+
+// SetSourceCiID sets the "source_ci_id" field.
+func (cru *CIRelationshipUpdate) SetSourceCiID(i int) *CIRelationshipUpdate {
+	cru.mutation.SetSourceCiID(i)
+	return cru
+}
+
+// SetNillableSourceCiID sets the "source_ci_id" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableSourceCiID(i *int) *CIRelationshipUpdate {
+	if i != nil {
+		cru.SetSourceCiID(*i)
+	}
+	return cru
+}
+
+// SetTargetCiID sets the "target_ci_id" field.
+func (cru *CIRelationshipUpdate) SetTargetCiID(i int) *CIRelationshipUpdate {
+	cru.mutation.SetTargetCiID(i)
+	return cru
+}
+
+// SetNillableTargetCiID sets the "target_ci_id" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableTargetCiID(i *int) *CIRelationshipUpdate {
+	if i != nil {
+		cru.SetTargetCiID(*i)
+	}
+	return cru
+}
+
+// SetStrength sets the "strength" field.
+func (cru *CIRelationshipUpdate) SetStrength(c cirelationship.Strength) *CIRelationshipUpdate {
+	cru.mutation.SetStrength(c)
+	return cru
+}
+
+// SetNillableStrength sets the "strength" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableStrength(c *cirelationship.Strength) *CIRelationshipUpdate {
+	if c != nil {
+		cru.SetStrength(*c)
+	}
+	return cru
+}
+
+// SetImpactLevel sets the "impact_level" field.
+func (cru *CIRelationshipUpdate) SetImpactLevel(cl cirelationship.ImpactLevel) *CIRelationshipUpdate {
+	cru.mutation.SetImpactLevel(cl)
+	return cru
+}
+
+// SetNillableImpactLevel sets the "impact_level" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableImpactLevel(cl *cirelationship.ImpactLevel) *CIRelationshipUpdate {
+	if cl != nil {
+		cru.SetImpactLevel(*cl)
+	}
+	return cru
+}
+
+// SetIsActive sets the "is_active" field.
+func (cru *CIRelationshipUpdate) SetIsActive(b bool) *CIRelationshipUpdate {
+	cru.mutation.SetIsActive(b)
+	return cru
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableIsActive(b *bool) *CIRelationshipUpdate {
+	if b != nil {
+		cru.SetIsActive(*b)
+	}
+	return cru
+}
+
+// SetIsDiscovered sets the "is_discovered" field.
+func (cru *CIRelationshipUpdate) SetIsDiscovered(b bool) *CIRelationshipUpdate {
+	cru.mutation.SetIsDiscovered(b)
+	return cru
+}
+
+// SetNillableIsDiscovered sets the "is_discovered" field if the given value is not nil.
+func (cru *CIRelationshipUpdate) SetNillableIsDiscovered(b *bool) *CIRelationshipUpdate {
+	if b != nil {
+		cru.SetIsDiscovered(*b)
 	}
 	return cru
 }
@@ -63,31 +147,15 @@ func (cru *CIRelationshipUpdate) ClearDescription() *CIRelationshipUpdate {
 	return cru
 }
 
-// SetParentID sets the "parent_id" field.
-func (cru *CIRelationshipUpdate) SetParentID(i int) *CIRelationshipUpdate {
-	cru.mutation.SetParentID(i)
+// SetMetadata sets the "metadata" field.
+func (cru *CIRelationshipUpdate) SetMetadata(m map[string]interface{}) *CIRelationshipUpdate {
+	cru.mutation.SetMetadata(m)
 	return cru
 }
 
-// SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (cru *CIRelationshipUpdate) SetNillableParentID(i *int) *CIRelationshipUpdate {
-	if i != nil {
-		cru.SetParentID(*i)
-	}
-	return cru
-}
-
-// SetChildID sets the "child_id" field.
-func (cru *CIRelationshipUpdate) SetChildID(i int) *CIRelationshipUpdate {
-	cru.mutation.SetChildID(i)
-	return cru
-}
-
-// SetNillableChildID sets the "child_id" field if the given value is not nil.
-func (cru *CIRelationshipUpdate) SetNillableChildID(i *int) *CIRelationshipUpdate {
-	if i != nil {
-		cru.SetChildID(*i)
-	}
+// ClearMetadata clears the value of the "metadata" field.
+func (cru *CIRelationshipUpdate) ClearMetadata() *CIRelationshipUpdate {
+	cru.mutation.ClearMetadata()
 	return cru
 }
 
@@ -105,14 +173,20 @@ func (cru *CIRelationshipUpdate) SetNillableCreatedAt(t *time.Time) *CIRelations
 	return cru
 }
 
-// SetParent sets the "parent" edge to the ConfigurationItem entity.
-func (cru *CIRelationshipUpdate) SetParent(c *ConfigurationItem) *CIRelationshipUpdate {
-	return cru.SetParentID(c.ID)
+// SetUpdatedAt sets the "updated_at" field.
+func (cru *CIRelationshipUpdate) SetUpdatedAt(t time.Time) *CIRelationshipUpdate {
+	cru.mutation.SetUpdatedAt(t)
+	return cru
 }
 
-// SetChild sets the "child" edge to the ConfigurationItem entity.
-func (cru *CIRelationshipUpdate) SetChild(c *ConfigurationItem) *CIRelationshipUpdate {
-	return cru.SetChildID(c.ID)
+// SetSourceCi sets the "source_ci" edge to the ConfigurationItem entity.
+func (cru *CIRelationshipUpdate) SetSourceCi(c *ConfigurationItem) *CIRelationshipUpdate {
+	return cru.SetSourceCiID(c.ID)
+}
+
+// SetTargetCi sets the "target_ci" edge to the ConfigurationItem entity.
+func (cru *CIRelationshipUpdate) SetTargetCi(c *ConfigurationItem) *CIRelationshipUpdate {
+	return cru.SetTargetCiID(c.ID)
 }
 
 // Mutation returns the CIRelationshipMutation object of the builder.
@@ -120,20 +194,21 @@ func (cru *CIRelationshipUpdate) Mutation() *CIRelationshipMutation {
 	return cru.mutation
 }
 
-// ClearParent clears the "parent" edge to the ConfigurationItem entity.
-func (cru *CIRelationshipUpdate) ClearParent() *CIRelationshipUpdate {
-	cru.mutation.ClearParent()
+// ClearSourceCi clears the "source_ci" edge to the ConfigurationItem entity.
+func (cru *CIRelationshipUpdate) ClearSourceCi() *CIRelationshipUpdate {
+	cru.mutation.ClearSourceCi()
 	return cru
 }
 
-// ClearChild clears the "child" edge to the ConfigurationItem entity.
-func (cru *CIRelationshipUpdate) ClearChild() *CIRelationshipUpdate {
-	cru.mutation.ClearChild()
+// ClearTargetCi clears the "target_ci" edge to the ConfigurationItem entity.
+func (cru *CIRelationshipUpdate) ClearTargetCi() *CIRelationshipUpdate {
+	cru.mutation.ClearTargetCi()
 	return cru
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (cru *CIRelationshipUpdate) Save(ctx context.Context) (int, error) {
+	cru.defaults()
 	return withHooks(ctx, cru.sqlSave, cru.mutation, cru.hooks)
 }
 
@@ -159,13 +234,36 @@ func (cru *CIRelationshipUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cru *CIRelationshipUpdate) defaults() {
+	if _, ok := cru.mutation.UpdatedAt(); !ok {
+		v := cirelationship.UpdateDefaultUpdatedAt()
+		cru.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cru *CIRelationshipUpdate) check() error {
-	if cru.mutation.ParentCleared() && len(cru.mutation.ParentIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "CIRelationship.parent"`)
+	if v, ok := cru.mutation.RelationshipType(); ok {
+		if err := cirelationship.RelationshipTypeValidator(v); err != nil {
+			return &ValidationError{Name: "relationship_type", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.relationship_type": %w`, err)}
+		}
 	}
-	if cru.mutation.ChildCleared() && len(cru.mutation.ChildIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "CIRelationship.child"`)
+	if v, ok := cru.mutation.Strength(); ok {
+		if err := cirelationship.StrengthValidator(v); err != nil {
+			return &ValidationError{Name: "strength", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.strength": %w`, err)}
+		}
+	}
+	if v, ok := cru.mutation.ImpactLevel(); ok {
+		if err := cirelationship.ImpactLevelValidator(v); err != nil {
+			return &ValidationError{Name: "impact_level", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.impact_level": %w`, err)}
+		}
+	}
+	if cru.mutation.SourceCiCleared() && len(cru.mutation.SourceCiIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "CIRelationship.source_ci"`)
+	}
+	if cru.mutation.TargetCiCleared() && len(cru.mutation.TargetCiIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "CIRelationship.target_ci"`)
 	}
 	return nil
 }
@@ -182,8 +280,20 @@ func (cru *CIRelationshipUpdate) sqlSave(ctx context.Context) (n int, err error)
 			}
 		}
 	}
-	if value, ok := cru.mutation.GetType(); ok {
-		_spec.SetField(cirelationship.FieldType, field.TypeString, value)
+	if value, ok := cru.mutation.RelationshipType(); ok {
+		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)
+	}
+	if value, ok := cru.mutation.Strength(); ok {
+		_spec.SetField(cirelationship.FieldStrength, field.TypeEnum, value)
+	}
+	if value, ok := cru.mutation.ImpactLevel(); ok {
+		_spec.SetField(cirelationship.FieldImpactLevel, field.TypeEnum, value)
+	}
+	if value, ok := cru.mutation.IsActive(); ok {
+		_spec.SetField(cirelationship.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := cru.mutation.IsDiscovered(); ok {
+		_spec.SetField(cirelationship.FieldIsDiscovered, field.TypeBool, value)
 	}
 	if value, ok := cru.mutation.Description(); ok {
 		_spec.SetField(cirelationship.FieldDescription, field.TypeString, value)
@@ -191,15 +301,24 @@ func (cru *CIRelationshipUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if cru.mutation.DescriptionCleared() {
 		_spec.ClearField(cirelationship.FieldDescription, field.TypeString)
 	}
+	if value, ok := cru.mutation.Metadata(); ok {
+		_spec.SetField(cirelationship.FieldMetadata, field.TypeJSON, value)
+	}
+	if cru.mutation.MetadataCleared() {
+		_spec.ClearField(cirelationship.FieldMetadata, field.TypeJSON)
+	}
 	if value, ok := cru.mutation.CreatedAt(); ok {
 		_spec.SetField(cirelationship.FieldCreatedAt, field.TypeTime, value)
 	}
-	if cru.mutation.ParentCleared() {
+	if value, ok := cru.mutation.UpdatedAt(); ok {
+		_spec.SetField(cirelationship.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if cru.mutation.SourceCiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ParentTable,
-			Columns: []string{cirelationship.ParentColumn},
+			Table:   cirelationship.SourceCiTable,
+			Columns: []string{cirelationship.SourceCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -207,12 +326,12 @@ func (cru *CIRelationshipUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cru.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := cru.mutation.SourceCiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ParentTable,
-			Columns: []string{cirelationship.ParentColumn},
+			Table:   cirelationship.SourceCiTable,
+			Columns: []string{cirelationship.SourceCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -223,12 +342,12 @@ func (cru *CIRelationshipUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cru.mutation.ChildCleared() {
+	if cru.mutation.TargetCiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ChildTable,
-			Columns: []string{cirelationship.ChildColumn},
+			Table:   cirelationship.TargetCiTable,
+			Columns: []string{cirelationship.TargetCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -236,12 +355,12 @@ func (cru *CIRelationshipUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cru.mutation.ChildIDs(); len(nodes) > 0 {
+	if nodes := cru.mutation.TargetCiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ChildTable,
-			Columns: []string{cirelationship.ChildColumn},
+			Table:   cirelationship.TargetCiTable,
+			Columns: []string{cirelationship.TargetCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -272,16 +391,100 @@ type CIRelationshipUpdateOne struct {
 	mutation *CIRelationshipMutation
 }
 
-// SetType sets the "type" field.
-func (cruo *CIRelationshipUpdateOne) SetType(s string) *CIRelationshipUpdateOne {
-	cruo.mutation.SetType(s)
+// SetRelationshipType sets the "relationship_type" field.
+func (cruo *CIRelationshipUpdateOne) SetRelationshipType(s string) *CIRelationshipUpdateOne {
+	cruo.mutation.SetRelationshipType(s)
 	return cruo
 }
 
-// SetNillableType sets the "type" field if the given value is not nil.
-func (cruo *CIRelationshipUpdateOne) SetNillableType(s *string) *CIRelationshipUpdateOne {
+// SetNillableRelationshipType sets the "relationship_type" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableRelationshipType(s *string) *CIRelationshipUpdateOne {
 	if s != nil {
-		cruo.SetType(*s)
+		cruo.SetRelationshipType(*s)
+	}
+	return cruo
+}
+
+// SetSourceCiID sets the "source_ci_id" field.
+func (cruo *CIRelationshipUpdateOne) SetSourceCiID(i int) *CIRelationshipUpdateOne {
+	cruo.mutation.SetSourceCiID(i)
+	return cruo
+}
+
+// SetNillableSourceCiID sets the "source_ci_id" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableSourceCiID(i *int) *CIRelationshipUpdateOne {
+	if i != nil {
+		cruo.SetSourceCiID(*i)
+	}
+	return cruo
+}
+
+// SetTargetCiID sets the "target_ci_id" field.
+func (cruo *CIRelationshipUpdateOne) SetTargetCiID(i int) *CIRelationshipUpdateOne {
+	cruo.mutation.SetTargetCiID(i)
+	return cruo
+}
+
+// SetNillableTargetCiID sets the "target_ci_id" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableTargetCiID(i *int) *CIRelationshipUpdateOne {
+	if i != nil {
+		cruo.SetTargetCiID(*i)
+	}
+	return cruo
+}
+
+// SetStrength sets the "strength" field.
+func (cruo *CIRelationshipUpdateOne) SetStrength(c cirelationship.Strength) *CIRelationshipUpdateOne {
+	cruo.mutation.SetStrength(c)
+	return cruo
+}
+
+// SetNillableStrength sets the "strength" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableStrength(c *cirelationship.Strength) *CIRelationshipUpdateOne {
+	if c != nil {
+		cruo.SetStrength(*c)
+	}
+	return cruo
+}
+
+// SetImpactLevel sets the "impact_level" field.
+func (cruo *CIRelationshipUpdateOne) SetImpactLevel(cl cirelationship.ImpactLevel) *CIRelationshipUpdateOne {
+	cruo.mutation.SetImpactLevel(cl)
+	return cruo
+}
+
+// SetNillableImpactLevel sets the "impact_level" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableImpactLevel(cl *cirelationship.ImpactLevel) *CIRelationshipUpdateOne {
+	if cl != nil {
+		cruo.SetImpactLevel(*cl)
+	}
+	return cruo
+}
+
+// SetIsActive sets the "is_active" field.
+func (cruo *CIRelationshipUpdateOne) SetIsActive(b bool) *CIRelationshipUpdateOne {
+	cruo.mutation.SetIsActive(b)
+	return cruo
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableIsActive(b *bool) *CIRelationshipUpdateOne {
+	if b != nil {
+		cruo.SetIsActive(*b)
+	}
+	return cruo
+}
+
+// SetIsDiscovered sets the "is_discovered" field.
+func (cruo *CIRelationshipUpdateOne) SetIsDiscovered(b bool) *CIRelationshipUpdateOne {
+	cruo.mutation.SetIsDiscovered(b)
+	return cruo
+}
+
+// SetNillableIsDiscovered sets the "is_discovered" field if the given value is not nil.
+func (cruo *CIRelationshipUpdateOne) SetNillableIsDiscovered(b *bool) *CIRelationshipUpdateOne {
+	if b != nil {
+		cruo.SetIsDiscovered(*b)
 	}
 	return cruo
 }
@@ -306,31 +509,15 @@ func (cruo *CIRelationshipUpdateOne) ClearDescription() *CIRelationshipUpdateOne
 	return cruo
 }
 
-// SetParentID sets the "parent_id" field.
-func (cruo *CIRelationshipUpdateOne) SetParentID(i int) *CIRelationshipUpdateOne {
-	cruo.mutation.SetParentID(i)
+// SetMetadata sets the "metadata" field.
+func (cruo *CIRelationshipUpdateOne) SetMetadata(m map[string]interface{}) *CIRelationshipUpdateOne {
+	cruo.mutation.SetMetadata(m)
 	return cruo
 }
 
-// SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (cruo *CIRelationshipUpdateOne) SetNillableParentID(i *int) *CIRelationshipUpdateOne {
-	if i != nil {
-		cruo.SetParentID(*i)
-	}
-	return cruo
-}
-
-// SetChildID sets the "child_id" field.
-func (cruo *CIRelationshipUpdateOne) SetChildID(i int) *CIRelationshipUpdateOne {
-	cruo.mutation.SetChildID(i)
-	return cruo
-}
-
-// SetNillableChildID sets the "child_id" field if the given value is not nil.
-func (cruo *CIRelationshipUpdateOne) SetNillableChildID(i *int) *CIRelationshipUpdateOne {
-	if i != nil {
-		cruo.SetChildID(*i)
-	}
+// ClearMetadata clears the value of the "metadata" field.
+func (cruo *CIRelationshipUpdateOne) ClearMetadata() *CIRelationshipUpdateOne {
+	cruo.mutation.ClearMetadata()
 	return cruo
 }
 
@@ -348,14 +535,20 @@ func (cruo *CIRelationshipUpdateOne) SetNillableCreatedAt(t *time.Time) *CIRelat
 	return cruo
 }
 
-// SetParent sets the "parent" edge to the ConfigurationItem entity.
-func (cruo *CIRelationshipUpdateOne) SetParent(c *ConfigurationItem) *CIRelationshipUpdateOne {
-	return cruo.SetParentID(c.ID)
+// SetUpdatedAt sets the "updated_at" field.
+func (cruo *CIRelationshipUpdateOne) SetUpdatedAt(t time.Time) *CIRelationshipUpdateOne {
+	cruo.mutation.SetUpdatedAt(t)
+	return cruo
 }
 
-// SetChild sets the "child" edge to the ConfigurationItem entity.
-func (cruo *CIRelationshipUpdateOne) SetChild(c *ConfigurationItem) *CIRelationshipUpdateOne {
-	return cruo.SetChildID(c.ID)
+// SetSourceCi sets the "source_ci" edge to the ConfigurationItem entity.
+func (cruo *CIRelationshipUpdateOne) SetSourceCi(c *ConfigurationItem) *CIRelationshipUpdateOne {
+	return cruo.SetSourceCiID(c.ID)
+}
+
+// SetTargetCi sets the "target_ci" edge to the ConfigurationItem entity.
+func (cruo *CIRelationshipUpdateOne) SetTargetCi(c *ConfigurationItem) *CIRelationshipUpdateOne {
+	return cruo.SetTargetCiID(c.ID)
 }
 
 // Mutation returns the CIRelationshipMutation object of the builder.
@@ -363,15 +556,15 @@ func (cruo *CIRelationshipUpdateOne) Mutation() *CIRelationshipMutation {
 	return cruo.mutation
 }
 
-// ClearParent clears the "parent" edge to the ConfigurationItem entity.
-func (cruo *CIRelationshipUpdateOne) ClearParent() *CIRelationshipUpdateOne {
-	cruo.mutation.ClearParent()
+// ClearSourceCi clears the "source_ci" edge to the ConfigurationItem entity.
+func (cruo *CIRelationshipUpdateOne) ClearSourceCi() *CIRelationshipUpdateOne {
+	cruo.mutation.ClearSourceCi()
 	return cruo
 }
 
-// ClearChild clears the "child" edge to the ConfigurationItem entity.
-func (cruo *CIRelationshipUpdateOne) ClearChild() *CIRelationshipUpdateOne {
-	cruo.mutation.ClearChild()
+// ClearTargetCi clears the "target_ci" edge to the ConfigurationItem entity.
+func (cruo *CIRelationshipUpdateOne) ClearTargetCi() *CIRelationshipUpdateOne {
+	cruo.mutation.ClearTargetCi()
 	return cruo
 }
 
@@ -390,6 +583,7 @@ func (cruo *CIRelationshipUpdateOne) Select(field string, fields ...string) *CIR
 
 // Save executes the query and returns the updated CIRelationship entity.
 func (cruo *CIRelationshipUpdateOne) Save(ctx context.Context) (*CIRelationship, error) {
+	cruo.defaults()
 	return withHooks(ctx, cruo.sqlSave, cruo.mutation, cruo.hooks)
 }
 
@@ -415,13 +609,36 @@ func (cruo *CIRelationshipUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cruo *CIRelationshipUpdateOne) defaults() {
+	if _, ok := cruo.mutation.UpdatedAt(); !ok {
+		v := cirelationship.UpdateDefaultUpdatedAt()
+		cruo.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cruo *CIRelationshipUpdateOne) check() error {
-	if cruo.mutation.ParentCleared() && len(cruo.mutation.ParentIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "CIRelationship.parent"`)
+	if v, ok := cruo.mutation.RelationshipType(); ok {
+		if err := cirelationship.RelationshipTypeValidator(v); err != nil {
+			return &ValidationError{Name: "relationship_type", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.relationship_type": %w`, err)}
+		}
 	}
-	if cruo.mutation.ChildCleared() && len(cruo.mutation.ChildIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "CIRelationship.child"`)
+	if v, ok := cruo.mutation.Strength(); ok {
+		if err := cirelationship.StrengthValidator(v); err != nil {
+			return &ValidationError{Name: "strength", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.strength": %w`, err)}
+		}
+	}
+	if v, ok := cruo.mutation.ImpactLevel(); ok {
+		if err := cirelationship.ImpactLevelValidator(v); err != nil {
+			return &ValidationError{Name: "impact_level", err: fmt.Errorf(`ent: validator failed for field "CIRelationship.impact_level": %w`, err)}
+		}
+	}
+	if cruo.mutation.SourceCiCleared() && len(cruo.mutation.SourceCiIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "CIRelationship.source_ci"`)
+	}
+	if cruo.mutation.TargetCiCleared() && len(cruo.mutation.TargetCiIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "CIRelationship.target_ci"`)
 	}
 	return nil
 }
@@ -455,8 +672,20 @@ func (cruo *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRela
 			}
 		}
 	}
-	if value, ok := cruo.mutation.GetType(); ok {
-		_spec.SetField(cirelationship.FieldType, field.TypeString, value)
+	if value, ok := cruo.mutation.RelationshipType(); ok {
+		_spec.SetField(cirelationship.FieldRelationshipType, field.TypeString, value)
+	}
+	if value, ok := cruo.mutation.Strength(); ok {
+		_spec.SetField(cirelationship.FieldStrength, field.TypeEnum, value)
+	}
+	if value, ok := cruo.mutation.ImpactLevel(); ok {
+		_spec.SetField(cirelationship.FieldImpactLevel, field.TypeEnum, value)
+	}
+	if value, ok := cruo.mutation.IsActive(); ok {
+		_spec.SetField(cirelationship.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := cruo.mutation.IsDiscovered(); ok {
+		_spec.SetField(cirelationship.FieldIsDiscovered, field.TypeBool, value)
 	}
 	if value, ok := cruo.mutation.Description(); ok {
 		_spec.SetField(cirelationship.FieldDescription, field.TypeString, value)
@@ -464,15 +693,24 @@ func (cruo *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRela
 	if cruo.mutation.DescriptionCleared() {
 		_spec.ClearField(cirelationship.FieldDescription, field.TypeString)
 	}
+	if value, ok := cruo.mutation.Metadata(); ok {
+		_spec.SetField(cirelationship.FieldMetadata, field.TypeJSON, value)
+	}
+	if cruo.mutation.MetadataCleared() {
+		_spec.ClearField(cirelationship.FieldMetadata, field.TypeJSON)
+	}
 	if value, ok := cruo.mutation.CreatedAt(); ok {
 		_spec.SetField(cirelationship.FieldCreatedAt, field.TypeTime, value)
 	}
-	if cruo.mutation.ParentCleared() {
+	if value, ok := cruo.mutation.UpdatedAt(); ok {
+		_spec.SetField(cirelationship.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if cruo.mutation.SourceCiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ParentTable,
-			Columns: []string{cirelationship.ParentColumn},
+			Table:   cirelationship.SourceCiTable,
+			Columns: []string{cirelationship.SourceCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -480,12 +718,12 @@ func (cruo *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRela
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cruo.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := cruo.mutation.SourceCiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ParentTable,
-			Columns: []string{cirelationship.ParentColumn},
+			Table:   cirelationship.SourceCiTable,
+			Columns: []string{cirelationship.SourceCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -496,12 +734,12 @@ func (cruo *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRela
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cruo.mutation.ChildCleared() {
+	if cruo.mutation.TargetCiCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ChildTable,
-			Columns: []string{cirelationship.ChildColumn},
+			Table:   cirelationship.TargetCiTable,
+			Columns: []string{cirelationship.TargetCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
@@ -509,12 +747,12 @@ func (cruo *CIRelationshipUpdateOne) sqlSave(ctx context.Context) (_node *CIRela
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cruo.mutation.ChildIDs(); len(nodes) > 0 {
+	if nodes := cruo.mutation.TargetCiIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   cirelationship.ChildTable,
-			Columns: []string{cirelationship.ChildColumn},
+			Table:   cirelationship.TargetCiTable,
+			Columns: []string{cirelationship.TargetCiColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),

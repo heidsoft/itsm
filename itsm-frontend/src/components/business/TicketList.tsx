@@ -21,6 +21,7 @@ import {
   SearchOutlined,
   FilterOutlined,
   DownloadOutlined,
+  DownOutlined,
   MoreOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -34,7 +35,7 @@ import {
   type TicketFilterParams,
 } from '../../lib/services/ticket-service';
 import { useAuthStore } from '@/lib/store/auth-store';
-import type { TicketListResponse } from '@/app/lib/api-config';
+import type { TicketListResponse } from '@/lib/api/api-config';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -62,11 +63,22 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
 
     setLoading(true);
     try {
-      const params: TicketFilterParams = {
+      // 构建符合ListTicketsParams的参数
+      const params: any = {
         page: currentPage,
-        size: pageSize,
-        ...filters,
-        search: searchText || undefined,
+        page_size: pageSize,
+        keyword: searchText || undefined,
+        status: filters.status as any,
+        priority: filters.priority as any,
+        type: filters.type,
+        category: filters.category,
+        assignee_id: filters.assignee_id,
+        requester_id: filters.requester_id,
+        date_from: filters.date_from,
+        date_to: filters.date_to,
+        tags: filters.tags,
+        sort_by: filters.sort_by,
+        sort_order: filters.sort_order,
       };
 
       const response: TicketListResponse = await ticketService.listTickets(params);
@@ -163,6 +175,45 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
     return priorityMap[priority] || priority;
   }, []);
 
+  // 获取工单操作菜单
+  const getTicketMenu = useCallback((record: Ticket) => {
+    return [
+      {
+        key: 'view',
+        label: '查看详情',
+        icon: <EyeOutlined />,
+        onClick: () => onTicketSelect?.(record),
+      },
+      {
+        key: 'edit',
+        label: '编辑',
+        icon: <EditOutlined />,
+        onClick: () => onTicketSelect?.(record),
+      },
+      {
+        key: 'delete',
+        label: '删除',
+        icon: <DeleteOutlined />,
+        danger: true,
+        onClick: () => {
+          Modal.confirm({
+            title: '确认删除',
+            content: `确定要删除工单 ${record.ticketNumber} 吗？`,
+            onOk: async () => {
+              try {
+                await ticketService.deleteTicket(record.id);
+                message.success('删除成功');
+                fetchTickets();
+              } catch (error) {
+                message.error('删除失败');
+              }
+            },
+          });
+        },
+      },
+    ];
+  }, [onTicketSelect, fetchTickets, message]);
+
   // 批量操作
   const handleBatchAction = useCallback(
     async (action: string) => {
@@ -178,7 +229,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
               title: '确认删除',
               content: `确定要删除选中的 ${selectedRowKeys.length} 个工单吗？`,
               onOk: async () => {
-                await Promise.all(selectedRowKeys.map(id => ticketService.deleteTicket(id)));
+                await Promise.all(selectedRowKeys.map(id => ticketService.deleteTicket(Number(id))));
                 message.success('删除成功');
                 setSelectedRowKeys([]);
                 fetchTickets();
@@ -286,55 +337,18 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         title: '操作',
         key: 'action',
         width: 120,
-        render: (_, record: Ticket) => (
+        render: (_: unknown, record: Ticket) => (
           <Dropdown
-            overlay={
-              <Menu>
-                <Menu.Item
-                  key='view'
-                  icon={<EyeOutlined />}
-                  onClick={() => onTicketSelect?.(record)}
-                >
-                  查看详情
-                </Menu.Item>
-                <Menu.Item
-                  key='edit'
-                  icon={<EditOutlined />}
-                  onClick={() => onTicketSelect?.(record)}
-                >
-                  编辑
-                </Menu.Item>
-                <Menu.Item
-                  key='delete'
-                  icon={<DeleteOutlined />}
-                  danger
-                  onClick={() => {
-                    Modal.confirm({
-                      title: '确认删除',
-                      content: '确定要删除这个工单吗？',
-                      onOk: async () => {
-                        try {
-                          await ticketService.deleteTicket(record.id);
-                          message.success('删除成功');
-                          fetchTickets();
-                        } catch (error) {
-                          message.error('删除失败');
-                        }
-                      },
-                    });
-                  }}
-                >
-                  删除
-                </Menu.Item>
-              </Menu>
-            }
+            menu={{ items: getTicketMenu(record) }}
           >
-            <Button type='text' icon={<MoreOutlined />} />
+            <Button type="primary" size="small">
+              操作 <DownOutlined />
+            </Button>
           </Dropdown>
         ),
       },
     ],
-    [getStatusColor, getPriorityColor, getStatusText, getPriorityText, onTicketSelect, fetchTickets]
+    [getStatusColor, getPriorityColor, getStatusText, getPriorityText, getTicketMenu, onTicketSelect]
   );
 
   // 行选择配置

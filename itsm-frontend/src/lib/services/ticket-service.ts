@@ -1,5 +1,5 @@
 import { httpClient } from '@/lib/api/http-client';
-import { Ticket, TicketListResponse } from '@/app/lib/api-config';
+import { Ticket, TicketListResponse } from '@/lib/api/api-config';
 
 // 工单状态枚举
 export enum TicketStatus {
@@ -29,6 +29,27 @@ export enum TicketType {
 
 // 移除旧的 Ticket 和 TicketListResponse 定义，使用 api-config 中的定义
 export { type Ticket };
+
+// 工单筛选参数（兼容旧版）
+export interface TicketFilterParams {
+  page?: number;
+  size?: number;
+  status?: string;
+  priority?: string;
+  type?: string;
+  category?: string;
+  assignee_id?: number;
+  requester_id?: number;
+  keyword?: string;
+  search?: string;
+  date_from?: string;
+  date_to?: string;
+  created_after?: string;  // 添加 created_after 字段
+  created_before?: string;  // 添加 created_before 字段
+  tags?: string[];
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
 
 // 创建工单请求（匹配后端DTO格式）
 export interface CreateTicketRequest {
@@ -409,6 +430,21 @@ class TicketService {
     } catch (error) {
       return false;
     }
+  }
+
+  // 导出工单
+  async exportTickets(filters: TicketFilterParams = {}): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/export`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(filters),
+    });
+    if (!response.ok) {
+      throw new Error('Export failed');
+    }
+    return response.blob();
   }
 }
 

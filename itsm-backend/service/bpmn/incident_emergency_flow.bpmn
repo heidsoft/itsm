@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="incident_emergency_flow" name="紧急事件流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">incident</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">紧急事件快速响应流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：事件报告 -->
+    <bpmn:startEvent id="StartEvent_1" name="事件报告">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 自动分配（基于SLA） -->
+    <bpmn:serviceTask id="Activity_AutoAssign" name="自动分配" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">assign_incident</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 初步诊断 -->
+    <bpmn:userTask id="Activity_Diagnosis" name="初步诊断">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_incident</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 问题定位网关 -->
+    <bpmn:exclusiveGateway id="Gateway_Resolved" name="问题已定位?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Resolve</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Escalate</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 立即解决 -->
+    <bpmn:userTask id="Activity_Resolve" name="立即解决">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">resolve_incident</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Resolve</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 升级处理（高优先级自动升级） -->
+    <bpmn:serviceTask id="Activity_AutoEscalate" name="自动升级" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">escalate_incident</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Escalate</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 专家团队处理 -->
+    <bpmn:userTask id="Activity_ExpertHandle" name="专家团队处理">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 问题解决网关 -->
+    <bpmn:exclusiveGateway id="Gateway_Solved" name="问题解决?">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 通知相关方 -->
+    <bpmn:serviceTask id="Activity_Notify" name="通知相关方" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">notify</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 事件关闭 -->
+    <bpmn:userTask id="Activity_Close" name="事件关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
+        <bpmn:metaData name="action">close_incident</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+      <bpmn:outgoing>Flow_Final</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_1" name="事件完成">
+      <bpmn:incoming>Flow_Final</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_AutoAssign" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_AutoAssign" targetRef="Activity_Diagnosis" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Diagnosis" targetRef="Gateway_Resolved" />
+    <bpmn:sequenceFlow id="Flow_Resolve" sourceRef="Gateway_Resolved" targetRef="Activity_Resolve">
+      <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Escalate" sourceRef="Gateway_Resolved" targetRef="Activity_AutoEscalate">
+      <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_AutoEscalate" targetRef="Activity_ExpertHandle" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_ExpertHandle" targetRef="Gateway_Solved" />
+    <bpmn:sequenceFlow id="Flow_Notify" sourceRef="Gateway_Solved" targetRef="Activity_Notify">
+      <bpmn:conditionExpression><![CDATA[${variables['solved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Notify" targetRef="Activity_Close" />
+    <bpmn:sequenceFlow id="Flow_Final" sourceRef="Activity_Close" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>

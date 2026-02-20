@@ -45,6 +45,7 @@ func SetupTicketRoutes(
 		tickets.POST("/import", middleware.RequirePermission("ticket", "import"), ticketController.ImportTickets)
 
 		// 工单状态操作
+		tickets.PUT("/:id/status", middleware.RequirePermission("ticket", "update"), ticketController.UpdateTicketStatus)
 		tickets.POST("/:id/assign", middleware.RequirePermission("ticket", "assign"), ticketController.AssignTicket)
 		tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), ticketController.EscalateTicket)
 		tickets.POST("/:id/resolve", middleware.RequirePermission("ticket", "resolve"), ticketController.ResolveTicket)
@@ -55,6 +56,7 @@ func SetupTicketRoutes(
 		tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), ticketController.GetOverdueTickets)
 		tickets.GET("/assignee/:assignee_id", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketsByAssignee)
 		tickets.GET("/:id/activity", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketActivity)
+		tickets.GET("/:id/sla", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketSLAInfo)
 
 		// 工单评论路由
 		tickets.GET("/:id/comments", middleware.RequirePermission("ticket", "read"), ticketCommentController.ListTicketComments)

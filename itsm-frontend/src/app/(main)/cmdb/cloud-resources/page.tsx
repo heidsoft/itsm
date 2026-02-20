@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, App } from 'antd';
 import dayjs from 'dayjs';
 
-import { CMDBApi } from '@/modules/cmdb/api';
-import type { CloudResource, CloudService } from '@/modules/cmdb/types';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { CloudResource, CloudService } from '@/types/biz/cmdb';
 
 const { Option } = Select;
 

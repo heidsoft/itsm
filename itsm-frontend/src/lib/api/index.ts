@@ -25,6 +25,7 @@ export type {
 
 // 工单
 export { TicketApi } from './ticket-api';
+export { TicketCategoryApi } from './ticket-category-api';
 export { TicketApprovalApi } from './ticket-approval-api';
 export { TicketAssignmentApi } from './ticket-assignment-api';
 export { TicketAttachmentApi } from './ticket-attachment-api';
@@ -40,13 +41,20 @@ export { TicketRootCauseApi } from './ticket-root-cause-api';
 
 // 事件
 export { IncidentAPI } from './incident-api';
+// 兼容别名
+export { IncidentAPI as IncidentApi } from './incident-api';
 
 // 变更
 export { ChangeApi } from './change-api';
 export { ChangeClassificationApi } from './change-classification-api';
 
+// 问题管理
+export { ProblemApi } from './problem-api';
+
 // 服务请求
 export { serviceRequestAPI } from './service-request-api';
+// 兼容别名
+export { serviceRequestAPI as ServiceRequestApi } from './service-request-api';
 export { ServiceCatalogApi } from './service-catalog-api';
 
 // 知识库
@@ -60,6 +68,9 @@ export { UserApi } from './user-api';
 export { RoleAPI } from './role-api';
 export { AuthAPI } from './auth-api';
 export { TenantAPI } from './tenant-api';
+
+// 通用API
+export { CommonApi } from './common-api';
 
 // 配置管理
 export { CMDBApi } from './cmdb-api';
@@ -80,6 +91,7 @@ export { ReportsApi } from './reports-api';
 // ==================== AI相关API ====================
 
 export * from './ai-api';
+export { AIApi } from './ai-api';
 
 // ==================== 其他功能API ====================
 

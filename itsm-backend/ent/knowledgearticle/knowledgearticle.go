@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -27,12 +28,25 @@ const (
 	FieldTenantID = "tenant_id"
 	// FieldIsPublished holds the string denoting the is_published field in the database.
 	FieldIsPublished = "is_published"
+	// FieldViewCount holds the string denoting the view_count field in the database.
+	FieldViewCount = "view_count"
+	// FieldLikeCount holds the string denoting the like_count field in the database.
+	FieldLikeCount = "like_count"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeUserLikes holds the string denoting the user_likes edge name in mutations.
+	EdgeUserLikes = "user_likes"
 	// Table holds the table name of the knowledgearticle in the database.
 	Table = "knowledge_articles"
+	// UserLikesTable is the table that holds the user_likes relation/edge.
+	UserLikesTable = "knowledge_article_likes"
+	// UserLikesInverseTable is the table name for the KnowledgeArticleLike entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticlelike" package.
+	UserLikesInverseTable = "knowledge_article_likes"
+	// UserLikesColumn is the table column denoting the user_likes relation/edge.
+	UserLikesColumn = "article_id"
 )
 
 // Columns holds all SQL columns for knowledgearticle fields.
@@ -45,6 +59,8 @@ var Columns = []string{
 	FieldAuthorID,
 	FieldTenantID,
 	FieldIsPublished,
+	FieldViewCount,
+	FieldLikeCount,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -68,6 +84,10 @@ var (
 	TenantIDValidator func(int) error
 	// DefaultIsPublished holds the default value on creation for the "is_published" field.
 	DefaultIsPublished bool
+	// DefaultViewCount holds the default value on creation for the "view_count" field.
+	DefaultViewCount int
+	// DefaultLikeCount holds the default value on creation for the "like_count" field.
+	DefaultLikeCount int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -119,6 +139,16 @@ func ByIsPublished(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsPublished, opts...).ToFunc()
 }
 
+// ByViewCount orders the results by the view_count field.
+func ByViewCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldViewCount, opts...).ToFunc()
+}
+
+// ByLikeCount orders the results by the like_count field.
+func ByLikeCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLikeCount, opts...).ToFunc()
+}
+
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
@@ -127,4 +157,25 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByUserLikesCount orders the results by user_likes count.
+func ByUserLikesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserLikesStep(), opts...)
+	}
+}
+
+// ByUserLikes orders the results by user_likes terms.
+func ByUserLikes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserLikesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newUserLikesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserLikesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserLikesTable, UserLikesColumn),
+	)
 }

@@ -13,7 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -39,9 +38,10 @@ func main() {
 
 	// 初始化服务
 	cmdbService := service.NewCMDBService(client)
+	ciRelationshipService := service.NewCIRelationshipService(client)
 
 	// 初始化控制器
-	cmdbController := controller.NewCMDBController(cmdbService)
+	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, nil)
 
 	// 初始化路由
 	r := gin.Default()
@@ -96,10 +96,8 @@ func main() {
 
 // initLogger 初始化日志
 func initLogger() *zap.Logger {
-	config := zap.NewProductionConfig()
+	config := zap.NewDevelopmentConfig()
 	config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
-	config.EncoderConfig.TimeKey = "timestamp"
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	logger, err := config.Build()
 	if err != nil {

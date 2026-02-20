@@ -23,7 +23,7 @@ import {
   type TicketAnalysisRequest,
   type AssigneeRecommendation,
   type SolutionSuggestion,
-} from '@/app/lib/ai-service';
+} from '@/lib/services/ai-service';
 
 const { Text } = Typography;
 const { TextArea } = Input;

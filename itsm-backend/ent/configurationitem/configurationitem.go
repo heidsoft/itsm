@@ -86,10 +86,10 @@ const (
 	EdgeTickets = "tickets"
 	// EdgeIncidents holds the string denoting the incidents edge name in mutations.
 	EdgeIncidents = "incidents"
-	// EdgeParentRelations holds the string denoting the parent_relations edge name in mutations.
-	EdgeParentRelations = "parent_relations"
-	// EdgeChildRelations holds the string denoting the child_relations edge name in mutations.
-	EdgeChildRelations = "child_relations"
+	// EdgeOutgoingRelations holds the string denoting the outgoing_relations edge name in mutations.
+	EdgeOutgoingRelations = "outgoing_relations"
+	// EdgeIncomingRelations holds the string denoting the incoming_relations edge name in mutations.
+	EdgeIncomingRelations = "incoming_relations"
 	// Table holds the table name of the configurationitem in the database.
 	Table = "configuration_items"
 	// CiTypeRefTable is the table that holds the ci_type_ref relation/edge.
@@ -116,20 +116,20 @@ const (
 	// IncidentsInverseTable is the table name for the Incident entity.
 	// It exists in this package in order to avoid circular dependency with the "incident" package.
 	IncidentsInverseTable = "incidents"
-	// ParentRelationsTable is the table that holds the parent_relations relation/edge.
-	ParentRelationsTable = "ci_relationships"
-	// ParentRelationsInverseTable is the table name for the CIRelationship entity.
+	// OutgoingRelationsTable is the table that holds the outgoing_relations relation/edge.
+	OutgoingRelationsTable = "ci_relationships"
+	// OutgoingRelationsInverseTable is the table name for the CIRelationship entity.
 	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
-	ParentRelationsInverseTable = "ci_relationships"
-	// ParentRelationsColumn is the table column denoting the parent_relations relation/edge.
-	ParentRelationsColumn = "parent_id"
-	// ChildRelationsTable is the table that holds the child_relations relation/edge.
-	ChildRelationsTable = "ci_relationships"
-	// ChildRelationsInverseTable is the table name for the CIRelationship entity.
+	OutgoingRelationsInverseTable = "ci_relationships"
+	// OutgoingRelationsColumn is the table column denoting the outgoing_relations relation/edge.
+	OutgoingRelationsColumn = "source_ci_id"
+	// IncomingRelationsTable is the table that holds the incoming_relations relation/edge.
+	IncomingRelationsTable = "ci_relationships"
+	// IncomingRelationsInverseTable is the table name for the CIRelationship entity.
 	// It exists in this package in order to avoid circular dependency with the "cirelationship" package.
-	ChildRelationsInverseTable = "ci_relationships"
-	// ChildRelationsColumn is the table column denoting the child_relations relation/edge.
-	ChildRelationsColumn = "child_id"
+	IncomingRelationsInverseTable = "ci_relationships"
+	// IncomingRelationsColumn is the table column denoting the incoming_relations relation/edge.
+	IncomingRelationsColumn = "target_ci_id"
 )
 
 // Columns holds all SQL columns for configurationitem fields.
@@ -401,31 +401,31 @@ func ByIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByParentRelationsCount orders the results by parent_relations count.
-func ByParentRelationsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByOutgoingRelationsCount orders the results by outgoing_relations count.
+func ByOutgoingRelationsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newParentRelationsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newOutgoingRelationsStep(), opts...)
 	}
 }
 
-// ByParentRelations orders the results by parent_relations terms.
-func ByParentRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByOutgoingRelations orders the results by outgoing_relations terms.
+func ByOutgoingRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newParentRelationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newOutgoingRelationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
-// ByChildRelationsCount orders the results by child_relations count.
-func ByChildRelationsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByIncomingRelationsCount orders the results by incoming_relations count.
+func ByIncomingRelationsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newChildRelationsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newIncomingRelationsStep(), opts...)
 	}
 }
 
-// ByChildRelations orders the results by child_relations terms.
-func ByChildRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByIncomingRelations orders the results by incoming_relations terms.
+func ByIncomingRelations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChildRelationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newIncomingRelationsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newCiTypeRefStep() *sqlgraph.Step {
@@ -456,17 +456,17 @@ func newIncidentsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, false, IncidentsTable, IncidentsPrimaryKey...),
 	)
 }
-func newParentRelationsStep() *sqlgraph.Step {
+func newOutgoingRelationsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ParentRelationsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ParentRelationsTable, ParentRelationsColumn),
+		sqlgraph.To(OutgoingRelationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OutgoingRelationsTable, OutgoingRelationsColumn),
 	)
 }
-func newChildRelationsStep() *sqlgraph.Step {
+func newIncomingRelationsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChildRelationsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ChildRelationsTable, ChildRelationsColumn),
+		sqlgraph.To(IncomingRelationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IncomingRelationsTable, IncomingRelationsColumn),
 	)
 }

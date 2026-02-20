@@ -20,27 +20,10 @@ import {
 } from 'antd';
 import { UserSelect } from '@/components/common/UserSelect';
 import { TicketApi } from '@/lib/api/ticket-api';
+import { Comment } from '@/types/comment';
 
 const { Text, Paragraph } = Typography;
 const { TextArea } = Input;
-
-interface Comment {
-  id: number;
-  ticket_id: number;
-  user_id: number;
-  content: string;
-  is_internal: boolean;
-  mentions: number[];
-  attachments: number[];
-  user?: {
-    id: number;
-    username: string;
-    name: string;
-    email: string;
-  };
-  created_at: string;
-  updated_at: string;
-}
 
 interface TicketCommentsProps {
   ticketId: number;

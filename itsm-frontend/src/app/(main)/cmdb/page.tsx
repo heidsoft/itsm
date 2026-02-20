@@ -1,6 +1,6 @@
 'use client';
 
-import CIList from '@/modules/cmdb/components/CIList';
+import CIList from '@/components/cmdb/CIList';
 
 export default function CMDBPage() {
   return <CIList />;

@@ -123,7 +123,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
           {/* 标题和编号 */}
           <div>
             <div className='font-medium text-sm text-gray-900 line-clamp-2'>{ticket.title}</div>
-            <div className='text-xs text-gray-500 mt-1'>#{ticket.ticket_number || ticket.id}</div>
+            <div className='text-xs text-gray-500 mt-1'>#{ticket.ticketNumber || ticket.id}</div>
           </div>
 
           {/* 状态和优先级 */}
@@ -149,8 +149,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
               )}
             </div>
             <div>
-              {ticket.created_at &&
-                formatDistanceToNow(new Date(ticket.created_at), {
+              {ticket.createdAt &&
+                formatDistanceToNow(new Date(ticket.createdAt), {
                   addSuffix: true,
                   locale: zhCN,
                 })}
@@ -268,7 +268,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
         ticket =>
           ticket.title?.toLowerCase().includes(keyword) ||
           ticket.description?.toLowerCase().includes(keyword) ||
-          ticket.ticket_number?.toLowerCase().includes(keyword)
+          ticket.ticketNumber?.toLowerCase().includes(keyword)
       );
     }
 

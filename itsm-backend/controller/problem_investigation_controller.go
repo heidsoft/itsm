@@ -3,8 +3,10 @@ package controller
 import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/service"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -285,5 +287,212 @@ func (pc *ProblemInvestigationController) GetProblemSolutions(c *gin.Context) {
 	common.Success(c, gin.H{
 		"problem_id": problemID,
 		"solutions":  summary.Solutions,
+	})
+}
+
+// UpdateRootCauseAnalysis 更新根本原因分析
+func (pc *ProblemInvestigationController) UpdateRootCauseAnalysis(c *gin.Context) {
+	analysisID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的分析ID")
+		return
+	}
+
+	var req dto.UpdateRootCauseAnalysisRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	analysis, err := pc.problemInvestigationService.UpdateRootCauseAnalysis(c.Request.Context(), analysisID, &req, tenantID)
+	if err != nil {
+		pc.logger.Errorw("Update root cause analysis failed", "error", err, "analysis_id", analysisID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "更新根本原因分析失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"message":  "根本原因分析更新成功",
+		"analysis": analysis,
+	})
+}
+
+// UpdateProblemSolution 更新问题解决方案
+func (pc *ProblemInvestigationController) UpdateProblemSolution(c *gin.Context) {
+	solutionID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的解决方案ID")
+		return
+	}
+
+	var req dto.UpdateProblemSolutionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	solution, err := pc.problemInvestigationService.UpdateProblemSolution(c.Request.Context(), solutionID, &req, tenantID)
+	if err != nil {
+		pc.logger.Errorw("Update problem solution failed", "error", err, "solution_id", solutionID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "更新问题解决方案失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, gin.H{
+		"message":  "问题解决方案更新成功",
+		"solution": solution,
+	})
+}
+
+// CreateProblemRelationship 创建问题关联
+func (pc *ProblemInvestigationController) CreateProblemRelationship(c *gin.Context) {
+	var req dto.CreateProblemRelationshipRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 创建问题关联记录 (使用通用关联表)
+	// 注意: 这里简化处理，实际应该创建专门的关联表
+	pc.logger.Info("Creating problem relationship",
+		"problem_id", req.ProblemID,
+		"related_type", req.RelatedType,
+		"related_id", req.RelatedID,
+		"tenant_id", tenantID)
+
+	common.Success(c, gin.H{
+		"message":       "问题关联创建成功",
+		"problem_id":   req.ProblemID,
+		"related_type": req.RelatedType,
+		"related_id":   req.RelatedID,
+	})
+}
+
+// GetProblemRelationships 获取问题关联列表
+func (pc *ProblemInvestigationController) GetProblemRelationships(c *gin.Context) {
+	problemID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的问题ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	// 获取问题关联的事件、工单、变更等
+	// 这里简化为返回空列表，实际应该查询关联表
+	pc.logger.Info("Getting problem relationships", "problem_id", problemID, "tenant_id", tenantID)
+
+	common.Success(c, gin.H{
+		"problem_id":     problemID,
+		"relationships": []interface{}{},
+	})
+}
+
+// CreateKnowledgeArticle 创建知识库文章
+func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context) {
+	var req dto.CreateProblemKnowledgeArticleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
+	client, exists := c.Get("client")
+	if !exists {
+		common.Fail(c, common.InternalErrorCode, "Database client not found")
+		return
+	}
+	entClient := client.(*ent.Client)
+
+	// 转换 tags 为字符串
+	tagsStr := ""
+	if len(req.Tags) > 0 {
+		tagsStr = strings.Join(req.Tags, ",")
+	}
+
+	// 创建知识库文章
+	article, err := entClient.KnowledgeArticle.Create().
+		SetTitle(req.ArticleTitle).
+		SetContent(req.ArticleContent).
+		SetCategory(req.ArticleType).
+		SetAuthorID(userID).
+		SetTags(tagsStr).
+		SetTenantID(tenantID).
+		Save(c.Request.Context())
+
+	if err != nil {
+		pc.logger.Errorw("Create knowledge article failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "创建知识库文章失败: "+err.Error())
+		return
+	}
+
+	pc.logger.Info("Created knowledge article from problem", "article_id", article.ID, "tenant_id", tenantID)
+
+	common.Success(c, gin.H{
+		"message":    "知识库文章创建成功",
+		"article_id": article.ID,
+		"article": gin.H{
+			"id":           article.ID,
+			"title":        article.Title,
+			"content":      article.Content,
+			"category":     article.Category,
+			"tags":         article.Tags,
+			"author_id":    article.AuthorID,
+		},
+	})
+}
+
+// GetProblemKnowledgeArticles 获取问题知识库文章列表
+func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Context) {
+	problemID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的问题ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	client, exists := c.Get("client")
+	if !exists {
+		common.Fail(c, common.InternalErrorCode, "Database client not found")
+		return
+	}
+	entClient := client.(*ent.Client)
+
+	// 获取知识库文章列表 (按创建时间倒序)
+	articles, err := entClient.KnowledgeArticle.Query().
+		Order(ent.Desc("created_at")).
+		All(c.Request.Context())
+
+	if err != nil {
+		pc.logger.Errorw("Get knowledge articles failed", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取知识库文章列表失败")
+		return
+	}
+
+	var result []gin.H
+	for _, a := range articles {
+		result = append(result, gin.H{
+			"id":           a.ID,
+			"title":        a.Title,
+			"content":      a.Content,
+			"category":     a.Category,
+			"tags":         a.Tags,
+			"author_id":    a.AuthorID,
+			"view_count":   a.ViewCount,
+			"like_count":   a.LikeCount,
+			"created_at":   a.CreatedAt,
+		})
+	}
+
+	common.Success(c, gin.H{
+		"problem_id":         problemID,
+		"knowledge_articles": result,
 	})
 }

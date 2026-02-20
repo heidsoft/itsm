@@ -144,11 +144,17 @@ var (
 	// CiRelationshipsColumns holds the columns for the "ci_relationships" table.
 	CiRelationshipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "type", Type: field.TypeString},
+		{Name: "relationship_type", Type: field.TypeString},
+		{Name: "strength", Type: field.TypeEnum, Enums: []string{"critical", "high", "medium", "low"}, Default: "medium"},
+		{Name: "impact_level", Type: field.TypeEnum, Enums: []string{"critical", "high", "medium", "low"}, Default: "medium"},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "is_discovered", Type: field.TypeBool, Default: false},
 		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
-		{Name: "parent_id", Type: field.TypeInt},
-		{Name: "child_id", Type: field.TypeInt},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "source_ci_id", Type: field.TypeInt},
+		{Name: "target_ci_id", Type: field.TypeInt},
 	}
 	// CiRelationshipsTable holds the schema information for the "ci_relationships" table.
 	CiRelationshipsTable = &schema.Table{
@@ -157,16 +163,53 @@ var (
 		PrimaryKey: []*schema.Column{CiRelationshipsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "ci_relationships_configuration_items_parent_relations",
-				Columns:    []*schema.Column{CiRelationshipsColumns[4]},
+				Symbol:     "ci_relationships_configuration_items_outgoing_relations",
+				Columns:    []*schema.Column{CiRelationshipsColumns[10]},
 				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "ci_relationships_configuration_items_child_relations",
-				Columns:    []*schema.Column{CiRelationshipsColumns[5]},
+				Symbol:     "ci_relationships_configuration_items_incoming_relations",
+				Columns:    []*schema.Column{CiRelationshipsColumns[11]},
 				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cirelationship_relationship_type",
+				Unique:  false,
+				Columns: []*schema.Column{CiRelationshipsColumns[1]},
+			},
+			{
+				Name:    "cirelationship_source_ci_id",
+				Unique:  false,
+				Columns: []*schema.Column{CiRelationshipsColumns[10]},
+			},
+			{
+				Name:    "cirelationship_target_ci_id",
+				Unique:  false,
+				Columns: []*schema.Column{CiRelationshipsColumns[11]},
+			},
+			{
+				Name:    "cirelationship_strength",
+				Unique:  false,
+				Columns: []*schema.Column{CiRelationshipsColumns[2]},
+			},
+			{
+				Name:    "cirelationship_impact_level",
+				Unique:  false,
+				Columns: []*schema.Column{CiRelationshipsColumns[3]},
+			},
+			{
+				Name:    "cirelationship_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{CiRelationshipsColumns[4]},
+			},
+			{
+				Name:    "cirelationship_source_ci_id_target_ci_id_relationship_type",
+				Unique:  true,
+				Columns: []*schema.Column{CiRelationshipsColumns[10], CiRelationshipsColumns[11], CiRelationshipsColumns[1]},
 			},
 		},
 	}
@@ -633,6 +676,7 @@ var (
 		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "status", Type: field.TypeString, Default: "new"},
+		{Name: "type", Type: field.TypeString, Default: "incident"},
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
 		{Name: "severity", Type: field.TypeString, Default: "medium"},
 		{Name: "incident_number", Type: field.TypeString, Unique: true},
@@ -821,6 +865,8 @@ var (
 		{Name: "author_id", Type: field.TypeInt},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_published", Type: field.TypeBool, Default: false},
+		{Name: "view_count", Type: field.TypeInt, Default: 0},
+		{Name: "like_count", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -829,6 +875,28 @@ var (
 		Name:       "knowledge_articles",
 		Columns:    KnowledgeArticlesColumns,
 		PrimaryKey: []*schema.Column{KnowledgeArticlesColumns[0]},
+	}
+	// KnowledgeArticleLikesColumns holds the columns for the "knowledge_article_likes" table.
+	KnowledgeArticleLikesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "article_id", Type: field.TypeInt},
+	}
+	// KnowledgeArticleLikesTable holds the schema information for the "knowledge_article_likes" table.
+	KnowledgeArticleLikesTable = &schema.Table{
+		Name:       "knowledge_article_likes",
+		Columns:    KnowledgeArticleLikesColumns,
+		PrimaryKey: []*schema.Column{KnowledgeArticleLikesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "knowledge_article_likes_knowledge_articles_user_likes",
+				Columns:    []*schema.Column{KnowledgeArticleLikesColumns[4]},
+				RefColumns: []*schema.Column{KnowledgeArticlesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// MessagesColumns holds the columns for the "messages" table.
 	MessagesColumns = []*schema.Column{
@@ -934,6 +1002,22 @@ var (
 			},
 		},
 	}
+	// PasswordResetTokensColumns holds the columns for the "password_reset_tokens" table.
+	PasswordResetTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "email", Type: field.TypeString},
+		{Name: "token", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "used", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// PasswordResetTokensTable holds the schema information for the "password_reset_tokens" table.
+	PasswordResetTokensTable = &schema.Table{
+		Name:       "password_reset_tokens",
+		Columns:    PasswordResetTokensColumns,
+		PrimaryKey: []*schema.Column{PasswordResetTokensColumns[0]},
+	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -982,6 +1066,43 @@ var (
 		Name:       "problems",
 		Columns:    ProblemsColumns,
 		PrimaryKey: []*schema.Column{ProblemsColumns[0]},
+	}
+	// ProcessBindingsColumns holds the columns for the "process_bindings" table.
+	ProcessBindingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "business_type", Type: field.TypeString},
+		{Name: "business_sub_type", Type: field.TypeString, Nullable: true},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "process_version", Type: field.TypeInt, Default: 1},
+		{Name: "is_default", Type: field.TypeBool, Default: false},
+		{Name: "priority", Type: field.TypeInt, Default: 0},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProcessBindingsTable holds the schema information for the "process_bindings" table.
+	ProcessBindingsTable = &schema.Table{
+		Name:       "process_bindings",
+		Columns:    ProcessBindingsColumns,
+		PrimaryKey: []*schema.Column{ProcessBindingsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processbinding_business_type_business_sub_type",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessBindingsColumns[1], ProcessBindingsColumns[2]},
+			},
+			{
+				Name:    "processbinding_process_definition_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessBindingsColumns[3]},
+			},
+			{
+				Name:    "processbinding_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessBindingsColumns[8]},
+			},
+		},
 	}
 	// ProcessDefinitionsColumns holds the columns for the "process_definitions" table.
 	ProcessDefinitionsColumns = []*schema.Column{
@@ -1736,8 +1857,14 @@ var (
 	// SLAViolationsColumns holds the columns for the "sla_violations" table.
 	SLAViolationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ticket_type", Type: field.TypeString, Default: "ticket"},
+		{Name: "sla_name", Type: field.TypeString, Default: "Default SLA"},
 		{Name: "violation_type", Type: field.TypeString},
 		{Name: "violation_time", Type: field.TypeTime},
+		{Name: "expected_time", Type: field.TypeInt, Nullable: true},
+		{Name: "actual_time", Type: field.TypeInt, Nullable: true},
+		{Name: "overdue_minutes", Type: field.TypeInt, Default: 0},
+		{Name: "status", Type: field.TypeString, Default: "open"},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "severity", Type: field.TypeString, Default: "medium"},
 		{Name: "is_resolved", Type: field.TypeBool, Default: false},
@@ -1757,13 +1884,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "sla_violations_sla_definitions_violations",
-				Columns:    []*schema.Column{SLAViolationsColumns[11]},
+				Columns:    []*schema.Column{SLAViolationsColumns[17]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "sla_violations_tickets_sla_violations",
-				Columns:    []*schema.Column{SLAViolationsColumns[12]},
+				Columns:    []*schema.Column{SLAViolationsColumns[18]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -2646,6 +2773,31 @@ var (
 			},
 		},
 	}
+	// ProcessDefinitionBindingsColumns holds the columns for the "process_definition_bindings" table.
+	ProcessDefinitionBindingsColumns = []*schema.Column{
+		{Name: "process_definition_id", Type: field.TypeInt},
+		{Name: "process_binding_id", Type: field.TypeInt},
+	}
+	// ProcessDefinitionBindingsTable holds the schema information for the "process_definition_bindings" table.
+	ProcessDefinitionBindingsTable = &schema.Table{
+		Name:       "process_definition_bindings",
+		Columns:    ProcessDefinitionBindingsColumns,
+		PrimaryKey: []*schema.Column{ProcessDefinitionBindingsColumns[0], ProcessDefinitionBindingsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_definition_bindings_process_definition_id",
+				Columns:    []*schema.Column{ProcessDefinitionBindingsColumns[0]},
+				RefColumns: []*schema.Column{ProcessDefinitionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "process_definition_bindings_process_binding_id",
+				Columns:    []*schema.Column{ProcessDefinitionBindingsColumns[1]},
+				RefColumns: []*schema.Column{ProcessBindingsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// ProjectTagsColumns holds the columns for the "project_tags" table.
 	ProjectTagsColumns = []*schema.Column{
 		{Name: "project_id", Type: field.TypeInt},
@@ -2747,12 +2899,15 @@ var (
 		IncidentRulesTable,
 		IncidentRuleExecutionsTable,
 		KnowledgeArticlesTable,
+		KnowledgeArticleLikesTable,
 		MessagesTable,
 		MicroservicesTable,
 		NotificationsTable,
 		NotificationPreferencesTable,
+		PasswordResetTokensTable,
 		PermissionsTable,
 		ProblemsTable,
+		ProcessBindingsTable,
 		ProcessDefinitionsTable,
 		ProcessDeploymentsTable,
 		ProcessExecutionHistoriesTable,
@@ -2798,6 +2953,7 @@ var (
 		DepartmentTagsTable,
 		IncidentRelatedIncidentsTable,
 		MicroserviceTagsTable,
+		ProcessDefinitionBindingsTable,
 		ProjectTagsTable,
 		TeamTagsTable,
 		UserRolesTable,
@@ -2822,6 +2978,7 @@ func init() {
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
+	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
@@ -2878,6 +3035,8 @@ func init() {
 	IncidentRelatedIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
 	MicroserviceTagsTable.ForeignKeys[0].RefTable = MicroservicesTable
 	MicroserviceTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ProcessDefinitionBindingsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
+	ProcessDefinitionBindingsTable.ForeignKeys[1].RefTable = ProcessBindingsTable
 	ProjectTagsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable

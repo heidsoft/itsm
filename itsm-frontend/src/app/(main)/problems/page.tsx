@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import ProblemList from '@/modules/problem/components/ProblemList';
+import ProblemList from '@/components/problem/ProblemList';
 
 export default function ProblemListPage() {
   return (

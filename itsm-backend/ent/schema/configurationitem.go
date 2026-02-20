@@ -142,10 +142,10 @@ func (ConfigurationItem) Edges() []ent.Edge {
 		edge.To("tickets", Ticket.Type),
 		// 与事件的关系
 		edge.To("incidents", Incident.Type),
-		// CI之间的关系 - 作为父节点
-		edge.To("parent_relations", CIRelationship.Type),
-		// CI之间的关系 - 作为子节点
-		edge.To("child_relations", CIRelationship.Type),
+		// CI之间的关系 - 出边 (作为源)
+		edge.To("outgoing_relations", CIRelationship.Type),
+		// CI之间的关系 - 入边 (作为目标)
+		edge.To("incoming_relations", CIRelationship.Type),
 	}
 }
 

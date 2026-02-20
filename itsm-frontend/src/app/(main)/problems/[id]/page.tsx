@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import ProblemDetail from '@/modules/problem/components/ProblemDetail';
+import ProblemDetail from '@/components/problem/ProblemDetail';
 
 export default function ProblemDetailPage() {
     return (

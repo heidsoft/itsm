@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, List, Tag, Button, Badge, Dropdown, Menu, Avatar, Space, Tooltip } from 'antd';
 import { MoreHorizontal, Eye, Clock, User } from 'lucide-react';
-import { RecentTicket } from '@/hooks/useDashboardData';
+import { RecentTicket } from '@/lib/hooks/useDashboardData';
 
 interface TicketListCardProps {
   tickets: RecentTicket[];
@@ -95,13 +95,13 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
       extra={
         showActions ? (
           <Dropdown
-            overlay={
-              <Menu>
-                <Menu.Item key="1">按优先级排序</Menu.Item>
-                <Menu.Item key="2">按状态排序</Menu.Item>
-                <Menu.Item key="3">按时间排序</Menu.Item>
-              </Menu>
-            }
+            menu={{
+              items: [
+                { key: '1', label: '按优先级排序' },
+                { key: '2', label: '按状态排序' },
+                { key: '3', label: '按时间排序' },
+              ],
+            }}
           >
             <Button type="text" icon={<MoreHorizontal size={16} />} />
           </Dropdown>

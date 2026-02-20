@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, List, Avatar, Typography } from 'antd';
 import { Clock, Activity } from 'lucide-react';
-import { RecentActivity } from '@/hooks/useDashboardData';
+import type { RecentActivity } from '@/app/(main)/dashboard/types/dashboard.types';
 
 const { Text } = Typography;
 
@@ -39,26 +39,24 @@ export const ActivityListCard: React.FC<ActivityListCardProps> = ({
             <List.Item.Meta
               avatar={
                 <Avatar
-                  src={item.avatar}
                   size="small"
                   className="shadow-sm"
                 >
-                  {item.operator.charAt(0)}
+                  {item.user?.charAt(0) || 'U'}
                 </Avatar>
               }
               title={
                 <div className="flex items-center justify-between">
                   <Text className="text-sm font-medium text-gray-800">
-                    <span className="text-blue-600">{item.operator}</span>
-                    <span className="mx-1">{item.action}</span>
-                    <span className="text-purple-600">{item.target}</span>
+                    <span className="text-blue-600">{item.user}</span>
+                    <span className="mx-1">{item.title}</span>
                   </Text>
                 </div>
               }
               description={
                 <div className="flex items-center space-x-1 text-xs text-gray-500">
                   <Clock size={12} />
-                  <span>{item.time}</span>
+                  <span>{item.timestamp}</span>
                 </div>
               }
             />

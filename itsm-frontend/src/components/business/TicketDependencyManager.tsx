@@ -1,5 +1,4 @@
 'use client';
-// @ts-nocheck
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -45,28 +44,11 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { Ticket } from '@/lib/services/ticket-service';
 import { TicketRelationsApi } from '@/lib/api/ticket-relations-api';
-import { TicketRelationType } from '@/types/ticket-relations';
+import { TicketRelationType, TicketDependency } from '@/types/ticket-relations';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-
-interface TicketDependency {
-  id: number;
-  source_ticket_id: number;
-  source_ticket_number: string;
-  source_ticket_title: string;
-  target_ticket_id: number;
-  target_ticket_number: string;
-  target_ticket_title: string;
-  relation_type: TicketRelationType;
-  dependency_type: 'hard' | 'soft';
-  is_blocking: boolean;
-  description?: string;
-  created_at: string;
-  created_by: number;
-  created_by_name: string;
-}
 
 interface DependencyImpact {
   ticket_id: number;
@@ -115,20 +97,20 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
 
       // 转换为依赖关系格式
       const deps: TicketDependency[] = relations.map(rel => ({
-        id: parseInt(rel.id) || Date.now(),
+        id: parseInt(String(rel.id)) || Date.now(),
         source_ticket_id: ticket.id,
-        source_ticket_number: ticket.ticket_number || `T-${ticket.id}`,
+        source_ticket_number: ticket.ticketNumber || `T-${ticket.id}`,
         source_ticket_title: ticket.title,
-        target_ticket_id: rel.targetTicket.id,
-        target_ticket_number: rel.targetTicket.ticketNumber || `T-${rel.targetTicket.id}`,
-        target_ticket_title: rel.targetTicket.title,
+        target_ticket_id: rel.targetTicket?.id || 0,
+        target_ticket_number: rel.targetTicket?.ticketNumber || `T-${rel.targetTicket?.id || 0}`,
+        target_ticket_title: rel.targetTicket?.title || '',
         relation_type: rel.relationType as TicketRelationType,
         dependency_type: rel.metadata?.dependency_type === 'hard' ? 'hard' : 'soft',
         is_blocking: rel.metadata?.is_blocking === true,
         description: rel.description,
-        created_at: rel.createdAt,
-        created_by: rel.createdBy?.id || 0,
-        created_by_name: rel.createdBy?.name || '系统',
+        created_at: typeof rel.createdAt === 'string' ? rel.createdAt : new Date(rel.createdAt).toISOString(),
+        created_by: rel.createdBy,
+        created_by_name: rel.createdByName || '系统',
       }));
 
       setDependencies(deps);
@@ -473,7 +455,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       {
         title: (
           <div className='flex items-center gap-2'>
-            <Text strong>{ticket.ticket_number || `T-${ticket.id}`}</Text>
+            <Text strong>{ticket.ticketNumber || `T-${ticket.id}`}</Text>
             <Tag color='blue'>当前工单</Tag>
           </div>
         ),
@@ -504,7 +486,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       <Card>
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={(key) => setActiveTab(key as 'dependencies' | 'impact' | 'graph' | 'stats')}
           type='card'
           size='large'
           items={[

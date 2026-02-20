@@ -12,6 +12,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/nitram509/lib-bpmn-engine v0.2.4
+	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/spf13/viper v1.20.1

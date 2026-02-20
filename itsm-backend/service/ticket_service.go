@@ -8,9 +8,12 @@ import (
 	"fmt"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/user"
 	"strings"
 	"time"
 
@@ -20,8 +23,12 @@ import (
 type TicketService struct {
 	client              *ent.Client
 	logger              *zap.SugaredLogger
-	notificationService *TicketNotificationService // 可选的通知服务
-	automationRuleService *TicketAutomationRuleService // 可选的自动化规则服务
+	notificationService *TicketNotificationService
+	automationRuleService *TicketAutomationRuleService
+	// 流程触发服务（用于工单创建时自动触发工作流）
+	processTriggerService ProcessTriggerServiceInterface
+	// 审批服务
+	approvalService *ApprovalService
 }
 
 func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketService {
@@ -41,6 +48,16 @@ func (s *TicketService) SetAutomationRuleService(automationRuleService *TicketAu
 	s.automationRuleService = automationRuleService
 }
 
+// SetProcessTriggerService 设置流程触发服务（用于工单创建时自动触发工作流）
+func (s *TicketService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
+	s.processTriggerService = triggerService
+}
+
+// SetApprovalService 设置审批服务
+func (s *TicketService) SetApprovalService(approvalService *ApprovalService) {
+	s.approvalService = approvalService
+}
+
 // CreateTicket 创建工单
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
@@ -54,6 +71,34 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		// ok（空值交给 schema 默认 medium）
 	default:
 		return nil, fmt.Errorf("无效的优先级")
+	}
+
+	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
+	if req.AssigneeID > 0 {
+		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID)).Exist(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to verify assignee", "error", err)
+			return nil, fmt.Errorf("验证分配人失败")
+		}
+		if !exists {
+			return nil, fmt.Errorf("分配的用户不存在")
+		}
+	}
+
+	// 计算SLA截止时间
+	ticketType := req.Type
+	if ticketType == "" {
+		ticketType = "ticket" // 默认类型
+	}
+	slaResult, err := s.calculateSLADeadline(ctx, tenantID, ticketType, req.Priority)
+	if err != nil {
+		s.logger.Warnw("Failed to calculate SLA deadline", "error", err)
+		// SLA计算失败不阻止工单创建
+		slaResult = &SLADeadlineResult{
+			SLADefinitionID:    0,
+			ResponseDeadline:   time.Now().Add(8 * time.Hour),
+			ResolutionDeadline: time.Now().Add(24 * time.Hour),
+		}
 	}
 
 	// 生成工单编号
@@ -72,7 +117,10 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		SetTicketNumber(ticketNumber).
 		SetTenantID(tenantID).
 		SetRequesterID(req.RequesterID).
-		SetAssigneeID(req.AssigneeID)
+		SetAssigneeID(req.AssigneeID).
+		SetSLADefinitionID(slaResult.SLADefinitionID).
+		SetSLAResponseDeadline(slaResult.ResponseDeadline).
+		SetSLAResolutionDeadline(slaResult.ResolutionDeadline)
 
 	// 如果指定了父工单ID，设置父工单关系
 	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
@@ -119,6 +167,32 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		"category": req.Category,
 	})
 
+	// 触发审批流程（仅针对需要审批的工单类型）
+	if s.approvalService != nil {
+		ticketType := req.Type
+		if ticketType == "" {
+			ticketType = "ticket"
+		}
+		// 只有紧急和高优先级工单需要审批
+		if req.Priority == "urgent" || req.Priority == "critical" {
+			approvalReq := &ApprovalTriggerRequest{
+				TicketID:     ticket.ID,
+				TicketNumber: ticket.TicketNumber,
+				TicketTitle:  ticket.Title,
+				TicketType:   ticketType,
+				Priority:     req.Priority,
+				RequesterID:  req.RequesterID,
+				TenantID:     tenantID,
+			}
+			records, err := s.approvalService.TriggerApproval(ctx, approvalReq)
+			if err != nil {
+				s.logger.Warnw("Failed to trigger approval", "error", err, "ticket_id", ticket.ID)
+			} else if len(records) > 0 {
+				s.logger.Infow("Approval workflow triggered", "ticket_id", ticket.ID, "records", len(records))
+			}
+		}
+	}
+
 	// 发送通知给处理人
 	if s.notificationService != nil && ticket.AssigneeID > 0 {
 		if err := s.notificationService.NotifyTicketCreated(ctx, ticket); err != nil {
@@ -138,10 +212,195 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}()
 	}
 
+	// 触发BPMN工作流（异步执行，不阻塞工单创建）
+	if s.processTriggerService != nil {
+		go func() {
+			// 使用新的context避免超时影响
+			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.triggerWorkflowForTicket(workflowCtx, ticket.ID, tenantID); err != nil {
+				s.logger.Warnw("Failed to trigger workflow for ticket", "error", err, "ticket_id", ticket.ID)
+			}
+		}()
+	}
+
 	return ticket, nil
 }
 
-// UpdateTicket 更新工单
+// triggerWorkflowForTicket 为工单触发工作流
+func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID int, tenantID int) error {
+	// 获取工单信息
+	ticket, err := s.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		return fmt.Errorf("failed to get ticket: %w", err)
+	}
+
+	// 构建流程变量
+	variables := map[string]interface{}{
+		"ticket_id":     ticket.ID,
+		"ticket_number": ticket.TicketNumber,
+		"title":         ticket.Title,
+		"description":   ticket.Description,
+		"priority":      ticket.Priority,
+		"status":        ticket.Status,
+		"requester_id":  ticket.RequesterID,
+		"assignee_id":  ticket.AssigneeID,
+	}
+
+	// 根据优先级选择不同的流程
+	processKey := "ticket_general_flow"
+	if ticket.Priority == "high" || ticket.Priority == "urgent" {
+		processKey = "ticket_urgent_flow"
+	}
+
+	// 触发流程
+	triggerReq := &dto.ProcessTriggerRequest{
+		BusinessType:       dto.BusinessTypeTicket,
+		BusinessID:         ticket.ID,
+		ProcessDefinitionKey: processKey,
+		Variables:          variables,
+		TriggeredBy:        fmt.Sprintf("%d", ticket.RequesterID),
+		TriggeredAt:        time.Now(),
+		TenantID:           tenantID,
+	}
+
+	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
+	if err != nil {
+		return fmt.Errorf("failed to trigger workflow: %w", err)
+	}
+
+	s.logger.Infow("Workflow triggered for ticket",
+		"ticket_id", ticketID,
+		"process_instance_id", resp.ProcessInstanceID,
+		"process_key", processKey,
+		"business_key", resp.BusinessKey,
+	)
+
+	return nil
+}
+
+// GetWorkflowStatus 获取工单关联的流程状态
+func (s *TicketService) GetWorkflowStatus(ctx context.Context, ticketID int, tenantID int) (*dto.ProcessTriggerResponse, error) {
+	// 构建 businessKey
+	businessKey := fmt.Sprintf("ticket:%d", ticketID)
+
+	// 通过 ProcessTriggerService 获取流程状态
+	// 由于 ProcessTriggerService 没有直接查询方法，我们直接查询数据库
+	processInstance, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+		).
+		WithDefinition().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("未找到工单关联的流程实例")
+		}
+		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+	}
+
+	// 获取流程定义名称
+	processDefName := ""
+	if processInstance.Edges.Definition != nil {
+		processDefName = processInstance.Edges.Definition.Name
+	}
+
+	return &dto.ProcessTriggerResponse{
+		ProcessInstanceID:     processInstance.ID,
+		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
+		ProcessDefinitionName: processDefName,
+		BusinessKey:          processInstance.BusinessKey,
+		Status:               s.mapProcessStatus(processInstance.Status),
+		CurrentActivityID:     processInstance.CurrentActivityID,
+		CurrentActivityName:   processInstance.CurrentActivityName,
+		StartTime:            processInstance.StartTime,
+		EndTime:              &processInstance.EndTime,
+	}, nil
+}
+
+// mapProcessStatus 映射流程状态
+func (s *TicketService) mapProcessStatus(status string) dto.ProcessStatus {
+	switch status {
+	case "running", "active":
+		return dto.ProcessStatusRunning
+	case "completed":
+		return dto.ProcessStatusCompleted
+	case "suspended":
+		return dto.ProcessStatusSuspended
+	case "terminated", "cancelled":
+		return dto.ProcessStatusTerminated
+	default:
+		return dto.ProcessStatusPending
+	}
+}
+
+// CancelWorkflow 取消工单关联的流程
+func (s *TicketService) CancelWorkflow(ctx context.Context, ticketID int, tenantID int, reason string) error {
+	businessKey := fmt.Sprintf("ticket:%d", ticketID)
+
+	// 查找流程实例
+	processInstance, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("未找到工单关联的流程实例")
+		}
+		return fmt.Errorf("查询流程实例失败: %w", err)
+	}
+
+	// 取消流程
+	if s.processTriggerService != nil {
+		return s.processTriggerService.CancelProcess(ctx, processInstance.ID, reason, tenantID)
+	}
+
+	return fmt.Errorf("流程触发服务未配置")
+}
+
+// SyncTicketStatusWithWorkflow 同步工单状态与流程状态
+func (s *TicketService) SyncTicketStatusWithWorkflow(ctx context.Context, ticketID int, tenantID int) error {
+	// 获取流程状态
+	workflowStatus, err := s.GetWorkflowStatus(ctx, ticketID, tenantID)
+	if err != nil {
+		s.logger.Warnw("Failed to get workflow status for sync", "error", err, "ticket_id", ticketID)
+		return err
+	}
+
+	// 根据流程状态更新工单状态
+	var newTicketStatus string
+	switch workflowStatus.Status {
+	case dto.ProcessStatusCompleted:
+		// 流程完成时，工单状态设为已解决
+		newTicketStatus = "resolved"
+	case dto.ProcessStatusTerminated, dto.ProcessStatusSuspended:
+		// 流程终止或暂停时，工单状态设为暂停
+		newTicketStatus = "pending"
+	default:
+		// 流程进行中，不自动更新工单状态
+		return nil
+	}
+
+	// 更新工单状态
+	_, err = s.client.Ticket.UpdateOneID(ticketID).
+		SetStatus(newTicketStatus).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("同步工单状态失败: %w", err)
+	}
+
+	s.logger.Infow("Ticket status synced with workflow",
+		"ticket_id", ticketID,
+		"workflow_status", workflowStatus.Status,
+		"ticket_status", newTicketStatus,
+	)
+
+	return nil
+}
 func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto.UpdateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Updating ticket", "ticket_id", ticketID, "tenant_id", tenantID)
 
@@ -172,8 +431,20 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 	if req.Status != "" {
 		updateQuery.SetStatus(req.Status)
 	}
-	if req.AssigneeID != 0 {
+	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
+	if req.AssigneeID > 0 {
+		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID)).Exist(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to verify assignee", "error", err)
+			return nil, fmt.Errorf("验证分配人失败")
+		}
+		if !exists {
+			return nil, fmt.Errorf("分配的用户不存在")
+		}
 		updateQuery.SetAssigneeID(req.AssigneeID)
+	} else if req.AssigneeID == 0 {
+		// 允许将 assignee 设为 0（表示取消分配）
+		updateQuery.SetAssigneeID(0)
 	}
 
 	ticket, err := updateQuery.Save(ctx)
@@ -199,6 +470,61 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 		"updated_fields": req,
 	})
 
+	return ticket, nil
+}
+
+// UpdateTicketStatus 更新工单状态
+func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, status string, tenantID int, operatorID int) (*ent.Ticket, error) {
+	s.logger.Infow("Updating ticket status", "ticket_id", ticketID, "status", status, "tenant_id", tenantID, "operator_id", operatorID)
+
+	// 检查工单是否存在
+	ticket, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("ticket not found")
+		}
+		return nil, fmt.Errorf("failed to get ticket: %w", err)
+	}
+
+	// 不能审批/拒绝自己提交的工单
+	if (status == "approved" || status == "rejected") && ticket.RequesterID == operatorID {
+		return nil, fmt.Errorf("cannot approve or reject your own ticket")
+	}
+
+	// 验证状态值
+	validStatuses := map[string]bool{
+		"new": true, "open": true, "in_progress": true, "pending": true,
+		"resolved": true, "closed": true, "cancelled": true, "approved": true, "rejected": true,
+	}
+	if !validStatuses[status] {
+		return nil, fmt.Errorf("invalid status: %s", status)
+	}
+
+	// 更新状态
+	ticket, err = s.client.Ticket.UpdateOneID(ticketID).
+		SetStatus(status).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to update ticket status", "error", err, "ticket_id", ticketID)
+		return nil, fmt.Errorf("failed to update ticket status: %w", err)
+	}
+
+	// 如果是解决或关闭状态，设置解决时间
+	if status == "resolved" || status == "closed" {
+		now := time.Now()
+		ticket, err = s.client.Ticket.UpdateOneID(ticketID).
+			SetResolvedAt(now).
+			SetUpdatedAt(now).
+			Save(ctx)
+		if err != nil {
+			s.logger.Warnw("Failed to set resolved time", "error", err, "ticket_id", ticketID)
+		}
+	}
+
+	s.logger.Infow("Ticket status updated", "ticket_id", ticketID, "new_status", status)
 	return ticket, nil
 }
 
@@ -288,8 +614,49 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		return nil, fmt.Errorf("failed to list tickets: %w", err)
 	}
 
+	// 收集所有需要的用户ID
+	userIDMap := make(map[int]bool)
+	for _, t := range tickets {
+		if t.RequesterID > 0 {
+			userIDMap[t.RequesterID] = true
+		}
+		if t.AssigneeID > 0 {
+			userIDMap[t.AssigneeID] = true
+		}
+	}
+
+	// 批量查询用户
+	userMap := make(map[int]*ent.User)
+	if len(userIDMap) > 0 {
+		userIDs := make([]int, 0, len(userIDMap))
+		for id := range userIDMap {
+			userIDs = append(userIDs, id)
+		}
+		users, err := s.client.User.Query().Where(user.IDIn(userIDs...)).All(ctx)
+		if err != nil {
+			s.logger.Warnw("Failed to query users", "error", err)
+		} else {
+			for _, u := range users {
+				userMap[u.ID] = u
+			}
+		}
+	}
+
+	// 转换为 DTO 响应格式，确保 ticket_number 字段正确返回
+	ticketResponses := make([]*dto.TicketResponse, len(tickets))
+	for i, t := range tickets {
+		var requester, assignee *ent.User
+		if t.RequesterID > 0 {
+			requester = userMap[t.RequesterID]
+		}
+		if t.AssigneeID > 0 {
+			assignee = userMap[t.AssigneeID]
+		}
+		ticketResponses[i] = dto.ToTicketResponseWithUsers(t, requester, assignee)
+	}
+
 	return &dto.ListTicketsResponse{
-		Tickets:  tickets,
+		Tickets:  ticketResponses,
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,
@@ -312,6 +679,92 @@ func (s *TicketService) GetTicket(ctx context.Context, ticketID int, tenantID in
 	}
 
 	return ticket, nil
+}
+
+// TicketSLAInfo 工单SLA信息
+type TicketSLAInfo struct {
+	TicketID              int        `json:"ticket_id"`
+	TicketNumber          string     `json:"ticket_number"`
+	Priority              string     `json:"priority"`
+	SLADefinitionID       int        `json:"sla_definition_id"`
+	SLADefinitionName    string     `json:"sla_definition_name"`
+	ResponseDeadline      time.Time  `json:"response_deadline"`
+	ResolutionDeadline   time.Time  `json:"resolution_deadline"`
+	FirstResponseAt       *time.Time `json:"first_response_at"`
+	ResolvedAt            *time.Time `json:"resolved_at"`
+	ResponseTimeLeft      int        `json:"response_time_left"`    // 剩余响应时间（分钟）
+	ResolutionTimeLeft    int        `json:"resolution_time_left"` // 剩余解决时间（分钟）
+	IsResponseBreached    bool       `json:"is_response_breached"`
+	IsResolutionBreached  bool       `json:"is_resolution_breached"`
+}
+
+// GetTicketSLAInfo 获取工单SLA信息
+func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (*TicketSLAInfo, error) {
+	ticket, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("ticket not found")
+		}
+		return nil, fmt.Errorf("failed to get ticket: %w", err)
+	}
+
+	info := &TicketSLAInfo{
+		TicketID:            ticket.ID,
+		TicketNumber:        ticket.TicketNumber,
+		Priority:            ticket.Priority,
+		SLADefinitionID:     ticket.SLADefinitionID,
+		ResponseDeadline:    ticket.SLAResponseDeadline,
+		ResolutionDeadline: ticket.SLAResolutionDeadline,
+	}
+
+	// 处理 first_response_at
+	if !ticket.FirstResponseAt.IsZero() {
+		info.FirstResponseAt = &ticket.FirstResponseAt
+	}
+
+	// 处理 resolved_at
+	if !ticket.ResolvedAt.IsZero() {
+		info.ResolvedAt = &ticket.ResolvedAt
+	}
+
+	// 获取SLA定义名称
+	if ticket.SLADefinitionID > 0 {
+		sla, err := s.client.SLADefinition.Query().
+			Where(sladefinition.ID(ticket.SLADefinitionID)).
+			First(ctx)
+		if err == nil && sla != nil {
+			info.SLADefinitionName = sla.Name
+		}
+	}
+
+	// 计算剩余时间
+	now := time.Now()
+
+	// 响应时间剩余
+	if !ticket.FirstResponseAt.IsZero() {
+		info.ResponseTimeLeft = 0
+		info.IsResponseBreached = false
+	} else if now.After(ticket.SLAResponseDeadline) {
+		info.ResponseTimeLeft = 0
+		info.IsResponseBreached = true
+	} else {
+		info.ResponseTimeLeft = int(ticket.SLAResponseDeadline.Sub(now).Minutes())
+	}
+
+	// 解决时间剩余
+	if !ticket.ResolvedAt.IsZero() {
+		info.ResolutionTimeLeft = 0
+		info.IsResolutionBreached = false
+	} else if now.After(ticket.SLAResolutionDeadline) {
+		info.ResolutionTimeLeft = 0
+		info.IsResolutionBreached = true
+	} else {
+		info.ResolutionTimeLeft = int(ticket.SLAResolutionDeadline.Sub(now).Minutes())
+	}
+
+	return info, nil
 }
 
 // DeleteTicket 删除工单
@@ -436,36 +889,94 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 	}, nil
 }
 
-// calculateSLADeadline 计算SLA截止时间
-func (s *TicketService) calculateSLADeadline(priority, category string) (time.Time, error) {
+// SLADeadlineResult contains response and resolution deadlines
+type SLADeadlineResult struct {
+	SLADefinitionID int        `json:"sla_definition_id"`
+	ResponseDeadline time.Time `json:"response_deadline"`
+	ResolutionDeadline time.Time `json:"resolution_deadline"`
+}
+
+// calculateSLADeadline 计算SLA截止时间（从数据库读取SLA定义）
+func (s *TicketService) calculateSLADeadline(ctx context.Context, tenantID int, ticketType, priority string) (*SLADeadlineResult, error) {
 	now := time.Now()
 
-	// 根据优先级和分类计算SLA时间
-	var slaHours int
-	switch priority {
-	case "critical":
-		slaHours = 2
-	case "high":
-		slaHours = 4
-	case "medium":
-		slaHours = 8
-	case "low":
-		slaHours = 24
+	// 确定service_type
+	var serviceType string
+	switch ticketType {
+	case "incident":
+		serviceType = "incident"
+	case "service_request":
+		serviceType = "service_request"
+	case "change":
+		serviceType = "change"
 	default:
-		slaHours = 8
+		// 默认为incident类型
+		serviceType = "incident"
 	}
 
-	// 考虑工作时间（简单实现，实际应该更复杂）
-	deadline := now.Add(time.Duration(slaHours) * time.Hour)
+	// 标准化优先级
+	normalizedPriority := strings.ToLower(priority)
+	if normalizedPriority == "urgent" {
+		normalizedPriority = "critical"
+	}
 
+	// 从数据库查找匹配的SLA定义
+	sla, err := s.client.SLADefinition.Query().
+		Where(
+			sladefinition.TenantID(tenantID),
+			sladefinition.ServiceType(serviceType),
+			sladefinition.Priority(normalizedPriority),
+			sladefinition.IsActive(true),
+		).
+		First(ctx)
+
+	if err != nil {
+		// 如果找不到精确匹配，尝试查找默认SLA（不带优先级）
+		if ent.IsNotFound(err) {
+			sla, err = s.client.SLADefinition.Query().
+				Where(
+					sladefinition.TenantID(tenantID),
+					sladefinition.ServiceType(serviceType),
+					sladefinition.IsActive(true),
+				).
+				First(ctx)
+		}
+
+		if err != nil || sla == nil {
+			// 如果还是找不到，返回默认值
+			s.logger.Warnw("No SLA definition found, using defaults", "service_type", serviceType, "priority", normalizedPriority)
+			return &SLADeadlineResult{
+				SLADefinitionID: 0,
+				ResponseDeadline: now.Add(8 * time.Hour),
+				ResolutionDeadline: now.Add(24 * time.Hour),
+			}, nil
+		}
+	}
+
+	// 计算截止时间（单位是分钟）
+	responseDeadline := now.Add(time.Duration(sla.ResponseTime) * time.Minute)
+	resolutionDeadline := now.Add(time.Duration(sla.ResolutionTime) * time.Minute)
+
+	// 考虑工作时间（简单实现：延后到下一个工作日）
+	responseDeadline = s.adjustToBusinessHours(responseDeadline)
+	resolutionDeadline = s.adjustToBusinessHours(resolutionDeadline)
+
+	return &SLADeadlineResult{
+		SLADefinitionID: sla.ID,
+		ResponseDeadline: responseDeadline,
+		ResolutionDeadline: resolutionDeadline,
+	}, nil
+}
+
+// adjustToBusinessHours 调整时间到工作时间（简单实现：延后到周一）
+func (s *TicketService) adjustToBusinessHours(t time.Time) time.Time {
 	// 如果是周末，延后到周一
-	if deadline.Weekday() == time.Saturday {
-		deadline = deadline.AddDate(0, 0, 2)
-	} else if deadline.Weekday() == time.Sunday {
-		deadline = deadline.AddDate(0, 0, 1)
+	if t.Weekday() == time.Saturday {
+		return t.AddDate(0, 0, 2)
+	} else if t.Weekday() == time.Sunday {
+		return t.AddDate(0, 0, 1)
 	}
-
-	return deadline, nil
+	return t
 }
 
 // canUpdateTicket 检查是否可以更新工单

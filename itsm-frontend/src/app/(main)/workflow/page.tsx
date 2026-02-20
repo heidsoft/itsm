@@ -222,8 +222,7 @@ const WorkflowManagementPage = () => {
       cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
-          // 模拟删除API调用
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await WorkflowAPI.deleteWorkflow(String(id));
           setWorkflows(prev => prev.filter(w => w.id !== id));
           message.success(t('workflow.deleteSuccess'));
           loadStats();
@@ -242,8 +241,7 @@ const WorkflowManagementPage = () => {
       cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
-          // 模拟部署API调用
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await WorkflowAPI.deployWorkflow(String(id));
           setWorkflows(prev =>
             prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w))
           );
@@ -258,14 +256,13 @@ const WorkflowManagementPage = () => {
 
   const handleCopyWorkflow = async (workflow: Workflow) => {
     try {
-      // 模拟复制API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const result = await WorkflowAPI.cloneWorkflow(String(workflow.id), `${workflow.name} - ${t('workflow.copySuffix')}`);
       const newWorkflow: Workflow = {
         ...workflow,
-        id: Date.now(), // 临时ID
-        name: `${workflow.name} - ${t('workflow.copySuffix')}`,
+        id: Number(result.id) || Date.now(),
+        name: result.name || '',
         status: 'draft',
-        version: '1.0.0',
+        version: String(result.version) || '1.0.0',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         instances_count: 0,
@@ -282,14 +279,7 @@ const WorkflowManagementPage = () => {
 
   const handleExportWorkflow = async (workflow: Workflow) => {
     try {
-      // 模拟导出API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const exportData = {
-        workflow: workflow,
-        exportTime: new Date().toISOString(),
-        version: '1.0',
-      };
+      const exportData = await WorkflowAPI.exportWorkflow(String(workflow.id));
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
         type: 'application/json',
@@ -297,16 +287,15 @@ const WorkflowManagementPage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `workflow_batch_export_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `workflow_${workflow.name}_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      message.success(t('workflow.batchExportSuccess', { count: selectedRowKeys.length }));
-      setSelectedRowKeys([]);
+      message.success(t('workflow.exportSuccess', { name: workflow.name }));
     } catch {
-      message.error(t('workflow.batchExportFailed'));
+      message.error(t('workflow.exportFailed'));
     }
   };
 
@@ -356,7 +345,7 @@ const WorkflowManagementPage = () => {
       cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await WorkflowAPI.deactivateWorkflow(String(id));
           setWorkflows(prev =>
             prev.map(w => (w.id === id ? { ...w, status: 'inactive' as const } : w))
           );
@@ -371,7 +360,7 @@ const WorkflowManagementPage = () => {
 
   const handleActivateWorkflow = async (id: number) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await WorkflowAPI.activateWorkflow(String(id));
       setWorkflows(prev => prev.map(w => (w.id === id ? { ...w, status: 'active' as const } : w)));
       message.success(t('workflow.activateSuccess'));
       loadStats();
@@ -394,7 +383,9 @@ const WorkflowManagementPage = () => {
       cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          for (const id of selectedRowKeys) {
+            await WorkflowAPI.deleteWorkflow(String(id));
+          }
           setWorkflows(prev => prev.filter(w => !selectedRowKeys.includes(w.id)));
           setSelectedRowKeys([]);
           message.success(t('workflow.batchDeleteSuccess', { count: selectedRowKeys.length }));
@@ -419,7 +410,9 @@ const WorkflowManagementPage = () => {
       cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          for (const id of selectedRowKeys) {
+            await WorkflowAPI.activateWorkflow(String(id));
+          }
           setWorkflows(prev =>
             prev.map(w =>
               selectedRowKeys.includes(w.id) ? { ...w, status: 'active' as const } : w
@@ -449,7 +442,9 @@ const WorkflowManagementPage = () => {
       cancelText: t('workflow.cancel'),
       onOk: async () => {
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          for (const id of selectedRowKeys) {
+            await WorkflowAPI.deactivateWorkflow(String(id));
+          }
           setWorkflows(prev =>
             prev.map(w =>
               selectedRowKeys.includes(w.id) ? { ...w, status: 'inactive' as const } : w

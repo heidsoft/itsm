@@ -31,11 +31,36 @@ type KnowledgeArticle struct {
 	TenantID int `json:"tenant_id,omitempty"`
 	// 是否发布
 	IsPublished bool `json:"is_published,omitempty"`
+	// 浏览次数
+	ViewCount int `json:"view_count,omitempty"`
+	// 点赞次数
+	LikeCount int `json:"like_count,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the KnowledgeArticleQuery when eager-loading is set.
+	Edges        KnowledgeArticleEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// KnowledgeArticleEdges holds the relations/edges for other nodes in the graph.
+type KnowledgeArticleEdges struct {
+	// UserLikes holds the value of the user_likes edge.
+	UserLikes []*KnowledgeArticleLike `json:"user_likes,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// UserLikesOrErr returns the UserLikes value or an error if the edge
+// was not loaded in eager-loading.
+func (e KnowledgeArticleEdges) UserLikesOrErr() ([]*KnowledgeArticleLike, error) {
+	if e.loadedTypes[0] {
+		return e.UserLikes, nil
+	}
+	return nil, &NotLoadedError{edge: "user_likes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -45,7 +70,7 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case knowledgearticle.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID:
+		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount:
 			values[i] = new(sql.NullInt64)
 		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags:
 			values[i] = new(sql.NullString)
@@ -114,6 +139,18 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ka.IsPublished = value.Bool
 			}
+		case knowledgearticle.FieldViewCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field view_count", values[i])
+			} else if value.Valid {
+				ka.ViewCount = int(value.Int64)
+			}
+		case knowledgearticle.FieldLikeCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field like_count", values[i])
+			} else if value.Valid {
+				ka.LikeCount = int(value.Int64)
+			}
 		case knowledgearticle.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -137,6 +174,11 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ka *KnowledgeArticle) Value(name string) (ent.Value, error) {
 	return ka.selectValues.Get(name)
+}
+
+// QueryUserLikes queries the "user_likes" edge of the KnowledgeArticle entity.
+func (ka *KnowledgeArticle) QueryUserLikes() *KnowledgeArticleLikeQuery {
+	return NewKnowledgeArticleClient(ka.config).QueryUserLikes(ka)
 }
 
 // Update returns a builder for updating this KnowledgeArticle.
@@ -182,6 +224,12 @@ func (ka *KnowledgeArticle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_published=")
 	builder.WriteString(fmt.Sprintf("%v", ka.IsPublished))
+	builder.WriteString(", ")
+	builder.WriteString("view_count=")
+	builder.WriteString(fmt.Sprintf("%v", ka.ViewCount))
+	builder.WriteString(", ")
+	builder.WriteString("like_count=")
+	builder.WriteString(fmt.Sprintf("%v", ka.LikeCount))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(ka.CreatedAt.Format(time.ANSIC))

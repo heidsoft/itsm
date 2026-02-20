@@ -17,6 +17,7 @@ import {
   Skeleton,
   Select,
 } from 'antd';
+import { useRouter } from 'next/navigation';
 import { RefreshCw, Settings, LayoutDashboard, Zap, LineChart, TrendingUp } from 'lucide-react';
 import { KPICards } from './components/KPICards';
 import { ChartsSection } from './components/ChartsSection';
@@ -32,6 +33,7 @@ import TeamWorkloadChart from './components/TeamWorkloadChart';
 import PeakHoursChart from './components/PeakHoursChart';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const {
     data,
     loading,
@@ -49,11 +51,10 @@ export default function DashboardPage() {
 
   // 处理快速操作点击
   const handleQuickActionClick = useCallback((action: QuickAction) => {
-    message.info(`正在跳转到 ${action.title}...`);
-    if (action.permission) {
-      console.log(`检查权限: ${action.permission}`);
+    if (action.path) {
+      router.push(action.path);
     }
-  }, []);
+  }, [router]);
 
   // 处理刷新间隔变化
   const handleRefreshIntervalChange = useCallback(

@@ -1,6 +1,6 @@
 'use client';
 
-import ChangeList from '@/modules/change/components/ChangeList';
+import ChangeList from '@/components/change/ChangeList';
 
 export default function ChangesPage() {
   return <ChangeList />;

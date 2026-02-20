@@ -4,7 +4,7 @@
  */
 
 import { httpClient } from './http-client';
-import { API_BASE_URL } from '@/app/lib/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 
 export interface TicketAttachment {
   id: number;

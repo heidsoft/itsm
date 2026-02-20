@@ -49,7 +49,7 @@ func NewApplication() *Application {
 	}
 
 	// 2. 初始化日志系统
-	logger, _ := zap.NewProduction()
+	logger, _ := zap.NewDevelopment()
 	sugar := logger.Sugar()
 	middleware.SetLogger(sugar)
 
@@ -83,6 +83,7 @@ func NewApplication() *Application {
 	cmdbService := service.NewCMDBService(client)
 	problemService := service.NewProblemService(client, sugar)
 	changeService := service.NewChangeService(client, sugar)
+	changeService.SetApprovalService(approvalService)
 	changeApprovalService := service.NewChangeApprovalService(client, database.GetRawDB(), sugar)
 
 	// LLM/Embedding/VectorStore
@@ -119,6 +120,11 @@ func NewApplication() *Application {
 	ticketAttachmentController := controller.NewTicketAttachmentController(ticketAttachmentService, sugar)
 	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
 	ticketNotificationController := controller.NewTicketNotificationController(ticketNotificationService, sugar)
+
+	// General Notification Service & Controller
+	notificationService := service.NewNotificationService(client)
+	notificationController := controller.NewNotificationController(notificationService)
+
 	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)
 	ticketViewService := service.NewTicketViewService(client, sugar)
@@ -132,6 +138,10 @@ func NewApplication() *Application {
 	// Ticket Workflow Service & Controller
 	ticketWorkflowService := service.NewTicketWorkflowService(client, database.GetRawDB(), sugar)
 	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, sugar)
+
+	// Ticket Automation Rule Service & Controller
+	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
+	ticketAutomationRuleController := controller.NewTicketAutomationRuleController(ticketAutomationRuleService, sugar)
 
 	// Set notification service dependencies
 	ticketService.SetNotificationService(ticketNotificationService)
@@ -159,6 +169,31 @@ func NewApplication() *Application {
 
 	processEngine := service.NewCustomProcessEngine(client, sugar)
 	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine)
+
+	// BPMN Process Trigger Service & Controller (统一流程触发接口)
+	bpmnTemplateService := service.NewBPMNTemplateService(client)
+	processBindingService := service.NewProcessBindingService(client)
+	processTriggerService := service.NewProcessTriggerService(client, processEngine)
+	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService)
+
+	// Set process trigger service for workflow integration (after processTriggerService is declared)
+	ticketService.SetProcessTriggerService(processTriggerService)
+
+	// Set approval service for ticket workflow integration
+	ticketService.SetApprovalService(approvalService)
+
+	// 初始化模板并部署默认流程
+	go func() {
+		ctx := context.Background()
+		// 为默认租户(1)加载和部署模板
+		if _, err := bpmnTemplateService.LoadAndDeployTemplates(ctx, 1); err != nil {
+			sugar.Warnw("Failed to deploy BPMN templates", "error", err)
+		}
+		// 初始化默认流程绑定
+		if err := processBindingService.InitDefaultBindings(ctx, 1); err != nil {
+			sugar.Warnw("Failed to init default process bindings", "error", err)
+		}
+	}()
 
 	dashboardService := service.NewDashboardService(client, sugar)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
@@ -194,7 +229,10 @@ func NewApplication() *Application {
 	changeHandler := change.NewHandler(changeServiceDomain)
 
 	// CMDB Controller (新增)
-	cmdbController := controller.NewCMDBController(service.NewCMDBService(client))
+	// Note: cmdbService already declared at line 83
+	ciRelationshipService := service.NewCIRelationshipService(client)
+	auditLogService := service.NewAuditLogService(client, sugar)
+	cmdbController := controller.NewCMDBController(cmdbService, ciRelationshipService, auditLogService)
 
 	// Analytics & Prediction Controllers
 	analyticsController := controller.NewAnalyticsController(analyticsService)
@@ -256,13 +294,16 @@ func NewApplication() *Application {
 		TicketCommentController:         ticketCommentController,
 		TicketAttachmentController:      ticketAttachmentController,
 		TicketNotificationController:    ticketNotificationController,
+		NotificationController:         notificationController,
 		TicketRatingController:          ticketRatingController,
 		TicketAssignmentSmartController: ticketAssignmentSmartController,
 		TicketViewController:            ticketViewController,
 		TicketWorkflowController:        ticketWorkflowController,
+		TicketAutomationRuleController: ticketAutomationRuleController,
 		IncidentController:              incidentController,
 		ApprovalController:              approvalController,
 		BPMNWorkflowController:          bpmnWorkflowController,
+		BPMNProcessTriggerController:   bpmnProcessTriggerController,
 		DashboardHandler:                dashboardHandler,
 		ProjectController:               projectController,
 		ApplicationController:           applicationController,

@@ -236,6 +236,9 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (GlobalErrorBoundary as any).displayName = 'GlobalErrorBoundary';
+
 /**
  * 功能组件错误边界Hook（实验性）
  * 注意：目前React不支持函数组件的错误边界，这个是包装器

@@ -58,6 +58,20 @@ func (ic *IncidentCreate) SetNillableStatus(s *string) *IncidentCreate {
 	return ic
 }
 
+// SetType sets the "type" field.
+func (ic *IncidentCreate) SetType(s string) *IncidentCreate {
+	ic.mutation.SetType(s)
+	return ic
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (ic *IncidentCreate) SetNillableType(s *string) *IncidentCreate {
+	if s != nil {
+		ic.SetType(*s)
+	}
+	return ic
+}
+
 // SetPriority sets the "priority" field.
 func (ic *IncidentCreate) SetPriority(s string) *IncidentCreate {
 	ic.mutation.SetPriority(s)
@@ -439,6 +453,10 @@ func (ic *IncidentCreate) defaults() {
 		v := incident.DefaultStatus
 		ic.mutation.SetStatus(v)
 	}
+	if _, ok := ic.mutation.GetType(); !ok {
+		v := incident.DefaultType
+		ic.mutation.SetType(v)
+	}
 	if _, ok := ic.mutation.Priority(); !ok {
 		v := incident.DefaultPriority
 		ic.mutation.SetPriority(v)
@@ -485,6 +503,9 @@ func (ic *IncidentCreate) check() error {
 	}
 	if _, ok := ic.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Incident.status"`)}
+	}
+	if _, ok := ic.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Incident.type"`)}
 	}
 	if _, ok := ic.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Incident.priority"`)}
@@ -571,6 +592,10 @@ func (ic *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.Status(); ok {
 		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 		_node.Status = value
+	}
+	if value, ok := ic.mutation.GetType(); ok {
+		_spec.SetField(incident.FieldType, field.TypeString, value)
+		_node.Type = value
 	}
 	if value, ok := ic.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)

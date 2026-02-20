@@ -21,12 +21,24 @@ type SLAViolation struct {
 	ID int `json:"id,omitempty"`
 	// SLA定义ID
 	SLADefinitionID int `json:"sla_definition_id,omitempty"`
+	// 工单类型
+	TicketType string `json:"ticket_type,omitempty"`
+	// SLA名称
+	SLAName string `json:"sla_name,omitempty"`
 	// 工单ID
 	TicketID int `json:"ticket_id,omitempty"`
 	// 违规类型
 	ViolationType string `json:"violation_type,omitempty"`
 	// 违规时间
 	ViolationTime time.Time `json:"violation_time,omitempty"`
+	// 期望时间(时间戳)
+	ExpectedTime int `json:"expected_time,omitempty"`
+	// 实际时间(时间戳)
+	ActualTime int `json:"actual_time,omitempty"`
+	// 超时分钟数
+	OverdueMinutes int `json:"overdue_minutes,omitempty"`
+	// 状态
+	Status string `json:"status,omitempty"`
 	// 违规描述
 	Description string `json:"description,omitempty"`
 	// 严重程度
@@ -89,9 +101,9 @@ func (*SLAViolation) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case slaviolation.FieldIsResolved:
 			values[i] = new(sql.NullBool)
-		case slaviolation.FieldID, slaviolation.FieldSLADefinitionID, slaviolation.FieldTicketID, slaviolation.FieldTenantID:
+		case slaviolation.FieldID, slaviolation.FieldSLADefinitionID, slaviolation.FieldTicketID, slaviolation.FieldExpectedTime, slaviolation.FieldActualTime, slaviolation.FieldOverdueMinutes, slaviolation.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case slaviolation.FieldViolationType, slaviolation.FieldDescription, slaviolation.FieldSeverity, slaviolation.FieldResolutionNotes:
+		case slaviolation.FieldTicketType, slaviolation.FieldSLAName, slaviolation.FieldViolationType, slaviolation.FieldStatus, slaviolation.FieldDescription, slaviolation.FieldSeverity, slaviolation.FieldResolutionNotes:
 			values[i] = new(sql.NullString)
 		case slaviolation.FieldViolationTime, slaviolation.FieldResolvedAt, slaviolation.FieldCreatedAt, slaviolation.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -122,6 +134,18 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sv.SLADefinitionID = int(value.Int64)
 			}
+		case slaviolation.FieldTicketType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ticket_type", values[i])
+			} else if value.Valid {
+				sv.TicketType = value.String
+			}
+		case slaviolation.FieldSLAName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_name", values[i])
+			} else if value.Valid {
+				sv.SLAName = value.String
+			}
 		case slaviolation.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
@@ -139,6 +163,30 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field violation_time", values[i])
 			} else if value.Valid {
 				sv.ViolationTime = value.Time
+			}
+		case slaviolation.FieldExpectedTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field expected_time", values[i])
+			} else if value.Valid {
+				sv.ExpectedTime = int(value.Int64)
+			}
+		case slaviolation.FieldActualTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field actual_time", values[i])
+			} else if value.Valid {
+				sv.ActualTime = int(value.Int64)
+			}
+		case slaviolation.FieldOverdueMinutes:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field overdue_minutes", values[i])
+			} else if value.Valid {
+				sv.OverdueMinutes = int(value.Int64)
+			}
+		case slaviolation.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				sv.Status = value.String
 			}
 		case slaviolation.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -237,6 +285,12 @@ func (sv *SLAViolation) String() string {
 	builder.WriteString("sla_definition_id=")
 	builder.WriteString(fmt.Sprintf("%v", sv.SLADefinitionID))
 	builder.WriteString(", ")
+	builder.WriteString("ticket_type=")
+	builder.WriteString(sv.TicketType)
+	builder.WriteString(", ")
+	builder.WriteString("sla_name=")
+	builder.WriteString(sv.SLAName)
+	builder.WriteString(", ")
 	builder.WriteString("ticket_id=")
 	builder.WriteString(fmt.Sprintf("%v", sv.TicketID))
 	builder.WriteString(", ")
@@ -245,6 +299,18 @@ func (sv *SLAViolation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("violation_time=")
 	builder.WriteString(sv.ViolationTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("expected_time=")
+	builder.WriteString(fmt.Sprintf("%v", sv.ExpectedTime))
+	builder.WriteString(", ")
+	builder.WriteString("actual_time=")
+	builder.WriteString(fmt.Sprintf("%v", sv.ActualTime))
+	builder.WriteString(", ")
+	builder.WriteString("overdue_minutes=")
+	builder.WriteString(fmt.Sprintf("%v", sv.OverdueMinutes))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(sv.Status)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(sv.Description)

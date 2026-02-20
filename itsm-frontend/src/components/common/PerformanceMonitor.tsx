@@ -92,39 +92,46 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     setLoading(true);
     try {
       const { SystemConfigAPI } = await import('@/lib/api/system-config-api');
-      const response = await SystemConfigAPI.getSystemStatus();
+      const apiResponse = await SystemConfigAPI.getSystemStatus() as {
+        cpu?: { usage?: number; cores?: number; temperature?: number };
+        memory?: { used?: number; total?: number; usage?: number };
+        disk?: { used?: number; total?: number; usage?: number };
+        network?: { inbound?: number; outbound?: number; latency?: number };
+        response?: { avgResponseTime?: number; p95ResponseTime?: number; errorRate?: number };
+        database?: { connections?: number; maxConnections?: number; queryTime?: number };
+      };
       
       // 使用后端返回的数据，如果没有则使用默认值0，严禁使用随机Mock数据
       const metricsData: PerformanceMetrics = {
         cpu: {
-          usage: response.cpu?.usage || 0,
-          cores: response.cpu?.cores || 1,
-          temperature: response.cpu?.temperature
+          usage: apiResponse.cpu?.usage || 0,
+          cores: apiResponse.cpu?.cores || 1,
+          temperature: apiResponse.cpu?.temperature
         },
         memory: {
-          used: response.memory?.used || 0,
-          total: response.memory?.total || 0,
-          usage: response.memory?.usage || 0
+          used: apiResponse.memory?.used || 0,
+          total: apiResponse.memory?.total || 0,
+          usage: apiResponse.memory?.usage || 0
         },
         disk: {
-          used: response.disk?.used || 0,
-          total: response.disk?.total || 0,
-          usage: response.disk?.usage || 0
+          used: apiResponse.disk?.used || 0,
+          total: apiResponse.disk?.total || 0,
+          usage: apiResponse.disk?.usage || 0
         },
         network: {
-          inbound: response.network?.inbound || 0,
-          outbound: response.network?.outbound || 0,
-          latency: response.network?.latency || 0
+          inbound: apiResponse.network?.inbound || 0,
+          outbound: apiResponse.network?.outbound || 0,
+          latency: apiResponse.network?.latency || 0
         },
         response: {
-          avgResponseTime: response.response?.avgResponseTime || 0,
-          p95ResponseTime: response.response?.p95ResponseTime || 0,
-          errorRate: response.response?.errorRate || 0
+          avgResponseTime: apiResponse.response?.avgResponseTime || 0,
+          p95ResponseTime: apiResponse.response?.p95ResponseTime || 0,
+          errorRate: apiResponse.response?.errorRate || 0
         },
         database: {
-          connections: response.database?.connections || 0,
-          maxConnections: response.database?.maxConnections || 100,
-          queryTime: response.database?.queryTime || 0
+          connections: apiResponse.database?.connections || 0,
+          maxConnections: apiResponse.database?.maxConnections || 100,
+          queryTime: apiResponse.database?.queryTime || 0
         }
       };
 

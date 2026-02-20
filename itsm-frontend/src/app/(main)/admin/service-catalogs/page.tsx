@@ -38,14 +38,14 @@ import {
   Tag,
 } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { CMDBApi } from '@/modules/cmdb/api';
+import { CMDBApi } from '@/lib/api/cmdb-api';
 import type {
   ServiceItem,
   CreateServiceItemRequest,
   UpdateServiceItemRequest,
   ServiceStatus,
 } from '@/types/service-catalog';
-import type { CIType, CloudService } from '@/modules/cmdb/types';
+import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

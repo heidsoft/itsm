@@ -4,19 +4,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { UserApi } from '@/lib/api/user-api';
-import type { Ticket } from '@/app/lib/api-config';
+import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
 import { ArrowLeft, AlertCircle, XCircle, UserCheck, Edit, Save, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button, Card, Typography, App, Badge, Tag, Descriptions, Space, Modal, Form, Select, Input } from 'antd';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Option } = Select;
 
 const TicketDetailPage: React.FC = () => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
+  const { user: currentUser } = useAuthStore();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,10 +25,21 @@ const TicketDetailPage: React.FC = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [slaInfo, setSlaInfo] = useState<{
+    sla_name: string;
+    response_deadline: string | null;
+    resolution_deadline: string | null;
+    is_breached: boolean;
+    response_time_remaining: number | null;
+    resolution_time_remaining: number | null;
+  } | null>(null);
   const [assignForm] = Form.useForm();
   const [editForm] = Form.useForm();
 
   const ticketId = parseInt(params.ticketId as string);
+
+  // 判断当前用户是否是工单申请人
+  const isRequester = ticket?.requesterId === currentUser?.id;
 
   // Get ticket details
   const fetchTicket = useCallback(async () => {
@@ -47,20 +59,38 @@ const TicketDetailPage: React.FC = () => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoadingUsers(true);
-      const data = await UserApi.getUsers({ page_size: 1000 });
+      const data = await UserApi.getUsers({ page_size: 100 });
       setUsers(data.users || []);
     } catch (error) {
-      antMessage.error('获取用户列表失败');
+      // 用户获取失败时使用空数组，不显示错误提示
+      setUsers([]);
     } finally {
       setLoadingUsers(false);
     }
   }, [antMessage]);
+
+  // Get ticket SLA info
+  const fetchSLAInfo = useCallback(async () => {
+    try {
+      const data = await TicketApi.getTicketSLA(ticketId);
+      setSlaInfo(data);
+    } catch (error) {
+      // SLA获取失败时不显示SLA信息
+      setSlaInfo(null);
+    }
+  }, [ticketId]);
 
   useEffect(() => {
     if (ticketId) {
       fetchTicket();
     }
   }, [ticketId, fetchTicket]);
+
+  useEffect(() => {
+    if (ticketId) {
+      fetchSLAInfo();
+    }
+  }, [ticketId, fetchSLAInfo]);
 
   useEffect(() => {
     fetchUsers();
@@ -244,21 +274,64 @@ const TicketDetailPage: React.FC = () => {
         <Space orientation='vertical' size={16} style={{ width: '100%' }}>
           <Descriptions column={2} bordered size='middle'>
             <Descriptions.Item label='标题'>{ticket.title}</Descriptions.Item>
-            <Descriptions.Item label='编号'>{ticket.ticket_number}</Descriptions.Item>
+            <Descriptions.Item label='编号'>{ticket.ticketNumber || '-'}</Descriptions.Item>
             <Descriptions.Item label='状态'>{ticket.status}</Descriptions.Item>
             <Descriptions.Item label='优先级'>{ticket.priority}</Descriptions.Item>
-            <Descriptions.Item label='创建时间'>{ticket.created_at}</Descriptions.Item>
-            <Descriptions.Item label='更新时间'>{ticket.updated_at}</Descriptions.Item>
+            <Descriptions.Item label='创建时间'>{ticket.createdAt}</Descriptions.Item>
+            <Descriptions.Item label='更新时间'>{ticket.updatedAt}</Descriptions.Item>
             <Descriptions.Item label='描述' span={2}>
               {ticket.description}
             </Descriptions.Item>
           </Descriptions>
 
+          {/* SLA Information */}
+          {slaInfo && (
+            <Card size='small' title='SLA信息' className='mt-4'>
+              <Space orientation='vertical' style={{ width: '100%' }}>
+                <div className='flex justify-between'>
+                  <Text type='secondary'>SLA定义:</Text>
+                  <Tag color={slaInfo.is_breached ? 'red' : 'blue'}>{slaInfo.sla_name}</Tag>
+                </div>
+                {slaInfo.response_deadline && (
+                  <div className='flex justify-between'>
+                    <Text type='secondary'>响应截止:</Text>
+                    <Text type={slaInfo.response_time_remaining !== null && slaInfo.response_time_remaining < 0 ? 'danger' : undefined}>
+                      {new Date(slaInfo.response_deadline).toLocaleString()}
+                      {slaInfo.response_time_remaining !== null && slaInfo.response_time_remaining < 0 && ' (已超时)'}
+                    </Text>
+                  </div>
+                )}
+                {slaInfo.resolution_deadline && (
+                  <div className='flex justify-between'>
+                    <Text type='secondary'>解决截止:</Text>
+                    <Text type={slaInfo.resolution_time_remaining !== null && slaInfo.resolution_time_remaining < 0 ? 'danger' : undefined}>
+                      {new Date(slaInfo.resolution_deadline).toLocaleString()}
+                      {slaInfo.resolution_time_remaining !== null && slaInfo.resolution_time_remaining < 0 && ' (已超时)'}
+                    </Text>
+                  </div>
+                )}
+                {slaInfo.is_breached && (
+                  <Tag color='red'>SLA已违规</Tag>
+                )}
+              </Space>
+            </Card>
+          )}
+
           <Space>
-            <Button type='primary' onClick={handleApprove}>
+            <Button
+              type='primary'
+              onClick={handleApprove}
+              disabled={isRequester}
+              title={isRequester ? '不能审批自己提交的工单' : ''}
+            >
               批准
             </Button>
-            <Button danger onClick={handleReject}>
+            <Button
+              danger
+              onClick={handleReject}
+              disabled={isRequester}
+              title={isRequester ? '不能拒绝自己提交的工单' : ''}
+            >
               拒绝
             </Button>
             <Button icon={<UserCheck size={16} />} onClick={handleAssign} loading={loadingUsers}>
@@ -269,9 +342,17 @@ const TicketDetailPage: React.FC = () => {
             </Button>
           </Space>
 
-          <Text type='secondary'>
-            工单详情页功能已恢复 - 支持分配、编辑等基本操作。
-          </Text>
+          {isRequester && (
+            <Text type='secondary' className='block mt-2'>
+              您是此工单的申请人，无法进行审批操作
+            </Text>
+          )}
+
+          {!isRequester && (
+            <Text type='secondary'>
+              支持状态变更、审批流程、分配处理人等完整工单操作
+            </Text>
+          )}
         </Space>
 
         {/* Assignment Modal */}
@@ -305,11 +386,11 @@ const TicketDetailPage: React.FC = () => {
                 loading={loadingUsers}
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  (option?.label as unknown as string)?.toLowerCase().includes(input.toLowerCase())
                 }
-              >
-                {users.map(user => (
-                  <Option key={user.id} value={user.id}>
+                options={users.map(user => ({
+                  value: user.id,
+                  label: (
                     <Space>
                       <span>{user.name}</span>
                       <Text type="secondary" className="text-xs">
@@ -321,9 +402,9 @@ const TicketDetailPage: React.FC = () => {
                         </Tag>
                       )}
                     </Space>
-                  </Option>
-                ))}
-              </Select>
+                  ),
+                }))}
+              />
             </Form.Item>
             <Form.Item
               label="备注"
@@ -411,30 +492,28 @@ const TicketDetailPage: React.FC = () => {
                 name="priority"
                 rules={[{ required: true, message: '请选择优先级' }]}
               >
-                <Select placeholder="请选择优先级">
-                  <Option value="low">
-                    <Tag color="green">低优先级</Tag>
-                  </Option>
-                  <Option value="medium">
-                    <Tag color="orange">中优先级</Tag>
-                  </Option>
-                  <Option value="high">
-                    <Tag color="red">高优先级</Tag>
-                  </Option>
-                </Select>
+                <Select placeholder="请选择优先级"
+                  options={[
+                    { value: 'low', label: <><Tag color="green">低优先级</Tag></> },
+                    { value: 'medium', label: <><Tag color="orange">中优先级</Tag></> },
+                    { value: 'high', label: <><Tag color="red">高优先级</Tag></> },
+                  ]}
+                />
               </Form.Item>
               <Form.Item
                 label="状态"
                 name="status"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
-                <Select placeholder="请选择状态">
-                  <Option value="new">待处理</Option>
-                  <Option value="open">处理中</Option>
-                  <Option value="pending">暂停</Option>
-                  <Option value="resolved">已解决</Option>
-                  <Option value="closed">已关闭</Option>
-                </Select>
+                <Select placeholder="请选择状态"
+                  options={[
+                    { value: 'new', label: '待处理' },
+                    { value: 'open', label: '处理中' },
+                    { value: 'pending', label: '暂停' },
+                    { value: 'resolved', label: '已解决' },
+                    { value: 'closed', label: '已关闭' },
+                  ]}
+                />
               </Form.Item>
             </div>
             <Form.Item className="mb-0">

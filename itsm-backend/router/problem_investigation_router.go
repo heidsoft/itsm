@@ -28,10 +28,20 @@ func SetupProblemInvestigationRoutes(r *gin.Engine, problemInvestigationControll
 
 		// 根本原因分析
 		problemInvestigationGroup.POST("/root-cause-analysis", problemInvestigationController.CreateRootCauseAnalysis)
+		problemInvestigationGroup.PUT("/root-cause-analysis/:id", problemInvestigationController.UpdateRootCauseAnalysis)
 
 		// 问题解决方案
 		problemInvestigationGroup.POST("/solutions", problemInvestigationController.CreateProblemSolution)
+		problemInvestigationGroup.PUT("/solutions/:id", problemInvestigationController.UpdateProblemSolution)
 		problemInvestigationGroup.GET("/problems/:id/solutions", problemInvestigationController.GetProblemSolutions)
+
+		// 问题关联
+		problemInvestigationGroup.POST("/relationships", problemInvestigationController.CreateProblemRelationship)
+		problemInvestigationGroup.GET("/problems/:id/relationships", problemInvestigationController.GetProblemRelationships)
+
+		// 知识库文章
+		problemInvestigationGroup.POST("/knowledge-articles", problemInvestigationController.CreateKnowledgeArticle)
+		problemInvestigationGroup.GET("/problems/:id/knowledge-articles", problemInvestigationController.GetProblemKnowledgeArticles)
 
 		// 问题调查摘要
 		problemInvestigationGroup.GET("/problems/:id/summary", problemInvestigationController.GetProblemInvestigationSummary)

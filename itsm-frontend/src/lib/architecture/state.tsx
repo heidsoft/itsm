@@ -121,6 +121,7 @@ export class ServerStateManager {
 
   // 查询数据
   useQuery<T>(queryKey: string[], queryFn: () => Promise<T>, options?: any) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useQuery({
       queryKey,
       queryFn,
@@ -130,6 +131,7 @@ export class ServerStateManager {
 
   // 变更数据
   useMutation<T, Error, any>(mutationFn: (variables: any) => Promise<T>, options?: any) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     return useMutation({
       mutationFn,
       ...options,

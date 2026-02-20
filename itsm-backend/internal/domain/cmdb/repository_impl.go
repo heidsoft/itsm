@@ -314,19 +314,20 @@ func (r *EntRepository) ListCITypes(ctx context.Context, tenantID int) ([]*CITyp
 // Relationships
 func (r *EntRepository) CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error) {
 	e, err := r.client.CIRelationship.Create().
-		SetParentID(rel.SourceCIID).
-		SetChildID(rel.TargetCIID).
-		SetType(rel.Description). // 使用Description作为Type
+		SetSourceCiID(rel.SourceCIID).
+		SetTargetCiID(rel.TargetCIID).
+		SetRelationshipType(rel.Description). // 使用Description作为关系类型
+		SetDescription(rel.Description).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &CIRelationship{
 		ID:                 e.ID,
-		SourceCIID:         e.ParentID,
-		TargetCIID:         e.ChildID,
+		SourceCIID:         e.SourceCiID,
+		TargetCIID:         e.TargetCiID,
 		RelationshipTypeID: 0, // 新schema没有这个字段
-		Description:        e.Type,
+		Description:        e.Description,
 		TenantID:           0, // 新schema没有这个字段
 		CreatedAt:          e.CreatedAt,
 		UpdatedAt:          e.CreatedAt, // 新schema只有CreatedAt
@@ -336,8 +337,8 @@ func (r *EntRepository) CreateRelationship(ctx context.Context, rel *CIRelations
 func (r *EntRepository) GetRelationships(ctx context.Context, ciID int) ([]*CIRelationship, error) {
 	es, err := r.client.CIRelationship.Query().
 		Where(cirelationship.Or(
-			cirelationship.ParentID(ciID),
-			cirelationship.ChildID(ciID),
+			cirelationship.SourceCiID(ciID),
+			cirelationship.TargetCiID(ciID),
 		)).All(ctx)
 	if err != nil {
 		return nil, err
@@ -346,10 +347,10 @@ func (r *EntRepository) GetRelationships(ctx context.Context, ciID int) ([]*CIRe
 	for _, e := range es {
 		results = append(results, &CIRelationship{
 			ID:                 e.ID,
-			SourceCIID:         e.ParentID,
-			TargetCIID:         e.ChildID,
+			SourceCIID:         e.SourceCiID,
+			TargetCIID:         e.TargetCiID,
 			RelationshipTypeID: 0,
-			Description:        e.Type,
+			Description:        e.RelationshipType,
 			TenantID:           0,
 			CreatedAt:          e.CreatedAt,
 			UpdatedAt:          e.CreatedAt,

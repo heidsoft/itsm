@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/app/lib/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 import { getAccessToken, getTenantCode } from '@/lib/auth/token-storage';
 
 export interface ChangeComment {

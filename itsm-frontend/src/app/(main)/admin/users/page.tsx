@@ -35,6 +35,7 @@ import {
   Switch,
   App,
   Tag,
+  Empty,
 } from 'antd';
 import { UserApi, type User } from '@/lib/api/user-api';
 
@@ -414,23 +415,34 @@ const UserManagement: React.FC = () => {
 
       {/* 用户表格 */}
       <Card>
-        <Table
-          columns={columns}
-          dataSource={users}
-          rowKey='id'
-          loading={loading}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
-            onChange: (page, pageSize) => {
-              setPagination(prev => ({ ...prev, current: page, pageSize }));
-            },
-          }}
-        />
+        {users.length === 0 && !loading ? (
+          <Empty
+            description='暂无用户数据'
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          >
+            <Button type='primary' onClick={() => setIsCreateModalVisible(true)}>
+              创建第一个用户
+            </Button>
+          </Empty>
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={users}
+            rowKey='id'
+            loading={loading}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+              onChange: (page, pageSize) => {
+                setPagination(prev => ({ ...prev, current: page, pageSize }));
+              },
+            }}
+          />
+        )}
       </Card>
 
       {/* 创建用户模态框 */}

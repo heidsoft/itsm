@@ -48,6 +48,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import dayjs, { type Dayjs } from 'dayjs';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { TicketPredictionApi } from '@/lib/api/ticket-prediction-api';
@@ -102,9 +103,9 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
   const { message: antMessage } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [predictionReport, setPredictionReport] = useState<PredictionReport | null>(null);
-  const [timeRange, setTimeRange] = useState<[string, string]>([
-    format(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-    format(new Date(), 'yyyy-MM-dd'),
+  const [timeRange, setTimeRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().subtract(90, 'day'),
+    dayjs(),
   ]);
   const [predictionPeriod, setPredictionPeriod] = useState<'week' | 'month' | 'quarter'>('month');
   const [modelType, setModelType] = useState<'arima' | 'exponential' | 'linear'>('arima');
@@ -117,7 +118,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
       const data = await TicketPredictionApi.getTrendPrediction({
         ticket_type: ticketType,
         category: category,
-        time_range: timeRange,
+        time_range: [timeRange[0].format('YYYY-MM-DD'), timeRange[1].format('YYYY-MM-DD')],
         prediction_period: predictionPeriod,
         model_type: modelType,
       });
@@ -255,13 +256,10 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
 
         <Space className='mb-4' wrap>
           <RangePicker
-            value={[new Date(timeRange[0]), new Date(timeRange[1])]}
+            value={timeRange}
             onChange={(dates) => {
-              if (dates) {
-                setTimeRange([
-                  format(dates[0]!, 'yyyy-MM-dd'),
-                  format(dates[1]!, 'yyyy-MM-dd'),
-                ]);
+              if (dates && dates[0] && dates[1]) {
+                setTimeRange([dates[0], dates[1]]);
               }
             }}
           />

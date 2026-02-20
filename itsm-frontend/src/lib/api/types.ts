@@ -45,6 +45,16 @@ export interface BatchOperationResponse<T = unknown> {
   }>;
 }
 
+// ==================== 基础用户类型 ====================
+
+export interface UserBasicInfo {
+  id: number;
+  name: string;
+  username?: string;
+  email?: string;
+  avatar?: string;
+}
+
 // ==================== 工单相关类型 ====================
 
 export type TicketPriority = 'low' | 'medium' | 'high' | 'critical';
@@ -53,26 +63,34 @@ export type TicketType = 'incident' | 'problem' | 'change' | 'service_request';
 
 export interface Ticket {
   id: number;
-  ticket_number: string;
+  ticketNumber: string;  // 后端返回 snake_case，前端自动转换为 camelCase
   title: string;
   description: string;
   priority: TicketPriority;
   status: TicketStatus;
-  type: TicketType;
+  type?: TicketType;
   category?: string;
-  category_id?: number;
+  categoryId?: number;
   tags?: string[];
-  requester_id: number;
-  assignee_id?: number;
+  requesterId: number;
+  assigneeId?: number;
   assignee?: UserBasicInfo;
   requester?: UserBasicInfo;
   resolution?: string;
-  sla_id?: number;
-  sla_info?: SLAInfo;
-  created_at: string;
-  updated_at: string;
-  due_time?: string;
-  closed_at?: string;
+  slaId?: number;
+  slaInfo?: SLAInfo;
+  createdAt: string;
+  updatedAt: string;
+  dueTime?: string;
+  closedAt?: string;
+}
+
+export interface TicketListResponse {
+  tickets: Ticket[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages?: number;
 }
 
 export interface TicketCreateRequest {
@@ -80,10 +98,10 @@ export interface TicketCreateRequest {
   description?: string;
   priority: TicketPriority;
   type?: TicketType;
-  category_id?: number;
+  categoryId?: number;
   tags?: string[];
-  assignee_id?: number;
-  form_fields?: Record<string, unknown>;
+  assigneeId?: number;
+  formFields?: Record<string, unknown>;
   attachments?: string[];
 }
 
@@ -177,18 +195,11 @@ export interface Change {
 
 // ==================== 用户相关类型 ====================
 
-export interface UserBasicInfo {
-  id: number;
-  username: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
-
 export interface User extends UserBasicInfo {
   phone?: string;
   department?: string;
   role?: string;
+  permissions?: string[];
   status: 'active' | 'inactive' | 'locked';
   tenant_id: number;
   created_at: string;
@@ -467,3 +478,6 @@ export function normalizeDateRangeParams(params: Record<string, unknown>): Recor
   if (params.date_to !== undefined) normalized.date_to = params.date_to;
   return normalized;
 }
+
+// 兼容性重导出
+export type { UserBasicInfo as Permission } from './types';

@@ -35,10 +35,7 @@ func (pc *ProblemController) CreateProblem(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 
-	// 设置创建者ID
-	req.CreatedBy = userID
-
-	problem, err := pc.problemService.CreateProblem(c.Request.Context(), &req, tenantID)
+	problem, err := pc.problemService.CreateProblem(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		pc.logger.Errorw("Create problem failed", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "创建问题失败: "+err.Error())

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="service_request_flow" name="服务请求流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">service_request</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">标准服务请求处理流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：请求提交 -->
+    <bpmn:startEvent id="StartEvent_1" name="请求提交">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 请求受理 -->
+    <bpmn:userTask id="Activity_Accept" name="请求受理">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 判断是否需要审批 -->
+    <bpmn:exclusiveGateway id="Gateway_Approval" name="需要审批?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 审批流程 -->
+    <bpmn:userTask id="Activity_Approval" name="请求审批">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批结果 -->
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 驳回通知 -->
+    <bpmn:serviceTask id="Activity_RejectNotify" name="驳回通知" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">notify_rejection</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndReject</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 执行服务 -->
+    <bpmn:userTask id="Activity_Execute" name="执行服务">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 确认完成 -->
+    <bpmn:userTask id="Activity_Confirm" name="用户确认">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 满意度网关 -->
+    <bpmn:exclusiveGateway id="Gateway_Satisfaction" name="满意?">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Feedback</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 改进服务 -->
+    <bpmn:userTask id="Activity_Feedback" name="改进服务">
+      <bpmn:incoming>Flow_Feedback</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 服务完成 -->
+    <bpmn:serviceTask id="Activity_Complete" name="服务完成" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">complete_service</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_1" name="流程结束">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_Reject" name="请求被拒">
+      <bpmn:incoming>Flow_EndReject</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Accept" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Accept" targetRef="Gateway_Approval" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_Approval" targetRef="Activity_Approval">
+      <bpmn:conditionExpression><![CDATA[${variables['need_approval'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_Approval" targetRef="Activity_Execute">
+      <bpmn:conditionExpression><![CDATA[${variables['need_approval'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Approval" targetRef="Gateway_ApprovalResult" />
+    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_ApprovalResult" targetRef="Activity_RejectNotify">
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EndReject" sourceRef="Activity_RejectNotify" targetRef="EndEvent_Reject" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Activity_Execute" targetRef="Activity_Confirm" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Activity_Confirm" targetRef="Gateway_Satisfaction" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Gateway_Satisfaction" targetRef="Activity_Complete">
+      <bpmn:conditionExpression><![CDATA[${variables['satisfied'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Feedback" sourceRef="Gateway_Satisfaction" targetRef="Activity_Feedback">
+      <bpmn:conditionExpression><![CDATA[${variables['satisfied'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Complete" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>

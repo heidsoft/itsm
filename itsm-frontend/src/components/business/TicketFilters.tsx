@@ -146,11 +146,11 @@ function TicketFilters({
     }
   };
 
-  const handleDateRangeChange = (dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => {
-    if (dates && dates[0] && dates[1]) {
+  const handleDateRangeChange = (dates: unknown, dateStrings: [string, string]) => {
+    if (dates && dateStrings[0] && dateStrings[1]) {
       onFilterChange({
-        dateStart: dates[0].format('YYYY-MM-DD'),
-        dateEnd: dates[1].format('YYYY-MM-DD'),
+        dateStart: dateStrings[0],
+        dateEnd: dateStrings[1],
       });
     } else {
       onFilterChange({

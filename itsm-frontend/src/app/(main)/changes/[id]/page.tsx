@@ -1,6 +1,6 @@
 'use client';
 
-import ChangeDetail from '@/modules/change/components/ChangeDetail';
+import ChangeDetail from '@/components/change/ChangeDetail';
 
 export default function ChangeDetailPage() {
     return <ChangeDetail />;

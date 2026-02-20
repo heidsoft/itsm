@@ -23,8 +23,8 @@ import {
 interface VirtualizedTicketListProps {
   tickets: Ticket[];
   loading: boolean;
-  selectedRowKeys: string[];
-  onRowSelectionChange: (keys: string[]) => void;
+  selectedRowKeys: number[];
+  onRowSelectionChange: (keys: number[]) => void;
   onEditTicket: (ticket: Ticket) => void;
   onViewActivity: (ticket: Ticket) => void;
   height?: number;
@@ -32,7 +32,7 @@ interface VirtualizedTicketListProps {
 }
 
 // 状态标签组件
-const StatusTag: React.FC<{ status: TicketStatus }> = React.memo(({ status }) => {
+const StatusTag: React.FC<{ status: string }> = React.memo(({ status }) => {
   const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     [TicketStatus.OPEN]: { color: '#fa8c16', text: 'Open', backgroundColor: '#fff7e6' },
     [TicketStatus.IN_PROGRESS]: {
@@ -67,7 +67,7 @@ const StatusTag: React.FC<{ status: TicketStatus }> = React.memo(({ status }) =>
 StatusTag.displayName = 'StatusTag';
 
 // 优先级标签组件
-const PriorityTag: React.FC<{ priority: TicketPriority }> = React.memo(({ priority }) => {
+const PriorityTag: React.FC<{ priority: string }> = React.memo(({ priority }) => {
   const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     [TicketPriority.LOW]: { color: '#52c41a', text: 'Low', backgroundColor: '#f6ffed' },
     [TicketPriority.MEDIUM]: { color: '#1890ff', text: 'Medium', backgroundColor: '#e6f7ff' },
@@ -96,7 +96,7 @@ const PriorityTag: React.FC<{ priority: TicketPriority }> = React.memo(({ priori
 PriorityTag.displayName = 'PriorityTag';
 
 // 类型标签组件
-const TypeTag: React.FC<{ type: TicketType }> = React.memo(({ type }) => {
+const TypeTag: React.FC<{ type: string }> = React.memo(({ type }) => {
   const typeConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     [TicketType.INCIDENT]: { color: '#ff4d4f', text: 'Incident', backgroundColor: '#fff2f0' },
     [TicketType.SERVICE_REQUEST]: {
@@ -132,7 +132,7 @@ TypeTag.displayName = 'TypeTag';
 const TicketRow: React.FC<{
   ticket: Ticket;
   isSelected: boolean;
-  onSelect: (ticketId: string, selected: boolean) => void;
+  onSelect: (ticketId: number, selected: boolean) => void;
   onEdit: (ticket: Ticket) => void;
   onViewActivity: (ticket: Ticket) => void;
 }> = React.memo(({ ticket, isSelected, onSelect, onEdit, onViewActivity }) => {
@@ -196,7 +196,7 @@ const TicketRow: React.FC<{
 
       {/* 类型 */}
       <div className='w-32 flex justify-center'>
-        <TypeTag type={ticket.type} />
+        <TypeTag type={ticket.type || 'incident'} />
       </div>
 
       {/* 分配人 */}
@@ -212,7 +212,7 @@ const TicketRow: React.FC<{
       {/* 创建时间 */}
       <div className='w-32 flex justify-center'>
         <div style={{ fontSize: 'small', color: '#666' }}>
-          {new Date(ticket.created_at).toLocaleDateString('zh-CN')}
+          {new Date(ticket.createdAt).toLocaleDateString('zh-CN')}
         </div>
       </div>
 
@@ -329,7 +329,7 @@ export const VirtualizedTicketList: React.FC<VirtualizedTicketListProps> = React
 
     // 处理单个选择
     const handleSelect = useCallback(
-      (ticketId: string, selected: boolean) => {
+      (ticketId: number, selected: boolean) => {
         if (selected) {
           onRowSelectionChange([...selectedRowKeys, ticketId]);
         } else {

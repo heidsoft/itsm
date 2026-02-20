@@ -579,4 +579,49 @@ export class IncidentAPI {
 
     return this.createIncidentFromCloudProductEvent(mockCloudEvent);
   }
+
+  // ==================== 兼容别名 ====================
+
+  /** @deprecated 使用 listIncidents */
+  static async getIncidents(params?: any): Promise<ListIncidentsResponse> {
+    return this.listIncidents(params);
+  }
+
+  /** @deprecated 使用 listIncidents */
+  static get incidents() {
+    return {
+      list: (params?: any) => this.listIncidents(params),
+      items: (params?: any) => this.listIncidents(params).then((r: any) => r.incidents || r.items || []),
+    };
+  }
+
+  // 获取事件活动记录
+  static async getIncidentEvents(incidentId: number): Promise<any[]> {
+    const response = await httpClient.get<any[]>(`/api/v1/incidents/${incidentId}/events`);
+    return response;
+  }
+
+  // 获取事件告警
+  static async getIncidentAlerts(incidentId: number): Promise<any[]> {
+    const response = await httpClient.get<any[]>(`/api/v1/incidents/${incidentId}/alerts`);
+    return response;
+  }
+
+  // 获取事件指标
+  static async getIncidentMetricsData(incidentId: number): Promise<any> {
+    const response = await httpClient.get<any>(`/api/v1/incidents/${incidentId}/metrics`);
+    return response;
+  }
+
+  // 事件升级
+  static async escalateIncident(data: {
+    incident_id: number;
+    escalation_level: number;
+    reason?: string;
+    notify_users?: number[];
+    auto_assign?: boolean;
+  }): Promise<any> {
+    const response = await httpClient.post<any>('/api/v1/incidents/escalate', data);
+    return response;
+  }
 }

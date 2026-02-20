@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
@@ -263,6 +264,21 @@ func (pdu *ProcessDefinitionUpdate) AddProcessInstances(p ...*ProcessInstance) *
 	return pdu.AddProcessInstanceIDs(ids...)
 }
 
+// AddBindingIDs adds the "bindings" edge to the ProcessBinding entity by IDs.
+func (pdu *ProcessDefinitionUpdate) AddBindingIDs(ids ...int) *ProcessDefinitionUpdate {
+	pdu.mutation.AddBindingIDs(ids...)
+	return pdu
+}
+
+// AddBindings adds the "bindings" edges to the ProcessBinding entity.
+func (pdu *ProcessDefinitionUpdate) AddBindings(p ...*ProcessBinding) *ProcessDefinitionUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdu.AddBindingIDs(ids...)
+}
+
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
 func (pdu *ProcessDefinitionUpdate) SetDeployment(p *ProcessDeployment) *ProcessDefinitionUpdate {
 	return pdu.SetDeploymentID(p.ID)
@@ -292,6 +308,27 @@ func (pdu *ProcessDefinitionUpdate) RemoveProcessInstances(p ...*ProcessInstance
 		ids[i] = p[i].ID
 	}
 	return pdu.RemoveProcessInstanceIDs(ids...)
+}
+
+// ClearBindings clears all "bindings" edges to the ProcessBinding entity.
+func (pdu *ProcessDefinitionUpdate) ClearBindings() *ProcessDefinitionUpdate {
+	pdu.mutation.ClearBindings()
+	return pdu
+}
+
+// RemoveBindingIDs removes the "bindings" edge to ProcessBinding entities by IDs.
+func (pdu *ProcessDefinitionUpdate) RemoveBindingIDs(ids ...int) *ProcessDefinitionUpdate {
+	pdu.mutation.RemoveBindingIDs(ids...)
+	return pdu
+}
+
+// RemoveBindings removes "bindings" edges to ProcessBinding entities.
+func (pdu *ProcessDefinitionUpdate) RemoveBindings(p ...*ProcessBinding) *ProcessDefinitionUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdu.RemoveBindingIDs(ids...)
 }
 
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
@@ -473,6 +510,51 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pdu.mutation.BindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pdu.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !pdu.mutation.BindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pdu.mutation.BindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -761,6 +843,21 @@ func (pduo *ProcessDefinitionUpdateOne) AddProcessInstances(p ...*ProcessInstanc
 	return pduo.AddProcessInstanceIDs(ids...)
 }
 
+// AddBindingIDs adds the "bindings" edge to the ProcessBinding entity by IDs.
+func (pduo *ProcessDefinitionUpdateOne) AddBindingIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	pduo.mutation.AddBindingIDs(ids...)
+	return pduo
+}
+
+// AddBindings adds the "bindings" edges to the ProcessBinding entity.
+func (pduo *ProcessDefinitionUpdateOne) AddBindings(p ...*ProcessBinding) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pduo.AddBindingIDs(ids...)
+}
+
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
 func (pduo *ProcessDefinitionUpdateOne) SetDeployment(p *ProcessDeployment) *ProcessDefinitionUpdateOne {
 	return pduo.SetDeploymentID(p.ID)
@@ -790,6 +887,27 @@ func (pduo *ProcessDefinitionUpdateOne) RemoveProcessInstances(p ...*ProcessInst
 		ids[i] = p[i].ID
 	}
 	return pduo.RemoveProcessInstanceIDs(ids...)
+}
+
+// ClearBindings clears all "bindings" edges to the ProcessBinding entity.
+func (pduo *ProcessDefinitionUpdateOne) ClearBindings() *ProcessDefinitionUpdateOne {
+	pduo.mutation.ClearBindings()
+	return pduo
+}
+
+// RemoveBindingIDs removes the "bindings" edge to ProcessBinding entities by IDs.
+func (pduo *ProcessDefinitionUpdateOne) RemoveBindingIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	pduo.mutation.RemoveBindingIDs(ids...)
+	return pduo
+}
+
+// RemoveBindings removes "bindings" edges to ProcessBinding entities.
+func (pduo *ProcessDefinitionUpdateOne) RemoveBindings(p ...*ProcessBinding) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pduo.RemoveBindingIDs(ids...)
 }
 
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
@@ -1001,6 +1119,51 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pduo.mutation.BindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pduo.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !pduo.mutation.BindingsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pduo.mutation.BindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

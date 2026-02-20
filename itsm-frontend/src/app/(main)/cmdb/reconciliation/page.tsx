@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Breadcrumb, Button, Card, Input, Modal, Space, Statistic, Table, Tag, message } from 'antd';
 import dayjs from 'dayjs';
 
-import { CMDBApi } from '@/modules/cmdb/api';
-import type { CloudResource, CloudService, ConfigurationItem, ReconciliationResponse } from '@/modules/cmdb/types';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { CloudResource, CloudService, ConfigurationItem, ReconciliationResponse } from '@/types/biz/cmdb';
 
 const summaryLabels = [
   { key: 'resource_total', label: '资源总数' },
@@ -62,7 +62,7 @@ export default function ReconciliationPage() {
     }
     try {
       const service = serviceMap.get(bindResource.service_id);
-      await CMDBApi.updateCI(ciID, {
+      await CMDBApi.updateCI(String(ciID), {
         cloud_resource_ref_id: bindResource.id,
         cloud_provider: service?.provider,
         cloud_account_id: String(bindResource.cloud_account_id),

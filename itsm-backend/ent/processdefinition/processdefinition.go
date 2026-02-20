@@ -46,6 +46,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeProcessInstances holds the string denoting the process_instances edge name in mutations.
 	EdgeProcessInstances = "process_instances"
+	// EdgeBindings holds the string denoting the bindings edge name in mutations.
+	EdgeBindings = "bindings"
 	// EdgeDeployment holds the string denoting the deployment edge name in mutations.
 	EdgeDeployment = "deployment"
 	// Table holds the table name of the processdefinition in the database.
@@ -57,6 +59,11 @@ const (
 	ProcessInstancesInverseTable = "process_instances"
 	// ProcessInstancesColumn is the table column denoting the process_instances relation/edge.
 	ProcessInstancesColumn = "process_definition_id"
+	// BindingsTable is the table that holds the bindings relation/edge. The primary key declared below.
+	BindingsTable = "process_definition_bindings"
+	// BindingsInverseTable is the table name for the ProcessBinding entity.
+	// It exists in this package in order to avoid circular dependency with the "processbinding" package.
+	BindingsInverseTable = "process_bindings"
 	// DeploymentTable is the table that holds the deployment relation/edge.
 	DeploymentTable = "process_definitions"
 	// DeploymentInverseTable is the table name for the ProcessDeployment entity.
@@ -85,6 +92,12 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
+
+var (
+	// BindingsPrimaryKey and BindingsColumn2 are the table columns denoting the
+	// primary key for the bindings relation (M2M).
+	BindingsPrimaryKey = []string{"process_definition_id", "process_binding_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -210,6 +223,20 @@ func ByProcessInstances(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 	}
 }
 
+// ByBindingsCount orders the results by bindings count.
+func ByBindingsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBindingsStep(), opts...)
+	}
+}
+
+// ByBindings orders the results by bindings terms.
+func ByBindings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBindingsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByDeploymentField orders the results by deployment field.
 func ByDeploymentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -221,6 +248,13 @@ func newProcessInstancesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProcessInstancesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ProcessInstancesTable, ProcessInstancesColumn),
+	)
+}
+func newBindingsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BindingsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, BindingsTable, BindingsPrimaryKey...),
 	)
 }
 func newDeploymentStep() *sqlgraph.Step {

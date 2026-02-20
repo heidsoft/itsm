@@ -59,11 +59,13 @@ type ProcessDefinition struct {
 type ProcessDefinitionEdges struct {
 	// 流程实例
 	ProcessInstances []*ProcessInstance `json:"process_instances,omitempty"`
+	// 流程绑定
+	Bindings []*ProcessBinding `json:"bindings,omitempty"`
 	// Deployment holds the value of the deployment edge.
 	Deployment *ProcessDeployment `json:"deployment,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // ProcessInstancesOrErr returns the ProcessInstances value or an error if the edge
@@ -75,12 +77,21 @@ func (e ProcessDefinitionEdges) ProcessInstancesOrErr() ([]*ProcessInstance, err
 	return nil, &NotLoadedError{edge: "process_instances"}
 }
 
+// BindingsOrErr returns the Bindings value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessDefinitionEdges) BindingsOrErr() ([]*ProcessBinding, error) {
+	if e.loadedTypes[1] {
+		return e.Bindings, nil
+	}
+	return nil, &NotLoadedError{edge: "bindings"}
+}
+
 // DeploymentOrErr returns the Deployment value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ProcessDefinitionEdges) DeploymentOrErr() (*ProcessDeployment, error) {
 	if e.Deployment != nil {
 		return e.Deployment, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[2] {
 		return nil, &NotFoundError{label: processdeployment.Label}
 	}
 	return nil, &NotLoadedError{edge: "deployment"}
@@ -232,6 +243,11 @@ func (pd *ProcessDefinition) Value(name string) (ent.Value, error) {
 // QueryProcessInstances queries the "process_instances" edge of the ProcessDefinition entity.
 func (pd *ProcessDefinition) QueryProcessInstances() *ProcessInstanceQuery {
 	return NewProcessDefinitionClient(pd.config).QueryProcessInstances(pd)
+}
+
+// QueryBindings queries the "bindings" edge of the ProcessDefinition entity.
+func (pd *ProcessDefinition) QueryBindings() *ProcessBindingQuery {
+	return NewProcessDefinitionClient(pd.config).QueryBindings(pd)
 }
 
 // QueryDeployment queries the "deployment" edge of the ProcessDefinition entity.

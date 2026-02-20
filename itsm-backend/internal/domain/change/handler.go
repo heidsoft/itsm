@@ -43,7 +43,6 @@ func toDTO(c *Change) *dto.ChangeResponse {
 		ImplementationPlan: c.ImplementationPlan,
 		RollbackPlan:       c.RollbackPlan,
 		AffectedCIs:        c.AffectedCIs,
-		RelatedTickets:     c.RelatedTickets,
 		CreatedAt:          c.CreatedAt,
 		UpdatedAt:          c.UpdatedAt,
 	}
@@ -79,7 +78,6 @@ func (h *Handler) CreateChange(c *gin.Context) {
 		ImplementationPlan: req.ImplementationPlan,
 		RollbackPlan:       req.RollbackPlan,
 		AffectedCIs:        req.AffectedCIs,
-		RelatedTickets:     req.RelatedTickets,
 	}
 
 	res, err := h.svc.CreateChange(c.Request.Context(), changeEntity)

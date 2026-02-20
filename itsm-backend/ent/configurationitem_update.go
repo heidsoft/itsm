@@ -632,34 +632,34 @@ func (ciu *ConfigurationItemUpdate) AddIncidents(i ...*Incident) *ConfigurationI
 	return ciu.AddIncidentIDs(ids...)
 }
 
-// AddParentRelationIDs adds the "parent_relations" edge to the CIRelationship entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddParentRelationIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddParentRelationIDs(ids...)
+// AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by IDs.
+func (ciu *ConfigurationItemUpdate) AddOutgoingRelationIDs(ids ...int) *ConfigurationItemUpdate {
+	ciu.mutation.AddOutgoingRelationIDs(ids...)
 	return ciu
 }
 
-// AddParentRelations adds the "parent_relations" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) AddParentRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
+// AddOutgoingRelations adds the "outgoing_relations" edges to the CIRelationship entity.
+func (ciu *ConfigurationItemUpdate) AddOutgoingRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciu.AddParentRelationIDs(ids...)
+	return ciu.AddOutgoingRelationIDs(ids...)
 }
 
-// AddChildRelationIDs adds the "child_relations" edge to the CIRelationship entity by IDs.
-func (ciu *ConfigurationItemUpdate) AddChildRelationIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.AddChildRelationIDs(ids...)
+// AddIncomingRelationIDs adds the "incoming_relations" edge to the CIRelationship entity by IDs.
+func (ciu *ConfigurationItemUpdate) AddIncomingRelationIDs(ids ...int) *ConfigurationItemUpdate {
+	ciu.mutation.AddIncomingRelationIDs(ids...)
 	return ciu
 }
 
-// AddChildRelations adds the "child_relations" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) AddChildRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
+// AddIncomingRelations adds the "incoming_relations" edges to the CIRelationship entity.
+func (ciu *ConfigurationItemUpdate) AddIncomingRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciu.AddChildRelationIDs(ids...)
+	return ciu.AddIncomingRelationIDs(ids...)
 }
 
 // Mutation returns the ConfigurationItemMutation object of the builder.
@@ -721,46 +721,46 @@ func (ciu *ConfigurationItemUpdate) RemoveIncidents(i ...*Incident) *Configurati
 	return ciu.RemoveIncidentIDs(ids...)
 }
 
-// ClearParentRelations clears all "parent_relations" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) ClearParentRelations() *ConfigurationItemUpdate {
-	ciu.mutation.ClearParentRelations()
+// ClearOutgoingRelations clears all "outgoing_relations" edges to the CIRelationship entity.
+func (ciu *ConfigurationItemUpdate) ClearOutgoingRelations() *ConfigurationItemUpdate {
+	ciu.mutation.ClearOutgoingRelations()
 	return ciu
 }
 
-// RemoveParentRelationIDs removes the "parent_relations" edge to CIRelationship entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveParentRelationIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveParentRelationIDs(ids...)
+// RemoveOutgoingRelationIDs removes the "outgoing_relations" edge to CIRelationship entities by IDs.
+func (ciu *ConfigurationItemUpdate) RemoveOutgoingRelationIDs(ids ...int) *ConfigurationItemUpdate {
+	ciu.mutation.RemoveOutgoingRelationIDs(ids...)
 	return ciu
 }
 
-// RemoveParentRelations removes "parent_relations" edges to CIRelationship entities.
-func (ciu *ConfigurationItemUpdate) RemoveParentRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
+// RemoveOutgoingRelations removes "outgoing_relations" edges to CIRelationship entities.
+func (ciu *ConfigurationItemUpdate) RemoveOutgoingRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciu.RemoveParentRelationIDs(ids...)
+	return ciu.RemoveOutgoingRelationIDs(ids...)
 }
 
-// ClearChildRelations clears all "child_relations" edges to the CIRelationship entity.
-func (ciu *ConfigurationItemUpdate) ClearChildRelations() *ConfigurationItemUpdate {
-	ciu.mutation.ClearChildRelations()
+// ClearIncomingRelations clears all "incoming_relations" edges to the CIRelationship entity.
+func (ciu *ConfigurationItemUpdate) ClearIncomingRelations() *ConfigurationItemUpdate {
+	ciu.mutation.ClearIncomingRelations()
 	return ciu
 }
 
-// RemoveChildRelationIDs removes the "child_relations" edge to CIRelationship entities by IDs.
-func (ciu *ConfigurationItemUpdate) RemoveChildRelationIDs(ids ...int) *ConfigurationItemUpdate {
-	ciu.mutation.RemoveChildRelationIDs(ids...)
+// RemoveIncomingRelationIDs removes the "incoming_relations" edge to CIRelationship entities by IDs.
+func (ciu *ConfigurationItemUpdate) RemoveIncomingRelationIDs(ids ...int) *ConfigurationItemUpdate {
+	ciu.mutation.RemoveIncomingRelationIDs(ids...)
 	return ciu
 }
 
-// RemoveChildRelations removes "child_relations" edges to CIRelationship entities.
-func (ciu *ConfigurationItemUpdate) RemoveChildRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
+// RemoveIncomingRelations removes "incoming_relations" edges to CIRelationship entities.
+func (ciu *ConfigurationItemUpdate) RemoveIncomingRelations(c ...*CIRelationship) *ConfigurationItemUpdate {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciu.RemoveChildRelationIDs(ids...)
+	return ciu.RemoveIncomingRelationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1141,12 +1141,12 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ciu.mutation.ParentRelationsCleared() {
+	if ciu.mutation.OutgoingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -1154,12 +1154,12 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciu.mutation.RemovedParentRelationsIDs(); len(nodes) > 0 && !ciu.mutation.ParentRelationsCleared() {
+	if nodes := ciu.mutation.RemovedOutgoingRelationsIDs(); len(nodes) > 0 && !ciu.mutation.OutgoingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -1170,12 +1170,12 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciu.mutation.ParentRelationsIDs(); len(nodes) > 0 {
+	if nodes := ciu.mutation.OutgoingRelationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -1186,12 +1186,12 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ciu.mutation.ChildRelationsCleared() {
+	if ciu.mutation.IncomingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -1199,12 +1199,12 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciu.mutation.RemovedChildRelationsIDs(); len(nodes) > 0 && !ciu.mutation.ChildRelationsCleared() {
+	if nodes := ciu.mutation.RemovedIncomingRelationsIDs(); len(nodes) > 0 && !ciu.mutation.IncomingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -1215,12 +1215,12 @@ func (ciu *ConfigurationItemUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciu.mutation.ChildRelationsIDs(); len(nodes) > 0 {
+	if nodes := ciu.mutation.IncomingRelationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -1850,34 +1850,34 @@ func (ciuo *ConfigurationItemUpdateOne) AddIncidents(i ...*Incident) *Configurat
 	return ciuo.AddIncidentIDs(ids...)
 }
 
-// AddParentRelationIDs adds the "parent_relations" edge to the CIRelationship entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddParentRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddParentRelationIDs(ids...)
+// AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by IDs.
+func (ciuo *ConfigurationItemUpdateOne) AddOutgoingRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.AddOutgoingRelationIDs(ids...)
 	return ciuo
 }
 
-// AddParentRelations adds the "parent_relations" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) AddParentRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
+// AddOutgoingRelations adds the "outgoing_relations" edges to the CIRelationship entity.
+func (ciuo *ConfigurationItemUpdateOne) AddOutgoingRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciuo.AddParentRelationIDs(ids...)
+	return ciuo.AddOutgoingRelationIDs(ids...)
 }
 
-// AddChildRelationIDs adds the "child_relations" edge to the CIRelationship entity by IDs.
-func (ciuo *ConfigurationItemUpdateOne) AddChildRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.AddChildRelationIDs(ids...)
+// AddIncomingRelationIDs adds the "incoming_relations" edge to the CIRelationship entity by IDs.
+func (ciuo *ConfigurationItemUpdateOne) AddIncomingRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.AddIncomingRelationIDs(ids...)
 	return ciuo
 }
 
-// AddChildRelations adds the "child_relations" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) AddChildRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
+// AddIncomingRelations adds the "incoming_relations" edges to the CIRelationship entity.
+func (ciuo *ConfigurationItemUpdateOne) AddIncomingRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciuo.AddChildRelationIDs(ids...)
+	return ciuo.AddIncomingRelationIDs(ids...)
 }
 
 // Mutation returns the ConfigurationItemMutation object of the builder.
@@ -1939,46 +1939,46 @@ func (ciuo *ConfigurationItemUpdateOne) RemoveIncidents(i ...*Incident) *Configu
 	return ciuo.RemoveIncidentIDs(ids...)
 }
 
-// ClearParentRelations clears all "parent_relations" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearParentRelations() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearParentRelations()
+// ClearOutgoingRelations clears all "outgoing_relations" edges to the CIRelationship entity.
+func (ciuo *ConfigurationItemUpdateOne) ClearOutgoingRelations() *ConfigurationItemUpdateOne {
+	ciuo.mutation.ClearOutgoingRelations()
 	return ciuo
 }
 
-// RemoveParentRelationIDs removes the "parent_relations" edge to CIRelationship entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveParentRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveParentRelationIDs(ids...)
+// RemoveOutgoingRelationIDs removes the "outgoing_relations" edge to CIRelationship entities by IDs.
+func (ciuo *ConfigurationItemUpdateOne) RemoveOutgoingRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.RemoveOutgoingRelationIDs(ids...)
 	return ciuo
 }
 
-// RemoveParentRelations removes "parent_relations" edges to CIRelationship entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveParentRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
+// RemoveOutgoingRelations removes "outgoing_relations" edges to CIRelationship entities.
+func (ciuo *ConfigurationItemUpdateOne) RemoveOutgoingRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciuo.RemoveParentRelationIDs(ids...)
+	return ciuo.RemoveOutgoingRelationIDs(ids...)
 }
 
-// ClearChildRelations clears all "child_relations" edges to the CIRelationship entity.
-func (ciuo *ConfigurationItemUpdateOne) ClearChildRelations() *ConfigurationItemUpdateOne {
-	ciuo.mutation.ClearChildRelations()
+// ClearIncomingRelations clears all "incoming_relations" edges to the CIRelationship entity.
+func (ciuo *ConfigurationItemUpdateOne) ClearIncomingRelations() *ConfigurationItemUpdateOne {
+	ciuo.mutation.ClearIncomingRelations()
 	return ciuo
 }
 
-// RemoveChildRelationIDs removes the "child_relations" edge to CIRelationship entities by IDs.
-func (ciuo *ConfigurationItemUpdateOne) RemoveChildRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
-	ciuo.mutation.RemoveChildRelationIDs(ids...)
+// RemoveIncomingRelationIDs removes the "incoming_relations" edge to CIRelationship entities by IDs.
+func (ciuo *ConfigurationItemUpdateOne) RemoveIncomingRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
+	ciuo.mutation.RemoveIncomingRelationIDs(ids...)
 	return ciuo
 }
 
-// RemoveChildRelations removes "child_relations" edges to CIRelationship entities.
-func (ciuo *ConfigurationItemUpdateOne) RemoveChildRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
+// RemoveIncomingRelations removes "incoming_relations" edges to CIRelationship entities.
+func (ciuo *ConfigurationItemUpdateOne) RemoveIncomingRelations(c ...*CIRelationship) *ConfigurationItemUpdateOne {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return ciuo.RemoveChildRelationIDs(ids...)
+	return ciuo.RemoveIncomingRelationIDs(ids...)
 }
 
 // Where appends a list predicates to the ConfigurationItemUpdate builder.
@@ -2389,12 +2389,12 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ciuo.mutation.ParentRelationsCleared() {
+	if ciuo.mutation.OutgoingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -2402,12 +2402,12 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciuo.mutation.RemovedParentRelationsIDs(); len(nodes) > 0 && !ciuo.mutation.ParentRelationsCleared() {
+	if nodes := ciuo.mutation.RemovedOutgoingRelationsIDs(); len(nodes) > 0 && !ciuo.mutation.OutgoingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -2418,12 +2418,12 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciuo.mutation.ParentRelationsIDs(); len(nodes) > 0 {
+	if nodes := ciuo.mutation.OutgoingRelationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -2434,12 +2434,12 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ciuo.mutation.ChildRelationsCleared() {
+	if ciuo.mutation.IncomingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -2447,12 +2447,12 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciuo.mutation.RemovedChildRelationsIDs(); len(nodes) > 0 && !ciuo.mutation.ChildRelationsCleared() {
+	if nodes := ciuo.mutation.RemovedIncomingRelationsIDs(); len(nodes) > 0 && !ciuo.mutation.IncomingRelationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -2463,12 +2463,12 @@ func (ciuo *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Con
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ciuo.mutation.ChildRelationsIDs(); len(nodes) > 0 {
+	if nodes := ciuo.mutation.IncomingRelationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),

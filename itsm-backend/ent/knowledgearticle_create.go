@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -94,6 +95,34 @@ func (kac *KnowledgeArticleCreate) SetNillableIsPublished(b *bool) *KnowledgeArt
 	return kac
 }
 
+// SetViewCount sets the "view_count" field.
+func (kac *KnowledgeArticleCreate) SetViewCount(i int) *KnowledgeArticleCreate {
+	kac.mutation.SetViewCount(i)
+	return kac
+}
+
+// SetNillableViewCount sets the "view_count" field if the given value is not nil.
+func (kac *KnowledgeArticleCreate) SetNillableViewCount(i *int) *KnowledgeArticleCreate {
+	if i != nil {
+		kac.SetViewCount(*i)
+	}
+	return kac
+}
+
+// SetLikeCount sets the "like_count" field.
+func (kac *KnowledgeArticleCreate) SetLikeCount(i int) *KnowledgeArticleCreate {
+	kac.mutation.SetLikeCount(i)
+	return kac
+}
+
+// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
+func (kac *KnowledgeArticleCreate) SetNillableLikeCount(i *int) *KnowledgeArticleCreate {
+	if i != nil {
+		kac.SetLikeCount(*i)
+	}
+	return kac
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (kac *KnowledgeArticleCreate) SetCreatedAt(t time.Time) *KnowledgeArticleCreate {
 	kac.mutation.SetCreatedAt(t)
@@ -120,6 +149,21 @@ func (kac *KnowledgeArticleCreate) SetNillableUpdatedAt(t *time.Time) *Knowledge
 		kac.SetUpdatedAt(*t)
 	}
 	return kac
+}
+
+// AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
+func (kac *KnowledgeArticleCreate) AddUserLikeIDs(ids ...int) *KnowledgeArticleCreate {
+	kac.mutation.AddUserLikeIDs(ids...)
+	return kac
+}
+
+// AddUserLikes adds the "user_likes" edges to the KnowledgeArticleLike entity.
+func (kac *KnowledgeArticleCreate) AddUserLikes(k ...*KnowledgeArticleLike) *KnowledgeArticleCreate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return kac.AddUserLikeIDs(ids...)
 }
 
 // Mutation returns the KnowledgeArticleMutation object of the builder.
@@ -161,6 +205,14 @@ func (kac *KnowledgeArticleCreate) defaults() {
 		v := knowledgearticle.DefaultIsPublished
 		kac.mutation.SetIsPublished(v)
 	}
+	if _, ok := kac.mutation.ViewCount(); !ok {
+		v := knowledgearticle.DefaultViewCount
+		kac.mutation.SetViewCount(v)
+	}
+	if _, ok := kac.mutation.LikeCount(); !ok {
+		v := knowledgearticle.DefaultLikeCount
+		kac.mutation.SetLikeCount(v)
+	}
 	if _, ok := kac.mutation.CreatedAt(); !ok {
 		v := knowledgearticle.DefaultCreatedAt()
 		kac.mutation.SetCreatedAt(v)
@@ -199,6 +251,12 @@ func (kac *KnowledgeArticleCreate) check() error {
 	}
 	if _, ok := kac.mutation.IsPublished(); !ok {
 		return &ValidationError{Name: "is_published", err: errors.New(`ent: missing required field "KnowledgeArticle.is_published"`)}
+	}
+	if _, ok := kac.mutation.ViewCount(); !ok {
+		return &ValidationError{Name: "view_count", err: errors.New(`ent: missing required field "KnowledgeArticle.view_count"`)}
+	}
+	if _, ok := kac.mutation.LikeCount(); !ok {
+		return &ValidationError{Name: "like_count", err: errors.New(`ent: missing required field "KnowledgeArticle.like_count"`)}
 	}
 	if _, ok := kac.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnowledgeArticle.created_at"`)}
@@ -260,6 +318,14 @@ func (kac *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cr
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 		_node.IsPublished = value
 	}
+	if value, ok := kac.mutation.ViewCount(); ok {
+		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
+		_node.ViewCount = value
+	}
+	if value, ok := kac.mutation.LikeCount(); ok {
+		_spec.SetField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
+		_node.LikeCount = value
+	}
 	if value, ok := kac.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -267,6 +333,22 @@ func (kac *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cr
 	if value, ok := kac.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := kac.mutation.UserLikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

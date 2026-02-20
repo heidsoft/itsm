@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import IncidentDetail from '@/modules/incident/components/IncidentDetail';
+import IncidentDetail from '@/components/incident/IncidentDetail';
 
 export default function IncidentDetailPage() {
   const router = useRouter();

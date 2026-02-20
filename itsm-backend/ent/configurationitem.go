@@ -100,10 +100,10 @@ type ConfigurationItemEdges struct {
 	Tickets []*Ticket `json:"tickets,omitempty"`
 	// Incidents holds the value of the incidents edge.
 	Incidents []*Incident `json:"incidents,omitempty"`
-	// ParentRelations holds the value of the parent_relations edge.
-	ParentRelations []*CIRelationship `json:"parent_relations,omitempty"`
-	// ChildRelations holds the value of the child_relations edge.
-	ChildRelations []*CIRelationship `json:"child_relations,omitempty"`
+	// OutgoingRelations holds the value of the outgoing_relations edge.
+	OutgoingRelations []*CIRelationship `json:"outgoing_relations,omitempty"`
+	// IncomingRelations holds the value of the incoming_relations edge.
+	IncomingRelations []*CIRelationship `json:"incoming_relations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [6]bool
@@ -149,22 +149,22 @@ func (e ConfigurationItemEdges) IncidentsOrErr() ([]*Incident, error) {
 	return nil, &NotLoadedError{edge: "incidents"}
 }
 
-// ParentRelationsOrErr returns the ParentRelations value or an error if the edge
+// OutgoingRelationsOrErr returns the OutgoingRelations value or an error if the edge
 // was not loaded in eager-loading.
-func (e ConfigurationItemEdges) ParentRelationsOrErr() ([]*CIRelationship, error) {
+func (e ConfigurationItemEdges) OutgoingRelationsOrErr() ([]*CIRelationship, error) {
 	if e.loadedTypes[4] {
-		return e.ParentRelations, nil
+		return e.OutgoingRelations, nil
 	}
-	return nil, &NotLoadedError{edge: "parent_relations"}
+	return nil, &NotLoadedError{edge: "outgoing_relations"}
 }
 
-// ChildRelationsOrErr returns the ChildRelations value or an error if the edge
+// IncomingRelationsOrErr returns the IncomingRelations value or an error if the edge
 // was not loaded in eager-loading.
-func (e ConfigurationItemEdges) ChildRelationsOrErr() ([]*CIRelationship, error) {
+func (e ConfigurationItemEdges) IncomingRelationsOrErr() ([]*CIRelationship, error) {
 	if e.loadedTypes[5] {
-		return e.ChildRelations, nil
+		return e.IncomingRelations, nil
 	}
-	return nil, &NotLoadedError{edge: "child_relations"}
+	return nil, &NotLoadedError{edge: "incoming_relations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -434,14 +434,14 @@ func (ci *ConfigurationItem) QueryIncidents() *IncidentQuery {
 	return NewConfigurationItemClient(ci.config).QueryIncidents(ci)
 }
 
-// QueryParentRelations queries the "parent_relations" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryParentRelations() *CIRelationshipQuery {
-	return NewConfigurationItemClient(ci.config).QueryParentRelations(ci)
+// QueryOutgoingRelations queries the "outgoing_relations" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryOutgoingRelations() *CIRelationshipQuery {
+	return NewConfigurationItemClient(ci.config).QueryOutgoingRelations(ci)
 }
 
-// QueryChildRelations queries the "child_relations" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryChildRelations() *CIRelationshipQuery {
-	return NewConfigurationItemClient(ci.config).QueryChildRelations(ci)
+// QueryIncomingRelations queries the "incoming_relations" edge of the ConfigurationItem entity.
+func (ci *ConfigurationItem) QueryIncomingRelations() *CIRelationshipQuery {
+	return NewConfigurationItemClient(ci.config).QueryIncomingRelations(ci)
 }
 
 // Update returns a builder for updating this ConfigurationItem.

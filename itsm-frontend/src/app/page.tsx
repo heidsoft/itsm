@@ -135,7 +135,7 @@ export default function Home() {
             <Text className='text-gray-600'>无法验证用户身份</Text>
           </div>
 
-          <Alert description={error} type='error' showIcon className='mb-6' />
+          <Alert title="错误" description={error} type='error' showIcon className='mb-6' />
 
           <div className='space-y-3'>
             <Button

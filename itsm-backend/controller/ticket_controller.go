@@ -43,12 +43,21 @@ func (tc *TicketController) CreateTicket(c *gin.Context) {
 			tenantID = tenantCtx.TenantID
 		}
 	}
+	if tenantID == 0 {
+		common.Fail(c, common.ParamErrorCode, "租户ID无效")
+		return
+	}
+
 	userID := c.GetInt("user_id")
 	if userID == 0 {
 		// 尝试从中间件获取
 		if uid, err := middleware.GetUserID(c); err == nil {
 			userID = uid
 		}
+	}
+	if userID == 0 {
+		common.Fail(c, common.ParamErrorCode, "无法获取当前用户信息，请重新登录")
+		return
 	}
 
 	// 设置请求者ID为当前用户
@@ -111,6 +120,26 @@ func (tc *TicketController) GetTicket(c *gin.Context) {
 	common.Success(c, ticket)
 }
 
+// GetTicketSLAInfo 获取工单SLA信息
+func (tc *TicketController) GetTicketSLAInfo(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+
+	slaInfo, err := tc.ticketService.GetTicketSLAInfo(c.Request.Context(), ticketID, tenantID)
+	if err != nil {
+		tc.logger.Errorw("Failed to get ticket SLA info", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.NotFoundCode, "工单不存在")
+		return
+	}
+
+	common.Success(c, slaInfo)
+}
+
 // ListTickets 获取工单列表
 func (tc *TicketController) ListTickets(c *gin.Context) {
 	var req dto.ListTicketsRequest
@@ -149,6 +178,35 @@ func (tc *TicketController) DeleteTicket(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{"message": "工单删除成功"})
+}
+
+// UpdateTicketStatus 更新工单状态
+func (tc *TicketController) UpdateTicketStatus(c *gin.Context) {
+	ticketID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		return
+	}
+
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	userID := c.GetInt("user_id")
+
+	ticket, err := tc.ticketService.UpdateTicketStatus(c.Request.Context(), ticketID, req.Status, tenantID, userID)
+	if err != nil {
+		tc.logger.Errorw("Failed to update ticket status", "error", err, "ticket_id", ticketID, "tenant_id", tenantID, "status", req.Status, "user_id", userID)
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, ticket)
 }
 
 // BatchDeleteTickets 批量删除工单
@@ -259,7 +317,13 @@ func (tc *TicketController) ResolveTicket(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	resolvedBy := c.GetInt("user_id")
 
-	ticket, err := tc.ticketService.ResolveTicket(c.Request.Context(), ticketID, req.Resolution, tenantID, resolvedBy)
+	// 兼容前端发送的 solution 字段
+	resolution := req.Resolution
+	if resolution == "" {
+		resolution = req.Solution
+	}
+
+	ticket, err := tc.ticketService.ResolveTicket(c.Request.Context(), ticketID, resolution, tenantID, resolvedBy)
 	if err != nil {
 		tc.logger.Errorw("Failed to resolve ticket", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, err.Error())

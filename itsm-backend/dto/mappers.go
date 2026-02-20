@@ -68,6 +68,37 @@ func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
 	return response
 }
 
+// ToTicketResponseWithUsers converts an ent.Ticket to TicketResponse with user info
+func ToTicketResponseWithUsers(ticket *ent.Ticket, requester *ent.User, assignee *ent.User) *TicketResponse {
+	if ticket == nil {
+		return nil
+	}
+
+	response := ToTicketResponse(ticket)
+
+	if requester != nil {
+		response.Requester = &UserBasicInfo{
+			ID:       requester.ID,
+			Username: requester.Username,
+			Name:     requester.Name,
+			Email:    requester.Email,
+			Role:     string(requester.Role),
+		}
+	}
+
+	if assignee != nil && assignee.ID > 0 {
+		response.Assignee = &UserBasicInfo{
+			ID:       assignee.ID,
+			Username: assignee.Username,
+			Name:     assignee.Name,
+			Email:    assignee.Email,
+			Role:     string(assignee.Role),
+		}
+	}
+
+	return response
+}
+
 // ToTicketResponseList converts a slice of ent.Ticket to TicketResponse slice
 func ToTicketResponseList(tickets []*ent.Ticket) []*TicketResponse {
 	if tickets == nil {

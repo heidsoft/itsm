@@ -5,6 +5,7 @@ import (
     "fmt"
     "itsm-backend/dto"
     "itsm-backend/ent"
+    "itsm-backend/ent/passwordresettoken"
     "itsm-backend/ent/tenant"
     "itsm-backend/ent/user"
     "itsm-backend/middleware"
@@ -19,6 +20,8 @@ type AuthService struct {
 	jwtSecret       string
 	logger          *zap.SugaredLogger
 	tokenBlacklist  *TokenBlacklistService
+	emailService    *EmailService
+	baseURL         string // 前端基础URL，用于生成重置链接
 }
 
 func NewAuthService(client *ent.Client, jwtSecret string, logger *zap.SugaredLogger, blacklistService *TokenBlacklistService) *AuthService {
@@ -27,7 +30,18 @@ func NewAuthService(client *ent.Client, jwtSecret string, logger *zap.SugaredLog
 		jwtSecret:      jwtSecret,
 		logger:         logger,
 		tokenBlacklist: blacklistService,
+		baseURL:        "http://localhost:3000", // 默认值，可在生产环境通过配置覆盖
 	}
+}
+
+// SetEmailService 设置邮件服务
+func (s *AuthService) SetEmailService(emailService *EmailService) {
+	s.emailService = emailService
+}
+
+// SetBaseURL 设置前端基础URL
+func (s *AuthService) SetBaseURL(baseURL string) {
+	s.baseURL = baseURL
 }
 
 // Login 用户登录
@@ -317,4 +331,265 @@ func (s *AuthService) AddTokenToBlacklist(tokenString string, expiresAt time.Tim
 	}
 
 	return s.tokenBlacklist.AddToBlacklist(tokenString, expiresAt)
+}
+
+// Register 用户注册
+func (s *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
+	// 检查用户名是否已存在
+	exists, err := s.client.User.Query().
+		Where(user.UsernameEQ(req.Username)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to check username existence", "username", req.Username, "error", err)
+		return nil, fmt.Errorf("检查用户名失败")
+	}
+	if exists {
+		return nil, fmt.Errorf("用户名已被注册")
+	}
+
+	// 检查邮箱是否已存在
+	exists, err = s.client.User.Query().
+		Where(user.EmailEQ(req.Email)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to check email existence", "email", req.Email, "error", err)
+		return nil, fmt.Errorf("检查邮箱失败")
+	}
+	if exists {
+		return nil, fmt.Errorf("邮箱已被注册")
+	}
+
+	// 获取租户ID
+	tenantID := 1 // 默认租户
+	if req.TenantCode != "" {
+		tenantEntity, err := s.client.Tenant.Query().
+			Where(tenant.CodeEQ(req.TenantCode)).
+			First(ctx)
+		if err != nil {
+			s.logger.Warnw("Tenant not found", "tenant_code", req.TenantCode, "error", err)
+			return nil, fmt.Errorf("租户不存在")
+		}
+		tenantID = tenantEntity.ID
+	}
+
+	// 加密密码
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Errorw("Failed to hash password", "error", err)
+		return nil, fmt.Errorf("密码加密失败")
+	}
+
+	// 确定角色
+	role := user.Role(req.Role)
+	if role.String() == "" {
+		role = "end_user"
+	}
+
+	// 创建用户
+	userEntity, err := s.client.User.Create().
+		SetUsername(req.Username).
+		SetEmail(req.Email).
+		SetName(req.FullName).
+		SetPasswordHash(string(hashedPassword)).
+		SetPhone(req.Phone).
+		SetDepartment(req.Company).
+		SetRole(role).
+		SetTenantID(tenantID).
+		SetActive(true).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to create user", "username", req.Username, "error", err)
+		return nil, fmt.Errorf("创建用户失败")
+	}
+
+	s.logger.Infow("User registered successfully", "user_id", userEntity.ID, "username", req.Username)
+
+	return &dto.RegisterResponse{
+		ID:       userEntity.ID,
+		Username: userEntity.Username,
+		Email:    userEntity.Email,
+		Message:  "注册成功",
+	}, nil
+}
+
+// ForgotPassword 发送密码重置邮件
+func (s *AuthService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error) {
+	// 查找用户
+	userQuery := s.client.User.Query().Where(user.EmailEQ(req.Email))
+
+	// 如果提供了租户代码，按租户过滤
+	if req.TenantCode != "" {
+		tenantEntity, err := s.client.Tenant.Query().
+			Where(tenant.CodeEQ(req.TenantCode)).
+			First(ctx)
+		if err != nil {
+			s.logger.Warnw("Tenant not found", "tenant_code", req.TenantCode, "error", err)
+			return nil, fmt.Errorf("用户不存在")
+		}
+		userQuery = userQuery.Where(user.TenantIDEQ(tenantEntity.ID))
+	}
+
+	userEntity, err := userQuery.First(ctx)
+	if err != nil {
+		s.logger.Warnw("User not found for password reset", "email", req.Email, "error", err)
+		// 为了安全，不提示用户不存在
+		return &dto.ForgotPasswordResponse{
+			Message: "如果该邮箱已注册，我们将发送密码重置链接",
+		}, nil
+	}
+
+	// 生成重置令牌
+	token := generateResetToken()
+	expiresAt := time.Now().Add(1 * time.Hour) // 1小时后过期
+
+	// 保存重置令牌
+	_, err = s.client.PasswordResetToken.Create().
+		SetUserID(userEntity.ID).
+		SetEmail(req.Email).
+		SetToken(token).
+		SetExpiresAt(expiresAt).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to create password reset token", "user_id", userEntity.ID, "error", err)
+		return nil, fmt.Errorf("生成重置令牌失败")
+	}
+
+	// 发送重置邮件
+	if s.emailService != nil {
+		err = s.emailService.SendPasswordResetEmail(ctx, []string{req.Email}, token, s.baseURL)
+		if err != nil {
+			s.logger.Errorw("Failed to send password reset email", "user_id", userEntity.ID, "email", req.Email, "error", err)
+			// 邮件发送失败不影响流程，只记录日志
+		} else {
+			s.logger.Infow("Password reset email sent", "user_id", userEntity.ID, "email", req.Email)
+		}
+	} else {
+		s.logger.Warnw("Email service not configured, skipping email send", "user_id", userEntity.ID, "email", req.Email)
+	}
+
+	return &dto.ForgotPasswordResponse{
+		Message: "如果该邮箱已注册，我们将发送密码重置链接",
+	}, nil
+}
+
+// ResetPassword 重置密码
+func (s *AuthService) ResetPassword(ctx context.Context, req *dto.PasswordResetRequest) (*dto.PasswordResetResponse, error) {
+	// 检查两次密码是否一致
+	if req.Password != req.PasswordConfirm {
+		return nil, fmt.Errorf("两次输入的密码不一致")
+	}
+
+	// 查找重置令牌
+	tokenEntity, err := s.client.PasswordResetToken.Query().
+		Where(
+			passwordresettoken.TokenEQ(req.Token),
+			passwordresettoken.EmailEQ(req.Email),
+			passwordresettoken.Used(false),
+		).
+		First(ctx)
+	if err != nil {
+		s.logger.Warnw("Invalid or used reset token", "email", req.Email, "error", err)
+		return nil, fmt.Errorf("重置令牌无效或已过期")
+	}
+
+	// 检查令牌是否过期
+	if time.Now().After(tokenEntity.ExpiresAt) {
+		return nil, fmt.Errorf("重置令牌已过期")
+	}
+
+	// 获取用户
+	userEntity, err := s.client.User.Get(ctx, tokenEntity.UserID)
+	if err != nil {
+		s.logger.Errorw("User not found for password reset", "user_id", tokenEntity.UserID, "error", err)
+		return nil, fmt.Errorf("用户不存在")
+	}
+
+	// 加密新密码
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Errorw("Failed to hash new password", "user_id", userEntity.ID, "error", err)
+		return nil, fmt.Errorf("密码加密失败")
+	}
+
+	// 更新用户密码
+	_, err = s.client.User.UpdateOneID(userEntity.ID).
+		SetPasswordHash(string(hashedPassword)).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to update password", "user_id", userEntity.ID, "error", err)
+		return nil, fmt.Errorf("更新密码失败")
+	}
+
+	// 标记令牌为已使用
+	_, err = s.client.PasswordResetToken.UpdateOneID(tokenEntity.ID).
+		SetUsed(true).
+		Save(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to mark token as used", "token_id", tokenEntity.ID, "error", err)
+	}
+
+	// 撤销用户的所有token
+	if s.tokenBlacklist != nil {
+		if err := s.tokenBlacklist.RevokeUserTokens(ctx, userEntity.ID); err != nil {
+			s.logger.Warnw("Failed to revoke user tokens", "user_id", userEntity.ID, "error", err)
+		}
+	}
+
+	s.logger.Infow("Password reset successfully", "user_id", userEntity.ID)
+
+	return &dto.PasswordResetResponse{
+		Message: "密码重置成功，请使用新密码登录",
+	}, nil
+}
+
+// ValidateResetToken 验证重置令牌是否有效
+func (s *AuthService) ValidateResetToken(ctx context.Context, req *dto.ValidateResetTokenRequest) (*dto.ValidateResetTokenResponse, error) {
+	tokenEntity, err := s.client.PasswordResetToken.Query().
+		Where(
+			passwordresettoken.TokenEQ(req.Token),
+			passwordresettoken.EmailEQ(req.Email),
+			passwordresettoken.Used(false),
+		).
+		First(ctx)
+	if err != nil {
+		return &dto.ValidateResetTokenResponse{
+			Valid: false,
+			Email: req.Email,
+		}, nil
+	}
+
+	// 检查是否过期
+	if time.Now().After(tokenEntity.ExpiresAt) {
+		return &dto.ValidateResetTokenResponse{
+			Valid: false,
+			Email: req.Email,
+		}, nil
+	}
+
+	return &dto.ValidateResetTokenResponse{
+		Valid: true,
+		Email: req.Email,
+	}, nil
+}
+
+// generateResetToken 生成密码重置令牌
+func generateResetToken() string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token := make([]byte, 32)
+	for i := range token {
+		token[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+	}
+	return string(token)
+}
+
+// CleanupExpiredTokens 清理过期的重置令牌
+func (s *AuthService) CleanupExpiredTokens(ctx context.Context) error {
+	_, err := s.client.PasswordResetToken.Delete().
+		Where(passwordresettoken.ExpiresAtLT(time.Now())).
+		Exec(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to cleanup expired tokens", "error", err)
+		return err
+	}
+	return nil
 }

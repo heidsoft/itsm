@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/predicate"
 	"time"
 
@@ -158,6 +159,48 @@ func (kau *KnowledgeArticleUpdate) SetNillableIsPublished(b *bool) *KnowledgeArt
 	return kau
 }
 
+// SetViewCount sets the "view_count" field.
+func (kau *KnowledgeArticleUpdate) SetViewCount(i int) *KnowledgeArticleUpdate {
+	kau.mutation.ResetViewCount()
+	kau.mutation.SetViewCount(i)
+	return kau
+}
+
+// SetNillableViewCount sets the "view_count" field if the given value is not nil.
+func (kau *KnowledgeArticleUpdate) SetNillableViewCount(i *int) *KnowledgeArticleUpdate {
+	if i != nil {
+		kau.SetViewCount(*i)
+	}
+	return kau
+}
+
+// AddViewCount adds i to the "view_count" field.
+func (kau *KnowledgeArticleUpdate) AddViewCount(i int) *KnowledgeArticleUpdate {
+	kau.mutation.AddViewCount(i)
+	return kau
+}
+
+// SetLikeCount sets the "like_count" field.
+func (kau *KnowledgeArticleUpdate) SetLikeCount(i int) *KnowledgeArticleUpdate {
+	kau.mutation.ResetLikeCount()
+	kau.mutation.SetLikeCount(i)
+	return kau
+}
+
+// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
+func (kau *KnowledgeArticleUpdate) SetNillableLikeCount(i *int) *KnowledgeArticleUpdate {
+	if i != nil {
+		kau.SetLikeCount(*i)
+	}
+	return kau
+}
+
+// AddLikeCount adds i to the "like_count" field.
+func (kau *KnowledgeArticleUpdate) AddLikeCount(i int) *KnowledgeArticleUpdate {
+	kau.mutation.AddLikeCount(i)
+	return kau
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (kau *KnowledgeArticleUpdate) SetCreatedAt(t time.Time) *KnowledgeArticleUpdate {
 	kau.mutation.SetCreatedAt(t)
@@ -178,9 +221,45 @@ func (kau *KnowledgeArticleUpdate) SetUpdatedAt(t time.Time) *KnowledgeArticleUp
 	return kau
 }
 
+// AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
+func (kau *KnowledgeArticleUpdate) AddUserLikeIDs(ids ...int) *KnowledgeArticleUpdate {
+	kau.mutation.AddUserLikeIDs(ids...)
+	return kau
+}
+
+// AddUserLikes adds the "user_likes" edges to the KnowledgeArticleLike entity.
+func (kau *KnowledgeArticleUpdate) AddUserLikes(k ...*KnowledgeArticleLike) *KnowledgeArticleUpdate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return kau.AddUserLikeIDs(ids...)
+}
+
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (kau *KnowledgeArticleUpdate) Mutation() *KnowledgeArticleMutation {
 	return kau.mutation
+}
+
+// ClearUserLikes clears all "user_likes" edges to the KnowledgeArticleLike entity.
+func (kau *KnowledgeArticleUpdate) ClearUserLikes() *KnowledgeArticleUpdate {
+	kau.mutation.ClearUserLikes()
+	return kau
+}
+
+// RemoveUserLikeIDs removes the "user_likes" edge to KnowledgeArticleLike entities by IDs.
+func (kau *KnowledgeArticleUpdate) RemoveUserLikeIDs(ids ...int) *KnowledgeArticleUpdate {
+	kau.mutation.RemoveUserLikeIDs(ids...)
+	return kau
+}
+
+// RemoveUserLikes removes "user_likes" edges to KnowledgeArticleLike entities.
+func (kau *KnowledgeArticleUpdate) RemoveUserLikes(k ...*KnowledgeArticleLike) *KnowledgeArticleUpdate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return kau.RemoveUserLikeIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -287,11 +366,68 @@ func (kau *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (n int, err erro
 	if value, ok := kau.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 	}
+	if value, ok := kau.mutation.ViewCount(); ok {
+		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.AddedViewCount(); ok {
+		_spec.AddField(knowledgearticle.FieldViewCount, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.LikeCount(); ok {
+		_spec.SetField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := kau.mutation.AddedLikeCount(); ok {
+		_spec.AddField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
+	}
 	if value, ok := kau.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := kau.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if kau.mutation.UserLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := kau.mutation.RemovedUserLikesIDs(); len(nodes) > 0 && !kau.mutation.UserLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := kau.mutation.UserLikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, kau.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -443,6 +579,48 @@ func (kauo *KnowledgeArticleUpdateOne) SetNillableIsPublished(b *bool) *Knowledg
 	return kauo
 }
 
+// SetViewCount sets the "view_count" field.
+func (kauo *KnowledgeArticleUpdateOne) SetViewCount(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.ResetViewCount()
+	kauo.mutation.SetViewCount(i)
+	return kauo
+}
+
+// SetNillableViewCount sets the "view_count" field if the given value is not nil.
+func (kauo *KnowledgeArticleUpdateOne) SetNillableViewCount(i *int) *KnowledgeArticleUpdateOne {
+	if i != nil {
+		kauo.SetViewCount(*i)
+	}
+	return kauo
+}
+
+// AddViewCount adds i to the "view_count" field.
+func (kauo *KnowledgeArticleUpdateOne) AddViewCount(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.AddViewCount(i)
+	return kauo
+}
+
+// SetLikeCount sets the "like_count" field.
+func (kauo *KnowledgeArticleUpdateOne) SetLikeCount(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.ResetLikeCount()
+	kauo.mutation.SetLikeCount(i)
+	return kauo
+}
+
+// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
+func (kauo *KnowledgeArticleUpdateOne) SetNillableLikeCount(i *int) *KnowledgeArticleUpdateOne {
+	if i != nil {
+		kauo.SetLikeCount(*i)
+	}
+	return kauo
+}
+
+// AddLikeCount adds i to the "like_count" field.
+func (kauo *KnowledgeArticleUpdateOne) AddLikeCount(i int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.AddLikeCount(i)
+	return kauo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (kauo *KnowledgeArticleUpdateOne) SetCreatedAt(t time.Time) *KnowledgeArticleUpdateOne {
 	kauo.mutation.SetCreatedAt(t)
@@ -463,9 +641,45 @@ func (kauo *KnowledgeArticleUpdateOne) SetUpdatedAt(t time.Time) *KnowledgeArtic
 	return kauo
 }
 
+// AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
+func (kauo *KnowledgeArticleUpdateOne) AddUserLikeIDs(ids ...int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.AddUserLikeIDs(ids...)
+	return kauo
+}
+
+// AddUserLikes adds the "user_likes" edges to the KnowledgeArticleLike entity.
+func (kauo *KnowledgeArticleUpdateOne) AddUserLikes(k ...*KnowledgeArticleLike) *KnowledgeArticleUpdateOne {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return kauo.AddUserLikeIDs(ids...)
+}
+
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (kauo *KnowledgeArticleUpdateOne) Mutation() *KnowledgeArticleMutation {
 	return kauo.mutation
+}
+
+// ClearUserLikes clears all "user_likes" edges to the KnowledgeArticleLike entity.
+func (kauo *KnowledgeArticleUpdateOne) ClearUserLikes() *KnowledgeArticleUpdateOne {
+	kauo.mutation.ClearUserLikes()
+	return kauo
+}
+
+// RemoveUserLikeIDs removes the "user_likes" edge to KnowledgeArticleLike entities by IDs.
+func (kauo *KnowledgeArticleUpdateOne) RemoveUserLikeIDs(ids ...int) *KnowledgeArticleUpdateOne {
+	kauo.mutation.RemoveUserLikeIDs(ids...)
+	return kauo
+}
+
+// RemoveUserLikes removes "user_likes" edges to KnowledgeArticleLike entities.
+func (kauo *KnowledgeArticleUpdateOne) RemoveUserLikes(k ...*KnowledgeArticleLike) *KnowledgeArticleUpdateOne {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return kauo.RemoveUserLikeIDs(ids...)
 }
 
 // Where appends a list predicates to the KnowledgeArticleUpdate builder.
@@ -602,11 +816,68 @@ func (kauo *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Know
 	if value, ok := kauo.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 	}
+	if value, ok := kauo.mutation.ViewCount(); ok {
+		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.AddedViewCount(); ok {
+		_spec.AddField(knowledgearticle.FieldViewCount, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.LikeCount(); ok {
+		_spec.SetField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := kauo.mutation.AddedLikeCount(); ok {
+		_spec.AddField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
+	}
 	if value, ok := kauo.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
 	}
 	if value, ok := kauo.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if kauo.mutation.UserLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := kauo.mutation.RemovedUserLikesIDs(); len(nodes) > 0 && !kauo.mutation.UserLikesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := kauo.mutation.UserLikesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.UserLikesTable,
+			Columns: []string{knowledgearticle.UserLikesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &KnowledgeArticle{config: kauo.config}
 	_spec.Assign = _node.assignValues

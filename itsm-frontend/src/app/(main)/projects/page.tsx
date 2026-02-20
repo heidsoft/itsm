@@ -181,14 +181,16 @@ export default function ProjectsPage() {
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="department_id" label="所属部门">
-              <Select placeholder="请选择部门">
-                <Select.Option value={1}>研发中心</Select.Option>
-              </Select>
+              <Select
+                placeholder="请选择部门"
+                options={[{ value: 1, label: '研发中心' }]}
+              />
             </Form.Item>
             <Form.Item name="manager_id" label="负责人">
-              <Select placeholder="请选择负责人">
-                <Select.Option value={1}>管理员</Select.Option>
-              </Select>
+              <Select
+                placeholder="请选择负责人"
+                options={[{ value: 1, label: '管理员' }]}
+              />
             </Form.Item>
           </div>
           <Form.Item name="description" label="描述">

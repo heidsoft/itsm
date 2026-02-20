@@ -26,7 +26,7 @@ import {
   Collapse,
   Radio,
   Checkbox,
-  message,
+  App,
   Empty,
   Badge,
 } from 'antd';
@@ -70,7 +70,6 @@ import type {
 } from '@/types/template';
 
 const { TextArea } = Input;
-const { Option } = Select;
 const { Panel } = Collapse;
 
 // ==================== 字段类型配置 ====================
@@ -433,6 +432,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
   const [form] = Form.useForm();
   const [currentField, setCurrentField] = useState<TemplateField | null>(field);
   const [activeTab, setActiveTab] = useState('basic');
+  const { message } = App.useApp();
 
   React.useEffect(() => {
     if (field) {
@@ -549,12 +549,15 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
             </Row>
 
             <Form.Item label="字段宽度" name="width">
-              <Select placeholder="选择字段宽度">
-                <Option value={24}>100% (全宽)</Option>
-                <Option value={12}>50% (半宽)</Option>
-                <Option value={8}>33% (三分之一)</Option>
-                <Option value={6}>25% (四分之一)</Option>
-              </Select>
+              <Select
+                placeholder="选择字段宽度"
+                options={[
+                  { value: 24, label: '100% (全宽)' },
+                  { value: 12, label: '50% (半宽)' },
+                  { value: 8, label: '33% (三分之一)' },
+                  { value: 6, label: '25% (四分之一)' },
+                ]}
+              />
             </Form.Item>
 
             <Form.Item label="默认值" name="defaultValue">
@@ -727,28 +730,29 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                 allowClear
                 showSearch
                 optionFilterProp="children"
-              >
-                {allFields
+                options={allFields
                   .filter((f) => f.id !== field.id)
-                  .map((f) => (
-                    <Option key={f.id} value={f.name}>
-                      {f.label} ({f.name})
-                    </Option>
-                  ))}
-              </Select>
+                  .map((f) => ({
+                    value: f.name,
+                    label: `${f.label} (${f.name})`,
+                  }))}
+              />
             </Form.Item>
 
             <Form.Item label="条件运算符" name={['conditional', 'operator']}>
-              <Select placeholder="选择运算符">
-                <Option value="equals">等于 (=)</Option>
-                <Option value="not_equals">不等于 (≠)</Option>
-                <Option value="contains">包含</Option>
-                <Option value="not_contains">不包含</Option>
-                <Option value="greater_than">大于 (&gt;)</Option>
-                <Option value="less_than">小于 (&lt;)</Option>
-                <Option value="in">在列表中</Option>
-                <Option value="not_in">不在列表中</Option>
-              </Select>
+              <Select
+                placeholder="选择运算符"
+                options={[
+                  { value: 'equals', label: '等于 (=)' },
+                  { value: 'not_equals', label: '不等于 (≠)' },
+                  { value: 'contains', label: '包含' },
+                  { value: 'not_contains', label: '不包含' },
+                  { value: 'greater_than', label: '大于 (> )' },
+                  { value: 'less_than', label: '小于 (< )' },
+                  { value: 'in', label: '在列表中' },
+                  { value: 'not_in', label: '不在列表中' },
+                ]}
+              />
             </Form.Item>
 
             <Form.Item label="比较值" name={['conditional', 'value']}>
@@ -770,14 +774,18 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                 </Form.Item>
 
                 <Form.Item label="允许的文件类型" name="acceptedFileTypes">
-                  <Select mode="tags" placeholder="如：image/*, .pdf, .docx">
-                    <Option value="image/*">图片 (image/*)</Option>
-                    <Option value="application/pdf">PDF</Option>
-                    <Option value=".doc">Word (.doc)</Option>
-                    <Option value=".docx">Word (.docx)</Option>
-                    <Option value=".xls">Excel (.xls)</Option>
-                    <Option value=".xlsx">Excel (.xlsx)</Option>
-                  </Select>
+                  <Select
+                    mode="tags"
+                    placeholder="如：image/*, .pdf, .docx"
+                    options={[
+                      { value: 'image/*', label: '图片 (image/*)' },
+                      { value: 'application/pdf', label: 'PDF' },
+                      { value: '.doc', label: 'Word (.doc)' },
+                      { value: '.docx', label: 'Word (.docx)' },
+                      { value: '.xls', label: 'Excel (.xls)' },
+                      { value: '.xlsx', label: 'Excel (.xlsx)' },
+                    ]}
+                  />
                 </Form.Item>
 
                 <Form.Item
@@ -840,15 +848,19 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   label="工具栏"
                   name={['richTextConfig', 'toolbar']}
                 >
-                  <Select mode="multiple" placeholder="选择工具栏按钮">
-                    <Option value="bold">粗体</Option>
-                    <Option value="italic">斜体</Option>
-                    <Option value="underline">下划线</Option>
-                    <Option value="link">链接</Option>
-                    <Option value="image">图片</Option>
-                    <Option value="code">代码</Option>
-                    <Option value="list">列表</Option>
-                  </Select>
+                  <Select
+                    mode="multiple"
+                    placeholder="选择工具栏按钮"
+                    options={[
+                      { value: 'bold', label: '粗体' },
+                      { value: 'italic', label: '斜体' },
+                      { value: 'underline', label: '下划线' },
+                      { value: 'link', label: '链接' },
+                      { value: 'image', label: '图片' },
+                      { value: 'code', label: '代码' },
+                      { value: 'list', label: '列表' },
+                    ]}
+                  />
                 </Form.Item>
               </>
             )}
@@ -875,6 +887,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
   const [fields, setFields] = useState<TemplateField[]>(value);
   const [selectedField, setSelectedField] = useState<TemplateField | null>(null);
   const [fieldTypeFilter, setFieldTypeFilter] = useState<string>('all');
+  const { message } = App.useApp();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1011,12 +1024,13 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                 value={fieldTypeFilter}
                 onChange={setFieldTypeFilter}
                 style={{ width: 100 }}
-              >
-                <Option value="all">全部</Option>
-                <Option value="basic">基础</Option>
-                <Option value="advanced">高级</Option>
-                <Option value="special">特殊</Option>
-              </Select>
+                options={[
+                  { value: 'all', label: '全部' },
+                  { value: 'basic', label: '基础' },
+                  { value: 'advanced', label: '高级' },
+                  { value: 'special', label: '特殊' },
+                ]}
+              />
             }
             className="h-full"
             styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}

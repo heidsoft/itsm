@@ -170,9 +170,9 @@ export const LoadingEmptyErrorExamples = () => {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold mb-6">LoadingEmptyError 组件示例</h1>
-      <BasicExample />
-      <TicketListExample />
-      <ModuleExamples />
+      <BasicExample key="basic" />
+      <TicketListExample key="ticket" />
+      <ModuleExamples key="module" />
     </div>
   );
 };

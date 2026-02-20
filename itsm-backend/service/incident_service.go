@@ -8,6 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentmetric"
@@ -17,8 +18,9 @@ import (
 )
 
 type IncidentService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client              *ent.Client
+	logger              *zap.SugaredLogger
+	processTriggerService ProcessTriggerServiceInterface
 }
 
 func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *IncidentService {
@@ -26,6 +28,11 @@ func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger) *Incident
 		client: client,
 		logger: logger,
 	}
+}
+
+// SetProcessTriggerService 设置流程触发服务
+func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
+	s.processTriggerService = triggerService
 }
 
 // CreateIncident 创建事件
@@ -103,6 +110,17 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 
 	// 执行事件规则
 	go s.executeIncidentRules(context.Background(), incidentEntity.ID, tenantID)
+
+	// 触发BPMN工作流（异步执行，不阻塞事件创建）
+	if s.processTriggerService != nil {
+		go func() {
+			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.triggerWorkflowForIncident(workflowCtx, incidentEntity.ID, tenantID); err != nil {
+				s.logger.Warnw("Failed to trigger workflow for incident", "error", err, "incident_id", incidentEntity.ID)
+			}
+		}()
+	}
 
 	s.logger.Infow("Incident created successfully", "id", incidentEntity.ID, "number", incidentNumber)
 	return s.toIncidentResponse(incidentEntity), nil
@@ -1078,4 +1096,110 @@ func (s *IncidentService) GetIncidentMetrics(ctx context.Context, incidentID int
 	}
 
 	return responses, nil
+}
+
+// triggerWorkflowForIncident 为事件触发工作流
+func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incidentID int, tenantID int) error {
+	// 获取事件信息
+	inc, err := s.client.Incident.Get(ctx, incidentID)
+	if err != nil {
+		return fmt.Errorf("failed to get incident: %w", err)
+	}
+
+	// 构建流程变量
+	variables := map[string]interface{}{
+		"incident_id":      inc.ID,
+		"incident_number": inc.IncidentNumber,
+		"title":           inc.Title,
+		"description":     inc.Description,
+		"priority":        inc.Priority,
+		"severity":       inc.Severity,
+		"status":         inc.Status,
+		"category":       inc.Category,
+		"reporter_id":    inc.ReporterID,
+		"assignee_id":    inc.AssigneeID,
+	}
+
+	// 根据严重程度选择不同的流程
+	processKey := "incident_general_flow"
+	if inc.Severity == "critical" || inc.Priority == "urgent" {
+		processKey = "incident_emergency_flow"
+	}
+
+	// 触发流程
+	triggerReq := &dto.ProcessTriggerRequest{
+		BusinessType:         dto.BusinessTypeIncident,
+		BusinessID:          incidentID,
+		ProcessDefinitionKey: processKey,
+		Variables:           variables,
+		TriggeredBy:         fmt.Sprintf("%d", inc.ReporterID),
+		TriggeredAt:         time.Now(),
+		TenantID:           tenantID,
+	}
+
+	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
+	if err != nil {
+		return fmt.Errorf("failed to trigger workflow: %w", err)
+	}
+
+	s.logger.Infow("Workflow triggered for incident",
+		"incident_id", incidentID,
+		"process_instance_id", resp.ProcessInstanceID,
+		"process_key", processKey,
+	)
+
+	return nil
+}
+
+// GetWorkflowStatus 获取事件关联的流程状态
+func (s *IncidentService) GetWorkflowStatus(ctx context.Context, incidentID int, tenantID int) (*dto.ProcessTriggerResponse, error) {
+	businessKey := fmt.Sprintf("incident:%d", incidentID)
+
+	// 直接查询流程实例
+	processInstance, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+		).
+		WithDefinition().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("未找到事件关联的流程实例")
+		}
+		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+	}
+
+	processDefName := ""
+	if processInstance.Edges.Definition != nil {
+		processDefName = processInstance.Edges.Definition.Name
+	}
+
+	return &dto.ProcessTriggerResponse{
+		ProcessInstanceID:     processInstance.ID,
+		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
+		ProcessDefinitionName: processDefName,
+		BusinessKey:          processInstance.BusinessKey,
+		Status:               s.mapProcessStatus(processInstance.Status),
+		CurrentActivityID:     processInstance.CurrentActivityID,
+		CurrentActivityName:   processInstance.CurrentActivityName,
+		StartTime:            processInstance.StartTime,
+		EndTime:              &processInstance.EndTime,
+	}, nil
+}
+
+// mapProcessStatus 映射流程状态
+func (s *IncidentService) mapProcessStatus(status string) dto.ProcessStatus {
+	switch status {
+	case "running", "active":
+		return dto.ProcessStatusRunning
+	case "completed":
+		return dto.ProcessStatusCompleted
+	case "suspended":
+		return dto.ProcessStatusSuspended
+	case "terminated", "cancelled":
+		return dto.ProcessStatusTerminated
+	default:
+		return dto.ProcessStatusPending
+	}
 }

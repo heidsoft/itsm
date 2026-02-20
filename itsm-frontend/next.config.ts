@@ -15,8 +15,6 @@ const nextConfig: NextConfig = {
   
   // 实验性功能开关
   experimental: {
-    // 关闭开发者偏好设置面板
-    clientRouterFilter: false,
     // 优化包导入 - 减少打包体积
     optimizePackageImports: ['antd', '@ant-design/icons', 'lucide-react'],
   },

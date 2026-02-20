@@ -81,6 +81,20 @@ func (iu *IncidentUpdate) SetNillableStatus(s *string) *IncidentUpdate {
 	return iu
 }
 
+// SetType sets the "type" field.
+func (iu *IncidentUpdate) SetType(s string) *IncidentUpdate {
+	iu.mutation.SetType(s)
+	return iu
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (iu *IncidentUpdate) SetNillableType(s *string) *IncidentUpdate {
+	if s != nil {
+		iu.SetType(*s)
+	}
+	return iu
+}
+
 // SetPriority sets the "priority" field.
 func (iu *IncidentUpdate) SetPriority(s string) *IncidentUpdate {
 	iu.mutation.SetPriority(s)
@@ -762,6 +776,9 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := iu.mutation.Status(); ok {
 		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 	}
+	if value, ok := iu.mutation.GetType(); ok {
+		_spec.SetField(incident.FieldType, field.TypeString, value)
+	}
 	if value, ok := iu.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
@@ -1215,6 +1232,20 @@ func (iuo *IncidentUpdateOne) SetStatus(s string) *IncidentUpdateOne {
 func (iuo *IncidentUpdateOne) SetNillableStatus(s *string) *IncidentUpdateOne {
 	if s != nil {
 		iuo.SetStatus(*s)
+	}
+	return iuo
+}
+
+// SetType sets the "type" field.
+func (iuo *IncidentUpdateOne) SetType(s string) *IncidentUpdateOne {
+	iuo.mutation.SetType(s)
+	return iuo
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (iuo *IncidentUpdateOne) SetNillableType(s *string) *IncidentUpdateOne {
+	if s != nil {
+		iuo.SetType(*s)
 	}
 	return iuo
 }
@@ -1929,6 +1960,9 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 	}
 	if value, ok := iuo.mutation.Status(); ok {
 		_spec.SetField(incident.FieldStatus, field.TypeString, value)
+	}
+	if value, ok := iuo.mutation.GetType(); ok {
+		_spec.SetField(incident.FieldType, field.TypeString, value)
 	}
 	if value, ok := iuo.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)

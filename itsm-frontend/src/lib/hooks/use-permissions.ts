@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAuthStore } from '../../app/lib/store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { RoutePermission } from '../router/route-config';
 
 /**

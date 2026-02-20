@@ -71,6 +71,8 @@ func (ProcessDefinition) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("process_instances", ProcessInstance.Type).
 			Comment("流程实例"),
+		edge.To("bindings", ProcessBinding.Type).
+			Comment("流程绑定"),
 		edge.From("deployment", ProcessDeployment.Type).
 			Ref("definitions").
 			Field("deployment_id").

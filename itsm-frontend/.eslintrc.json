@@ -24,7 +24,8 @@
     "no-var": "error",
     "prefer-const": "error",
     "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-explicit-any": "warn"
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@next/next/no-assign-module-variable": "off"
   },
   "overrides": [
     {

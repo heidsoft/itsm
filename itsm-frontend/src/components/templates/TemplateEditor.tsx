@@ -69,7 +69,7 @@ import {
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { Step } = Steps;
+// Ant Design v5 不再使用 Steps.Step，改用 items 属性
 const { Panel } = Collapse;
 
 // ==================== 步骤定义 ====================
@@ -878,16 +878,16 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       {/* 步骤导航 */}
       <Card className="mb-4">
-        <Steps current={currentStep} onChange={setCurrentStep}>
-          {STEPS.map((step, index) => (
-            <Step
-              key={step.key}
-              title={step.title}
-              description={step.description}
-              icon={step.icon}
-            />
-          ))}
-        </Steps>
+        <Steps 
+          current={currentStep} 
+          onChange={setCurrentStep}
+          items={STEPS.map((step) => ({
+            key: step.key,
+            title: step.title,
+            description: step.description,
+            icon: step.icon,
+          }))}
+        />
       </Card>
 
       {/* 步骤内容 */}

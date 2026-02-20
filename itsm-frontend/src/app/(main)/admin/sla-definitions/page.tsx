@@ -13,7 +13,8 @@ import {
   Search,
 } from 'lucide-react';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { SLAApi, SLADefinition as SLADefinitionType } from '@/lib/api/sla-api';
 import {
   Card,
   Table,
@@ -34,9 +35,29 @@ import {
   List,
   Badge,
   Tag,
+  Alert,
 } from 'antd';
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+// 转换API数据格式为页面格式
+const transformSLA = (item: SLADefinitionType): SLADefinition => ({
+  id: String(item.id),
+  name: item.name,
+  description: item.description,
+  serviceType: item.service_type,
+  priority: item.priority as SLADefinition['priority'],
+  responseTime: `${item.response_time_minutes}分钟`,
+  resolutionTime: `${item.resolution_time_minutes}分钟`,
+  availability: `${item.availability_target}%`,
+  businessHours: '7x24',
+  escalationRules: [],
+  applicableServices: [],
+  status: item.is_active ? 'active' : 'inactive',
+  createdAt: item.created_at,
+  updatedAt: item.updated_at,
+  createdBy: '系统',
+});
 
 // SLA定义数据类型
 interface SLADefinition {
@@ -157,7 +178,7 @@ const STATUS_CONFIG = {
 };
 
 const SLADefinitionManagement = () => {
-  const [slaDefinitions, setSlaDefinitions] = useState(mockSLADefinitions);
+  const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -167,6 +188,25 @@ const SLADefinitionManagement = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+
+  // 加载SLA定义列表
+  const loadSLADefinitions = async () => {
+    setLoading(true);
+    try {
+      const data = await SLAApi.getSLADefinitions();
+      const transformed = (data.items || data || []).map(transformSLA);
+      setSlaDefinitions(transformed);
+    } catch (error) {
+      console.error('Failed to load SLA definitions:', error);
+      message.error('加载SLA定义失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSLADefinitions();
+  }, []);
 
   // 统计信息
   const stats = {
@@ -195,23 +235,38 @@ const SLADefinitionManagement = () => {
   });
 
   // 处理状态切换
-  const handleStatusToggle = (slaId: string) => {
-    setSlaDefinitions(prev =>
-      prev.map(sla => {
-        if (sla.id === slaId) {
-          const newStatus = sla.status === 'active' ? 'inactive' : 'active';
-          return { ...sla, status: newStatus };
-        }
-        return sla;
-      })
-    );
-    message.success('SLA状态已更新');
+  const handleStatusToggle = async (slaId: string) => {
+    try {
+      const sla = slaDefinitions.find(s => s.id === slaId);
+      if (!sla) return;
+
+      const newStatus = sla.status === 'active' ? 'inactive' : 'active';
+      await SLAApi.updateSLADefinition(Number(slaId), { is_active: newStatus === 'active' });
+      setSlaDefinitions(prev =>
+        prev.map(sla => {
+          if (sla.id === slaId) {
+            return { ...sla, status: newStatus };
+          }
+          return sla;
+        })
+      );
+      message.success('SLA状态已更新');
+    } catch (error) {
+      console.error('Failed to update SLA status:', error);
+      message.error('更新状态失败');
+    }
   };
 
   // 处理删除
-  const handleDelete = (slaId: string) => {
-    setSlaDefinitions(prev => prev.filter(sla => sla.id !== slaId));
-    message.success('SLA定义已删除');
+  const handleDelete = async (slaId: string) => {
+    try {
+      await SLAApi.deleteSLADefinition(Number(slaId));
+      setSlaDefinitions(prev => prev.filter(sla => sla.id !== slaId));
+      message.success('SLA定义已删除');
+    } catch (error) {
+      console.error('Failed to delete SLA:', error);
+      message.error('删除失败');
+    }
   };
 
   // 查看详情
@@ -226,10 +281,20 @@ const SLADefinitionManagement = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 转换表单值格式
+      const apiData = {
+        name: values.name,
+        description: values.description,
+        service_type: values.serviceType,
+        priority: values.priority,
+        response_time_minutes: parseInt(values.responseTime) || 60,
+        resolution_time_minutes: parseInt(values.resolutionTime) || 240,
+        availability_target: parseInt(values.availability) || 99,
+      };
 
       if (selectedSLA) {
         // 编辑
+        await SLAApi.updateSLADefinition(Number(selectedSLA.id), apiData);
         setSlaDefinitions(prev =>
           prev.map(sla =>
             sla.id === selectedSLA.id
@@ -244,8 +309,9 @@ const SLADefinitionManagement = () => {
         message.success('SLA定义更新成功');
       } else {
         // 新建
+        const result = await SLAApi.createSLADefinition(apiData);
         const newSLA: SLADefinition = {
-          id: `SLA-DEF-${String(slaDefinitions.length + 1).padStart(3, '0')}`,
+          id: String(result.id),
           ...values,
           status: 'draft',
           createdBy: '当前用户',
@@ -541,19 +607,29 @@ const SLADefinitionManagement = () => {
 
       {/* SLA定义列表 */}
       <Card className='enterprise-card'>
-        <Table
-          columns={columns}
-          dataSource={filteredSLAs}
-          rowKey='id'
-          pagination={{
-            total: filteredSLAs.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
-          }}
-          className='enterprise-table'
-        />
+        {filteredSLAs.length === 0 && !loading ? (
+          <Alert
+            message='暂无SLA定义'
+            description='点击右上角按钮创建第一个SLA定义'
+            type='info'
+            showIcon
+          />
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={filteredSLAs}
+            rowKey='id'
+            loading={loading}
+            pagination={{
+              total: filteredSLAs.length,
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: total => `共 ${total} 条记录`,
+            }}
+            className='enterprise-table'
+          />
+        )}
       </Card>
 
       {/* 创建/编辑模态框 */}

@@ -61,4 +61,36 @@ export async function aiGetMetrics(days = 7): Promise<AIMetrics> {
   return httpClient.get<AIMetrics>(`/api/v1/ai/metrics?days=${days}`);
 }
 
+// ==================== 兼容类包装器 ====================
+
+export class AIApi {
+  static async triage(title: string, description: string): Promise<TriageResult> {
+    return aiTriage(title, description);
+  }
+
+  static async chat(params: { query: string; conversation_id?: number; limit?: number }): Promise<any> {
+    return aiSearchKB(params.query, params.limit);
+  }
+
+  static async searchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {
+    return aiSearchKB(query, limit);
+  }
+
+  static async similarIncidents(query: string, limit = 5): Promise<{ incidents: RagAnswer[] }> {
+    return aiSimilarIncidents(query, limit);
+  }
+
+  static async summarize(text: string, maxLen = 200): Promise<{ summary: string }> {
+    return aiSummarize(text, maxLen);
+  }
+
+  static async saveFeedback(feedback: AIFeedbackRequest): Promise<{ message: string }> {
+    return aiSaveFeedback(feedback);
+  }
+
+  static async getMetrics(days = 7): Promise<AIMetrics> {
+    return aiGetMetrics(days);
+  }
+}
+
 

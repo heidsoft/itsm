@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, message } from 'antd';
 
-import { CMDBApi } from '@/modules/cmdb/api';
-import type { CloudAccount } from '@/modules/cmdb/types';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { CloudAccount } from '@/types/biz/cmdb';
 
 const { Option } = Select;
 
@@ -28,8 +28,7 @@ export default function CloudAccountPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const values = form.getFieldsValue();
-      const list = await CMDBApi.getCloudAccounts(values.provider);
+      const list = await CMDBApi.getCloudAccounts();
       setData(list || []);
     } catch (error) {
       message.error('加载云账号失败');

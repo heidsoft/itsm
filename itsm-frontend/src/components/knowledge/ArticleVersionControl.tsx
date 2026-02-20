@@ -378,13 +378,11 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                   value={selectedVersions?.[0]}
                   onChange={(value) => setSelectedVersions([value, selectedVersions?.[1] || 0])}
                   placeholder="选择源版本"
-                >
-                  {versions.map(version => (
-                    <Select.Option key={version.version} value={version.version}>
-                      v{version.version} - {format(new Date(version.createdAt), 'yyyy-MM-dd')}
-                    </Select.Option>
-                  ))}
-                </Select>
+                  options={versions.map(version => ({
+                    value: version.version,
+                    label: `v${version.version} - ${format(new Date(version.createdAt), 'yyyy-MM-dd')}`,
+                  }))}
+                />
               </Col>
               <Col span={12}>
                 <Text strong>目标版本</Text>
@@ -393,13 +391,11 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                   value={selectedVersions?.[1]}
                   onChange={(value) => setSelectedVersions([selectedVersions?.[0] || 0, value])}
                   placeholder="选择目标版本"
-                >
-                  {versions.map(version => (
-                    <Select.Option key={version.version} value={version.version}>
-                      v{version.version} - {format(new Date(version.createdAt), 'yyyy-MM-dd')}
-                    </Select.Option>
-                  ))}
-                </Select>
+                  options={versions.map(version => ({
+                    value: version.version,
+                    label: `v${version.version} - ${format(new Date(version.createdAt), 'yyyy-MM-dd')}`,
+                  }))}
+                />
               </Col>
             </Row>
             <div className="text-center mt-4">

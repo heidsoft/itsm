@@ -1,4 +1,4 @@
-export const formatDateTime = (iso?: string) => {
+export const formatDateTime = (iso?: string | null) => {
   if (!iso) return '';
   try {
     return new Date(iso).toLocaleString('zh-CN');

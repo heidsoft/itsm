@@ -179,6 +179,9 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(ErrorBoundary as any).displayName = 'ErrorBoundary';
+
 // Global error handler hook
 export const useErrorHandler = () => {
   React.useEffect(() => {
@@ -229,7 +232,7 @@ export const SimpleErrorFallback: React.FC<{
       <p style={{ color: "#666", marginBottom: "24px" }}>
         {error?.message || "Unknown error"}
       </p>
-      <Button type="primary" onClick={() => window.location.reload()}>
+      <Button type="primary" onClick={() => window.location.reload()} key="reload">
         Reload Page
       </Button>
     </div>

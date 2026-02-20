@@ -20,6 +20,8 @@ const (
 	FieldDescription = "description"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
 	// FieldSeverity holds the string denoting the severity field in the database.
@@ -116,6 +118,7 @@ var Columns = []string{
 	FieldTitle,
 	FieldDescription,
 	FieldStatus,
+	FieldType,
 	FieldPriority,
 	FieldSeverity,
 	FieldIncidentNumber,
@@ -167,6 +170,8 @@ var (
 	TitleValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultType holds the default value on creation for the "type" field.
+	DefaultType string
 	// DefaultPriority holds the default value on creation for the "priority" field.
 	DefaultPriority string
 	// DefaultSeverity holds the default value on creation for the "severity" field.
@@ -214,6 +219,11 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
 // ByPriority orders the results by the priority field.

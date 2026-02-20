@@ -17,7 +17,7 @@ import {
   Progress,
   Modal,
   Form,
-  message,
+  App,
   Badge,
   Tooltip,
   Popconfirm,
@@ -80,7 +80,8 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
     critical: 0,
   });
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-    const [filters, setFilters] = useState<{
+  const { message } = App.useApp();
+  const [filters, setFilters] = useState<{
       status: string;
       severity: string;
       type: string;
@@ -113,8 +114,8 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
 
       const processedViolations: SLAViolation[] = response.items.map(violation => ({
         ...violation,
-        expected_time: dayjs(violation.expected_time).format('YYYY-MM-DD HH:mm:ss'),
-        actual_time: dayjs(violation.actual_time).format('YYYY-MM-DD HH:mm:ss'),
+        expected_time: violation.expected_time ? dayjs(violation.expected_time).format('YYYY-MM-DD HH:mm:ss') : '',
+        actual_time: violation.actual_time ? dayjs(violation.actual_time).format('YYYY-MM-DD HH:mm:ss') : '',
       }));
 
       setViolations(processedViolations);
@@ -393,7 +394,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             <Popconfirm
               title="确认标记为已解决？"
               onConfirm={() => {
-                SLAApi.updateSLAViolationStatus(record.id, 'resolved')
+                SLAApi.updateSLAViolationStatus(record.id, true)  // 改为 true
                   .then(() => {
                     message.success('状态更新成功');
                     loadViolations();

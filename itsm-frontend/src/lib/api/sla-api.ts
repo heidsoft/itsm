@@ -342,6 +342,28 @@ export class SLAApi {
     // 修正: 确保路径与后端一致，去掉 v2
     return httpClient.get('/api/v1/sla/alert-history', params);
   }
+
+  // ==================== 兼容别名（旧代码使用） ====================
+
+  /** @deprecated 使用 getSLADefinitions */
+  static getDefinitions(params?: any) {
+    return this.getSLADefinitions(params);
+  }
+
+  /** @deprecated 使用 getSLADefinition */
+  static getDefinition(id: number) {
+    return this.getSLADefinition(id);
+  }
+
+  /** @deprecated 使用 updateSLADefinition */
+  static updateDefinition(id: number, data: any) {
+    return this.updateSLADefinition(id, data);
+  }
+
+  /** @deprecated 使用 deleteSLADefinition */
+  static deleteDefinition(id: number) {
+    return this.deleteSLADefinition(id);
+  }
 }
 
 export default SLAApi;

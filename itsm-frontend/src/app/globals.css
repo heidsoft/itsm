@@ -1,6 +1,27 @@
 /* Tailwind CSS v4 导入 */
+/* ========== 外部样式导入 (必须在所有其他规则之前) ========== */
 @import "tailwindcss";
 @reference "tailwindcss";
+@import url('../styles/theme-variables.css');
+@import url('../styles/antd-layout-overrides.css');
+@import '../components/ui/animations.css';
+@import '../components/ui/typography.css';
+
+/* Tooltip 样式修复 - 修复白色透明背景问题 */
+.ant-tooltip {
+  opacity: 1 !important;
+}
+
+.ant-tooltip-inner {
+  background-color: #333 !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+  padding: 8px 12px !important;
+}
+
+.ant-tooltip-arrow::before {
+  background-color: #333 !important;
+}
 
 @layer utilities {
   .animate-pulse-strong {
@@ -28,16 +49,6 @@
   padding: 24px;
   background-color: #f0f2f5;
 }
-
-/* 导入主题变量 */
-@import url('../styles/theme-variables.css');
-
-/* 导入Ant Design Layout覆盖样式 (遵循官方设计规范) */
-@import url('../styles/antd-layout-overrides.css');
-
-/* 导入设计系统样式 */
-@import '../components/ui/animations.css';
-@import '../components/ui/typography.css';
 
 /* 主内容区域：移除页面内居中约束，贴合侧边栏与顶部布局 */
 .main-content {
@@ -211,19 +222,17 @@
 
 .accessibility-enhanced.keyboard-nav {
 
-  /* 键盘导航优化 */
+  /* 键盘导航优化 - 移除蓝色边框，使用更柔和的样式 */
   *:focus {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
+    outline: none;
   }
 
   button:focus,
   input:focus,
   textarea:focus,
   select:focus {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    outline: none;
+    box-shadow: none;
   }
 }
 
@@ -269,9 +278,9 @@
   }
 }
 
-/* 增强的焦点指示器 */
-.focus-within\\:ring-2:focus-within {
-  box-shadow: 0 0 0 2px var(--color-primary-500);
+/* 增强的焦点指示器 - 移除蓝色边框 */
+*:focus-within {
+  outline: none;
 }
 
 /* 改进的消息通知样式 */

@@ -17,7 +17,7 @@ import {
   Col,
   Modal,
   Form,
-  message,
+  App,
 } from 'antd';
 import {
   MoreOutlined,
@@ -44,7 +44,6 @@ dayjs.locale('zh-cn');
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
-const { Option } = Select;
 
 interface TicketKanbanProps {
   onTicketSelect?: (ticket: Ticket) => void;
@@ -72,6 +71,7 @@ const PRIORITY_CONFIG = {
 const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const router = useRouter();
   const { tickets, loading, fetchTickets, updateTicket, deleteTicket } = useTickets();
+  const { message, modal } = App.useApp();
   
   const [searchValue, setSearchValue] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
@@ -89,7 +89,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
       filtered = filtered.filter(ticket =>
         ticket.title.toLowerCase().includes(searchValue.toLowerCase()) ||
         ticket.description.toLowerCase().includes(searchValue.toLowerCase()) ||
-        ticket.ticket_number.toLowerCase().includes(searchValue.toLowerCase())
+        ticket.ticketNumber.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
@@ -114,7 +114,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           return a.title.localeCompare(b.title);
         case 'created_at':
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
 
@@ -174,7 +174,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const handleDeleteTicket = useCallback(async (ticket: Ticket) => {
     Modal.confirm({
       title: '确认删除',
-      content: `确定要删除工单 ${ticket.ticket_number} 吗？此操作不可撤销。`,
+      content: `确定要删除工单 ${ticket.ticketNumber || '-'} 吗？此操作不可撤销。`,
       okText: '确认删除',
       cancelText: '取消',
       okType: 'danger',
@@ -213,7 +213,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           margin: '0 0 12px 0',
         }}
         actions={[
-          <Dropdown menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
+          <Dropdown key="more" menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
             <Button type="text" icon={<MoreOutlined />} size="small" />
           </Dropdown>
         ]}
@@ -236,7 +236,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
           {/* 工单号和类型 */}
           <div className="flex items-center justify-between">
-            <Text code className="text-xs">{ticket.ticket_number}</Text>
+            <Text code className="text-xs">{ticket.ticketNumber || '-'}</Text>
             <Tag color="blue">{ticket.type}</Tag>
           </div>
 
@@ -251,7 +251,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           {/* 时间信息 */}
           <div className="flex items-center text-xs text-gray-400">
             <ClockCircleOutlined className="mr-1" />
-            {dayjs(ticket.created_at).fromNow()}
+            {dayjs(ticket.createdAt).fromNow()}
           </div>
 
           {/* 分配人信息 */}
@@ -263,11 +263,11 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           )}
 
           {/* 截止时间 */}
-          {ticket.dueDate && (
+          {ticket.dueTime && (
             <div className="flex items-center mt-1">
               <CalendarOutlined className="mr-1 text-xs text-red-500" />
               <Text className="text-xs text-red-500">
-                截止: {dayjs(ticket.dueDate).format('MM-DD HH:mm')}
+                截止: {dayjs(ticket.dueTime).format('MM-DD HH:mm')}
               </Text>
             </div>
           )}
@@ -296,35 +296,32 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 onChange={setSelectedStatus}
                 allowClear
                 style={{ width: 120 }}
-              >
-                {KANBAN_STATUS_CONFIG.map(status => (
-                  <Option key={status.key} value={status.key}>
-                    {status.title}
-                  </Option>
-                ))}
-              </Select>
+                options={KANBAN_STATUS_CONFIG.map(status => ({
+                  value: status.key,
+                  label: status.title,
+                }))}
+              />
               <Select
                 placeholder="优先级"
                 value={selectedPriority}
                 onChange={setSelectedPriority}
                 allowClear
                 style={{ width: 120 }}
-              >
-                {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-                  <Option key={key} value={key}>
-                    <Tag color={config.color}>{config.text}</Tag>
-                  </Option>
-                ))}
-              </Select>
+                options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({
+                  value: key,
+                  label: <><Tag color={config.color}>{config.text}</Tag></>,
+                }))}
+              />
               <Select
                 value={sortBy}
                 onChange={setSortBy}
                 style={{ width: 140 }}
-              >
-                <Option value="created_at">创建时间</Option>
-                <Option value="priority">优先级</Option>
-                <Option value="title">标题</Option>
-              </Select>
+                options={[
+                  { value: 'created_at', label: '创建时间' },
+                  { value: 'priority', label: '优先级' },
+                  { value: 'title', label: '标题' },
+                ]}
+              />
             </Space>
           </Col>
           <Col>
@@ -407,7 +404,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         {selectedTicket && (
           <div className="space-y-4">
             <div>
-              <Text strong>{selectedTicket.ticket_number}</Text>
+              <Text strong>{selectedTicket.ticketNumber || '-'}</Text>
               <Title level={4}>{selectedTicket.title}</Title>
             </div>
             <div>
@@ -425,11 +422,11 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
               </div>
               <div>
                 <Text>创建时间:</Text>
-                <div>{dayjs(selectedTicket.created_at).format('YYYY-MM-DD HH:mm')}</div>
+                <div>{dayjs(selectedTicket.createdAt).format('YYYY-MM-DD HH:mm')}</div>
               </div>
               <div>
                 <Text>更新时间:</Text>
-                <div>{dayjs(selectedTicket.updated_at).format('YYYY-MM-DD HH:mm')}</div>
+                <div>{dayjs(selectedTicket.updatedAt).format('YYYY-MM-DD HH:mm')}</div>
               </div>
             </div>
           </div>

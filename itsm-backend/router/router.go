@@ -1,7 +1,9 @@
 package router
 
 import (
+	"os"
 	"runtime"
+	"strconv"
 	"time"
 
 	"itsm-backend/common"
@@ -31,6 +33,7 @@ type RouterConfig struct {
 	Client    *ent.Client
 
 	// Controllers
+	ProblemInvestigationController *controller.ProblemInvestigationController
 	TicketController                *controller.TicketController
 	TicketDependencyController      *controller.TicketDependencyController
 	TicketCommentController         *controller.TicketCommentController
@@ -40,9 +43,11 @@ type RouterConfig struct {
 	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
 	TicketViewController            *controller.TicketViewController
 	TicketWorkflowController        *controller.TicketWorkflowController
+	TicketAutomationRuleController *controller.TicketAutomationRuleController
 	IncidentController              *controller.IncidentController
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
+	BPMNProcessTriggerController   *controller.BPMNProcessTriggerController
 	DashboardHandler                *handlers.DashboardHandler
 
 	// Organization & Project
@@ -63,6 +68,7 @@ type RouterConfig struct {
 	RoleController                   *controller.RoleController
 	PermissionController             *controller.PermissionController
 	NotificationPreferenceController *controller.NotificationPreferenceController
+	NotificationController        *controller.NotificationController
 
 	// Additional domain controllers
 	ServiceController        *controller.ServiceController
@@ -96,7 +102,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	r.Use(middleware.CORSMiddleware())
 
 	// 安全中间件
-	rateLimiter := middleware.NewRateLimiter(100, time.Minute) // 每分钟100次请求
+	// 速率限制：从环境变量读取，默认每分钟500次请求（测试环境可配置为更高）
+	rateLimit := 500
+	if envLimit := os.Getenv("RATE_LIMIT"); envLimit != "" {
+		if parsed, err := strconv.Atoi(envLimit); err == nil && parsed > 0 {
+			rateLimit = parsed
+		}
+	}
+	rateLimiter := middleware.NewRateLimiter(rateLimit, time.Minute)
 	r.Use(middleware.RateLimitMiddleware(rateLimiter))
 	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.SQLInjectionProtectionMiddleware())
@@ -170,10 +183,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.GET("/stats", config.TicketController.GetTicketStats)
 			tickets.GET("/:id", config.TicketController.GetTicket)
 			tickets.PUT("/:id", config.TicketController.UpdateTicket)
+			tickets.PUT("/:id/status", config.TicketController.UpdateTicketStatus)
 			tickets.DELETE("/:id", config.TicketController.DeleteTicket)
 			tickets.POST("/:id/assign", config.TicketController.AssignTicket)
 			tickets.POST("/:id/resolve", config.TicketController.ResolveTicket)
 			tickets.POST("/:id/close", config.TicketController.CloseTicket)
+
+			// 工单SLA信息
+			tickets.GET("/:id/sla", config.TicketController.GetTicketSLAInfo)
 
 			// 子任务管理
 			tickets.GET("/:id/subtasks", config.TicketController.GetSubtasks)
@@ -200,6 +217,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if config.ApprovalController != nil {
 				tickets.POST("/approval/submit", config.ApprovalController.SubmitApproval)
 				tickets.GET("/approval/records", config.ApprovalController.GetApprovalRecords)
+
+				// 审批工作流CRUD
+				approvalWorkflows := tenant.(*gin.RouterGroup).Group("/approval-workflows")
+				{
+					approvalWorkflows.GET("", config.ApprovalController.ListWorkflows)
+					approvalWorkflows.POST("", config.ApprovalController.CreateWorkflow)
+					approvalWorkflows.GET("/:id", config.ApprovalController.GetWorkflow)
+					approvalWorkflows.PUT("/:id", config.ApprovalController.UpdateWorkflow)
+					approvalWorkflows.DELETE("/:id", config.ApprovalController.DeleteWorkflow)
+				}
 			}
 
 			// 工单流转工作流
@@ -214,6 +241,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/workflow/close", config.TicketWorkflowController.CloseTicket)
 				tickets.POST("/workflow/reopen", config.TicketWorkflowController.ReopenTicket)
 				tickets.GET("/:id/workflow/state", config.TicketWorkflowController.GetTicketWorkflowState)
+			}
+
+			// 工单自动化规则
+			if config.TicketAutomationRuleController != nil {
+				tickets.GET("/automation-rules", config.TicketAutomationRuleController.ListAutomationRules)
+				tickets.POST("/automation-rules", config.TicketAutomationRuleController.CreateAutomationRule)
+				tickets.GET("/automation-rules/:id", config.TicketAutomationRuleController.GetAutomationRule)
+				tickets.PUT("/automation-rules/:id", config.TicketAutomationRuleController.UpdateAutomationRule)
+				tickets.DELETE("/automation-rules/:id", config.TicketAutomationRuleController.DeleteAutomationRule)
+				tickets.POST("/automation-rules/:id/test", config.TicketAutomationRuleController.TestAutomationRule)
 			}
 
 			// 工单评分
@@ -269,9 +306,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			{
 				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentHandler.List)
 				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Create)
+				inc.GET("/stats", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetStats)
 				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Get)
 				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
 				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Escalate)
+				inc.GET("/:id/events", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetIncidentEvents)
+				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetIncidentAlerts)
+				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetIncidentMetrics)
+				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetRootCause)
+				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateRootCause)
+				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetImpactAssessment)
+				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateImpactAssessment)
+				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetClassification)
+				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateClassification)
 			}
 		}
 
@@ -360,15 +407,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				cmdb.POST("", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateCI)
 				cmdb.GET("/:id", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCI)
 				cmdb.GET("/:id/topology", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCITopology)
+				cmdb.GET("/:id/impact-analysis", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIImpactAnalysis)
+				cmdb.GET("/:id/change-history", middleware.RequirePermission("cmdb", "read"), config.CMDBController.GetCIChangeHistory)
+				cmdb.GET("/relationships", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListRelationships)
 				cmdb.POST("/relationships", middleware.RequirePermission("cmdb", "write"), config.CMDBController.CreateRelationship)
 			}
 		}
 
 		// ==================== Knowledge Base (DDD) ====================
 		if config.KnowledgeHandler != nil {
-			// Old route for backward compatibility if needed, but we prefer the new structure
-			// kb := tenant.(*gin.RouterGroup).Group("/knowledge-articles") ...
-
+			// New route structure: /api/v1/knowledge/articles
 			knowledgeGrp := tenant.(*gin.RouterGroup).Group("/knowledge")
 			{
 				// Articles
@@ -379,7 +427,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					articles.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
 					articles.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
 					articles.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
-					
+
 					// Comments
 					articles.GET("/:id/comments", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticleComments)
 					articles.POST("/:id/comments", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.AddArticleComment)
@@ -387,13 +435,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 				// Categories
 				knowledgeGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
-				
+
 				// Search
 				knowledgeGrp.POST("/search", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.SearchArticles)
-				
+
 				// Recommendations
 				knowledgeGrp.GET("/recommendations", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecommendations)
 				knowledgeGrp.GET("/recent", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecentArticles)
+			}
+
+			// Legacy route for backward compatibility: /api/v1/knowledge-articles/*
+			kbGrp := tenant.(*gin.RouterGroup).Group("/knowledge-articles")
+			{
+				kbGrp.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
+				kbGrp.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
+				kbGrp.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
+				kbGrp.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
+				kbGrp.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
+				kbGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
 			}
 		}
 
@@ -542,17 +601,62 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					notifPrefs.POST("/init", config.NotificationPreferenceController.InitializeDefaultPreferences)
 				}
 			}
+
+			// Notifications
+			if config.NotificationController != nil {
+				notifications := tenant.(*gin.RouterGroup).Group("/notifications")
+				{
+					notifications.GET("", config.NotificationController.GetNotifications)
+					notifications.GET("/unread-count", config.NotificationController.GetUnreadCount)
+					notifications.PUT("/:id/read", config.NotificationController.MarkNotificationRead)
+					notifications.PUT("/read-all", config.NotificationController.MarkAllNotificationsRead)
+					notifications.DELETE("/:id", config.NotificationController.DeleteNotification)
+					notifications.POST("", config.NotificationController.CreateNotification)
+				}
+			}
 		}
 
-		// ==================== Miscellaneous ====================
+		// ==================== Problem Investigation ====================
+		if config.ProblemInvestigationController != nil {
+			problemInvestigation := tenant.(*gin.RouterGroup).Group("/problem-investigation")
+			{
+				// 问题调查管理
+				problemInvestigation.POST("/investigations", config.ProblemInvestigationController.CreateProblemInvestigation)
+				problemInvestigation.GET("/investigations/:id", config.ProblemInvestigationController.GetProblemInvestigation)
+				problemInvestigation.PUT("/investigations/:id", config.ProblemInvestigationController.UpdateProblemInvestigation)
+
+				// 调查步骤管理
+				problemInvestigation.POST("/steps", config.ProblemInvestigationController.CreateInvestigationStep)
+				problemInvestigation.PUT("/steps/:id", config.ProblemInvestigationController.UpdateInvestigationStep)
+				problemInvestigation.GET("/investigations/:investigation_id/steps", config.ProblemInvestigationController.GetInvestigationSteps)
+
+				// 根本原因分析
+				problemInvestigation.POST("/root-cause-analysis", config.ProblemInvestigationController.CreateRootCauseAnalysis)
+
+				// 解决方案管理
+				problemInvestigation.POST("/solutions", config.ProblemInvestigationController.CreateProblemSolution)
+				problemInvestigation.GET("/problems/:id/solutions", config.ProblemInvestigationController.GetProblemSolutions)
+
+				// 问题调查摘要
+				problemInvestigation.GET("/problems/:id/summary", config.ProblemInvestigationController.GetProblemInvestigationSummary)
+			}
+		}
+
+		// ==================== BPMN Workflow ====================
 		if config.BPMNWorkflowController != nil {
 			config.BPMNWorkflowController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// BPMN Process Trigger Controller (统一流程触发接口)
+		if config.BPMNProcessTriggerController != nil {
+			config.BPMNProcessTriggerController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		if config.DashboardHandler != nil {
 			dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
 			{
 				dashboard.GET("/overview", config.DashboardHandler.GetOverview)
+				dashboard.GET("/stats", config.DashboardHandler.GetStats)
 				dashboard.GET("/kpi-metrics", config.DashboardHandler.GetKPIMetrics)
 				dashboard.GET("/ticket-trend", config.DashboardHandler.GetTicketTrend)
 				dashboard.GET("/incident-distribution", config.DashboardHandler.GetIncidentDistribution)

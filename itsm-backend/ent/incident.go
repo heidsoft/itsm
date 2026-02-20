@@ -24,6 +24,8 @@ type Incident struct {
 	Description string `json:"description,omitempty"`
 	// 状态
 	Status string `json:"status,omitempty"`
+	// 事件类型
+	Type string `json:"type,omitempty"`
 	// 优先级
 	Priority string `json:"priority,omitempty"`
 	// 严重程度
@@ -158,7 +160,7 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case incident.FieldID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldPriority, incident.FieldSeverity, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
+		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSeverity, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
 			values[i] = new(sql.NullString)
 		case incident.FieldDetectedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldEscalatedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -200,6 +202,12 @@ func (i *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[j])
 			} else if value.Valid {
 				i.Status = value.String
+			}
+		case incident.FieldType:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[j])
+			} else if value.Valid {
+				i.Type = value.String
 			}
 		case incident.FieldPriority:
 			if value, ok := values[j].(*sql.NullString); !ok {
@@ -415,6 +423,9 @@ func (i *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(i.Status)
+	builder.WriteString(", ")
+	builder.WriteString("type=")
+	builder.WriteString(i.Type)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(i.Priority)

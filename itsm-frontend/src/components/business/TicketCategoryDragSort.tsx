@@ -35,6 +35,7 @@ import {
 import {
   ticketCategoryService,
   type CategoryTreeItem,
+  type BatchUpdateCategoriesRequest,
 } from "../../lib/services/ticket-category-service";
 
 const { Text } = Typography;
@@ -119,7 +120,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   // 构建树形数据
   const buildTreeData = useCallback((items: CategoryTreeItem[]): TreeNodeData[] => {
     return items.map((item, index) => ({
-      key: item.id,
+      key: String(item.id),
       title: (
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
@@ -230,22 +231,12 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   };
 
   // 准备更新数据
-  const prepareUpdateData = (items: CategoryTreeItem[]): Array<{
-    id: string;
-    parent_id?: string;
-    sort_order: number;
-    level: number;
-  }> => {
-    const updates: Array<{
-      id: string;
-      parent_id?: string;
-      sort_order: number;
-      level: number;
-    }> = [];
-    
+  const prepareUpdateData = (items: CategoryTreeItem[]): BatchUpdateCategoriesRequest[] => {
+    const updates: BatchUpdateCategoriesRequest[] = [];
+
     const processItems = (
-      items: CategoryTreeItem[], 
-      parentId?: string, 
+      items: CategoryTreeItem[],
+      parentId?: number,
       level: number = 0
     ) => {
       items.forEach((item, index) => {
@@ -255,13 +246,13 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
           sort_order: index,
           level: level,
         });
-        
+
         if (item.children && item.children.length > 0) {
           processItems(item.children, item.id, level + 1);
         }
       });
     };
-    
+
     processItems(items);
     return updates;
   };
@@ -460,7 +451,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
         </Card>
       )}
 
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragEnd={handleTreeDragEnd as unknown as (result: any) => void}>
         <Droppable droppableId="categories" type="list">
           {(provided) => (
             <div

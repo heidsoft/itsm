@@ -198,6 +198,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(ErrorBoundary as any).displayName = 'ErrorBoundary';
+
 // 高阶组件版本
 export const withErrorBoundary = <P extends object>(
   Component: React.ComponentType<P>,

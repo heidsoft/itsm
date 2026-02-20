@@ -123,7 +123,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
         columns: [], // 默认列，后续可以从表格配置中获取
         sort_config: {
           field: filters.sortBy?.split('_')[0] || 'createdAt',
-          order: filters.sortBy?.split('_')[1] || 'desc',
+          order: (filters.sortBy?.split('_')[1] as 'asc' | 'desc') || 'desc',
         },
         is_shared: values.is_shared,
       };
@@ -262,12 +262,12 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
               <Space>
                 <span>{view.name}</span>
                 {view.is_shared && (
-                  <Tag color='blue' size='small'>
+                  <Tag color='blue' style={{ marginRight: 0 }}>
                     共享
                   </Tag>
                 )}
                 {view.id === currentViewId && (
-                  <Tag color='green' size='small'>
+                  <Tag color='green' style={{ marginRight: 0 }}>
                     当前
                   </Tag>
                 )}

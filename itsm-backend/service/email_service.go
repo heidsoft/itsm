@@ -292,3 +292,67 @@ func (s *EmailService) ValidateConfig() error {
 	}
 	return nil
 }
+
+// SendPasswordResetEmail 发送密码重置邮件
+func (s *EmailService) SendPasswordResetEmail(ctx context.Context, to []string, resetToken, baseURL string) error {
+	// 构建重置链接
+	resetURL := fmt.Sprintf("%s/reset-password?token=%s", baseURL, resetToken)
+
+	subject := "[ITSM] 密码重置"
+
+	bodyText := fmt.Sprintf(`
+密码重置
+========
+
+您收到此邮件是因为您请求重置ITSM系统的密码。
+
+请点击以下链接重置密码：
+%s
+
+此链接将在1小时后失效。
+
+如果您没有请求重置密码，请忽略此邮件。
+
+---
+此邮件由ITSM系统自动发送
+发送时间: %s
+`, resetURL, time.Now().Format("2006-01-02 15:04:05"))
+
+	bodyHTML := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333;">密码重置</h2>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0 0 15px 0;">您收到此邮件是因为您请求重置ITSM系统的密码。</p>
+            <p style="margin: 0 0 15px 0;">请点击下方按钮重置密码：</p>
+            <p style="text-align: center; margin: 30px 0;">
+                <a href="%s" style="background-color: #1890ff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                    重置密码
+                </a>
+            </p>
+            <p style="margin: 0; color: #888; font-size: 12px;">此链接将在1小时后失效</p>
+        </div>
+        <div style="background-color: #fff7e6; padding: 15px; border-radius: 5px; border-left: 4px solid #faad14;">
+            <p style="margin: 0; color: #d48806;">如果您没有请求重置密码，请忽略此邮件。</p>
+        </div>
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+        <p style="color: #888; font-size: 12px;">此邮件由ITSM系统自动发送</p>
+    </div>
+</body>
+</html>
+`, resetURL)
+
+	msg := &EmailMessage{
+		To:       to,
+		Subject:  subject,
+		Body:     bodyHTML,
+		BodyText: bodyText,
+	}
+
+	return s.Send(ctx, msg)
+}

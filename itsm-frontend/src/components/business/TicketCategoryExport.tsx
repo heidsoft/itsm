@@ -32,7 +32,6 @@ import {
 
 const { Option } = Select;
 const { Text, Title } = Typography;
-const { CheckboxGroup } = Checkbox;
 
 interface TicketCategoryExportProps {
   visible: boolean;
@@ -421,7 +420,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
               name="selectedFields"
               rules={[{ required: true, message: "请选择至少一个字段" }]}
             >
-              <CheckboxGroup className="grid grid-cols-2 gap-2">
+              <Checkbox.Group className="grid grid-cols-2 gap-2">
                 {availableFields.map((field) => (
                   <Checkbox
                     key={field.key}
@@ -434,7 +433,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
                     </Space>
                   </Checkbox>
                 ))}
-              </CheckboxGroup>
+              </Checkbox.Group>
             </Form.Item>
           </Card>
 

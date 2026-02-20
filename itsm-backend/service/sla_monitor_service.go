@@ -140,15 +140,31 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		severity = "critical"
 	}
 
+	now := time.Now()
+	// 如果没有 SLA 定义，跳过创建违规记录
+	if t.SLADefinitionID == 0 {
+		return nil
+	}
+
+	// 获取 SLA 定义名称（如果存在）
+	slaName := "Default SLA"
+	if slaDef, err := s.client.SLADefinition.Get(ctx, t.SLADefinitionID); err == nil && slaDef != nil {
+		slaName = slaDef.Name
+	}
+
 	_, err = s.client.SLAViolation.Create().
 		SetTicketID(t.ID).
+		SetTicketType("ticket"). // Ticket 表没有类型字段，使用默认值
 		SetSLADefinitionID(t.SLADefinitionID).
+		SetSLAName(slaName).
 		SetViolationType(violationType).
-		SetViolationTime(time.Now()).
+		SetViolationTime(now).
 		SetDescription(description).
 		SetSeverity(severity).
 		SetIsResolved(false).
 		SetTenantID(t.TenantID).
+		SetCreatedAt(now).
+		SetUpdatedAt(now).
 		Save(ctx)
 	if err != nil {
 		return err
@@ -294,4 +310,56 @@ type SLAComplianceStat struct {
 	TotalTickets       int     `json:"total_tickets"`
 	ViolatedTickets    int     `json:"violated_tickets"`
 	ComplianceRate     float64 `json:"compliance_rate"`
+}
+
+// StartSLAWatcher 启动SLA定时检查任务
+// interval: 检查间隔，默认5分钟
+func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.Duration) {
+	if interval == 0 {
+		interval = 5 * time.Minute // 默认5分钟检查一次
+	}
+
+	s.logger.Infow("Starting SLA watcher", "interval", interval.String())
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info("SLA watcher stopped")
+			return
+		case <-ticker.C:
+			// 获取所有租户并检查SLA
+			tenants, err := s.client.Tenant.Query().All(ctx)
+			if err != nil {
+				s.logger.Errorw("Failed to query tenants", "error", err)
+				continue
+			}
+
+			for _, tenant := range tenants {
+				if err := s.CheckSLAViolations(ctx, tenant.ID); err != nil {
+					s.logger.Errorw("Failed to check SLA violations", "tenant_id", tenant.ID, "error", err)
+				}
+			}
+
+			s.logger.Info("SLA watcher completed one round")
+		}
+	}
+}
+
+// CheckAllTenantsSLA 检查所有租户的SLA（用于定时任务调用）
+func (s *SLAMonitorService) CheckAllTenantsSLA(ctx context.Context) error {
+	tenants, err := s.client.Tenant.Query().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to query tenants: %w", err)
+	}
+
+	for _, tenant := range tenants {
+		if err := s.CheckSLAViolations(ctx, tenant.ID); err != nil {
+			s.logger.Errorw("Failed to check SLA violations", "tenant_id", tenant.ID, "error", err)
+		}
+	}
+
+	return nil
 }

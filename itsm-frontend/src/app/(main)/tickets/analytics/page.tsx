@@ -48,6 +48,7 @@ const { TabPane } = Tabs;
 const TicketAnalytics: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
     dayjs().subtract(30, 'day'),
     dayjs(),
@@ -129,8 +130,32 @@ const TicketAnalytics: React.FC = () => {
   }, [dateRange]);
 
   // 导出数据
-  const handleExport = () => {
-    message.info('导出功能开发中');
+  const handleExport = async (format: 'csv' | 'excel' | 'pdf' = 'excel') => {
+    setExporting(true);
+    try {
+      const blob = await ticketAnalyticsService.exportAnalytics({
+        date_from: dateRange[0].format('YYYY-MM-DD'),
+        date_to: dateRange[1].format('YYYY-MM-DD'),
+        format,
+      });
+
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `工单分析_${dateRange[0].format('YYYYMMDD')}_${dateRange[1].format('YYYYMMDD')}.${format === 'excel' ? 'xlsx' : format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      message.success('导出成功');
+    } catch (error) {
+      console.error('Export failed:', error);
+      message.error('导出失败，请重试');
+    } finally {
+      setExporting(false);
+    }
   };
 
   // 计算百分比
@@ -223,7 +248,11 @@ const TicketAnalytics: React.FC = () => {
             <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>
               刷新数据
             </Button>
-            <Button icon={<FileExcelOutlined />} onClick={handleExport}>
+            <Button
+              icon={<FileExcelOutlined />}
+              onClick={() => handleExport('excel')}
+              loading={exporting}
+            >
               导出报表
             </Button>
           </Space>

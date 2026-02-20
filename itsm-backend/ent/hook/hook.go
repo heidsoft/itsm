@@ -296,6 +296,18 @@ func (f KnowledgeArticleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleMutation", m)
 }
 
+// The KnowledgeArticleLikeFunc type is an adapter to allow the use of ordinary
+// function as KnowledgeArticleLike mutator.
+type KnowledgeArticleLikeFunc func(context.Context, *ent.KnowledgeArticleLikeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnowledgeArticleLikeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnowledgeArticleLikeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleLikeMutation", m)
+}
+
 // The MessageFunc type is an adapter to allow the use of ordinary
 // function as Message mutator.
 type MessageFunc func(context.Context, *ent.MessageMutation) (ent.Value, error)
@@ -344,6 +356,18 @@ func (f NotificationPreferenceFunc) Mutate(ctx context.Context, m ent.Mutation) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.NotificationPreferenceMutation", m)
 }
 
+// The PasswordResetTokenFunc type is an adapter to allow the use of ordinary
+// function as PasswordResetToken mutator.
+type PasswordResetTokenFunc func(context.Context, *ent.PasswordResetTokenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PasswordResetTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PasswordResetTokenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PasswordResetTokenMutation", m)
+}
+
 // The PermissionFunc type is an adapter to allow the use of ordinary
 // function as Permission mutator.
 type PermissionFunc func(context.Context, *ent.PermissionMutation) (ent.Value, error)
@@ -366,6 +390,18 @@ func (f ProblemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProblemMutation", m)
+}
+
+// The ProcessBindingFunc type is an adapter to allow the use of ordinary
+// function as ProcessBinding mutator.
+type ProcessBindingFunc func(context.Context, *ent.ProcessBindingMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessBindingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessBindingMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessBindingMutation", m)
 }
 
 // The ProcessDefinitionFunc type is an adapter to allow the use of ordinary

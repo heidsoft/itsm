@@ -178,6 +178,22 @@ class TicketAnalyticsService {
   }> {
     return httpClient.get(`${this.baseUrl}/stats`);
   }
+
+  // 导出分析报表
+  async exportAnalytics(params: {
+    date_from: string;
+    date_to: string;
+    format: 'csv' | 'excel' | 'pdf';
+    group_by?: string;
+  }): Promise<Blob> {
+    const response = await httpClient.request({
+      method: 'GET',
+      url: `${this.baseUrl}/analytics/export`,
+      params,
+      responseType: 'blob'
+    });
+    return response as Blob;
+  }
 }
 
 export const dashboardService = new DashboardService();

@@ -3,6 +3,7 @@
 package cirelationship
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -14,46 +15,64 @@ const (
 	Label = "ci_relationship"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldType holds the string denoting the type field in the database.
-	FieldType = "type"
+	// FieldRelationshipType holds the string denoting the relationship_type field in the database.
+	FieldRelationshipType = "relationship_type"
+	// FieldSourceCiID holds the string denoting the source_ci_id field in the database.
+	FieldSourceCiID = "source_ci_id"
+	// FieldTargetCiID holds the string denoting the target_ci_id field in the database.
+	FieldTargetCiID = "target_ci_id"
+	// FieldStrength holds the string denoting the strength field in the database.
+	FieldStrength = "strength"
+	// FieldImpactLevel holds the string denoting the impact_level field in the database.
+	FieldImpactLevel = "impact_level"
+	// FieldIsActive holds the string denoting the is_active field in the database.
+	FieldIsActive = "is_active"
+	// FieldIsDiscovered holds the string denoting the is_discovered field in the database.
+	FieldIsDiscovered = "is_discovered"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldParentID holds the string denoting the parent_id field in the database.
-	FieldParentID = "parent_id"
-	// FieldChildID holds the string denoting the child_id field in the database.
-	FieldChildID = "child_id"
+	// FieldMetadata holds the string denoting the metadata field in the database.
+	FieldMetadata = "metadata"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// EdgeParent holds the string denoting the parent edge name in mutations.
-	EdgeParent = "parent"
-	// EdgeChild holds the string denoting the child edge name in mutations.
-	EdgeChild = "child"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// EdgeSourceCi holds the string denoting the source_ci edge name in mutations.
+	EdgeSourceCi = "source_ci"
+	// EdgeTargetCi holds the string denoting the target_ci edge name in mutations.
+	EdgeTargetCi = "target_ci"
 	// Table holds the table name of the cirelationship in the database.
 	Table = "ci_relationships"
-	// ParentTable is the table that holds the parent relation/edge.
-	ParentTable = "ci_relationships"
-	// ParentInverseTable is the table name for the ConfigurationItem entity.
+	// SourceCiTable is the table that holds the source_ci relation/edge.
+	SourceCiTable = "ci_relationships"
+	// SourceCiInverseTable is the table name for the ConfigurationItem entity.
 	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
-	ParentInverseTable = "configuration_items"
-	// ParentColumn is the table column denoting the parent relation/edge.
-	ParentColumn = "parent_id"
-	// ChildTable is the table that holds the child relation/edge.
-	ChildTable = "ci_relationships"
-	// ChildInverseTable is the table name for the ConfigurationItem entity.
+	SourceCiInverseTable = "configuration_items"
+	// SourceCiColumn is the table column denoting the source_ci relation/edge.
+	SourceCiColumn = "source_ci_id"
+	// TargetCiTable is the table that holds the target_ci relation/edge.
+	TargetCiTable = "ci_relationships"
+	// TargetCiInverseTable is the table name for the ConfigurationItem entity.
 	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
-	ChildInverseTable = "configuration_items"
-	// ChildColumn is the table column denoting the child relation/edge.
-	ChildColumn = "child_id"
+	TargetCiInverseTable = "configuration_items"
+	// TargetCiColumn is the table column denoting the target_ci relation/edge.
+	TargetCiColumn = "target_ci_id"
 )
 
 // Columns holds all SQL columns for cirelationship fields.
 var Columns = []string{
 	FieldID,
-	FieldType,
+	FieldRelationshipType,
+	FieldSourceCiID,
+	FieldTargetCiID,
+	FieldStrength,
+	FieldImpactLevel,
+	FieldIsActive,
+	FieldIsDiscovered,
 	FieldDescription,
-	FieldParentID,
-	FieldChildID,
+	FieldMetadata,
 	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -67,9 +86,75 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// RelationshipTypeValidator is a validator for the "relationship_type" field. It is called by the builders before save.
+	RelationshipTypeValidator func(string) error
+	// DefaultIsActive holds the default value on creation for the "is_active" field.
+	DefaultIsActive bool
+	// DefaultIsDiscovered holds the default value on creation for the "is_discovered" field.
+	DefaultIsDiscovered bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )
+
+// Strength defines the type for the "strength" enum field.
+type Strength string
+
+// StrengthMedium is the default value of the Strength enum.
+const DefaultStrength = StrengthMedium
+
+// Strength values.
+const (
+	StrengthCritical Strength = "critical"
+	StrengthHigh     Strength = "high"
+	StrengthMedium   Strength = "medium"
+	StrengthLow      Strength = "low"
+)
+
+func (s Strength) String() string {
+	return string(s)
+}
+
+// StrengthValidator is a validator for the "strength" field enum values. It is called by the builders before save.
+func StrengthValidator(s Strength) error {
+	switch s {
+	case StrengthCritical, StrengthHigh, StrengthMedium, StrengthLow:
+		return nil
+	default:
+		return fmt.Errorf("cirelationship: invalid enum value for strength field: %q", s)
+	}
+}
+
+// ImpactLevel defines the type for the "impact_level" enum field.
+type ImpactLevel string
+
+// ImpactLevelMedium is the default value of the ImpactLevel enum.
+const DefaultImpactLevel = ImpactLevelMedium
+
+// ImpactLevel values.
+const (
+	ImpactLevelCritical ImpactLevel = "critical"
+	ImpactLevelHigh     ImpactLevel = "high"
+	ImpactLevelMedium   ImpactLevel = "medium"
+	ImpactLevelLow      ImpactLevel = "low"
+)
+
+func (il ImpactLevel) String() string {
+	return string(il)
+}
+
+// ImpactLevelValidator is a validator for the "impact_level" field enum values. It is called by the builders before save.
+func ImpactLevelValidator(il ImpactLevel) error {
+	switch il {
+	case ImpactLevelCritical, ImpactLevelHigh, ImpactLevelMedium, ImpactLevelLow:
+		return nil
+	default:
+		return fmt.Errorf("cirelationship: invalid enum value for impact_level field: %q", il)
+	}
+}
 
 // OrderOption defines the ordering options for the CIRelationship queries.
 type OrderOption func(*sql.Selector)
@@ -79,9 +164,39 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByType orders the results by the type field.
-func ByType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldType, opts...).ToFunc()
+// ByRelationshipType orders the results by the relationship_type field.
+func ByRelationshipType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRelationshipType, opts...).ToFunc()
+}
+
+// BySourceCiID orders the results by the source_ci_id field.
+func BySourceCiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceCiID, opts...).ToFunc()
+}
+
+// ByTargetCiID orders the results by the target_ci_id field.
+func ByTargetCiID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTargetCiID, opts...).ToFunc()
+}
+
+// ByStrength orders the results by the strength field.
+func ByStrength(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStrength, opts...).ToFunc()
+}
+
+// ByImpactLevel orders the results by the impact_level field.
+func ByImpactLevel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldImpactLevel, opts...).ToFunc()
+}
+
+// ByIsActive orders the results by the is_active field.
+func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// ByIsDiscovered orders the results by the is_discovered field.
+func ByIsDiscovered(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsDiscovered, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.
@@ -89,45 +204,40 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByParentID orders the results by the parent_id field.
-func ByParentID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldParentID, opts...).ToFunc()
-}
-
-// ByChildID orders the results by the child_id field.
-func ByChildID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldChildID, opts...).ToFunc()
-}
-
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByParentField orders the results by parent field.
-func ByParentField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// BySourceCiField orders the results by source_ci field.
+func BySourceCiField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newParentStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newSourceCiStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// ByChildField orders the results by child field.
-func ByChildField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByTargetCiField orders the results by target_ci field.
+func ByTargetCiField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newChildStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newTargetCiStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newParentStep() *sqlgraph.Step {
+func newSourceCiStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ParentInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ParentTable, ParentColumn),
+		sqlgraph.To(SourceCiInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, SourceCiTable, SourceCiColumn),
 	)
 }
-func newChildStep() *sqlgraph.Step {
+func newTargetCiStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ChildInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ChildTable, ChildColumn),
+		sqlgraph.To(TargetCiInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TargetCiTable, TargetCiColumn),
 	)
 }

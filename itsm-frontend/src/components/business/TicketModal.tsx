@@ -75,7 +75,8 @@ const TicketForm: React.FC<{
       
       // 保存当前步骤数据
       const values = form.getFieldsValue();
-      setFormData(prev => ({ ...prev, ...values }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setFormData((prev: any) => ({ ...prev, ...values }));
       
       if (currentStep < steps.length - 1) {
         setCurrentStep(currentStep + 1);
@@ -534,7 +535,7 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
             type: editingTicket.type,
             category: editingTicket.category,
             priority: editingTicket.priority,
-            assignee_id: editingTicket.assignee_id,
+            assignee_id: editingTicket.assigneeId,
             description: editingTicket.description,
             // 如果有预计完成时间，需要转换为 dayjs 对象
             // estimated_time: editingTicket.estimated_time ? dayjs(editingTicket.estimated_time) : undefined,

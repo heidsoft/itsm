@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/configurationitem"
@@ -18,16 +19,28 @@ type CIRelationship struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// 关系类型
-	Type string `json:"type,omitempty"`
+	// 关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by
+	RelationshipType string `json:"relationship_type,omitempty"`
+	// 源CI ID
+	SourceCiID int `json:"source_ci_id,omitempty"`
+	// 目标CI ID
+	TargetCiID int `json:"target_ci_id,omitempty"`
+	// 关系强度
+	Strength cirelationship.Strength `json:"strength,omitempty"`
+	// 影响程度
+	ImpactLevel cirelationship.ImpactLevel `json:"impact_level,omitempty"`
+	// 是否启用
+	IsActive bool `json:"is_active,omitempty"`
+	// 是否自动发现
+	IsDiscovered bool `json:"is_discovered,omitempty"`
 	// 关系描述
 	Description string `json:"description,omitempty"`
-	// 父CI ID
-	ParentID int `json:"parent_id,omitempty"`
-	// 子CI ID
-	ChildID int `json:"child_id,omitempty"`
+	// 关系元数据
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the CIRelationshipQuery when eager-loading is set.
 	Edges        CIRelationshipEdges `json:"edges"`
@@ -36,35 +49,35 @@ type CIRelationship struct {
 
 // CIRelationshipEdges holds the relations/edges for other nodes in the graph.
 type CIRelationshipEdges struct {
-	// Parent holds the value of the parent edge.
-	Parent *ConfigurationItem `json:"parent,omitempty"`
-	// Child holds the value of the child edge.
-	Child *ConfigurationItem `json:"child,omitempty"`
+	// SourceCi holds the value of the source_ci edge.
+	SourceCi *ConfigurationItem `json:"source_ci,omitempty"`
+	// TargetCi holds the value of the target_ci edge.
+	TargetCi *ConfigurationItem `json:"target_ci,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
 }
 
-// ParentOrErr returns the Parent value or an error if the edge
+// SourceCiOrErr returns the SourceCi value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e CIRelationshipEdges) ParentOrErr() (*ConfigurationItem, error) {
-	if e.Parent != nil {
-		return e.Parent, nil
+func (e CIRelationshipEdges) SourceCiOrErr() (*ConfigurationItem, error) {
+	if e.SourceCi != nil {
+		return e.SourceCi, nil
 	} else if e.loadedTypes[0] {
 		return nil, &NotFoundError{label: configurationitem.Label}
 	}
-	return nil, &NotLoadedError{edge: "parent"}
+	return nil, &NotLoadedError{edge: "source_ci"}
 }
 
-// ChildOrErr returns the Child value or an error if the edge
+// TargetCiOrErr returns the TargetCi value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e CIRelationshipEdges) ChildOrErr() (*ConfigurationItem, error) {
-	if e.Child != nil {
-		return e.Child, nil
+func (e CIRelationshipEdges) TargetCiOrErr() (*ConfigurationItem, error) {
+	if e.TargetCi != nil {
+		return e.TargetCi, nil
 	} else if e.loadedTypes[1] {
 		return nil, &NotFoundError{label: configurationitem.Label}
 	}
-	return nil, &NotLoadedError{edge: "child"}
+	return nil, &NotLoadedError{edge: "target_ci"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -72,11 +85,15 @@ func (*CIRelationship) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case cirelationship.FieldID, cirelationship.FieldParentID, cirelationship.FieldChildID:
+		case cirelationship.FieldMetadata:
+			values[i] = new([]byte)
+		case cirelationship.FieldIsActive, cirelationship.FieldIsDiscovered:
+			values[i] = new(sql.NullBool)
+		case cirelationship.FieldID, cirelationship.FieldSourceCiID, cirelationship.FieldTargetCiID:
 			values[i] = new(sql.NullInt64)
-		case cirelationship.FieldType, cirelationship.FieldDescription:
+		case cirelationship.FieldRelationshipType, cirelationship.FieldStrength, cirelationship.FieldImpactLevel, cirelationship.FieldDescription:
 			values[i] = new(sql.NullString)
-		case cirelationship.FieldCreatedAt:
+		case cirelationship.FieldCreatedAt, cirelationship.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -99,11 +116,47 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			cr.ID = int(value.Int64)
-		case cirelationship.FieldType:
+		case cirelationship.FieldRelationshipType:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[i])
+				return fmt.Errorf("unexpected type %T for field relationship_type", values[i])
 			} else if value.Valid {
-				cr.Type = value.String
+				cr.RelationshipType = value.String
+			}
+		case cirelationship.FieldSourceCiID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field source_ci_id", values[i])
+			} else if value.Valid {
+				cr.SourceCiID = int(value.Int64)
+			}
+		case cirelationship.FieldTargetCiID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field target_ci_id", values[i])
+			} else if value.Valid {
+				cr.TargetCiID = int(value.Int64)
+			}
+		case cirelationship.FieldStrength:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field strength", values[i])
+			} else if value.Valid {
+				cr.Strength = cirelationship.Strength(value.String)
+			}
+		case cirelationship.FieldImpactLevel:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field impact_level", values[i])
+			} else if value.Valid {
+				cr.ImpactLevel = cirelationship.ImpactLevel(value.String)
+			}
+		case cirelationship.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				cr.IsActive = value.Bool
+			}
+		case cirelationship.FieldIsDiscovered:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_discovered", values[i])
+			} else if value.Valid {
+				cr.IsDiscovered = value.Bool
 			}
 		case cirelationship.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -111,23 +164,25 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				cr.Description = value.String
 			}
-		case cirelationship.FieldParentID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field parent_id", values[i])
-			} else if value.Valid {
-				cr.ParentID = int(value.Int64)
-			}
-		case cirelationship.FieldChildID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field child_id", values[i])
-			} else if value.Valid {
-				cr.ChildID = int(value.Int64)
+		case cirelationship.FieldMetadata:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field metadata", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &cr.Metadata); err != nil {
+					return fmt.Errorf("unmarshal field metadata: %w", err)
+				}
 			}
 		case cirelationship.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				cr.CreatedAt = value.Time
+			}
+		case cirelationship.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				cr.UpdatedAt = value.Time
 			}
 		default:
 			cr.selectValues.Set(columns[i], values[i])
@@ -142,14 +197,14 @@ func (cr *CIRelationship) Value(name string) (ent.Value, error) {
 	return cr.selectValues.Get(name)
 }
 
-// QueryParent queries the "parent" edge of the CIRelationship entity.
-func (cr *CIRelationship) QueryParent() *ConfigurationItemQuery {
-	return NewCIRelationshipClient(cr.config).QueryParent(cr)
+// QuerySourceCi queries the "source_ci" edge of the CIRelationship entity.
+func (cr *CIRelationship) QuerySourceCi() *ConfigurationItemQuery {
+	return NewCIRelationshipClient(cr.config).QuerySourceCi(cr)
 }
 
-// QueryChild queries the "child" edge of the CIRelationship entity.
-func (cr *CIRelationship) QueryChild() *ConfigurationItemQuery {
-	return NewCIRelationshipClient(cr.config).QueryChild(cr)
+// QueryTargetCi queries the "target_ci" edge of the CIRelationship entity.
+func (cr *CIRelationship) QueryTargetCi() *ConfigurationItemQuery {
+	return NewCIRelationshipClient(cr.config).QueryTargetCi(cr)
 }
 
 // Update returns a builder for updating this CIRelationship.
@@ -175,20 +230,38 @@ func (cr *CIRelationship) String() string {
 	var builder strings.Builder
 	builder.WriteString("CIRelationship(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", cr.ID))
-	builder.WriteString("type=")
-	builder.WriteString(cr.Type)
+	builder.WriteString("relationship_type=")
+	builder.WriteString(cr.RelationshipType)
+	builder.WriteString(", ")
+	builder.WriteString("source_ci_id=")
+	builder.WriteString(fmt.Sprintf("%v", cr.SourceCiID))
+	builder.WriteString(", ")
+	builder.WriteString("target_ci_id=")
+	builder.WriteString(fmt.Sprintf("%v", cr.TargetCiID))
+	builder.WriteString(", ")
+	builder.WriteString("strength=")
+	builder.WriteString(fmt.Sprintf("%v", cr.Strength))
+	builder.WriteString(", ")
+	builder.WriteString("impact_level=")
+	builder.WriteString(fmt.Sprintf("%v", cr.ImpactLevel))
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", cr.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("is_discovered=")
+	builder.WriteString(fmt.Sprintf("%v", cr.IsDiscovered))
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(cr.Description)
 	builder.WriteString(", ")
-	builder.WriteString("parent_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.ParentID))
-	builder.WriteString(", ")
-	builder.WriteString("child_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.ChildID))
+	builder.WriteString("metadata=")
+	builder.WriteString(fmt.Sprintf("%v", cr.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(cr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(cr.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

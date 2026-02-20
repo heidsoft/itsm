@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
@@ -197,6 +198,21 @@ func (pdc *ProcessDefinitionCreate) AddProcessInstances(p ...*ProcessInstance) *
 		ids[i] = p[i].ID
 	}
 	return pdc.AddProcessInstanceIDs(ids...)
+}
+
+// AddBindingIDs adds the "bindings" edge to the ProcessBinding entity by IDs.
+func (pdc *ProcessDefinitionCreate) AddBindingIDs(ids ...int) *ProcessDefinitionCreate {
+	pdc.mutation.AddBindingIDs(ids...)
+	return pdc
+}
+
+// AddBindings adds the "bindings" edges to the ProcessBinding entity.
+func (pdc *ProcessDefinitionCreate) AddBindings(p ...*ProcessBinding) *ProcessDefinitionCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdc.AddBindingIDs(ids...)
 }
 
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
@@ -421,6 +437,22 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pdc.mutation.BindingsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   processdefinition.BindingsTable,
+			Columns: processdefinition.BindingsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

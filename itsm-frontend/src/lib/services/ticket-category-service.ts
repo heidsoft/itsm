@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/app/lib/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 import { getAccessToken } from '@/lib/auth/token-storage';
 
 // 工单分类接口
@@ -62,6 +62,8 @@ export interface CategoryTreeItem {
   sort_order: number;
   is_active: boolean;
   children: CategoryTreeItem[];
+  parent_id?: number;
+  tenant_id?: string;
   created_at?: string;
   updated_at?: string;
   created_by?: string;
@@ -72,6 +74,14 @@ export interface CategoryTreeItem {
 export interface MoveCategoryRequest {
   new_parent_id?: number;
   new_sort_order?: number;
+}
+
+// 批量更新分类请求
+export interface BatchUpdateCategoriesRequest {
+  id: number;
+  parent_id?: number;
+  sort_order: number;
+  level: number;
 }
 
 class TicketCategoryService {
@@ -209,6 +219,23 @@ class TicketCategoryService {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || `移动分类失败: ${response.statusText}`);
+    }
+  }
+
+  // 批量更新分类
+  async batchUpdateCategories(data: BatchUpdateCategoriesRequest[]): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/batch-update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.getAuthToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `批量更新分类失败: ${response.statusText}`);
     }
   }
 

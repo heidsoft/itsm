@@ -4,11 +4,11 @@ import './globals.css';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { AntdProvider } from '@/app/lib/providers/AntdProvider';
+import { AntdProvider } from '@/lib/providers/AntdProvider';
 
 dayjs.locale('zh-cn');
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-import { QueryProvider } from '@/app/lib/providers/QueryProvider';
+import { QueryProvider } from '@/lib/providers/QueryProvider';
 
 // 使用更适合中文的字体组合
 const inter = Inter({

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -18,8 +19,15 @@ func (KnowledgeArticle) Fields() []ent.Field {
 		field.Int("author_id").Comment("作者ID").Positive(),
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Bool("is_published").Comment("是否发布").Default(false),
+		field.Int("view_count").Comment("浏览次数").Default(0),
+		field.Int("like_count").Comment("点赞次数").Default(0),
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
-func (KnowledgeArticle) Edges() []ent.Edge { return nil }
+
+func (KnowledgeArticle) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("user_likes", KnowledgeArticleLike.Type),
+	}
+}

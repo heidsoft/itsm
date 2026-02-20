@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"itsm-backend/config"
 	"itsm-backend/database"
@@ -95,14 +96,16 @@ func main() {
 
 func generateSecurePassword(length int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-	b := make([]byte, length)
-	for i := range b {
-		randomByte := make([]byte, 1)
-		_, err := os.Read(randomByte)
-		if err != nil {
-			return "", err
-		}
-		b[i] = charset[int(randomByte[0])%len(charset)]
+	if length <= 0 {
+		return "", nil
 	}
-	return string(b), nil
+	rnd := make([]byte, length)
+	if _, err := rand.Read(rnd); err != nil {
+		return "", err
+	}
+	out := make([]byte, length)
+	for i := 0; i < length; i++ {
+		out[i] = charset[int(rnd[i])%len(charset)]
+	}
+	return string(out), nil
 }

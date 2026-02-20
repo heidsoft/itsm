@@ -10,7 +10,7 @@ import {
   Space,
   Typography,
   Spin,
-  message,
+  App,
 } from 'antd';
 import {
   LineChart,
@@ -57,6 +57,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   timeRange,
   refreshInterval = 300000, // 5分钟
 }) => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState<SLAChartData[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d');

@@ -1296,7 +1296,7 @@ const IncidentMonitoringPanel: React.FC<{
                 }
               />
             ) : (
-              <Alert description='暂无严重事件' type='success' showIcon />
+              <Alert title="暂无严重事件" type='success' showIcon />
             )}
           </Card>
         </div>

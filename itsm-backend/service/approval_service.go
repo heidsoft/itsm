@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -658,4 +659,192 @@ func (s *ApprovalService) toRecordResponse(record *ent.ApprovalRecord) *dto.Appr
 	}
 
 	return response
+}
+
+// ApprovalTriggerRequest 审批触发请求
+type ApprovalTriggerRequest struct {
+	TicketID     int
+	TicketNumber string
+	TicketTitle  string
+	TicketType   string // incident, change, service_request, ticket
+	Priority     string
+	RequesterID  int
+	TenantID     int
+}
+
+// TriggerApproval 触发审批流程
+func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTriggerRequest) ([]*ent.ApprovalRecord, error) {
+	s.logger.Infow("Triggering approval", "ticket_number", req.TicketNumber, "ticket_type", req.TicketType, "priority", req.Priority)
+
+	// 查找匹配的审批工作流
+	workflow, err := s.findMatchingWorkflow(ctx, req.TicketType, req.Priority, req.TenantID)
+	if err != nil {
+		s.logger.Warnw("Error finding matching workflow", "error", err)
+		return nil, nil
+	}
+
+	if workflow == nil {
+		s.logger.Info("No active approval workflow found, skipping approval")
+		return nil, nil
+	}
+
+	// 解析工作流节点
+	nodes, err := s.parseWorkflowNodes(workflow.Nodes)
+	if err != nil {
+		s.logger.Errorw("Failed to parse workflow nodes", "error", err)
+		return nil, fmt.Errorf("failed to parse workflow: %w", err)
+	}
+
+	if len(nodes) == 0 {
+		s.logger.Warnw("Workflow has no nodes", "workflow_id", workflow.ID)
+		return nil, nil
+	}
+
+	// 创建审批记录
+	records := make([]*ent.ApprovalRecord, 0)
+	for i, node := range nodes {
+		// 计算截止时间
+		dueDate := time.Now()
+		if node.TimeoutHours > 0 {
+			dueDate = dueDate.Add(time.Duration(node.TimeoutHours) * time.Hour)
+		}
+
+		// 获取审批人
+		approverID, approverName, err := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID)
+		if err != nil {
+			s.logger.Warnw("Failed to resolve approver", "error", err, "node", i)
+			continue
+		}
+
+		record, err := s.client.ApprovalRecord.Create().
+			SetTicketNumber(req.TicketNumber).
+			SetTicketTitle(req.TicketTitle).
+			SetWorkflowName(workflow.Name).
+			SetCurrentLevel(i + 1).
+			SetTotalLevels(len(nodes)).
+			SetApproverID(approverID).
+			SetApproverName(approverName).
+			SetStatus("pending").
+			SetWorkflowID(workflow.ID).
+			SetTicketID(req.TicketID).
+			SetStepOrder(i + 1).
+			SetDueDate(dueDate).
+			SetTenantID(req.TenantID).
+			SetCreatedAt(time.Now()).
+			Save(ctx)
+
+		if err != nil {
+			s.logger.Errorw("Failed to create approval record", "error", err, "node", i)
+			continue
+		}
+
+		records = append(records, record)
+		s.logger.Infow("Created approval record", "record_id", record.ID, "approver", approverName, "level", i+1)
+	}
+
+	return records, nil
+}
+
+// findMatchingWorkflow 查找匹配的审批工作流
+func (s *ApprovalService) findMatchingWorkflow(ctx context.Context, ticketType, priority string, tenantID int) (*ent.ApprovalWorkflow, error) {
+	// 先尝试精确匹配（类型+优先级）
+	workflow, err := s.client.ApprovalWorkflow.Query().
+		Where(
+			approvalworkflow.TenantID(tenantID),
+			approvalworkflow.Status("active"),
+			approvalworkflow.TicketType(ticketType),
+			approvalworkflow.Priority(priority),
+		).
+		First(ctx)
+
+	if err == nil && workflow != nil {
+		return workflow, nil
+	}
+
+	// 尝试匹配类型（不带优先级）
+	workflow, err = s.client.ApprovalWorkflow.Query().
+		Where(
+			approvalworkflow.TenantID(tenantID),
+			approvalworkflow.Status("active"),
+			approvalworkflow.TicketType(ticketType),
+		).
+		First(ctx)
+
+	if err == nil && workflow != nil {
+		return workflow, nil
+	}
+
+	// 没有找到匹配的审批工作流
+	return nil, nil
+}
+
+// workflowNode 审批节点
+type workflowNode struct {
+	Name          string
+	AssigneeType  string // role, user
+	AssigneeValue string
+	TimeoutHours  int
+}
+
+// parseWorkflowNodes 解析工作流节点JSON
+func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowNode, error) {
+	if nodesJSON == nil {
+		return nil, nil
+	}
+
+	// 尝试解析为数组
+	nodesArray, ok := nodesJSON.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid nodes format")
+	}
+
+	nodes := make([]workflowNode, 0, len(nodesArray))
+	for i, nodeRaw := range nodesArray {
+		nodeMap, ok := nodeRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		node := workflowNode{
+			Name:          fmt.Sprintf("Step %d", i+1),
+			AssigneeType:  "role",
+			AssigneeValue: "admin",
+			TimeoutHours:  24,
+		}
+
+		if name, ok := nodeMap["name"].(string); ok {
+			node.Name = name
+		}
+		if assigneeType, ok := nodeMap["assignee_type"].(string); ok {
+			node.AssigneeType = assigneeType
+		}
+		if assigneeValue, ok := nodeMap["assignee_value"].(string); ok {
+			node.AssigneeValue = assigneeValue
+		}
+		if timeout, ok := nodeMap["timeout_hours"].(float64); ok {
+			node.TimeoutHours = int(timeout)
+		}
+
+		nodes = append(nodes, node)
+	}
+
+	return nodes, nil
+}
+
+// resolveApprover 解析审批人
+func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, assigneeValue string, tenantID int) (int, string, error) {
+	switch assigneeType {
+	case "role":
+		// 根据角色查找用户
+		user, err := s.client.User.Query().
+			Where(user.RoleEQ(user.Role(assigneeValue)), user.TenantID(tenantID), user.Active(true)).
+			First(ctx)
+		if err != nil || user == nil {
+			// 如果没找到，返回默认管理员
+			return 1, "管理员", nil
+		}
+		return user.ID, user.Name, nil
+	default:
+		return 1, "管理员", nil
+	}
 }

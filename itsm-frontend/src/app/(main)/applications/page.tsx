@@ -239,35 +239,46 @@ export default function ApplicationsPage() {
           {modalType === "application" ? (
             <>
               <Form.Item name="project_id" label="所属项目">
-                <Select placeholder="请选择项目">
-                  <Select.Option value={1}>ITSM 系统重构</Select.Option>
-                </Select>
+                <Select
+                  placeholder="请选择项目"
+                  options={[
+                    { label: 'ITSM 系统重构', value: 1 },
+                  ]}
+                />
               </Form.Item>
               <Form.Item name="type" label="应用类型">
-                <Select placeholder="请选择类型">
-                  <Select.Option value="web">Web应用</Select.Option>
-                  <Select.Option value="mobile">移动应用</Select.Option>
-                  <Select.Option value="backend">后端服务</Select.Option>
-                </Select>
+                <Select
+                  placeholder="请选择类型"
+                  options={[
+                    { label: 'Web应用', value: 'web' },
+                    { label: '移动应用', value: 'mobile' },
+                    { label: '后端服务', value: 'backend' },
+                  ]}
+                />
               </Form.Item>
             </>
           ) : (
             <>
               <Form.Item name="application_id" label="所属应用" rules={[{ required: true, message: '请选择所属应用' }]}>
-                <Select placeholder="请选择应用">
-                  {applications.map(app => (
-                    <Select.Option key={app.id} value={app.id}>{app.name}</Select.Option>
-                  ))}
-                </Select>
+                <Select
+                  placeholder="请选择应用"
+                  options={applications.map(app => ({
+                    label: app.name,
+                    value: app.id,
+                  }))}
+                />
               </Form.Item>
               <div className="grid grid-cols-2 gap-4">
                 <Form.Item name="language" label="开发语言">
-                  <Select placeholder="请选择语言">
-                    <Select.Option value="go">Go</Select.Option>
-                    <Select.Option value="java">Java</Select.Option>
-                    <Select.Option value="python">Python</Select.Option>
-                    <Select.Option value="nodejs">Node.js</Select.Option>
-                  </Select>
+                  <Select
+                    placeholder="请选择语言"
+                    options={[
+                      { label: 'Go', value: 'go' },
+                      { label: 'Java', value: 'java' },
+                      { label: 'Python', value: 'python' },
+                      { label: 'Node.js', value: 'nodejs' },
+                    ]}
+                  />
                 </Form.Item>
                 <Form.Item name="framework" label="框架">
                   <Input placeholder="如: Gin, Spring Boot" />

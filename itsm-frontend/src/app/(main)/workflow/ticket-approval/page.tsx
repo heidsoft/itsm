@@ -42,7 +42,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import WorkflowEngine from "@/app/components/workflow/WorkflowEngine";
+import WorkflowEngine from "@/components/workflow/WorkflowEngine";
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;

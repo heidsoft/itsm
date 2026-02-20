@@ -24,9 +24,8 @@ const customJestConfig = {
   collectCoverageFrom: [
     'src/components/ui/**/*.{ts,tsx}',
     'src/components/common/**/*.{ts,tsx}',
-    'src/app/lib/__tests__/**/*.{ts,tsx}',
-    'src/app/lib/api/**/*.ts',
-    'src/app/lib/env.ts',
+    'src/app/lib/**/*.{ts,tsx}',
+    'src/lib/**/*.{ts,tsx}',
   ],
   // Coverage thresholds disabled during development - tests are passing
   coverageThreshold: {},

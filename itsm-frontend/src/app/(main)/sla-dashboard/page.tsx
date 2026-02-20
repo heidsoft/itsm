@@ -309,7 +309,7 @@ const SLADashboardPage = () => {
 
       {/* SLA概览统计 */}
       <div className="mb-6">
-        <Row gutter={[16, 16]}>
+        <Row gutter={[16, 16]} className="m-0">
           <Col xs={24} sm={12} lg={6}>
             <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
               <Statistic
@@ -364,7 +364,7 @@ const SLADashboardPage = () => {
 
       {/* SLA预警和趋势 */}
       <div className="mb-6">
-        <Row gutter={[16, 16]}>
+        <Row gutter={[16, 16]} className="m-0">
           <Col xs={24} lg={12}>
             <Card
               className="rounded-lg shadow-sm border border-gray-200"
@@ -454,7 +454,7 @@ const SLADashboardPage = () => {
       {/* 合规报告 */}
       {complianceReport && (
         <div className="mb-6">
-          <Row gutter={[16, 16]}>
+          <Row gutter={[16, 16]} className="m-0">
             <Col span={24}>
               <Card
                 className="rounded-lg shadow-sm border border-gray-200"
@@ -532,7 +532,7 @@ const SLADashboardPage = () => {
               children: (
                 <div className="space-y-6">
                   {/* SLA定义和违规表格 */}
-                  <Row gutter={[16, 16]}>
+                  <Row gutter={[16, 16]} className="m-0">
                     <Col xs={24} lg={12}>
                       <Card
                         className="rounded-lg shadow-sm border border-gray-200"

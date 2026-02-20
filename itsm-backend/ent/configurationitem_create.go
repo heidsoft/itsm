@@ -463,34 +463,34 @@ func (cic *ConfigurationItemCreate) AddIncidents(i ...*Incident) *ConfigurationI
 	return cic.AddIncidentIDs(ids...)
 }
 
-// AddParentRelationIDs adds the "parent_relations" edge to the CIRelationship entity by IDs.
-func (cic *ConfigurationItemCreate) AddParentRelationIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddParentRelationIDs(ids...)
+// AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by IDs.
+func (cic *ConfigurationItemCreate) AddOutgoingRelationIDs(ids ...int) *ConfigurationItemCreate {
+	cic.mutation.AddOutgoingRelationIDs(ids...)
 	return cic
 }
 
-// AddParentRelations adds the "parent_relations" edges to the CIRelationship entity.
-func (cic *ConfigurationItemCreate) AddParentRelations(c ...*CIRelationship) *ConfigurationItemCreate {
+// AddOutgoingRelations adds the "outgoing_relations" edges to the CIRelationship entity.
+func (cic *ConfigurationItemCreate) AddOutgoingRelations(c ...*CIRelationship) *ConfigurationItemCreate {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return cic.AddParentRelationIDs(ids...)
+	return cic.AddOutgoingRelationIDs(ids...)
 }
 
-// AddChildRelationIDs adds the "child_relations" edge to the CIRelationship entity by IDs.
-func (cic *ConfigurationItemCreate) AddChildRelationIDs(ids ...int) *ConfigurationItemCreate {
-	cic.mutation.AddChildRelationIDs(ids...)
+// AddIncomingRelationIDs adds the "incoming_relations" edge to the CIRelationship entity by IDs.
+func (cic *ConfigurationItemCreate) AddIncomingRelationIDs(ids ...int) *ConfigurationItemCreate {
+	cic.mutation.AddIncomingRelationIDs(ids...)
 	return cic
 }
 
-// AddChildRelations adds the "child_relations" edges to the CIRelationship entity.
-func (cic *ConfigurationItemCreate) AddChildRelations(c ...*CIRelationship) *ConfigurationItemCreate {
+// AddIncomingRelations adds the "incoming_relations" edges to the CIRelationship entity.
+func (cic *ConfigurationItemCreate) AddIncomingRelations(c ...*CIRelationship) *ConfigurationItemCreate {
 	ids := make([]int, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
-	return cic.AddChildRelationIDs(ids...)
+	return cic.AddIncomingRelationIDs(ids...)
 }
 
 // Mutation returns the ConfigurationItemMutation object of the builder.
@@ -813,12 +813,12 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := cic.mutation.ParentRelationsIDs(); len(nodes) > 0 {
+	if nodes := cic.mutation.OutgoingRelationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ParentRelationsTable,
-			Columns: []string{configurationitem.ParentRelationsColumn},
+			Table:   configurationitem.OutgoingRelationsTable,
+			Columns: []string{configurationitem.OutgoingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),
@@ -829,12 +829,12 @@ func (cic *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := cic.mutation.ChildRelationsIDs(); len(nodes) > 0 {
+	if nodes := cic.mutation.IncomingRelationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   configurationitem.ChildRelationsTable,
-			Columns: []string{configurationitem.ChildRelationsColumn},
+			Table:   configurationitem.IncomingRelationsTable,
+			Columns: []string{configurationitem.IncomingRelationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt),

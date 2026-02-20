@@ -33,7 +33,7 @@ import {
   AssignRecommendation,
   AutoAssignResponse,
 } from '@/lib/api/ticket-assignment-api';
-import { message } from 'antd';
+import { App } from 'antd';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -50,6 +50,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
   onCancel,
   onSuccess,
 }) => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<AssignRecommendation[]>([]);
   const [autoAssigning, setAutoAssigning] = useState(false);
@@ -175,7 +176,7 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
               renderItem={(item, index) => (
                 <List.Item
                   actions={[
-                    <Button type='primary' onClick={() => handleSelectAssignee(item.user_id)}>
+                    <Button key="select" type='primary' onClick={() => handleSelectAssignee(item.user_id)}>
                       选择
                     </Button>,
                   ]}

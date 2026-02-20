@@ -1,5 +1,5 @@
 import React from 'react';
-import ServiceRequestList from '@/modules/service-request/components/ServiceRequestList';
+import ServiceRequestList from '@/components/service-request/ServiceRequestList';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {

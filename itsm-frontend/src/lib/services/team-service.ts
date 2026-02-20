@@ -1,5 +1,5 @@
 import { httpClient } from '@/lib/api/http-client';
-import { User } from '@/app/lib/api-config'; // Reuse User interface if possible, or define local
+import { User } from '@/lib/api/api-config'; // Reuse User interface if possible, or define local
 
 export interface Team {
   id: number;

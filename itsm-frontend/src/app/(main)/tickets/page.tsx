@@ -88,7 +88,7 @@ export default function TicketsPage() {
               <Title level={2} style={{ marginBottom: 0 }}>
                 工单管理
               </Title>
-              <Text type='secondary'>全功能工单管理系统 - 支持列表、看板、分析多种视图</Text>
+              <Text type='secondary'>统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA监控与智能分派</Text>
             </div>
             <Space>
               <Button
@@ -163,7 +163,7 @@ export default function TicketsPage() {
       <div className='w-full px-6 py-6'>
         {/* 功能提示 */}
         <Alert
-          message='工单管理功能已全面升级'
+          title='工单管理功能已全面升级'
           description='现在支持列表视图、看板视图、高级搜索、统计分析等完整功能，提供更高效的工单管理体验。'
           type='success'
           showIcon

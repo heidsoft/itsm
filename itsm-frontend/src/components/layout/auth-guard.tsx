@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../app/lib/store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { usePermissions, useRoutePermissions } from '@/lib/hooks/use-permissions';
 import { RoutePermission } from '@/lib/router/route-config';
 

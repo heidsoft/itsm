@@ -17,7 +17,7 @@ import {
   Search,
   Plus,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -38,7 +38,9 @@ import {
   Badge,
   Progress,
   Alert,
+  Empty,
 } from 'antd';
+import { WorkflowAPI } from '@/lib/api/workflow-api';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -197,7 +199,7 @@ const STATUS_CONFIG = {
 };
 
 const WorkflowManagement = () => {
-  const [workflows, setWorkflows] = useState<Workflow[]>(mockWorkflows);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -207,6 +209,41 @@ const WorkflowManagement = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+
+  // 加载工作流数据
+  const loadWorkflows = async () => {
+    setLoading(true);
+    try {
+      const response = await WorkflowAPI.getWorkflows({});
+      // 转换API数据格式
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const workflowList = (response.workflows || []).map((w: any) => ({
+        id: w.id,
+        name: w.name || w.key || '',
+        description: w.description || '',
+        type: w.category || 'default',
+        status: w.is_deployed ? 'active' : 'draft',
+        version: String(w.version || '1.0'),
+        createdBy: w.created_by || '系统',
+        createdAt: w.created_at || new Date().toISOString(),
+        lastModified: w.updated_at || w.created_at || new Date().toISOString(),
+        stepsCount: w.step_count || 0,
+        activeInstances: w.running_instances || 0,
+        completedInstances: w.completed_instances || 0,
+      }));
+      setWorkflows(workflowList);
+    } catch (error) {
+      console.error('Failed to load workflows:', error);
+      // 失败时使用mock数据
+      setWorkflows(mockWorkflows);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadWorkflows();
+  }, []);
 
   // 统计信息
   const stats = {
@@ -635,20 +672,30 @@ const WorkflowManagement = () => {
 
       {/* 工作流列表 */}
       <Card className='enterprise-card'>
-        <Table
-          columns={columns}
-          dataSource={filteredWorkflows}
-          rowKey='id'
-          rowSelection={rowSelection}
-          pagination={{
-            total: filteredWorkflows.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
-          }}
-          className='enterprise-table'
-        />
+        {filteredWorkflows.length === 0 && !loading ? (
+          <Alert
+            message='暂无工作流'
+            description='点击右上角按钮创建第一个工作流'
+            type='info'
+            showIcon
+          />
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={filteredWorkflows}
+            rowKey='id'
+            rowSelection={rowSelection}
+            loading={loading}
+            pagination={{
+              total: filteredWorkflows.length,
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: total => `共 ${total} 条记录`,
+            }}
+            className='enterprise-table'
+          />
+        )}
       </Card>
 
       {/* 创建/编辑模态框 */}

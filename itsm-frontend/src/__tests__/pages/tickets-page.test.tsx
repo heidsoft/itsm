@@ -38,9 +38,10 @@ jest.mock('antd', () => {
     ),
     Table: ({ columns, dataSource }: { columns?: unknown[]; dataSource?: unknown[] }) => (
       <div data-testid='table'>
-        {dataSource?.map((item: { ticket_number: string }) => (
-          <div key={item.ticket_number}>{item.ticket_number}</div>
-        ))}
+        {dataSource?.map((item: unknown) => {
+          const ticket = item as { ticket_number: string };
+          return <div key={ticket.ticket_number}>{ticket.ticket_number}</div>;
+        })}
       </div>
     ),
   };

@@ -763,6 +763,29 @@ func HasProcessInstancesWith(preds ...predicate.ProcessInstance) predicate.Proce
 	})
 }
 
+// HasBindings applies the HasEdge predicate on the "bindings" edge.
+func HasBindings() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, BindingsTable, BindingsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasBindingsWith applies the HasEdge predicate on the "bindings" edge with a given conditions (other predicates).
+func HasBindingsWith(preds ...predicate.ProcessBinding) predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := newBindingsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasDeployment applies the HasEdge predicate on the "deployment" edge.
 func HasDeployment() predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(func(s *sql.Selector) {

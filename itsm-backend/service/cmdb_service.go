@@ -57,8 +57,8 @@ func (s *CMDBService) GetCI(ctx context.Context, id int) (*ent.ConfigurationItem
 	return s.client.ConfigurationItem.
 		Query().
 		Where(configurationitem.ID(id)).
-		WithParentRelations().
-		WithChildRelations().
+		WithOutgoingRelations().
+		WithIncomingRelations().
 		Only(ctx)
 }
 
@@ -86,15 +86,32 @@ func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.
 func (s *CMDBService) CreateRelationship(ctx context.Context, req *CreateRelationshipRequest) (*ent.CIRelationship, error) {
 	create := s.client.CIRelationship.
 		Create().
-		SetType(req.Type).
-		SetParentID(req.ParentID).
-		SetChildID(req.ChildID)
-	
+		SetRelationshipType(req.Type).
+		SetSourceCiID(req.ParentID).
+		SetTargetCiID(req.ChildID)
+
 	if req.Description != nil {
 		create = create.SetDescription(*req.Description)
 	}
-	
+
 	return create.Save(ctx)
+}
+
+// ListRelationships 获取CI关系列表
+func (s *CMDBService) ListRelationships(ctx context.Context, tenantID int, ciID *int) ([]*ent.CIRelationship, error) {
+	query := s.client.CIRelationship.Query()
+
+	if ciID != nil {
+		// 如果指定了CIID，查询与该CI相关的所有关系
+		query = query.Where(
+			cirelationship.Or(
+				cirelationship.SourceCiID(*ciID),
+				cirelationship.TargetCiID(*ciID),
+			),
+		)
+	}
+
+	return query.All(ctx)
 }
 
 // GetCITopology 获取CI拓扑
@@ -103,25 +120,25 @@ func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*
 	if err != nil {
 		return nil, err
 	}
-	
+
 	topology := &CITopology{
 		CI: ci,
 		Children: make([]*CITopology, 0),
 	}
-	
+
 	if depth > 0 {
 		children, err := s.client.CIRelationship.
 			Query().
-			Where(cirelationship.ParentID(ciID)).
-			WithChild().
+			Where(cirelationship.SourceCiID(ciID)).
+			WithTargetCi().
 			All(ctx)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		for _, rel := range children {
-			if rel.Edges.Child != nil {
-				childTopology, err := s.GetCITopology(ctx, rel.Edges.Child.ID, depth-1)
+			if rel.Edges.TargetCi != nil {
+				childTopology, err := s.GetCITopology(ctx, rel.Edges.TargetCi.ID, depth-1)
 				if err != nil {
 					continue
 				}

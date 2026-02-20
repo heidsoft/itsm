@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="ticket_general_flow" name="通用工单流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">ticket</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">通用工单处理流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：工单创建 -->
+    <bpmn:startEvent id="StartEvent_1" name="工单创建">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 任务分配 -->
+    <bpmn:userTask id="Activity_Assign" name="任务分配" instantiate="false">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">assign</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Approval</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 处理任务 -->
+    <bpmn:userTask id="Activity_Handle" name="工单处理">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_status</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 升级判断网关 -->
+    <bpmn:exclusiveGateway id="Gateway_Escalate" name="是否需要升级?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Resolve</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 升级处理 -->
+    <bpmn:userTask id="Activity_Escalate" name="升级处理">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">escalate</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 解决工单 -->
+    <bpmn:userTask id="Activity_Resolve" name="解决工单">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_status</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Resolve</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 通知请求人 -->
+    <bpmn:serviceTask id="Activity_NotifyRequester" name="通知请求人" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">notify_requester</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 结束事件：工单关闭 -->
+    <bpmn:endEvent id="EndEvent_1" name="工单关闭">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 审批判断 -->
+    <bpmn:exclusiveGateway id="Gateway_Approval" name="是否需要审批?">
+      <bpmn:incoming>Flow_Approval</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApprovalTask</bpmn:outgoing>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 审批任务 -->
+    <bpmn:userTask id="Activity_Approval" name="工单审批">
+      <bpmn:incoming>Flow_ApprovalTask</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApprovalResult</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+      <bpmn:incoming>Flow_ApprovalResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 驳回到处理 -->
+    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_ApprovalResult" targetRef="Activity_Handle" />
+
+    <!-- 连线定义 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Assign" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Assign" targetRef="Activity_Handle" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Handle" targetRef="Gateway_Escalate" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_Escalate" targetRef="Activity_Escalate">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['need_escalate'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Resolve" sourceRef="Gateway_Escalate" targetRef="Activity_Resolve">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <bpmn:body>${variables['need_escalate'] != true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Resolve" targetRef="Activity_NotifyRequester" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Activity_NotifyRequester" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="Flow_Approval" sourceRef="Activity_Assign" targetRef="Gateway_Approval" />
+    <bpmn:sequenceFlow id="Flow_ApprovalTask" sourceRef="Gateway_Approval" targetRef="Activity_Approval" />
+    <bpmn:sequenceFlow id="Flow_ApprovalResult" sourceRef="Activity_Approval" targetRef="Gateway_ApprovalResult" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ticket_general_flow">
+      <!-- 省略DI定义 -->
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,6 +1,6 @@
 'use client';
 
-import SLADetail from '@/modules/sla/components/SLADetail';
+import SLADetail from '@/components/sla/SLADetail';
 
 export default function SLADetailPage() {
     return <SLADetail />;

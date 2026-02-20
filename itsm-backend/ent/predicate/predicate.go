@@ -78,6 +78,9 @@ type IncidentRuleExecution func(*sql.Selector)
 // KnowledgeArticle is the predicate function for knowledgearticle builders.
 type KnowledgeArticle func(*sql.Selector)
 
+// KnowledgeArticleLike is the predicate function for knowledgearticlelike builders.
+type KnowledgeArticleLike func(*sql.Selector)
+
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 
@@ -90,11 +93,17 @@ type Notification func(*sql.Selector)
 // NotificationPreference is the predicate function for notificationpreference builders.
 type NotificationPreference func(*sql.Selector)
 
+// PasswordResetToken is the predicate function for passwordresettoken builders.
+type PasswordResetToken func(*sql.Selector)
+
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
 
 // Problem is the predicate function for problem builders.
 type Problem func(*sql.Selector)
+
+// ProcessBinding is the predicate function for processbinding builders.
+type ProcessBinding func(*sql.Selector)
 
 // ProcessDefinition is the predicate function for processdefinition builders.
 type ProcessDefinition func(*sql.Selector)

@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
@@ -26,6 +27,7 @@ type ProcessDefinitionQuery struct {
 	inters               []Interceptor
 	predicates           []predicate.ProcessDefinition
 	withProcessInstances *ProcessInstanceQuery
+	withBindings         *ProcessBindingQuery
 	withDeployment       *ProcessDeploymentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -78,6 +80,28 @@ func (pdq *ProcessDefinitionQuery) QueryProcessInstances() *ProcessInstanceQuery
 			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, selector),
 			sqlgraph.To(processinstance.Table, processinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.ProcessInstancesTable, processdefinition.ProcessInstancesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBindings chains the current query on the "bindings" edge.
+func (pdq *ProcessDefinitionQuery) QueryBindings() *ProcessBindingQuery {
+	query := (&ProcessBindingClient{config: pdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, selector),
+			sqlgraph.To(processbinding.Table, processbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, processdefinition.BindingsTable, processdefinition.BindingsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
 		return fromU, nil
@@ -300,6 +324,7 @@ func (pdq *ProcessDefinitionQuery) Clone() *ProcessDefinitionQuery {
 		inters:               append([]Interceptor{}, pdq.inters...),
 		predicates:           append([]predicate.ProcessDefinition{}, pdq.predicates...),
 		withProcessInstances: pdq.withProcessInstances.Clone(),
+		withBindings:         pdq.withBindings.Clone(),
 		withDeployment:       pdq.withDeployment.Clone(),
 		// clone intermediate query.
 		sql:  pdq.sql.Clone(),
@@ -315,6 +340,17 @@ func (pdq *ProcessDefinitionQuery) WithProcessInstances(opts ...func(*ProcessIns
 		opt(query)
 	}
 	pdq.withProcessInstances = query
+	return pdq
+}
+
+// WithBindings tells the query-builder to eager-load the nodes that are connected to
+// the "bindings" edge. The optional arguments are used to configure the query builder of the edge.
+func (pdq *ProcessDefinitionQuery) WithBindings(opts ...func(*ProcessBindingQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessBindingClient{config: pdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pdq.withBindings = query
 	return pdq
 }
 
@@ -407,8 +443,9 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	var (
 		nodes       = []*ProcessDefinition{}
 		_spec       = pdq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			pdq.withProcessInstances != nil,
+			pdq.withBindings != nil,
 			pdq.withDeployment != nil,
 		}
 	)
@@ -436,6 +473,13 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			func(n *ProcessDefinition, e *ProcessInstance) {
 				n.Edges.ProcessInstances = append(n.Edges.ProcessInstances, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := pdq.withBindings; query != nil {
+		if err := pdq.loadBindings(ctx, query, nodes,
+			func(n *ProcessDefinition) { n.Edges.Bindings = []*ProcessBinding{} },
+			func(n *ProcessDefinition, e *ProcessBinding) { n.Edges.Bindings = append(n.Edges.Bindings, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -475,6 +519,67 @@ func (pdq *ProcessDefinitionQuery) loadProcessInstances(ctx context.Context, que
 			return fmt.Errorf(`unexpected referenced foreign-key "process_definition_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (pdq *ProcessDefinitionQuery) loadBindings(ctx context.Context, query *ProcessBindingQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessBinding)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*ProcessDefinition)
+	nids := make(map[int]map[*ProcessDefinition]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(processdefinition.BindingsTable)
+		s.Join(joinT).On(s.C(processbinding.FieldID), joinT.C(processdefinition.BindingsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(processdefinition.BindingsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(processdefinition.BindingsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*ProcessDefinition]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*ProcessBinding](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "bindings" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
 	}
 	return nil
 }

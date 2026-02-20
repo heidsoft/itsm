@@ -24,16 +24,16 @@ import (
 // ConfigurationItemQuery is the builder for querying ConfigurationItem entities.
 type ConfigurationItemQuery struct {
 	config
-	ctx                  *QueryContext
-	order                []configurationitem.OrderOption
-	inters               []Interceptor
-	predicates           []predicate.ConfigurationItem
-	withCiTypeRef        *CITypeQuery
-	withCloudResourceRef *CloudResourceQuery
-	withTickets          *TicketQuery
-	withIncidents        *IncidentQuery
-	withParentRelations  *CIRelationshipQuery
-	withChildRelations   *CIRelationshipQuery
+	ctx                   *QueryContext
+	order                 []configurationitem.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.ConfigurationItem
+	withCiTypeRef         *CITypeQuery
+	withCloudResourceRef  *CloudResourceQuery
+	withTickets           *TicketQuery
+	withIncidents         *IncidentQuery
+	withOutgoingRelations *CIRelationshipQuery
+	withIncomingRelations *CIRelationshipQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -158,8 +158,8 @@ func (ciq *ConfigurationItemQuery) QueryIncidents() *IncidentQuery {
 	return query
 }
 
-// QueryParentRelations chains the current query on the "parent_relations" edge.
-func (ciq *ConfigurationItemQuery) QueryParentRelations() *CIRelationshipQuery {
+// QueryOutgoingRelations chains the current query on the "outgoing_relations" edge.
+func (ciq *ConfigurationItemQuery) QueryOutgoingRelations() *CIRelationshipQuery {
 	query := (&CIRelationshipClient{config: ciq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := ciq.prepareQuery(ctx); err != nil {
@@ -172,7 +172,7 @@ func (ciq *ConfigurationItemQuery) QueryParentRelations() *CIRelationshipQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ParentRelationsTable, configurationitem.ParentRelationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationsTable, configurationitem.OutgoingRelationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
 		return fromU, nil
@@ -180,8 +180,8 @@ func (ciq *ConfigurationItemQuery) QueryParentRelations() *CIRelationshipQuery {
 	return query
 }
 
-// QueryChildRelations chains the current query on the "child_relations" edge.
-func (ciq *ConfigurationItemQuery) QueryChildRelations() *CIRelationshipQuery {
+// QueryIncomingRelations chains the current query on the "incoming_relations" edge.
+func (ciq *ConfigurationItemQuery) QueryIncomingRelations() *CIRelationshipQuery {
 	query := (&CIRelationshipClient{config: ciq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := ciq.prepareQuery(ctx); err != nil {
@@ -194,7 +194,7 @@ func (ciq *ConfigurationItemQuery) QueryChildRelations() *CIRelationshipQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ChildRelationsTable, configurationitem.ChildRelationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncomingRelationsTable, configurationitem.IncomingRelationsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
 		return fromU, nil
@@ -389,17 +389,17 @@ func (ciq *ConfigurationItemQuery) Clone() *ConfigurationItemQuery {
 		return nil
 	}
 	return &ConfigurationItemQuery{
-		config:               ciq.config,
-		ctx:                  ciq.ctx.Clone(),
-		order:                append([]configurationitem.OrderOption{}, ciq.order...),
-		inters:               append([]Interceptor{}, ciq.inters...),
-		predicates:           append([]predicate.ConfigurationItem{}, ciq.predicates...),
-		withCiTypeRef:        ciq.withCiTypeRef.Clone(),
-		withCloudResourceRef: ciq.withCloudResourceRef.Clone(),
-		withTickets:          ciq.withTickets.Clone(),
-		withIncidents:        ciq.withIncidents.Clone(),
-		withParentRelations:  ciq.withParentRelations.Clone(),
-		withChildRelations:   ciq.withChildRelations.Clone(),
+		config:                ciq.config,
+		ctx:                   ciq.ctx.Clone(),
+		order:                 append([]configurationitem.OrderOption{}, ciq.order...),
+		inters:                append([]Interceptor{}, ciq.inters...),
+		predicates:            append([]predicate.ConfigurationItem{}, ciq.predicates...),
+		withCiTypeRef:         ciq.withCiTypeRef.Clone(),
+		withCloudResourceRef:  ciq.withCloudResourceRef.Clone(),
+		withTickets:           ciq.withTickets.Clone(),
+		withIncidents:         ciq.withIncidents.Clone(),
+		withOutgoingRelations: ciq.withOutgoingRelations.Clone(),
+		withIncomingRelations: ciq.withIncomingRelations.Clone(),
 		// clone intermediate query.
 		sql:  ciq.sql.Clone(),
 		path: ciq.path,
@@ -450,25 +450,25 @@ func (ciq *ConfigurationItemQuery) WithIncidents(opts ...func(*IncidentQuery)) *
 	return ciq
 }
 
-// WithParentRelations tells the query-builder to eager-load the nodes that are connected to
-// the "parent_relations" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithParentRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
+// WithOutgoingRelations tells the query-builder to eager-load the nodes that are connected to
+// the "outgoing_relations" edge. The optional arguments are used to configure the query builder of the edge.
+func (ciq *ConfigurationItemQuery) WithOutgoingRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
 	query := (&CIRelationshipClient{config: ciq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withParentRelations = query
+	ciq.withOutgoingRelations = query
 	return ciq
 }
 
-// WithChildRelations tells the query-builder to eager-load the nodes that are connected to
-// the "child_relations" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithChildRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
+// WithIncomingRelations tells the query-builder to eager-load the nodes that are connected to
+// the "incoming_relations" edge. The optional arguments are used to configure the query builder of the edge.
+func (ciq *ConfigurationItemQuery) WithIncomingRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
 	query := (&CIRelationshipClient{config: ciq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withChildRelations = query
+	ciq.withIncomingRelations = query
 	return ciq
 }
 
@@ -555,8 +555,8 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			ciq.withCloudResourceRef != nil,
 			ciq.withTickets != nil,
 			ciq.withIncidents != nil,
-			ciq.withParentRelations != nil,
-			ciq.withChildRelations != nil,
+			ciq.withOutgoingRelations != nil,
+			ciq.withIncomingRelations != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -603,20 +603,20 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			return nil, err
 		}
 	}
-	if query := ciq.withParentRelations; query != nil {
-		if err := ciq.loadParentRelations(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.ParentRelations = []*CIRelationship{} },
+	if query := ciq.withOutgoingRelations; query != nil {
+		if err := ciq.loadOutgoingRelations(ctx, query, nodes,
+			func(n *ConfigurationItem) { n.Edges.OutgoingRelations = []*CIRelationship{} },
 			func(n *ConfigurationItem, e *CIRelationship) {
-				n.Edges.ParentRelations = append(n.Edges.ParentRelations, e)
+				n.Edges.OutgoingRelations = append(n.Edges.OutgoingRelations, e)
 			}); err != nil {
 			return nil, err
 		}
 	}
-	if query := ciq.withChildRelations; query != nil {
-		if err := ciq.loadChildRelations(ctx, query, nodes,
-			func(n *ConfigurationItem) { n.Edges.ChildRelations = []*CIRelationship{} },
+	if query := ciq.withIncomingRelations; query != nil {
+		if err := ciq.loadIncomingRelations(ctx, query, nodes,
+			func(n *ConfigurationItem) { n.Edges.IncomingRelations = []*CIRelationship{} },
 			func(n *ConfigurationItem, e *CIRelationship) {
-				n.Edges.ChildRelations = append(n.Edges.ChildRelations, e)
+				n.Edges.IncomingRelations = append(n.Edges.IncomingRelations, e)
 			}); err != nil {
 			return nil, err
 		}
@@ -804,7 +804,7 @@ func (ciq *ConfigurationItemQuery) loadIncidents(ctx context.Context, query *Inc
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadParentRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
+func (ciq *ConfigurationItemQuery) loadOutgoingRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ConfigurationItem)
 	for i := range nodes {
@@ -815,26 +815,26 @@ func (ciq *ConfigurationItemQuery) loadParentRelations(ctx context.Context, quer
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(cirelationship.FieldParentID)
+		query.ctx.AppendFieldOnce(cirelationship.FieldSourceCiID)
 	}
 	query.Where(predicate.CIRelationship(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.ParentRelationsColumn), fks...))
+		s.Where(sql.InValues(s.C(configurationitem.OutgoingRelationsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.ParentID
+		fk := n.SourceCiID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "parent_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "source_ci_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadChildRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
+func (ciq *ConfigurationItemQuery) loadIncomingRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ConfigurationItem)
 	for i := range nodes {
@@ -845,20 +845,20 @@ func (ciq *ConfigurationItemQuery) loadChildRelations(ctx context.Context, query
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(cirelationship.FieldChildID)
+		query.ctx.AppendFieldOnce(cirelationship.FieldTargetCiID)
 	}
 	query.Where(predicate.CIRelationship(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(configurationitem.ChildRelationsColumn), fks...))
+		s.Where(sql.InValues(s.C(configurationitem.IncomingRelationsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.ChildID
+		fk := n.TargetCiID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "child_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "target_ci_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

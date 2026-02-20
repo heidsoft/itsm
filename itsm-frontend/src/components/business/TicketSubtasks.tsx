@@ -178,7 +178,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
         <div>
           <div className='font-medium'>{text}</div>
           <div className='text-xs text-gray-500'>
-            #{record.ticket_number || record.id}
+            #{record.ticketNumber || record.id}
           </div>
         </div>
       ),
@@ -287,8 +287,8 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
     return (
       <div className='space-y-4'>
         {subtasks.map(subtask => {
-          const startDate = subtask.created_at
-            ? new Date(subtask.created_at)
+          const startDate = subtask.createdAt
+            ? new Date(subtask.createdAt)
             : new Date();
           const endDate = subtask.due_date
             ? new Date(subtask.due_date)
@@ -368,8 +368,8 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                 </div>
                 <div className='text-right'>
                   <div className='text-sm text-gray-500'>
-                    {subtask.created_at &&
-                      format(new Date(subtask.created_at), 'yyyy-MM-dd HH:mm')}
+                    {subtask.createdAt &&
+                      format(new Date(subtask.createdAt), 'yyyy-MM-dd HH:mm')}
                   </div>
                   {subtask.due_date && (
                     <div className='text-xs text-gray-400'>

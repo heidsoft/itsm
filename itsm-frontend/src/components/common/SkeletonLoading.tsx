@@ -174,7 +174,7 @@ export const ChartSkeleton: React.FC<{ height?: number }> = ({ height = 300 }) =
  */
 export const DashboardSkeleton: React.FC = () => {
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Space orientation="vertical" style={{ width: '100%' }} size="large">
       {/* 统计卡片 */}
       <StatCardSkeleton count={4} />
 

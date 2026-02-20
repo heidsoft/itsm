@@ -19,12 +19,12 @@ import (
 // CIRelationshipQuery is the builder for querying CIRelationship entities.
 type CIRelationshipQuery struct {
 	config
-	ctx        *QueryContext
-	order      []cirelationship.OrderOption
-	inters     []Interceptor
-	predicates []predicate.CIRelationship
-	withParent *ConfigurationItemQuery
-	withChild  *ConfigurationItemQuery
+	ctx          *QueryContext
+	order        []cirelationship.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.CIRelationship
+	withSourceCi *ConfigurationItemQuery
+	withTargetCi *ConfigurationItemQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,8 +61,8 @@ func (crq *CIRelationshipQuery) Order(o ...cirelationship.OrderOption) *CIRelati
 	return crq
 }
 
-// QueryParent chains the current query on the "parent" edge.
-func (crq *CIRelationshipQuery) QueryParent() *ConfigurationItemQuery {
+// QuerySourceCi chains the current query on the "source_ci" edge.
+func (crq *CIRelationshipQuery) QuerySourceCi() *ConfigurationItemQuery {
 	query := (&ConfigurationItemClient{config: crq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := crq.prepareQuery(ctx); err != nil {
@@ -75,7 +75,7 @@ func (crq *CIRelationshipQuery) QueryParent() *ConfigurationItemQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, selector),
 			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.ParentTable, cirelationship.ParentColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.SourceCiTable, cirelationship.SourceCiColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(crq.driver.Dialect(), step)
 		return fromU, nil
@@ -83,8 +83,8 @@ func (crq *CIRelationshipQuery) QueryParent() *ConfigurationItemQuery {
 	return query
 }
 
-// QueryChild chains the current query on the "child" edge.
-func (crq *CIRelationshipQuery) QueryChild() *ConfigurationItemQuery {
+// QueryTargetCi chains the current query on the "target_ci" edge.
+func (crq *CIRelationshipQuery) QueryTargetCi() *ConfigurationItemQuery {
 	query := (&ConfigurationItemClient{config: crq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := crq.prepareQuery(ctx); err != nil {
@@ -97,7 +97,7 @@ func (crq *CIRelationshipQuery) QueryChild() *ConfigurationItemQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, selector),
 			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.ChildTable, cirelationship.ChildColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.TargetCiTable, cirelationship.TargetCiColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(crq.driver.Dialect(), step)
 		return fromU, nil
@@ -292,38 +292,38 @@ func (crq *CIRelationshipQuery) Clone() *CIRelationshipQuery {
 		return nil
 	}
 	return &CIRelationshipQuery{
-		config:     crq.config,
-		ctx:        crq.ctx.Clone(),
-		order:      append([]cirelationship.OrderOption{}, crq.order...),
-		inters:     append([]Interceptor{}, crq.inters...),
-		predicates: append([]predicate.CIRelationship{}, crq.predicates...),
-		withParent: crq.withParent.Clone(),
-		withChild:  crq.withChild.Clone(),
+		config:       crq.config,
+		ctx:          crq.ctx.Clone(),
+		order:        append([]cirelationship.OrderOption{}, crq.order...),
+		inters:       append([]Interceptor{}, crq.inters...),
+		predicates:   append([]predicate.CIRelationship{}, crq.predicates...),
+		withSourceCi: crq.withSourceCi.Clone(),
+		withTargetCi: crq.withTargetCi.Clone(),
 		// clone intermediate query.
 		sql:  crq.sql.Clone(),
 		path: crq.path,
 	}
 }
 
-// WithParent tells the query-builder to eager-load the nodes that are connected to
-// the "parent" edge. The optional arguments are used to configure the query builder of the edge.
-func (crq *CIRelationshipQuery) WithParent(opts ...func(*ConfigurationItemQuery)) *CIRelationshipQuery {
+// WithSourceCi tells the query-builder to eager-load the nodes that are connected to
+// the "source_ci" edge. The optional arguments are used to configure the query builder of the edge.
+func (crq *CIRelationshipQuery) WithSourceCi(opts ...func(*ConfigurationItemQuery)) *CIRelationshipQuery {
 	query := (&ConfigurationItemClient{config: crq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	crq.withParent = query
+	crq.withSourceCi = query
 	return crq
 }
 
-// WithChild tells the query-builder to eager-load the nodes that are connected to
-// the "child" edge. The optional arguments are used to configure the query builder of the edge.
-func (crq *CIRelationshipQuery) WithChild(opts ...func(*ConfigurationItemQuery)) *CIRelationshipQuery {
+// WithTargetCi tells the query-builder to eager-load the nodes that are connected to
+// the "target_ci" edge. The optional arguments are used to configure the query builder of the edge.
+func (crq *CIRelationshipQuery) WithTargetCi(opts ...func(*ConfigurationItemQuery)) *CIRelationshipQuery {
 	query := (&ConfigurationItemClient{config: crq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	crq.withChild = query
+	crq.withTargetCi = query
 	return crq
 }
 
@@ -333,12 +333,12 @@ func (crq *CIRelationshipQuery) WithChild(opts ...func(*ConfigurationItemQuery))
 // Example:
 //
 //	var v []struct {
-//		Type string `json:"type,omitempty"`
+//		RelationshipType string `json:"relationship_type,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.CIRelationship.Query().
-//		GroupBy(cirelationship.FieldType).
+//		GroupBy(cirelationship.FieldRelationshipType).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (crq *CIRelationshipQuery) GroupBy(field string, fields ...string) *CIRelationshipGroupBy {
@@ -356,11 +356,11 @@ func (crq *CIRelationshipQuery) GroupBy(field string, fields ...string) *CIRelat
 // Example:
 //
 //	var v []struct {
-//		Type string `json:"type,omitempty"`
+//		RelationshipType string `json:"relationship_type,omitempty"`
 //	}
 //
 //	client.CIRelationship.Query().
-//		Select(cirelationship.FieldType).
+//		Select(cirelationship.FieldRelationshipType).
 //		Scan(ctx, &v)
 func (crq *CIRelationshipQuery) Select(fields ...string) *CIRelationshipSelect {
 	crq.ctx.Fields = append(crq.ctx.Fields, fields...)
@@ -406,8 +406,8 @@ func (crq *CIRelationshipQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 		nodes       = []*CIRelationship{}
 		_spec       = crq.querySpec()
 		loadedTypes = [2]bool{
-			crq.withParent != nil,
-			crq.withChild != nil,
+			crq.withSourceCi != nil,
+			crq.withTargetCi != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -428,26 +428,26 @@ func (crq *CIRelationshipQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := crq.withParent; query != nil {
-		if err := crq.loadParent(ctx, query, nodes, nil,
-			func(n *CIRelationship, e *ConfigurationItem) { n.Edges.Parent = e }); err != nil {
+	if query := crq.withSourceCi; query != nil {
+		if err := crq.loadSourceCi(ctx, query, nodes, nil,
+			func(n *CIRelationship, e *ConfigurationItem) { n.Edges.SourceCi = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := crq.withChild; query != nil {
-		if err := crq.loadChild(ctx, query, nodes, nil,
-			func(n *CIRelationship, e *ConfigurationItem) { n.Edges.Child = e }); err != nil {
+	if query := crq.withTargetCi; query != nil {
+		if err := crq.loadTargetCi(ctx, query, nodes, nil,
+			func(n *CIRelationship, e *ConfigurationItem) { n.Edges.TargetCi = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (crq *CIRelationshipQuery) loadParent(ctx context.Context, query *ConfigurationItemQuery, nodes []*CIRelationship, init func(*CIRelationship), assign func(*CIRelationship, *ConfigurationItem)) error {
+func (crq *CIRelationshipQuery) loadSourceCi(ctx context.Context, query *ConfigurationItemQuery, nodes []*CIRelationship, init func(*CIRelationship), assign func(*CIRelationship, *ConfigurationItem)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*CIRelationship)
 	for i := range nodes {
-		fk := nodes[i].ParentID
+		fk := nodes[i].SourceCiID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -464,7 +464,7 @@ func (crq *CIRelationshipQuery) loadParent(ctx context.Context, query *Configura
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "parent_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "source_ci_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -472,11 +472,11 @@ func (crq *CIRelationshipQuery) loadParent(ctx context.Context, query *Configura
 	}
 	return nil
 }
-func (crq *CIRelationshipQuery) loadChild(ctx context.Context, query *ConfigurationItemQuery, nodes []*CIRelationship, init func(*CIRelationship), assign func(*CIRelationship, *ConfigurationItem)) error {
+func (crq *CIRelationshipQuery) loadTargetCi(ctx context.Context, query *ConfigurationItemQuery, nodes []*CIRelationship, init func(*CIRelationship), assign func(*CIRelationship, *ConfigurationItem)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*CIRelationship)
 	for i := range nodes {
-		fk := nodes[i].ChildID
+		fk := nodes[i].TargetCiID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -493,7 +493,7 @@ func (crq *CIRelationshipQuery) loadChild(ctx context.Context, query *Configurat
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "child_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "target_ci_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -527,11 +527,11 @@ func (crq *CIRelationshipQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if crq.withParent != nil {
-			_spec.Node.AddColumnOnce(cirelationship.FieldParentID)
+		if crq.withSourceCi != nil {
+			_spec.Node.AddColumnOnce(cirelationship.FieldSourceCiID)
 		}
-		if crq.withChild != nil {
-			_spec.Node.AddColumnOnce(cirelationship.FieldChildID)
+		if crq.withTargetCi != nil {
+			_spec.Node.AddColumnOnce(cirelationship.FieldTargetCiID)
 		}
 	}
 	if ps := crq.predicates; len(ps) > 0 {

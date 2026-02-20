@@ -207,7 +207,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
               allowClear
               showSearch
               filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
               }
             >
               {/* 这里应该从API获取用户列表 */}

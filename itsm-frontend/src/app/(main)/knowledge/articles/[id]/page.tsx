@@ -1,6 +1,6 @@
 'use client';
 
-import ArticleDetail from '@/modules/knowledge/components/ArticleDetail';
+import ArticleDetail from '@/components/knowledge/ArticleDetail';
 
 export default function ArticleDetailPage() {
     return <ArticleDetail />;

@@ -591,10 +591,15 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
 
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>关联类型</label>
-            <Select value={associationType} onChange={setAssociationType} style={{ width: '100%' }}>
-              <Select.Option value='manual'>手动关联</Select.Option>
-              <Select.Option value='suggested'>建议关联</Select.Option>
-            </Select>
+            <Select
+              value={associationType}
+              onChange={setAssociationType}
+              style={{ width: '100%' }}
+              options={[
+                { value: 'manual', label: '手动关联' },
+                { value: 'suggested', label: '建议关联' },
+              ]}
+            />
           </div>
 
           <div className='text-sm text-gray-500'>

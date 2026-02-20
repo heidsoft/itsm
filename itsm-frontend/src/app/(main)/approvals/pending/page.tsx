@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Space, Button, Table, Tag, message } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Card, Space, Button, Table, Tag, message, Empty } from 'antd';
+import { ReloadOutlined, CheckCircleOutlined } from '@ant-design/icons';
 
 import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
 
@@ -71,18 +71,29 @@ export default function PendingApprovalsPage() {
         </Card>
 
         <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-          <Table<ServiceRequest>
-            rowKey="id"
-            loading={loading}
-            dataSource={rows}
-            pagination={{
-              current: page,
-              pageSize: size,
-              total,
-              showSizeChanger: true,
-              onChange: (p, s) => load(p, s),
-            }}
-            columns={[
+          {rows.length === 0 && !loading ? (
+            <Empty
+              description='暂无待审批事项'
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
+              <div className="text-center">
+                <CheckCircleOutlined className="text-4xl text-green-500 mb-4" />
+                <p className="text-gray-500">所有审批事项已处理完成</p>
+              </div>
+            </Empty>
+          ) : (
+            <Table<ServiceRequest>
+              rowKey="id"
+              loading={loading}
+              dataSource={rows}
+              pagination={{
+                current: page,
+                pageSize: size,
+                total,
+                showSizeChanger: true,
+                onChange: (p, s) => load(p, s),
+              }}
+              columns={[
               {
                 title: 'ID',
                 dataIndex: 'id',
@@ -122,7 +133,8 @@ export default function PendingApprovalsPage() {
                 ),
               },
             ]}
-          />
+            />
+          )}
         </Card>
       </Space>
     </div>

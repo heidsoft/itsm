@@ -131,3 +131,75 @@ func (ac *AuthController) Logout(c *gin.Context) {
 
 	common.Success(c, nil)
 }
+
+// Register 用户注册接口
+func (ac *AuthController) Register(c *gin.Context) {
+	var req dto.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "参数错误: "+err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+	response, err := ac.authService.Register(ctx, &req)
+	if err != nil {
+		common.AuthFailed(c, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// ForgotPassword 忘记密码接口
+func (ac *AuthController) ForgotPassword(c *gin.Context) {
+	var req dto.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "参数错误: "+err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+	response, err := ac.authService.ForgotPassword(ctx, &req)
+	if err != nil {
+		common.AuthFailed(c, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// ResetPassword 重置密码接口
+func (ac *AuthController) ResetPassword(c *gin.Context) {
+	var req dto.PasswordResetRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "参数错误: "+err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+	response, err := ac.authService.ResetPassword(ctx, &req)
+	if err != nil {
+		common.AuthFailed(c, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}
+
+// ValidateResetToken 验证重置令牌接口
+func (ac *AuthController) ValidateResetToken(c *gin.Context) {
+	var req dto.ValidateResetTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "参数错误: "+err.Error())
+		return
+	}
+
+	ctx := c.Request.Context()
+	response, err := ac.authService.ValidateResetToken(ctx, &req)
+	if err != nil {
+		common.AuthFailed(c, err.Error())
+		return
+	}
+
+	common.Success(c, response)
+}

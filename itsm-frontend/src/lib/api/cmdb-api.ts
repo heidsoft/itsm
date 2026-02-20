@@ -98,6 +98,23 @@ export class CMDBApi {
   }
 
   /**
+   * 获取CI影响分析 (新端点)
+   */
+  static async getCIImpactAnalysis(id: number): Promise<any> {
+    return httpClient.get(`/api/v1/configuration-items/${id}/impact-analysis`);
+  }
+
+  /**
+   * 获取CI变更历史 (新端点)
+   */
+  static async getCIChangeHistory(
+    id: number,
+    params?: { page?: number; page_size?: number }
+  ): Promise<any> {
+    return httpClient.get(`/api/v1/configuration-items/${id}/change-history`, params);
+  }
+
+  /**
    * 创建CI关系 (新端点)
    */
   static async createCIRelationship(data: {
@@ -144,7 +161,7 @@ export class CMDBApi {
    */
   static async updateCI(
     id: string,
-    request: Partial<CreateCIRequest>
+    request: Partial<CreateCIRequest> & Record<string, any>
   ): Promise<ConfigurationItem> {
     return httpClient.put(`/api/v1/cmdb/cis/${id}`, request);
   }
@@ -204,16 +221,6 @@ export class CMDBApi {
    */
   static async getCITypes(): Promise<any> {
     return this.getCMDBTypes();
-  }
-
-  /**
-   * 获取CI变更历史
-   */
-  static async getCIChangeHistory(
-    ciId: string,
-    params?: Record<string, unknown>
-  ): Promise<any> {
-    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/changes`, params);
   }
 
   /**
@@ -307,6 +314,80 @@ export class CMDBApi {
       }
     }
     return results;
+  }
+
+  // ==================== 云服务相关（兼容旧代码） ====================
+
+  /**
+   * 获取云服务列表
+   */
+  static async getCloudServices(provider?: string): Promise<any[]> {
+    return httpClient.get('/api/v1/cmdb/cloud-services', provider ? { provider } : undefined);
+  }
+
+  /**
+   * 获取云资源列表
+   */
+  static async getCloudResources(params?: any): Promise<any> {
+    return httpClient.get('/api/v1/cmdb/cloud-resources', params);
+  }
+
+  /**
+   * 获取云账号列表
+   */
+  static async getCloudAccounts(): Promise<any[]> {
+    return httpClient.get('/api/v1/cmdb/cloud-accounts');
+  }
+
+  /**
+   * 创建云账号
+   */
+  static async createCloudAccount(data: any): Promise<any> {
+    return httpClient.post('/api/v1/cmdb/cloud-accounts', data);
+  }
+
+  /**
+   * 删除云账号
+   */
+  static async deleteCloudAccount(id: string): Promise<void> {
+    return httpClient.delete(`/api/v1/cmdb/cloud-accounts/${id}`);
+  }
+
+  /**
+   * 创建云服务
+   */
+  static async createCloudService(data: any): Promise<any> {
+    return httpClient.post('/api/v1/cmdb/cloud-services', data);
+  }
+
+  /**
+   * 获取对账结果
+   */
+  static async getReconciliationResults(params?: any): Promise<any> {
+    return httpClient.get('/api/v1/cmdb/reconciliation', params);
+  }
+
+  /**
+   * 运行对账
+   */
+  static async runReconciliation(params?: any): Promise<any> {
+    return httpClient.post('/api/v1/cmdb/reconciliation/run', params);
+  }
+
+  // ==================== 兼容别名（旧代码使用） ====================
+
+  /** @deprecated 使用 getCITypes */
+  static getTypes = this.getCITypes;
+
+  /** @deprecated 使用 getReconciliationResults */
+  static getReconciliation = this.getReconciliationResults;
+
+  /** @deprecated 使用 getCIs */
+  static get cis() {
+    return {
+      list: (params?: any) => this.getCIs(params),
+      items: (params?: any) => this.getCIs(params).then((r: any) => r.cis || r.items || []),
+    };
   }
 }
 

@@ -1,0 +1,256 @@
+name: Automated Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'tests/**'
+      - '**.py'
+  pull_request:
+    paths:
+      - 'tests/**'
+      - '**.py'
+  schedule:
+    # 每天凌晨2点运行回归测试
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test Type'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - api
+          - ui
+          - database
+
+env:
+  ITSM_API_URL:8080
+  http://localhost: ITSM_UI_URL: http://localhost:3000
+  ITSM_DB_HOST: localhost
+  ITSM_DB_PORT: 5432
+  ITSM_DB_NAME: itsm
+  ITSM_DB_USER: postgres
+  ITSM_DB_PASSWORD: password
+
+jobs:
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: itsm
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('tests/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install -r tests/requirements.txt
+
+      - name: Start backend service
+        run: |
+          cd itsm-backend
+          # 启动后端服务用于测试
+          timeout 30s ./itsm &
+          sleep 10
+
+      - name: Run API Tests
+        run: |
+          cd tests
+          python -m pytest api/ -v --tb=short -m "not slow"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-reports
+          path: tests/reports/
+          retention-days: 30
+
+  database-tests:
+    name: Database Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: itsm
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install psycopg2-binary pytest pytest-html
+
+      - name: Run Database Tests
+        run: |
+          cd tests
+          python -m pytest database/ -v --tb=short
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-test-reports
+          path: tests/reports/
+          retention-days: 30
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    if: false  # 需要前端服务运行，暂时禁用
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: itsm
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r tests/requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Start services
+        run: |
+          # 启动前端服务
+          cd itsm-frontend
+          npm run dev &
+          sleep 30
+
+      - name: Run UI Tests
+        run: |
+          cd tests
+          python -m pytest ui/ -v --tb=short -m "not slow"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-reports
+          path: tests/reports/
+          retention-days: 30
+
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [api-tests, database-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest requests psycopg2-binary pytest-html
+
+      - name: Run Smoke Tests
+        run: |
+          cd tests
+          python -m pytest -v -m "smoke" --tb=short
+
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "## Test Summary" >> $GITHUB_ST          echo "- API Tests: CompletedEP_SUMMARY
+" >> $GITHUB_STEP_SUMMARY
+          echo "- Database Tests: Completed" >> $GITHUB_STEP_SUMMARY
+
+  test-report:
+    name: Test Report
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [api-tests, database-tests, ui-tests, smoke-tests]
+
+    steps:
+      - name: Download all test reports
+        uses: actions/download-artifact@v4
+        with:
+          path: test-reports
+
+      - name: Generate Test Summary
+        run: |
+          echo "## Automated Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| API Tests | ${{ needs.api-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Database Tests | ${{ needs.database-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UI Tests | ${{ needs.ui-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Smoke Tests | ${{ needs.smoke-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload combined reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-test-reports
+          path: test-reports/
+          retention-days: 90

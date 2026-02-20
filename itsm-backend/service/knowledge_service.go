@@ -6,6 +6,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"strings"
 
 	"go.uber.org/zap"
@@ -179,7 +180,7 @@ func (ks *KnowledgeService) GetCategories(ctx context.Context, tenantID int) ([]
 	return categories, nil
 }
 
-// LikeArticle 点赞知识库文章
+// LikeArticle 点赞/取消点赞知识库文章
 func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantID int) error {
 	// 检查文章是否存在
 	exist, err := ks.client.KnowledgeArticle.Query().
@@ -188,7 +189,7 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 			knowledgearticle.TenantID(tenantID),
 		).
 		Exist(ctx)
-	
+
 	if err != nil {
 		return fmt.Errorf("检查文章失败: %w", err)
 	}
@@ -196,9 +197,86 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 		return fmt.Errorf("文章不存在")
 	}
 
-	// 由于 Schema 中暂时没有 LikeCount 字段，这里仅记录日志
-	// TODO: 在 Schema 中添加 LikeCount 字段和 UserLike 关联表
-	ks.logger.Infof("用户 %d 点赞了文章 %d", userID, id)
-	
+	// 检查用户是否已经点赞
+	existingLike, err := ks.client.KnowledgeArticleLike.Query().
+		Where(
+			knowledgearticlelike.ArticleID(id),
+			knowledgearticlelike.UserID(userID),
+			knowledgearticlelike.TenantID(tenantID),
+		).
+		Only(ctx)
+
+	if err != nil && !ent.IsNotFound(err) {
+		return fmt.Errorf("检查点赞状态失败: %w", err)
+	}
+
+	// 如果已经点赞，则取消点赞
+	if existingLike != nil {
+		// 删除点赞记录
+		err = ks.client.KnowledgeArticleLike.DeleteOne(existingLike).Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("取消点赞失败: %w", err)
+		}
+
+		// 减少点赞数
+		_, err = ks.client.KnowledgeArticle.UpdateOneID(id).
+			AddLikeCount(-1).
+			Save(ctx)
+		if err != nil {
+			ks.logger.Warnw("Failed to decrement like count", "article_id", id, "error", err)
+		}
+
+		ks.logger.Infow("User unliked article", "user_id", userID, "article_id", id)
+		return nil
+	}
+
+	// 如果未点赞，则添加点赞
+	_, err = ks.client.KnowledgeArticleLike.Create().
+		SetArticleID(id).
+		SetUserID(userID).
+		SetTenantID(tenantID).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("创建点赞记录失败: %w", err)
+	}
+
+	// 增加点赞数
+	_, err = ks.client.KnowledgeArticle.UpdateOneID(id).
+		AddLikeCount(1).
+		Save(ctx)
+	if err != nil {
+		ks.logger.Warnw("Failed to increment like count", "article_id", id, "error", err)
+	}
+
+	ks.logger.Infow("User liked article", "user_id", userID, "article_id", id)
 	return nil
+}
+
+// GetLikeStatus 获取用户对文章的点赞状态
+func (ks *KnowledgeService) GetLikeStatus(ctx context.Context, articleID, userID, tenantID int) (bool, error) {
+	exist, err := ks.client.KnowledgeArticleLike.Query().
+		Where(
+			knowledgearticlelike.ArticleID(articleID),
+			knowledgearticlelike.UserID(userID),
+			knowledgearticlelike.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return false, fmt.Errorf("检查点赞状态失败: %w", err)
+	}
+	return exist, nil
+}
+
+// GetLikeCount 获取文章的点赞数
+func (ks *KnowledgeService) GetLikeCount(ctx context.Context, articleID, tenantID int) (int, error) {
+	article, err := ks.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("获取文章失败: %w", err)
+	}
+	return article.LikeCount, nil
 }

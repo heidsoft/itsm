@@ -3,18 +3,22 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/processinstance"
 
 	"go.uber.org/zap"
 )
 
 // ChangeService 变更管理服务
 type ChangeService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client               *ent.Client
+	logger               *zap.SugaredLogger
+	processTriggerService ProcessTriggerServiceInterface
+	approvalService      *ApprovalService
 }
 
 // NewChangeService 创建变更管理服务
@@ -25,6 +29,16 @@ func NewChangeService(client *ent.Client, logger *zap.SugaredLogger) *ChangeServ
 	}
 }
 
+// SetProcessTriggerService 设置流程触发服务
+func (s *ChangeService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
+	s.processTriggerService = triggerService
+}
+
+// SetApprovalService 设置审批服务
+func (s *ChangeService) SetApprovalService(approvalSvc *ApprovalService) {
+	s.approvalService = approvalSvc
+}
+
 // CreateChange 创建变更
 func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeRequest, createdBy, tenantID int) (*dto.ChangeResponse, error) {
 	// 创建变更记录
@@ -32,11 +46,11 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetJustification(req.Justification).
-		SetType(string(req.Type)).
+		SetType(req.Type).
 		SetStatus(string(dto.ChangeStatusDraft)).
-		SetPriority(string(req.Priority)).
-		SetImpactScope(string(req.ImpactScope)).
-		SetRiskLevel(string(req.RiskLevel)).
+		SetPriority(req.Priority).
+		SetImpactScope(req.ImpactScope).
+		SetRiskLevel(req.RiskLevel).
 		SetCreatedBy(createdBy).
 		SetTenantID(tenantID).
 		SetImplementationPlan(req.ImplementationPlan).
@@ -55,14 +69,6 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		_, err = changeEntity.Update().SetAffectedCis(req.AffectedCIs).Save(ctx)
 		if err != nil {
 			s.logger.Warnw("Failed to set affected CIs", "error", err, "change_id", changeEntity.ID)
-		}
-	}
-
-	// 设置相关工单
-	if len(req.RelatedTickets) > 0 {
-		_, err = changeEntity.Update().SetRelatedTickets(req.RelatedTickets).Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to set related tickets", "error", err, "change_id", changeEntity.ID)
 		}
 	}
 
@@ -102,6 +108,42 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	// 设置相关工单
 	if len(changeEntity.RelatedTickets) > 0 {
 		response.RelatedTickets = changeEntity.RelatedTickets
+	}
+
+	// 触发审批流程（对于紧急或高风险变更）
+	if s.approvalService != nil && (string(req.Priority) == "urgent" || string(req.RiskLevel) == "high" || string(req.RiskLevel) == "critical") {
+		go func() {
+			approvalCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			// 生成变更编号
+			changeNumber := fmt.Sprintf("CHG-%s-%06d", time.Now().Format("200602"), changeEntity.ID)
+			approvalReq := &ApprovalTriggerRequest{
+				TicketID:     changeEntity.ID,
+				TicketNumber: changeNumber,
+				TicketTitle:  changeEntity.Title,
+				TicketType:   "change",
+				Priority:     string(req.Priority),
+				RequesterID:  createdBy,
+				TenantID:     tenantID,
+			}
+			records, err := s.approvalService.TriggerApproval(approvalCtx, approvalReq)
+			if err != nil {
+				s.logger.Warnw("Failed to trigger approval for change", "error", err, "change_id", changeEntity.ID)
+			} else if len(records) > 0 {
+				s.logger.Infow("Approval triggered for change", "change_id", changeEntity.ID, "approval_records", len(records))
+			}
+		}()
+	}
+
+	// 触发BPMN工作流（异步执行，不阻塞变更创建）
+	if s.processTriggerService != nil {
+		go func() {
+			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.triggerWorkflowForChange(workflowCtx, changeEntity.ID, tenantID); err != nil {
+				s.logger.Warnw("Failed to trigger workflow for change", "error", err, "change_id", changeEntity.ID)
+			}
+		}()
 	}
 
 	s.logger.Infow("Change created successfully", "change_id", changeEntity.ID, "tenant_id", tenantID)
@@ -472,4 +514,109 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 
 	s.logger.Infow("Change status updated successfully", "change_id", id, "status", status, "tenant_id", tenantID)
 	return nil
+}
+
+// triggerWorkflowForChange 为变更触发工作流
+func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID int, tenantID int) error {
+	// 获取变更信息
+	ch, err := s.client.Change.Get(ctx, changeID)
+	if err != nil {
+		return fmt.Errorf("failed to get change: %w", err)
+	}
+
+	// 构建流程变量
+	variables := map[string]interface{}{
+		"change_id":      ch.ID,
+		"title":         ch.Title,
+		"description":   ch.Description,
+		"type":          ch.Type,
+		"priority":      ch.Priority,
+		"status":        ch.Status,
+		"impact_scope":  ch.ImpactScope,
+		"risk_level":    ch.RiskLevel,
+		"created_by":    ch.CreatedBy,
+		"assignee_id":   ch.AssigneeID,
+	}
+
+	// 根据变更类型选择不同的流程
+	processKey := "change_normal_flow"
+	if ch.Type == "emergency" {
+		processKey = "change_emergency_flow"
+	}
+
+	// 触发流程
+	triggerReq := &dto.ProcessTriggerRequest{
+		BusinessType:         dto.BusinessTypeChange,
+		BusinessID:        changeID,
+		ProcessDefinitionKey: processKey,
+		Variables:         variables,
+		TriggeredBy:      fmt.Sprintf("%d", ch.CreatedBy),
+		TriggeredAt:       time.Now(),
+		TenantID:         tenantID,
+	}
+
+	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
+	if err != nil {
+		return fmt.Errorf("failed to trigger workflow: %w", err)
+	}
+
+	s.logger.Infow("Workflow triggered for change",
+		"change_id", changeID,
+		"process_instance_id", resp.ProcessInstanceID,
+		"process_key", processKey,
+	)
+
+	return nil
+}
+
+// GetWorkflowStatus 获取变更关联的流程状态
+func (s *ChangeService) GetWorkflowStatus(ctx context.Context, changeID int, tenantID int) (*dto.ProcessTriggerResponse, error) {
+	businessKey := fmt.Sprintf("change:%d", changeID)
+
+	processInstance, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+		).
+		WithDefinition().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("未找到变更关联的流程实例")
+		}
+		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+	}
+
+	processDefName := ""
+	if processInstance.Edges.Definition != nil {
+		processDefName = processInstance.Edges.Definition.Name
+	}
+
+	return &dto.ProcessTriggerResponse{
+		ProcessInstanceID:     processInstance.ID,
+		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
+		ProcessDefinitionName: processDefName,
+		BusinessKey:          processInstance.BusinessKey,
+		Status:               s.mapProcessStatus(processInstance.Status),
+		CurrentActivityID:     processInstance.CurrentActivityID,
+		CurrentActivityName:   processInstance.CurrentActivityName,
+		StartTime:            processInstance.StartTime,
+		EndTime:              &processInstance.EndTime,
+	}, nil
+}
+
+// mapProcessStatus 映射流程状态
+func (s *ChangeService) mapProcessStatus(status string) dto.ProcessStatus {
+	switch status {
+	case "running", "active":
+		return dto.ProcessStatusRunning
+	case "completed":
+		return dto.ProcessStatusCompleted
+	case "suspended":
+		return dto.ProcessStatusSuspended
+	case "terminated", "cancelled":
+		return dto.ProcessStatusTerminated
+	default:
+		return dto.ProcessStatusPending
+	}
 }

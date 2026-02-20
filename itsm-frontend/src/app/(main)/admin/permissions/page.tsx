@@ -14,7 +14,7 @@ import {
   Search,
 } from 'lucide-react';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -37,6 +37,7 @@ import {
   Tabs,
   Tree,
 } from 'antd';
+import { RoleAPI } from '@/lib/api/role-api';
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -242,6 +243,27 @@ const PermissionConfiguration = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<'card' | 'tree'>('card');
+  const [loading, setLoading] = useState(false);
+
+  // 加载权限数据
+  const loadPermissions = async () => {
+    setLoading(true);
+    try {
+      const permissions = await RoleAPI.getPermissions();
+      // 如果API返回权限列表，可以用来更新配置
+      if (permissions && permissions.length > 0) {
+        console.log('Loaded permissions from API:', permissions);
+      }
+    } catch (error) {
+      console.error('Failed to load permissions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPermissions();
+  }, []);
 
   // 过滤模块
   const filteredModules = permissionConfig.modules.filter(module => {

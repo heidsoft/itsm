@@ -96,23 +96,9 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 
 	newVersionNumber := currentVersion + 1
 
-	// 创建新的流程定义
-	processDef, err := s.client.ProcessDefinition.Create().
-		SetKey(req.ProcessDefinitionKey).
-		SetName(req.Name).
-		SetDescription(req.Description).
-		SetBpmnXML([]byte(req.BPMNXML)).                 // BPMNXML是[]byte类型
-		SetVersion(fmt.Sprintf("%d", newVersionNumber)). // Version是string类型
-		SetTenantID(req.TenantID).
-		SetIsActive(false). // 新版本默认不激活
-		Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("创建流程定义失败: %w", err)
-	}
-
-	// 创建部署记录 - ProcessDeployment没有ProcessDefinitionID字段
+	// 先创建部署记录（因为ProcessDefinition需要deployment_id）
 	deployment, err := s.client.ProcessDeployment.Create().
-		SetDeploymentID(fmt.Sprintf("%s-v%d", req.ProcessDefinitionKey, newVersionNumber)). // 使用deployment_id字段
+		SetDeploymentID(fmt.Sprintf("%s-v%d", req.ProcessDefinitionKey, newVersionNumber)).
 		SetDeploymentName(fmt.Sprintf("%s v%d", req.Name, newVersionNumber)).
 		SetDeploymentTime(time.Now()).
 		SetTenantID(req.TenantID).
@@ -120,6 +106,21 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建部署记录失败: %w", err)
+	}
+
+	// 使用部署ID创建流程定义
+	processDef, err := s.client.ProcessDefinition.Create().
+		SetKey(req.ProcessDefinitionKey).
+		SetName(req.Name).
+		SetDescription(req.Description).
+		SetBpmnXML([]byte(req.BPMNXML)).
+		SetVersion(fmt.Sprintf("%d", newVersionNumber)).
+		SetTenantID(req.TenantID).
+		SetIsActive(false).
+		SetDeploymentID(deployment.ID).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
 
 	// 记录版本变更日志 - processDef.ID是int类型

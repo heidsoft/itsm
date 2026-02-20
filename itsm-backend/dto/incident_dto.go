@@ -8,6 +8,7 @@ import (
 type CreateIncidentRequest struct {
 	Title               string                 `json:"title" binding:"required" example:"服务器CPU使用率过高"`
 	Description         string                 `json:"description" example:"生产环境Web服务器CPU使用率持续超过90%"`
+	Type                string                 `json:"type" example:"incident"` // 事件类型
 	Priority            string                 `json:"priority" example:"high"`
 	Severity            string                 `json:"severity" example:"high"`
 	Category            string                 `json:"category" example:"performance"`

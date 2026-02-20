@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Button, Tooltip, message } from 'antd';
+import { Button, Tooltip, App } from 'antd';
 import {
   Save,
   PlayCircle,
@@ -37,6 +37,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   readOnly = false,
   height = 600,
 }) => {
+  const { message } = App.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const modelerRef = useRef<BpmnModeler | null>(null);
   const [currentXML, setCurrentXML] = useState(xml);

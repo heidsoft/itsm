@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="problem_management_flow" name="问题管理流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">problem</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">问题管理全流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：问题创建 -->
+    <bpmn:startEvent id="StartEvent_1" name="问题创建">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 问题记录 -->
+    <bpmn:userTask id="Activity_Record" name="问题记录">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 分类和优先级 -->
+    <bpmn:userTask id="Activity_Classify" name="问题分类">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 调查与分析 -->
+    <bpmn:userTask id="Activity_Investigate" name="调查分析">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 根因分析 -->
+    <bpmn:userTask id="Activity_RootCause" name="根因分析">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 解决方案网关 -->
+    <bpmn:exclusiveGateway id="Gateway_Solution" name="找到解决方案?">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KB</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 制定解决方案 -->
+    <bpmn:userTask id="Activity_Solution" name="制定解决方案">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 评估解决方案 -->
+    <bpmn:userTask id="Activity_Evaluate" name="评估方案">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批解决方案 -->
+    <bpmn:userTask id="Activity_SolutionApproval" name="方案审批">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_SolutionResult" name="审批通过?">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Solution</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 实施解决方案 -->
+    <bpmn:userTask id="Activity_Implement" name="实施解决">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证解决 -->
+    <bpmn:userTask id="Activity_Verify" name="验证解决">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证成功?">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_KB</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Solution</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 知识库更新 -->
+    <bpmn:serviceTask id="Activity_KnowledgeBase" name="更新知识库" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_kb</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_KB</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 关闭问题 -->
+    <bpmn:userTask id="Activity_Close" name="问题关闭">
+      <bpmn:incoming>Flow_Close</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_1" name="问题关闭">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Record" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Record" targetRef="Activity_Classify" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Classify" targetRef="Activity_Investigate" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Investigate" targetRef="Activity_RootCause" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_RootCause" targetRef="Gateway_Solution" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Gateway_Solution" targetRef="Activity_Solution">
+      <bpmn:conditionExpression><![CDATA[${variables['solution_found'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_KB" sourceRef="Gateway_Solution" targetRef="Activity_KnowledgeBase">
+      <bpmn:conditionExpression><![CDATA[${variables['solution_found'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Solution" sourceRef="Gateway_Solution" targetRef="Activity_Solution" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Activity_Solution" targetRef="Activity_Evaluate" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Activity_Evaluate" targetRef="Activity_SolutionApproval" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Activity_SolutionApproval" targetRef="Gateway_SolutionResult" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Gateway_SolutionResult" targetRef="Activity_Implement">
+      <bpmn:conditionExpression><![CDATA[${variables['solution_approved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SolutionResult" sourceRef="Gateway_SolutionResult" targetRef="Activity_Solution" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Activity_Implement" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Activity_Verify" targetRef="Gateway_VerifyResult" />
+    <bpmn:sequenceFlow id="Flow_Close" sourceRef="Gateway_VerifyResult" targetRef="Activity_KnowledgeBase">
+      <bpmn:conditionExpression><![CDATA[${variables['verified'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Close" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>

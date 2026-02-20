@@ -27,12 +27,15 @@ import (
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processexecutionhistory"
@@ -266,10 +269,28 @@ func init() {
 	ciattributedefinition.UpdateDefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	cirelationshipFields := schema.CIRelationship{}.Fields()
 	_ = cirelationshipFields
+	// cirelationshipDescRelationshipType is the schema descriptor for relationship_type field.
+	cirelationshipDescRelationshipType := cirelationshipFields[0].Descriptor()
+	// cirelationship.RelationshipTypeValidator is a validator for the "relationship_type" field. It is called by the builders before save.
+	cirelationship.RelationshipTypeValidator = cirelationshipDescRelationshipType.Validators[0].(func(string) error)
+	// cirelationshipDescIsActive is the schema descriptor for is_active field.
+	cirelationshipDescIsActive := cirelationshipFields[5].Descriptor()
+	// cirelationship.DefaultIsActive holds the default value on creation for the is_active field.
+	cirelationship.DefaultIsActive = cirelationshipDescIsActive.Default.(bool)
+	// cirelationshipDescIsDiscovered is the schema descriptor for is_discovered field.
+	cirelationshipDescIsDiscovered := cirelationshipFields[6].Descriptor()
+	// cirelationship.DefaultIsDiscovered holds the default value on creation for the is_discovered field.
+	cirelationship.DefaultIsDiscovered = cirelationshipDescIsDiscovered.Default.(bool)
 	// cirelationshipDescCreatedAt is the schema descriptor for created_at field.
-	cirelationshipDescCreatedAt := cirelationshipFields[4].Descriptor()
+	cirelationshipDescCreatedAt := cirelationshipFields[9].Descriptor()
 	// cirelationship.DefaultCreatedAt holds the default value on creation for the created_at field.
 	cirelationship.DefaultCreatedAt = cirelationshipDescCreatedAt.Default.(func() time.Time)
+	// cirelationshipDescUpdatedAt is the schema descriptor for updated_at field.
+	cirelationshipDescUpdatedAt := cirelationshipFields[10].Descriptor()
+	// cirelationship.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cirelationship.DefaultUpdatedAt = cirelationshipDescUpdatedAt.Default.(func() time.Time)
+	// cirelationship.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cirelationship.UpdateDefaultUpdatedAt = cirelationshipDescUpdatedAt.UpdateDefault.(func() time.Time)
 	citypeFields := schema.CIType{}.Fields()
 	_ = citypeFields
 	// citypeDescName is the schema descriptor for name field.
@@ -610,48 +631,52 @@ func init() {
 	incidentDescStatus := incidentFields[2].Descriptor()
 	// incident.DefaultStatus holds the default value on creation for the status field.
 	incident.DefaultStatus = incidentDescStatus.Default.(string)
+	// incidentDescType is the schema descriptor for type field.
+	incidentDescType := incidentFields[3].Descriptor()
+	// incident.DefaultType holds the default value on creation for the type field.
+	incident.DefaultType = incidentDescType.Default.(string)
 	// incidentDescPriority is the schema descriptor for priority field.
-	incidentDescPriority := incidentFields[3].Descriptor()
+	incidentDescPriority := incidentFields[4].Descriptor()
 	// incident.DefaultPriority holds the default value on creation for the priority field.
 	incident.DefaultPriority = incidentDescPriority.Default.(string)
 	// incidentDescSeverity is the schema descriptor for severity field.
-	incidentDescSeverity := incidentFields[4].Descriptor()
+	incidentDescSeverity := incidentFields[5].Descriptor()
 	// incident.DefaultSeverity holds the default value on creation for the severity field.
 	incident.DefaultSeverity = incidentDescSeverity.Default.(string)
 	// incidentDescIncidentNumber is the schema descriptor for incident_number field.
-	incidentDescIncidentNumber := incidentFields[5].Descriptor()
+	incidentDescIncidentNumber := incidentFields[6].Descriptor()
 	// incident.IncidentNumberValidator is a validator for the "incident_number" field. It is called by the builders before save.
 	incident.IncidentNumberValidator = incidentDescIncidentNumber.Validators[0].(func(string) error)
 	// incidentDescReporterID is the schema descriptor for reporter_id field.
-	incidentDescReporterID := incidentFields[6].Descriptor()
+	incidentDescReporterID := incidentFields[7].Descriptor()
 	// incident.ReporterIDValidator is a validator for the "reporter_id" field. It is called by the builders before save.
 	incident.ReporterIDValidator = incidentDescReporterID.Validators[0].(func(int) error)
 	// incidentDescDetectedAt is the schema descriptor for detected_at field.
-	incidentDescDetectedAt := incidentFields[14].Descriptor()
+	incidentDescDetectedAt := incidentFields[15].Descriptor()
 	// incident.DefaultDetectedAt holds the default value on creation for the detected_at field.
 	incident.DefaultDetectedAt = incidentDescDetectedAt.Default.(func() time.Time)
 	// incidentDescEscalationLevel is the schema descriptor for escalation_level field.
-	incidentDescEscalationLevel := incidentFields[18].Descriptor()
+	incidentDescEscalationLevel := incidentFields[19].Descriptor()
 	// incident.DefaultEscalationLevel holds the default value on creation for the escalation_level field.
 	incident.DefaultEscalationLevel = incidentDescEscalationLevel.Default.(int)
 	// incidentDescIsAutomated is the schema descriptor for is_automated field.
-	incidentDescIsAutomated := incidentFields[19].Descriptor()
+	incidentDescIsAutomated := incidentFields[20].Descriptor()
 	// incident.DefaultIsAutomated holds the default value on creation for the is_automated field.
 	incident.DefaultIsAutomated = incidentDescIsAutomated.Default.(bool)
 	// incidentDescSource is the schema descriptor for source field.
-	incidentDescSource := incidentFields[20].Descriptor()
+	incidentDescSource := incidentFields[21].Descriptor()
 	// incident.DefaultSource holds the default value on creation for the source field.
 	incident.DefaultSource = incidentDescSource.Default.(string)
 	// incidentDescTenantID is the schema descriptor for tenant_id field.
-	incidentDescTenantID := incidentFields[22].Descriptor()
+	incidentDescTenantID := incidentFields[23].Descriptor()
 	// incident.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	incident.TenantIDValidator = incidentDescTenantID.Validators[0].(func(int) error)
 	// incidentDescCreatedAt is the schema descriptor for created_at field.
-	incidentDescCreatedAt := incidentFields[23].Descriptor()
+	incidentDescCreatedAt := incidentFields[24].Descriptor()
 	// incident.DefaultCreatedAt holds the default value on creation for the created_at field.
 	incident.DefaultCreatedAt = incidentDescCreatedAt.Default.(func() time.Time)
 	// incidentDescUpdatedAt is the schema descriptor for updated_at field.
-	incidentDescUpdatedAt := incidentFields[24].Descriptor()
+	incidentDescUpdatedAt := incidentFields[25].Descriptor()
 	// incident.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	incident.DefaultUpdatedAt = incidentDescUpdatedAt.Default.(func() time.Time)
 	// incident.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -858,16 +883,42 @@ func init() {
 	knowledgearticleDescIsPublished := knowledgearticleFields[6].Descriptor()
 	// knowledgearticle.DefaultIsPublished holds the default value on creation for the is_published field.
 	knowledgearticle.DefaultIsPublished = knowledgearticleDescIsPublished.Default.(bool)
+	// knowledgearticleDescViewCount is the schema descriptor for view_count field.
+	knowledgearticleDescViewCount := knowledgearticleFields[7].Descriptor()
+	// knowledgearticle.DefaultViewCount holds the default value on creation for the view_count field.
+	knowledgearticle.DefaultViewCount = knowledgearticleDescViewCount.Default.(int)
+	// knowledgearticleDescLikeCount is the schema descriptor for like_count field.
+	knowledgearticleDescLikeCount := knowledgearticleFields[8].Descriptor()
+	// knowledgearticle.DefaultLikeCount holds the default value on creation for the like_count field.
+	knowledgearticle.DefaultLikeCount = knowledgearticleDescLikeCount.Default.(int)
 	// knowledgearticleDescCreatedAt is the schema descriptor for created_at field.
-	knowledgearticleDescCreatedAt := knowledgearticleFields[7].Descriptor()
+	knowledgearticleDescCreatedAt := knowledgearticleFields[9].Descriptor()
 	// knowledgearticle.DefaultCreatedAt holds the default value on creation for the created_at field.
 	knowledgearticle.DefaultCreatedAt = knowledgearticleDescCreatedAt.Default.(func() time.Time)
 	// knowledgearticleDescUpdatedAt is the schema descriptor for updated_at field.
-	knowledgearticleDescUpdatedAt := knowledgearticleFields[8].Descriptor()
+	knowledgearticleDescUpdatedAt := knowledgearticleFields[10].Descriptor()
 	// knowledgearticle.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	knowledgearticle.DefaultUpdatedAt = knowledgearticleDescUpdatedAt.Default.(func() time.Time)
 	// knowledgearticle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	knowledgearticle.UpdateDefaultUpdatedAt = knowledgearticleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	knowledgearticlelikeFields := schema.KnowledgeArticleLike{}.Fields()
+	_ = knowledgearticlelikeFields
+	// knowledgearticlelikeDescArticleID is the schema descriptor for article_id field.
+	knowledgearticlelikeDescArticleID := knowledgearticlelikeFields[0].Descriptor()
+	// knowledgearticlelike.ArticleIDValidator is a validator for the "article_id" field. It is called by the builders before save.
+	knowledgearticlelike.ArticleIDValidator = knowledgearticlelikeDescArticleID.Validators[0].(func(int) error)
+	// knowledgearticlelikeDescUserID is the schema descriptor for user_id field.
+	knowledgearticlelikeDescUserID := knowledgearticlelikeFields[1].Descriptor()
+	// knowledgearticlelike.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	knowledgearticlelike.UserIDValidator = knowledgearticlelikeDescUserID.Validators[0].(func(int) error)
+	// knowledgearticlelikeDescTenantID is the schema descriptor for tenant_id field.
+	knowledgearticlelikeDescTenantID := knowledgearticlelikeFields[2].Descriptor()
+	// knowledgearticlelike.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	knowledgearticlelike.TenantIDValidator = knowledgearticlelikeDescTenantID.Validators[0].(func(int) error)
+	// knowledgearticlelikeDescCreatedAt is the schema descriptor for created_at field.
+	knowledgearticlelikeDescCreatedAt := knowledgearticlelikeFields[3].Descriptor()
+	// knowledgearticlelike.DefaultCreatedAt holds the default value on creation for the created_at field.
+	knowledgearticlelike.DefaultCreatedAt = knowledgearticlelikeDescCreatedAt.Default.(func() time.Time)
 	messageFields := schema.Message{}.Fields()
 	_ = messageFields
 	// messageDescCreatedAt is the schema descriptor for created_at field.
@@ -990,6 +1041,20 @@ func init() {
 	notificationpreference.DefaultUpdatedAt = notificationpreferenceDescUpdatedAt.Default.(func() time.Time)
 	// notificationpreference.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	notificationpreference.UpdateDefaultUpdatedAt = notificationpreferenceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	passwordresettokenFields := schema.PasswordResetToken{}.Fields()
+	_ = passwordresettokenFields
+	// passwordresettokenDescToken is the schema descriptor for token field.
+	passwordresettokenDescToken := passwordresettokenFields[2].Descriptor()
+	// passwordresettoken.TokenValidator is a validator for the "token" field. It is called by the builders before save.
+	passwordresettoken.TokenValidator = passwordresettokenDescToken.Validators[0].(func(string) error)
+	// passwordresettokenDescUsed is the schema descriptor for used field.
+	passwordresettokenDescUsed := passwordresettokenFields[4].Descriptor()
+	// passwordresettoken.DefaultUsed holds the default value on creation for the used field.
+	passwordresettoken.DefaultUsed = passwordresettokenDescUsed.Default.(bool)
+	// passwordresettokenDescCreatedAt is the schema descriptor for created_at field.
+	passwordresettokenDescCreatedAt := passwordresettokenFields[5].Descriptor()
+	// passwordresettoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	passwordresettoken.DefaultCreatedAt = passwordresettokenDescCreatedAt.Default.(func() time.Time)
 	permissionFields := schema.Permission{}.Fields()
 	_ = permissionFields
 	// permissionDescCode is the schema descriptor for code field.
@@ -1054,6 +1119,46 @@ func init() {
 	problem.DefaultUpdatedAt = problemDescUpdatedAt.Default.(func() time.Time)
 	// problem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	problem.UpdateDefaultUpdatedAt = problemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processbindingFields := schema.ProcessBinding{}.Fields()
+	_ = processbindingFields
+	// processbindingDescBusinessType is the schema descriptor for business_type field.
+	processbindingDescBusinessType := processbindingFields[0].Descriptor()
+	// processbinding.BusinessTypeValidator is a validator for the "business_type" field. It is called by the builders before save.
+	processbinding.BusinessTypeValidator = processbindingDescBusinessType.Validators[0].(func(string) error)
+	// processbindingDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
+	processbindingDescProcessDefinitionKey := processbindingFields[2].Descriptor()
+	// processbinding.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
+	processbinding.ProcessDefinitionKeyValidator = processbindingDescProcessDefinitionKey.Validators[0].(func(string) error)
+	// processbindingDescProcessVersion is the schema descriptor for process_version field.
+	processbindingDescProcessVersion := processbindingFields[3].Descriptor()
+	// processbinding.DefaultProcessVersion holds the default value on creation for the process_version field.
+	processbinding.DefaultProcessVersion = processbindingDescProcessVersion.Default.(int)
+	// processbindingDescIsDefault is the schema descriptor for is_default field.
+	processbindingDescIsDefault := processbindingFields[4].Descriptor()
+	// processbinding.DefaultIsDefault holds the default value on creation for the is_default field.
+	processbinding.DefaultIsDefault = processbindingDescIsDefault.Default.(bool)
+	// processbindingDescPriority is the schema descriptor for priority field.
+	processbindingDescPriority := processbindingFields[5].Descriptor()
+	// processbinding.DefaultPriority holds the default value on creation for the priority field.
+	processbinding.DefaultPriority = processbindingDescPriority.Default.(int)
+	// processbindingDescIsActive is the schema descriptor for is_active field.
+	processbindingDescIsActive := processbindingFields[6].Descriptor()
+	// processbinding.DefaultIsActive holds the default value on creation for the is_active field.
+	processbinding.DefaultIsActive = processbindingDescIsActive.Default.(bool)
+	// processbindingDescTenantID is the schema descriptor for tenant_id field.
+	processbindingDescTenantID := processbindingFields[7].Descriptor()
+	// processbinding.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processbinding.TenantIDValidator = processbindingDescTenantID.Validators[0].(func(int) error)
+	// processbindingDescCreatedAt is the schema descriptor for created_at field.
+	processbindingDescCreatedAt := processbindingFields[8].Descriptor()
+	// processbinding.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processbinding.DefaultCreatedAt = processbindingDescCreatedAt.Default.(func() time.Time)
+	// processbindingDescUpdatedAt is the schema descriptor for updated_at field.
+	processbindingDescUpdatedAt := processbindingFields[9].Descriptor()
+	// processbinding.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processbinding.DefaultUpdatedAt = processbindingDescUpdatedAt.Default.(func() time.Time)
+	// processbinding.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processbinding.UpdateDefaultUpdatedAt = processbindingDescUpdatedAt.UpdateDefault.(func() time.Time)
 	processdefinitionFields := schema.ProcessDefinition{}.Fields()
 	_ = processdefinitionFields
 	// processdefinitionDescKey is the schema descriptor for key field.
@@ -1680,36 +1785,52 @@ func init() {
 	slaviolationDescSLADefinitionID := slaviolationFields[0].Descriptor()
 	// slaviolation.SLADefinitionIDValidator is a validator for the "sla_definition_id" field. It is called by the builders before save.
 	slaviolation.SLADefinitionIDValidator = slaviolationDescSLADefinitionID.Validators[0].(func(int) error)
+	// slaviolationDescTicketType is the schema descriptor for ticket_type field.
+	slaviolationDescTicketType := slaviolationFields[1].Descriptor()
+	// slaviolation.DefaultTicketType holds the default value on creation for the ticket_type field.
+	slaviolation.DefaultTicketType = slaviolationDescTicketType.Default.(string)
+	// slaviolationDescSLAName is the schema descriptor for sla_name field.
+	slaviolationDescSLAName := slaviolationFields[2].Descriptor()
+	// slaviolation.DefaultSLAName holds the default value on creation for the sla_name field.
+	slaviolation.DefaultSLAName = slaviolationDescSLAName.Default.(string)
 	// slaviolationDescTicketID is the schema descriptor for ticket_id field.
-	slaviolationDescTicketID := slaviolationFields[1].Descriptor()
+	slaviolationDescTicketID := slaviolationFields[3].Descriptor()
 	// slaviolation.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
 	slaviolation.TicketIDValidator = slaviolationDescTicketID.Validators[0].(func(int) error)
 	// slaviolationDescViolationType is the schema descriptor for violation_type field.
-	slaviolationDescViolationType := slaviolationFields[2].Descriptor()
+	slaviolationDescViolationType := slaviolationFields[4].Descriptor()
 	// slaviolation.ViolationTypeValidator is a validator for the "violation_type" field. It is called by the builders before save.
 	slaviolation.ViolationTypeValidator = slaviolationDescViolationType.Validators[0].(func(string) error)
 	// slaviolationDescViolationTime is the schema descriptor for violation_time field.
-	slaviolationDescViolationTime := slaviolationFields[3].Descriptor()
+	slaviolationDescViolationTime := slaviolationFields[5].Descriptor()
 	// slaviolation.DefaultViolationTime holds the default value on creation for the violation_time field.
 	slaviolation.DefaultViolationTime = slaviolationDescViolationTime.Default.(func() time.Time)
+	// slaviolationDescOverdueMinutes is the schema descriptor for overdue_minutes field.
+	slaviolationDescOverdueMinutes := slaviolationFields[8].Descriptor()
+	// slaviolation.DefaultOverdueMinutes holds the default value on creation for the overdue_minutes field.
+	slaviolation.DefaultOverdueMinutes = slaviolationDescOverdueMinutes.Default.(int)
+	// slaviolationDescStatus is the schema descriptor for status field.
+	slaviolationDescStatus := slaviolationFields[9].Descriptor()
+	// slaviolation.DefaultStatus holds the default value on creation for the status field.
+	slaviolation.DefaultStatus = slaviolationDescStatus.Default.(string)
 	// slaviolationDescSeverity is the schema descriptor for severity field.
-	slaviolationDescSeverity := slaviolationFields[5].Descriptor()
+	slaviolationDescSeverity := slaviolationFields[11].Descriptor()
 	// slaviolation.DefaultSeverity holds the default value on creation for the severity field.
 	slaviolation.DefaultSeverity = slaviolationDescSeverity.Default.(string)
 	// slaviolationDescIsResolved is the schema descriptor for is_resolved field.
-	slaviolationDescIsResolved := slaviolationFields[6].Descriptor()
+	slaviolationDescIsResolved := slaviolationFields[12].Descriptor()
 	// slaviolation.DefaultIsResolved holds the default value on creation for the is_resolved field.
 	slaviolation.DefaultIsResolved = slaviolationDescIsResolved.Default.(bool)
 	// slaviolationDescTenantID is the schema descriptor for tenant_id field.
-	slaviolationDescTenantID := slaviolationFields[9].Descriptor()
+	slaviolationDescTenantID := slaviolationFields[15].Descriptor()
 	// slaviolation.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	slaviolation.TenantIDValidator = slaviolationDescTenantID.Validators[0].(func(int) error)
 	// slaviolationDescCreatedAt is the schema descriptor for created_at field.
-	slaviolationDescCreatedAt := slaviolationFields[10].Descriptor()
+	slaviolationDescCreatedAt := slaviolationFields[16].Descriptor()
 	// slaviolation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	slaviolation.DefaultCreatedAt = slaviolationDescCreatedAt.Default.(func() time.Time)
 	// slaviolationDescUpdatedAt is the schema descriptor for updated_at field.
-	slaviolationDescUpdatedAt := slaviolationFields[11].Descriptor()
+	slaviolationDescUpdatedAt := slaviolationFields[17].Descriptor()
 	// slaviolation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	slaviolation.DefaultUpdatedAt = slaviolationDescUpdatedAt.Default.(func() time.Time)
 	// slaviolation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

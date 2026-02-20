@@ -2,6 +2,7 @@ package service
 
 import (
     "context"
+    "fmt"
     "time"
 
     "itsm-backend/dto"
@@ -115,5 +116,71 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
         Total:    total,
         Page:     req.Page,
         PageSize: req.PageSize,
+    }, nil
+}
+
+// GetCIAuditLogs 获取CI相关的审计日志
+func (s *AuditLogService) GetCIAuditLogs(ctx context.Context, tenantID, ciID, page, pageSize int) (*dto.ListAuditLogsResponse, error) {
+    if page <= 0 {
+        page = 1
+    }
+    if pageSize <= 0 || pageSize > 100 {
+        pageSize = 20
+    }
+
+    // 构造搜索模式 - 匹配包含 ci_<id> 的资源记录
+    searchPattern := fmt.Sprintf("ci_%d", ciID)
+
+    q := s.client.AuditLog.Query().Where(
+        auditlog.TenantID(tenantID),
+    )
+
+    // 模糊匹配包含 CI ID 的资源记录
+    // 由于resource字段可能存储不同的格式，我们使用Like来匹配
+    q = q.Where(auditlog.ResourceContains(searchPattern))
+
+    total, err := q.Clone().Count(ctx)
+    if err != nil {
+        s.logger.Errorw("Failed to count CI audit logs", "error", err, "tenant_id", tenantID, "ci_id", ciID)
+        return nil, err
+    }
+
+    items, err := q.
+        Order(ent.Desc(auditlog.FieldCreatedAt)).
+        Offset((page - 1) * pageSize).
+        Limit(pageSize).
+        All(ctx)
+    if err != nil {
+        s.logger.Errorw("Failed to list CI audit logs", "error", err, "tenant_id", tenantID, "ci_id", ciID)
+        return nil, err
+    }
+
+    logs := make([]*dto.AuditLog, 0, len(items))
+    for _, it := range items {
+        var body string
+        if it.RequestBody != nil {
+            body = *it.RequestBody
+        }
+        logs = append(logs, &dto.AuditLog{
+            ID:          it.ID,
+            CreatedAt:   it.CreatedAt,
+            TenantID:    it.TenantID,
+            UserID:      it.UserID,
+            RequestID:   it.RequestID,
+            IP:          it.IP,
+            Resource:    it.Resource,
+            Action:      it.Action,
+            Path:        it.Path,
+            Method:      it.Method,
+            StatusCode:  it.StatusCode,
+            RequestBody: body,
+        })
+    }
+
+    return &dto.ListAuditLogsResponse{
+        Logs:     logs,
+        Total:    total,
+        Page:     page,
+        PageSize: pageSize,
     }, nil
 }

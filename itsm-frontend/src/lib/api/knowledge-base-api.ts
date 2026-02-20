@@ -36,21 +36,21 @@ export class KnowledgeBaseApi {
     articles: KnowledgeArticle[];
     total: number;
   }> {
-    return httpClient.get('/api/v1/knowledge/articles', query);
+    return httpClient.get('/api/v1/knowledge-articles', query);
   }
 
   /**
    * 获取单个文章
    */
   static async getArticle(id: string): Promise<KnowledgeArticle> {
-    return httpClient.get(`/api/v1/knowledge/articles/${id}`);
+    return httpClient.get(`/api/v1/knowledge-articles/${id}`);
   }
 
   /**
    * 通过slug获取文章
    */
   static async getArticleBySlug(slug: string): Promise<KnowledgeArticle> {
-    return httpClient.get(`/api/v1/knowledge/articles/slug/${slug}`);
+    return httpClient.get(`/api/v1/knowledge-articles/slug/${slug}`);
   }
 
   /**
@@ -59,7 +59,7 @@ export class KnowledgeBaseApi {
   static async createArticle(
     request: CreateArticleRequest
   ): Promise<KnowledgeArticle> {
-    return httpClient.post('/api/v1/knowledge/articles', request);
+    return httpClient.post('/api/v1/knowledge-articles', request);
   }
 
   /**
@@ -69,14 +69,14 @@ export class KnowledgeBaseApi {
     id: string,
     request: UpdateArticleRequest
   ): Promise<KnowledgeArticle> {
-    return httpClient.put(`/api/v1/knowledge/articles/${id}`, request);
+    return httpClient.put(`/api/v1/knowledge-articles/${id}`, request);
   }
 
   /**
    * 删除文章
    */
   static async deleteArticle(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge/articles/${id}`);
+    return httpClient.delete(`/api/v1/knowledge-articles/${id}`);
   }
 
   /**
@@ -86,14 +86,14 @@ export class KnowledgeBaseApi {
     id: string,
     request?: PublishArticleRequest
   ): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge/articles/${id}/publish`, request);
+    return httpClient.post(`/api/v1/knowledge-articles/${id}/publish`, request);
   }
 
   /**
    * 归档文章
    */
   static async archiveArticle(id: string): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge/articles/${id}/archive`);
+    return httpClient.post(`/api/v1/knowledge-articles/${id}/archive`);
   }
 
   /**
@@ -103,7 +103,7 @@ export class KnowledgeBaseApi {
     id: string,
     title: string
   ): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge/articles/${id}/clone`, {
+    return httpClient.post(`/api/v1/knowledge-articles/${id}/clone`, {
       title,
     });
   }
@@ -114,7 +114,7 @@ export class KnowledgeBaseApi {
   static async batchOperation(
     operation: BatchArticleOperation
   ): Promise<{ success: number; failed: number }> {
-    return httpClient.post('/api/v1/knowledge/articles/batch', operation);
+    return httpClient.post('/api/v1/knowledge-articles/batch', operation);
   }
 
   // ==================== 版本控制 ====================
@@ -125,7 +125,7 @@ export class KnowledgeBaseApi {
   static async getArticleVersions(
     articleId: string
   ): Promise<ArticleVersion[]> {
-    return httpClient.get(`/api/v1/knowledge/articles/${articleId}/versions`);
+    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/versions`);
   }
 
   /**
@@ -136,7 +136,7 @@ export class KnowledgeBaseApi {
     version: number
   ): Promise<KnowledgeArticle> {
     return httpClient.post(
-      `/api/v1/knowledge/articles/${articleId}/versions/${version}/restore`
+      `/api/v1/knowledge-articles/${articleId}/versions/${version}/restore`
     );
   }
 
@@ -155,7 +155,7 @@ export class KnowledgeBaseApi {
     }>;
   }> {
     return httpClient.get(
-      `/api/v1/knowledge/articles/${articleId}/versions/compare`,
+      `/api/v1/knowledge-articles/${articleId}/versions/compare`,
       { from: fromVersion, to: toVersion }
     );
   }
@@ -166,7 +166,7 @@ export class KnowledgeBaseApi {
    * 获取分类列表
    */
   static async getCategories(): Promise<KnowledgeCategory[]> {
-    return httpClient.get('/api/v1/knowledge/categories');
+    return httpClient.get('/api/v1/knowledge-articles/categories');
   }
 
   /**
@@ -175,7 +175,7 @@ export class KnowledgeBaseApi {
   static async createCategory(
     category: Omit<KnowledgeCategory, 'id' | 'level' | 'articleCount' | 'createdAt' | 'updatedAt'>
   ): Promise<KnowledgeCategory> {
-    return httpClient.post('/api/v1/knowledge/categories', category);
+    return httpClient.post('/api/v1/knowledge-articles/categories', category);
   }
 
   /**
@@ -185,21 +185,21 @@ export class KnowledgeBaseApi {
     id: string,
     category: Partial<KnowledgeCategory>
   ): Promise<KnowledgeCategory> {
-    return httpClient.put(`/api/v1/knowledge/categories/${id}`, category);
+    return httpClient.put(`/api/v1/knowledge-articles/categories/${id}`, category);
   }
 
   /**
    * 删除分类
    */
   static async deleteCategory(id: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge/categories/${id}`);
+    return httpClient.delete(`/api/v1/knowledge-articles/categories/${id}`);
   }
 
   /**
    * 获取标签列表
    */
   static async getTags(): Promise<KnowledgeTag[]> {
-    return httpClient.get('/api/v1/knowledge/tags');
+    return httpClient.get('/api/v1/knowledge-articles/tags');
   }
 
   /**
@@ -208,7 +208,7 @@ export class KnowledgeBaseApi {
   static async createTag(
     tag: Omit<KnowledgeTag, 'id' | 'articleCount' | 'createdAt'>
   ): Promise<KnowledgeTag> {
-    return httpClient.post('/api/v1/knowledge/tags', tag);
+    return httpClient.post('/api/v1/knowledge-articles/tags', tag);
   }
 
   // ==================== 评论和反馈 ====================
@@ -227,7 +227,7 @@ export class KnowledgeBaseApi {
     total: number;
   }> {
     return httpClient.get(
-      `/api/v1/knowledge/articles/${articleId}/comments`,
+      `/api/v1/knowledge-articles/${articleId}/comments`,
       params
     );
   }
@@ -240,7 +240,7 @@ export class KnowledgeBaseApi {
     content: string,
     parentId?: string
   ): Promise<ArticleComment> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/comments`, {
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/comments`, {
       content,
       parentId,
     });
@@ -250,14 +250,14 @@ export class KnowledgeBaseApi {
    * 删除评论
    */
   static async deleteComment(commentId: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge/comments/${commentId}`);
+    return httpClient.delete(`/api/v1/knowledge-articles/comments/${commentId}`);
   }
 
   /**
    * 标记评论有用
    */
   static async markCommentHelpful(commentId: string, helpful: boolean): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge/comments/${commentId}/helpful`, {
+    return httpClient.post(`/api/v1/knowledge-articles/comments/${commentId}/helpful`, {
       helpful,
     });
   }
@@ -270,7 +270,7 @@ export class KnowledgeBaseApi {
     feedback: Omit<ArticleFeedback, 'id' | 'userId' | 'userName' | 'createdAt'>
   ): Promise<ArticleFeedback> {
     return httpClient.post(
-      `/api/v1/knowledge/articles/${articleId}/feedback`,
+      `/api/v1/knowledge-articles/${articleId}/feedback`,
       feedback
     );
   }
@@ -281,21 +281,21 @@ export class KnowledgeBaseApi {
    * 点赞文章
    */
   static async likeArticle(articleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/like`);
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/like`);
   }
 
   /**
    * 取消点赞
    */
   static async unlikeArticle(articleId: string): Promise<void> {
-    return httpClient.delete(`/api/v1/knowledge/articles/${articleId}/like`);
+    return httpClient.delete(`/api/v1/knowledge-articles/${articleId}/like`);
   }
 
   /**
    * 收藏文章
    */
   static async bookmarkArticle(articleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/bookmark`);
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/bookmark`);
   }
 
   /**
@@ -303,7 +303,7 @@ export class KnowledgeBaseApi {
    */
   static async unbookmarkArticle(articleId: string): Promise<void> {
     return httpClient.delete(
-      `/api/v1/knowledge/articles/${articleId}/bookmark`
+      `/api/v1/knowledge-articles/${articleId}/bookmark`
     );
   }
 
@@ -311,7 +311,7 @@ export class KnowledgeBaseApi {
    * 分享文章
    */
   static async shareArticle(articleId: string, platform: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/share`, {
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/share`, {
       platform,
     });
   }
@@ -320,7 +320,7 @@ export class KnowledgeBaseApi {
    * 记录浏览
    */
   static async recordView(articleId: string): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/view`);
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/view`);
   }
 
   // ==================== 搜索和推荐 ====================
@@ -331,7 +331,7 @@ export class KnowledgeBaseApi {
   static async search(
     request: KnowledgeSearchRequest
   ): Promise<KnowledgeSearchResult> {
-    return httpClient.post('/api/v1/knowledge/search', request);
+    return httpClient.post('/api/v1/knowledge-articles/search', request);
   }
 
   /**
@@ -341,7 +341,7 @@ export class KnowledgeBaseApi {
     articleId?: string,
     limit = 5
   ): Promise<ArticleRecommendation[]> {
-    return httpClient.get('/api/v1/knowledge/recommendations', {
+    return httpClient.get('/api/v1/knowledge-articles/recommendations', {
       articleId,
       limit,
     });
@@ -357,7 +357,7 @@ export class KnowledgeBaseApi {
       limit?: number;
     }
   ): Promise<KnowledgeArticle[]> {
-    return httpClient.get('/api/v1/knowledge/popular', params);
+    return httpClient.get('/api/v1/knowledge-articles/popular', params);
   }
 
   /**
@@ -369,7 +369,7 @@ export class KnowledgeBaseApi {
       limit?: number;
     }
   ): Promise<KnowledgeArticle[]> {
-    return httpClient.get('/api/v1/knowledge/recent', params);
+    return httpClient.get('/api/v1/knowledge-articles/recent', params);
   }
 
   // ==================== 富文本编辑器 ====================
@@ -380,7 +380,7 @@ export class KnowledgeBaseApi {
   static async uploadImage(file: File): Promise<ImageUploadResult> {
     const formData = new FormData();
     formData.append('image', file);
-    return httpClient.post('/api/v1/knowledge/upload/image', formData, {
+    return httpClient.post('/api/v1/knowledge-articles/upload/image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   }
@@ -392,7 +392,7 @@ export class KnowledgeBaseApi {
     articleId: string,
     content: string
   ): Promise<void> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/autosave`, {
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/autosave`, {
       content,
     });
   }
@@ -406,7 +406,7 @@ export class KnowledgeBaseApi {
     articleId: string,
     reviewerId?: number
   ): Promise<KnowledgeArticle> {
-    return httpClient.post(`/api/v1/knowledge/articles/${articleId}/review`, {
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/review`, {
       reviewerId,
     });
   }
@@ -419,7 +419,7 @@ export class KnowledgeBaseApi {
     request: ReviewArticleRequest
   ): Promise<KnowledgeArticle> {
     return httpClient.post(
-      `/api/v1/knowledge/articles/${articleId}/review/decision`,
+      `/api/v1/knowledge-articles/${articleId}/review/decision`,
       request
     );
   }
@@ -430,7 +430,7 @@ export class KnowledgeBaseApi {
    * 获取知识库统计
    */
   static async getStats(): Promise<KnowledgeBaseStats> {
-    return httpClient.get('/api/v1/knowledge/stats');
+    return httpClient.get('/api/v1/knowledge-articles/stats');
   }
 
   /**
@@ -444,7 +444,7 @@ export class KnowledgeBaseApi {
     }
   ): Promise<ArticleAnalytics> {
     return httpClient.get(
-      `/api/v1/knowledge/articles/${articleId}/analytics`,
+      `/api/v1/knowledge-articles/${articleId}/analytics`,
       params
     );
   }
@@ -459,7 +459,7 @@ export class KnowledgeBaseApi {
   }): Promise<Blob> {
     const response = await httpClient.request({
       method: 'POST',
-      url: '/api/v1/knowledge/export',
+      url: '/api/v1/knowledge-articles/export',
       data: params,
       responseType: 'blob',
     });

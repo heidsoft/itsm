@@ -4,8 +4,10 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/predicate"
 	"math"
 
@@ -18,10 +20,11 @@ import (
 // KnowledgeArticleQuery is the builder for querying KnowledgeArticle entities.
 type KnowledgeArticleQuery struct {
 	config
-	ctx        *QueryContext
-	order      []knowledgearticle.OrderOption
-	inters     []Interceptor
-	predicates []predicate.KnowledgeArticle
+	ctx           *QueryContext
+	order         []knowledgearticle.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.KnowledgeArticle
+	withUserLikes *KnowledgeArticleLikeQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (kaq *KnowledgeArticleQuery) Unique(unique bool) *KnowledgeArticleQuery {
 func (kaq *KnowledgeArticleQuery) Order(o ...knowledgearticle.OrderOption) *KnowledgeArticleQuery {
 	kaq.order = append(kaq.order, o...)
 	return kaq
+}
+
+// QueryUserLikes chains the current query on the "user_likes" edge.
+func (kaq *KnowledgeArticleQuery) QueryUserLikes() *KnowledgeArticleLikeQuery {
+	query := (&KnowledgeArticleLikeClient{config: kaq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := kaq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := kaq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
+			sqlgraph.To(knowledgearticlelike.Table, knowledgearticlelike.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.UserLikesTable, knowledgearticle.UserLikesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(kaq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first KnowledgeArticle entity from the query.
@@ -245,15 +270,27 @@ func (kaq *KnowledgeArticleQuery) Clone() *KnowledgeArticleQuery {
 		return nil
 	}
 	return &KnowledgeArticleQuery{
-		config:     kaq.config,
-		ctx:        kaq.ctx.Clone(),
-		order:      append([]knowledgearticle.OrderOption{}, kaq.order...),
-		inters:     append([]Interceptor{}, kaq.inters...),
-		predicates: append([]predicate.KnowledgeArticle{}, kaq.predicates...),
+		config:        kaq.config,
+		ctx:           kaq.ctx.Clone(),
+		order:         append([]knowledgearticle.OrderOption{}, kaq.order...),
+		inters:        append([]Interceptor{}, kaq.inters...),
+		predicates:    append([]predicate.KnowledgeArticle{}, kaq.predicates...),
+		withUserLikes: kaq.withUserLikes.Clone(),
 		// clone intermediate query.
 		sql:  kaq.sql.Clone(),
 		path: kaq.path,
 	}
+}
+
+// WithUserLikes tells the query-builder to eager-load the nodes that are connected to
+// the "user_likes" edge. The optional arguments are used to configure the query builder of the edge.
+func (kaq *KnowledgeArticleQuery) WithUserLikes(opts ...func(*KnowledgeArticleLikeQuery)) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleLikeClient{config: kaq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	kaq.withUserLikes = query
+	return kaq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +369,11 @@ func (kaq *KnowledgeArticleQuery) prepareQuery(ctx context.Context) error {
 
 func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnowledgeArticle, error) {
 	var (
-		nodes = []*KnowledgeArticle{}
-		_spec = kaq.querySpec()
+		nodes       = []*KnowledgeArticle{}
+		_spec       = kaq.querySpec()
+		loadedTypes = [1]bool{
+			kaq.withUserLikes != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*KnowledgeArticle).scanValues(nil, columns)
@@ -341,6 +381,7 @@ func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &KnowledgeArticle{config: kaq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +393,45 @@ func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := kaq.withUserLikes; query != nil {
+		if err := kaq.loadUserLikes(ctx, query, nodes,
+			func(n *KnowledgeArticle) { n.Edges.UserLikes = []*KnowledgeArticleLike{} },
+			func(n *KnowledgeArticle, e *KnowledgeArticleLike) { n.Edges.UserLikes = append(n.Edges.UserLikes, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (kaq *KnowledgeArticleQuery) loadUserLikes(ctx context.Context, query *KnowledgeArticleLikeQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *KnowledgeArticleLike)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*KnowledgeArticle)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(knowledgearticlelike.FieldArticleID)
+	}
+	query.Where(predicate.KnowledgeArticleLike(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(knowledgearticle.UserLikesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ArticleID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "article_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (kaq *KnowledgeArticleQuery) sqlCount(ctx context.Context) (int, error) {

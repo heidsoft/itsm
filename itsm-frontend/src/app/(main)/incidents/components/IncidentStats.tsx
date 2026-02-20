@@ -7,10 +7,11 @@ import { useI18n } from '@/lib/i18n';
 
 interface IncidentStatsProps {
   metrics?: {
-    total_incidents: number;
-    critical_incidents: number;
-    major_incidents: number;
-    avg_resolution_time: number;
+    totalIncidents?: number;
+    openIncidents?: number;
+    criticalIncidents?: number;
+    majorIncidents?: number;
+    avgResolutionTime?: number;
   };
   className?: string;
 }
@@ -44,7 +45,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
               <AlertTriangle className='w-5 h-5 text-white' />
             </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.total_incidents}</div>
+            <div className='text-2xl font-bold mb-1'>{metrics.totalIncidents ?? '-'}</div>
             <div className='text-blue-100 font-medium text-xs'>{t('incidents.total')}</div>
           </Card>
         </Col>
@@ -57,7 +58,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
               <Clock className='w-5 h-5 text-white' />
             </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.critical_incidents}</div>
+            <div className='text-2xl font-bold mb-1'>{metrics.criticalIncidents ?? '-'}</div>
             <div className='text-orange-100 font-medium text-xs'>{t('incidents.critical')}</div>
           </Card>
         </Col>
@@ -70,7 +71,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
               <CheckCircle className='w-5 h-5 text-white' />
             </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.major_incidents}</div>
+            <div className='text-2xl font-bold mb-1'>{metrics.majorIncidents ?? '-'}</div>
             <div className='text-green-100 font-medium text-xs'>{t('incidents.major')}</div>
           </Card>
         </Col>
@@ -83,7 +84,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
               <AlertCircle className='w-5 h-5 text-white' />
             </div>
-            <div className='text-2xl font-bold mb-1'>{metrics.avg_resolution_time}</div>
+            <div className='text-2xl font-bold mb-1'>{metrics.avgResolutionTime ?? '-'}</div>
             <div className='text-purple-100 font-medium text-xs'>{t('incidents.avgResolutionTime')}</div>
           </Card>
         </Col>

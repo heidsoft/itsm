@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/app/lib/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
 

@@ -37,7 +37,7 @@ dayjs.extend(relativeTime);
 
 import type { TicketStats, UserStats, SystemStats } from '@/types/dashboard';
 import type { Ticket } from '@/types/ticket';
-import type { User } from '@/types/user';
+import type { User } from '@/lib/api/types';  // 改用lib/api/types中的User
 
 interface DashboardOverviewProps {
   timeRange?: '24h' | '7d' | '30d';
@@ -69,7 +69,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         await Promise.all([
           TicketApi.getTicketStats(),
           UserApi.getUserStats(),
-          SystemConfigAPI.getSystemStatus(),
+          SystemConfigAPI.getSystemStatus() as Promise<{
+            cpu?: { usage?: number };
+            memory?: { usage?: number };
+            disk?: { usage?: number };
+            response?: { avgResponseTime?: number; errorRate?: number };
+            database?: { connections?: number };
+          }>,
           TicketApi.getTickets({ page: 1, size: 5, sort: 'created_at,desc' }),
           UserApi.getUsers({ page: 1, page_size: 5, status: 'active' }),
         ]);
@@ -165,10 +171,14 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           id: u.id,
           username: u.username,
           email: u.email,
-          fullName: u.name,
+          name: u.name || u.username,
+          phone: u.phone,
+          department: u.department,
           role: u.role || 'user',
           status: u.active ? 'active' : 'inactive',
-          lastLoginAt: u.updated_at, // 暂用更新时间代替登录时间
+          tenant_id: u.tenant_id || 1,
+          created_at: u.created_at || new Date().toISOString(),
+          updated_at: u.updated_at || new Date().toISOString(),
         }))
       );
     } catch (error) {
@@ -453,13 +463,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 renderItem={user => (
                   <List.Item>
                     <List.Item.Meta
-                      avatar={<Avatar icon={<UserIcon />} src={user.avatar} />}
-                      title={user.fullName}
+                      avatar={<Avatar icon={<UserIcon />} />}
+                      title={user.name}
                       description={
                         <Space>
                           <Tag>{user.role}</Tag>
                           <span style={{ color: '#999', fontSize: '12px' }}>
-                            {dayjs(user.lastLoginAt).fromNow()}
+                            {dayjs(user.updated_at).fromNow()}
                           </span>
                         </Space>
                       }

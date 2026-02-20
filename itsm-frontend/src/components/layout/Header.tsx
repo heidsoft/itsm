@@ -11,7 +11,6 @@ import {
   Typography,
   Drawer,
   Input,
-  List,
   message,
   Modal,
 } from 'antd';
@@ -107,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
       key: 'settings',
       label: t('header.settings'),
       icon: <Settings style={iconStyle} />,
-      onClick: () => router.push('/settings'),
+      onClick: () => router.push('/profile'),
     },
     {
       type: 'divider' as const,
@@ -373,44 +372,57 @@ export const Header: React.FC<HeaderProps> = ({
         onClose={() => setNotificationsOpen(false)}
         className={styles.notificationDrawer}
       >
-        <List
-          dataSource={notifications}
-          renderItem={item => (
-            <List.Item className={styles.notificationItem} style={{ opacity: item.read ? 0.7 : 1 }}>
-              <List.Item.Meta
-                avatar={
-                  <div
-                    className={styles.notificationAvatar}
-                    style={{
-                      backgroundColor:
-                        item.priority === 'urgent'
-                          ? '#ef4444'
-                          : item.priority === 'high'
-                            ? '#f59e0b'
-                            : '#3b82f6',
-                    }}
-                  >
-                    {item.type === 'ticket' ? 'T' : item.type === 'system' ? 'S' : 'SLA'}
-                  </div>
-                }
-                title={
+        <div className="notifications-list">
+          {notifications.map(item => (
+            <div
+              key={item.id}
+              className={styles.notificationItem}
+              style={{ opacity: item.read ? 0.7 : 1, padding: '12px', borderBottom: '1px solid #f0f0f0' }}
+            >
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div
+                  className={styles.notificationAvatar}
+                  style={{
+                    backgroundColor:
+                      item.priority === 'urgent'
+                        ? '#ef4444'
+                        : item.priority === 'high'
+                          ? '#f59e0b'
+                          : '#3b82f6',
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontWeight: 600,
+                    flexShrink: 0,
+                  }}
+                >
+                  {item.type === 'ticket' ? 'T' : item.type === 'system' ? 'S' : 'SLA'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className={styles.notificationTitle}>
                     <Text
                       style={{
                         fontWeight: item.read ? '400' : '600',
                         color: item.read ? '#6b7280' : '#1f2937',
+                        display: 'block',
                       }}
                     >
                       {item.title}
                     </Text>
                     <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
                   </div>
-                }
-                description={<Text className={styles.notificationContent}>{item.content}</Text>}
-              />
-            </List.Item>
-          )}
-        />
+                  <Text className={styles.notificationContent} style={{ display: 'block', marginTop: 4 }}>
+                    {item.content}
+                  </Text>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {notifications.length === 0 && (
           <div className={styles.emptyNotifications}>
@@ -430,32 +442,29 @@ export const Header: React.FC<HeaderProps> = ({
         {searchResults ? (
           <div>
             <h3>{t('tickets.title')}</h3>
-            <List
-              dataSource={searchResults.tickets}
-              renderItem={item => (
-                <List.Item>
+            <div className="search-results">
+              {searchResults.tickets.map(item => (
+                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                   <a href={`/tickets/${item.id}`}>{item.title}</a>
-                </List.Item>
-              )}
-            />
+                </div>
+              ))}
+            </div>
             <h3>{t('incidents.title')}</h3>
-            <List
-              dataSource={searchResults.incidents}
-              renderItem={item => (
-                <List.Item>
+            <div className="search-results">
+              {searchResults.incidents.map(item => (
+                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                   <a href={`/incidents/${item.id}`}>{item.title}</a>
-                </List.Item>
-              )}
-            />
+                </div>
+              ))}
+            </div>
             <h3>{t('problems.title')}</h3>
-            <List
-              dataSource={searchResults.problems}
-              renderItem={item => (
-                <List.Item>
+            <div className="search-results">
+              {searchResults.problems.map(item => (
+                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                   <a href={`/problems/${item.id}`}>{item.title}</a>
-                </List.Item>
-              )}
-            />
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <p>{t('header.noResults')}</p>

@@ -27,7 +27,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import type { Ticket } from '@/app/lib/api-config';
+import type { Ticket } from '@/lib/api/api-config';
 import { TicketAPI } from '@/lib/api/ticket-api';
 
 const { Option } = Select;
@@ -149,7 +149,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         setOperationProgress(prev => ({
           ...prev,
           current: i + 1,
-          status: `处理工单 ${ticket.ticket_number}...`,
+          status: `处理工单 ${ticket.ticketNumber}...`,
         }));
 
         try {
@@ -182,7 +182,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           successCount++;
         } catch (error) {
           failCount++;
-          errors.push(`${ticket.ticket_number}: ${error instanceof Error ? error.message : '操作失败'}`);
+          errors.push(`${ticket.ticketNumber}: ${error instanceof Error ? error.message : '操作失败'}`);
         }
 
         // 模拟处理延迟，避免请求过于频繁

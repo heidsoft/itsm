@@ -73,6 +73,9 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "problem", Action: "read"},
 		{Resource: "problem", Action: "write"},
 		{Resource: "problem", Action: "delete"},
+		{Resource: "sla", Action: "read"},
+		{Resource: "sla", Action: "write"},
+		{Resource: "sla", Action: "delete"},
 		// 审计日志权限：仅管理员及以上可读
 		{Resource: "audit_logs", Action: "read"},
 		{Resource: "ai", Action: "read"},
@@ -81,6 +84,14 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "role", Action: "write"},
 		{Resource: "role", Action: "delete"},
 		{Resource: "permission", Action: "read"},
+		{Resource: "system_config", Action: "read"},
+		{Resource: "system_config", Action: "write"},
+		{Resource: "org", Action: "read"},
+		{Resource: "org", Action: "write"},
+		// BPMN Workflow permissions
+		{Resource: "bpmn", Action: "read"},
+		{Resource: "bpmn", Action: "write"},
+		{Resource: "bpmn", Action: "delete"},
 	},
 	"manager": {
 		{Resource: "ticket", Action: "read"},
@@ -98,6 +109,9 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_request", Action: "write"},
 		{Resource: "change", Action: "read"},
 		{Resource: "problem", Action: "read"},
+		// BPMN Workflow permissions
+		{Resource: "bpmn", Action: "read"},
+		{Resource: "bpmn", Action: "write"},
 	},
 	"agent": {
 		{Resource: "ticket", Action: "read"},
@@ -117,6 +131,9 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "change", Action: "write"},
 		{Resource: "problem", Action: "read"},
 		{Resource: "problem", Action: "write"},
+		// BPMN Workflow permissions
+		{Resource: "bpmn", Action: "read"},
+		{Resource: "bpmn", Action: "write"},
 	},
 	"technician": {
 		{Resource: "ticket", Action: "read"},
@@ -129,12 +146,18 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
+		// BPMN Workflow permissions
+		{Resource: "bpmn", Action: "read"},
+		{Resource: "bpmn", Action: "write"},
 	},
 	"security": {
 		// V0：安全审批只需要查看/处理服务请求（以及读取服务目录用于上下文展示）
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
+		// BPMN Workflow permissions
+		{Resource: "bpmn", Action: "read"},
+		{Resource: "bpmn", Action: "write"},
 	},
 	"end_user": {
 		{Resource: "ticket", Action: "read"},
@@ -148,6 +171,17 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
+		{Resource: "user", Action: "read"}, // 查看自己的用户信息
+		{Resource: "sla", Action: "read"},
+		{Resource: "sla", Action: "write"},
+		{Resource: "system_config", Action: "read"},
+		{Resource: "org", Action: "read"},
+		{Resource: "cmdb", Action: "read"}, // 查看配置项信息
+		{Resource: "incident", Action: "read"},
+		{Resource: "change", Action: "read"},
+		{Resource: "problem", Action: "read"},
+		// BPMN Workflow permissions (read only)
+		{Resource: "bpmn", Action: "read"},
 	},
 }
 
@@ -168,7 +202,7 @@ func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int
 
 	roleEntity, err := client.Role.Query().
 		Where(
-			role.Name(roleName),
+			role.Code(roleName),
 			role.TenantID(tenantID),
 		).
 		WithPermissions().
@@ -222,20 +256,26 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/dashboard":            {Resource: "dashboard", Action: "read"},
 		"/api/v1/dashboard/*":          {Resource: "dashboard", Action: "read"},
 		"/api/v1/knowledge":            {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge/search":     {Resource: "knowledge", Action: "read"},
 		"/api/v1/knowledge/*":          {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge-articles":          {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge-articles/*":        {Resource: "knowledge", Action: "read"},
 		"/api/v1/cmdb":                 {Resource: "cmdb", Action: "read"},
 		"/api/v1/cmdb/*":               {Resource: "cmdb", Action: "read"},
+		"/api/v1/configuration-items":  {Resource: "cmdb", Action: "read"},
+		"/api/v1/configuration-items/*": {Resource: "cmdb", Action: "read"},
 		"/api/v1/incidents":            {Resource: "incident", Action: "read"},
 		"/api/v1/incidents/*":          {Resource: "incident", Action: "read"},
 		"/api/v1/audit-logs":           {Resource: "audit_logs", Action: "read"},
+		"/api/v1/system/*":             {Resource: "system_config", Action: "read"},
 		"/api/v1/ai/*":                 {Resource: "ai", Action: "read"},
 		"/api/v1/service-catalogs":     {Resource: "service_catalog", Action: "read"},
 		"/api/v1/service-catalogs/*":   {Resource: "service_catalog", Action: "read"},
 		"/api/v1/service-requests":     {Resource: "service_request", Action: "read"},
 		"/api/v1/service-requests/*":   {Resource: "service_request", Action: "read"},
 		"/api/v1/provisioning-tasks/*": {Resource: "service_request", Action: "read"},
-		"/api/v1/knowledge-articles":   {Resource: "knowledge", Action: "read"},
-		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge/articles":        {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge/articles/*":    {Resource: "knowledge", Action: "read"},
 		"/api/v1/problems":             {Resource: "problem", Action: "read"},
 		"/api/v1/problems/*":           {Resource: "problem", Action: "read"},
 		"/api/v1/changes":              {Resource: "change", Action: "read"},
@@ -243,6 +283,15 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/roles":                {Resource: "role", Action: "read"},
 		"/api/v1/roles/*":              {Resource: "role", Action: "read"},
 		"/api/v1/permissions":          {Resource: "permission", Action: "read"},
+		"/api/v1/sla/*":                {Resource: "sla", Action: "read"},
+		"/api/v1/org/*":                {Resource: "org", Action: "read"},
+		"/api/v1/auth/me":              {Resource: "user", Action: "read"},
+		"/api/v1/auth/profile":         {Resource: "user", Action: "read"},
+		// BPMN Workflow permissions
+		"/api/v1/bpmn/*":              {Resource: "bpmn", Action: "read"},
+		"/api/v1/process-trigger/*":   {Resource: "bpmn", Action: "read"},
+		"/api/v1/process-bindings":    {Resource: "bpmn", Action: "read"},
+		"/api/v1/process-bindings/*":  {Resource: "bpmn", Action: "read"},
 	},
 	"POST": {
 		"/api/v1/tickets":              {Resource: "ticket", Action: "write"},
@@ -255,23 +304,38 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/ticket-tags/*":        {Resource: "ticket_tag", Action: "write"},
 		"/api/v1/users":                {Resource: "user", Action: "write"},
 		"/api/v1/knowledge":            {Resource: "knowledge", Action: "write"},
+		"/api/v1/knowledge/search":     {Resource: "knowledge", Action: "read"},
+		"/api/v1/knowledge-articles":          {Resource: "knowledge", Action: "write"},
+		"/api/v1/knowledge-articles/*":        {Resource: "knowledge", Action: "write"},
 		"/api/v1/cmdb":                 {Resource: "cmdb", Action: "write"},
 		"/api/v1/cmdb/*":               {Resource: "cmdb", Action: "write"},
+		"/api/v1/configuration-items":  {Resource: "cmdb", Action: "write"},
+		"/api/v1/configuration-items/*": {Resource: "cmdb", Action: "write"},
 		"/api/v1/incidents":            {Resource: "incident", Action: "write"},
+		"/api/v1/incidents/*":          {Resource: "incident", Action: "write"},
 		"/api/v1/ai/*":                 {Resource: "ai", Action: "write"},
 		"/api/v1/service-catalogs":     {Resource: "service_catalog", Action: "write"},
 		"/api/v1/service-catalogs/*":   {Resource: "service_catalog", Action: "write"},
 		"/api/v1/service-requests":     {Resource: "service_request", Action: "write"},
 		"/api/v1/service-requests/*":   {Resource: "service_request", Action: "write"},
 		"/api/v1/provisioning-tasks/*": {Resource: "service_request", Action: "write"},
-		"/api/v1/knowledge-articles":   {Resource: "knowledge", Action: "write"},
-		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "write"},
+		"/api/v1/knowledge/articles":        {Resource: "knowledge", Action: "write"},
+		"/api/v1/knowledge/articles/*":    {Resource: "knowledge", Action: "write"},
 		"/api/v1/problems":             {Resource: "problem", Action: "write"},
 		"/api/v1/problems/*":           {Resource: "problem", Action: "write"},
 		"/api/v1/changes":              {Resource: "change", Action: "write"},
 		"/api/v1/changes/*":            {Resource: "change", Action: "write"},
 		"/api/v1/roles":                {Resource: "role", Action: "write"},
 		"/api/v1/roles/*":              {Resource: "role", Action: "write"},
+		"/api/v1/system/*":             {Resource: "system_config", Action: "write"},
+		"/api/v1/org/*":                {Resource: "org", Action: "write"},
+		"/api/v1/sla/*":                {Resource: "sla", Action: "write"},
+		// BPMN Workflow permissions
+		"/api/v1/bpmn/*":              {Resource: "bpmn", Action: "write"},
+		"/api/v1/process-trigger":     {Resource: "bpmn", Action: "write"},
+		"/api/v1/process-trigger/*":   {Resource: "bpmn", Action: "write"},
+		"/api/v1/process-bindings":    {Resource: "bpmn", Action: "write"},
+		"/api/v1/process-bindings/*":  {Resource: "bpmn", Action: "write"},
 	},
 	"PUT": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "write"},
@@ -288,6 +352,8 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/knowledge-articles/*": {Resource: "knowledge", Action: "write"},
 		"/api/v1/problems/*":           {Resource: "problem", Action: "write"},
 		"/api/v1/changes/*":            {Resource: "change", Action: "write"},
+		// BPMN Workflow permissions
+		"/api/v1/bpmn/*":              {Resource: "bpmn", Action: "write"},
 	},
 	"DELETE": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "delete"},
@@ -303,6 +369,8 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/problems/*":           {Resource: "problem", Action: "delete"},
 		"/api/v1/changes/*":            {Resource: "change", Action: "delete"},
 		"/api/v1/roles/*":              {Resource: "role", Action: "delete"},
+		// BPMN Workflow permissions
+		"/api/v1/bpmn/*":              {Resource: "bpmn", Action: "delete"},
 	},
 }
 
@@ -565,6 +633,13 @@ func checkTicketPermission(role, action string, userID int, c *gin.Context) bool
 		if c.Request.Method == "POST" && strings.HasPrefix(c.Request.URL.Path, "/api/v1/tickets") {
 			return true
 		}
+		// 获取当前访问路径
+		path := c.Request.URL.Path
+		// 检查是否是获取自己工单的列表（GET /tickets）
+		if c.Request.Method == "GET" && (path == "/api/v1/tickets" || strings.HasPrefix(path, "/api/v1/tickets?")) {
+			// end_user 可以查看自己的工单列表（通过查询过滤）
+			return true
+		}
 		// 其他操作需要检查工单的请求人是否为当前用户
 		ticketIDStr := c.Param("id")
 		if ticketIDStr != "" {
@@ -590,6 +665,12 @@ func checkUserPermission(role, action string, userID int, c *gin.Context) bool {
 	}
 	// 经理可读取所有用户基本信息（仅限 read 操作）
 	if role == "manager" && action == "read" {
+		return true
+	}
+
+	// 对 /auth/me 端点，允许任何已登录用户查看自己的信息
+	path := c.Request.URL.Path
+	if path == "/api/v1/auth/me" {
 		return true
 	}
 

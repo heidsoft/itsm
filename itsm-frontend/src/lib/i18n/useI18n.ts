@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { userPreferences } from '@/app/lib/user-preferences';
+import { userPreferences } from '@/lib/user-preferences';
 import { translations, Language } from './translations';
 
 /**

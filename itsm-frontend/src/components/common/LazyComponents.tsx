@@ -35,11 +35,15 @@ export const withLazyLoading = <P extends object>(
 ) => {
   const LazyComponent = lazy(() => Promise.resolve({ default: Component }));
 
-  return (props: P) => (
+  const WrappedComponent = (props: P) => (
     <Suspense fallback={fallback || <LoadingSpinner />}>
       <LazyComponent {...props} />
     </Suspense>
   );
+
+  WrappedComponent.displayName = `withLazyLoading(${Component.displayName || Component.name})`;
+
+  return WrappedComponent;
 };
 
 // 懒加载的工单组件
@@ -110,7 +114,7 @@ export const LazyChangesPage = lazy(() =>
 );
 
 export const LazyKnowledgePage = lazy(() =>
-  import('@/app/(main)/knowledge-base/page').then(module => ({
+  import('@/app/(main)/knowledge/page').then(module => ({
     default: module.default,
   }))
 );
@@ -135,13 +139,13 @@ export const LazyAppLayout = lazy(() =>
 );
 
 export const LazySidebar = lazy(() =>
-  import('@/components/layout/Sidebar.tsx').then(module => ({
+  import('@/components/layout/Sidebar').then(module => ({
     default: module.Sidebar,
   }))
 );
 
 export const LazyHeader = lazy(() =>
-  import('@/components/layout/Header.tsx').then(module => ({
+  import('@/components/layout/Header').then(module => ({
     default: module.Header,
   }))
 );
@@ -149,7 +153,7 @@ export const LazyHeader = lazy(() =>
 // 懒加载的图表组件
 export const LazyCharts = lazy(() =>
   import('@/app/(main)/dashboard/charts').then(module => ({
-    default: module.default,
+    default: module.default as unknown as React.ComponentType<any>,
   }))
 );
 

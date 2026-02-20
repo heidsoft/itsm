@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TicketCategoryApi, TicketCategory as TicketCategoryType } from '@/lib/api/ticket-category-api';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -43,7 +44,7 @@ interface TicketCategory {
   id: number;
   name: string;
   description: string;
-  parent_id?: number;
+  parent_id: number | null;
   level: number;
   path: string;
   sort_order: number;
@@ -54,7 +55,7 @@ interface TicketCategory {
   created_at: string;
   updated_at: string;
   children?: TicketCategory[];
-  ticket_count: number;
+  ticket_count?: number;
 }
 
 interface TicketCategoryFormData {
@@ -83,148 +84,13 @@ const TicketCategoryManagementPage = () => {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 模拟分类数据
-      const mockCategories: TicketCategory[] = [
-        {
-          id: 1,
-          name: '硬件故障',
-          description: '计算机硬件相关问题和故障',
-          parent_id: undefined,
-          level: 1,
-          path: '硬件故障',
-          sort_order: 1,
-          is_active: true,
-          is_default: false,
-          color: '#ff4d4f',
-          icon: '💻',
-          created_at: '2024-01-01 00:00:00',
-          updated_at: '2024-01-15 10:00:00',
-          ticket_count: 45,
-          children: [
-            {
-              id: 2,
-              name: '显示器问题',
-              description: '显示器故障和显示异常',
-              parent_id: 1,
-              level: 2,
-              path: '硬件故障/显示器问题',
-              sort_order: 1,
-              is_active: true,
-              is_default: false,
-              color: '#fa8c16',
-              icon: '🖥️',
-              created_at: '2024-01-01 00:00:00',
-              updated_at: '2024-01-15 10:00:00',
-              ticket_count: 12,
-            },
-            {
-              id: 3,
-              name: '键盘鼠标',
-              description: '键盘鼠标故障和连接问题',
-              parent_id: 1,
-              level: 2,
-              path: '硬件故障/键盘鼠标',
-              sort_order: 2,
-              is_active: true,
-              is_default: false,
-              color: '#fa8c16',
-              icon: '⌨️',
-              created_at: '2024-01-01 00:00:00',
-              updated_at: '2024-01-15 10:00:00',
-              ticket_count: 8,
-            },
-          ],
-        },
-        {
-          id: 4,
-          name: '软件故障',
-          description: '软件安装、配置和运行问题',
-          parent_id: undefined,
-          level: 1,
-          path: '软件故障',
-          sort_order: 2,
-          is_active: true,
-          is_default: false,
-          color: '#1890ff',
-          icon: '🔧',
-          created_at: '2024-01-01 00:00:00',
-          updated_at: '2024-01-15 10:00:00',
-          ticket_count: 67,
-          children: [
-            {
-              id: 5,
-              name: '办公软件',
-              description: 'Office、WPS等办公软件问题',
-              parent_id: 4,
-              level: 2,
-              path: '软件故障/办公软件',
-              sort_order: 1,
-              is_active: true,
-              is_default: false,
-              color: '#52c41a',
-              icon: '📄',
-              created_at: '2024-01-01 00:00:00',
-              updated_at: '2024-01-15 10:00:00',
-              ticket_count: 23,
-            },
-            {
-              id: 6,
-              name: '系统软件',
-              description: '操作系统和系统工具问题',
-              parent_id: 4,
-              level: 2,
-              path: '软件故障/系统软件',
-              sort_order: 2,
-              is_active: true,
-              is_default: false,
-              color: '#52c41a',
-              icon: '⚙️',
-              created_at: '2024-01-01 00:00:00',
-              updated_at: '2024-01-15 10:00:00',
-              ticket_count: 18,
-            },
-          ],
-        },
-        {
-          id: 7,
-          name: '网络故障',
-          description: '网络连接和网络配置问题',
-          parent_id: undefined,
-          level: 1,
-          path: '网络故障',
-          sort_order: 3,
-          is_active: true,
-          is_default: false,
-          color: '#722ed1',
-          icon: '🌐',
-          created_at: '2024-01-01 00:00:00',
-          updated_at: '2024-01-15 10:00:00',
-          ticket_count: 34,
-        },
-        {
-          id: 8,
-          name: '权限问题',
-          description: '用户权限和访问控制问题',
-          parent_id: undefined,
-          level: 1,
-          path: '权限问题',
-          sort_order: 4,
-          is_active: true,
-          is_default: false,
-          color: '#eb2f96',
-          icon: '🔐',
-          created_at: '2024-01-01 00:00:00',
-          updated_at: '2024-01-15 10:00:00',
-          ticket_count: 15,
-        },
-      ];
-
-      setCategories(mockCategories);
+      const data = await TicketCategoryApi.getCategories();
+      const list = data.items || data || [];
+      setCategories(list);
     } catch (error) {
+      console.error('Failed to load categories:', error);
       message.error('加载分类失败');
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -266,12 +132,11 @@ const TicketCategoryManagementPage = () => {
 
   const handleDeleteCategory = async (id: number) => {
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
-
+      await TicketCategoryApi.deleteCategory(id);
       setCategories(prev => prev.filter(c => c.id !== id));
       message.success('分类删除成功');
     } catch (error) {
+      console.error('Failed to delete category:', error);
       message.error('删除失败');
     }
   };
@@ -282,6 +147,7 @@ const TicketCategoryManagementPage = () => {
 
       if (editingCategory) {
         // 更新分类
+        await TicketCategoryApi.updateCategory(editingCategory.id, values);
         const updatedCategory = {
           ...editingCategory,
           ...values,
@@ -292,9 +158,10 @@ const TicketCategoryManagementPage = () => {
         message.success('分类更新成功');
       } else {
         // 创建新分类
+        const result = await TicketCategoryApi.createCategory(values);
         const newCategory: TicketCategory = {
-          id: Date.now(),
-          ...values,
+          ...result,
+          id: result.id,
           level: values.parent_id ? 2 : 1,
           path: values.parent_id ? `父分类/${values.name}` : values.name,
           sort_order: values.sort_order || 1,

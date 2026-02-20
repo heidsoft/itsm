@@ -86,36 +86,36 @@ export default function NewIncidentPage() {
           className='flex items-center text-blue-600 hover:underline mb-4'
         >
           <ArrowLeft className='w-5 h-5 mr-2' />
-          Back
+          返回
         </button>
-        <h2 className='text-4xl font-bold text-gray-800'>Create New Incident</h2>
-        <p className='text-gray-500 mt-1'>Manually record a new IT incident</p>
+        <h2 className='text-4xl font-bold text-gray-800'>创建新事件</h2>
+        <p className='text-gray-500 mt-1'>手动记录一个新的IT事件</p>
       </header>
 
       <div className='bg-white p-8 rounded-lg shadow-md'>
         <form onSubmit={handleSubmit}>
           <div className='space-y-6'>
             <FormInput
-              label='Incident Title'
+              label='事件标题'
               id='title'
               name='title'
               type='text'
               required
-              placeholder='Brief description of the incident'
+              placeholder='简要描述该事件'
             />
             <FormTextarea
-              label='Detailed Description'
+              label='详细描述'
               id='description'
               name='description'
               rows={6}
               required
-              placeholder='Please provide detailed information about the incident, including impact scope, occurrence time, etc...'
+              placeholder='请提供该事件的详细信息，包括影响范围、发生时间等...'
             />
 
             {/* Configuration Items Selection */}
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Affected Configuration Items
+                受影响的配置项
               </label>
 
               <div className='flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg'>
@@ -123,7 +123,7 @@ export default function NewIncidentPage() {
                   <Search className='w-4 h-4 text-blue-600' />
                   <input
                     type='text'
-                    placeholder='Search configuration items...'
+                    placeholder='搜索配置项...'
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     className='bg-transparent border-none outline-none flex-1 text-sm'
@@ -154,7 +154,7 @@ export default function NewIncidentPage() {
               {/* Selected CIs */}
               {selectedCIs.length > 0 && (
                 <div className='mt-3'>
-                  <div className='text-sm font-medium text-gray-700 mb-2'>Selected Items:</div>
+                  <div className='text-sm font-medium text-gray-700 mb-2'>已选择:</div>
                   <div className='flex flex-wrap gap-2'>
                     {selectedCIs.map(ci => (
                       <div
@@ -178,35 +178,35 @@ export default function NewIncidentPage() {
 
             {/* Priority Selection */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>Priority</label>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>优先级</label>
               <select
                 name='priority'
                 required
                 className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               >
-                <option value=''>Select Priority</option>
-                <option value='low'>Low</option>
-                <option value='medium'>Medium</option>
-                <option value='high'>High</option>
-                <option value='critical'>Critical</option>
+                <option value=''>选择优先级</option>
+                <option value='low'>低</option>
+                <option value='medium'>中</option>
+                <option value='high'>高</option>
+                <option value='critical'>紧急</option>
               </select>
             </div>
 
             {/* Type Selection */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>Incident Type</label>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>事件类型</label>
               <select
                 name='type'
                 required
                 className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               >
-                <option value=''>Select Type</option>
-                <option value='hardware'>Hardware</option>
-                <option value='software'>Software</option>
-                <option value='network'>Network</option>
-                <option value='security'>Security</option>
-                <option value='performance'>Performance</option>
-                <option value='other'>Other</option>
+                <option value=''>选择类型</option>
+                <option value='hardware'>硬件</option>
+                <option value='software'>软件</option>
+                <option value='network'>网络</option>
+                <option value='security'>安全</option>
+                <option value='performance'>性能</option>
+                <option value='other'>其他</option>
               </select>
             </div>
           </div>
@@ -217,13 +217,13 @@ export default function NewIncidentPage() {
               onClick={() => router.back()}
               className='px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50'
             >
-              Cancel
+              取消
             </button>
             <button
               type='submit'
               className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
             >
-              Create Incident
+              创建事件
             </button>
           </div>
         </form>

@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { httpClient } from '@/lib/api/http-client';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
-import { User, Tenant } from '@/app/lib/api-config';
+import { User, Tenant } from '@/lib/api/api-config';
 
 // ===================================
 // 类型定义

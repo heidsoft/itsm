@@ -60,6 +60,8 @@ type Tx struct {
 	IncidentRuleExecution *IncidentRuleExecutionClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
+	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
+	KnowledgeArticleLike *KnowledgeArticleLikeClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -68,10 +70,14 @@ type Tx struct {
 	Notification *NotificationClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
+	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
+	PasswordResetToken *PasswordResetTokenClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessBinding is the client for interacting with the ProcessBinding builders.
+	ProcessBinding *ProcessBindingClient
 	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
 	ProcessDefinition *ProcessDefinitionClient
 	// ProcessDeployment is the client for interacting with the ProcessDeployment builders.
@@ -305,12 +311,15 @@ func (tx *Tx) init() {
 	tx.IncidentRule = NewIncidentRuleClient(tx.config)
 	tx.IncidentRuleExecution = NewIncidentRuleExecutionClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
+	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
 	tx.NotificationPreference = NewNotificationPreferenceClient(tx.config)
+	tx.PasswordResetToken = NewPasswordResetTokenClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
+	tx.ProcessBinding = NewProcessBindingClient(tx.config)
 	tx.ProcessDefinition = NewProcessDefinitionClient(tx.config)
 	tx.ProcessDeployment = NewProcessDeploymentClient(tx.config)
 	tx.ProcessExecutionHistory = NewProcessExecutionHistoryClient(tx.config)

@@ -8,9 +8,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// ProcessTriggerServiceInterface 流程触发服务接口
+type ProcessTriggerServiceInterface interface {
+	TriggerProcess(ctx context.Context, req interface{}) (interface{}, error)
+}
+
 type Service struct {
-	repo   Repository
-	logger *zap.SugaredLogger
+	repo              Repository
+	logger            *zap.SugaredLogger
+	processTriggerService ProcessTriggerServiceInterface
 }
 
 func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
@@ -18,6 +24,11 @@ func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
 		repo:   repo,
 		logger: logger,
 	}
+}
+
+// SetProcessTriggerService 设置流程触发服务
+func (s *Service) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
+	s.processTriggerService = triggerService
 }
 
 func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incident, error) {

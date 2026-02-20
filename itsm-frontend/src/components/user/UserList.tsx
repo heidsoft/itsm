@@ -40,8 +40,8 @@ import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
-import type { User, UserRole, UserStatus, UserFilters } from '@/types/user';
-import { userAPI } from '@/lib/user-api';
+import type { UserRole, UserStatus, UserFilters } from '@/types/user';
+import { UserApi, type User } from '@/lib/api/user-api';  // 从UserApi导入User类型
 
 const { Search } = Input;
 const { Option } = Select;
@@ -77,17 +77,17 @@ const UserList: React.FC<UserListProps> = ({
     async (params?: { page?: number; pageSize?: number; filters?: UserFilters }) => {
       try {
         setLoading(true);
-        const response = await userAPI.listUsers({
+        const response = await UserApi.getUsers({  // 改为 getUsers
           page: params?.page,
-          pageSize: params?.pageSize,
-          filters: params?.filters,
+          page_size: params?.pageSize,  // 改为 page_size
+          // filters: params?.filters,  // 移除filters，不在ListUsersParams中
         });
 
         setUsers(response.users);
         setPagination({
-          current: response.page,
+          current: response.pagination.page,
           pageSize: params?.pageSize || 20,
-          total: response.total,
+          total: response.pagination.total,
         });
       } catch (error) {
         message.error('获取用户列表失败');
@@ -164,8 +164,8 @@ const UserList: React.FC<UserListProps> = ({
       },
       {
         key: 'status',
-        icon: record.status === 'active' ? <LockOutlined /> : <UnlockOutlined />,
-        label: record.status === 'active' ? '禁用用户' : '启用用户',
+        icon: record.active ? <LockOutlined /> : <UnlockOutlined />,  // 改为 active
+        label: record.active ? '禁用用户' : '启用用户',  // 改为 active
         onClick: () => handleToggleStatus(record),
       },
       {
@@ -201,9 +201,9 @@ const UserList: React.FC<UserListProps> = ({
 
   const handleToggleStatus = async (user: User) => {
     try {
-      const newStatus = user.status === 'active' ? 'inactive' : 'active';
-      await userAPI.changeUserStatus(user.id, newStatus);
-      message.success(`用户${newStatus === 'active' ? '启用' : '禁用'}成功`);
+      const newStatus = user.active;  // 改为 active
+      await UserApi.changeUserStatus(user.id, !newStatus);  // 传入boolean
+      message.success(`用户${!newStatus ? '启用' : '禁用'}成功`);
       fetchUsers();
     } catch {
       message.error('操作失败');
@@ -213,7 +213,7 @@ const UserList: React.FC<UserListProps> = ({
   const handleResetPassword = (user: User) => {
     Modal.confirm({
       title: '重置密码',
-      content: `确定要重置用户 ${user.fullName} 的密码吗？`,
+      content: `确定要重置用户 ${user.name} 的密码吗？`,
       icon: <ExclamationCircleOutlined />,
       okText: '重置',
       cancelText: '取消',
@@ -221,7 +221,7 @@ const UserList: React.FC<UserListProps> = ({
         try {
           // 生成随机密码并重置
           const newPassword = Math.random().toString(36).slice(-8);
-          await userAPI.resetPassword({ userId: user.id, newPassword, sendNotification: true });
+          await UserApi.resetPassword(user.id, newPassword);  // 修正参数
           message.success(`密码重置成功，新密码：${newPassword}（已发送到用户邮箱）`);
         } catch {
           message.error('密码重置失败');
@@ -233,14 +233,14 @@ const UserList: React.FC<UserListProps> = ({
   const handleDeleteUser = (user: User) => {
     Modal.confirm({
       title: '确认删除',
-      content: `确定要删除用户 ${user.fullName} 吗？此操作不可恢复。`,
+      content: `确定要删除用户 ${user.name} 吗？此操作不可恢复。`,
       icon: <ExclamationCircleOutlined />,
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
       onOk: async () => {
         try {
-          await userAPI.deleteUser(user.id);
+          await UserApi.deleteUser(user.id);
           message.success('用户删除成功');
           fetchUsers();
         } catch {
@@ -303,7 +303,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'left',
       render: (_, record) => (
         <Space>
-          <Avatar size='small' icon={<UserOutlined />} src={record.avatar} />
+          <Avatar size='small' icon={<UserOutlined />} />  {/* 移除src={record.avatar} */}
           <div>
             <div>
               <Button
@@ -311,7 +311,7 @@ const UserList: React.FC<UserListProps> = ({
                 onClick={() => handleViewUser(record)}
                 style={{ padding: 0, height: 'auto' }}
               >
-                {record.fullName}
+                {record.name}
               </Button>
             </div>
             <div style={{ fontSize: '12px', color: '#999' }}>@{record.username}</div>

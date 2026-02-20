@@ -37,6 +37,7 @@ import { useRouter } from 'next/navigation';
 import { TicketApi } from '@/lib/api/ticket-api';
 import type { Ticket } from '@/lib/api/types';
 import { useTickets } from '@/lib/hooks/useTickets';
+import { useDebounce } from '@/lib/component-utils';
 import TicketBatchOperations from './TicketBatchOperations';
 
 type ListTicketsRequest = Record<string, any>;
@@ -108,6 +109,16 @@ const TicketList: React.FC<TicketListProps> = ({
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
 
+  // 防抖搜索 - 延迟300ms触发搜索，减少API调用
+  const debouncedSearchValue = useDebounce(searchValue, 300);
+
+  // 当防抖值变化时触发搜索
+  useEffect(() => {
+    updateFilters({ keyword: debouncedSearchValue || undefined });
+    fetchTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchValue]);
+
   // 选择操作
   const selectTicket = useCallback((id: number) => {
     setSelectedTickets(prev => new Set(prev).add(id));
@@ -132,15 +143,10 @@ const TicketList: React.FC<TicketListProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 搜索处理
-  const handleSearch = useCallback(
-    (value: string) => {
-      setSearchValue(value);
-      updateFilters({ keyword: value || undefined });
-      fetchTickets();
-    },
-    [updateFilters, fetchTickets]
-  );
+  // 搜索处理 - 现在由useDebounce自动处理
+  const handleSearch = useCallback((value: string) => {
+    setSearchValue(value);
+  }, []);
 
   // 过滤器变更处理
   const handleFilterChange = useCallback(
@@ -254,9 +260,9 @@ const TicketList: React.FC<TicketListProps> = ({
     () => [
       {
         title: '工单号',
-        dataIndex: 'ticket_number',
-        key: 'ticket_number',
-        width: 120,
+        dataIndex: 'ticketNumber',
+        key: 'ticketNumber',
+        width: 150,
         fixed: 'left',
         render: (ticketNumber: string, record: Ticket) => (
           <Button
@@ -269,7 +275,7 @@ const TicketList: React.FC<TicketListProps> = ({
               }
             }}
           >
-            {ticketNumber}
+            {ticketNumber || '-'}
           </Button>
         ),
       },
@@ -449,7 +455,7 @@ const TicketList: React.FC<TicketListProps> = ({
             <>
               <Divider />
               <Row gutter={[16, 16]}>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder='状态'
                     value={filters.status}
@@ -464,7 +470,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     ))}
                   </Select>
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder='优先级'
                     value={filters.priority}
@@ -479,7 +485,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     ))}
                   </Select>
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <Select
                     placeholder='类型'
                     value={filters.type}
@@ -494,7 +500,7 @@ const TicketList: React.FC<TicketListProps> = ({
                     ))}
                   </Select>
                 </Col>
-                <Col span={6}>
+                <Col xs={24} sm={12} md={6}>
                   <RangePicker
                     placeholder={['开始日期', '结束日期']}
                     onChange={dates => handleDateRangeChange(dates, 'created')}
@@ -558,7 +564,7 @@ const TicketList: React.FC<TicketListProps> = ({
       >
         <p>
           <ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
-          确定要删除工单 <strong>{ticketToDelete?.ticket_number}</strong> 吗？此操作不可撤销。
+          确定要删除工单 <strong>{ticketToDelete?.ticketNumber || '-'}</strong> 吗？此操作不可撤销。
         </p>
       </Modal>
     </div>

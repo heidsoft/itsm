@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/app/lib/api-config';
+import { API_BASE_URL } from '@/lib/api/api-config';
 import { getAccessToken, getTenantCode } from '@/lib/auth/token-storage';
 
 export interface ServiceRequest {
@@ -212,6 +212,23 @@ class ServiceRequestAPI {
         method: 'POST',
       }
     );
+  }
+
+  // ==================== 兼容别名 ====================
+
+  /** @deprecated 使用 getUserServiceRequests */
+  async getServiceRequests(params?: any): Promise<ServiceRequestListResponse> {
+    return this.getUserServiceRequests(params);
+  }
+
+  /** @deprecated 使用 getUserServiceRequests */
+  async getServiceRequest(id: number): Promise<ServiceRequest> {
+    return this.getUserServiceRequests({ id } as any).then(r => r.requests[0]);
+  }
+
+  /** @deprecated 使用 applyApprovalAction */
+  async applyApproval(id: number, action: string, comment?: string): Promise<ServiceRequest> {
+    return this.applyApprovalAction(id, { action: action as 'approve' | 'reject', comment });
   }
 }
 

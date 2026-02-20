@@ -30,12 +30,15 @@ import (
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processexecutionhistory"
@@ -165,12 +168,15 @@ func checkColumn(table, column string) error {
 			incidentrule.Table:            incidentrule.ValidColumn,
 			incidentruleexecution.Table:   incidentruleexecution.ValidColumn,
 			knowledgearticle.Table:        knowledgearticle.ValidColumn,
+			knowledgearticlelike.Table:    knowledgearticlelike.ValidColumn,
 			message.Table:                 message.ValidColumn,
 			microservice.Table:            microservice.ValidColumn,
 			notification.Table:            notification.ValidColumn,
 			notificationpreference.Table:  notificationpreference.ValidColumn,
+			passwordresettoken.Table:      passwordresettoken.ValidColumn,
 			permission.Table:              permission.ValidColumn,
 			problem.Table:                 problem.ValidColumn,
+			processbinding.Table:          processbinding.ValidColumn,
 			processdefinition.Table:       processdefinition.ValidColumn,
 			processdeployment.Table:       processdeployment.ValidColumn,
 			processexecutionhistory.Table: processexecutionhistory.ValidColumn,

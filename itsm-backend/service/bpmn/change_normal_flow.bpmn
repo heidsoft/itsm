@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="change_normal_flow" name="普通变更流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">change</bpmn:metaData>
+      <bpmn:metaData name="sub_category">normal</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">普通变更管理流程</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：变更申请 -->
+    <bpmn:startEvent id="StartEvent_1" name="变更申请">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 变更评估 -->
+    <bpmn:userTask id="Activity_Assessment" name="变更评估">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批判断网关 -->
+    <bpmn:exclusiveGateway id="Gateway_Approval" name="是否需要审批?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Schedule</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- CAB审批 -->
+    <bpmn:userTask id="Activity_CABApproval" name="CAB审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">approve_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApprovalResult</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+      <bpmn:incoming>Flow_ApprovalResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_Schedule</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 驳回处理 -->
+    <bpmn:userTask id="Activity_Reject" name="变更驳回">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">reject_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 排期 -->
+    <bpmn:userTask id="Activity_Schedule" name="变更排期">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">schedule_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Schedule</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 实施 -->
+    <bpmn:userTask id="Activity_Implement" name="变更实施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">implement_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证 -->
+    <bpmn:userTask id="Activity_Verify" name="变更验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">verify_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证结果?">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close</bpmn:outgoing>
+      <bpmn:outgoing>Flow_BackToImplement</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 回退实施 -->
+    <bpmn:sequenceFlow id="Flow_BackToImplement" sourceRef="Gateway_VerifyResult" targetRef="Activity_Implement" />
+
+    <!-- 关闭 -->
+    <bpmn:userTask id="Activity_Close" name="关闭变更">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">close_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Close</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_1" name="变更完成">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Assessment" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Assessment" targetRef="Gateway_Approval" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_Approval" targetRef="Activity_CABApproval">
+      <bpmn:conditionExpression><![CDATA[${variables['need_approval'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Schedule" sourceRef="Gateway_Approval" targetRef="Activity_Schedule">
+      <bpmn:conditionExpression><![CDATA[${variables['need_approval'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ApprovalResult" sourceRef="Activity_CABApproval" targetRef="Gateway_ApprovalResult" />
+    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_ApprovalResult" targetRef="Activity_Reject" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Schedule" targetRef="Activity_Implement" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Implement" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Activity_Verify" targetRef="Gateway_VerifyResult" />
+    <bpmn:sequenceFlow id="Flow_Close" sourceRef="Gateway_VerifyResult" targetRef="Activity_Close">
+      <bpmn:conditionExpression><![CDATA[${variables['verify_passed'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Close" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="Flow_EndReject" sourceRef="Activity_Reject" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>

@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { App } from 'antd';
+import { ChangeApi, ChangeRequest } from '@/lib/api/change-api';
 
 const CreateChangePage = () => {
   const router = useRouter();
@@ -15,16 +16,59 @@ const CreateChangePage = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+
     const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-    console.log('新建变更数据:', JSON.stringify(data, null, 2));
+
+    // 转换表单字段为API请求格式
+    const typeMap: Record<string, string> = {
+      '普通变更': 'normal',
+      '标准变更': 'standard',
+      '紧急变更': 'emergency'
+    };
+
+    const priorityMap: Record<string, string> = {
+      '紧急': 'critical',
+      '高': 'high',
+      '中': 'medium',
+      '低': 'low'
+    };
+
+    const impactMap: Record<string, string> = {
+      '高 (影响核心业务)': 'high',
+      '中 (影响部分业务或用户)': 'medium',
+      '低 (影响较小或无影响)': 'low'
+    };
+
+    const riskMap: Record<string, string> = {
+      '高': 'high',
+      '中': 'medium',
+      '低': 'low'
+    };
+
+    const changeData: ChangeRequest = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      justification: formData.get('justification') as string,
+      type: (typeMap[formData.get('type') as string] || 'normal') as ChangeRequest['type'],
+      priority: (priorityMap[formData.get('priority') as string] || 'medium') as ChangeRequest['priority'],
+      impact_scope: (impactMap[formData.get('impactScope') as string] || 'medium') as ChangeRequest['impact_scope'],
+      risk_level: (riskMap[formData.get('riskLevel') as string] || 'medium') as ChangeRequest['risk_level'],
+      planned_start_date: formData.get('plannedStartDate') as string || undefined,
+      planned_end_date: formData.get('plannedEndDate') as string || undefined,
+      implementation_plan: formData.get('implementationPlan') as string,
+      rollback_plan: formData.get('rollbackPlan') as string,
+      affected_cis: (formData.get('affectedCIs') as string)?.split(',').map(ci => ci.trim()).filter(Boolean) || [],
+      related_tickets: []
+    };
+
+    console.log('新建变更数据:', JSON.stringify(changeData, null, 2));
 
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await ChangeApi.createChange(changeData);
       message.success('变更请求已成功提交！');
       router.push('/changes');
     } catch (error) {
+      console.error('提交变更失败:', error);
       message.error('提交失败，请稍后重试');
     } finally {
       setLoading(false);
@@ -176,14 +220,16 @@ const CreateChangePage = () => {
               type='button'
               onClick={() => router.back()}
               className='bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 mr-4'
+              disabled={loading}
             >
               取消
             </button>
             <button
               type='submit'
-              className='bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700'
+              className='bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50'
+              disabled={loading}
             >
-              提交变更请求
+              {loading ? '提交中...' : '提交变更请求'}
             </button>
           </div>
         </form>

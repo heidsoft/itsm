@@ -5,15 +5,25 @@ import (
 	"time"
 )
 
+// UserBasicInfo 用户基本信息
+type UserBasicInfo struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+}
+
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
 	Title          string                 `json:"title" binding:"required,min=2,max=200"`
 	Description    string                 `json:"description" binding:"required,min=10,max=5000"`
-	Priority       string                 `json:"priority" binding:"required,oneof=low medium high critical"`
-	Category       string                 `json:"category" binding:"required"`
+	Priority       string                 `json:"priority" binding:"required"`
+	Type           string                 `json:"type"` // 工单类型: incident, service_request, change, ticket
+	Category       string                 `json:"category"` // 分类名称（可选，前端传入）
 	CategoryID     *int                   `json:"category_id,omitempty"` // 分类ID（优先使用）
 	TemplateID     *int                   `json:"template_id,omitempty"` // 模板ID
-	RequesterID    int                    `json:"requester_id" binding:"required"`
+	RequesterID    int                    `json:"requester_id"` // 从认证上下文中获取，前端可不传
 	AssigneeID     int                    `json:"assignee_id"`
 	ParentTicketID *int                   `json:"parent_ticket_id,omitempty"`
 	TagIDs         []int                  `json:"tag_ids,omitempty"` // 标签ID列表
@@ -55,26 +65,28 @@ type ListTicketsRequest struct {
 
 // TicketResponse 工单响应
 type TicketResponse struct {
-	ID           int       `json:"id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	Status       string    `json:"status"`
-	Priority     string    `json:"priority"`
-	TicketNumber string    `json:"ticket_number"`
-	RequesterID  int       `json:"requester_id"`
-	AssigneeID   int       `json:"assignee_id,omitempty"`
-	TenantID     int       `json:"tenant_id"`
-	CategoryID   int       `json:"category_id,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           int              `json:"id"`
+	Title        string           `json:"title"`
+	Description  string           `json:"description"`
+	Status       string           `json:"status"`
+	Priority     string           `json:"priority"`
+	TicketNumber string           `json:"ticket_number"`
+	RequesterID  int              `json:"requester_id"`
+	AssigneeID   int              `json:"assignee_id,omitempty"`
+	TenantID     int              `json:"tenant_id"`
+	CategoryID   int              `json:"category_id,omitempty"`
+	CreatedAt    time.Time        `json:"created_at"`
+	UpdatedAt    time.Time        `json:"updated_at"`
+	Requester    *UserBasicInfo   `json:"requester,omitempty"`
+	Assignee     *UserBasicInfo   `json:"assignee,omitempty"`
 }
 
 // ListTicketsResponse 工单列表响应
 type ListTicketsResponse struct {
-	Tickets  []*ent.Ticket `json:"tickets"`
-	Total    int           `json:"total"`
-	Page     int           `json:"page"`
-	PageSize int           `json:"page_size"`
+	Tickets  []*TicketResponse `json:"tickets"`
+	Total    int              `json:"total"`
+	Page     int              `json:"page"`
+	PageSize int              `json:"page_size"`
 }
 
 // TicketStatsResponse 工单统计响应
@@ -216,7 +228,8 @@ type EscalateTicketRequest struct {
 // ResolveTicketRequest 解决工单请求
 type ResolveTicketRequest struct {
 	TicketID           int    `json:"ticket_id"`
-	Resolution         string `json:"resolution" binding:"required"`
+	Resolution         string `json:"resolution"` // 解决方案（可选，兼容前端发送 solution）
+	Solution           string `json:"solution"`   // 兼容前端字段名
 	ResolutionCategory string `json:"resolution_category,omitempty"`
 	WorkNotes          string `json:"work_notes,omitempty"`
 }

@@ -407,20 +407,6 @@ export class TicketApi {
     return httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
   }
 
-  // Get ticket SLA
-  static async getTicketSLA(id: number): Promise<{
-    sla_id: number;
-    sla_name: string;
-    response_time: number;
-    resolution_time: number;
-    start_time: string;
-    due_time: string;
-    breach_time?: string;
-    status: string;
-  }> {
-    return httpClient.get(`/api/v1/tickets/${id}/sla`);
-  }
-
   // Add ticket tags
   static async addTicketTags(id: number, tags: string[]): Promise<{
     success: boolean;
@@ -521,6 +507,26 @@ export class TicketApi {
     total: number;
   }> {
     return httpClient.get('/api/v1/ticket-templates', params);
+  }
+
+  // Get ticket SLA info
+  static async getTicketSLA(id: number): Promise<{
+    ticket_id: number;
+    sla_definition_id: number;
+    sla_name: string;
+    service_type: string;
+    priority: string;
+    response_time: number;
+    resolution_time: number;
+    response_deadline: string | null;
+    resolution_deadline: string | null;
+    first_response_at: string | null;
+    resolved_at: string | null;
+    is_breached: boolean;
+    response_time_remaining: number | null;
+    resolution_time_remaining: number | null;
+  }> {
+    return httpClient.get(`/api/v1/tickets/${id}/sla`);
   }
 }
 

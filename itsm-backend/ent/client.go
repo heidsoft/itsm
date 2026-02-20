@@ -35,12 +35,15 @@ import (
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processexecutionhistory"
@@ -140,6 +143,8 @@ type Client struct {
 	IncidentRuleExecution *IncidentRuleExecutionClient
 	// KnowledgeArticle is the client for interacting with the KnowledgeArticle builders.
 	KnowledgeArticle *KnowledgeArticleClient
+	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
+	KnowledgeArticleLike *KnowledgeArticleLikeClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -148,10 +153,14 @@ type Client struct {
 	Notification *NotificationClient
 	// NotificationPreference is the client for interacting with the NotificationPreference builders.
 	NotificationPreference *NotificationPreferenceClient
+	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
+	PasswordResetToken *PasswordResetTokenClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessBinding is the client for interacting with the ProcessBinding builders.
+	ProcessBinding *ProcessBindingClient
 	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
 	ProcessDefinition *ProcessDefinitionClient
 	// ProcessDeployment is the client for interacting with the ProcessDeployment builders.
@@ -265,12 +274,15 @@ func (c *Client) init() {
 	c.IncidentRule = NewIncidentRuleClient(c.config)
 	c.IncidentRuleExecution = NewIncidentRuleExecutionClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
+	c.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Microservice = NewMicroserviceClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
 	c.NotificationPreference = NewNotificationPreferenceClient(c.config)
+	c.PasswordResetToken = NewPasswordResetTokenClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.Problem = NewProblemClient(c.config)
+	c.ProcessBinding = NewProcessBindingClient(c.config)
 	c.ProcessDefinition = NewProcessDefinitionClient(c.config)
 	c.ProcessDeployment = NewProcessDeploymentClient(c.config)
 	c.ProcessExecutionHistory = NewProcessExecutionHistoryClient(c.config)
@@ -426,12 +438,15 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		IncidentRule:            NewIncidentRuleClient(cfg),
 		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
 		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
+		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
 		NotificationPreference:  NewNotificationPreferenceClient(cfg),
+		PasswordResetToken:      NewPasswordResetTokenClient(cfg),
 		Permission:              NewPermissionClient(cfg),
 		Problem:                 NewProblemClient(cfg),
+		ProcessBinding:          NewProcessBindingClient(cfg),
 		ProcessDefinition:       NewProcessDefinitionClient(cfg),
 		ProcessDeployment:       NewProcessDeploymentClient(cfg),
 		ProcessExecutionHistory: NewProcessExecutionHistoryClient(cfg),
@@ -514,12 +529,15 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		IncidentRule:            NewIncidentRuleClient(cfg),
 		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
 		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
+		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
 		NotificationPreference:  NewNotificationPreferenceClient(cfg),
+		PasswordResetToken:      NewPasswordResetTokenClient(cfg),
 		Permission:              NewPermissionClient(cfg),
 		Problem:                 NewProblemClient(cfg),
+		ProcessBinding:          NewProcessBindingClient(cfg),
 		ProcessDefinition:       NewProcessDefinitionClient(cfg),
 		ProcessDeployment:       NewProcessDeploymentClient(cfg),
 		ProcessExecutionHistory: NewProcessExecutionHistoryClient(cfg),
@@ -593,18 +611,19 @@ func (c *Client) Use(hooks ...Hook) {
 		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Conversation,
 		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.Incident,
 		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.Permission, c.Problem,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
-		c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Role,
-		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAViolation, c.ServiceCatalog, c.ServiceRequest,
-		c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike, c.Message,
+		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
+		c.Permission, c.Problem, c.ProcessBinding, c.ProcessDefinition,
+		c.ProcessDeployment, c.ProcessExecutionHistory, c.ProcessInstance,
+		c.ProcessTask, c.ProcessVariable, c.Project, c.PromptTemplate,
+		c.ProvisioningTask, c.RelationshipType, c.Role, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
+		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
+		c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -619,18 +638,19 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Conversation,
 		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.Incident,
 		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.Message, c.Microservice,
-		c.Notification, c.NotificationPreference, c.Permission, c.Problem,
-		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
-		c.ProcessInstance, c.ProcessTask, c.ProcessVariable, c.Project,
-		c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Role,
-		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAViolation, c.ServiceCatalog, c.ServiceRequest,
-		c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
-		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike, c.Message,
+		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
+		c.Permission, c.Problem, c.ProcessBinding, c.ProcessDefinition,
+		c.ProcessDeployment, c.ProcessExecutionHistory, c.ProcessInstance,
+		c.ProcessTask, c.ProcessVariable, c.Project, c.PromptTemplate,
+		c.ProvisioningTask, c.RelationshipType, c.Role, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric,
+		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
+		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
+		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
+		c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -687,6 +707,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.IncidentRuleExecution.mutate(ctx, m)
 	case *KnowledgeArticleMutation:
 		return c.KnowledgeArticle.mutate(ctx, m)
+	case *KnowledgeArticleLikeMutation:
+		return c.KnowledgeArticleLike.mutate(ctx, m)
 	case *MessageMutation:
 		return c.Message.mutate(ctx, m)
 	case *MicroserviceMutation:
@@ -695,10 +717,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Notification.mutate(ctx, m)
 	case *NotificationPreferenceMutation:
 		return c.NotificationPreference.mutate(ctx, m)
+	case *PasswordResetTokenMutation:
+		return c.PasswordResetToken.mutate(ctx, m)
 	case *PermissionMutation:
 		return c.Permission.mutate(ctx, m)
 	case *ProblemMutation:
 		return c.Problem.mutate(ctx, m)
+	case *ProcessBindingMutation:
+		return c.ProcessBinding.mutate(ctx, m)
 	case *ProcessDefinitionMutation:
 		return c.ProcessDefinition.mutate(ctx, m)
 	case *ProcessDeploymentMutation:
@@ -1651,15 +1677,15 @@ func (c *CIRelationshipClient) GetX(ctx context.Context, id int) *CIRelationship
 	return obj
 }
 
-// QueryParent queries the parent edge of a CIRelationship.
-func (c *CIRelationshipClient) QueryParent(cr *CIRelationship) *ConfigurationItemQuery {
+// QuerySourceCi queries the source_ci edge of a CIRelationship.
+func (c *CIRelationshipClient) QuerySourceCi(cr *CIRelationship) *ConfigurationItemQuery {
 	query := (&ConfigurationItemClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := cr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, id),
 			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.ParentTable, cirelationship.ParentColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.SourceCiTable, cirelationship.SourceCiColumn),
 		)
 		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
 		return fromV, nil
@@ -1667,15 +1693,15 @@ func (c *CIRelationshipClient) QueryParent(cr *CIRelationship) *ConfigurationIte
 	return query
 }
 
-// QueryChild queries the child edge of a CIRelationship.
-func (c *CIRelationshipClient) QueryChild(cr *CIRelationship) *ConfigurationItemQuery {
+// QueryTargetCi queries the target_ci edge of a CIRelationship.
+func (c *CIRelationshipClient) QueryTargetCi(cr *CIRelationship) *ConfigurationItemQuery {
 	query := (&ConfigurationItemClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := cr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(cirelationship.Table, cirelationship.FieldID, id),
 			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.ChildTable, cirelationship.ChildColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, cirelationship.TargetCiTable, cirelationship.TargetCiColumn),
 		)
 		fromV = sqlgraph.Neighbors(cr.driver.Dialect(), step)
 		return fromV, nil
@@ -2673,15 +2699,15 @@ func (c *ConfigurationItemClient) QueryIncidents(ci *ConfigurationItem) *Inciden
 	return query
 }
 
-// QueryParentRelations queries the parent_relations edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryParentRelations(ci *ConfigurationItem) *CIRelationshipQuery {
+// QueryOutgoingRelations queries the outgoing_relations edge of a ConfigurationItem.
+func (c *ConfigurationItemClient) QueryOutgoingRelations(ci *ConfigurationItem) *CIRelationshipQuery {
 	query := (&CIRelationshipClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ci.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ParentRelationsTable, configurationitem.ParentRelationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationsTable, configurationitem.OutgoingRelationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
 		return fromV, nil
@@ -2689,15 +2715,15 @@ func (c *ConfigurationItemClient) QueryParentRelations(ci *ConfigurationItem) *C
 	return query
 }
 
-// QueryChildRelations queries the child_relations edge of a ConfigurationItem.
-func (c *ConfigurationItemClient) QueryChildRelations(ci *ConfigurationItem) *CIRelationshipQuery {
+// QueryIncomingRelations queries the incoming_relations edge of a ConfigurationItem.
+func (c *ConfigurationItemClient) QueryIncomingRelations(ci *ConfigurationItem) *CIRelationshipQuery {
 	query := (&CIRelationshipClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ci.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.ChildRelationsTable, configurationitem.ChildRelationsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncomingRelationsTable, configurationitem.IncomingRelationsColumn),
 		)
 		fromV = sqlgraph.Neighbors(ci.driver.Dialect(), step)
 		return fromV, nil
@@ -4701,6 +4727,22 @@ func (c *KnowledgeArticleClient) GetX(ctx context.Context, id int) *KnowledgeArt
 	return obj
 }
 
+// QueryUserLikes queries the user_likes edge of a KnowledgeArticle.
+func (c *KnowledgeArticleClient) QueryUserLikes(ka *KnowledgeArticle) *KnowledgeArticleLikeQuery {
+	query := (&KnowledgeArticleLikeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ka.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
+			sqlgraph.To(knowledgearticlelike.Table, knowledgearticlelike.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.UserLikesTable, knowledgearticle.UserLikesColumn),
+		)
+		fromV = sqlgraph.Neighbors(ka.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *KnowledgeArticleClient) Hooks() []Hook {
 	return c.hooks.KnowledgeArticle
@@ -4723,6 +4765,155 @@ func (c *KnowledgeArticleClient) mutate(ctx context.Context, m *KnowledgeArticle
 		return (&KnowledgeArticleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown KnowledgeArticle mutation op: %q", m.Op())
+	}
+}
+
+// KnowledgeArticleLikeClient is a client for the KnowledgeArticleLike schema.
+type KnowledgeArticleLikeClient struct {
+	config
+}
+
+// NewKnowledgeArticleLikeClient returns a client for the KnowledgeArticleLike from the given config.
+func NewKnowledgeArticleLikeClient(c config) *KnowledgeArticleLikeClient {
+	return &KnowledgeArticleLikeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `knowledgearticlelike.Hooks(f(g(h())))`.
+func (c *KnowledgeArticleLikeClient) Use(hooks ...Hook) {
+	c.hooks.KnowledgeArticleLike = append(c.hooks.KnowledgeArticleLike, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `knowledgearticlelike.Intercept(f(g(h())))`.
+func (c *KnowledgeArticleLikeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.KnowledgeArticleLike = append(c.inters.KnowledgeArticleLike, interceptors...)
+}
+
+// Create returns a builder for creating a KnowledgeArticleLike entity.
+func (c *KnowledgeArticleLikeClient) Create() *KnowledgeArticleLikeCreate {
+	mutation := newKnowledgeArticleLikeMutation(c.config, OpCreate)
+	return &KnowledgeArticleLikeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of KnowledgeArticleLike entities.
+func (c *KnowledgeArticleLikeClient) CreateBulk(builders ...*KnowledgeArticleLikeCreate) *KnowledgeArticleLikeCreateBulk {
+	return &KnowledgeArticleLikeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KnowledgeArticleLikeClient) MapCreateBulk(slice any, setFunc func(*KnowledgeArticleLikeCreate, int)) *KnowledgeArticleLikeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KnowledgeArticleLikeCreateBulk{err: fmt.Errorf("calling to KnowledgeArticleLikeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KnowledgeArticleLikeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KnowledgeArticleLikeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for KnowledgeArticleLike.
+func (c *KnowledgeArticleLikeClient) Update() *KnowledgeArticleLikeUpdate {
+	mutation := newKnowledgeArticleLikeMutation(c.config, OpUpdate)
+	return &KnowledgeArticleLikeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KnowledgeArticleLikeClient) UpdateOne(kal *KnowledgeArticleLike) *KnowledgeArticleLikeUpdateOne {
+	mutation := newKnowledgeArticleLikeMutation(c.config, OpUpdateOne, withKnowledgeArticleLike(kal))
+	return &KnowledgeArticleLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KnowledgeArticleLikeClient) UpdateOneID(id int) *KnowledgeArticleLikeUpdateOne {
+	mutation := newKnowledgeArticleLikeMutation(c.config, OpUpdateOne, withKnowledgeArticleLikeID(id))
+	return &KnowledgeArticleLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for KnowledgeArticleLike.
+func (c *KnowledgeArticleLikeClient) Delete() *KnowledgeArticleLikeDelete {
+	mutation := newKnowledgeArticleLikeMutation(c.config, OpDelete)
+	return &KnowledgeArticleLikeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KnowledgeArticleLikeClient) DeleteOne(kal *KnowledgeArticleLike) *KnowledgeArticleLikeDeleteOne {
+	return c.DeleteOneID(kal.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KnowledgeArticleLikeClient) DeleteOneID(id int) *KnowledgeArticleLikeDeleteOne {
+	builder := c.Delete().Where(knowledgearticlelike.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KnowledgeArticleLikeDeleteOne{builder}
+}
+
+// Query returns a query builder for KnowledgeArticleLike.
+func (c *KnowledgeArticleLikeClient) Query() *KnowledgeArticleLikeQuery {
+	return &KnowledgeArticleLikeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKnowledgeArticleLike},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a KnowledgeArticleLike entity by its id.
+func (c *KnowledgeArticleLikeClient) Get(ctx context.Context, id int) (*KnowledgeArticleLike, error) {
+	return c.Query().Where(knowledgearticlelike.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KnowledgeArticleLikeClient) GetX(ctx context.Context, id int) *KnowledgeArticleLike {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryArticle queries the article edge of a KnowledgeArticleLike.
+func (c *KnowledgeArticleLikeClient) QueryArticle(kal *KnowledgeArticleLike) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := kal.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticlelike.Table, knowledgearticlelike.FieldID, id),
+			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticlelike.ArticleTable, knowledgearticlelike.ArticleColumn),
+		)
+		fromV = sqlgraph.Neighbors(kal.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KnowledgeArticleLikeClient) Hooks() []Hook {
+	return c.hooks.KnowledgeArticleLike
+}
+
+// Interceptors returns the client interceptors.
+func (c *KnowledgeArticleLikeClient) Interceptors() []Interceptor {
+	return c.inters.KnowledgeArticleLike
+}
+
+func (c *KnowledgeArticleLikeClient) mutate(ctx context.Context, m *KnowledgeArticleLikeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KnowledgeArticleLikeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KnowledgeArticleLikeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KnowledgeArticleLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KnowledgeArticleLikeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown KnowledgeArticleLike mutation op: %q", m.Op())
 	}
 }
 
@@ -5322,6 +5513,139 @@ func (c *NotificationPreferenceClient) mutate(ctx context.Context, m *Notificati
 	}
 }
 
+// PasswordResetTokenClient is a client for the PasswordResetToken schema.
+type PasswordResetTokenClient struct {
+	config
+}
+
+// NewPasswordResetTokenClient returns a client for the PasswordResetToken from the given config.
+func NewPasswordResetTokenClient(c config) *PasswordResetTokenClient {
+	return &PasswordResetTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `passwordresettoken.Hooks(f(g(h())))`.
+func (c *PasswordResetTokenClient) Use(hooks ...Hook) {
+	c.hooks.PasswordResetToken = append(c.hooks.PasswordResetToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `passwordresettoken.Intercept(f(g(h())))`.
+func (c *PasswordResetTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PasswordResetToken = append(c.inters.PasswordResetToken, interceptors...)
+}
+
+// Create returns a builder for creating a PasswordResetToken entity.
+func (c *PasswordResetTokenClient) Create() *PasswordResetTokenCreate {
+	mutation := newPasswordResetTokenMutation(c.config, OpCreate)
+	return &PasswordResetTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PasswordResetToken entities.
+func (c *PasswordResetTokenClient) CreateBulk(builders ...*PasswordResetTokenCreate) *PasswordResetTokenCreateBulk {
+	return &PasswordResetTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PasswordResetTokenClient) MapCreateBulk(slice any, setFunc func(*PasswordResetTokenCreate, int)) *PasswordResetTokenCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PasswordResetTokenCreateBulk{err: fmt.Errorf("calling to PasswordResetTokenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PasswordResetTokenCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PasswordResetTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PasswordResetToken.
+func (c *PasswordResetTokenClient) Update() *PasswordResetTokenUpdate {
+	mutation := newPasswordResetTokenMutation(c.config, OpUpdate)
+	return &PasswordResetTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PasswordResetTokenClient) UpdateOne(prt *PasswordResetToken) *PasswordResetTokenUpdateOne {
+	mutation := newPasswordResetTokenMutation(c.config, OpUpdateOne, withPasswordResetToken(prt))
+	return &PasswordResetTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PasswordResetTokenClient) UpdateOneID(id int) *PasswordResetTokenUpdateOne {
+	mutation := newPasswordResetTokenMutation(c.config, OpUpdateOne, withPasswordResetTokenID(id))
+	return &PasswordResetTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PasswordResetToken.
+func (c *PasswordResetTokenClient) Delete() *PasswordResetTokenDelete {
+	mutation := newPasswordResetTokenMutation(c.config, OpDelete)
+	return &PasswordResetTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PasswordResetTokenClient) DeleteOne(prt *PasswordResetToken) *PasswordResetTokenDeleteOne {
+	return c.DeleteOneID(prt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PasswordResetTokenClient) DeleteOneID(id int) *PasswordResetTokenDeleteOne {
+	builder := c.Delete().Where(passwordresettoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PasswordResetTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for PasswordResetToken.
+func (c *PasswordResetTokenClient) Query() *PasswordResetTokenQuery {
+	return &PasswordResetTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePasswordResetToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PasswordResetToken entity by its id.
+func (c *PasswordResetTokenClient) Get(ctx context.Context, id int) (*PasswordResetToken, error) {
+	return c.Query().Where(passwordresettoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PasswordResetTokenClient) GetX(ctx context.Context, id int) *PasswordResetToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *PasswordResetTokenClient) Hooks() []Hook {
+	return c.hooks.PasswordResetToken
+}
+
+// Interceptors returns the client interceptors.
+func (c *PasswordResetTokenClient) Interceptors() []Interceptor {
+	return c.inters.PasswordResetToken
+}
+
+func (c *PasswordResetTokenClient) mutate(ctx context.Context, m *PasswordResetTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PasswordResetTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PasswordResetTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PasswordResetTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PasswordResetTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PasswordResetToken mutation op: %q", m.Op())
+	}
+}
+
 // PermissionClient is a client for the Permission schema.
 type PermissionClient struct {
 	config
@@ -5604,6 +5928,155 @@ func (c *ProblemClient) mutate(ctx context.Context, m *ProblemMutation) (Value, 
 	}
 }
 
+// ProcessBindingClient is a client for the ProcessBinding schema.
+type ProcessBindingClient struct {
+	config
+}
+
+// NewProcessBindingClient returns a client for the ProcessBinding from the given config.
+func NewProcessBindingClient(c config) *ProcessBindingClient {
+	return &ProcessBindingClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processbinding.Hooks(f(g(h())))`.
+func (c *ProcessBindingClient) Use(hooks ...Hook) {
+	c.hooks.ProcessBinding = append(c.hooks.ProcessBinding, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processbinding.Intercept(f(g(h())))`.
+func (c *ProcessBindingClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessBinding = append(c.inters.ProcessBinding, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessBinding entity.
+func (c *ProcessBindingClient) Create() *ProcessBindingCreate {
+	mutation := newProcessBindingMutation(c.config, OpCreate)
+	return &ProcessBindingCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessBinding entities.
+func (c *ProcessBindingClient) CreateBulk(builders ...*ProcessBindingCreate) *ProcessBindingCreateBulk {
+	return &ProcessBindingCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessBindingClient) MapCreateBulk(slice any, setFunc func(*ProcessBindingCreate, int)) *ProcessBindingCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessBindingCreateBulk{err: fmt.Errorf("calling to ProcessBindingClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessBindingCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessBindingCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessBinding.
+func (c *ProcessBindingClient) Update() *ProcessBindingUpdate {
+	mutation := newProcessBindingMutation(c.config, OpUpdate)
+	return &ProcessBindingUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessBindingClient) UpdateOne(pb *ProcessBinding) *ProcessBindingUpdateOne {
+	mutation := newProcessBindingMutation(c.config, OpUpdateOne, withProcessBinding(pb))
+	return &ProcessBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessBindingClient) UpdateOneID(id int) *ProcessBindingUpdateOne {
+	mutation := newProcessBindingMutation(c.config, OpUpdateOne, withProcessBindingID(id))
+	return &ProcessBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessBinding.
+func (c *ProcessBindingClient) Delete() *ProcessBindingDelete {
+	mutation := newProcessBindingMutation(c.config, OpDelete)
+	return &ProcessBindingDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessBindingClient) DeleteOne(pb *ProcessBinding) *ProcessBindingDeleteOne {
+	return c.DeleteOneID(pb.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessBindingClient) DeleteOneID(id int) *ProcessBindingDeleteOne {
+	builder := c.Delete().Where(processbinding.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessBindingDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessBinding.
+func (c *ProcessBindingClient) Query() *ProcessBindingQuery {
+	return &ProcessBindingQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessBinding},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessBinding entity by its id.
+func (c *ProcessBindingClient) Get(ctx context.Context, id int) (*ProcessBinding, error) {
+	return c.Query().Where(processbinding.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessBindingClient) GetX(ctx context.Context, id int) *ProcessBinding {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProcessDefinition queries the process_definition edge of a ProcessBinding.
+func (c *ProcessBindingClient) QueryProcessDefinition(pb *ProcessBinding) *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pb.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processbinding.Table, processbinding.FieldID, id),
+			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, processbinding.ProcessDefinitionTable, processbinding.ProcessDefinitionPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pb.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessBindingClient) Hooks() []Hook {
+	return c.hooks.ProcessBinding
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessBindingClient) Interceptors() []Interceptor {
+	return c.inters.ProcessBinding
+}
+
+func (c *ProcessBindingClient) mutate(ctx context.Context, m *ProcessBindingMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessBindingCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessBindingUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessBindingUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessBindingDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessBinding mutation op: %q", m.Op())
+	}
+}
+
 // ProcessDefinitionClient is a client for the ProcessDefinition schema.
 type ProcessDefinitionClient struct {
 	config
@@ -5721,6 +6194,22 @@ func (c *ProcessDefinitionClient) QueryProcessInstances(pd *ProcessDefinition) *
 			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, id),
 			sqlgraph.To(processinstance.Table, processinstance.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.ProcessInstancesTable, processdefinition.ProcessInstancesColumn),
+		)
+		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryBindings queries the bindings edge of a ProcessDefinition.
+func (c *ProcessDefinitionClient) QueryBindings(pd *ProcessDefinition) *ProcessBindingQuery {
+	query := (&ProcessBindingClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, id),
+			sqlgraph.To(processbinding.Table, processbinding.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, processdefinition.BindingsTable, processdefinition.BindingsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
 		return fromV, nil
@@ -12062,8 +12551,9 @@ type (
 		CIRelationship, CIType, Change, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, Conversation, Department, DiscoveryJob, DiscoveryResult,
 		DiscoverySource, Incident, IncidentAlert, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, KnowledgeArticle, Message, Microservice,
-		Notification, NotificationPreference, Permission, Problem, ProcessDefinition,
+		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, Problem, ProcessBinding, ProcessDefinition,
 		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
 		ProcessVariable, Project, PromptTemplate, ProvisioningTask, RelationshipType,
 		Role, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition,
@@ -12078,8 +12568,9 @@ type (
 		CIRelationship, CIType, Change, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, Conversation, Department, DiscoveryJob, DiscoveryResult,
 		DiscoverySource, Incident, IncidentAlert, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, KnowledgeArticle, Message, Microservice,
-		Notification, NotificationPreference, Permission, Problem, ProcessDefinition,
+		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, Problem, ProcessBinding, ProcessDefinition,
 		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
 		ProcessVariable, Project, PromptTemplate, ProvisioningTask, RelationshipType,
 		Role, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition,

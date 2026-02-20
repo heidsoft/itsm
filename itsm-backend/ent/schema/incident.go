@@ -25,6 +25,9 @@ func (Incident) Fields() []ent.Field {
 		field.String("status").
 			Comment("状态").
 			Default("new"),
+		field.String("type").
+			Comment("事件类型").
+			Default("incident"),
 		field.String("priority").
 			Comment("优先级").
 			Default("medium"),

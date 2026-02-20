@@ -278,4 +278,11 @@ export class ChangeApi {
   static async getImplementationLogs(id: number): Promise<any[]> {
     return httpClient.get(`/api/v1/changes/${id}/logs`);
   }
+
+  // ==================== 兼容别名（旧代码使用） ====================
+
+  /** @deprecated 使用 getChangeApprovals */
+  static async getApprovalSummary(id: number) {
+    return this.getChangeApprovals(id);
+  }
 }

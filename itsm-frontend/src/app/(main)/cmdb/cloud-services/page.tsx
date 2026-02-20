@@ -4,8 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, message } from 'antd';
 
-import { CMDBApi } from '@/modules/cmdb/api';
-import type { CloudService } from '@/modules/cmdb/types';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { CloudService } from '@/types/biz/cmdb';
 
 const { Option } = Select;
 const { TextArea } = Input;

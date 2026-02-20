@@ -4,9 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Breadcrumb, Button, Card, Divider, Form, Input, Select, Space, message } from 'antd';
 
-import { CMDBApi } from '@/modules/cmdb/api';
-import { CIStatus, CIStatusLabels } from '@/modules/cmdb/constants';
-import type { CIType, CloudResource, CloudService } from '@/modules/cmdb/types';
+import { CMDBApi } from '@/lib/api/cmdb-api';
+import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
+import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
 
 const { TextArea } = Input;
 
@@ -204,9 +204,8 @@ const CreateCIPage: React.FC = () => {
       setSaving(true);
       await CMDBApi.createCI({
         name: values.name,
-        ci_type_id: values.ci_type_id,
+        ci_type: String(values.ci_type_id),
         status: values.status,
-        description: values.description,
         attributes,
         serial_number: values.serial_number,
         model: values.model,
@@ -215,8 +214,8 @@ const CreateCIPage: React.FC = () => {
         asset_tag: values.asset_tag,
         assigned_to: values.assigned_to,
         owned_by: values.owned_by,
-        environment: values.environment,
-        criticality: values.criticality,
+        environment: values.environment || '',
+        criticality: values.criticality || '',
         discovery_source: values.discovery_source,
         source: values.source,
         cloud_provider: values.cloud_provider,
@@ -228,7 +227,7 @@ const CreateCIPage: React.FC = () => {
         cloud_sync_status: values.cloud_sync_status,
         cloud_resource_ref_id: values.cloud_resource_ref_id,
         cloud_metadata: values.cloud_metadata,
-      });
+      } as any);
       message.success('配置项创建成功');
       router.push('/cmdb');
     } catch (error) {
@@ -268,13 +267,14 @@ const CreateCIPage: React.FC = () => {
           name="ci_type_id"
           rules={[{ required: true, message: '请选择资产类型' }]}
         >
-          <Select placeholder="请选择资产类型" loading={typesLoading}>
-            {types.map((type) => (
-              <Select.Option key={type.id} value={type.id}>
-                {type.name}
-              </Select.Option>
-            ))}
-          </Select>
+          <Select
+            placeholder="请选择资产类型"
+            loading={typesLoading}
+            options={types.map((type) => ({
+              label: type.name,
+              value: type.id,
+            }))}
+          />
         </Form.Item>
 
         <Form.Item
@@ -282,13 +282,13 @@ const CreateCIPage: React.FC = () => {
           name="status"
           rules={[{ required: true, message: '请选择资产状态' }]}
         >
-          <Select placeholder="请选择资产状态">
-            {statusOptions.map((status) => (
-              <Select.Option key={status} value={status}>
-                {CIStatusLabels[status]}
-              </Select.Option>
-            ))}
-          </Select>
+          <Select
+            placeholder="请选择资产状态"
+            options={statusOptions.map((status) => ({
+              label: CIStatusLabels[status],
+              value: status,
+            }))}
+          />
         </Form.Item>
 
         <Form.Item label="描述" name="description">
@@ -324,20 +324,28 @@ const CreateCIPage: React.FC = () => {
         </Form.Item>
 
         <Form.Item label="环境" name="environment">
-          <Select placeholder="请选择环境" allowClear>
-            <Select.Option value="production">生产</Select.Option>
-            <Select.Option value="staging">预发布</Select.Option>
-            <Select.Option value="development">开发</Select.Option>
-          </Select>
+          <Select
+            placeholder="请选择环境"
+            allowClear
+            options={[
+              { label: '生产', value: 'production' },
+              { label: '预发布', value: 'staging' },
+              { label: '开发', value: 'development' },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item label="重要性" name="criticality">
-          <Select placeholder="请选择重要性" allowClear>
-            <Select.Option value="low">低</Select.Option>
-            <Select.Option value="medium">中</Select.Option>
-            <Select.Option value="high">高</Select.Option>
-            <Select.Option value="critical">关键</Select.Option>
-          </Select>
+          <Select
+            placeholder="请选择重要性"
+            allowClear
+            options={[
+              { label: '低', value: 'low' },
+              { label: '中', value: 'medium' },
+              { label: '高', value: 'high' },
+              { label: '关键', value: 'critical' },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item label="发现源" name="discovery_source">
@@ -345,23 +353,31 @@ const CreateCIPage: React.FC = () => {
         </Form.Item>
 
         <Form.Item label="数据来源" name="source">
-          <Select placeholder="请选择数据来源" allowClear>
-            <Select.Option value="manual">手工录入</Select.Option>
-            <Select.Option value="discovery">自动发现</Select.Option>
-            <Select.Option value="import">批量导入</Select.Option>
-          </Select>
+          <Select
+            placeholder="请选择数据来源"
+            allowClear
+            options={[
+              { label: '手工录入', value: 'manual' },
+              { label: '自动发现', value: 'discovery' },
+              { label: '批量导入', value: 'import' },
+            ]}
+          />
         </Form.Item>
 
         <Divider>云资源信息</Divider>
 
         <Form.Item label="云厂商" name="cloud_provider">
-          <Select placeholder="请选择云厂商" allowClear>
-            <Select.Option value="aliyun">阿里云</Select.Option>
-            <Select.Option value="huawei">华为云</Select.Option>
-            <Select.Option value="tencent">腾讯云</Select.Option>
-            <Select.Option value="azure">Azure</Select.Option>
-            <Select.Option value="onprem">私有云</Select.Option>
-          </Select>
+          <Select
+            placeholder="请选择云厂商"
+            allowClear
+            options={[
+              { label: '阿里云', value: 'aliyun' },
+              { label: '华为云', value: 'huawei' },
+              { label: '腾讯云', value: 'tencent' },
+              { label: 'Azure', value: 'azure' },
+              { label: '私有云', value: 'onprem' },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item label="云资源引用" name="cloud_resource_ref_id">
@@ -372,17 +388,15 @@ const CreateCIPage: React.FC = () => {
             showSearch
             optionFilterProp="label"
             onChange={handleCloudResourceChange}
-          >
-            {cloudResources.map((resource) => {
+            options={cloudResources.map((resource) => {
               const service = cloudServiceMap.get(resource.service_id);
               const label = `${resource.resource_name || resource.resource_id}（${service?.resource_type_name || '未知类型'}）`;
-              return (
-                <Select.Option key={resource.id} value={resource.id} label={label}>
-                  {label}
-                </Select.Option>
-              );
+              return {
+                label,
+                value: resource.id,
+              };
             })}
-          </Select>
+          />
         </Form.Item>
 
         <Form.Item label="云账号ID" name="cloud_account_id">
@@ -419,13 +433,14 @@ const CreateCIPage: React.FC = () => {
                 rules={field.required ? [{ required: true, message: `请输入${field.label || field.key}` }] : undefined}
               >
                 {field.type === 'select' ? (
-                  <Select placeholder={field.placeholder || `请选择${field.label || field.key}`} allowClear>
-                    {(field.options || []).map((option) => (
-                      <Select.Option key={option} value={option}>
-                        {option}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                  <Select
+                    placeholder={field.placeholder || `请选择${field.label || field.key}`}
+                    allowClear
+                    options={(field.options || []).map((option) => ({
+                      label: option,
+                      value: option,
+                    }))}
+                  />
                 ) : (
                   <Input placeholder={field.placeholder || `请输入${field.label || field.key}`} />
                 )}
@@ -435,11 +450,15 @@ const CreateCIPage: React.FC = () => {
         )}
 
         <Form.Item label="同步状态" name="cloud_sync_status">
-          <Select placeholder="请选择同步状态" allowClear>
-            <Select.Option value="success">成功</Select.Option>
-            <Select.Option value="failed">失败</Select.Option>
-            <Select.Option value="unknown">未知</Select.Option>
-          </Select>
+          <Select
+            placeholder="请选择同步状态"
+            allowClear
+            options={[
+              { label: '成功', value: 'success' },
+              { label: '失败', value: 'failed' },
+              { label: '未知', value: 'unknown' },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item label="扩展属性" name="attributes">
