@@ -87,3 +87,5 @@ tests/
 itsm-frontend/reports
 itsm-frontend/test-results
 reports/
+report.html
+report.xml
