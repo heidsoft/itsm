@@ -193,6 +193,8 @@ export interface CreateTicketRequest {
   title: string;
   description: string;
   priority: string;
+  category?: string;
+  category_id?: number;
   formFields?: Record<string, unknown>;
   assigneeId?: number;
 }

@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
+	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
 	"strings"
@@ -130,6 +131,18 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 如果指定了分类ID，设置分类
 	if req.CategoryID != nil && *req.CategoryID > 0 {
 		createBuilder = createBuilder.SetCategoryID(*req.CategoryID)
+	} else if req.Category != "" {
+		// 尝试根据名称查找分类
+		cat, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.NameEQ(req.Category), ticketcategory.TenantID(tenantID)).
+			First(ctx)
+		if err == nil {
+			createBuilder = createBuilder.SetCategoryID(cat.ID)
+		} else if ent.IsNotFound(err) {
+			// 如果分类不存在，可以选择创建它（这里简单起见，我们先忽略）
+			// 或者记录一个警告
+			s.logger.Warnw("Category not found by name", "name", req.Category)
+		}
 	}
 
 	// 如果指定了模板ID，设置模板

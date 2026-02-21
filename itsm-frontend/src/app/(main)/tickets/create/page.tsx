@@ -34,7 +34,7 @@ export default function CreateTicketPage() {
         description: values.description,
         priority: values.priority,
         category: values.category,
-      } as any);
+      });
 
       message.success('工单创建成功');
       router.push(`/tickets/${created.id}`);
