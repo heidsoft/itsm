@@ -6,7 +6,7 @@ import {
   Button,
   Switch,
   Tooltip,
-  message,
+  App,
   Space,
   Badge,
   Dropdown,
@@ -34,6 +34,7 @@ import PeakHoursChart from './components/PeakHoursChart';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const {
     data,
     loading,

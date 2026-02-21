@@ -15,7 +15,7 @@ import {
   Input,
   Select,
   Form,
-  message,
+  App,
   Modal,
   Empty,
 } from 'antd';
@@ -58,6 +58,7 @@ const priorityColors: Record<string, string> = {
 
 const ProblemList: React.FC = () => {
   const router = useRouter();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Problem[]>([]);
   const [total, setTotal] = useState(0);
@@ -234,7 +235,7 @@ const ProblemList: React.FC = () => {
           </Form.Item>
           <Form.Item className="mb-0">
             <Space>
-              <Button type='primary' ghost onClick={handleSearch}>
+              <Button type="primary" onClick={handleSearch}>
                 查询
               </Button>
               <Button onClick={handleReset}>重置</Button>
@@ -266,6 +267,7 @@ const ProblemList: React.FC = () => {
               showTotal: t => `共 ${t} 条记录`,
             }}
             scroll={{ x: 1000 }}
+            getPopupContainer={(node) => node.parentElement || document.body}
           />
         )}
       </Card>

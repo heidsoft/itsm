@@ -12,12 +12,14 @@ type SLAViolation struct{ ent.Schema }
 
 func (SLAViolation) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("created_by").Comment("创建人ID").Default(0),
 		field.Int("sla_definition_id").Comment("SLA定义ID").Positive(),
 		field.String("ticket_type").Comment("工单类型").Default("ticket"),
 		field.String("sla_name").Comment("SLA名称").Default("Default SLA"),
 		field.Int("ticket_id").Comment("工单ID").Positive(),
 		field.String("violation_type").Comment("违规类型").NotEmpty(),
 		field.Time("violation_time").Comment("违规时间").Default(time.Now),
+		field.Time("violation_occurred_at").Comment("违规发生时间").Default(time.Now),
 		field.Int("expected_time").Comment("期望时间(时间戳)").Optional(),
 		field.Int("actual_time").Comment("实际时间(时间戳)").Optional(),
 		field.Int("overdue_minutes").Comment("超时分钟数").Default(0),

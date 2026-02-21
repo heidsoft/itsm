@@ -34,7 +34,7 @@ const { Panel } = Collapse;
 const { TextArea } = Input;
 const { Text } = Typography;
 
-interface AdvancedSearchFilters {
+export interface AdvancedSearchFilters {
   // 基础信息
   keyword?: string;
   ticket_number?: string;
@@ -78,7 +78,7 @@ interface AdvancedSearchFilters {
   metadata?: Record<string, any>;
 }
 
-interface TicketAdvancedSearchProps {
+export interface TicketAdvancedSearchProps {
   onSearch: (filters: AdvancedSearchFilters) => void;
   onReset: () => void;
   loading?: boolean;

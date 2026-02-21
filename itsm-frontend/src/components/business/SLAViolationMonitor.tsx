@@ -108,7 +108,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       setLoading(true);
       const response = await SLAApi.getSLAViolations({
         page: 1,
-        page_size: 100,
+        size: 100,
         is_resolved: filters.status === 'resolved' ? true : filters.status === 'open' ? false : undefined,
       });
 

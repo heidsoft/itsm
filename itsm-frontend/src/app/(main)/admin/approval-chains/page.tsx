@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button, message, Modal } from 'antd';
+import { Button, App, Modal } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
@@ -15,17 +15,19 @@ import {
 import { httpClient } from '@/lib/api/http-client';
 // import { handleError } from '@/lib/error-handler';
 
-// 临时错误处理函数
-const handleError = (error: unknown, errorMessage?: string) => {
-  console.error(errorMessage || '操作失败', error);
-  if (error instanceof Error) {
-    message.error(error.message);
-  } else {
-    message.error(errorMessage || '操作失败');
-  }
-};
-
 export default function ApprovalChainsPage() {
+  const { message } = App.useApp();
+
+  // 临时错误处理函数
+  const handleError = (error: unknown, errorMessage?: string) => {
+    console.error(errorMessage || '操作失败', error);
+    if (error instanceof Error) {
+      message.error(error.message);
+    } else {
+      message.error(errorMessage || '操作失败');
+    }
+  };
+
   // 状态管理
   const [chains, setChains] = useState<ApprovalChain[]>([]);
   const [stats, setStats] = useState<ApprovalChainStats>({

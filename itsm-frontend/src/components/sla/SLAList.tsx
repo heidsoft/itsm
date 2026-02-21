@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Table, Tag, Button, Card, Space, Tooltip,
-    message, Modal, Breadcrumb, Switch
+    App, Modal, Breadcrumb, Switch
 } from 'antd';
 import {
     PlusOutlined, ReloadOutlined, EditOutlined,
@@ -22,6 +22,7 @@ import type { SLADefinition } from '@/types/biz/sla';
 
 const SLAList: React.FC = () => {
     const router = useRouter();
+    const { message } = App.useApp();
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<SLADefinition[]>([]);
     const [total, setTotal] = useState(0);
@@ -164,7 +165,7 @@ const SLAList: React.FC = () => {
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
-                        onClick={() => router.push('/sla/definitions/create')}
+                        onClick={() => router.push('/sla/definitions/new')}
                     >
                         新建 SLA
                     </Button>
@@ -183,6 +184,7 @@ const SLAList: React.FC = () => {
                     total: total,
                     onChange: (page, size) => setPagination({ page, size }),
                 }}
+                getPopupContainer={(node) => node.parentElement || document.body}
             />
         </Card>
     );

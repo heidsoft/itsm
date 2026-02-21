@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Button, Tag, Space, Card, message, Empty } from 'antd';
+import { Table, Button, Tag, Space, Card, App, Empty } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
@@ -25,6 +25,7 @@ const statusColors: Record<ImprovementStatus, string> = {
 
 const ImprovementListPage = () => {
   const router = useRouter();
+  const { message } = App.useApp();
   const [improvements, setImprovements] = useState<Improvement[]>([]);
   const [filter, setFilter] = useState<string>('全部');
   const [loading, setLoading] = useState(false);

@@ -1781,56 +1781,64 @@ func init() {
 	slametric.UpdateDefaultUpdatedAt = slametricDescUpdatedAt.UpdateDefault.(func() time.Time)
 	slaviolationFields := schema.SLAViolation{}.Fields()
 	_ = slaviolationFields
+	// slaviolationDescCreatedBy is the schema descriptor for created_by field.
+	slaviolationDescCreatedBy := slaviolationFields[0].Descriptor()
+	// slaviolation.DefaultCreatedBy holds the default value on creation for the created_by field.
+	slaviolation.DefaultCreatedBy = slaviolationDescCreatedBy.Default.(int)
 	// slaviolationDescSLADefinitionID is the schema descriptor for sla_definition_id field.
-	slaviolationDescSLADefinitionID := slaviolationFields[0].Descriptor()
+	slaviolationDescSLADefinitionID := slaviolationFields[1].Descriptor()
 	// slaviolation.SLADefinitionIDValidator is a validator for the "sla_definition_id" field. It is called by the builders before save.
 	slaviolation.SLADefinitionIDValidator = slaviolationDescSLADefinitionID.Validators[0].(func(int) error)
 	// slaviolationDescTicketType is the schema descriptor for ticket_type field.
-	slaviolationDescTicketType := slaviolationFields[1].Descriptor()
+	slaviolationDescTicketType := slaviolationFields[2].Descriptor()
 	// slaviolation.DefaultTicketType holds the default value on creation for the ticket_type field.
 	slaviolation.DefaultTicketType = slaviolationDescTicketType.Default.(string)
 	// slaviolationDescSLAName is the schema descriptor for sla_name field.
-	slaviolationDescSLAName := slaviolationFields[2].Descriptor()
+	slaviolationDescSLAName := slaviolationFields[3].Descriptor()
 	// slaviolation.DefaultSLAName holds the default value on creation for the sla_name field.
 	slaviolation.DefaultSLAName = slaviolationDescSLAName.Default.(string)
 	// slaviolationDescTicketID is the schema descriptor for ticket_id field.
-	slaviolationDescTicketID := slaviolationFields[3].Descriptor()
+	slaviolationDescTicketID := slaviolationFields[4].Descriptor()
 	// slaviolation.TicketIDValidator is a validator for the "ticket_id" field. It is called by the builders before save.
 	slaviolation.TicketIDValidator = slaviolationDescTicketID.Validators[0].(func(int) error)
 	// slaviolationDescViolationType is the schema descriptor for violation_type field.
-	slaviolationDescViolationType := slaviolationFields[4].Descriptor()
+	slaviolationDescViolationType := slaviolationFields[5].Descriptor()
 	// slaviolation.ViolationTypeValidator is a validator for the "violation_type" field. It is called by the builders before save.
 	slaviolation.ViolationTypeValidator = slaviolationDescViolationType.Validators[0].(func(string) error)
 	// slaviolationDescViolationTime is the schema descriptor for violation_time field.
-	slaviolationDescViolationTime := slaviolationFields[5].Descriptor()
+	slaviolationDescViolationTime := slaviolationFields[6].Descriptor()
 	// slaviolation.DefaultViolationTime holds the default value on creation for the violation_time field.
 	slaviolation.DefaultViolationTime = slaviolationDescViolationTime.Default.(func() time.Time)
+	// slaviolationDescViolationOccurredAt is the schema descriptor for violation_occurred_at field.
+	slaviolationDescViolationOccurredAt := slaviolationFields[7].Descriptor()
+	// slaviolation.DefaultViolationOccurredAt holds the default value on creation for the violation_occurred_at field.
+	slaviolation.DefaultViolationOccurredAt = slaviolationDescViolationOccurredAt.Default.(func() time.Time)
 	// slaviolationDescOverdueMinutes is the schema descriptor for overdue_minutes field.
-	slaviolationDescOverdueMinutes := slaviolationFields[8].Descriptor()
+	slaviolationDescOverdueMinutes := slaviolationFields[10].Descriptor()
 	// slaviolation.DefaultOverdueMinutes holds the default value on creation for the overdue_minutes field.
 	slaviolation.DefaultOverdueMinutes = slaviolationDescOverdueMinutes.Default.(int)
 	// slaviolationDescStatus is the schema descriptor for status field.
-	slaviolationDescStatus := slaviolationFields[9].Descriptor()
+	slaviolationDescStatus := slaviolationFields[11].Descriptor()
 	// slaviolation.DefaultStatus holds the default value on creation for the status field.
 	slaviolation.DefaultStatus = slaviolationDescStatus.Default.(string)
 	// slaviolationDescSeverity is the schema descriptor for severity field.
-	slaviolationDescSeverity := slaviolationFields[11].Descriptor()
+	slaviolationDescSeverity := slaviolationFields[13].Descriptor()
 	// slaviolation.DefaultSeverity holds the default value on creation for the severity field.
 	slaviolation.DefaultSeverity = slaviolationDescSeverity.Default.(string)
 	// slaviolationDescIsResolved is the schema descriptor for is_resolved field.
-	slaviolationDescIsResolved := slaviolationFields[12].Descriptor()
+	slaviolationDescIsResolved := slaviolationFields[14].Descriptor()
 	// slaviolation.DefaultIsResolved holds the default value on creation for the is_resolved field.
 	slaviolation.DefaultIsResolved = slaviolationDescIsResolved.Default.(bool)
 	// slaviolationDescTenantID is the schema descriptor for tenant_id field.
-	slaviolationDescTenantID := slaviolationFields[15].Descriptor()
+	slaviolationDescTenantID := slaviolationFields[17].Descriptor()
 	// slaviolation.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	slaviolation.TenantIDValidator = slaviolationDescTenantID.Validators[0].(func(int) error)
 	// slaviolationDescCreatedAt is the schema descriptor for created_at field.
-	slaviolationDescCreatedAt := slaviolationFields[16].Descriptor()
+	slaviolationDescCreatedAt := slaviolationFields[18].Descriptor()
 	// slaviolation.DefaultCreatedAt holds the default value on creation for the created_at field.
 	slaviolation.DefaultCreatedAt = slaviolationDescCreatedAt.Default.(func() time.Time)
 	// slaviolationDescUpdatedAt is the schema descriptor for updated_at field.
-	slaviolationDescUpdatedAt := slaviolationFields[17].Descriptor()
+	slaviolationDescUpdatedAt := slaviolationFields[19].Descriptor()
 	// slaviolation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	slaviolation.DefaultUpdatedAt = slaviolationDescUpdatedAt.Default.(func() time.Time)
 	// slaviolation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

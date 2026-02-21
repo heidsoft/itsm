@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Table, Tag, Button, Card, Space, Tooltip,
-    Input, Select, Form, Row, Col, message
+    Input, Select, Form, Row, Col, App
 } from 'antd';
 import {
     SearchOutlined, EyeOutlined, EditOutlined,
@@ -43,6 +43,7 @@ const priorityColors: Record<string, string> = {
 
 const IncidentList: React.FC = () => {
     const router = useRouter();
+    const { message } = App.useApp();
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<Incident[]>([]);
     const [total, setTotal] = useState(0);
@@ -191,7 +192,7 @@ const IncidentList: React.FC = () => {
                     </Space>
                 </Form.Item>
                 <div style={{ flex: 1, textAlign: 'right' }}>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/incidents/create')}>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/incidents/new')}>
                         新建事件
                     </Button>
                 </div>
@@ -210,6 +211,7 @@ const IncidentList: React.FC = () => {
                     showSizeChanger: true,
                     showTotal: (t) => `共 ${t} 条记录`
                 }}
+                getPopupContainer={(node) => node.parentElement || document.body}
             />
         </Card>
     );

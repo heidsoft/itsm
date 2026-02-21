@@ -25,6 +25,7 @@ type SLADefinition struct {
 // SLAViolation represents a breach of SLA
 type SLAViolation struct {
 	ID              int        `json:"id"`
+	CreatedBy       int        `json:"created_by"`
 	TicketID        int        `json:"ticket_id"`
 	SLADefinitionID int        `json:"sla_definition_id"`
 	ViolationType   string     `json:"violation_type"` // e.g., "response", "resolution"

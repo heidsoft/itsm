@@ -22,6 +22,20 @@ type SLAViolationCreate struct {
 	hooks    []Hook
 }
 
+// SetCreatedBy sets the "created_by" field.
+func (svc *SLAViolationCreate) SetCreatedBy(i int) *SLAViolationCreate {
+	svc.mutation.SetCreatedBy(i)
+	return svc
+}
+
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (svc *SLAViolationCreate) SetNillableCreatedBy(i *int) *SLAViolationCreate {
+	if i != nil {
+		svc.SetCreatedBy(*i)
+	}
+	return svc
+}
+
 // SetSLADefinitionID sets the "sla_definition_id" field.
 func (svc *SLAViolationCreate) SetSLADefinitionID(i int) *SLAViolationCreate {
 	svc.mutation.SetSLADefinitionID(i)
@@ -78,6 +92,20 @@ func (svc *SLAViolationCreate) SetViolationTime(t time.Time) *SLAViolationCreate
 func (svc *SLAViolationCreate) SetNillableViolationTime(t *time.Time) *SLAViolationCreate {
 	if t != nil {
 		svc.SetViolationTime(*t)
+	}
+	return svc
+}
+
+// SetViolationOccurredAt sets the "violation_occurred_at" field.
+func (svc *SLAViolationCreate) SetViolationOccurredAt(t time.Time) *SLAViolationCreate {
+	svc.mutation.SetViolationOccurredAt(t)
+	return svc
+}
+
+// SetNillableViolationOccurredAt sets the "violation_occurred_at" field if the given value is not nil.
+func (svc *SLAViolationCreate) SetNillableViolationOccurredAt(t *time.Time) *SLAViolationCreate {
+	if t != nil {
+		svc.SetViolationOccurredAt(*t)
 	}
 	return svc
 }
@@ -287,6 +315,10 @@ func (svc *SLAViolationCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (svc *SLAViolationCreate) defaults() {
+	if _, ok := svc.mutation.CreatedBy(); !ok {
+		v := slaviolation.DefaultCreatedBy
+		svc.mutation.SetCreatedBy(v)
+	}
 	if _, ok := svc.mutation.TicketType(); !ok {
 		v := slaviolation.DefaultTicketType
 		svc.mutation.SetTicketType(v)
@@ -298,6 +330,10 @@ func (svc *SLAViolationCreate) defaults() {
 	if _, ok := svc.mutation.ViolationTime(); !ok {
 		v := slaviolation.DefaultViolationTime()
 		svc.mutation.SetViolationTime(v)
+	}
+	if _, ok := svc.mutation.ViolationOccurredAt(); !ok {
+		v := slaviolation.DefaultViolationOccurredAt()
+		svc.mutation.SetViolationOccurredAt(v)
 	}
 	if _, ok := svc.mutation.OverdueMinutes(); !ok {
 		v := slaviolation.DefaultOverdueMinutes
@@ -327,6 +363,9 @@ func (svc *SLAViolationCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (svc *SLAViolationCreate) check() error {
+	if _, ok := svc.mutation.CreatedBy(); !ok {
+		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "SLAViolation.created_by"`)}
+	}
 	if _, ok := svc.mutation.SLADefinitionID(); !ok {
 		return &ValidationError{Name: "sla_definition_id", err: errors.New(`ent: missing required field "SLAViolation.sla_definition_id"`)}
 	}
@@ -359,6 +398,9 @@ func (svc *SLAViolationCreate) check() error {
 	}
 	if _, ok := svc.mutation.ViolationTime(); !ok {
 		return &ValidationError{Name: "violation_time", err: errors.New(`ent: missing required field "SLAViolation.violation_time"`)}
+	}
+	if _, ok := svc.mutation.ViolationOccurredAt(); !ok {
+		return &ValidationError{Name: "violation_occurred_at", err: errors.New(`ent: missing required field "SLAViolation.violation_occurred_at"`)}
 	}
 	if _, ok := svc.mutation.OverdueMinutes(); !ok {
 		return &ValidationError{Name: "overdue_minutes", err: errors.New(`ent: missing required field "SLAViolation.overdue_minutes"`)}
@@ -418,6 +460,10 @@ func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec
 		_node = &SLAViolation{config: svc.config}
 		_spec = sqlgraph.NewCreateSpec(slaviolation.Table, sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt))
 	)
+	if value, ok := svc.mutation.CreatedBy(); ok {
+		_spec.SetField(slaviolation.FieldCreatedBy, field.TypeInt, value)
+		_node.CreatedBy = value
+	}
 	if value, ok := svc.mutation.TicketType(); ok {
 		_spec.SetField(slaviolation.FieldTicketType, field.TypeString, value)
 		_node.TicketType = value
@@ -433,6 +479,10 @@ func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec
 	if value, ok := svc.mutation.ViolationTime(); ok {
 		_spec.SetField(slaviolation.FieldViolationTime, field.TypeTime, value)
 		_node.ViolationTime = value
+	}
+	if value, ok := svc.mutation.ViolationOccurredAt(); ok {
+		_spec.SetField(slaviolation.FieldViolationOccurredAt, field.TypeTime, value)
+		_node.ViolationOccurredAt = value
 	}
 	if value, ok := svc.mutation.ExpectedTime(); ok {
 		_spec.SetField(slaviolation.FieldExpectedTime, field.TypeInt, value)

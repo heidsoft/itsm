@@ -59,13 +59,14 @@ export default function IncidentsPage() {
   const fetchStats = async () => {
     try {
       const stats = await IncidentAPI.getIncidentMetrics() as unknown as Record<string, unknown>;
+      console.log('Incident stats response:', stats);
       // Transform snake_case to camelCase for IncidentStats component
       setMetrics({
-        totalIncidents: stats.total_incidents as number,
-        openIncidents: stats.open_incidents as number,
-        criticalIncidents: stats.critical_incidents as number,
-        majorIncidents: stats.major_incidents as number,
-        avgResolutionTime: stats.avg_resolution_time as number,
+        totalIncidents: Number(stats.total_incidents) || 0,
+        openIncidents: Number(stats.open_incidents) || 0,
+        criticalIncidents: Number(stats.critical_incidents) || 0,
+        majorIncidents: Number(stats.major_incidents) || 0,
+        avgResolutionTime: Number(stats.avg_resolution_time) || 0,
       });
     } catch (error) {
       console.error('Failed to fetch incident stats:', error);

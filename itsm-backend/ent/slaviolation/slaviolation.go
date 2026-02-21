@@ -14,6 +14,8 @@ const (
 	Label = "sla_violation"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCreatedBy holds the string denoting the created_by field in the database.
+	FieldCreatedBy = "created_by"
 	// FieldSLADefinitionID holds the string denoting the sla_definition_id field in the database.
 	FieldSLADefinitionID = "sla_definition_id"
 	// FieldTicketType holds the string denoting the ticket_type field in the database.
@@ -26,6 +28,8 @@ const (
 	FieldViolationType = "violation_type"
 	// FieldViolationTime holds the string denoting the violation_time field in the database.
 	FieldViolationTime = "violation_time"
+	// FieldViolationOccurredAt holds the string denoting the violation_occurred_at field in the database.
+	FieldViolationOccurredAt = "violation_occurred_at"
 	// FieldExpectedTime holds the string denoting the expected_time field in the database.
 	FieldExpectedTime = "expected_time"
 	// FieldActualTime holds the string denoting the actual_time field in the database.
@@ -75,12 +79,14 @@ const (
 // Columns holds all SQL columns for slaviolation fields.
 var Columns = []string{
 	FieldID,
+	FieldCreatedBy,
 	FieldSLADefinitionID,
 	FieldTicketType,
 	FieldSLAName,
 	FieldTicketID,
 	FieldViolationType,
 	FieldViolationTime,
+	FieldViolationOccurredAt,
 	FieldExpectedTime,
 	FieldActualTime,
 	FieldOverdueMinutes,
@@ -106,6 +112,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultCreatedBy holds the default value on creation for the "created_by" field.
+	DefaultCreatedBy int
 	// SLADefinitionIDValidator is a validator for the "sla_definition_id" field. It is called by the builders before save.
 	SLADefinitionIDValidator func(int) error
 	// DefaultTicketType holds the default value on creation for the "ticket_type" field.
@@ -118,6 +126,8 @@ var (
 	ViolationTypeValidator func(string) error
 	// DefaultViolationTime holds the default value on creation for the "violation_time" field.
 	DefaultViolationTime func() time.Time
+	// DefaultViolationOccurredAt holds the default value on creation for the "violation_occurred_at" field.
+	DefaultViolationOccurredAt func() time.Time
 	// DefaultOverdueMinutes holds the default value on creation for the "overdue_minutes" field.
 	DefaultOverdueMinutes int
 	// DefaultStatus holds the default value on creation for the "status" field.
@@ -142,6 +152,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCreatedBy orders the results by the created_by field.
+func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedBy, opts...).ToFunc()
 }
 
 // BySLADefinitionID orders the results by the sla_definition_id field.
@@ -172,6 +187,11 @@ func ByViolationType(opts ...sql.OrderTermOption) OrderOption {
 // ByViolationTime orders the results by the violation_time field.
 func ByViolationTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldViolationTime, opts...).ToFunc()
+}
+
+// ByViolationOccurredAt orders the results by the violation_occurred_at field.
+func ByViolationOccurredAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldViolationOccurredAt, opts...).ToFunc()
 }
 
 // ByExpectedTime orders the results by the expected_time field.

@@ -106,3 +106,50 @@ func (s *Service) DeleteAlertRule(ctx context.Context, id int, tenantID int) err
 func (s *Service) GetAlertHistory(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAAlertHistory, int, error) {
 	return s.repo.ListAlertHistory(ctx, tenantID, page, size, filters)
 }
+
+// GetSLAStats 获取SLA统计信息
+func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (map[string]interface{}, error) {
+	// 获取总SLA定义数
+	definitions, _, err := s.repo.ListDefinitions(ctx, tenantID, 1, 1000)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取活跃SLA定义数
+	activeCount := 0
+	for _, def := range definitions {
+		if def.IsActive {
+			activeCount++
+		}
+	}
+
+	// 获取总违规数
+	violations, _, err := s.repo.ListViolations(ctx, tenantID, 1, 1000, map[string]interface{}{})
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取待处理违规数
+	openViolations := 0
+	for _, v := range violations {
+		if !v.IsResolved {
+			openViolations++
+		}
+	}
+
+	// 计算合规率
+	complianceRate := 0.0
+	if len(violations) > 0 {
+		complianceRate = float64(len(violations)-openViolations) / float64(len(violations)) * 100
+	} else {
+		complianceRate = 100.0
+	}
+
+	return map[string]interface{}{
+		"total_definitions":       len(definitions),
+		"active_definitions":      activeCount,
+		"total_violations":        len(violations),
+		"open_violations":         openViolations,
+		"overall_compliance_rate": complianceRate,
+	}, nil
+}

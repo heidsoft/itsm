@@ -83,7 +83,7 @@ const SLADashboardPage = () => {
   // 加载SLA定义
   const loadSLADefinitions = async () => {
     try {
-      const response = await SLAApi.getSLADefinitions({ page: 1, page_size: 10 });
+      const response = await SLAApi.getSLADefinitions({ page: 1, size: 10 });
       setSlaDefinitions(response.items);
     } catch (error) {
       console.error('加载SLA定义失败:', error);
@@ -93,7 +93,7 @@ const SLADashboardPage = () => {
   // 加载SLA违规
   const loadSLAViolations = async () => {
     try {
-      const response = await SLAApi.getSLAViolations({ page: 1, page_size: 10 });
+      const response = await SLAApi.getSLAViolations({ page: 1, size: 10 });
       setSlaViolations(response.items);
     } catch (error) {
       console.error('加载SLA违规失败:', error);

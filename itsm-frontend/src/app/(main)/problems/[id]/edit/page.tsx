@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Card, Form, Input, Select, message, Row, Col, Space, Divider } from 'antd';
+import { Button, Card, Form, Input, Select, App, Row, Col, Space, Divider } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { ProblemApi } from '@/lib/api/problem-api';
 import { problemService } from '@/lib/services/problem-service';
@@ -14,6 +14,7 @@ export default function ProblemEditPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);

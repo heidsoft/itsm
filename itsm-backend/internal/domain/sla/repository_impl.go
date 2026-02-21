@@ -131,6 +131,7 @@ func toSLAViolationDomain(e *ent.SLAViolation) *SLAViolation {
 	}
 	return &SLAViolation{
 		ID:              e.ID,
+		CreatedBy:       e.CreatedBy,
 		TicketID:        e.TicketID,
 		SLADefinitionID: e.SLADefinitionID,
 		ViolationType:   e.ViolationType,
@@ -146,6 +147,7 @@ func toSLAViolationDomain(e *ent.SLAViolation) *SLAViolation {
 
 func (r *EntRepository) CreateViolation(ctx context.Context, v *SLAViolation) (*SLAViolation, error) {
 	creator := r.client.SLAViolation.Create().
+		SetCreatedBy(v.CreatedBy).
 		SetTicketID(v.TicketID).
 		SetSLADefinitionID(v.SLADefinitionID).
 		SetViolationType(v.ViolationType).

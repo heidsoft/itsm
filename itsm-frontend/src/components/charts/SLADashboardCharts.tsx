@@ -82,7 +82,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   // 加载SLA定义列表
   const loadSLADefinitions = async () => {
     try {
-      const response = await SLAApi.getSLADefinitions({ page: 1, page_size: 100 });
+      const response = await SLAApi.getSLADefinitions({ page: 1, size: 100 });
       setSlaDefinitions(response.items);
     } catch (error) {
       console.error('加载SLA定义失败:', error);

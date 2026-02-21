@@ -191,7 +191,7 @@ const ArticleList: React.FC = () => {
         <Button
           type='primary'
           icon={<PlusOutlined />}
-          onClick={() => router.push('/knowledge/articles/create')}
+          onClick={() => router.push('/knowledge/articles/new')}
           size="large"
         >
           新建文章
@@ -253,7 +253,7 @@ const ArticleList: React.FC = () => {
             description='暂无知识库文章'
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           >
-            <Button type='primary' onClick={() => router.push('/knowledge/articles/create')}>
+            <Button type='primary' onClick={() => router.push('/knowledge/articles/new')}>
               创建第一篇文章
             </Button>
           </Empty>
@@ -272,6 +272,7 @@ const ArticleList: React.FC = () => {
               onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
             }}
             scroll={{ x: 1000 }}
+            getPopupContainer={(node) => node.parentElement || document.body}
           />
         )}
       </Card>

@@ -15,7 +15,7 @@ import {
   Table,
   Tag,
   Progress,
-  message,
+  App,
   Spin,
   Empty,
 } from 'antd';
@@ -41,6 +41,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const ReportsPage: React.FC = () => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse | null>(null);
   const [timeRange, setTimeRange] = useState<[string, string]>([

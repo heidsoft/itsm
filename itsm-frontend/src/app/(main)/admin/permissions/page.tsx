@@ -33,7 +33,7 @@ import {
   Tag,
   Tooltip,
   Alert,
-  message,
+  App,
   Tabs,
   Tree,
 } from 'antd';
@@ -237,6 +237,7 @@ const mockPermissionConfig = {
 };
 
 const PermissionConfiguration = () => {
+  const { message } = App.useApp();
   const [permissionConfig, setPermissionConfig] = useState(mockPermissionConfig);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');

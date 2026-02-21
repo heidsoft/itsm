@@ -15,7 +15,7 @@ import {
   Input,
   Select,
   Form,
-  message,
+  App,
   Modal,
   Breadcrumb,
 } from 'antd';
@@ -51,6 +51,7 @@ const getErrorMessage = (error: unknown): string => {
 
 const CIList: React.FC = () => {
   const router = useRouter();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ConfigurationItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -266,7 +267,7 @@ const CIList: React.FC = () => {
           </Form.Item>
           <Form.Item className='mb-0'>
             <Space>
-              <Button type='primary' ghost onClick={handleSearch}>
+              <Button type="primary" onClick={handleSearch}>
                 查询
               </Button>
               <Button icon={<ReloadOutlined />} onClick={loadData} aria-label='刷新' />
@@ -300,6 +301,7 @@ const CIList: React.FC = () => {
             onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
           }}
           scroll={{ x: 1200 }}
+          getPopupContainer={(node) => node.parentElement || document.body}
         />
       </Card>
     </div>

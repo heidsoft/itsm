@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Table, Tag, Button, Space, Badge } from 'antd';
+import { Table, Tag, Button, Space, Badge, Tooltip } from 'antd';
 import { Eye, Edit, MoreHorizontal, AlertTriangle } from 'lucide-react';
 import { Problem, ProblemStatus, ProblemPriority } from '@/lib/services/problem-service';
 import { useRouter } from 'next/navigation';
@@ -48,29 +48,28 @@ export const ProblemList: React.FC<ProblemListProps> = ({
     },
   };
 
-  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> =
-    {
-      low: {
-        color: '#52c41a',
-        text: '低',
-        backgroundColor: '#f6ffed',
-      },
-      medium: {
-        color: '#1890ff',
-        text: '中',
-        backgroundColor: '#e6f7ff',
-      },
-      high: {
-        color: '#fa8c16',
-        text: '高',
-        backgroundColor: '#fff7e6',
-      },
-      critical: {
-        color: '#ff4d4f',
-        text: '紧急',
-        backgroundColor: '#fff2f0',
-      },
-    };
+  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
+    low: {
+      color: '#52c41a',
+      text: '低',
+      backgroundColor: '#f6ffed',
+    },
+    medium: {
+      color: '#1890ff',
+      text: '中',
+      backgroundColor: '#e6f7ff',
+    },
+    high: {
+      color: '#fa8c16',
+      text: '高',
+      backgroundColor: '#fff7e6',
+    },
+    critical: {
+      color: '#ff4d4f',
+      text: '紧急',
+      backgroundColor: '#fff2f0',
+    },
+  };
 
   const columns = [
     {
@@ -191,29 +190,32 @@ export const ProblemList: React.FC<ProblemListProps> = ({
       width: 150,
       render: (_: unknown, record: Problem) => (
         <Space size='small'>
-          <Button
-            type='text'
-            size='small'
-            icon={<Eye size={16} />}
-            onClick={() => router.push(`/problems/${record.id}`)}
-            className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200'
-            title='查看详情'
-          />
-          <Button
-            type='text'
-            size='small'
-            icon={<Edit size={16} />}
-            onClick={() => router.push(`/problems/${record.id}/edit`)}
-            className='text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200'
-            title='编辑问题'
-          />
-          <Button
-            type='text'
-            size='small'
-            icon={<MoreHorizontal size={16} />}
-            className='text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200'
-            title='更多操作'
-          />
+          <Tooltip title='查看详情'>
+            <Button
+              type='text'
+              size='small'
+              icon={<Eye size={16} />}
+              onClick={() => router.push(`/problems/${record.id}`)}
+              className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200'
+            />
+          </Tooltip>
+          <Tooltip title='编辑问题'>
+            <Button
+              type='text'
+              size='small'
+              icon={<Edit size={16} />}
+              onClick={() => router.push(`/problems/${record.id}/edit`)}
+              className='text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200'
+            />
+          </Tooltip>
+          <Tooltip title='更多操作'>
+            <Button
+              type='text'
+              size='small'
+              icon={<MoreHorizontal size={16} />}
+              className='text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200'
+            />
+          </Tooltip>
         </Space>
       ),
     },

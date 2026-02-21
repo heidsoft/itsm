@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, Space, Button, Table, Tag, message, Empty } from 'antd';
+import { Card, Space, Button, Table, Tag, App, Empty } from 'antd';
 import { ReloadOutlined, CheckCircleOutlined } from '@ant-design/icons';
 
 import { serviceRequestAPI, ServiceRequest } from '@/lib/api/service-request-api';
@@ -24,6 +24,7 @@ function statusTag(status: string) {
 }
 
 export default function PendingApprovalsPage() {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ServiceRequest[]>([]);
   const [page, setPage] = useState(1);

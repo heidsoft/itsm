@@ -62,7 +62,7 @@ export class SLAApi {
   // 获取SLA定义列表
   static async getSLADefinitions(params?: {
     page?: number;
-    page_size?: number;
+    size?: number;
     is_active?: boolean;
     name?: string;
   }): Promise<{
@@ -71,8 +71,15 @@ export class SLAApi {
     page: number;
     page_size: number;
   }> {
-    // 修正: 确保路径与后端一致，后端可能是 /api/v1/sla/definitions
-    return httpClient.get('/api/v1/sla/definitions', params);
+    // 后端期望参数是 page 和 size
+    const queryParams: Record<string, string> = {};
+    if (params) {
+      if (params.page) queryParams.page = String(params.page);
+      if (params.size) queryParams.size = String(params.size);
+      if (params.is_active !== undefined) queryParams.is_active = String(params.is_active);
+      if (params.name) queryParams.name = params.name;
+    }
+    return httpClient.get('/api/v1/sla/definitions', queryParams);
   }
 
   // 获取SLA定义详情
@@ -106,7 +113,7 @@ export class SLAApi {
   // 获取SLA违规列表
   static async getSLAViolations(params?: {
     page?: number;
-    page_size?: number;
+    size?: number;
     is_resolved?: boolean;
     severity?: string;
     violation_type?: string;
@@ -117,8 +124,17 @@ export class SLAApi {
     page: number;
     page_size: number;
   }> {
-    // 修正: 确保路径与后端一致，后端可能是 /api/v1/sla/violations
-    return httpClient.get('/api/v1/sla/violations', params);
+    // 后端期望参数是 page 和 size
+    const queryParams: Record<string, string> = {};
+    if (params) {
+      if (params.page) queryParams.page = String(params.page);
+      if (params.size) queryParams.size = String(params.size);
+      if (params.is_resolved !== undefined) queryParams.is_resolved = String(params.is_resolved);
+      if (params.severity) queryParams.severity = params.severity;
+      if (params.violation_type) queryParams.violation_type = params.violation_type;
+      if (params.sla_definition_id) queryParams.sla_definition_id = String(params.sla_definition_id);
+    }
+    return httpClient.get('/api/v1/sla/violations', queryParams);
   }
 
   // 更新SLA违规状态
@@ -249,7 +265,7 @@ export class SLAApi {
     // 这里暂时假设后端会增加此端点，或者我们使用 alert-history 替代
     // 根据 PRD，告警历史是 /api/v1/sla/alert-history
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const history = await httpClient.get<{items: any[]}>('/api/v1/sla/alert-history', { page: 1, page_size: 10 });
+    const history = await httpClient.get<{items: any[]}>('/api/v1/sla/alert-history', { page: 1, size: 10 });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return history.items.map((item: any) => ({
       ticket_id: item.ticket_id,

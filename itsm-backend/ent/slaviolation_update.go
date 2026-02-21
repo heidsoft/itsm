@@ -30,6 +30,27 @@ func (svu *SLAViolationUpdate) Where(ps ...predicate.SLAViolation) *SLAViolation
 	return svu
 }
 
+// SetCreatedBy sets the "created_by" field.
+func (svu *SLAViolationUpdate) SetCreatedBy(i int) *SLAViolationUpdate {
+	svu.mutation.ResetCreatedBy()
+	svu.mutation.SetCreatedBy(i)
+	return svu
+}
+
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (svu *SLAViolationUpdate) SetNillableCreatedBy(i *int) *SLAViolationUpdate {
+	if i != nil {
+		svu.SetCreatedBy(*i)
+	}
+	return svu
+}
+
+// AddCreatedBy adds i to the "created_by" field.
+func (svu *SLAViolationUpdate) AddCreatedBy(i int) *SLAViolationUpdate {
+	svu.mutation.AddCreatedBy(i)
+	return svu
+}
+
 // SetSLADefinitionID sets the "sla_definition_id" field.
 func (svu *SLAViolationUpdate) SetSLADefinitionID(i int) *SLAViolationUpdate {
 	svu.mutation.SetSLADefinitionID(i)
@@ -110,6 +131,20 @@ func (svu *SLAViolationUpdate) SetViolationTime(t time.Time) *SLAViolationUpdate
 func (svu *SLAViolationUpdate) SetNillableViolationTime(t *time.Time) *SLAViolationUpdate {
 	if t != nil {
 		svu.SetViolationTime(*t)
+	}
+	return svu
+}
+
+// SetViolationOccurredAt sets the "violation_occurred_at" field.
+func (svu *SLAViolationUpdate) SetViolationOccurredAt(t time.Time) *SLAViolationUpdate {
+	svu.mutation.SetViolationOccurredAt(t)
+	return svu
+}
+
+// SetNillableViolationOccurredAt sets the "violation_occurred_at" field if the given value is not nil.
+func (svu *SLAViolationUpdate) SetNillableViolationOccurredAt(t *time.Time) *SLAViolationUpdate {
+	if t != nil {
+		svu.SetViolationOccurredAt(*t)
 	}
 	return svu
 }
@@ -438,6 +473,12 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := svu.mutation.CreatedBy(); ok {
+		_spec.SetField(slaviolation.FieldCreatedBy, field.TypeInt, value)
+	}
+	if value, ok := svu.mutation.AddedCreatedBy(); ok {
+		_spec.AddField(slaviolation.FieldCreatedBy, field.TypeInt, value)
+	}
 	if value, ok := svu.mutation.TicketType(); ok {
 		_spec.SetField(slaviolation.FieldTicketType, field.TypeString, value)
 	}
@@ -449,6 +490,9 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := svu.mutation.ViolationTime(); ok {
 		_spec.SetField(slaviolation.FieldViolationTime, field.TypeTime, value)
+	}
+	if value, ok := svu.mutation.ViolationOccurredAt(); ok {
+		_spec.SetField(slaviolation.FieldViolationOccurredAt, field.TypeTime, value)
 	}
 	if value, ok := svu.mutation.ExpectedTime(); ok {
 		_spec.SetField(slaviolation.FieldExpectedTime, field.TypeInt, value)
@@ -591,6 +635,27 @@ type SLAViolationUpdateOne struct {
 	mutation *SLAViolationMutation
 }
 
+// SetCreatedBy sets the "created_by" field.
+func (svuo *SLAViolationUpdateOne) SetCreatedBy(i int) *SLAViolationUpdateOne {
+	svuo.mutation.ResetCreatedBy()
+	svuo.mutation.SetCreatedBy(i)
+	return svuo
+}
+
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (svuo *SLAViolationUpdateOne) SetNillableCreatedBy(i *int) *SLAViolationUpdateOne {
+	if i != nil {
+		svuo.SetCreatedBy(*i)
+	}
+	return svuo
+}
+
+// AddCreatedBy adds i to the "created_by" field.
+func (svuo *SLAViolationUpdateOne) AddCreatedBy(i int) *SLAViolationUpdateOne {
+	svuo.mutation.AddCreatedBy(i)
+	return svuo
+}
+
 // SetSLADefinitionID sets the "sla_definition_id" field.
 func (svuo *SLAViolationUpdateOne) SetSLADefinitionID(i int) *SLAViolationUpdateOne {
 	svuo.mutation.SetSLADefinitionID(i)
@@ -671,6 +736,20 @@ func (svuo *SLAViolationUpdateOne) SetViolationTime(t time.Time) *SLAViolationUp
 func (svuo *SLAViolationUpdateOne) SetNillableViolationTime(t *time.Time) *SLAViolationUpdateOne {
 	if t != nil {
 		svuo.SetViolationTime(*t)
+	}
+	return svuo
+}
+
+// SetViolationOccurredAt sets the "violation_occurred_at" field.
+func (svuo *SLAViolationUpdateOne) SetViolationOccurredAt(t time.Time) *SLAViolationUpdateOne {
+	svuo.mutation.SetViolationOccurredAt(t)
+	return svuo
+}
+
+// SetNillableViolationOccurredAt sets the "violation_occurred_at" field if the given value is not nil.
+func (svuo *SLAViolationUpdateOne) SetNillableViolationOccurredAt(t *time.Time) *SLAViolationUpdateOne {
+	if t != nil {
+		svuo.SetViolationOccurredAt(*t)
 	}
 	return svuo
 }
@@ -1029,6 +1108,12 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 			}
 		}
 	}
+	if value, ok := svuo.mutation.CreatedBy(); ok {
+		_spec.SetField(slaviolation.FieldCreatedBy, field.TypeInt, value)
+	}
+	if value, ok := svuo.mutation.AddedCreatedBy(); ok {
+		_spec.AddField(slaviolation.FieldCreatedBy, field.TypeInt, value)
+	}
 	if value, ok := svuo.mutation.TicketType(); ok {
 		_spec.SetField(slaviolation.FieldTicketType, field.TypeString, value)
 	}
@@ -1040,6 +1125,9 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 	}
 	if value, ok := svuo.mutation.ViolationTime(); ok {
 		_spec.SetField(slaviolation.FieldViolationTime, field.TypeTime, value)
+	}
+	if value, ok := svuo.mutation.ViolationOccurredAt(); ok {
+		_spec.SetField(slaviolation.FieldViolationOccurredAt, field.TypeTime, value)
 	}
 	if value, ok := svuo.mutation.ExpectedTime(); ok {
 		_spec.SetField(slaviolation.FieldExpectedTime, field.TypeInt, value)

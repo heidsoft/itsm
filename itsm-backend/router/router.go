@@ -461,6 +461,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
 			{
 				// SLA Definitions
+				slaGrp.GET("/stats", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAStats)
 				slaGrp.GET("/definitions", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
 				slaGrp.POST("/definitions", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateSLADefinition)
 				slaGrp.GET("/definitions/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)

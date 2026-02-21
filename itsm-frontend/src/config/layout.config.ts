@@ -171,17 +171,18 @@ export const validateSiderWidth = (width: number): boolean => {
   return (width - 200) % 8 === 0 && width >= 200;
 };
 
-// 验证当前配置
-console.assert(
-  validateHeaderHeight(LAYOUT_CONFIG.header.height),
-  `❌ Header高度 ${LAYOUT_CONFIG.header.height}px 不符合 Ant Design 公式 (48+8n)`
-);
+if (process.env.NODE_ENV === 'development') {
+  console.assert(
+    validateHeaderHeight(LAYOUT_CONFIG.header.height),
+    `❌ Header高度 ${LAYOUT_CONFIG.header.height}px 不符合 Ant Design 公式 (48+8n)`
+  );
 
-console.assert(
-  validateSiderWidth(LAYOUT_CONFIG.sider.width),
-  `❌ Sider宽度 ${LAYOUT_CONFIG.sider.width}px 不符合 Ant Design 公式 (200+8n)`
-);
+  console.assert(
+    validateSiderWidth(LAYOUT_CONFIG.sider.width),
+    `❌ Sider宽度 ${LAYOUT_CONFIG.sider.width}px 不符合 Ant Design 公式 (200+8n)`
+  );
 
-console.log('✅ Layout配置符合 Ant Design 官方设计规范');
+  console.log('✅ Layout配置符合 Ant Design 官方设计规范');
+}
 
 export default LAYOUT_CONFIG;

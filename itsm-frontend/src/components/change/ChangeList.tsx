@@ -215,7 +215,7 @@ const ChangeList: React.FC = () => {
           </Form.Item>
           <Form.Item className="mb-0">
             <Space>
-              <Button type='primary' ghost onClick={handleSearch}>
+              <Button type="primary" onClick={handleSearch}>
                 查询
               </Button>
               <Button icon={<SyncOutlined />} onClick={loadData} />
@@ -247,6 +247,7 @@ const ChangeList: React.FC = () => {
               onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
             }}
             scroll={{ x: 1000 }}
+            getPopupContainer={(node) => node.parentElement || document.body}
           />
         )}
       </Card>

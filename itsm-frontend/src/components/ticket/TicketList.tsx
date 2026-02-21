@@ -12,7 +12,7 @@ import {
   Tooltip,
   Dropdown,
   Modal,
-  message,
+  App,
   DatePicker,
   Row,
   Col,
@@ -37,6 +37,7 @@ import { useRouter } from 'next/navigation';
 import { TicketApi } from '@/lib/api/ticket-api';
 import type { Ticket } from '@/lib/api/types';
 import { useTickets } from '@/lib/hooks/useTickets';
+import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
 import { useDebounce } from '@/lib/component-utils';
 import TicketBatchOperations from './TicketBatchOperations';
 
@@ -52,6 +53,7 @@ interface TicketListProps {
   pageSize?: number;
   filters?: Partial<ListTicketsRequest>;
   onTicketSelect?: (ticket: Ticket) => void;
+  advancedFilters?: Partial<TicketQueryFilters>;
 }
 
 // 工单状态配置
@@ -88,8 +90,10 @@ const TicketList: React.FC<TicketListProps> = ({
   showHeader = true,
   filters: initialFilters = {},
   onTicketSelect,
+  advancedFilters,
 }) => {
   const router = useRouter();
+  const { message } = App.useApp();
   const {
     tickets,
     loading,
@@ -118,6 +122,12 @@ const TicketList: React.FC<TicketListProps> = ({
     fetchTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchValue]);
+
+  useEffect(() => {
+    if (advancedFilters === undefined) return;
+    updateFilters(advancedFilters);
+    fetchTickets(advancedFilters);
+  }, [advancedFilters, updateFilters, fetchTickets]);
 
   // 选择操作
   const selectTicket = useCallback((id: number) => {
@@ -546,6 +556,7 @@ const TicketList: React.FC<TicketListProps> = ({
           onChange={handleTableChange}
           scroll={{ x: 1200 }}
           size='middle'
+          getPopupContainer={(node) => node.parentElement || document.body}
         />
       </Card>
 

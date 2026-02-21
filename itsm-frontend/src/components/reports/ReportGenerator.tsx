@@ -16,7 +16,7 @@ import {
   InputNumber,
   DatePicker,
   Input,
-  message
+  App
 } from 'antd';
 import {
   BarChart3,
@@ -44,6 +44,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   loading = false,
   timeRange,
 }) => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [previewData, setPreviewData] = useState<AnalyticsResponse | null>(null);
   const [showPreview, setShowPreview] = useState(false);

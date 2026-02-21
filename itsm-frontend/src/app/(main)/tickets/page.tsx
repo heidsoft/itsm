@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Typography, Space, Button, Tabs, Badge, Alert } from 'antd';
 import {
   PlusOutlined,
@@ -14,7 +14,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import TicketList from '@/components/ticket/TicketList';
 import TicketKanban from '@/components/ticket/TicketKanban';
-import TicketAdvancedSearch from '@/components/ticket/TicketAdvancedSearch';
+import TicketAdvancedSearch, {
+  type AdvancedSearchFilters,
+} from '@/components/ticket/TicketAdvancedSearch';
+import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +26,7 @@ export default function TicketsPage() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('list');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<Partial<TicketQueryFilters>>({});
   const [ticketStats, setTicketStats] = useState({
     total: 0,
     open: 0,
@@ -66,16 +70,57 @@ export default function TicketsPage() {
     router.push(`/tickets?${newParams.toString()}`, { scroll: false });
   };
 
-  // 高级搜索处理
-  const handleAdvancedSearch = (filters: any) => {
-    console.log('Advanced search filters:', filters);
-    // 这里应该调用实际的搜索API
+  const mapAdvancedToQueryFilters = useCallback(
+    (filters: AdvancedSearchFilters): Partial<TicketQueryFilters> => {
+      const result: Partial<TicketQueryFilters> = {};
+
+      if (filters.keyword) {
+        result.keyword = filters.keyword;
+      } else if (filters.ticket_number) {
+        result.keyword = filters.ticket_number;
+      } else if (filters.title) {
+        result.keyword = filters.title;
+      } else if (filters.description) {
+        result.keyword = filters.description;
+      }
+
+      if (filters.status && filters.status.length > 0) {
+        result.status = filters.status[0] as TicketQueryFilters['status'];
+      }
+
+      if (filters.priority && filters.priority.length > 0) {
+        result.priority = filters.priority[0] as TicketQueryFilters['priority'];
+      }
+
+      if (filters.type && filters.type.length > 0) {
+        result.type = filters.type[0] as TicketQueryFilters['type'];
+      }
+
+      if (filters.category && filters.category.length > 0) {
+        result.category = filters.category[0];
+      }
+
+      if (typeof filters.assignee_id === 'number') {
+        result.assignee_id = filters.assignee_id;
+      }
+
+      if (filters.created_after && filters.created_before) {
+        result.dateRange = [filters.created_after, filters.created_before];
+      }
+
+      return result;
+    },
+    []
+  );
+
+  const handleAdvancedSearch = (filters: AdvancedSearchFilters) => {
+    const mapped = mapAdvancedToQueryFilters(filters);
+    setAdvancedFilters(mapped);
     setActiveTab('list');
   };
 
   const handleSearchReset = () => {
-    console.log('Search reset');
-    // 重置搜索条件
+    setAdvancedFilters({});
   };
 
   return (
@@ -88,7 +133,9 @@ export default function TicketsPage() {
               <Title level={2} style={{ marginBottom: 0 }}>
                 工单管理
               </Title>
-              <Text type='secondary'>统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA监控与智能分派</Text>
+              <Text type='secondary'>
+                统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA监控与智能分派
+              </Text>
             </div>
             <Space>
               <Button
@@ -161,16 +208,6 @@ export default function TicketsPage() {
 
       {/* 主内容区域 */}
       <div className='w-full px-6 py-6'>
-        {/* 功能提示 */}
-        <Alert
-          title='工单管理功能已全面升级'
-          description='现在支持列表视图、看板视图、高级搜索、统计分析等完整功能，提供更高效的工单管理体验。'
-          type='success'
-          showIcon
-          closable
-          className='mb-4 rounded-lg'
-        />
-
         {/* 标签页导航 */}
         <Tabs
           activeKey={activeTab}
@@ -196,44 +233,16 @@ export default function TicketsPage() {
                 </span>
               ),
             },
-            {
-              key: 'analytics',
-              label: (
-                <span className='flex items-center gap-2'>
-                  <BarChartOutlined />
-                  数据分析
-                </span>
-              ),
-            },
           ]}
         />
 
         {/* 标签页内容 */}
-        {activeTab === 'list' && <TicketList showHeader={false} pageSize={20} />}
+        {activeTab === 'list' && (
+          <TicketList showHeader={false} pageSize={20} advancedFilters={advancedFilters} />
+        )}
 
         {activeTab === 'kanban' && (
           <TicketKanban onTicketSelect={ticket => router.push(`/tickets/${ticket.id}`)} />
-        )}
-
-        {activeTab === 'analytics' && (
-          <div className='bg-white rounded-lg p-4 shadow-sm border border-gray-200'>
-            <div className='text-center py-8'>
-              <BarChartOutlined className='text-4xl text-gray-400 mb-4' />
-              <Title level={4} type='secondary'>
-                数据分析功能
-              </Title>
-              <Text type='secondary'>完整的数据分析功能已迁移至专门的统计页面</Text>
-              <div className='mt-4'>
-                <Button
-                  type='primary'
-                  size='large'
-                  onClick={() => router.push('/tickets/analytics')}
-                >
-                  查看详细分析
-                </Button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
 

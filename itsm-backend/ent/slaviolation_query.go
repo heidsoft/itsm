@@ -334,12 +334,12 @@ func (svq *SLAViolationQuery) WithTicket(opts ...func(*TicketQuery)) *SLAViolati
 // Example:
 //
 //	var v []struct {
-//		SLADefinitionID int `json:"sla_definition_id,omitempty"`
+//		CreatedBy int `json:"created_by,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.SLAViolation.Query().
-//		GroupBy(slaviolation.FieldSLADefinitionID).
+//		GroupBy(slaviolation.FieldCreatedBy).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (svq *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolationGroupBy {
@@ -357,11 +357,11 @@ func (svq *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolat
 // Example:
 //
 //	var v []struct {
-//		SLADefinitionID int `json:"sla_definition_id,omitempty"`
+//		CreatedBy int `json:"created_by,omitempty"`
 //	}
 //
 //	client.SLAViolation.Query().
-//		Select(slaviolation.FieldSLADefinitionID).
+//		Select(slaviolation.FieldCreatedBy).
 //		Scan(ctx, &v)
 func (svq *SLAViolationQuery) Select(fields ...string) *SLAViolationSelect {
 	svq.ctx.Fields = append(svq.ctx.Fields, fields...)

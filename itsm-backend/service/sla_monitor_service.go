@@ -153,6 +153,7 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 	}
 
 	_, err = s.client.SLAViolation.Create().
+		SetCreatedBy(0). // 系统自动创建，使用默认用户ID 0
 		SetTicketID(t.ID).
 		SetTicketType("ticket"). // Ticket 表没有类型字段，使用默认值
 		SetSLADefinitionID(t.SLADefinitionID).

@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldLTE(FieldID, id))
 }
 
+// CreatedBy applies equality check predicate on the "created_by" field. It's identical to CreatedByEQ.
+func CreatedBy(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldCreatedBy, v))
+}
+
 // SLADefinitionID applies equality check predicate on the "sla_definition_id" field. It's identical to SLADefinitionIDEQ.
 func SLADefinitionID(v int) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldSLADefinitionID, v))
@@ -83,6 +88,11 @@ func ViolationType(v string) predicate.SLAViolation {
 // ViolationTime applies equality check predicate on the "violation_time" field. It's identical to ViolationTimeEQ.
 func ViolationTime(v time.Time) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldViolationTime, v))
+}
+
+// ViolationOccurredAt applies equality check predicate on the "violation_occurred_at" field. It's identical to ViolationOccurredAtEQ.
+func ViolationOccurredAt(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldViolationOccurredAt, v))
 }
 
 // ExpectedTime applies equality check predicate on the "expected_time" field. It's identical to ExpectedTimeEQ.
@@ -143,6 +153,46 @@ func CreatedAt(v time.Time) predicate.SLAViolation {
 // UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
 func UpdatedAt(v time.Time) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// CreatedByEQ applies the EQ predicate on the "created_by" field.
+func CreatedByEQ(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldCreatedBy, v))
+}
+
+// CreatedByNEQ applies the NEQ predicate on the "created_by" field.
+func CreatedByNEQ(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldCreatedBy, v))
+}
+
+// CreatedByIn applies the In predicate on the "created_by" field.
+func CreatedByIn(vs ...int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldCreatedBy, vs...))
+}
+
+// CreatedByNotIn applies the NotIn predicate on the "created_by" field.
+func CreatedByNotIn(vs ...int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldCreatedBy, vs...))
+}
+
+// CreatedByGT applies the GT predicate on the "created_by" field.
+func CreatedByGT(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldCreatedBy, v))
+}
+
+// CreatedByGTE applies the GTE predicate on the "created_by" field.
+func CreatedByGTE(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldCreatedBy, v))
+}
+
+// CreatedByLT applies the LT predicate on the "created_by" field.
+func CreatedByLT(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldCreatedBy, v))
+}
+
+// CreatedByLTE applies the LTE predicate on the "created_by" field.
+func CreatedByLTE(v int) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldCreatedBy, v))
 }
 
 // SLADefinitionIDEQ applies the EQ predicate on the "sla_definition_id" field.
@@ -418,6 +468,46 @@ func ViolationTimeLT(v time.Time) predicate.SLAViolation {
 // ViolationTimeLTE applies the LTE predicate on the "violation_time" field.
 func ViolationTimeLTE(v time.Time) predicate.SLAViolation {
 	return predicate.SLAViolation(sql.FieldLTE(FieldViolationTime, v))
+}
+
+// ViolationOccurredAtEQ applies the EQ predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtEQ(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldEQ(FieldViolationOccurredAt, v))
+}
+
+// ViolationOccurredAtNEQ applies the NEQ predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtNEQ(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNEQ(FieldViolationOccurredAt, v))
+}
+
+// ViolationOccurredAtIn applies the In predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtIn(vs ...time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldIn(FieldViolationOccurredAt, vs...))
+}
+
+// ViolationOccurredAtNotIn applies the NotIn predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtNotIn(vs ...time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldNotIn(FieldViolationOccurredAt, vs...))
+}
+
+// ViolationOccurredAtGT applies the GT predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtGT(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGT(FieldViolationOccurredAt, v))
+}
+
+// ViolationOccurredAtGTE applies the GTE predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtGTE(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldGTE(FieldViolationOccurredAt, v))
+}
+
+// ViolationOccurredAtLT applies the LT predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtLT(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLT(FieldViolationOccurredAt, v))
+}
+
+// ViolationOccurredAtLTE applies the LTE predicate on the "violation_occurred_at" field.
+func ViolationOccurredAtLTE(v time.Time) predicate.SLAViolation {
+	return predicate.SLAViolation(sql.FieldLTE(FieldViolationOccurredAt, v))
 }
 
 // ExpectedTimeEQ applies the EQ predicate on the "expected_time" field.

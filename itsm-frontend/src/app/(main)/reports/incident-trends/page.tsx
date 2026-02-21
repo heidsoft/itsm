@@ -10,7 +10,7 @@ import {
   Space,
   Typography,
   Spin,
-  message,
+  App,
   Statistic,
 } from 'antd';
 import {
@@ -47,6 +47,7 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const IncidentTrendsPage = () => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([

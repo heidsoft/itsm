@@ -81,6 +81,7 @@ export const useTickets = (): UseTicketsReturn => {
     
     try {
       const currentFilters = customFilters || filters;
+      const dateRange = currentFilters.dateRange;
       const response = await ticketService.listTickets({
         page: pagination.current,
         page_size: pagination.pageSize,
@@ -90,6 +91,9 @@ export const useTickets = (): UseTicketsReturn => {
         category: currentFilters.category,
         assignee_id: currentFilters.assignee_id,
         keyword: currentFilters.keyword,
+        date_from: dateRange?.[0],
+        date_to: dateRange?.[1],
+        tags: currentFilters.tags,
       });
       
       setTickets(response.tickets);

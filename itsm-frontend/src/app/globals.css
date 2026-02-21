@@ -1,15 +1,20 @@
 /* Tailwind CSS v4 导入 */
 /* ========== 外部样式导入 (必须在所有其他规则之前) ========== */
-@import "tailwindcss";
-@reference "tailwindcss";
 @import url('../styles/theme-variables.css');
 @import url('../styles/antd-layout-overrides.css');
 @import '../components/ui/animations.css';
 @import '../components/ui/typography.css';
+@import "tailwindcss";
+@reference "tailwindcss";
 
 /* Tooltip 样式修复 - 修复白色透明背景问题 */
 .ant-tooltip {
   opacity: 1 !important;
+  z-index: 9999 !important;
+}
+
+.ant-tooltip-wrapper {
+  z-index: 9999 !important;
 }
 
 .ant-tooltip-inner {
@@ -312,7 +317,7 @@
 /* 增强的表格样式 */
 .ant-table {
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-sm);
 }
 

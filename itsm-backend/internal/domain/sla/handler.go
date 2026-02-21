@@ -432,3 +432,17 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 		"page_size": size,
 	})
 }
+
+// GetSLAStats handles GET /api/v1/sla/stats
+func (h *Handler) GetSLAStats(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	stats, err := h.svc.GetSLAStats(c.Request.Context(), tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, stats)
+}

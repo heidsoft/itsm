@@ -1857,10 +1857,12 @@ var (
 	// SLAViolationsColumns holds the columns for the "sla_violations" table.
 	SLAViolationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_by", Type: field.TypeInt, Default: 0},
 		{Name: "ticket_type", Type: field.TypeString, Default: "ticket"},
 		{Name: "sla_name", Type: field.TypeString, Default: "Default SLA"},
 		{Name: "violation_type", Type: field.TypeString},
 		{Name: "violation_time", Type: field.TypeTime},
+		{Name: "violation_occurred_at", Type: field.TypeTime},
 		{Name: "expected_time", Type: field.TypeInt, Nullable: true},
 		{Name: "actual_time", Type: field.TypeInt, Nullable: true},
 		{Name: "overdue_minutes", Type: field.TypeInt, Default: 0},
@@ -1884,13 +1886,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "sla_violations_sla_definitions_violations",
-				Columns:    []*schema.Column{SLAViolationsColumns[17]},
+				Columns:    []*schema.Column{SLAViolationsColumns[19]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "sla_violations_tickets_sla_violations",
-				Columns:    []*schema.Column{SLAViolationsColumns[18]},
+				Columns:    []*schema.Column{SLAViolationsColumns[20]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

@@ -58871,10 +58871,13 @@ type SLAViolationMutation struct {
 	op                    Op
 	typ                   string
 	id                    *int
+	created_by            *int
+	addcreated_by         *int
 	ticket_type           *string
 	sla_name              *string
 	violation_type        *string
 	violation_time        *time.Time
+	violation_occurred_at *time.Time
 	expected_time         *int
 	addexpected_time      *int
 	actual_time           *int
@@ -58997,6 +59000,62 @@ func (m *SLAViolationMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *SLAViolationMutation) SetCreatedBy(i int) {
+	m.created_by = &i
+	m.addcreated_by = nil
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *SLAViolationMutation) CreatedBy() (r int, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldCreatedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// AddCreatedBy adds i to the "created_by" field.
+func (m *SLAViolationMutation) AddCreatedBy(i int) {
+	if m.addcreated_by != nil {
+		*m.addcreated_by += i
+	} else {
+		m.addcreated_by = &i
+	}
+}
+
+// AddedCreatedBy returns the value that was added to the "created_by" field in this mutation.
+func (m *SLAViolationMutation) AddedCreatedBy() (r int, exists bool) {
+	v := m.addcreated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *SLAViolationMutation) ResetCreatedBy() {
+	m.created_by = nil
+	m.addcreated_by = nil
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
@@ -59213,6 +59272,42 @@ func (m *SLAViolationMutation) OldViolationTime(ctx context.Context) (v time.Tim
 // ResetViolationTime resets all changes to the "violation_time" field.
 func (m *SLAViolationMutation) ResetViolationTime() {
 	m.violation_time = nil
+}
+
+// SetViolationOccurredAt sets the "violation_occurred_at" field.
+func (m *SLAViolationMutation) SetViolationOccurredAt(t time.Time) {
+	m.violation_occurred_at = &t
+}
+
+// ViolationOccurredAt returns the value of the "violation_occurred_at" field in the mutation.
+func (m *SLAViolationMutation) ViolationOccurredAt() (r time.Time, exists bool) {
+	v := m.violation_occurred_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViolationOccurredAt returns the old "violation_occurred_at" field's value of the SLAViolation entity.
+// If the SLAViolation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SLAViolationMutation) OldViolationOccurredAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViolationOccurredAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViolationOccurredAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViolationOccurredAt: %w", err)
+	}
+	return oldValue.ViolationOccurredAt, nil
+}
+
+// ResetViolationOccurredAt resets all changes to the "violation_occurred_at" field.
+func (m *SLAViolationMutation) ResetViolationOccurredAt() {
+	m.violation_occurred_at = nil
 }
 
 // SetExpectedTime sets the "expected_time" field.
@@ -59882,7 +59977,10 @@ func (m *SLAViolationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SLAViolationMutation) Fields() []string {
-	fields := make([]string, 0, 18)
+	fields := make([]string, 0, 20)
+	if m.created_by != nil {
+		fields = append(fields, slaviolation.FieldCreatedBy)
+	}
 	if m.sla_definition != nil {
 		fields = append(fields, slaviolation.FieldSLADefinitionID)
 	}
@@ -59900,6 +59998,9 @@ func (m *SLAViolationMutation) Fields() []string {
 	}
 	if m.violation_time != nil {
 		fields = append(fields, slaviolation.FieldViolationTime)
+	}
+	if m.violation_occurred_at != nil {
+		fields = append(fields, slaviolation.FieldViolationOccurredAt)
 	}
 	if m.expected_time != nil {
 		fields = append(fields, slaviolation.FieldExpectedTime)
@@ -59945,6 +60046,8 @@ func (m *SLAViolationMutation) Fields() []string {
 // schema.
 func (m *SLAViolationMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case slaviolation.FieldCreatedBy:
+		return m.CreatedBy()
 	case slaviolation.FieldSLADefinitionID:
 		return m.SLADefinitionID()
 	case slaviolation.FieldTicketType:
@@ -59957,6 +60060,8 @@ func (m *SLAViolationMutation) Field(name string) (ent.Value, bool) {
 		return m.ViolationType()
 	case slaviolation.FieldViolationTime:
 		return m.ViolationTime()
+	case slaviolation.FieldViolationOccurredAt:
+		return m.ViolationOccurredAt()
 	case slaviolation.FieldExpectedTime:
 		return m.ExpectedTime()
 	case slaviolation.FieldActualTime:
@@ -59990,6 +60095,8 @@ func (m *SLAViolationMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *SLAViolationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case slaviolation.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
 	case slaviolation.FieldSLADefinitionID:
 		return m.OldSLADefinitionID(ctx)
 	case slaviolation.FieldTicketType:
@@ -60002,6 +60109,8 @@ func (m *SLAViolationMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldViolationType(ctx)
 	case slaviolation.FieldViolationTime:
 		return m.OldViolationTime(ctx)
+	case slaviolation.FieldViolationOccurredAt:
+		return m.OldViolationOccurredAt(ctx)
 	case slaviolation.FieldExpectedTime:
 		return m.OldExpectedTime(ctx)
 	case slaviolation.FieldActualTime:
@@ -60035,6 +60144,13 @@ func (m *SLAViolationMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *SLAViolationMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case slaviolation.FieldCreatedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
 	case slaviolation.FieldSLADefinitionID:
 		v, ok := value.(int)
 		if !ok {
@@ -60076,6 +60192,13 @@ func (m *SLAViolationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetViolationTime(v)
+		return nil
+	case slaviolation.FieldViolationOccurredAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViolationOccurredAt(v)
 		return nil
 	case slaviolation.FieldExpectedTime:
 		v, ok := value.(int)
@@ -60169,6 +60292,9 @@ func (m *SLAViolationMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *SLAViolationMutation) AddedFields() []string {
 	var fields []string
+	if m.addcreated_by != nil {
+		fields = append(fields, slaviolation.FieldCreatedBy)
+	}
 	if m.addexpected_time != nil {
 		fields = append(fields, slaviolation.FieldExpectedTime)
 	}
@@ -60189,6 +60315,8 @@ func (m *SLAViolationMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *SLAViolationMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case slaviolation.FieldCreatedBy:
+		return m.AddedCreatedBy()
 	case slaviolation.FieldExpectedTime:
 		return m.AddedExpectedTime()
 	case slaviolation.FieldActualTime:
@@ -60206,6 +60334,13 @@ func (m *SLAViolationMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *SLAViolationMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case slaviolation.FieldCreatedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCreatedBy(v)
+		return nil
 	case slaviolation.FieldExpectedTime:
 		v, ok := value.(int)
 		if !ok {
@@ -60294,6 +60429,9 @@ func (m *SLAViolationMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *SLAViolationMutation) ResetField(name string) error {
 	switch name {
+	case slaviolation.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
 	case slaviolation.FieldSLADefinitionID:
 		m.ResetSLADefinitionID()
 		return nil
@@ -60311,6 +60449,9 @@ func (m *SLAViolationMutation) ResetField(name string) error {
 		return nil
 	case slaviolation.FieldViolationTime:
 		m.ResetViolationTime()
+		return nil
+	case slaviolation.FieldViolationOccurredAt:
+		m.ResetViolationOccurredAt()
 		return nil
 	case slaviolation.FieldExpectedTime:
 		m.ResetExpectedTime()

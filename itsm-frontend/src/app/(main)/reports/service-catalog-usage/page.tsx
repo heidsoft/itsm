@@ -7,7 +7,7 @@ import {
   Col,
   Typography,
   Spin,
-  message,
+  App,
   Select,
   DatePicker,
   Space,
@@ -34,6 +34,7 @@ const { RangePicker } = DatePicker;
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1', '#13c2c2'];
 
 const ServiceCatalogUsagePage = () => {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<any[]>([]);
   const [requestsByService, setRequestsByService] = useState<any[]>([]);
