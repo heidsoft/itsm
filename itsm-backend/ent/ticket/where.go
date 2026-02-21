@@ -70,6 +70,11 @@ func Status(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldStatus, v))
 }
 
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldType, v))
+}
+
 // Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
 func Priority(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldPriority, v))
@@ -138,6 +143,11 @@ func FirstResponseAt(v time.Time) predicate.Ticket {
 // ResolvedAt applies equality check predicate on the "resolved_at" field. It's identical to ResolvedAtEQ.
 func ResolvedAt(v time.Time) predicate.Ticket {
 	return predicate.Ticket(sql.FieldEQ(FieldResolvedAt, v))
+}
+
+// Resolution applies equality check predicate on the "resolution" field. It's identical to ResolutionEQ.
+func Resolution(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldResolution, v))
 }
 
 // Rating applies equality check predicate on the "rating" field. It's identical to RatingEQ.
@@ -373,6 +383,71 @@ func StatusEqualFold(v string) predicate.Ticket {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.Ticket {
 	return predicate.Ticket(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldType, v))
+}
+
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldType, v))
+}
+
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldType, vs...))
+}
+
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldType, vs...))
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldType, v))
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldType, v))
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldType, v))
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldType, v))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldType, v))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldType, v))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldType, v))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldType, v))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldType, v))
 }
 
 // PriorityEQ applies the EQ predicate on the "priority" field.
@@ -983,6 +1058,81 @@ func ResolvedAtIsNil() predicate.Ticket {
 // ResolvedAtNotNil applies the NotNil predicate on the "resolved_at" field.
 func ResolvedAtNotNil() predicate.Ticket {
 	return predicate.Ticket(sql.FieldNotNull(FieldResolvedAt))
+}
+
+// ResolutionEQ applies the EQ predicate on the "resolution" field.
+func ResolutionEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEQ(FieldResolution, v))
+}
+
+// ResolutionNEQ applies the NEQ predicate on the "resolution" field.
+func ResolutionNEQ(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNEQ(FieldResolution, v))
+}
+
+// ResolutionIn applies the In predicate on the "resolution" field.
+func ResolutionIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldIn(FieldResolution, vs...))
+}
+
+// ResolutionNotIn applies the NotIn predicate on the "resolution" field.
+func ResolutionNotIn(vs ...string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotIn(FieldResolution, vs...))
+}
+
+// ResolutionGT applies the GT predicate on the "resolution" field.
+func ResolutionGT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGT(FieldResolution, v))
+}
+
+// ResolutionGTE applies the GTE predicate on the "resolution" field.
+func ResolutionGTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldGTE(FieldResolution, v))
+}
+
+// ResolutionLT applies the LT predicate on the "resolution" field.
+func ResolutionLT(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLT(FieldResolution, v))
+}
+
+// ResolutionLTE applies the LTE predicate on the "resolution" field.
+func ResolutionLTE(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldLTE(FieldResolution, v))
+}
+
+// ResolutionContains applies the Contains predicate on the "resolution" field.
+func ResolutionContains(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContains(FieldResolution, v))
+}
+
+// ResolutionHasPrefix applies the HasPrefix predicate on the "resolution" field.
+func ResolutionHasPrefix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasPrefix(FieldResolution, v))
+}
+
+// ResolutionHasSuffix applies the HasSuffix predicate on the "resolution" field.
+func ResolutionHasSuffix(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldHasSuffix(FieldResolution, v))
+}
+
+// ResolutionIsNil applies the IsNil predicate on the "resolution" field.
+func ResolutionIsNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldIsNull(FieldResolution))
+}
+
+// ResolutionNotNil applies the NotNil predicate on the "resolution" field.
+func ResolutionNotNil() predicate.Ticket {
+	return predicate.Ticket(sql.FieldNotNull(FieldResolution))
+}
+
+// ResolutionEqualFold applies the EqualFold predicate on the "resolution" field.
+func ResolutionEqualFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldEqualFold(FieldResolution, v))
+}
+
+// ResolutionContainsFold applies the ContainsFold predicate on the "resolution" field.
+func ResolutionContainsFold(v string) predicate.Ticket {
+	return predicate.Ticket(sql.FieldContainsFold(FieldResolution, v))
 }
 
 // RatingEQ applies the EQ predicate on the "rating" field.

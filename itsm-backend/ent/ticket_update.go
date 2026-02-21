@@ -90,6 +90,20 @@ func (tu *TicketUpdate) SetNillableStatus(s *string) *TicketUpdate {
 	return tu
 }
 
+// SetType sets the "type" field.
+func (tu *TicketUpdate) SetType(s string) *TicketUpdate {
+	tu.mutation.SetType(s)
+	return tu
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableType(s *string) *TicketUpdate {
+	if s != nil {
+		tu.SetType(*s)
+	}
+	return tu
+}
+
 // SetPriority sets the "priority" field.
 func (tu *TicketUpdate) SetPriority(s string) *TicketUpdate {
 	tu.mutation.SetPriority(s)
@@ -364,6 +378,26 @@ func (tu *TicketUpdate) SetNillableResolvedAt(t *time.Time) *TicketUpdate {
 // ClearResolvedAt clears the value of the "resolved_at" field.
 func (tu *TicketUpdate) ClearResolvedAt() *TicketUpdate {
 	tu.mutation.ClearResolvedAt()
+	return tu
+}
+
+// SetResolution sets the "resolution" field.
+func (tu *TicketUpdate) SetResolution(s string) *TicketUpdate {
+	tu.mutation.SetResolution(s)
+	return tu
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (tu *TicketUpdate) SetNillableResolution(s *string) *TicketUpdate {
+	if s != nil {
+		tu.SetResolution(*s)
+	}
+	return tu
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (tu *TicketUpdate) ClearResolution() *TicketUpdate {
+	tu.mutation.ClearResolution()
 	return tu
 }
 
@@ -1027,6 +1061,9 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.Status(); ok {
 		_spec.SetField(ticket.FieldStatus, field.TypeString, value)
 	}
+	if value, ok := tu.mutation.GetType(); ok {
+		_spec.SetField(ticket.FieldType, field.TypeString, value)
+	}
 	if value, ok := tu.mutation.Priority(); ok {
 		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
 	}
@@ -1077,6 +1114,12 @@ func (tu *TicketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if tu.mutation.ResolvedAtCleared() {
 		_spec.ClearField(ticket.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := tu.mutation.Resolution(); ok {
+		_spec.SetField(ticket.FieldResolution, field.TypeString, value)
+	}
+	if tu.mutation.ResolutionCleared() {
+		_spec.ClearField(ticket.FieldResolution, field.TypeString)
 	}
 	if value, ok := tu.mutation.Rating(); ok {
 		_spec.SetField(ticket.FieldRating, field.TypeInt, value)
@@ -1822,6 +1865,20 @@ func (tuo *TicketUpdateOne) SetNillableStatus(s *string) *TicketUpdateOne {
 	return tuo
 }
 
+// SetType sets the "type" field.
+func (tuo *TicketUpdateOne) SetType(s string) *TicketUpdateOne {
+	tuo.mutation.SetType(s)
+	return tuo
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableType(s *string) *TicketUpdateOne {
+	if s != nil {
+		tuo.SetType(*s)
+	}
+	return tuo
+}
+
 // SetPriority sets the "priority" field.
 func (tuo *TicketUpdateOne) SetPriority(s string) *TicketUpdateOne {
 	tuo.mutation.SetPriority(s)
@@ -2096,6 +2153,26 @@ func (tuo *TicketUpdateOne) SetNillableResolvedAt(t *time.Time) *TicketUpdateOne
 // ClearResolvedAt clears the value of the "resolved_at" field.
 func (tuo *TicketUpdateOne) ClearResolvedAt() *TicketUpdateOne {
 	tuo.mutation.ClearResolvedAt()
+	return tuo
+}
+
+// SetResolution sets the "resolution" field.
+func (tuo *TicketUpdateOne) SetResolution(s string) *TicketUpdateOne {
+	tuo.mutation.SetResolution(s)
+	return tuo
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (tuo *TicketUpdateOne) SetNillableResolution(s *string) *TicketUpdateOne {
+	if s != nil {
+		tuo.SetResolution(*s)
+	}
+	return tuo
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (tuo *TicketUpdateOne) ClearResolution() *TicketUpdateOne {
+	tuo.mutation.ClearResolution()
 	return tuo
 }
 
@@ -2789,6 +2866,9 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 	if value, ok := tuo.mutation.Status(); ok {
 		_spec.SetField(ticket.FieldStatus, field.TypeString, value)
 	}
+	if value, ok := tuo.mutation.GetType(); ok {
+		_spec.SetField(ticket.FieldType, field.TypeString, value)
+	}
 	if value, ok := tuo.mutation.Priority(); ok {
 		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
 	}
@@ -2839,6 +2919,12 @@ func (tuo *TicketUpdateOne) sqlSave(ctx context.Context) (_node *Ticket, err err
 	}
 	if tuo.mutation.ResolvedAtCleared() {
 		_spec.ClearField(ticket.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := tuo.mutation.Resolution(); ok {
+		_spec.SetField(ticket.FieldResolution, field.TypeString, value)
+	}
+	if tuo.mutation.ResolutionCleared() {
+		_spec.ClearField(ticket.FieldResolution, field.TypeString)
 	}
 	if value, ok := tuo.mutation.Rating(); ok {
 		_spec.SetField(ticket.FieldRating, field.TypeInt, value)

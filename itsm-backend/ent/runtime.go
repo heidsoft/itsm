@@ -2043,32 +2043,36 @@ func init() {
 	ticketDescStatus := ticketFields[2].Descriptor()
 	// ticket.DefaultStatus holds the default value on creation for the status field.
 	ticket.DefaultStatus = ticketDescStatus.Default.(string)
+	// ticketDescType is the schema descriptor for type field.
+	ticketDescType := ticketFields[3].Descriptor()
+	// ticket.DefaultType holds the default value on creation for the type field.
+	ticket.DefaultType = ticketDescType.Default.(string)
 	// ticketDescPriority is the schema descriptor for priority field.
-	ticketDescPriority := ticketFields[3].Descriptor()
+	ticketDescPriority := ticketFields[4].Descriptor()
 	// ticket.DefaultPriority holds the default value on creation for the priority field.
 	ticket.DefaultPriority = ticketDescPriority.Default.(string)
 	// ticketDescTicketNumber is the schema descriptor for ticket_number field.
-	ticketDescTicketNumber := ticketFields[4].Descriptor()
+	ticketDescTicketNumber := ticketFields[5].Descriptor()
 	// ticket.TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
 	ticket.TicketNumberValidator = ticketDescTicketNumber.Validators[0].(func(string) error)
 	// ticketDescRequesterID is the schema descriptor for requester_id field.
-	ticketDescRequesterID := ticketFields[5].Descriptor()
+	ticketDescRequesterID := ticketFields[6].Descriptor()
 	// ticket.RequesterIDValidator is a validator for the "requester_id" field. It is called by the builders before save.
 	ticket.RequesterIDValidator = ticketDescRequesterID.Validators[0].(func(int) error)
 	// ticketDescTenantID is the schema descriptor for tenant_id field.
-	ticketDescTenantID := ticketFields[7].Descriptor()
+	ticketDescTenantID := ticketFields[8].Descriptor()
 	// ticket.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	ticket.TenantIDValidator = ticketDescTenantID.Validators[0].(func(int) error)
 	// ticketDescRating is the schema descriptor for rating field.
-	ticketDescRating := ticketFields[17].Descriptor()
+	ticketDescRating := ticketFields[19].Descriptor()
 	// ticket.RatingValidator is a validator for the "rating" field. It is called by the builders before save.
 	ticket.RatingValidator = ticketDescRating.Validators[0].(func(int) error)
 	// ticketDescCreatedAt is the schema descriptor for created_at field.
-	ticketDescCreatedAt := ticketFields[21].Descriptor()
+	ticketDescCreatedAt := ticketFields[23].Descriptor()
 	// ticket.DefaultCreatedAt holds the default value on creation for the created_at field.
 	ticket.DefaultCreatedAt = ticketDescCreatedAt.Default.(func() time.Time)
 	// ticketDescUpdatedAt is the schema descriptor for updated_at field.
-	ticketDescUpdatedAt := ticketFields[22].Descriptor()
+	ticketDescUpdatedAt := ticketFields[24].Descriptor()
 	// ticket.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	ticket.DefaultUpdatedAt = ticketDescUpdatedAt.Default.(func() time.Time)
 	// ticket.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

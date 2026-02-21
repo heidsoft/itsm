@@ -68,6 +68,20 @@ func (tc *TicketCreate) SetNillableStatus(s *string) *TicketCreate {
 	return tc
 }
 
+// SetType sets the "type" field.
+func (tc *TicketCreate) SetType(s string) *TicketCreate {
+	tc.mutation.SetType(s)
+	return tc
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableType(s *string) *TicketCreate {
+	if s != nil {
+		tc.SetType(*s)
+	}
+	return tc
+}
+
 // SetPriority sets the "priority" field.
 func (tc *TicketCreate) SetPriority(s string) *TicketCreate {
 	tc.mutation.SetPriority(s)
@@ -236,6 +250,20 @@ func (tc *TicketCreate) SetResolvedAt(t time.Time) *TicketCreate {
 func (tc *TicketCreate) SetNillableResolvedAt(t *time.Time) *TicketCreate {
 	if t != nil {
 		tc.SetResolvedAt(*t)
+	}
+	return tc
+}
+
+// SetResolution sets the "resolution" field.
+func (tc *TicketCreate) SetResolution(s string) *TicketCreate {
+	tc.mutation.SetResolution(s)
+	return tc
+}
+
+// SetNillableResolution sets the "resolution" field if the given value is not nil.
+func (tc *TicketCreate) SetNillableResolution(s *string) *TicketCreate {
+	if s != nil {
+		tc.SetResolution(*s)
 	}
 	return tc
 }
@@ -553,6 +581,10 @@ func (tc *TicketCreate) defaults() {
 		v := ticket.DefaultStatus
 		tc.mutation.SetStatus(v)
 	}
+	if _, ok := tc.mutation.GetType(); !ok {
+		v := ticket.DefaultType
+		tc.mutation.SetType(v)
+	}
 	if _, ok := tc.mutation.Priority(); !ok {
 		v := ticket.DefaultPriority
 		tc.mutation.SetPriority(v)
@@ -579,6 +611,9 @@ func (tc *TicketCreate) check() error {
 	}
 	if _, ok := tc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Ticket.status"`)}
+	}
+	if _, ok := tc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Ticket.type"`)}
 	}
 	if _, ok := tc.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Ticket.priority"`)}
@@ -656,6 +691,10 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 		_spec.SetField(ticket.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
+	if value, ok := tc.mutation.GetType(); ok {
+		_spec.SetField(ticket.FieldType, field.TypeString, value)
+		_node.Type = value
+	}
 	if value, ok := tc.mutation.Priority(); ok {
 		_spec.SetField(ticket.FieldPriority, field.TypeString, value)
 		_node.Priority = value
@@ -691,6 +730,10 @@ func (tc *TicketCreate) createSpec() (*Ticket, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.ResolvedAt(); ok {
 		_spec.SetField(ticket.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
+	}
+	if value, ok := tc.mutation.Resolution(); ok {
+		_spec.SetField(ticket.FieldResolution, field.TypeString, value)
+		_node.Resolution = value
 	}
 	if value, ok := tc.mutation.Rating(); ok {
 		_spec.SetField(ticket.FieldRating, field.TypeInt, value)

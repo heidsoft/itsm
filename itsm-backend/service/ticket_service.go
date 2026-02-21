@@ -22,9 +22,9 @@ import (
 )
 
 type TicketService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
-	notificationService *TicketNotificationService
+	client                *ent.Client
+	logger                *zap.SugaredLogger
+	notificationService   *TicketNotificationService
 	automationRuleService *TicketAutomationRuleService
 	// 流程触发服务（用于工单创建时自动触发工作流）
 	processTriggerService ProcessTriggerServiceInterface
@@ -113,6 +113,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetPriority(req.Priority).
+		SetType(ticketType).
 		// 工单默认状态：open（与 schema 默认一致）
 		SetStatus("open").
 		SetTicketNumber(ticketNumber).
@@ -257,7 +258,7 @@ func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID i
 		"priority":      ticket.Priority,
 		"status":        ticket.Status,
 		"requester_id":  ticket.RequesterID,
-		"assignee_id":  ticket.AssigneeID,
+		"assignee_id":   ticket.AssigneeID,
 	}
 
 	// 根据优先级选择不同的流程
@@ -268,13 +269,13 @@ func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID i
 
 	// 触发流程
 	triggerReq := &dto.ProcessTriggerRequest{
-		BusinessType:       dto.BusinessTypeTicket,
-		BusinessID:         ticket.ID,
+		BusinessType:         dto.BusinessTypeTicket,
+		BusinessID:           ticket.ID,
 		ProcessDefinitionKey: processKey,
-		Variables:          variables,
-		TriggeredBy:        fmt.Sprintf("%d", ticket.RequesterID),
-		TriggeredAt:        time.Now(),
-		TenantID:           tenantID,
+		Variables:            variables,
+		TriggeredBy:          fmt.Sprintf("%d", ticket.RequesterID),
+		TriggeredAt:          time.Now(),
+		TenantID:             tenantID,
 	}
 
 	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
@@ -323,12 +324,12 @@ func (s *TicketService) GetWorkflowStatus(ctx context.Context, ticketID int, ten
 		ProcessInstanceID:     processInstance.ID,
 		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
 		ProcessDefinitionName: processDefName,
-		BusinessKey:          processInstance.BusinessKey,
-		Status:               s.mapProcessStatus(processInstance.Status),
+		BusinessKey:           processInstance.BusinessKey,
+		Status:                s.mapProcessStatus(processInstance.Status),
 		CurrentActivityID:     processInstance.CurrentActivityID,
 		CurrentActivityName:   processInstance.CurrentActivityName,
-		StartTime:            processInstance.StartTime,
-		EndTime:              &processInstance.EndTime,
+		StartTime:             processInstance.StartTime,
+		EndTime:               &processInstance.EndTime,
 	}, nil
 }
 
@@ -696,19 +697,19 @@ func (s *TicketService) GetTicket(ctx context.Context, ticketID int, tenantID in
 
 // TicketSLAInfo 工单SLA信息
 type TicketSLAInfo struct {
-	TicketID              int        `json:"ticket_id"`
-	TicketNumber          string     `json:"ticket_number"`
-	Priority              string     `json:"priority"`
-	SLADefinitionID       int        `json:"sla_definition_id"`
+	TicketID             int        `json:"ticket_id"`
+	TicketNumber         string     `json:"ticket_number"`
+	Priority             string     `json:"priority"`
+	SLADefinitionID      int        `json:"sla_definition_id"`
 	SLADefinitionName    string     `json:"sla_definition_name"`
-	ResponseDeadline      time.Time  `json:"response_deadline"`
+	ResponseDeadline     time.Time  `json:"response_deadline"`
 	ResolutionDeadline   time.Time  `json:"resolution_deadline"`
-	FirstResponseAt       *time.Time `json:"first_response_at"`
-	ResolvedAt            *time.Time `json:"resolved_at"`
-	ResponseTimeLeft      int        `json:"response_time_left"`    // 剩余响应时间（分钟）
-	ResolutionTimeLeft    int        `json:"resolution_time_left"` // 剩余解决时间（分钟）
-	IsResponseBreached    bool       `json:"is_response_breached"`
-	IsResolutionBreached  bool       `json:"is_resolution_breached"`
+	FirstResponseAt      *time.Time `json:"first_response_at"`
+	ResolvedAt           *time.Time `json:"resolved_at"`
+	ResponseTimeLeft     int        `json:"response_time_left"`   // 剩余响应时间（分钟）
+	ResolutionTimeLeft   int        `json:"resolution_time_left"` // 剩余解决时间（分钟）
+	IsResponseBreached   bool       `json:"is_response_breached"`
+	IsResolutionBreached bool       `json:"is_resolution_breached"`
 }
 
 // GetTicketSLAInfo 获取工单SLA信息
@@ -724,11 +725,11 @@ func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tena
 	}
 
 	info := &TicketSLAInfo{
-		TicketID:            ticket.ID,
-		TicketNumber:        ticket.TicketNumber,
-		Priority:            ticket.Priority,
-		SLADefinitionID:     ticket.SLADefinitionID,
-		ResponseDeadline:    ticket.SLAResponseDeadline,
+		TicketID:           ticket.ID,
+		TicketNumber:       ticket.TicketNumber,
+		Priority:           ticket.Priority,
+		SLADefinitionID:    ticket.SLADefinitionID,
+		ResponseDeadline:   ticket.SLAResponseDeadline,
 		ResolutionDeadline: ticket.SLAResolutionDeadline,
 	}
 
@@ -904,8 +905,8 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 
 // SLADeadlineResult contains response and resolution deadlines
 type SLADeadlineResult struct {
-	SLADefinitionID int        `json:"sla_definition_id"`
-	ResponseDeadline time.Time `json:"response_deadline"`
+	SLADefinitionID    int       `json:"sla_definition_id"`
+	ResponseDeadline   time.Time `json:"response_deadline"`
 	ResolutionDeadline time.Time `json:"resolution_deadline"`
 }
 
@@ -959,8 +960,8 @@ func (s *TicketService) calculateSLADeadline(ctx context.Context, tenantID int, 
 			// 如果还是找不到，返回默认值
 			s.logger.Warnw("No SLA definition found, using defaults", "service_type", serviceType, "priority", normalizedPriority)
 			return &SLADeadlineResult{
-				SLADefinitionID: 0,
-				ResponseDeadline: now.Add(8 * time.Hour),
+				SLADefinitionID:    0,
+				ResponseDeadline:   now.Add(8 * time.Hour),
 				ResolutionDeadline: now.Add(24 * time.Hour),
 			}, nil
 		}
@@ -975,8 +976,8 @@ func (s *TicketService) calculateSLADeadline(ctx context.Context, tenantID int, 
 	resolutionDeadline = s.adjustToBusinessHours(resolutionDeadline)
 
 	return &SLADeadlineResult{
-		SLADefinitionID: sla.ID,
-		ResponseDeadline: responseDeadline,
+		SLADefinitionID:    sla.ID,
+		ResponseDeadline:   responseDeadline,
 		ResolutionDeadline: resolutionDeadline,
 	}, nil
 }
@@ -1230,13 +1231,13 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 
 	// 1. 添加工单创建活动
 	activities = append(activities, map[string]interface{}{
-		"action":     "created",
-		"timestamp":  ticket.CreatedAt,
-		"user_id":    ticket.RequesterID,
-		"user_name":  "",
-		"details":    "工单已创建",
-		"old_value":  nil,
-		"new_value":  ticket.Title,
+		"action":    "created",
+		"timestamp": ticket.CreatedAt,
+		"user_id":   ticket.RequesterID,
+		"user_name": "",
+		"details":   "工单已创建",
+		"old_value": nil,
+		"new_value": ticket.Title,
 	})
 
 	// 2. 查询评论作为活动记录
@@ -1259,13 +1260,13 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 				}
 			}
 			activities = append(activities, map[string]interface{}{
-				"action":     "commented",
-				"timestamp":  c.CreatedAt,
-				"user_id":    c.UserID,
-				"user_name":  userName,
-				"details":    "添加了评论",
-				"old_value":  nil,
-				"new_value":  nil,
+				"action":    "commented",
+				"timestamp": c.CreatedAt,
+				"user_id":   c.UserID,
+				"user_name": userName,
+				"details":   "添加了评论",
+				"old_value": nil,
+				"new_value": nil,
 			})
 		}
 	}
@@ -1282,13 +1283,13 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 	} else {
 		for _, a := range attachments {
 			activities = append(activities, map[string]interface{}{
-				"action":     "attachment",
-				"timestamp":  a.CreatedAt,
-				"user_id":    a.UploadedBy,
-				"user_name":  "",
-				"details":    fmt.Sprintf("添加了附件: %s", a.FileName),
-				"old_value":  nil,
-				"new_value":  nil,
+				"action":    "attachment",
+				"timestamp": a.CreatedAt,
+				"user_id":   a.UploadedBy,
+				"user_name": "",
+				"details":   fmt.Sprintf("添加了附件: %s", a.FileName),
+				"old_value": nil,
+				"new_value": nil,
 			})
 		}
 	}
@@ -1296,52 +1297,52 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 	// 4. 如果有分配历史，添加分配活动
 	if ticket.AssigneeID > 0 {
 		activities = append(activities, map[string]interface{}{
-			"action":     "assigned",
-			"timestamp":  ticket.UpdatedAt,
-			"user_id":    ticket.AssigneeID,
-			"user_name":  "",
-			"details":    "工单已分配",
-			"old_value":  nil,
-			"new_value":  ticket.AssigneeID,
+			"action":    "assigned",
+			"timestamp": ticket.UpdatedAt,
+			"user_id":   ticket.AssigneeID,
+			"user_name": "",
+			"details":   "工单已分配",
+			"old_value": nil,
+			"new_value": ticket.AssigneeID,
 		})
 	}
 
 	// 5. 如果有首次响应时间，添加响应活动
 	if !ticket.FirstResponseAt.IsZero() {
 		activities = append(activities, map[string]interface{}{
-			"action":     "first_response",
-			"timestamp":  ticket.FirstResponseAt,
-			"user_id":    ticket.AssigneeID,
-			"user_name":  "",
-			"details":    "首次响应工单",
-			"old_value":  nil,
-			"new_value":  nil,
+			"action":    "first_response",
+			"timestamp": ticket.FirstResponseAt,
+			"user_id":   ticket.AssigneeID,
+			"user_name": "",
+			"details":   "首次响应工单",
+			"old_value": nil,
+			"new_value": nil,
 		})
 	}
 
 	// 6. 如果有解决时间，添加解决活动
 	if !ticket.ResolvedAt.IsZero() {
 		activities = append(activities, map[string]interface{}{
-			"action":     "resolved",
-			"timestamp":  ticket.ResolvedAt,
-			"user_id":    ticket.AssigneeID,
-			"user_name":  "",
-			"details":    "工单已解决",
-			"old_value":  nil,
-			"new_value":  nil,
+			"action":    "resolved",
+			"timestamp": ticket.ResolvedAt,
+			"user_id":   ticket.AssigneeID,
+			"user_name": "",
+			"details":   "工单已解决",
+			"old_value": nil,
+			"new_value": nil,
 		})
 	}
 
 	// 7. 如果有评分，添加评分活动
 	if ticket.Rating > 0 {
 		activities = append(activities, map[string]interface{}{
-			"action":     "rated",
-			"timestamp":  ticket.RatedAt,
-			"user_id":    ticket.RatedBy,
-			"user_name":  "",
-			"details":    fmt.Sprintf("用户评分: %d星", ticket.Rating),
-			"old_value":  nil,
-			"new_value":  ticket.Rating,
+			"action":    "rated",
+			"timestamp": ticket.RatedAt,
+			"user_id":   ticket.RatedBy,
+			"user_name": "",
+			"details":   fmt.Sprintf("用户评分: %d星", ticket.Rating),
+			"old_value": nil,
+			"new_value": ticket.Rating,
 		})
 	}
 

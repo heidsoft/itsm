@@ -38,9 +38,11 @@ type UpdateTicketRequest struct {
 	Description string                 `json:"description" binding:"omitempty,min=10,max=5000"`
 	Priority    string                 `json:"priority" binding:"omitempty,oneof=low medium high critical"`
 	Status      string                 `json:"status" binding:"omitempty,oneof=open in_progress resolved closed"`
+	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket"`
 	Category    string                 `json:"category" binding:"omitempty"`
 	AssigneeID  int                    `json:"assignee_id"`
 	Tags        []string               `json:"tags"`
+	Resolution  string                 `json:"resolution" binding:"omitempty"`
 	FormFields  map[string]interface{} `json:"form_fields"`
 	UserID      int                    `json:"user_id" binding:"required"` // 操作用户ID
 }

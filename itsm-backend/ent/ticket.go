@@ -27,6 +27,8 @@ type Ticket struct {
 	Description string `json:"description,omitempty"`
 	// 状态
 	Status string `json:"status,omitempty"`
+	// 工单类型
+	Type string `json:"type,omitempty"`
 	// 优先级
 	Priority string `json:"priority,omitempty"`
 	// 工单编号
@@ -55,6 +57,8 @@ type Ticket struct {
 	FirstResponseAt time.Time `json:"first_response_at,omitempty"`
 	// 解决时间
 	ResolvedAt time.Time `json:"resolved_at,omitempty"`
+	// 解决方案
+	Resolution string `json:"resolution,omitempty"`
 	// 评分（1-5星）
 	Rating int `json:"rating,omitempty"`
 	// 评分评论
@@ -274,7 +278,7 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticket.FieldID, ticket.FieldRequesterID, ticket.FieldAssigneeID, ticket.FieldTenantID, ticket.FieldTemplateID, ticket.FieldCategoryID, ticket.FieldDepartmentID, ticket.FieldParentTicketID, ticket.FieldSLADefinitionID, ticket.FieldRating, ticket.FieldRatedBy:
 			values[i] = new(sql.NullInt64)
-		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldRatingComment:
+		case ticket.FieldTitle, ticket.FieldDescription, ticket.FieldStatus, ticket.FieldType, ticket.FieldPriority, ticket.FieldTicketNumber, ticket.FieldResolution, ticket.FieldRatingComment:
 			values[i] = new(sql.NullString)
 		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -318,6 +322,12 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				t.Status = value.String
+			}
+		case ticket.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
+			} else if value.Valid {
+				t.Type = value.String
 			}
 		case ticket.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -402,6 +412,12 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
 				t.ResolvedAt = value.Time
+			}
+		case ticket.FieldResolution:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution", values[i])
+			} else if value.Valid {
+				t.Resolution = value.String
 			}
 		case ticket.FieldRating:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -571,6 +587,9 @@ func (t *Ticket) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(t.Status)
 	builder.WriteString(", ")
+	builder.WriteString("type=")
+	builder.WriteString(t.Type)
+	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(t.Priority)
 	builder.WriteString(", ")
@@ -612,6 +631,9 @@ func (t *Ticket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
 	builder.WriteString(t.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("resolution=")
+	builder.WriteString(t.Resolution)
 	builder.WriteString(", ")
 	builder.WriteString("rating=")
 	builder.WriteString(fmt.Sprintf("%v", t.Rating))

@@ -25,6 +25,9 @@ func (Ticket) Fields() []ent.Field {
 		field.String("status").
 			Comment("状态").
 			Default("open"),
+		field.String("type").
+			Comment("工单类型").
+			Default("incident"),
 		field.String("priority").
 			Comment("优先级").
 			Default("medium"),
@@ -67,6 +70,9 @@ func (Ticket) Fields() []ent.Field {
 			Optional(),
 		field.Time("resolved_at").
 			Comment("解决时间").
+			Optional(),
+		field.Text("resolution").
+			Comment("解决方案").
 			Optional(),
 		field.Int("rating").
 			Comment("评分（1-5星）").

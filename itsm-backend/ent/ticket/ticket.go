@@ -20,6 +20,8 @@ const (
 	FieldDescription = "description"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
 	// FieldPriority holds the string denoting the priority field in the database.
 	FieldPriority = "priority"
 	// FieldTicketNumber holds the string denoting the ticket_number field in the database.
@@ -48,6 +50,8 @@ const (
 	FieldFirstResponseAt = "first_response_at"
 	// FieldResolvedAt holds the string denoting the resolved_at field in the database.
 	FieldResolvedAt = "resolved_at"
+	// FieldResolution holds the string denoting the resolution field in the database.
+	FieldResolution = "resolution"
 	// FieldRating holds the string denoting the rating field in the database.
 	FieldRating = "rating"
 	// FieldRatingComment holds the string denoting the rating_comment field in the database.
@@ -206,6 +210,7 @@ var Columns = []string{
 	FieldTitle,
 	FieldDescription,
 	FieldStatus,
+	FieldType,
 	FieldPriority,
 	FieldTicketNumber,
 	FieldRequesterID,
@@ -220,6 +225,7 @@ var Columns = []string{
 	FieldSLAResolutionDeadline,
 	FieldFirstResponseAt,
 	FieldResolvedAt,
+	FieldResolution,
 	FieldRating,
 	FieldRatingComment,
 	FieldRatedAt,
@@ -260,6 +266,8 @@ var (
 	TitleValidator func(string) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultType holds the default value on creation for the "type" field.
+	DefaultType string
 	// DefaultPriority holds the default value on creation for the "priority" field.
 	DefaultPriority string
 	// TicketNumberValidator is a validator for the "ticket_number" field. It is called by the builders before save.
@@ -299,6 +307,11 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
 }
 
 // ByPriority orders the results by the priority field.
@@ -369,6 +382,11 @@ func ByFirstResponseAt(opts ...sql.OrderTermOption) OrderOption {
 // ByResolvedAt orders the results by the resolved_at field.
 func ByResolvedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldResolvedAt, opts...).ToFunc()
+}
+
+// ByResolution orders the results by the resolution field.
+func ByResolution(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolution, opts...).ToFunc()
 }
 
 // ByRating orders the results by the rating field.

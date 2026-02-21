@@ -67930,6 +67930,7 @@ type TicketMutation struct {
 	title                      *string
 	description                *string
 	status                     *string
+	_type                      *string
 	priority                   *string
 	ticket_number              *string
 	requester_id               *int
@@ -67942,6 +67943,7 @@ type TicketMutation struct {
 	sla_resolution_deadline    *time.Time
 	first_response_at          *time.Time
 	resolved_at                *time.Time
+	resolution                 *string
 	rating                     *int
 	addrating                  *int
 	rating_comment             *string
@@ -68216,6 +68218,42 @@ func (m *TicketMutation) OldStatus(ctx context.Context) (v string, err error) {
 // ResetStatus resets all changes to the "status" field.
 func (m *TicketMutation) ResetStatus() {
 	m.status = nil
+}
+
+// SetType sets the "type" field.
+func (m *TicketMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *TicketMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *TicketMutation) ResetType() {
+	m._type = nil
 }
 
 // SetPriority sets the "priority" field.
@@ -68911,6 +68949,55 @@ func (m *TicketMutation) ResolvedAtCleared() bool {
 func (m *TicketMutation) ResetResolvedAt() {
 	m.resolved_at = nil
 	delete(m.clearedFields, ticket.FieldResolvedAt)
+}
+
+// SetResolution sets the "resolution" field.
+func (m *TicketMutation) SetResolution(s string) {
+	m.resolution = &s
+}
+
+// Resolution returns the value of the "resolution" field in the mutation.
+func (m *TicketMutation) Resolution() (r string, exists bool) {
+	v := m.resolution
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolution returns the old "resolution" field's value of the Ticket entity.
+// If the Ticket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TicketMutation) OldResolution(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolution is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolution requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolution: %w", err)
+	}
+	return oldValue.Resolution, nil
+}
+
+// ClearResolution clears the value of the "resolution" field.
+func (m *TicketMutation) ClearResolution() {
+	m.resolution = nil
+	m.clearedFields[ticket.FieldResolution] = struct{}{}
+}
+
+// ResolutionCleared returns if the "resolution" field was cleared in this mutation.
+func (m *TicketMutation) ResolutionCleared() bool {
+	_, ok := m.clearedFields[ticket.FieldResolution]
+	return ok
+}
+
+// ResetResolution resets all changes to the "resolution" field.
+func (m *TicketMutation) ResetResolution() {
+	m.resolution = nil
+	delete(m.clearedFields, ticket.FieldResolution)
 }
 
 // SetRating sets the "rating" field.
@@ -69986,7 +70073,7 @@ func (m *TicketMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TicketMutation) Fields() []string {
-	fields := make([]string, 0, 23)
+	fields := make([]string, 0, 25)
 	if m.title != nil {
 		fields = append(fields, ticket.FieldTitle)
 	}
@@ -69995,6 +70082,9 @@ func (m *TicketMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, ticket.FieldStatus)
+	}
+	if m._type != nil {
+		fields = append(fields, ticket.FieldType)
 	}
 	if m.priority != nil {
 		fields = append(fields, ticket.FieldPriority)
@@ -70038,6 +70128,9 @@ func (m *TicketMutation) Fields() []string {
 	if m.resolved_at != nil {
 		fields = append(fields, ticket.FieldResolvedAt)
 	}
+	if m.resolution != nil {
+		fields = append(fields, ticket.FieldResolution)
+	}
 	if m.rating != nil {
 		fields = append(fields, ticket.FieldRating)
 	}
@@ -70070,6 +70163,8 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case ticket.FieldStatus:
 		return m.Status()
+	case ticket.FieldType:
+		return m.GetType()
 	case ticket.FieldPriority:
 		return m.Priority()
 	case ticket.FieldTicketNumber:
@@ -70098,6 +70193,8 @@ func (m *TicketMutation) Field(name string) (ent.Value, bool) {
 		return m.FirstResponseAt()
 	case ticket.FieldResolvedAt:
 		return m.ResolvedAt()
+	case ticket.FieldResolution:
+		return m.Resolution()
 	case ticket.FieldRating:
 		return m.Rating()
 	case ticket.FieldRatingComment:
@@ -70125,6 +70222,8 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldDescription(ctx)
 	case ticket.FieldStatus:
 		return m.OldStatus(ctx)
+	case ticket.FieldType:
+		return m.OldType(ctx)
 	case ticket.FieldPriority:
 		return m.OldPriority(ctx)
 	case ticket.FieldTicketNumber:
@@ -70153,6 +70252,8 @@ func (m *TicketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldFirstResponseAt(ctx)
 	case ticket.FieldResolvedAt:
 		return m.OldResolvedAt(ctx)
+	case ticket.FieldResolution:
+		return m.OldResolution(ctx)
 	case ticket.FieldRating:
 		return m.OldRating(ctx)
 	case ticket.FieldRatingComment:
@@ -70194,6 +70295,13 @@ func (m *TicketMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case ticket.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
 		return nil
 	case ticket.FieldPriority:
 		v, ok := value.(string)
@@ -70292,6 +70400,13 @@ func (m *TicketMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetResolvedAt(v)
+		return nil
+	case ticket.FieldResolution:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolution(v)
 		return nil
 	case ticket.FieldRating:
 		v, ok := value.(int)
@@ -70461,6 +70576,9 @@ func (m *TicketMutation) ClearedFields() []string {
 	if m.FieldCleared(ticket.FieldResolvedAt) {
 		fields = append(fields, ticket.FieldResolvedAt)
 	}
+	if m.FieldCleared(ticket.FieldResolution) {
+		fields = append(fields, ticket.FieldResolution)
+	}
 	if m.FieldCleared(ticket.FieldRating) {
 		fields = append(fields, ticket.FieldRating)
 	}
@@ -70520,6 +70638,9 @@ func (m *TicketMutation) ClearField(name string) error {
 	case ticket.FieldResolvedAt:
 		m.ClearResolvedAt()
 		return nil
+	case ticket.FieldResolution:
+		m.ClearResolution()
+		return nil
 	case ticket.FieldRating:
 		m.ClearRating()
 		return nil
@@ -70548,6 +70669,9 @@ func (m *TicketMutation) ResetField(name string) error {
 		return nil
 	case ticket.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case ticket.FieldType:
+		m.ResetType()
 		return nil
 	case ticket.FieldPriority:
 		m.ResetPriority()
@@ -70590,6 +70714,9 @@ func (m *TicketMutation) ResetField(name string) error {
 		return nil
 	case ticket.FieldResolvedAt:
 		m.ResetResolvedAt()
+		return nil
+	case ticket.FieldResolution:
+		m.ResetResolution()
 		return nil
 	case ticket.FieldRating:
 		m.ResetRating()
