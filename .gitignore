@@ -81,3 +81,9 @@ itsm-frontend/.swc/
 # Backup files
 *.bak
 *.backup
+tests/
+*.png
+*.txt
+itsm-frontend/reports
+itsm-frontend/test-results
+reports/

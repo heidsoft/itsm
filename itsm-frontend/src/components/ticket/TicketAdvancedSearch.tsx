@@ -13,7 +13,7 @@ import {
   Col,
   Divider,
   Tag,
-  Tooltip,
+  Popover,
   Collapse,
   Typography,
 } from 'antd';
@@ -40,18 +40,18 @@ export interface AdvancedSearchFilters {
   ticket_number?: string;
   title?: string;
   description?: string;
-  
+
   // 状态和分类
   status?: string[];
   priority?: string[];
   type?: string[];
   category?: string[];
-  
+
   // 人员
   reporter_id?: number;
   assignee_id?: number;
   created_by?: number;
-  
+
   // 时间范围
   created_after?: string;
   created_before?: string;
@@ -61,18 +61,18 @@ export interface AdvancedSearchFilters {
   due_before?: string;
   resolved_after?: string;
   resolved_before?: string;
-  
+
   // 配置项
   configuration_item_id?: number;
-  
+
   // 来源和渠道
   source?: string[];
   channel?: string[];
-  
+
   // SLA相关
   sla_breach?: boolean;
   sla_warning?: boolean;
-  
+
   // 自定义字段
   tags?: string[];
   metadata?: Record<string, any>;
@@ -175,37 +175,40 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 
   // 快速日期范围（需要在面板定义之前）
   const quickDateRanges: RangePickerProps['ranges'] = {
-    '今天': [dayjs().startOf('day'), dayjs().endOf('day')],
-    '昨天': [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
-    '本周': [dayjs().startOf('week'), dayjs().endOf('week')],
-    '上周': [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
-    '本月': [dayjs().startOf('month'), dayjs().endOf('month')],
-    '上月': [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')],
-    '最近7天': [dayjs().subtract(7, 'day'), dayjs()],
-    '最近30天': [dayjs().subtract(30, 'day'), dayjs()],
+    今天: [dayjs().startOf('day'), dayjs().endOf('day')],
+    昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
+    本周: [dayjs().startOf('week'), dayjs().endOf('week')],
+    上周: [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
+    本月: [dayjs().startOf('month'), dayjs().endOf('month')],
+    上月: [
+      dayjs().subtract(1, 'month').startOf('month'),
+      dayjs().subtract(1, 'month').endOf('month'),
+    ],
+    最近7天: [dayjs().subtract(7, 'day'), dayjs()],
+    最近30天: [dayjs().subtract(30, 'day'), dayjs()],
   };
 
   // 面板内容
   const basicInfoPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label="关键字搜索" name="keyword">
-          <Input placeholder="标题、描述、工单号..." prefix={<SearchOutlined />} />
+        <Form.Item label='关键字搜索' name='keyword'>
+          <Input placeholder='标题、描述、工单号...' prefix={<SearchOutlined />} />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单号" name="ticket_number">
-          <Input placeholder="精确工单号" />
+        <Form.Item label='工单号' name='ticket_number'>
+          <Input placeholder='精确工单号' />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单标题" name="title">
-          <Input placeholder="工单标题" />
+        <Form.Item label='工单标题' name='title'>
+          <Input placeholder='工单标题' />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单描述" name="description">
-          <TextArea rows={1} placeholder="工单描述" />
+        <Form.Item label='工单描述' name='description'>
+          <TextArea rows={1} placeholder='工单描述' />
         </Form.Item>
       </Col>
     </Row>
@@ -214,8 +217,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const statusPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label="状态" name="status">
-          <Select mode="multiple" placeholder="选择状态" allowClear>
+        <Form.Item label='状态' name='status'>
+          <Select mode='multiple' placeholder='选择状态' allowClear>
             {TICKET_STATUS_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 <Tag color={option.color}>{option.label}</Tag>
@@ -225,8 +228,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="优先级" name="priority">
-          <Select mode="multiple" placeholder="选择优先级" allowClear>
+        <Form.Item label='优先级' name='priority'>
+          <Select mode='multiple' placeholder='选择优先级' allowClear>
             {TICKET_PRIORITY_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 <Tag color={option.color}>{option.label}</Tag>
@@ -236,8 +239,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单类型" name="type">
-          <Select mode="multiple" placeholder="选择类型" allowClear>
+        <Form.Item label='工单类型' name='type'>
+          <Select mode='multiple' placeholder='选择类型' allowClear>
             {TICKET_TYPE_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 {option.label}
@@ -247,8 +250,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="来源" name="source">
-          <Select mode="multiple" placeholder="选择来源" allowClear>
+        <Form.Item label='来源' name='source'>
+          <Select mode='multiple' placeholder='选择来源' allowClear>
             {TICKET_SOURCE_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 {option.label}
@@ -263,47 +266,79 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const timePanel = (
     <Row gutter={[16, 0]}>
       <Col span={12}>
-        <Form.Item label="创建时间" name="created_range">
-          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
-            if (dates && dates[0] && dates[1]) {
-              form.setFieldsValue({ created_after: dates[0].format('YYYY-MM-DD'), created_before: dates[1].format('YYYY-MM-DD') });
-            } else {
-              form.setFieldsValue({ created_after: undefined, created_before: undefined });
-            }
-          }} />
+        <Form.Item label='创建时间' name='created_range'>
+          <RangePicker
+            style={{ width: '100%' }}
+            ranges={quickDateRanges}
+            format='YYYY-MM-DD'
+            onChange={dates => {
+              if (dates && dates[0] && dates[1]) {
+                form.setFieldsValue({
+                  created_after: dates[0].format('YYYY-MM-DD'),
+                  created_before: dates[1].format('YYYY-MM-DD'),
+                });
+              } else {
+                form.setFieldsValue({ created_after: undefined, created_before: undefined });
+              }
+            }}
+          />
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label="更新时间" name="updated_range">
-          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
-            if (dates && dates[0] && dates[1]) {
-              form.setFieldsValue({ updated_after: dates[0].format('YYYY-MM-DD'), updated_before: dates[1].format('YYYY-MM-DD') });
-            } else {
-              form.setFieldsValue({ updated_after: undefined, updated_before: undefined });
-            }
-          }} />
+        <Form.Item label='更新时间' name='updated_range'>
+          <RangePicker
+            style={{ width: '100%' }}
+            ranges={quickDateRanges}
+            format='YYYY-MM-DD'
+            onChange={dates => {
+              if (dates && dates[0] && dates[1]) {
+                form.setFieldsValue({
+                  updated_after: dates[0].format('YYYY-MM-DD'),
+                  updated_before: dates[1].format('YYYY-MM-DD'),
+                });
+              } else {
+                form.setFieldsValue({ updated_after: undefined, updated_before: undefined });
+              }
+            }}
+          />
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label="截止时间" name="due_range">
-          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
-            if (dates && dates[0] && dates[1]) {
-              form.setFieldsValue({ due_after: dates[0].format('YYYY-MM-DD'), due_before: dates[1].format('YYYY-MM-DD') });
-            } else {
-              form.setFieldsValue({ due_after: undefined, due_before: undefined });
-            }
-          }} />
+        <Form.Item label='截止时间' name='due_range'>
+          <RangePicker
+            style={{ width: '100%' }}
+            ranges={quickDateRanges}
+            format='YYYY-MM-DD'
+            onChange={dates => {
+              if (dates && dates[0] && dates[1]) {
+                form.setFieldsValue({
+                  due_after: dates[0].format('YYYY-MM-DD'),
+                  due_before: dates[1].format('YYYY-MM-DD'),
+                });
+              } else {
+                form.setFieldsValue({ due_after: undefined, due_before: undefined });
+              }
+            }}
+          />
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label="解决时间" name="resolved_range">
-          <RangePicker style={{ width: '100%' }} ranges={quickDateRanges} format="YYYY-MM-DD" onChange={(dates) => {
-            if (dates && dates[0] && dates[1]) {
-              form.setFieldsValue({ resolved_after: dates[0].format('YYYY-MM-DD'), resolved_before: dates[1].format('YYYY-MM-DD') });
-            } else {
-              form.setFieldsValue({ resolved_after: undefined, resolved_before: undefined });
-            }
-          }} />
+        <Form.Item label='解决时间' name='resolved_range'>
+          <RangePicker
+            style={{ width: '100%' }}
+            ranges={quickDateRanges}
+            format='YYYY-MM-DD'
+            onChange={dates => {
+              if (dates && dates[0] && dates[1]) {
+                form.setFieldsValue({
+                  resolved_after: dates[0].format('YYYY-MM-DD'),
+                  resolved_before: dates[1].format('YYYY-MM-DD'),
+                });
+              } else {
+                form.setFieldsValue({ resolved_after: undefined, resolved_before: undefined });
+              }
+            }}
+          />
         </Form.Item>
       </Col>
     </Row>
@@ -312,11 +347,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const slaPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label="SLA状态" name="sla_status">
-          <Select placeholder="选择SLA状态" allowClear>
-            <Option value="breach">已超时</Option>
-            <Option value="warning">即将超时</Option>
-            <Option value="normal">正常</Option>
+        <Form.Item label='SLA状态' name='sla_status'>
+          <Select placeholder='选择SLA状态' allowClear>
+            <Option value='breach'>已超时</Option>
+            <Option value='warning'>即将超时</Option>
+            <Option value='normal'>正常</Option>
           </Select>
         </Form.Item>
       </Col>
@@ -324,16 +359,19 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   );
 
   // 应用搜索模板
-  const applyTemplate = useCallback((template: typeof SEARCH_TEMPLATES[0]) => {
-    form.setFieldsValue(template.filters);
-    setActiveTemplate(template.name);
-  }, [form]);
+  const applyTemplate = useCallback(
+    (template: (typeof SEARCH_TEMPLATES)[0]) => {
+      form.setFieldsValue(template.filters);
+      setActiveTemplate(template.name);
+    },
+    [form]
+  );
 
   // 保存当前搜索条件
   const saveSearch = useCallback(() => {
     const values = form.getFieldsValue();
     const searchName = `搜索_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}`;
-    
+
     setSavedSearches(prev => [
       ...prev,
       {
@@ -348,14 +386,18 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   // 执行搜索
   const handleSearch = useCallback(() => {
     const values = form.getFieldsValue();
-    
+
     // 处理日期范围
     const processedValues: AdvancedSearchFilters = {};
-    
+
     Object.keys(values).forEach(key => {
       const value = values[key];
-      if (value !== undefined && value !== null && value !== '' && 
-          (Array.isArray(value) ? value.length > 0 : true)) {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== '' &&
+        (Array.isArray(value) ? value.length > 0 : true)
+      ) {
         processedValues[key as keyof AdvancedSearchFilters] = value;
       }
     });
@@ -371,49 +413,45 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   }, [form, onReset]);
 
   return (
-    <Card 
+    <Card
       title={
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <FilterOutlined className="mr-2" />
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center'>
+            <FilterOutlined className='mr-2' />
             <span>高级搜索</span>
           </div>
           <Space>
-            <Button size="small" icon={<SaveOutlined />} onClick={saveSearch}>
+            <Button size='small' icon={<SaveOutlined />} onClick={saveSearch}>
               保存搜索
             </Button>
           </Space>
         </div>
       }
-      size="small"
+      size='small'
     >
       {/* 预设模板 */}
-      <div className="mb-4">
-        <Text strong className="mb-2 block">快速搜索模板：</Text>
+      <div className='mb-4'>
+        <Text strong className='mb-2 block'>
+          快速搜索模板：
+        </Text>
         <Space wrap>
           {SEARCH_TEMPLATES.map(template => (
-            <Button
-              key={template.name}
-              size="small"
-              type={activeTemplate === template.name ? 'primary' : 'default'}
-              onClick={() => applyTemplate(template)}
-            >
-              <Tooltip title={template.description}>
+            <Popover key={template.name} content={template.description} placement='bottom'>
+              <Button
+                size='small'
+                type={activeTemplate === template.name ? 'primary' : 'default'}
+                onClick={() => applyTemplate(template)}
+              >
                 {template.name}
-              </Tooltip>
-            </Button>
+              </Button>
+            </Popover>
           ))}
         </Space>
       </div>
 
       <Divider />
 
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={initialValues}
-        onFinish={handleSearch}
-      >
+      <Form form={form} layout='vertical' initialValues={initialValues} onFinish={handleSearch}>
         <Collapse
           defaultActiveKey={['basic']}
           ghost
@@ -426,26 +464,21 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         />
 
         {/* 操作按钮 */}
-        <div className="flex justify-between items-center mt-6">
+        <div className='flex justify-between items-center mt-6'>
           <Space>
-            <Button 
-              type="primary" 
-              icon={<SearchOutlined />} 
-              htmlType="submit"
-              loading={loading}
-            >
+            <Button type='primary' icon={<SearchOutlined />} htmlType='submit' loading={loading}>
               搜索
             </Button>
             <Button icon={<ReloadOutlined />} onClick={handleReset}>
               重置
             </Button>
           </Space>
-          
+
           {savedSearches.length > 0 && (
             <Select
-              placeholder="已保存的搜索"
+              placeholder='已保存的搜索'
               style={{ width: 200 }}
-              onChange={(value) => {
+              onChange={value => {
                 const search = savedSearches.find(s => s.id === value);
                 if (search) {
                   form.setFieldsValue(search.filters);
