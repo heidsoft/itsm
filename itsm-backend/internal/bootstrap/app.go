@@ -414,7 +414,7 @@ func (app *Application) startBackgroundTasks() {
 					continue
 				}
 				for _, t := range tenants {
-					_ = slaMonitorService.CheckSLAViolations(ctx, t.ID)
+					_, _ = slaMonitorService.CheckSLAViolations(ctx, t.ID)
 				}
 			case <-escalationTicker.C:
 				tenants, err := app.DBClient.Tenant.Query().All(ctx)

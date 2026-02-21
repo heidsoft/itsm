@@ -119,15 +119,12 @@ const TicketList: React.FC<TicketListProps> = ({
   // 当防抖值变化时触发搜索
   useEffect(() => {
     updateFilters({ keyword: debouncedSearchValue || undefined });
-    fetchTickets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchValue]);
+  }, [debouncedSearchValue, updateFilters]);
 
   useEffect(() => {
     if (advancedFilters === undefined) return;
     updateFilters(advancedFilters);
-    fetchTickets(advancedFilters);
-  }, [advancedFilters, updateFilters, fetchTickets]);
+  }, [advancedFilters, updateFilters]);
 
   // 选择操作
   const selectTicket = useCallback((id: number) => {
@@ -147,12 +144,6 @@ const TicketList: React.FC<TicketListProps> = ({
     updateFilters({});
   }, [updateFilters]);
 
-  // 初始化加载
-  useEffect(() => {
-    fetchTickets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // 搜索处理 - 现在由useDebounce自动处理
   const handleSearch = useCallback((value: string) => {
     setSearchValue(value);
@@ -162,9 +153,8 @@ const TicketList: React.FC<TicketListProps> = ({
   const handleFilterChange = useCallback(
     (key: keyof ListTicketsRequest, value: unknown) => {
       updateFilters({ [key]: value });
-      fetchTickets();
     },
-    [updateFilters, fetchTickets]
+    [updateFilters]
   );
 
   // 分页变更处理
@@ -174,9 +164,8 @@ const TicketList: React.FC<TicketListProps> = ({
       const newPageSize = pagination.pageSize || 20;
 
       updatePagination(newPage, newPageSize);
-      fetchTickets();
     },
-    [updatePagination, fetchTickets]
+    [updatePagination]
   );
 
   // 刷新数据
@@ -188,8 +177,7 @@ const TicketList: React.FC<TicketListProps> = ({
   const handleClearFilters = useCallback(() => {
     setSearchValue('');
     clearFilters();
-    fetchTickets({});
-  }, [clearFilters, fetchTickets]);
+  }, [clearFilters]);
 
   // 删除工单
   const handleDelete = useCallback(

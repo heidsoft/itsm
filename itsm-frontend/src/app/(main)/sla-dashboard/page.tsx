@@ -171,6 +171,23 @@ const SLADashboardPage = () => {
     }
   };
 
+  const formatMinutes = (minutes?: number) => {
+    if (minutes === null || minutes === undefined) return '-';
+    return `${minutes}分钟`;
+  };
+
+  const formatPercent = (value?: number) => {
+    if (value === null || value === undefined) return '-';
+    return `${value}%`;
+  };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) return '-';
+    const time = new Date(value);
+    if (Number.isNaN(time.getTime())) return '-';
+    return time.toLocaleString();
+  };
+
   // SLA定义表格列
   const slaDefinitionColumns = [
     {
@@ -179,8 +196,8 @@ const SLADashboardPage = () => {
       key: 'name',
       render: (name: string, record: SLADefinition) => (
         <div>
-          <div className="font-medium">{name}</div>
-          <span className="text-xs text-gray-500">
+          <div className='font-medium'>{name}</div>
+          <span className='text-xs text-gray-500'>
             {record.service_type} - {record.priority}
           </span>
         </div>
@@ -190,10 +207,10 @@ const SLADashboardPage = () => {
       title: '响应时间',
       dataIndex: 'response_time_minutes',
       key: 'response_time_minutes',
-      render: (minutes: number) => (
+      render: (minutes?: number) => (
         <Space>
-          <Clock className="w-4 h-4" />
-          <span>{minutes}分钟</span>
+          <Clock className='w-4 h-4' />
+          <span>{formatMinutes(minutes)}</span>
         </Space>
       ),
     },
@@ -201,10 +218,10 @@ const SLADashboardPage = () => {
       title: '解决时间',
       dataIndex: 'resolution_time_minutes',
       key: 'resolution_time_minutes',
-      render: (minutes: number) => (
+      render: (minutes?: number) => (
         <Space>
-          <Target className="w-4 h-4" />
-          <span>{minutes}分钟</span>
+          <Target className='w-4 h-4' />
+          <span>{formatMinutes(minutes)}</span>
         </Space>
       ),
     },
@@ -212,7 +229,7 @@ const SLADashboardPage = () => {
       title: '可用性目标',
       dataIndex: 'availability_target',
       key: 'availability_target',
-      render: (target: number) => <Tag color='blue'>{target}%</Tag>,
+      render: (target?: number) => <Tag color='blue'>{formatPercent(target)}</Tag>,
     },
     {
       title: '状态',
@@ -230,7 +247,9 @@ const SLADashboardPage = () => {
       title: '工单ID',
       dataIndex: 'ticket_id',
       key: 'ticket_id',
-      render: (id: number) => <span className="font-mono bg-gray-100 px-1 rounded">#{String(id).padStart(5, '0')}</span>,
+      render: (id: number) => (
+        <span className='font-mono bg-gray-100 px-1 rounded'>#{String(id).padStart(5, '0')}</span>
+      ),
     },
     {
       title: '违规类型',
@@ -246,7 +265,7 @@ const SLADashboardPage = () => {
       title: '延迟时间',
       dataIndex: 'delay_minutes',
       key: 'delay_minutes',
-      render: (minutes: number) => <span className="text-red-500">{minutes}分钟</span>,
+      render: (minutes?: number) => <span className='text-red-500'>{formatMinutes(minutes)}</span>,
     },
     {
       title: '状态',
@@ -262,28 +281,26 @@ const SLADashboardPage = () => {
       title: '创建时间',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (date: string) => <span>{new Date(date).toLocaleString()}</span>,
+      render: (date?: string) => <span>{formatDateTime(date)}</span>,
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* 页面标题 */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 m-0 flex items-center gap-2">
-          <BarChart3 className="text-blue-500" />
+    <div className='p-6'>
+      <div className='mb-6'>
+        <h2 className='text-2xl font-bold text-gray-900 m-0 flex items-center gap-2'>
+          <BarChart3 className='text-blue-500' />
           SLA监控仪表盘
         </h2>
-        <p className="text-gray-500 mt-1">实时监控服务级别协议的执行情况和合规性</p>
+        <p className='text-gray-500 mt-1'>实时监控服务级别协议的执行情况和合规性</p>
       </div>
 
-      {/* 操作栏 */}
-      <Card className="mb-6 rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className='mb-6 rounded-lg shadow-sm border border-gray-200' variant='borderless'>
         <Row justify='space-between' align='middle'>
           <Col>
             <Space>
               <RangePicker />
-              <Select defaultValue='all' className="w-32">
+              <Select defaultValue='all' className='w-32'>
                 <Option value='all'>全部服务</Option>
                 <Option value='it'>IT服务</Option>
                 <Option value='hr'>HR服务</Option>
@@ -294,12 +311,12 @@ const SLADashboardPage = () => {
           <Col>
             <Space>
               <Button
-                icon={<RefreshCw className="w-4 h-4" />}
+                icon={<RefreshCw className='w-4 h-4' />}
                 onClick={() => window.location.reload()}
               >
                 刷新
               </Button>
-              <Button type='primary' icon={<Bell className="w-4 h-4" />}>
+              <Button type='primary' icon={<Bell className='w-4 h-4' />}>
                 SLA预警设置
               </Button>
             </Space>
@@ -307,219 +324,9 @@ const SLADashboardPage = () => {
         </Row>
       </Card>
 
-      {/* SLA概览统计 */}
-      <div className="mb-6">
-        <Row gutter={[16, 16]} className="m-0">
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-              <Statistic
-                title='总体合规率'
-                value={slaStats.overall_compliance_rate}
-                precision={1}
-                suffix='%'
-                styles={{ content: { color: getComplianceColor(slaStats.overall_compliance_rate) } }}
-                prefix={<Target className="w-5 h-5" />}
-              />
-              <Progress
-                percent={slaStats.overall_compliance_rate}
-                strokeColor={getComplianceColor(slaStats.overall_compliance_rate)}
-                size='small'
-                className="mt-2"
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-              <Statistic
-                title='活跃SLA定义'
-                value={slaStats.active_definitions}
-                suffix={`/ ${slaStats.total_definitions}`}
-                styles={{ content: { color: '#52c41a' } }}
-                prefix={<FileText className="w-5 h-5" />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-              <Statistic
-                title='待处理违规'
-                value={slaStats.open_violations}
-                styles={{ content: { color: '#ff4d4f' } }}
-                prefix={<AlertTriangle className="w-5 h-5" />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-              <Statistic
-                title='总违规数'
-                value={slaStats.total_violations}
-                styles={{ content: { color: '#faad14' } }}
-                prefix={<Activity className="w-5 h-5" />}
-              />
-            </Card>
-          </Col>
-        </Row>
-      </div>
-
-      {/* SLA预警和趋势 */}
-      <div className="mb-6">
-        <Row gutter={[16, 16]} className="m-0">
-          <Col xs={24} lg={12}>
-            <Card
-              className="rounded-lg shadow-sm border border-gray-200"
-              variant="borderless"
-              title={
-                <Space>
-                  <Bell className="w-4 h-4" />
-                  SLA预警
-                </Space>
-              }
-              extra={<Badge count={slaAlerts.length} />}
-            >
-              <List
-                dataSource={slaAlerts.slice(0, 5)}
-                renderItem={alert => (
-                  <List.Item>
-                    <List.Item.Meta
-                      avatar={
-                        <AlertTriangle
-                          style={{
-                            width: 20,
-                            height: 20,
-                            color: getViolationLevelColor(alert.alert_level),
-                          }}
-                        />
-                      }
-                      title={`工单 #${String(alert.ticket_id).padStart(5, '0')}`}
-                      description={
-                        <div>
-                          <div>{alert.ticket_title}</div>
-                          <span className="text-xs text-gray-500">
-                            剩余时间: {alert.time_remaining}分钟 | 级别: {alert.alert_level}
-                          </span>
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-                locale={{ emptyText: '暂无SLA预警' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} lg={12}>
-            <Card
-              className="rounded-lg shadow-sm border border-gray-200"
-              variant="borderless"
-              title={
-                <Space>
-                  <TrendingUp className="w-4 h-4" />
-                  SLA性能趋势
-                </Space>
-              }
-            >
-              {slaMetrics && (
-                <div>
-                  <Row gutter={16} className="mb-4">
-                    <Col span={12}>
-                      <Statistic
-                        title='平均响应时间'
-                        value={slaMetrics.response_time_avg}
-                        precision={1}
-                        suffix='分钟'
-                        styles={{ content: { fontSize: 16 } }}
-                      />
-                    </Col>
-                    <Col span={12}>
-                      <Statistic
-                        title='平均解决时间'
-                        value={slaMetrics.resolution_time_avg}
-                        precision={1}
-                        suffix='分钟'
-                        styles={{ content: { fontSize: 16 } }}
-                      />
-                    </Col>
-                  </Row>
-                  <div className="h-px bg-gray-200 my-4" />
-                  <div className="text-center">
-                    <span className="text-gray-500">近7天违规: {slaMetrics.violation_count} 次</span>
-                  </div>
-                </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
-      </div>
-
-      {/* 合规报告 */}
-      {complianceReport && (
-        <div className="mb-6">
-          <Row gutter={[16, 16]} className="m-0">
-            <Col span={24}>
-              <Card
-                className="rounded-lg shadow-sm border border-gray-200"
-                variant="borderless"
-                title={
-                  <Space>
-                    <BarChart3 className="w-4 h-4" />
-                    SLA合规报告 (近30天)
-                  </Space>
-                }
-              >
-                <Row gutter={16}>
-                  <Col xs={24} sm={8}>
-                    <Statistic
-                      title='总工单数'
-                      value={complianceReport.total_tickets}
-                      prefix={<FileText className="w-4 h-4" />}
-                    />
-                  </Col>
-                  <Col xs={24} sm={8}>
-                    <Statistic
-                      title='达标工单'
-                      value={complianceReport.met_sla}
-                      styles={{ content: { color: '#52c41a' } }}
-                      prefix={<CheckCircle className="w-4 h-4" />}
-                    />
-                  </Col>
-                  <Col xs={24} sm={8}>
-                    <Statistic
-                      title='违规工单'
-                      value={complianceReport.violated_sla}
-                      styles={{ content: { color: '#ff4d4f' } }}
-                      prefix={<AlertTriangle className="w-4 h-4" />}
-                    />
-                  </Col>
-                </Row>
-                <div className="h-px bg-gray-200 my-4" />
-                <Row gutter={16}>
-                  <Col xs={24} sm={12}>
-                    <Statistic
-                      title='平均响应时间'
-                      value={complianceReport.avg_response_time}
-                      precision={1}
-                      suffix='分钟'
-                    />
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <Statistic
-                      title='平均解决时间'
-                      value={complianceReport.avg_resolution_time}
-                      precision={1}
-                      suffix='分钟'
-                    />
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
-          </Row>
-        </div>
-      )}
-
-      {/* 主要内容区域 - 使用Tabs布局 */}
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
         <Tabs
-          defaultActiveKey="overview"
+          defaultActiveKey='overview'
           items={[
             {
               key: 'overview',
@@ -530,13 +337,235 @@ const SLADashboardPage = () => {
                 </Space>
               ),
               children: (
-                <div className="space-y-6">
-                  {/* SLA定义和违规表格 */}
-                  <Row gutter={[16, 16]} className="m-0">
+                <div className='space-y-6'>
+                  <Row gutter={[16, 16]} className='m-0'>
+                    <Col xs={24} sm={12} lg={6}>
+                      <Card
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
+                      >
+                        <Statistic
+                          title='总体合规率'
+                          value={slaStats.overall_compliance_rate}
+                          precision={1}
+                          suffix='%'
+                          styles={{
+                            content: {
+                              color: getComplianceColor(slaStats.overall_compliance_rate),
+                            },
+                          }}
+                          prefix={<Target className='w-5 h-5' />}
+                        />
+                        <Progress
+                          percent={slaStats.overall_compliance_rate}
+                          strokeColor={getComplianceColor(slaStats.overall_compliance_rate)}
+                          size='small'
+                          className='mt-2'
+                        />
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={12} lg={6}>
+                      <Card
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
+                      >
+                        <Statistic
+                          title='活跃SLA定义'
+                          value={slaStats.active_definitions}
+                          suffix={
+                            typeof slaStats.total_definitions === 'number'
+                              ? `/ ${slaStats.total_definitions}`
+                              : undefined
+                          }
+                          styles={{ content: { color: '#52c41a' } }}
+                          prefix={<FileText className='w-5 h-5' />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={12} lg={6}>
+                      <Card
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
+                      >
+                        <Statistic
+                          title='待处理违规'
+                          value={slaStats.open_violations}
+                          styles={{ content: { color: '#ff4d4f' } }}
+                          prefix={<AlertTriangle className='w-5 h-5' />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={12} lg={6}>
+                      <Card
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
+                      >
+                        <Statistic
+                          title='总违规数'
+                          value={slaStats.total_violations}
+                          styles={{ content: { color: '#faad14' } }}
+                          prefix={<Activity className='w-5 h-5' />}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={[16, 16]} className='m-0'>
                     <Col xs={24} lg={12}>
                       <Card
-                        className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
+                        title={
+                          <Space>
+                            <Bell className='w-4 h-4' />
+                            SLA预警
+                          </Space>
+                        }
+                        extra={<Badge count={slaAlerts.length} />}
+                      >
+                        <List
+                          dataSource={slaAlerts.slice(0, 5)}
+                          renderItem={alert => (
+                            <List.Item>
+                              <List.Item.Meta
+                                avatar={
+                                  <AlertTriangle
+                                    style={{
+                                      width: 20,
+                                      height: 20,
+                                      color: getViolationLevelColor(alert.alert_level),
+                                    }}
+                                  />
+                                }
+                                title={`工单 #${String(alert.ticket_id).padStart(5, '0')}`}
+                                description={
+                                  <div>
+                                    <div>{alert.ticket_title}</div>
+                                    <span className='text-xs text-gray-500'>
+                                      剩余时间: {alert.time_remaining}分钟 | 级别:{' '}
+                                      {alert.alert_level}
+                                    </span>
+                                  </div>
+                                }
+                              />
+                            </List.Item>
+                          )}
+                          locale={{ emptyText: '暂无SLA预警' }}
+                        />
+                      </Card>
+                    </Col>
+                    <Col xs={24} lg={12}>
+                      <Card
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
+                        title={
+                          <Space>
+                            <TrendingUp className='w-4 h-4' />
+                            SLA性能趋势
+                          </Space>
+                        }
+                      >
+                        {slaMetrics && (
+                          <div>
+                            <Row gutter={16} className='mb-4'>
+                              <Col span={12}>
+                                <Statistic
+                                  title='平均响应时间'
+                                  value={slaMetrics.response_time_avg}
+                                  precision={1}
+                                  suffix='分钟'
+                                  styles={{ content: { fontSize: 16 } }}
+                                />
+                              </Col>
+                              <Col span={12}>
+                                <Statistic
+                                  title='平均解决时间'
+                                  value={slaMetrics.resolution_time_avg}
+                                  precision={1}
+                                  suffix='分钟'
+                                  styles={{ content: { fontSize: 16 } }}
+                                />
+                              </Col>
+                            </Row>
+                            <div className='h-px bg-gray-200 my-4' />
+                            <div className='text-center'>
+                              <span className='text-gray-500'>
+                                近7天违规: {slaMetrics.violation_count} 次
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  {complianceReport && (
+                    <Row gutter={[16, 16]} className='m-0'>
+                      <Col span={24}>
+                        <Card
+                          className='rounded-lg shadow-sm border border-gray-200'
+                          variant='borderless'
+                          title={
+                            <Space>
+                              <BarChart3 className='w-4 h-4' />
+                              SLA合规报告 (近30天)
+                            </Space>
+                          }
+                        >
+                          <Row gutter={16}>
+                            <Col xs={24} sm={8}>
+                              <Statistic
+                                title='总工单数'
+                                value={complianceReport.total_tickets}
+                                prefix={<FileText className='w-4 h-4' />}
+                              />
+                            </Col>
+                            <Col xs={24} sm={8}>
+                              <Statistic
+                                title='达标工单'
+                                value={complianceReport.met_sla}
+                                styles={{ content: { color: '#52c41a' } }}
+                                prefix={<CheckCircle className='w-4 h-4' />}
+                              />
+                            </Col>
+                            <Col xs={24} sm={8}>
+                              <Statistic
+                                title='违规工单'
+                                value={complianceReport.violated_sla}
+                                styles={{ content: { color: '#ff4d4f' } }}
+                                prefix={<AlertTriangle className='w-4 h-4' />}
+                              />
+                            </Col>
+                          </Row>
+                          <div className='h-px bg-gray-200 my-4' />
+                          <Row gutter={16}>
+                            <Col xs={24} sm={12}>
+                              <Statistic
+                                title='平均响应时间'
+                                value={complianceReport.avg_response_time}
+                                precision={1}
+                                suffix='分钟'
+                              />
+                            </Col>
+                            <Col xs={24} sm={12}>
+                              <Statistic
+                                title='平均解决时间'
+                                value={complianceReport.avg_resolution_time}
+                                precision={1}
+                                suffix='分钟'
+                              />
+                            </Col>
+                          </Row>
+                        </Card>
+                      </Col>
+                    </Row>
+                  )}
+
+                  <Row gutter={[16, 16]} className='m-0'>
+                    <Col xs={24} lg={12}>
+                      <Card
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
                         title='SLA定义'
                         extra={
                           <Button type='primary' size='small'>
@@ -555,8 +584,8 @@ const SLADashboardPage = () => {
                     </Col>
                     <Col xs={24} lg={12}>
                       <Card
-                        className="rounded-lg shadow-sm border border-gray-200"
-                        variant="borderless"
+                        className='rounded-lg shadow-sm border border-gray-200'
+                        variant='borderless'
                         title='最近SLA违规'
                         extra={
                           <Button type='primary' size='small'>

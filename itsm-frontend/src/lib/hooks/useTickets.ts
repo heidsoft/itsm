@@ -191,12 +191,12 @@ export const useTickets = (): UseTicketsReturn => {
     }
   }, [refreshData]);
 
-  // Initial data fetch
+  // Initial statistics fetch
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    fetchStats();
+  }, [fetchStats]);
 
-  // Refetch when filters or pagination change
+  // Refetch tickets when filters or pagination change (including initial mount)
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);

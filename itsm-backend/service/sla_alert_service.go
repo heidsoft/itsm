@@ -284,8 +284,8 @@ func (s *SLAAlertService) GetAlertHistory(ctx context.Context, req *dto.GetSLAAl
 	return responses, total, nil
 }
 
-// CheckAndTriggerAlerts 检查并触发预警
-func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID int, tenantID int) error {
+// CheckAndTriggerAlerts 检查并触发预警，返回是否触发了告警
+func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID int, tenantID int) (bool, error) {
 	s.logger.Infow("Checking and triggering alerts", "ticket_id", ticketID, "tenant_id", tenantID)
 
 	// 获取工单信息
@@ -296,11 +296,11 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 		).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get ticket: %w", err)
+		return false, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
 	if ticketEntity.SLADefinitionID == 0 {
-		return nil // 没有SLA定义，无需检查
+		return false, nil // 没有SLA定义，无需检查
 	}
 
 	// 获取该SLA定义的所有活跃预警规则
@@ -312,12 +312,17 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 		).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get alert rules: %w", err)
+		return false, fmt.Errorf("failed to get alert rules: %w", err)
+	}
+
+	if len(alertRules) == 0 {
+		return false, nil
 	}
 
 	now := time.Now()
 	var slaDeadline time.Time
 	var timeRemaining float64
+	alertTriggered := false
 
 	// 检查响应时间预警
 	if !ticketEntity.SLAResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
@@ -328,7 +333,10 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 			totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
 			if totalTime > 0 {
 				percentage := (timeRemaining / totalTime) * 100
-				s.checkAndCreateAlert(ctx, ticketEntity, alertRules, "response_time", percentage, tenantID)
+				triggered := s.checkAndCreateAlert(ctx, ticketEntity, alertRules, "response_time", percentage, tenantID)
+				if triggered {
+					alertTriggered = true
+				}
 			}
 		}
 	}
@@ -342,16 +350,82 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 			totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
 			if totalTime > 0 {
 				percentage := (timeRemaining / totalTime) * 100
-				s.checkAndCreateAlert(ctx, ticketEntity, alertRules, "resolution_time", percentage, tenantID)
+				triggered := s.checkAndCreateAlert(ctx, ticketEntity, alertRules, "resolution_time", percentage, tenantID)
+				if triggered {
+					alertTriggered = true
+				}
 			}
 		}
 	}
 
-	return nil
+	return alertTriggered, nil
 }
 
-// checkAndCreateAlert 检查并创建预警记录
-func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity *ent.Ticket, alertRules []*ent.SLAAlertRule, alertType string, percentage float64, tenantID int) {
+// TriggerSLAWarning 触发SLA预警（基于默认阈值）
+// 返回是否成功触发预警
+func (s *SLAAlertService) TriggerSLAWarning(ctx context.Context, ticketID int, warningType string, tenantID int) (bool, error) {
+	// 获取工单信息
+	ticketEntity, err := s.client.Ticket.Query().
+		Where(
+			ticket.IDEQ(ticketID),
+			ticket.TenantIDEQ(tenantID),
+		).
+		Only(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get ticket: %w", err)
+	}
+
+	if ticketEntity.SLADefinitionID == 0 {
+		return false, nil
+	}
+
+	// 获取该SLA定义的所有活跃预警规则
+	alertRules, err := s.client.SLAAlertRule.Query().
+		Where(
+			slaalertrule.SLADefinitionIDEQ(ticketEntity.SLADefinitionID),
+			slaalertrule.TenantIDEQ(tenantID),
+			slaalertrule.IsActiveEQ(true),
+		).
+		All(ctx)
+	if err != nil {
+		return false, fmt.Errorf("failed to get alert rules: %w", err)
+	}
+
+	if len(alertRules) == 0 {
+		return false, nil
+	}
+
+	now := time.Now()
+	var percentage float64
+	var slaDeadline time.Time
+
+	if warningType == "response_time" && !ticketEntity.SLAResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
+		slaDeadline = ticketEntity.SLAResponseDeadline
+		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
+		timeRemaining := slaDeadline.Sub(now).Minutes()
+		if totalTime > 0 && timeRemaining > 0 {
+			percentage = (timeRemaining / totalTime) * 100
+		}
+	} else if warningType == "resolution_time" && !ticketEntity.SLAResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
+		slaDeadline = ticketEntity.SLAResolutionDeadline
+		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
+		timeRemaining := slaDeadline.Sub(now).Minutes()
+		if totalTime > 0 && timeRemaining > 0 {
+			percentage = (timeRemaining / totalTime) * 100
+		}
+	}
+
+	if percentage <= 0 {
+		return false, nil
+	}
+
+	triggered := s.checkAndCreateAlert(ctx, ticketEntity, alertRules, warningType, percentage, tenantID)
+	return triggered, nil
+}
+
+// checkAndCreateAlert 检查并创建预警记录，返回是否触发了告警
+func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity *ent.Ticket, alertRules []*ent.SLAAlertRule, alertType string, percentage float64, tenantID int) bool {
+	alertTriggered := false
 	for _, rule := range alertRules {
 		threshold := float64(rule.ThresholdPercentage)
 		if percentage <= threshold {
@@ -432,8 +506,10 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 
 			s.logger.Infow("SLA alert triggered", "ticket_id", ticketEntity.ID,
 				"alert_rule", rule.Name, "level", rule.AlertLevel, "percentage", percentage)
+			alertTriggered = true
 		}
 	}
+	return alertTriggered
 }
 
 // 辅助方法：转换为响应DTO
