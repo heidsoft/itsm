@@ -39,7 +39,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
         <Col xs={24} sm={12} md={6} lg={6}>
           <Card
             className='text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative'
-            bordered={false}
+            variant="borderless"
             styles={{ body: { padding: '16px' } }}
           >
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
@@ -52,7 +52,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
         <Col xs={24} sm={12} md={6} lg={6}>
           <Card
             className='text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden relative'
-            bordered={false}
+            variant="borderless"
             styles={{ body: { padding: '16px' } }}
           >
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
@@ -65,7 +65,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
         <Col xs={24} sm={12} md={6} lg={6}>
           <Card
             className='text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative'
-            bordered={false}
+            variant="borderless"
             styles={{ body: { padding: '16px' } }}
           >
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>
@@ -78,7 +78,7 @@ export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className
         <Col xs={24} sm={12} md={6} lg={6}>
           <Card
             className='text-center rounded-lg shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative'
-            bordered={false}
+            variant="borderless"
             styles={{ body: { padding: '16px' } }}
           >
             <div className='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3'>

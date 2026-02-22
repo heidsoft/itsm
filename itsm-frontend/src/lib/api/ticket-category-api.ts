@@ -86,6 +86,23 @@ export class TicketCategoryApi {
   static async deleteCategory(id: number): Promise<void> {
     return httpClient.delete(`/api/v1/ticket-categories/${id}`);
   }
+
+  // 预览导入数据
+  static async previewImport(formData: FormData): Promise<{
+    name: string;
+    code: string;
+    description: string;
+    parent_code: string;
+    sort_order: number;
+    is_active: boolean;
+  }[]> {
+    return httpClient.post('/api/v1/ticket-categories/import/preview', formData);
+  }
+
+  // 执行导入
+  static async executeImport(formData: FormData): Promise<{ success: number; failed: number }> {
+    return httpClient.post('/api/v1/ticket-categories/import', formData);
+  }
 }
 
 export default TicketCategoryApi;

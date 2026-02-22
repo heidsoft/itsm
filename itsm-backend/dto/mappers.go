@@ -1,6 +1,8 @@
 package dto
 
-import "itsm-backend/ent"
+import (
+	"itsm-backend/ent"
+)
 
 // ===================================
 // User Mappers
@@ -123,6 +125,23 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		return nil
 	}
 
+	var impactAnalysis *ImpactAnalysis
+	if incident.ImpactAnalysis != nil {
+		impactAnalysis = &ImpactAnalysis{}
+		MapToStruct(incident.ImpactAnalysis, impactAnalysis)
+	}
+
+	var rootCause *RootCause
+	if incident.RootCause != nil {
+		rootCause = &RootCause{}
+		MapToStruct(incident.RootCause, rootCause)
+	}
+
+	var resolutionSteps []ResolutionStep
+	if incident.ResolutionSteps != nil {
+		MapSliceToStructSlice(incident.ResolutionSteps, &resolutionSteps)
+	}
+
 	response := &IncidentResponse{
 		ID:              incident.ID,
 		Title:           incident.Title,
@@ -134,9 +153,9 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		ReporterID:      incident.ReporterID,
 		Category:        incident.Category,
 		Subcategory:     incident.Subcategory,
-		ImpactAnalysis:  incident.ImpactAnalysis,
-		RootCause:       incident.RootCause,
-		ResolutionSteps: []map[string]interface{}{}, // Initialize empty slice
+		ImpactAnalysis:  impactAnalysis,
+		RootCause:       rootCause,
+		ResolutionSteps: resolutionSteps,
 		TenantID:        incident.TenantID,
 		CreatedAt:       incident.CreatedAt,
 		UpdatedAt:       incident.UpdatedAt,
@@ -152,6 +171,14 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 	}
 
 	// Handle time fields - convert to pointer if not zero
+	if !incident.DetectedAt.IsZero() {
+		response.DetectedAt = incident.DetectedAt
+	}
+
+	if !incident.EscalatedAt.IsZero() {
+		response.EscalatedAt = &incident.EscalatedAt
+	}
+
 	if !incident.ResolvedAt.IsZero() {
 		response.ResolvedAt = &incident.ResolvedAt
 	}

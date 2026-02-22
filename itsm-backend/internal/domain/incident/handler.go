@@ -9,6 +9,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/slaviolation"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,7 +48,7 @@ func (h *Handler) Create(c *gin.Context) {
 		Severity:       req.Severity,
 		Category:       req.Category,
 		Subcategory:    req.Subcategory,
-		ImpactAnalysis: req.ImpactAnalysis, // Now map
+		ImpactAnalysis: dto.StructToMap(req.ImpactAnalysis),
 		Source:         req.Source,
 		Metadata:       req.Metadata,
 		ReporterID:     userID.(int),
@@ -182,13 +183,13 @@ func (h *Handler) Update(c *gin.Context) {
 		updates.Metadata = req.Metadata
 	}
 	if req.ImpactAnalysis != nil {
-		updates.ImpactAnalysis = req.ImpactAnalysis
+		updates.ImpactAnalysis = dto.StructToMap(req.ImpactAnalysis)
 	}
 	if req.RootCause != nil {
-		updates.RootCause = req.RootCause
+		updates.RootCause = dto.StructToMap(req.RootCause)
 	}
 	if req.ResolutionSteps != nil {
-		updates.ResolutionSteps = req.ResolutionSteps
+		updates.ResolutionSteps = dto.StructSliceToMapSlice(req.ResolutionSteps)
 	}
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
@@ -230,6 +231,24 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 	if i == nil {
 		return nil
 	}
+
+	var impactAnalysis *dto.ImpactAnalysis
+	if i.ImpactAnalysis != nil {
+		impactAnalysis = &dto.ImpactAnalysis{}
+		dto.MapToStruct(i.ImpactAnalysis, impactAnalysis)
+	}
+
+	var rootCause *dto.RootCause
+	if i.RootCause != nil {
+		rootCause = &dto.RootCause{}
+		dto.MapToStruct(i.RootCause, rootCause)
+	}
+
+	var resolutionSteps []dto.ResolutionStep
+	if i.ResolutionSteps != nil {
+		dto.MapSliceToStructSlice(i.ResolutionSteps, &resolutionSteps)
+	}
+
 	return &dto.IncidentResponse{
 		ID:                  i.ID,
 		Title:               i.Title,
@@ -243,9 +262,9 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 		ConfigurationItemID: i.ConfigurationItemID,
 		Category:            i.Category,
 		Subcategory:         i.Subcategory,
-		ImpactAnalysis:      i.ImpactAnalysis,
-		RootCause:           i.RootCause,
-		ResolutionSteps:     i.ResolutionSteps,
+		ImpactAnalysis:      impactAnalysis,
+		RootCause:           rootCause,
+		ResolutionSteps:     resolutionSteps,
 		DetectedAt:          i.DetectedAt,
 		ResolvedAt:          i.ResolvedAt,
 		ClosedAt:            i.ClosedAt,
@@ -575,8 +594,10 @@ func (h *Handler) GetIncidentMetrics(c *gin.Context) {
 		resolutionTime = inc.ResolvedAt.Sub(inc.CreatedAt).Hours()
 	}
 
-	// 获取 SLA 违规数
+	// 获取 SLA 违规数（按租户过滤）
+	// 注意：SLAViolation 关联的是 ticket，如需关联 incident 需要通过 ticket 过滤
 	violations, _ := entClient.SLAViolation.Query().
+		Where(slaviolation.TenantIDEQ(tenantID.(int))).
 		Count(c.Request.Context())
 
 	result := gin.H{

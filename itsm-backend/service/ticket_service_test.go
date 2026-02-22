@@ -6,6 +6,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,10 +19,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	ticketService := &TicketService{
-		client: client,
-		logger: logger,
-	}
+	ticketService := NewTicketService(client, logger)
 
 	ctx := context.Background()
 
@@ -108,6 +106,26 @@ func TestTicketService_CreateTicket(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// 确保 assignee 存在（如果测试用例指定了）
+			if tt.request.AssigneeID > 0 {
+				// 先尝试查询，如果不存在则创建
+				exists, _ := client.User.Query().Where(user.ID(tt.request.AssigneeID)).Exist(ctx)
+				if !exists {
+					u, err := client.User.Create().
+						SetUsername(fmt.Sprintf("assignee_%d", tt.request.AssigneeID)).
+						SetEmail(fmt.Sprintf("assignee_%d@example.com", tt.request.AssigneeID)).
+						SetName("Assignee").
+						SetPasswordHash("hash").
+						SetRole("agent").
+						SetActive(true).
+						SetTenantID(tt.tenantID).
+						Save(ctx)
+					if err == nil {
+						tt.request.AssigneeID = u.ID
+					}
+				}
+			}
+
 			response, err := ticketService.CreateTicket(ctx, tt.request, tt.tenantID)
 
 			if tt.expectedError {
@@ -119,6 +137,7 @@ func TestTicketService_CreateTicket(t *testing.T) {
 				assert.Equal(t, tt.request.Title, response.Title)
 				assert.Equal(t, tt.request.Description, response.Description)
 				assert.Equal(t, tt.request.Priority, response.Priority)
+				// assert.Equal(t, tt.request.Category, response.Category) // Category is handled via relation and not directly available in simple response without eager loading
 				assert.Equal(t, "open", response.Status) // 默认状态
 				assert.NotEmpty(t, response.TicketNumber)
 				assert.Equal(t, tt.tenantID, response.TenantID)
@@ -132,10 +151,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	ticketService := &TicketService{
-		client: client,
-		logger: logger,
-	}
+	ticketService := NewTicketService(client, logger)
 
 	ctx := context.Background()
 
@@ -250,10 +266,7 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	ticketService := &TicketService{
-		client: client,
-		logger: logger,
-	}
+	ticketService := NewTicketService(client, logger)
 
 	ctx := context.Background()
 
@@ -337,10 +350,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	ticketService := &TicketService{
-		client: client,
-		logger: logger,
-	}
+	ticketService := NewTicketService(client, logger)
 
 	ctx := context.Background()
 
@@ -450,10 +460,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	ticketService := &TicketService{
-		client: client,
-		logger: logger,
-	}
+	ticketService := NewTicketService(client, logger)
 
 	ctx := context.Background()
 
@@ -531,10 +538,7 @@ func TestTicketService_SearchTickets(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	ticketService := &TicketService{
-		client: client,
-		logger: logger,
-	}
+	ticketService := NewTicketService(client, logger)
 
 	ctx := context.Background()
 

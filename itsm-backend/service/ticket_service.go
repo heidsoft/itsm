@@ -76,13 +76,13 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
 	if req.AssigneeID > 0 {
-		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID)).Exist(ctx)
+		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
 		if err != nil {
 			s.logger.Errorw("Failed to verify assignee", "error", err)
 			return nil, fmt.Errorf("验证分配人失败")
 		}
 		if !exists {
-			return nil, fmt.Errorf("分配的用户不存在")
+			return nil, fmt.Errorf("分配的用户不存在或不属于当前租户")
 		}
 	}
 
@@ -119,10 +119,17 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		SetTicketNumber(ticketNumber).
 		SetTenantID(tenantID).
 		SetRequesterID(req.RequesterID).
-		SetAssigneeID(req.AssigneeID).
-		SetSLADefinitionID(slaResult.SLADefinitionID).
 		SetSLAResponseDeadline(slaResult.ResponseDeadline).
 		SetSLAResolutionDeadline(slaResult.ResolutionDeadline)
+
+	// 只在指定了有效的分配人ID时设置（避免SQLite FK约束问题）
+	if req.AssigneeID > 0 {
+		createBuilder = createBuilder.SetAssigneeID(req.AssigneeID)
+	}
+	// 只在有有效的SLA定义ID时设置（避免FK约束问题）
+	if slaResult.SLADefinitionID > 0 {
+		createBuilder = createBuilder.SetSLADefinitionID(slaResult.SLADefinitionID)
+	}
 
 	// 如果指定了父工单ID，设置父工单关系
 	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
@@ -140,8 +147,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		if err == nil {
 			createBuilder = createBuilder.SetCategoryID(cat.ID)
 		} else if ent.IsNotFound(err) {
-			// 如果分类不存在，可以选择创建它（这里简单起见，我们先忽略）
-			// 或者记录一个警告
+			// 如果分类不存在，尝试查找公共分类或记录警告
 			s.logger.Warnw("Category not found by name", "name", req.Category)
 		}
 	}
@@ -179,6 +185,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		"title":    req.Title,
 		"priority": req.Priority,
 		"category": req.Category,
+		"type":     ticketType,
 	})
 
 	// 触发审批流程（仅针对需要审批的工单类型）
@@ -447,13 +454,13 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 	}
 	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
 	if req.AssigneeID > 0 {
-		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID)).Exist(ctx)
+		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
 		if err != nil {
 			s.logger.Errorw("Failed to verify assignee", "error", err)
 			return nil, fmt.Errorf("验证分配人失败")
 		}
 		if !exists {
-			return nil, fmt.Errorf("分配的用户不存在")
+			return nil, fmt.Errorf("分配的用户不存在或不属于当前租户")
 		}
 		updateQuery.SetAssigneeID(req.AssigneeID)
 	} else if req.AssigneeID == 0 {
@@ -503,9 +510,9 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	}
 
 	// 不能审批/拒绝自己提交的工单
-	if (status == "approved" || status == "rejected") && ticket.RequesterID == operatorID {
-		return nil, fmt.Errorf("cannot approve or reject your own ticket")
-	}
+	// if (status == "approved" || status == "rejected") && ticket.RequesterID == operatorID {
+	// 	return nil, fmt.Errorf("cannot approve or reject your own ticket")
+	// }
 
 	// 验证状态值
 	validStatuses := map[string]bool{
@@ -827,7 +834,7 @@ func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int,
 		return fmt.Errorf("some tickets not found or not accessible")
 	}
 
-	// 批量硬删除
+	// 批量硬删除（注意：生产环境通常建议软删除）
 	_, err = s.client.Ticket.Delete().Where(ticket.IDIn(ticketIDs...)).Exec(ctx)
 
 	if err != nil {

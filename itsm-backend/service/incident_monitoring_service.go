@@ -633,6 +633,23 @@ func (s *IncidentMonitoringService) getIncidentAlerts(ctx context.Context, incid
 func (s *IncidentMonitoringService) convertIncidentsToResponse(incidents []*ent.Incident) []dto.IncidentResponse {
 	responses := make([]dto.IncidentResponse, len(incidents))
 	for i, incident := range incidents {
+		var impactAnalysis *dto.ImpactAnalysis
+		if incident.ImpactAnalysis != nil {
+			impactAnalysis = &dto.ImpactAnalysis{}
+			dto.MapToStruct(incident.ImpactAnalysis, impactAnalysis)
+		}
+
+		var rootCause *dto.RootCause
+		if incident.RootCause != nil {
+			rootCause = &dto.RootCause{}
+			dto.MapToStruct(incident.RootCause, rootCause)
+		}
+
+		var resolutionSteps []dto.ResolutionStep
+		if incident.ResolutionSteps != nil {
+			dto.MapSliceToStructSlice(incident.ResolutionSteps, &resolutionSteps)
+		}
+
 		responses[i] = dto.IncidentResponse{
 			ID:                  incident.ID,
 			Title:               incident.Title,
@@ -646,9 +663,9 @@ func (s *IncidentMonitoringService) convertIncidentsToResponse(incidents []*ent.
 			ConfigurationItemID: &incident.ConfigurationItemID,
 			Category:            incident.Category,
 			Subcategory:         incident.Subcategory,
-			ImpactAnalysis:      incident.ImpactAnalysis,
-			RootCause:           incident.RootCause,
-			ResolutionSteps:     incident.ResolutionSteps,
+			ImpactAnalysis:      impactAnalysis,
+			RootCause:           rootCause,
+			ResolutionSteps:     resolutionSteps,
 			DetectedAt:          incident.DetectedAt,
 			ResolvedAt:          &incident.ResolvedAt,
 			ClosedAt:            &incident.ClosedAt,

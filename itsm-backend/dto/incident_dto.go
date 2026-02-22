@@ -4,19 +4,58 @@ import (
 	"time"
 )
 
+// 结构化字段定义
+
+type ImpactAnalysis struct {
+	BusinessImpact  *BusinessImpact `json:"business_impact,omitempty"`
+	TechnicalImpact string          `json:"technical_impact,omitempty"`
+	AffectedUsers   int             `json:"affected_users,omitempty"`
+	TimeImpact      *TimeImpact     `json:"time_impact,omitempty"`
+}
+
+type BusinessImpact struct {
+	AffectedUsers       int     `json:"affected_users,omitempty"`
+	RevenueImpact       float64 `json:"revenue_impact,omitempty"`
+	ServiceAvailability float64 `json:"service_availability,omitempty"`
+}
+
+type TimeImpact struct {
+	IsOverdue          bool   `json:"is_overdue,omitempty"`
+	HoursSinceCreation int    `json:"hours_since_creation,omitempty"`
+	ResponseDeadline   string `json:"response_deadline,omitempty"`
+	ResolutionDeadline string `json:"resolution_deadline,omitempty"`
+}
+
+type RootCause struct {
+	AnalysisMethod      string   `json:"analysis_method,omitempty"`
+	RootCause           string   `json:"root_cause,omitempty"`
+	ContributingFactors []string `json:"contributing_factors,omitempty"`
+	Evidence            []string `json:"evidence,omitempty"`
+	PreventiveActions   []string `json:"preventive_actions,omitempty"`
+	Status              string   `json:"status,omitempty"`
+}
+
+type ResolutionStep struct {
+	Step        int       `json:"step"`
+	Description string    `json:"description"`
+	ExecutedBy  string    `json:"executed_by"`
+	ExecutedAt  time.Time `json:"executed_at"`
+	Status      string    `json:"status"` // pending, in_progress, completed, failed
+}
+
 // 事件管理相关DTO
 type CreateIncidentRequest struct {
 	Title               string                 `json:"title" binding:"required" example:"服务器CPU使用率过高"`
 	Description         string                 `json:"description" example:"生产环境Web服务器CPU使用率持续超过90%"`
-	Type                string                 `json:"type" example:"incident"` // 事件类型
-	Priority            string                 `json:"priority" example:"high"`
-	Severity            string                 `json:"severity" example:"high"`
+	Type                string                 `json:"type" binding:"omitempty,oneof=incident service_request security_event alert" example:"incident"` // 事件类型
+	Priority            string                 `json:"priority" binding:"omitempty,oneof=low medium high critical" example:"high"`
+	Severity            string                 `json:"severity" binding:"omitempty,oneof=low medium high critical" example:"high"`
 	Category            string                 `json:"category" example:"performance"`
 	Subcategory         string                 `json:"subcategory" example:"cpu"`
 	ConfigurationItemID *int                   `json:"configuration_item_id" example:"1"`
 	AssigneeID          *int                   `json:"assignee_id" example:"1"`
-	ImpactAnalysis      map[string]interface{} `json:"impact_analysis"`
-	Source              string                 `json:"source" example:"monitoring"`
+	ImpactAnalysis      *ImpactAnalysis        `json:"impact_analysis"`
+	Source              string                 `json:"source" binding:"omitempty,oneof=manual monitoring system user" example:"monitoring"`
 	Metadata            map[string]interface{} `json:"metadata"`
 	DetectedAt          *time.Time             `json:"detected_at" example:"2024-01-01T00:00:00Z"`
 }
@@ -24,15 +63,15 @@ type CreateIncidentRequest struct {
 type UpdateIncidentRequest struct {
 	Title           *string                  `json:"title,omitempty"`
 	Description     *string                  `json:"description,omitempty"`
-	Status          *string                  `json:"status,omitempty"`
-	Priority        *string                  `json:"priority,omitempty"`
-	Severity        *string                  `json:"severity,omitempty"`
+	Status          *string                  `json:"status,omitempty" binding:"omitempty,oneof=new assigned in_progress on_hold resolved closed cancelled"`
+	Priority        *string                  `json:"priority,omitempty" binding:"omitempty,oneof=low medium high critical"`
+	Severity        *string                  `json:"severity,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	Category        *string                  `json:"category,omitempty"`
 	Subcategory     *string                  `json:"subcategory,omitempty"`
 	AssigneeID      *int                     `json:"assignee_id,omitempty"`
-	ImpactAnalysis  map[string]interface{}   `json:"impact_analysis,omitempty"`
-	RootCause       map[string]interface{}   `json:"root_cause,omitempty"`
-	ResolutionSteps []map[string]interface{} `json:"resolution_steps,omitempty"`
+	ImpactAnalysis  *ImpactAnalysis          `json:"impact_analysis,omitempty"`
+	RootCause       *RootCause               `json:"root_cause,omitempty"`
+	ResolutionSteps []ResolutionStep         `json:"resolution_steps,omitempty"`
 	Metadata        map[string]interface{}   `json:"metadata,omitempty"`
 }
 
@@ -49,9 +88,9 @@ type IncidentResponse struct {
 	ConfigurationItemID *int                     `json:"configuration_item_id" example:"1"`
 	Category            string                   `json:"category" example:"performance"`
 	Subcategory         string                   `json:"subcategory" example:"cpu"`
-	ImpactAnalysis      map[string]interface{}   `json:"impact_analysis"`
-	RootCause           map[string]interface{}   `json:"root_cause"`
-	ResolutionSteps     []map[string]interface{} `json:"resolution_steps"`
+	ImpactAnalysis      *ImpactAnalysis          `json:"impact_analysis"`
+	RootCause           *RootCause               `json:"root_cause"`
+	ResolutionSteps     []ResolutionStep         `json:"resolution_steps"`
 	DetectedAt          time.Time                `json:"detected_at" example:"2024-01-01T00:00:00Z"`
 	ResolvedAt          *time.Time               `json:"resolved_at,omitempty" example:"2024-01-01T12:00:00Z"`
 	ClosedAt            *time.Time               `json:"closed_at,omitempty" example:"2024-01-01T18:00:00Z"`

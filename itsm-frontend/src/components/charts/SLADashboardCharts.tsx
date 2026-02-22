@@ -100,30 +100,16 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
       if (metrics.trend_data && metrics.trend_data.length > 0) {
         const formattedData: SLAChartData[] = metrics.trend_data.map(item => ({
           date: dayjs(item.date).format('MM-DD'),
-          compliance_rate: Number(item.compliance_rate.toFixed(1)),
-          avg_response_time: Number(item.avg_response_time.toFixed(2)),
-          avg_resolution_time: Number(item.avg_resolution_time.toFixed(2)),
-          ticket_count: Math.floor(Math.random() * 50) + 10, // 模拟数据
-          violation_count: Math.floor(Math.random() * 10) + 1, // 模拟数据
+          compliance_rate: Number(item.compliance_rate?.toFixed(1) || 0),
+          avg_response_time: Number(item.avg_response_time?.toFixed(2) || 0),
+          avg_resolution_time: Number(item.avg_resolution_time?.toFixed(2) || 0),
+          ticket_count: 0, // API 未返回此字段，设为 0
+          violation_count: 0, // API 未返回此字段，设为 0
         }));
         setChartData(formattedData);
       } else {
-        // 生成模拟数据用于演示
-        const mockData: SLAChartData[] = [];
-        const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90;
-        
-        for (let i = days - 1; i >= 0; i--) {
-          const date = dayjs().subtract(i, 'day');
-          mockData.push({
-            date: date.format('MM-DD'),
-            compliance_rate: Math.floor(Math.random() * 20) + 80,
-            avg_response_time: Number((Math.random() * 2 + 1).toFixed(2)),
-            avg_resolution_time: Number((Math.random() * 4 + 6).toFixed(2)),
-            ticket_count: Math.floor(Math.random() * 50) + 10,
-            violation_count: Math.floor(Math.random() * 8) + 1,
-          });
-        }
-        setChartData(mockData);
+        // API 返回空数据时显示空状态，不使用模拟数据
+        setChartData([]);
       }
     } catch (error) {
       console.error('加载图表数据失败:', error);

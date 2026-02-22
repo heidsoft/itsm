@@ -29,6 +29,7 @@ import {
   Dropdown,
   Menu,
 } from 'antd';
+import { ReportsApi } from '@/lib/api/reports-api';
 import {
   BarChart3,
   TrendingUp,
@@ -355,29 +356,21 @@ const AdvancedReporting: React.FC = () => {
       setCurrentReport(report);
       setLoading(true);
 
-      // 模拟执行报表
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 调用后端 API 执行报表
+      const result = await ReportsApi.executeReport({
+        reportId: report.id.toString(),
+        filters: {},
+      });
 
-      // 模拟报表数据
-      const mockData: ReportData = {
-        columns: ['日期', '工单数量', '平均响应时间', '平均解决时间', 'SLA合规率'],
-        rows: [
-          ['2024-01-01', 45, '2.3小时', '8.5小时', '95.6%'],
-          ['2024-01-02', 52, '2.1小时', '7.8小时', '96.2%'],
-          ['2024-01-03', 38, '2.5小时', '9.2小时', '94.8%'],
-          ['2024-01-04', 61, '1.9小时', '7.1小时', '97.1%'],
-          ['2024-01-05', 47, '2.2小时', '8.1小时', '95.9%'],
-        ],
-        total: 5,
-        summary: {
-          total_tickets: 243,
-          avg_response_time: '2.2小时',
-          avg_resolution_time: '8.1小时',
-          overall_sla_compliance: '95.9%',
-        },
+      // 转换 API 返回的数据格式
+      const reportData: ReportData = {
+        columns: result.data?.columns || [],
+        rows: result.data?.rows || [],
+        total: result.data?.total || 0,
+        summary: {},
       };
 
-      setReportData(mockData);
+      setReportData(reportData);
       setShowExecutionModal(true);
     } catch (error) {
       console.error('执行报表失败:', error);

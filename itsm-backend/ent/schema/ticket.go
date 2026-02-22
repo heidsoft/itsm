@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // Ticket holds the schema definition for the Ticket entity.
@@ -148,5 +149,23 @@ func (Ticket) Edges() []ent.Edge {
 		edge.From("configuration_items", ConfigurationItem.Type).
 			Ref("tickets").
 			Comment("关联的配置项"),
+	}
+}
+
+// Indexes of the Ticket.
+func (Ticket) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("ticket_number").Unique(),
+		index.Fields("status"),
+		index.Fields("priority"),
+		index.Fields("type"), // Added index for type
+		index.Fields("requester_id"),
+		index.Fields("assignee_id"),
+		index.Fields("created_at"),
+		index.Fields("tenant_id"),
+		index.Fields("tenant_id", "status"),
+		index.Fields("tenant_id", "requester_id"),
+		index.Fields("status", "priority"),
+		index.Fields("requester_id", "status"),
 	}
 }

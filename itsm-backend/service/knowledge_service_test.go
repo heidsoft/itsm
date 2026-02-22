@@ -554,7 +554,7 @@ func TestKnowledgeService_LikeArticle(t *testing.T) {
 	defer client.Close()
 
 	logger := zaptest.NewLogger(t).Sugar()
-	knowledgeService := NewKnowledgeService(client, logger)
+	_ = NewKnowledgeService(client, logger)
 
 	ctx := context.Background()
 

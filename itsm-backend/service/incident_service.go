@@ -61,7 +61,7 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 		SetReporterID(1). // 假设当前用户ID为1
 		SetCategory(req.Category).
 		SetSubcategory(req.Subcategory).
-		SetImpactAnalysis(req.ImpactAnalysis).
+		SetImpactAnalysis(dto.StructToMap(req.ImpactAnalysis)).
 		SetSource(req.Source).
 		SetMetadata(req.Metadata).
 		SetDetectedAt(detectedAt).
@@ -249,13 +249,13 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 		updateQuery.SetAssigneeID(*req.AssigneeID)
 	}
 	if req.ImpactAnalysis != nil {
-		updateQuery.SetImpactAnalysis(req.ImpactAnalysis)
+		updateQuery.SetImpactAnalysis(dto.StructToMap(req.ImpactAnalysis))
 	}
 	if req.RootCause != nil {
-		updateQuery.SetRootCause(req.RootCause)
+		updateQuery.SetRootCause(dto.StructToMap(req.RootCause))
 	}
 	if req.ResolutionSteps != nil {
-		updateQuery.SetResolutionSteps(req.ResolutionSteps)
+		updateQuery.SetResolutionSteps(dto.StructSliceToMapSlice(req.ResolutionSteps))
 	}
 	if req.Metadata != nil {
 		updateQuery.SetMetadata(req.Metadata)
@@ -793,6 +793,23 @@ func (s *IncidentService) executeAssignmentAction(ctx context.Context, action ma
 
 // 转换为响应DTO
 func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.IncidentResponse {
+	var impactAnalysis *dto.ImpactAnalysis
+	if incident.ImpactAnalysis != nil {
+		impactAnalysis = &dto.ImpactAnalysis{}
+		dto.MapToStruct(incident.ImpactAnalysis, impactAnalysis)
+	}
+
+	var rootCause *dto.RootCause
+	if incident.RootCause != nil {
+		rootCause = &dto.RootCause{}
+		dto.MapToStruct(incident.RootCause, rootCause)
+	}
+
+	var resolutionSteps []dto.ResolutionStep
+	if incident.ResolutionSteps != nil {
+		dto.MapSliceToStructSlice(incident.ResolutionSteps, &resolutionSteps)
+	}
+
 	return &dto.IncidentResponse{
 		ID:                  incident.ID,
 		Title:               incident.Title,
@@ -806,9 +823,9 @@ func (s *IncidentService) toIncidentResponse(incident *ent.Incident) *dto.Incide
 		ConfigurationItemID: &incident.ConfigurationItemID,
 		Category:            incident.Category,
 		Subcategory:         incident.Subcategory,
-		ImpactAnalysis:      incident.ImpactAnalysis,
-		RootCause:           incident.RootCause,
-		ResolutionSteps:     incident.ResolutionSteps,
+		ImpactAnalysis:      impactAnalysis,
+		RootCause:           rootCause,
+		ResolutionSteps:     resolutionSteps,
 		DetectedAt:          incident.DetectedAt,
 		ResolvedAt:          &incident.ResolvedAt,
 		ClosedAt:            &incident.ClosedAt,

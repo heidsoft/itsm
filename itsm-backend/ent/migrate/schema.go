@@ -2158,6 +2158,68 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ticket_ticket_number",
+				Unique:  true,
+				Columns: []*schema.Column{TicketsColumns[6]},
+			},
+			{
+				Name:    "ticket_status",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[3]},
+			},
+			{
+				Name:    "ticket_priority",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[5]},
+			},
+			{
+				Name:    "ticket_type",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[4]},
+			},
+			{
+				Name:    "ticket_requester_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[7]},
+			},
+			{
+				Name:    "ticket_assignee_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[8]},
+			},
+			{
+				Name:    "ticket_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[19]},
+			},
+			{
+				Name:    "ticket_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[9]},
+			},
+			{
+				Name:    "ticket_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[9], TicketsColumns[3]},
+			},
+			{
+				Name:    "ticket_tenant_id_requester_id",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[9], TicketsColumns[7]},
+			},
+			{
+				Name:    "ticket_status_priority",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[3], TicketsColumns[5]},
+			},
+			{
+				Name:    "ticket_requester_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{TicketsColumns[7], TicketsColumns[3]},
+			},
+		},
 	}
 	// TicketAssignmentRulesColumns holds the columns for the "ticket_assignment_rules" table.
 	TicketAssignmentRulesColumns = []*schema.Column{

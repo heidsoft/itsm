@@ -30,6 +30,7 @@ import {
   ticketCategoryService,
   type CreateCategoryRequest,
 } from "../../lib/services/ticket-category-service";
+import { TicketCategoryApi } from "../../lib/api/ticket-category-api";
 
 const { Text, Title } = Typography;
 const { Dragger } = Upload;
@@ -98,46 +99,9 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
       const formData = new FormData();
       formData.append("file", file);
 
-      // 这里应该调用后端的预览API
-      // const response = await ticketCategoryService.previewImport(formData);
-      // setPreviewData(response.data);
-
-      // 模拟预览数据
-      const mockData = [
-        {
-          name: "硬件问题",
-          code: "HW001",
-          description: "硬件相关的问题",
-          parent_code: "",
-          sort_order: 1,
-          is_active: true,
-        },
-        {
-          name: "软件问题",
-          code: "SW001",
-          description: "软件相关的问题",
-          parent_code: "",
-          sort_order: 2,
-          is_active: true,
-        },
-        {
-          name: "网络问题",
-          code: "NET001",
-          description: "网络相关的问题",
-          parent_code: "",
-          sort_order: 3,
-          is_active: true,
-        },
-        {
-          name: "系统问题",
-          code: "SYS001",
-          description: "系统相关的问题",
-          parent_code: "",
-          sort_order: 4,
-          is_active: true,
-        },
-      ];
-      setPreviewData(mockData);
+      // 调用后端 API 预览导入数据
+      const response = await TicketCategoryApi.previewImport(formData);
+      setPreviewData(response);
     } catch (error) {
       message.error("文件预览失败");
     }
@@ -170,52 +134,22 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
         });
       }, 200);
 
-      // 调用导入API
-      // const response = await ticketCategoryService.importCategories(formData);
+      // 调用后端 API 执行导入
+      const response = await TicketCategoryApi.executeImport(formData);
 
-      // 模拟导入结果
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       clearInterval(progressInterval);
       setImportProgress(100);
 
-      const mockResult: ImportResult = {
-        success: 3,
-        failed: 1,
-        total: 4,
-        errors: ["第4行: 分类代码已存在"],
-        details: [
-          {
-            row: 1,
-            name: "硬件问题",
-            code: "HW001",
-            status: "success",
-            message: "导入成功",
-          },
-          {
-            row: 2,
-            name: "软件问题",
-            code: "SW001",
-            status: "success",
-            message: "导入成功",
-          },
-          {
-            row: 3,
-            name: "网络问题",
-            code: "NET001",
-            status: "success",
-            message: "导入成功",
-          },
-          {
-            row: 4,
-            name: "系统问题",
-            code: "SYS001",
-            status: "failed",
-            message: "分类代码已存在",
-          },
-        ],
+      // 转换 API 返回结果
+      const importResult: ImportResult = {
+        success: response.success,
+        failed: response.failed,
+        total: response.success + response.failed,
+        errors: [],
+        details: [],
       };
 
-      setImportResult(mockResult);
+      setImportResult(importResult);
       message.success("导入完成");
     } catch (error) {
       message.error(
