@@ -18,6 +18,10 @@ type Tx struct {
 	ApprovalRecord *ApprovalRecordClient
 	// ApprovalWorkflow is the client for interacting with the ApprovalWorkflow builders.
 	ApprovalWorkflow *ApprovalWorkflowClient
+	// Asset is the client for interacting with the Asset builders.
+	Asset *AssetClient
+	// AssetLicense is the client for interacting with the AssetLicense builders.
+	AssetLicense *AssetLicenseClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
@@ -98,6 +102,8 @@ type Tx struct {
 	ProvisioningTask *ProvisioningTaskClient
 	// RelationshipType is the client for interacting with the RelationshipType builders.
 	RelationshipType *RelationshipTypeClient
+	// Release is the client for interacting with the Release builders.
+	Release *ReleaseClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
@@ -290,6 +296,8 @@ func (tx *Tx) init() {
 	tx.Application = NewApplicationClient(tx.config)
 	tx.ApprovalRecord = NewApprovalRecordClient(tx.config)
 	tx.ApprovalWorkflow = NewApprovalWorkflowClient(tx.config)
+	tx.Asset = NewAssetClient(tx.config)
+	tx.AssetLicense = NewAssetLicenseClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
@@ -330,6 +338,7 @@ func (tx *Tx) init() {
 	tx.PromptTemplate = NewPromptTemplateClient(tx.config)
 	tx.ProvisioningTask = NewProvisioningTaskClient(tx.config)
 	tx.RelationshipType = NewRelationshipTypeClient(tx.config)
+	tx.Release = NewReleaseClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.RootCauseAnalysis = NewRootCauseAnalysisClient(tx.config)
 	tx.SLAAlertHistory = NewSLAAlertHistoryClient(tx.config)

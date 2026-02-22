@@ -188,6 +188,51 @@ export const routes: RouteConfig[] = [
     ],
   },
   {
+    path: '/releases',
+    name: 'releases',
+    title: '发布管理',
+    icon: 'Rocket',
+    permissions: [{ resource: 'release', action: 'read' }],
+    meta: {
+      requireAuth: true,
+      breadcrumb: true,
+    },
+    children: [
+      {
+        path: '/releases',
+        name: 'release-list',
+        title: '发布列表',
+        component: 'ReleaseList',
+        permissions: [{ resource: 'release', action: 'read' }],
+        meta: {
+          requireAuth: true,
+          keepAlive: true,
+        },
+      },
+      {
+        path: '/releases/new',
+        name: 'release-create',
+        title: '创建发布',
+        component: 'ReleaseForm',
+        permissions: [{ resource: 'release', action: 'create' }],
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: '/releases/:id',
+        name: 'release-detail',
+        title: '发布详情',
+        component: 'ReleaseDetail',
+        permissions: [{ resource: 'release', action: 'read' }],
+        hidden: true,
+        meta: {
+          requireAuth: true,
+        },
+      },
+    ],
+  },
+  {
     path: '/changes',
     name: 'changes',
     title: '变更管理',
@@ -225,6 +270,96 @@ export const routes: RouteConfig[] = [
         title: '变更详情',
         component: 'ChangeDetail',
         permissions: [{ resource: 'change', action: 'read' }],
+        hidden: true,
+        meta: {
+          requireAuth: true,
+        },
+      },
+    ],
+  },
+  {
+    path: '/assets',
+    name: 'assets',
+    title: '资产管理',
+    icon: 'Desktop',
+    permissions: [{ resource: 'asset', action: 'read' }],
+    meta: {
+      requireAuth: true,
+      breadcrumb: true,
+    },
+    children: [
+      {
+        path: '/assets',
+        name: 'asset-list',
+        title: '资产列表',
+        component: 'AssetList',
+        permissions: [{ resource: 'asset', action: 'read' }],
+        meta: {
+          requireAuth: true,
+          keepAlive: true,
+        },
+      },
+      {
+        path: '/assets/new',
+        name: 'asset-create',
+        title: '创建资产',
+        component: 'AssetForm',
+        permissions: [{ resource: 'asset', action: 'create' }],
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: '/assets/:id',
+        name: 'asset-detail',
+        title: '资产详情',
+        component: 'AssetDetail',
+        permissions: [{ resource: 'asset', action: 'read' }],
+        hidden: true,
+        meta: {
+          requireAuth: true,
+        },
+      },
+    ],
+  },
+  {
+    path: '/licenses',
+    name: 'licenses',
+    title: '许可证管理',
+    icon: 'Key',
+    permissions: [{ resource: 'license', action: 'read' }],
+    meta: {
+      requireAuth: true,
+      breadcrumb: true,
+    },
+    children: [
+      {
+        path: '/licenses',
+        name: 'license-list',
+        title: '许可证列表',
+        component: 'LicenseList',
+        permissions: [{ resource: 'license', action: 'read' }],
+        meta: {
+          requireAuth: true,
+          keepAlive: true,
+        },
+      },
+      {
+        path: '/licenses/new',
+        name: 'license-create',
+        title: '创建许可证',
+        component: 'LicenseForm',
+        permissions: [{ resource: 'license', action: 'create' }],
+        meta: {
+          requireAuth: true,
+        },
+      },
+      {
+        path: '/licenses/:id',
+        name: 'license-detail',
+        title: '许可证详情',
+        component: 'LicenseDetail',
+        permissions: [{ resource: 'license', action: 'read' }],
         hidden: true,
         meta: {
           requireAuth: true,

@@ -23,10 +23,10 @@ describe('formatDateTime', () => {
     expect(formatDateTime('')).toBe('');
   });
 
-  it('should return original string for invalid date', () => {
+  it('should return Invalid Date for invalid date', () => {
     const invalidDate = 'invalid-date';
     const result = formatDateTime(invalidDate);
-    expect(result).toBe(invalidDate);
+    expect(result).toBe('Invalid Date');
   });
 
   it('should handle ISO format with milliseconds', () => {

@@ -23,6 +23,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  CheckCheck,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -56,12 +57,57 @@ export const Header: React.FC<HeaderProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const { t } = useI18n();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: t('header.newTicketAssigned'),
+      content: t('header.newTicketAssignedContent'),
+      time: t('header.twoMinutesAgo'),
+      read: false,
+      type: 'ticket',
+      priority: 'high',
+    },
+    {
+      id: 2,
+      title: t('header.systemMaintenanceNotification'),
+      content: t('header.systemMaintenanceNotificationContent'),
+      time: t('header.oneHourAgo'),
+      read: true,
+      type: 'system',
+      priority: 'medium',
+    },
+    {
+      id: 3,
+      title: t('header.slaWarning'),
+      content: t('header.slaWarningContent', { ticketId: '1234' }),
+      time: t('header.threeHoursAgo'),
+      read: false,
+      type: 'sla',
+      priority: 'urgent',
+    },
+  ]);
+
+  const markAsRead = (id: number) => {
+    setNotifications(prev => prev.map(n =>
+      n.id === id ? { ...n, read: true } : n
+    ));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleNotificationClick = (item: any) => {
+    if (!item.read) {
+      markAsRead(item.id);
+    }
+  };
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchResults, setSearchResults] = useState<GlobalSearchResult | null>(null);
-  const { t } = useI18n();
   const [isClient, setIsClient] = useState(false);
 
   // 处理 hydration 问题
@@ -116,36 +162,6 @@ export const Header: React.FC<HeaderProps> = ({
       label: t('header.logout'),
       icon: <LogOut style={iconStyle} />,
       onClick: handleLogout,
-    },
-  ];
-
-  const notifications = [
-    {
-      id: 1,
-      title: t('header.newTicketAssigned'),
-      content: t('header.newTicketAssignedContent'),
-      time: t('header.twoMinutesAgo'),
-      read: false,
-      type: 'ticket',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      title: t('header.systemMaintenanceNotification'),
-      content: t('header.systemMaintenanceNotificationContent'),
-      time: t('header.oneHourAgo'),
-      read: true,
-      type: 'system',
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      title: t('header.slaWarning'),
-      content: t('header.slaWarningContent', { ticketId: '1234' }),
-      time: t('header.threeHoursAgo'),
-      read: false,
-      type: 'sla',
-      priority: 'urgent',
     },
   ];
 
@@ -359,75 +375,97 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 通知抽屉 */}
       <Drawer
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Bell style={{ color: '#3b82f6', width: 20, height: 20 }} />
-            <span>{t('header.notificationCenter')}</span>
-            {unreadCount > 0 && <Badge count={unreadCount} size='small' />}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Bell style={{ color: '#3b82f6', width: 20, height: 20 }} />
+              <span>{t('header.notificationCenter')}</span>
+              {unreadCount > 0 && <Badge count={unreadCount} size='small' />}
+            </div>
+            {unreadCount > 0 && (
+              <Button
+                type="text"
+                size="small"
+                icon={<CheckCheck size={14} />}
+                onClick={markAllAsRead}
+                style={{ color: '#3b82f6' }}
+              >
+                全部标记为已读
+              </Button>
+            )}
           </div>
         }
         placement='right'
-        size="default"
-        style={{ width: 400 }}
+        size="large"
+        style={{ maxWidth: 'calc(100vw - 64px)' }}
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
         className={styles.notificationDrawer}
       >
-        <div className="notifications-list">
-          {notifications.map(item => (
-            <div
-              key={item.id}
-              className={styles.notificationItem}
-              style={{ opacity: item.read ? 0.7 : 1, padding: '12px', borderBottom: '1px solid #f0f0f0' }}
-            >
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div
-                  className={styles.notificationAvatar}
-                  style={{
-                    backgroundColor:
-                      item.priority === 'urgent'
-                        ? '#ef4444'
-                        : item.priority === 'high'
-                          ? '#f59e0b'
-                          : '#3b82f6',
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}
-                >
-                  {item.type === 'ticket' ? 'T' : item.type === 'system' ? 'S' : 'SLA'}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className={styles.notificationTitle}>
-                    <Text
-                      style={{
-                        fontWeight: item.read ? '400' : '600',
-                        color: item.read ? '#6b7280' : '#1f2937',
-                        display: 'block',
-                      }}
-                    >
-                      {item.title}
-                    </Text>
-                    <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
+        {notifications.length === 0 ? (
+          <div className={styles.emptyNotifications} style={{ textAlign: 'center', padding: '48px 0' }}>
+            <Bell style={{ width: 48, height: 48, marginBottom: '16px', opacity: 0.3 }} />
+            <Text style={{ display: 'block', color: '#9ca3af' }}>{t('header.noNotifications')}</Text>
+          </div>
+        ) : (
+          <div className="notifications-list" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+            {notifications.map(item => (
+              <div
+                key={item.id}
+                className={styles.notificationItem}
+                style={{
+                  opacity: item.read ? 0.7 : 1,
+                  padding: '12px',
+                  borderBottom: '1px solid #f0f0f0',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
+                onClick={() => handleNotificationClick(item)}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = item.read ? '#f9fafb' : '#eff6ff'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div
+                    className={styles.notificationAvatar}
+                    style={{
+                      backgroundColor:
+                        item.priority === 'urgent'
+                          ? '#ef4444'
+                          : item.priority === 'high'
+                            ? '#f59e0b'
+                            : '#3b82f6',
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontWeight: 600,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {item.type === 'ticket' ? 'T' : item.type === 'system' ? 'S' : 'SLA'}
                   </div>
-                  <Text className={styles.notificationContent} style={{ display: 'block', marginTop: 4 }}>
-                    {item.content}
-                  </Text>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className={styles.notificationTitle}>
+                      <Text
+                        style={{
+                          fontWeight: item.read ? '400' : '600',
+                          color: item.read ? '#6b7280' : '#1f2937',
+                          display: 'block',
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
+                    </div>
+                    <Text className={styles.notificationContent} style={{ display: 'block', marginTop: 4, fontSize: '13px' }}>
+                      {item.content}
+                    </Text>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {notifications.length === 0 && (
-          <div className={styles.emptyNotifications}>
-            <Bell style={{ width: 48, height: 48, marginBottom: '16px', opacity: 0.5 }} />
-            <Text>{t('header.noNotifications')}</Text>
+            ))}
           </div>
         )}
       </Drawer>

@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Table, Tag, Button, Card, Space, Tooltip,
-    Input, Select, Form, Row, Col, App
+    Input, Select, Form, Row, Col, App, Empty
 } from 'antd';
 import {
     SearchOutlined, EyeOutlined, EditOutlined,
@@ -203,6 +203,19 @@ const IncidentList: React.FC = () => {
                 columns={columns as any}
                 dataSource={data}
                 loading={loading}
+                scroll={{ x: 'max-content' }}
+                locale={{
+                    emptyText: (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="暂无事件数据"
+                        >
+                            <Button type="primary" onClick={() => router.push('/incidents/new')}>
+                                创建第一个事件
+                            </Button>
+                        </Empty>
+                    ),
+                }}
                 pagination={{
                     current: query.page,
                     pageSize: query.size,

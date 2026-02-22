@@ -9,6 +9,8 @@ import (
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/asset"
+	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -49,6 +51,7 @@ import (
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/relationshiptype"
+	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
@@ -147,6 +150,8 @@ func checkColumn(table, column string) error {
 			application.Table:             application.ValidColumn,
 			approvalrecord.Table:          approvalrecord.ValidColumn,
 			approvalworkflow.Table:        approvalworkflow.ValidColumn,
+			asset.Table:                   asset.ValidColumn,
+			assetlicense.Table:            assetlicense.ValidColumn,
 			auditlog.Table:                auditlog.ValidColumn,
 			ciattributedefinition.Table:   ciattributedefinition.ValidColumn,
 			cirelationship.Table:          cirelationship.ValidColumn,
@@ -187,6 +192,7 @@ func checkColumn(table, column string) error {
 			prompttemplate.Table:          prompttemplate.ValidColumn,
 			provisioningtask.Table:        provisioningtask.ValidColumn,
 			relationshiptype.Table:        relationshiptype.ValidColumn,
+			release.Table:                 release.ValidColumn,
 			role.Table:                    role.ValidColumn,
 			rootcauseanalysis.Table:       rootcauseanalysis.ValidColumn,
 			slaalerthistory.Table:         slaalerthistory.ValidColumn,

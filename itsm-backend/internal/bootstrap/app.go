@@ -86,6 +86,11 @@ func NewApplication() *Application {
 	changeService.SetApprovalService(approvalService)
 	changeApprovalService := service.NewChangeApprovalService(client, database.GetRawDB(), sugar)
 
+	// Release & Asset Management Services
+	releaseService := service.NewReleaseService(client, sugar)
+	assetService := service.NewAssetService(client, sugar)
+	assetLicenseService := service.NewAssetLicenseService(client, sugar)
+
 	// LLM/Embedding/VectorStore
 	var embedder service.Embedder
 	if cfg.LLM.Provider == "openai" || cfg.LLM.Provider == "" {
@@ -158,6 +163,11 @@ func NewApplication() *Application {
 	problemController := controller.NewProblemController(sugar, problemService)
 	changeController := controller.NewChangeController(sugar, changeService)
 	changeApprovalController := controller.NewChangeApprovalController(changeApprovalService, sugar)
+
+	// Release & Asset Management Controllers
+	releaseController := controller.NewReleaseController(sugar, releaseService)
+	assetController := controller.NewAssetController(sugar, assetService)
+	assetLicenseController := controller.NewAssetLicenseController(sugar, assetLicenseService)
 
 	projectController := controller.NewProjectController(client)
 	applicationController := controller.NewApplicationController(client)
@@ -315,13 +325,16 @@ func NewApplication() *Application {
 		CMDBController: cmdbController,
 
 		// Additional controllers
-		ServiceController:        serviceController,
-		ProvisioningController:   provisioningController,
-		ProblemController:        problemController,
-		ChangeController:         changeController,
-		ChangeApprovalController: changeApprovalController,
-		AnalyticsController:      analyticsController,
-		PredictionController:     predictionController,
+		ServiceController:         serviceController,
+		ProvisioningController:    provisioningController,
+		ProblemController:         problemController,
+		ChangeController:          changeController,
+		ChangeApprovalController:  changeApprovalController,
+		AnalyticsController:       analyticsController,
+		PredictionController:      predictionController,
+		ReleaseController:        releaseController,
+		AssetController:         assetController,
+		AssetLicenseController:   assetLicenseController,
 
 		// Domain Handlers
 		ServiceCatalogHandler: scHandler,

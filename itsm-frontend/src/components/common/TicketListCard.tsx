@@ -79,7 +79,7 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
   return (
     <Card
       title={
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <span className="font-semibold text-gray-800">{title}</span>
           <div className="flex items-center space-x-2">
             <Badge count={pendingCount} />
@@ -102,8 +102,10 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
                 { key: '3', label: '按时间排序' },
               ],
             }}
+            trigger={['click']}
+            placement="bottomRight"
           >
-            <Button type="text" icon={<MoreHorizontal size={16} />} />
+            <Button type="text" icon={<MoreHorizontal size={16} />} aria-label="更多选项" />
           </Dropdown>
         ) : null
       }

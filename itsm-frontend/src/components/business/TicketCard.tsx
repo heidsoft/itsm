@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { Tooltip } from "antd";
 import {
   Zap,
   AlertCircle,
@@ -91,16 +92,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   return (
     <div
       ref={cardRef}
-      className={`relative flex flex-col justify-between rounded-lg border-l-4 bg-white p-6 shadow-md transition-shadow duration-300 ease-in-out hover:shadow-xl ${config.borderColor}`}
+      className={`relative flex flex-col justify-between rounded-lg border-l-4 bg-white p-6 shadow-md transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 cursor-pointer ${config.borderColor}`}
     >
       {/* 优先级徽章 */}
-      <div
-        className={`absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-bold ${config.bgColor} ${config.textColor}`}
-      >
-        {config.label}
-      </div>
+      <Tooltip title={`优先级: ${config.label}`}>
+        <div
+          className={`absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-bold ${config.bgColor} ${config.textColor}`}
+        >
+          {config.label}
+        </div>
+      </Tooltip>
 
-      <h3 className="mb-2 text-lg font-semibold text-gray-800">{title}</h3>
+      <h3 className="mb-2 text-lg font-semibold text-gray-800 truncate" title={title}>
+        {title}
+      </h3>
       <p className="mb-4 text-sm text-gray-600">
         {type}ID: {id}
       </p>

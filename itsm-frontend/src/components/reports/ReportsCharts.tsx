@@ -104,8 +104,9 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center" style={{ height }}>
-        <Spin size="large" tip="加载图表数据..." />
+      <div className="flex flex-col justify-center items-center" style={{ height }}>
+        <Spin size="large" />
+        <span className="mt-2 text-gray-500">加载图表数据...</span>
       </div>
     );
   }

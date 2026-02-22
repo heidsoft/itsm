@@ -92,6 +92,18 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
 		{Resource: "bpmn", Action: "delete"},
+		// Release Management permissions
+		{Resource: "release", Action: "read"},
+		{Resource: "release", Action: "write"},
+		{Resource: "release", Action: "delete"},
+		// Asset Management permissions
+		{Resource: "asset", Action: "read"},
+		{Resource: "asset", Action: "write"},
+		{Resource: "asset", Action: "delete"},
+		// License Management permissions
+		{Resource: "license", Action: "read"},
+		{Resource: "license", Action: "write"},
+		{Resource: "license", Action: "delete"},
 	},
 	"manager": {
 		{Resource: "ticket", Action: "read"},
@@ -112,6 +124,15 @@ var RolePermissions = map[string][]Permission{
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
+		// Release Management permissions
+		{Resource: "release", Action: "read"},
+		{Resource: "release", Action: "write"},
+		// Asset Management permissions
+		{Resource: "asset", Action: "read"},
+		{Resource: "asset", Action: "write"},
+		// License Management permissions
+		{Resource: "license", Action: "read"},
+		{Resource: "license", Action: "write"},
 	},
 	"agent": {
 		{Resource: "ticket", Action: "read"},
@@ -158,6 +179,12 @@ var RolePermissions = map[string][]Permission{
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
+		// Release Management permissions
+		{Resource: "release", Action: "read"},
+		// Asset Management permissions
+		{Resource: "asset", Action: "read"},
+		// License Management permissions
+		{Resource: "license", Action: "read"},
 	},
 	"end_user": {
 		{Resource: "ticket", Action: "read"},
@@ -182,6 +209,10 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "problem", Action: "read"},
 		// BPMN Workflow permissions (read only)
 		{Resource: "bpmn", Action: "read"},
+		// Release/Asset/License read permissions
+		{Resource: "release", Action: "read"},
+		{Resource: "asset", Action: "read"},
+		{Resource: "license", Action: "read"},
 	},
 }
 

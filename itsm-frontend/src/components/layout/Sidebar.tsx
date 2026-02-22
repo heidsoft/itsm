@@ -14,6 +14,9 @@ import {
   GitMerge,
   Shield,
   TrendingUp,
+  Rocket,
+  Monitor,
+  Key,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -110,6 +113,30 @@ const getMenuConfig = (t: any) => ({
       permission: 'report:view',
       description: t('reports.description'),
     },
+    {
+      key: '/releases',
+      icon: <Rocket style={iconStyle} />,
+      label: '发布管理',
+      path: '/releases',
+      permission: 'release:view',
+      description: '软件发布管理',
+    },
+    {
+      key: '/assets',
+      icon: <Monitor style={iconStyle} />,
+      label: '资产管理',
+      path: '/assets',
+      permission: 'asset:view',
+      description: 'IT资产跟踪和管理',
+    },
+    {
+      key: '/licenses',
+      icon: <Key style={iconStyle} />,
+      label: '许可证管理',
+      path: '/licenses',
+      permission: 'license:view',
+      description: '软件许可证管理',
+    },
   ],
   admin: [
     {
@@ -156,8 +183,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       key: item.key,
       icon: item.icon,
       label: (
-        <div className={styles.menuItemLabel}>
-          <span>{item.label}</span>
+        <div className={styles.menuItemLabel} title={item.description || item.label}>
+          <span className="truncate">{item.label}</span>
           {item.badge && <Badge count={item.badge} size='small' className={styles.menuItemBadge} />}
         </div>
       ),

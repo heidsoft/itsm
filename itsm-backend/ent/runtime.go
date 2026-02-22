@@ -6,6 +6,8 @@ import (
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/asset"
+	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -46,6 +48,7 @@ import (
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/relationshiptype"
+	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/schema"
@@ -201,6 +204,74 @@ func init() {
 	approvalworkflow.DefaultUpdatedAt = approvalworkflowDescUpdatedAt.Default.(func() time.Time)
 	// approvalworkflow.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	approvalworkflow.UpdateDefaultUpdatedAt = approvalworkflowDescUpdatedAt.UpdateDefault.(func() time.Time)
+	assetFields := schema.Asset{}.Fields()
+	_ = assetFields
+	// assetDescAssetNumber is the schema descriptor for asset_number field.
+	assetDescAssetNumber := assetFields[0].Descriptor()
+	// asset.AssetNumberValidator is a validator for the "asset_number" field. It is called by the builders before save.
+	asset.AssetNumberValidator = assetDescAssetNumber.Validators[0].(func(string) error)
+	// assetDescName is the schema descriptor for name field.
+	assetDescName := assetFields[1].Descriptor()
+	// asset.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	asset.NameValidator = assetDescName.Validators[0].(func(string) error)
+	// assetDescType is the schema descriptor for type field.
+	assetDescType := assetFields[3].Descriptor()
+	// asset.DefaultType holds the default value on creation for the type field.
+	asset.DefaultType = assetDescType.Default.(string)
+	// assetDescStatus is the schema descriptor for status field.
+	assetDescStatus := assetFields[4].Descriptor()
+	// asset.DefaultStatus holds the default value on creation for the status field.
+	asset.DefaultStatus = assetDescStatus.Default.(string)
+	// assetDescTenantID is the schema descriptor for tenant_id field.
+	assetDescTenantID := assetFields[7].Descriptor()
+	// asset.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	asset.TenantIDValidator = assetDescTenantID.Validators[0].(func(int) error)
+	// assetDescCreatedAt is the schema descriptor for created_at field.
+	assetDescCreatedAt := assetFields[25].Descriptor()
+	// asset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	asset.DefaultCreatedAt = assetDescCreatedAt.Default.(func() time.Time)
+	// assetDescUpdatedAt is the schema descriptor for updated_at field.
+	assetDescUpdatedAt := assetFields[26].Descriptor()
+	// asset.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	asset.DefaultUpdatedAt = assetDescUpdatedAt.Default.(func() time.Time)
+	// asset.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	asset.UpdateDefaultUpdatedAt = assetDescUpdatedAt.UpdateDefault.(func() time.Time)
+	assetlicenseFields := schema.AssetLicense{}.Fields()
+	_ = assetlicenseFields
+	// assetlicenseDescName is the schema descriptor for name field.
+	assetlicenseDescName := assetlicenseFields[1].Descriptor()
+	// assetlicense.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	assetlicense.NameValidator = assetlicenseDescName.Validators[0].(func(string) error)
+	// assetlicenseDescLicenseType is the schema descriptor for license_type field.
+	assetlicenseDescLicenseType := assetlicenseFields[4].Descriptor()
+	// assetlicense.DefaultLicenseType holds the default value on creation for the license_type field.
+	assetlicense.DefaultLicenseType = assetlicenseDescLicenseType.Default.(string)
+	// assetlicenseDescTotalQuantity is the schema descriptor for total_quantity field.
+	assetlicenseDescTotalQuantity := assetlicenseFields[5].Descriptor()
+	// assetlicense.DefaultTotalQuantity holds the default value on creation for the total_quantity field.
+	assetlicense.DefaultTotalQuantity = assetlicenseDescTotalQuantity.Default.(int)
+	// assetlicenseDescUsedQuantity is the schema descriptor for used_quantity field.
+	assetlicenseDescUsedQuantity := assetlicenseFields[6].Descriptor()
+	// assetlicense.DefaultUsedQuantity holds the default value on creation for the used_quantity field.
+	assetlicense.DefaultUsedQuantity = assetlicenseDescUsedQuantity.Default.(int)
+	// assetlicenseDescTenantID is the schema descriptor for tenant_id field.
+	assetlicenseDescTenantID := assetlicenseFields[7].Descriptor()
+	// assetlicense.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	assetlicense.TenantIDValidator = assetlicenseDescTenantID.Validators[0].(func(int) error)
+	// assetlicenseDescStatus is the schema descriptor for status field.
+	assetlicenseDescStatus := assetlicenseFields[15].Descriptor()
+	// assetlicense.DefaultStatus holds the default value on creation for the status field.
+	assetlicense.DefaultStatus = assetlicenseDescStatus.Default.(string)
+	// assetlicenseDescCreatedAt is the schema descriptor for created_at field.
+	assetlicenseDescCreatedAt := assetlicenseFields[19].Descriptor()
+	// assetlicense.DefaultCreatedAt holds the default value on creation for the created_at field.
+	assetlicense.DefaultCreatedAt = assetlicenseDescCreatedAt.Default.(func() time.Time)
+	// assetlicenseDescUpdatedAt is the schema descriptor for updated_at field.
+	assetlicenseDescUpdatedAt := assetlicenseFields[20].Descriptor()
+	// assetlicense.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	assetlicense.DefaultUpdatedAt = assetlicenseDescUpdatedAt.Default.(func() time.Time)
+	// assetlicense.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	assetlicense.UpdateDefaultUpdatedAt = assetlicenseDescUpdatedAt.UpdateDefault.(func() time.Time)
 	auditlogFields := schema.AuditLog{}.Fields()
 	_ = auditlogFields
 	// auditlogDescCreatedAt is the schema descriptor for created_at field.
@@ -1513,6 +1584,58 @@ func init() {
 	relationshiptype.DefaultUpdatedAt = relationshiptypeDescUpdatedAt.Default.(func() time.Time)
 	// relationshiptype.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	relationshiptype.UpdateDefaultUpdatedAt = relationshiptypeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	releaseFields := schema.Release{}.Fields()
+	_ = releaseFields
+	// releaseDescReleaseNumber is the schema descriptor for release_number field.
+	releaseDescReleaseNumber := releaseFields[0].Descriptor()
+	// release.ReleaseNumberValidator is a validator for the "release_number" field. It is called by the builders before save.
+	release.ReleaseNumberValidator = releaseDescReleaseNumber.Validators[0].(func(string) error)
+	// releaseDescTitle is the schema descriptor for title field.
+	releaseDescTitle := releaseFields[1].Descriptor()
+	// release.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	release.TitleValidator = releaseDescTitle.Validators[0].(func(string) error)
+	// releaseDescType is the schema descriptor for type field.
+	releaseDescType := releaseFields[3].Descriptor()
+	// release.DefaultType holds the default value on creation for the type field.
+	release.DefaultType = releaseDescType.Default.(string)
+	// releaseDescStatus is the schema descriptor for status field.
+	releaseDescStatus := releaseFields[4].Descriptor()
+	// release.DefaultStatus holds the default value on creation for the status field.
+	release.DefaultStatus = releaseDescStatus.Default.(string)
+	// releaseDescSeverity is the schema descriptor for severity field.
+	releaseDescSeverity := releaseFields[5].Descriptor()
+	// release.DefaultSeverity holds the default value on creation for the severity field.
+	release.DefaultSeverity = releaseDescSeverity.Default.(string)
+	// releaseDescEnvironment is the schema descriptor for environment field.
+	releaseDescEnvironment := releaseFields[6].Descriptor()
+	// release.DefaultEnvironment holds the default value on creation for the environment field.
+	release.DefaultEnvironment = releaseDescEnvironment.Default.(string)
+	// releaseDescCreatedBy is the schema descriptor for created_by field.
+	releaseDescCreatedBy := releaseFields[9].Descriptor()
+	// release.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
+	release.CreatedByValidator = releaseDescCreatedBy.Validators[0].(func(int) error)
+	// releaseDescTenantID is the schema descriptor for tenant_id field.
+	releaseDescTenantID := releaseFields[10].Descriptor()
+	// release.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	release.TenantIDValidator = releaseDescTenantID.Validators[0].(func(int) error)
+	// releaseDescIsEmergency is the schema descriptor for is_emergency field.
+	releaseDescIsEmergency := releaseFields[22].Descriptor()
+	// release.DefaultIsEmergency holds the default value on creation for the is_emergency field.
+	release.DefaultIsEmergency = releaseDescIsEmergency.Default.(bool)
+	// releaseDescRequiresApproval is the schema descriptor for requires_approval field.
+	releaseDescRequiresApproval := releaseFields[23].Descriptor()
+	// release.DefaultRequiresApproval holds the default value on creation for the requires_approval field.
+	release.DefaultRequiresApproval = releaseDescRequiresApproval.Default.(bool)
+	// releaseDescCreatedAt is the schema descriptor for created_at field.
+	releaseDescCreatedAt := releaseFields[24].Descriptor()
+	// release.DefaultCreatedAt holds the default value on creation for the created_at field.
+	release.DefaultCreatedAt = releaseDescCreatedAt.Default.(func() time.Time)
+	// releaseDescUpdatedAt is the schema descriptor for updated_at field.
+	releaseDescUpdatedAt := releaseFields[25].Descriptor()
+	// release.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	release.DefaultUpdatedAt = releaseDescUpdatedAt.Default.(func() time.Time)
+	// release.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	release.UpdateDefaultUpdatedAt = releaseDescUpdatedAt.UpdateDefault.(func() time.Time)
 	roleFields := schema.Role{}.Fields()
 	_ = roleFields
 	// roleDescName is the schema descriptor for name field.

@@ -237,7 +237,8 @@ describe('DashboardPage', () => {
       renderWithProviders(<DashboardPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('card')).toBeInTheDocument();
+        // Multiple cards can exist, use getAllByTestId
+        expect(screen.getAllByTestId('card').length).toBeGreaterThan(0);
       });
     });
 

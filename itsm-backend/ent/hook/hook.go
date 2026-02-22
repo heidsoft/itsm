@@ -44,6 +44,30 @@ func (f ApprovalWorkflowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApprovalWorkflowMutation", m)
 }
 
+// The AssetFunc type is an adapter to allow the use of ordinary
+// function as Asset mutator.
+type AssetFunc func(context.Context, *ent.AssetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AssetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AssetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssetMutation", m)
+}
+
+// The AssetLicenseFunc type is an adapter to allow the use of ordinary
+// function as AssetLicense mutator.
+type AssetLicenseFunc func(context.Context, *ent.AssetLicenseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AssetLicenseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AssetLicenseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssetLicenseMutation", m)
+}
+
 // The AuditLogFunc type is an adapter to allow the use of ordinary
 // function as AuditLog mutator.
 type AuditLogFunc func(context.Context, *ent.AuditLogMutation) (ent.Value, error)
@@ -522,6 +546,18 @@ func (f RelationshipTypeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RelationshipTypeMutation", m)
+}
+
+// The ReleaseFunc type is an adapter to allow the use of ordinary
+// function as Release mutator.
+type ReleaseFunc func(context.Context, *ent.ReleaseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReleaseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ReleaseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReleaseMutation", m)
 }
 
 // The RoleFunc type is an adapter to allow the use of ordinary

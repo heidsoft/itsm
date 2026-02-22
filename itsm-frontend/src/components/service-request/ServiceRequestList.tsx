@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Table, Tag, Button, Tabs, Card, Space, Tooltip,
-    message
+    message, Empty
 } from 'antd';
 import {
     EyeOutlined, CheckCircleOutlined,
@@ -180,6 +180,19 @@ const ServiceRequestList: React.FC = () => {
                 columns={columns as any}
                 dataSource={data}
                 loading={loading}
+                scroll={{ x: 'max-content' }}
+                locale={{
+                    emptyText: (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="暂无服务请求数据"
+                        >
+                            <Button type="primary" onClick={() => router.push('/service-requests/new')}>
+                                创建第一个服务请求
+                            </Button>
+                        </Empty>
+                    ),
+                }}
                 pagination={{
                     current: query.page,
                     pageSize: query.size,

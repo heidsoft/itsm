@@ -98,6 +98,133 @@ var (
 		Columns:    ApprovalWorkflowsColumns,
 		PrimaryKey: []*schema.Column{ApprovalWorkflowsColumns[0]},
 	}
+	// AssetsColumns holds the columns for the "assets" table.
+	AssetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "asset_number", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "type", Type: field.TypeString, Default: "hardware"},
+		{Name: "status", Type: field.TypeString, Default: "available"},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "subcategory", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "ci_id", Type: field.TypeInt, Nullable: true},
+		{Name: "assigned_to", Type: field.TypeInt, Nullable: true},
+		{Name: "location_id", Type: field.TypeInt, Nullable: true},
+		{Name: "serial_number", Type: field.TypeString, Nullable: true},
+		{Name: "model", Type: field.TypeString, Nullable: true},
+		{Name: "manufacturer", Type: field.TypeString, Nullable: true},
+		{Name: "vendor", Type: field.TypeString, Nullable: true},
+		{Name: "purchase_date", Type: field.TypeString, Nullable: true},
+		{Name: "purchase_price", Type: field.TypeFloat64, Nullable: true},
+		{Name: "warranty_expiry", Type: field.TypeString, Nullable: true},
+		{Name: "support_expiry", Type: field.TypeString, Nullable: true},
+		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "department", Type: field.TypeString, Nullable: true},
+		{Name: "parent_asset_id", Type: field.TypeInt, Nullable: true},
+		{Name: "specifications", Type: field.TypeJSON, Nullable: true},
+		{Name: "custom_fields", Type: field.TypeJSON, Nullable: true},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// AssetsTable holds the schema information for the "assets" table.
+	AssetsTable = &schema.Table{
+		Name:       "assets",
+		Columns:    AssetsColumns,
+		PrimaryKey: []*schema.Column{AssetsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "asset_asset_number",
+				Unique:  false,
+				Columns: []*schema.Column{AssetsColumns[1]},
+			},
+			{
+				Name:    "asset_type",
+				Unique:  false,
+				Columns: []*schema.Column{AssetsColumns[4]},
+			},
+			{
+				Name:    "asset_status",
+				Unique:  false,
+				Columns: []*schema.Column{AssetsColumns[5]},
+			},
+			{
+				Name:    "asset_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{AssetsColumns[8]},
+			},
+			{
+				Name:    "asset_assigned_to",
+				Unique:  false,
+				Columns: []*schema.Column{AssetsColumns[10]},
+			},
+			{
+				Name:    "asset_ci_id",
+				Unique:  false,
+				Columns: []*schema.Column{AssetsColumns[9]},
+			},
+		},
+	}
+	// AssetLicensesColumns holds the columns for the "asset_licenses" table.
+	AssetLicensesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "license_key", Type: field.TypeString, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "vendor", Type: field.TypeString, Nullable: true},
+		{Name: "license_type", Type: field.TypeString, Default: "perpetual"},
+		{Name: "total_quantity", Type: field.TypeInt, Default: 1},
+		{Name: "used_quantity", Type: field.TypeInt, Default: 0},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "asset_id", Type: field.TypeInt, Nullable: true},
+		{Name: "purchase_date", Type: field.TypeString, Nullable: true},
+		{Name: "purchase_price", Type: field.TypeFloat64, Nullable: true},
+		{Name: "expiry_date", Type: field.TypeString, Nullable: true},
+		{Name: "support_vendor", Type: field.TypeString, Nullable: true},
+		{Name: "support_contact", Type: field.TypeString, Nullable: true},
+		{Name: "renewal_cost", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "users", Type: field.TypeJSON, Nullable: true},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// AssetLicensesTable holds the schema information for the "asset_licenses" table.
+	AssetLicensesTable = &schema.Table{
+		Name:       "asset_licenses",
+		Columns:    AssetLicensesColumns,
+		PrimaryKey: []*schema.Column{AssetLicensesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "assetlicense_name",
+				Unique:  false,
+				Columns: []*schema.Column{AssetLicensesColumns[2]},
+			},
+			{
+				Name:    "assetlicense_license_type",
+				Unique:  false,
+				Columns: []*schema.Column{AssetLicensesColumns[5]},
+			},
+			{
+				Name:    "assetlicense_status",
+				Unique:  false,
+				Columns: []*schema.Column{AssetLicensesColumns[16]},
+			},
+			{
+				Name:    "assetlicense_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{AssetLicensesColumns[8]},
+			},
+			{
+				Name:    "assetlicense_asset_id",
+				Unique:  false,
+				Columns: []*schema.Column{AssetLicensesColumns[9]},
+			},
+		},
+	}
 	// AuditLogsColumns holds the columns for the "audit_logs" table.
 	AuditLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1682,6 +1809,64 @@ var (
 			},
 		},
 	}
+	// ReleasesColumns holds the columns for the "releases" table.
+	ReleasesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "release_number", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "type", Type: field.TypeString, Default: "minor"},
+		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "severity", Type: field.TypeString, Default: "medium"},
+		{Name: "environment", Type: field.TypeString, Default: "staging"},
+		{Name: "change_id", Type: field.TypeInt, Nullable: true},
+		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_by", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "planned_release_date", Type: field.TypeTime, Nullable: true},
+		{Name: "actual_release_date", Type: field.TypeTime, Nullable: true},
+		{Name: "planned_start_date", Type: field.TypeTime, Nullable: true},
+		{Name: "planned_end_date", Type: field.TypeTime, Nullable: true},
+		{Name: "release_notes", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "rollback_procedure", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "validation_criteria", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "affected_systems", Type: field.TypeJSON, Nullable: true},
+		{Name: "affected_components", Type: field.TypeJSON, Nullable: true},
+		{Name: "deployment_steps", Type: field.TypeJSON, Nullable: true},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_emergency", Type: field.TypeBool, Default: false},
+		{Name: "requires_approval", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ReleasesTable holds the schema information for the "releases" table.
+	ReleasesTable = &schema.Table{
+		Name:       "releases",
+		Columns:    ReleasesColumns,
+		PrimaryKey: []*schema.Column{ReleasesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "release_release_number",
+				Unique:  false,
+				Columns: []*schema.Column{ReleasesColumns[1]},
+			},
+			{
+				Name:    "release_change_id",
+				Unique:  false,
+				Columns: []*schema.Column{ReleasesColumns[8]},
+			},
+			{
+				Name:    "release_status",
+				Unique:  false,
+				Columns: []*schema.Column{ReleasesColumns[5]},
+			},
+			{
+				Name:    "release_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ReleasesColumns[11]},
+			},
+		},
+	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2944,6 +3129,8 @@ var (
 		ApplicationsTable,
 		ApprovalRecordsTable,
 		ApprovalWorkflowsTable,
+		AssetsTable,
+		AssetLicensesTable,
 		AuditLogsTable,
 		CiAttributeDefinitionsTable,
 		CiRelationshipsTable,
@@ -2984,6 +3171,7 @@ var (
 		PromptTemplatesTable,
 		ProvisioningTasksTable,
 		RelationshipTypesTable,
+		ReleasesTable,
 		RolesTable,
 		RootCauseAnalysesTable,
 		SLAAlertHistoriesTable,

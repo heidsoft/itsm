@@ -18,6 +18,7 @@ import {
   App,
   Modal,
   Breadcrumb,
+  Empty,
 } from 'antd';
 import {
   SearchOutlined,
@@ -291,7 +292,18 @@ const CIList: React.FC = () => {
           columns={columns as any}
           dataSource={data}
           loading={loading}
-          locale={{ emptyText: '暂无配置项' }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="暂无配置项数据"
+              >
+                <Button type="primary" onClick={() => router.push('/cmdb/cis/create')}>
+                  创建第一个配置项
+                </Button>
+              </Empty>
+            ),
+          }}
           pagination={{
             current: query.page,
             pageSize: query.page_size,

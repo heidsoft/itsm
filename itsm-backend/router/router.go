@@ -71,13 +71,16 @@ type RouterConfig struct {
 	NotificationController        *controller.NotificationController
 
 	// Additional domain controllers
-	ServiceController        *controller.ServiceController
-	ProblemController        *controller.ProblemController
-	ChangeController         *controller.ChangeController
-	ChangeApprovalController *controller.ChangeApprovalController
-	ProvisioningController   *controller.ProvisioningController
-	AnalyticsController      *controller.AnalyticsController
-	PredictionController     *controller.PredictionController
+	ServiceController         *controller.ServiceController
+	ProblemController         *controller.ProblemController
+	ChangeController          *controller.ChangeController
+	ChangeApprovalController  *controller.ChangeApprovalController
+	ProvisioningController    *controller.ProvisioningController
+	AnalyticsController       *controller.AnalyticsController
+	PredictionController      *controller.PredictionController
+	ReleaseController         *controller.ReleaseController
+	AssetController          *controller.AssetController
+	AssetLicenseController    *controller.AssetLicenseController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
@@ -371,6 +374,50 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.POST("/:id/approvals", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitApproval)
 				changes.GET("/:id/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovalSummary)
 				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
+			}
+		}
+
+		// ==================== Releases ====================
+		if config.ReleaseController != nil {
+			releases := tenant.(*gin.RouterGroup).Group("/releases")
+			{
+				releases.GET("", middleware.RequirePermission("release", "read"), config.ReleaseController.ListReleases)
+				releases.POST("", middleware.RequirePermission("release", "write"), config.ReleaseController.CreateRelease)
+				releases.GET("/stats", middleware.RequirePermission("release", "read"), config.ReleaseController.GetReleaseStats)
+				releases.GET("/:id", middleware.RequirePermission("release", "read"), config.ReleaseController.GetRelease)
+				releases.PUT("/:id", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateRelease)
+				releases.PUT("/:id/status", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateReleaseStatus)
+				releases.DELETE("/:id", middleware.RequirePermission("release", "delete"), config.ReleaseController.DeleteRelease)
+			}
+		}
+
+		// ==================== Assets ====================
+		if config.AssetController != nil {
+			assets := tenant.(*gin.RouterGroup).Group("/assets")
+			{
+				assets.GET("", middleware.RequirePermission("asset", "read"), config.AssetController.ListAssets)
+				assets.POST("", middleware.RequirePermission("asset", "write"), config.AssetController.CreateAsset)
+				assets.GET("/stats", middleware.RequirePermission("asset", "read"), config.AssetController.GetAssetStats)
+				assets.GET("/:id", middleware.RequirePermission("asset", "read"), config.AssetController.GetAsset)
+				assets.PUT("/:id", middleware.RequirePermission("asset", "write"), config.AssetController.UpdateAsset)
+				assets.PUT("/:id/status", middleware.RequirePermission("asset", "write"), config.AssetController.UpdateAssetStatus)
+				assets.PUT("/:id/assign", middleware.RequirePermission("asset", "write"), config.AssetController.AssignAsset)
+				assets.PUT("/:id/retire", middleware.RequirePermission("asset", "write"), config.AssetController.RetireAsset)
+				assets.DELETE("/:id", middleware.RequirePermission("asset", "delete"), config.AssetController.DeleteAsset)
+			}
+		}
+
+		// ==================== Asset Licenses ====================
+		if config.AssetLicenseController != nil {
+			licenses := tenant.(*gin.RouterGroup).Group("/licenses")
+			{
+				licenses.GET("", middleware.RequirePermission("license", "read"), config.AssetLicenseController.ListLicenses)
+				licenses.POST("", middleware.RequirePermission("license", "write"), config.AssetLicenseController.CreateLicense)
+				licenses.GET("/stats", middleware.RequirePermission("license", "read"), config.AssetLicenseController.GetLicenseStats)
+				licenses.GET("/:id", middleware.RequirePermission("license", "read"), config.AssetLicenseController.GetLicense)
+				licenses.PUT("/:id", middleware.RequirePermission("license", "write"), config.AssetLicenseController.UpdateLicense)
+				licenses.PUT("/:id/assign", middleware.RequirePermission("license", "write"), config.AssetLicenseController.AssignUsers)
+				licenses.DELETE("/:id", middleware.RequirePermission("license", "delete"), config.AssetLicenseController.DeleteLicense)
 			}
 		}
 

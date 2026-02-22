@@ -14,6 +14,8 @@ import (
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/asset"
+	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
@@ -54,6 +56,7 @@ import (
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/relationshiptype"
+	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/servicecatalog"
@@ -101,6 +104,10 @@ type Client struct {
 	ApprovalRecord *ApprovalRecordClient
 	// ApprovalWorkflow is the client for interacting with the ApprovalWorkflow builders.
 	ApprovalWorkflow *ApprovalWorkflowClient
+	// Asset is the client for interacting with the Asset builders.
+	Asset *AssetClient
+	// AssetLicense is the client for interacting with the AssetLicense builders.
+	AssetLicense *AssetLicenseClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
@@ -181,6 +188,8 @@ type Client struct {
 	ProvisioningTask *ProvisioningTaskClient
 	// RelationshipType is the client for interacting with the RelationshipType builders.
 	RelationshipType *RelationshipTypeClient
+	// Release is the client for interacting with the Release builders.
+	Release *ReleaseClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// RootCauseAnalysis is the client for interacting with the RootCauseAnalysis builders.
@@ -253,6 +262,8 @@ func (c *Client) init() {
 	c.Application = NewApplicationClient(c.config)
 	c.ApprovalRecord = NewApprovalRecordClient(c.config)
 	c.ApprovalWorkflow = NewApprovalWorkflowClient(c.config)
+	c.Asset = NewAssetClient(c.config)
+	c.AssetLicense = NewAssetLicenseClient(c.config)
 	c.AuditLog = NewAuditLogClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
@@ -293,6 +304,7 @@ func (c *Client) init() {
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
 	c.ProvisioningTask = NewProvisioningTaskClient(c.config)
 	c.RelationshipType = NewRelationshipTypeClient(c.config)
+	c.Release = NewReleaseClient(c.config)
 	c.Role = NewRoleClient(c.config)
 	c.RootCauseAnalysis = NewRootCauseAnalysisClient(c.config)
 	c.SLAAlertHistory = NewSLAAlertHistoryClient(c.config)
@@ -417,6 +429,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Application:             NewApplicationClient(cfg),
 		ApprovalRecord:          NewApprovalRecordClient(cfg),
 		ApprovalWorkflow:        NewApprovalWorkflowClient(cfg),
+		Asset:                   NewAssetClient(cfg),
+		AssetLicense:            NewAssetLicenseClient(cfg),
 		AuditLog:                NewAuditLogClient(cfg),
 		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:          NewCIRelationshipClient(cfg),
@@ -457,6 +471,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		ProvisioningTask:        NewProvisioningTaskClient(cfg),
 		RelationshipType:        NewRelationshipTypeClient(cfg),
+		Release:                 NewReleaseClient(cfg),
 		Role:                    NewRoleClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
@@ -508,6 +523,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Application:             NewApplicationClient(cfg),
 		ApprovalRecord:          NewApprovalRecordClient(cfg),
 		ApprovalWorkflow:        NewApprovalWorkflowClient(cfg),
+		Asset:                   NewAssetClient(cfg),
+		AssetLicense:            NewAssetLicenseClient(cfg),
 		AuditLog:                NewAuditLogClient(cfg),
 		CIAttributeDefinition:   NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:          NewCIRelationshipClient(cfg),
@@ -548,6 +565,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		ProvisioningTask:        NewProvisioningTaskClient(cfg),
 		RelationshipType:        NewRelationshipTypeClient(cfg),
+		Release:                 NewReleaseClient(cfg),
 		Role:                    NewRoleClient(cfg),
 		RootCauseAnalysis:       NewRootCauseAnalysisClient(cfg),
 		SLAAlertHistory:         NewSLAAlertHistoryClient(cfg),
@@ -606,24 +624,24 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Application, c.ApprovalRecord, c.ApprovalWorkflow, c.AuditLog,
-		c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change, c.CloudAccount,
-		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Conversation,
-		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.Incident,
-		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike, c.Message,
-		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.Problem, c.ProcessBinding, c.ProcessDefinition,
-		c.ProcessDeployment, c.ProcessExecutionHistory, c.ProcessInstance,
-		c.ProcessTask, c.ProcessVariable, c.Project, c.PromptTemplate,
-		c.ProvisioningTask, c.RelationshipType, c.Role, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
-		c.WorkflowVersion,
+		c.Application, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset, c.AssetLicense,
+		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
+		c.CloudAccount, c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
+		c.DiscoverySource, c.Incident, c.IncidentAlert, c.IncidentEvent,
+		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.Message, c.Microservice, c.Notification,
+		c.NotificationPreference, c.PasswordResetToken, c.Permission, c.Problem,
+		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
+		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -633,24 +651,24 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Application, c.ApprovalRecord, c.ApprovalWorkflow, c.AuditLog,
-		c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change, c.CloudAccount,
-		c.CloudResource, c.CloudService, c.ConfigurationItem, c.Conversation,
-		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource, c.Incident,
-		c.IncidentAlert, c.IncidentEvent, c.IncidentMetric, c.IncidentRule,
-		c.IncidentRuleExecution, c.KnowledgeArticle, c.KnowledgeArticleLike, c.Message,
-		c.Microservice, c.Notification, c.NotificationPreference, c.PasswordResetToken,
-		c.Permission, c.Problem, c.ProcessBinding, c.ProcessDefinition,
-		c.ProcessDeployment, c.ProcessExecutionHistory, c.ProcessInstance,
-		c.ProcessTask, c.ProcessVariable, c.Project, c.PromptTemplate,
-		c.ProvisioningTask, c.RelationshipType, c.Role, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval,
-		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
-		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
-		c.WorkflowVersion,
+		c.Application, c.ApprovalRecord, c.ApprovalWorkflow, c.Asset, c.AssetLicense,
+		c.AuditLog, c.CIAttributeDefinition, c.CIRelationship, c.CIType, c.Change,
+		c.CloudAccount, c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.Conversation, c.Department, c.DiscoveryJob, c.DiscoveryResult,
+		c.DiscoverySource, c.Incident, c.IncidentAlert, c.IncidentEvent,
+		c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.Message, c.Microservice, c.Notification,
+		c.NotificationPreference, c.PasswordResetToken, c.Permission, c.Problem,
+		c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
+		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
+		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
+		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceRequest, c.ServiceRequestApproval, c.Tag, c.Team, c.Tenant, c.Ticket,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketView, c.ToolInvocation, c.User, c.Workflow,
+		c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -665,6 +683,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ApprovalRecord.mutate(ctx, m)
 	case *ApprovalWorkflowMutation:
 		return c.ApprovalWorkflow.mutate(ctx, m)
+	case *AssetMutation:
+		return c.Asset.mutate(ctx, m)
+	case *AssetLicenseMutation:
+		return c.AssetLicense.mutate(ctx, m)
 	case *AuditLogMutation:
 		return c.AuditLog.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
@@ -745,6 +767,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ProvisioningTask.mutate(ctx, m)
 	case *RelationshipTypeMutation:
 		return c.RelationshipType.mutate(ctx, m)
+	case *ReleaseMutation:
+		return c.Release.mutate(ctx, m)
 	case *RoleMutation:
 		return c.Role.mutate(ctx, m)
 	case *RootCauseAnalysisMutation:
@@ -1300,6 +1324,272 @@ func (c *ApprovalWorkflowClient) mutate(ctx context.Context, m *ApprovalWorkflow
 		return (&ApprovalWorkflowDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ApprovalWorkflow mutation op: %q", m.Op())
+	}
+}
+
+// AssetClient is a client for the Asset schema.
+type AssetClient struct {
+	config
+}
+
+// NewAssetClient returns a client for the Asset from the given config.
+func NewAssetClient(c config) *AssetClient {
+	return &AssetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `asset.Hooks(f(g(h())))`.
+func (c *AssetClient) Use(hooks ...Hook) {
+	c.hooks.Asset = append(c.hooks.Asset, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `asset.Intercept(f(g(h())))`.
+func (c *AssetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Asset = append(c.inters.Asset, interceptors...)
+}
+
+// Create returns a builder for creating a Asset entity.
+func (c *AssetClient) Create() *AssetCreate {
+	mutation := newAssetMutation(c.config, OpCreate)
+	return &AssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Asset entities.
+func (c *AssetClient) CreateBulk(builders ...*AssetCreate) *AssetCreateBulk {
+	return &AssetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AssetClient) MapCreateBulk(slice any, setFunc func(*AssetCreate, int)) *AssetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AssetCreateBulk{err: fmt.Errorf("calling to AssetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AssetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AssetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Asset.
+func (c *AssetClient) Update() *AssetUpdate {
+	mutation := newAssetMutation(c.config, OpUpdate)
+	return &AssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AssetClient) UpdateOne(a *Asset) *AssetUpdateOne {
+	mutation := newAssetMutation(c.config, OpUpdateOne, withAsset(a))
+	return &AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AssetClient) UpdateOneID(id int) *AssetUpdateOne {
+	mutation := newAssetMutation(c.config, OpUpdateOne, withAssetID(id))
+	return &AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Asset.
+func (c *AssetClient) Delete() *AssetDelete {
+	mutation := newAssetMutation(c.config, OpDelete)
+	return &AssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AssetClient) DeleteOne(a *Asset) *AssetDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AssetClient) DeleteOneID(id int) *AssetDeleteOne {
+	builder := c.Delete().Where(asset.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AssetDeleteOne{builder}
+}
+
+// Query returns a query builder for Asset.
+func (c *AssetClient) Query() *AssetQuery {
+	return &AssetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAsset},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Asset entity by its id.
+func (c *AssetClient) Get(ctx context.Context, id int) (*Asset, error) {
+	return c.Query().Where(asset.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AssetClient) GetX(ctx context.Context, id int) *Asset {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AssetClient) Hooks() []Hook {
+	return c.hooks.Asset
+}
+
+// Interceptors returns the client interceptors.
+func (c *AssetClient) Interceptors() []Interceptor {
+	return c.inters.Asset
+}
+
+func (c *AssetClient) mutate(ctx context.Context, m *AssetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AssetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AssetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AssetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Asset mutation op: %q", m.Op())
+	}
+}
+
+// AssetLicenseClient is a client for the AssetLicense schema.
+type AssetLicenseClient struct {
+	config
+}
+
+// NewAssetLicenseClient returns a client for the AssetLicense from the given config.
+func NewAssetLicenseClient(c config) *AssetLicenseClient {
+	return &AssetLicenseClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `assetlicense.Hooks(f(g(h())))`.
+func (c *AssetLicenseClient) Use(hooks ...Hook) {
+	c.hooks.AssetLicense = append(c.hooks.AssetLicense, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `assetlicense.Intercept(f(g(h())))`.
+func (c *AssetLicenseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AssetLicense = append(c.inters.AssetLicense, interceptors...)
+}
+
+// Create returns a builder for creating a AssetLicense entity.
+func (c *AssetLicenseClient) Create() *AssetLicenseCreate {
+	mutation := newAssetLicenseMutation(c.config, OpCreate)
+	return &AssetLicenseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AssetLicense entities.
+func (c *AssetLicenseClient) CreateBulk(builders ...*AssetLicenseCreate) *AssetLicenseCreateBulk {
+	return &AssetLicenseCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AssetLicenseClient) MapCreateBulk(slice any, setFunc func(*AssetLicenseCreate, int)) *AssetLicenseCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AssetLicenseCreateBulk{err: fmt.Errorf("calling to AssetLicenseClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AssetLicenseCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AssetLicenseCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AssetLicense.
+func (c *AssetLicenseClient) Update() *AssetLicenseUpdate {
+	mutation := newAssetLicenseMutation(c.config, OpUpdate)
+	return &AssetLicenseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AssetLicenseClient) UpdateOne(al *AssetLicense) *AssetLicenseUpdateOne {
+	mutation := newAssetLicenseMutation(c.config, OpUpdateOne, withAssetLicense(al))
+	return &AssetLicenseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AssetLicenseClient) UpdateOneID(id int) *AssetLicenseUpdateOne {
+	mutation := newAssetLicenseMutation(c.config, OpUpdateOne, withAssetLicenseID(id))
+	return &AssetLicenseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AssetLicense.
+func (c *AssetLicenseClient) Delete() *AssetLicenseDelete {
+	mutation := newAssetLicenseMutation(c.config, OpDelete)
+	return &AssetLicenseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AssetLicenseClient) DeleteOne(al *AssetLicense) *AssetLicenseDeleteOne {
+	return c.DeleteOneID(al.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AssetLicenseClient) DeleteOneID(id int) *AssetLicenseDeleteOne {
+	builder := c.Delete().Where(assetlicense.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AssetLicenseDeleteOne{builder}
+}
+
+// Query returns a query builder for AssetLicense.
+func (c *AssetLicenseClient) Query() *AssetLicenseQuery {
+	return &AssetLicenseQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAssetLicense},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AssetLicense entity by its id.
+func (c *AssetLicenseClient) Get(ctx context.Context, id int) (*AssetLicense, error) {
+	return c.Query().Where(assetlicense.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AssetLicenseClient) GetX(ctx context.Context, id int) *AssetLicense {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AssetLicenseClient) Hooks() []Hook {
+	return c.hooks.AssetLicense
+}
+
+// Interceptors returns the client interceptors.
+func (c *AssetLicenseClient) Interceptors() []Interceptor {
+	return c.inters.AssetLicense
+}
+
+func (c *AssetLicenseClient) mutate(ctx context.Context, m *AssetLicenseMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AssetLicenseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AssetLicenseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AssetLicenseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AssetLicenseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AssetLicense mutation op: %q", m.Op())
 	}
 }
 
@@ -7631,6 +7921,139 @@ func (c *RelationshipTypeClient) mutate(ctx context.Context, m *RelationshipType
 	}
 }
 
+// ReleaseClient is a client for the Release schema.
+type ReleaseClient struct {
+	config
+}
+
+// NewReleaseClient returns a client for the Release from the given config.
+func NewReleaseClient(c config) *ReleaseClient {
+	return &ReleaseClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `release.Hooks(f(g(h())))`.
+func (c *ReleaseClient) Use(hooks ...Hook) {
+	c.hooks.Release = append(c.hooks.Release, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `release.Intercept(f(g(h())))`.
+func (c *ReleaseClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Release = append(c.inters.Release, interceptors...)
+}
+
+// Create returns a builder for creating a Release entity.
+func (c *ReleaseClient) Create() *ReleaseCreate {
+	mutation := newReleaseMutation(c.config, OpCreate)
+	return &ReleaseCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Release entities.
+func (c *ReleaseClient) CreateBulk(builders ...*ReleaseCreate) *ReleaseCreateBulk {
+	return &ReleaseCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ReleaseClient) MapCreateBulk(slice any, setFunc func(*ReleaseCreate, int)) *ReleaseCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ReleaseCreateBulk{err: fmt.Errorf("calling to ReleaseClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ReleaseCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ReleaseCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Release.
+func (c *ReleaseClient) Update() *ReleaseUpdate {
+	mutation := newReleaseMutation(c.config, OpUpdate)
+	return &ReleaseUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReleaseClient) UpdateOne(r *Release) *ReleaseUpdateOne {
+	mutation := newReleaseMutation(c.config, OpUpdateOne, withRelease(r))
+	return &ReleaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReleaseClient) UpdateOneID(id int) *ReleaseUpdateOne {
+	mutation := newReleaseMutation(c.config, OpUpdateOne, withReleaseID(id))
+	return &ReleaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Release.
+func (c *ReleaseClient) Delete() *ReleaseDelete {
+	mutation := newReleaseMutation(c.config, OpDelete)
+	return &ReleaseDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ReleaseClient) DeleteOne(r *Release) *ReleaseDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ReleaseClient) DeleteOneID(id int) *ReleaseDeleteOne {
+	builder := c.Delete().Where(release.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReleaseDeleteOne{builder}
+}
+
+// Query returns a query builder for Release.
+func (c *ReleaseClient) Query() *ReleaseQuery {
+	return &ReleaseQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRelease},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Release entity by its id.
+func (c *ReleaseClient) Get(ctx context.Context, id int) (*Release, error) {
+	return c.Query().Where(release.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReleaseClient) GetX(ctx context.Context, id int) *Release {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ReleaseClient) Hooks() []Hook {
+	return c.hooks.Release
+}
+
+// Interceptors returns the client interceptors.
+func (c *ReleaseClient) Interceptors() []Interceptor {
+	return c.inters.Release
+}
+
+func (c *ReleaseClient) mutate(ctx context.Context, m *ReleaseMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ReleaseCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ReleaseUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ReleaseUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ReleaseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Release mutation op: %q", m.Op())
+	}
+}
+
 // RoleClient is a client for the Role schema.
 type RoleClient struct {
 	config
@@ -12547,38 +12970,39 @@ func (c *WorkflowVersionClient) mutate(ctx context.Context, m *WorkflowVersionMu
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
-		CIRelationship, CIType, Change, CloudAccount, CloudResource, CloudService,
-		ConfigurationItem, Conversation, Department, DiscoveryJob, DiscoveryResult,
-		DiscoverySource, Incident, IncidentAlert, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
-		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, Problem, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, Project, PromptTemplate, ProvisioningTask, RelationshipType,
-		Role, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition,
-		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest,
-		ServiceRequestApproval, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		Application, ApprovalRecord, ApprovalWorkflow, Asset, AssetLicense, AuditLog,
+		CIAttributeDefinition, CIRelationship, CIType, Change, CloudAccount,
+		CloudResource, CloudService, ConfigurationItem, Conversation, Department,
+		DiscoveryJob, DiscoveryResult, DiscoverySource, Incident, IncidentAlert,
+		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
+		KnowledgeArticle, KnowledgeArticleLike, Message, Microservice, Notification,
+		NotificationPreference, PasswordResetToken, Permission, Problem,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAViolation,
+		ServiceCatalog, ServiceRequest, ServiceRequestApproval, Tag, Team, Tenant,
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
+		WorkflowVersion []ent.Hook
 	}
 	inters struct {
-		Application, ApprovalRecord, ApprovalWorkflow, AuditLog, CIAttributeDefinition,
-		CIRelationship, CIType, Change, CloudAccount, CloudResource, CloudService,
-		ConfigurationItem, Conversation, Department, DiscoveryJob, DiscoveryResult,
-		DiscoverySource, Incident, IncidentAlert, IncidentEvent, IncidentMetric,
-		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
-		Message, Microservice, Notification, NotificationPreference,
-		PasswordResetToken, Permission, Problem, ProcessBinding, ProcessDefinition,
-		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
-		ProcessVariable, Project, PromptTemplate, ProvisioningTask, RelationshipType,
-		Role, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition,
-		SLAMetric, SLAViolation, ServiceCatalog, ServiceRequest,
-		ServiceRequestApproval, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Workflow, WorkflowInstance, WorkflowTask,
+		Application, ApprovalRecord, ApprovalWorkflow, Asset, AssetLicense, AuditLog,
+		CIAttributeDefinition, CIRelationship, CIType, Change, CloudAccount,
+		CloudResource, CloudService, ConfigurationItem, Conversation, Department,
+		DiscoveryJob, DiscoveryResult, DiscoverySource, Incident, IncidentAlert,
+		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
+		KnowledgeArticle, KnowledgeArticleLike, Message, Microservice, Notification,
+		NotificationPreference, PasswordResetToken, Permission, Problem,
+		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
+		ProcessInstance, ProcessTask, ProcessVariable, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAViolation,
+		ServiceCatalog, ServiceRequest, ServiceRequestApproval, Tag, Team, Tenant,
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
 		WorkflowVersion []ent.Interceptor
 	}
 )

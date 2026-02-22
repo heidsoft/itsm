@@ -15,6 +15,12 @@ type ApprovalRecord func(*sql.Selector)
 // ApprovalWorkflow is the predicate function for approvalworkflow builders.
 type ApprovalWorkflow func(*sql.Selector)
 
+// Asset is the predicate function for asset builders.
+type Asset func(*sql.Selector)
+
+// AssetLicense is the predicate function for assetlicense builders.
+type AssetLicense func(*sql.Selector)
+
 // AuditLog is the predicate function for auditlog builders.
 type AuditLog func(*sql.Selector)
 
@@ -134,6 +140,9 @@ type ProvisioningTask func(*sql.Selector)
 
 // RelationshipType is the predicate function for relationshiptype builders.
 type RelationshipType func(*sql.Selector)
+
+// Release is the predicate function for release builders.
+type Release func(*sql.Selector)
 
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)

@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Table, Tag, Button, Card, Space, Tooltip,
-    App, Modal, Breadcrumb, Switch
+    App, Modal, Breadcrumb, Switch, Empty
 } from 'antd';
 import {
     PlusOutlined, ReloadOutlined, EditOutlined,
@@ -178,6 +178,19 @@ const SLAList: React.FC = () => {
                 columns={columns as any}
                 dataSource={data}
                 loading={loading}
+                scroll={{ x: 'max-content' }}
+                locale={{
+                    emptyText: (
+                        <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="暂无SLA数据"
+                        >
+                            <Button type="primary" onClick={() => router.push('/sla/definitions/new')}>
+                                创建第一个SLA
+                            </Button>
+                        </Empty>
+                    ),
+                }}
                 pagination={{
                     current: pagination.page,
                     pageSize: pagination.size,

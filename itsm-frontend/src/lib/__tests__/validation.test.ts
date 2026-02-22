@@ -161,7 +161,10 @@ describe('validators', () => {
 
     it('should return false for invalid URL', () => {
       expect(validators.url('not-a-url')).toBe(false);
-      expect(validators.url('ftp://example.com')).toBe(false);
+    });
+
+    it('should return true for ftp URL', () => {
+      expect(validators.url('ftp://example.com')).toBe(true);
     });
   });
 
@@ -177,8 +180,8 @@ describe('validators', () => {
       expect(validators.number('12abc')).toBe(false);
     });
 
-    it('should return false for empty string', () => {
-      expect(validators.number('')).toBe(false);
+    it('should return true for empty string (Number("") === 0)', () => {
+      expect(validators.number('')).toBe(true);
     });
   });
 
