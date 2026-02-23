@@ -23,7 +23,14 @@ func NewTicketCommentController(commentService *service.TicketCommentService, lo
 }
 
 // ListTicketComments 获取工单评论列表
-// GET /api/v1/tickets/:id/comments
+// @Summary 获取工单评论列表
+// @Description 获取指定工单的所有评论
+// @Tags 工单评论
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets/{id}/comments [get]
 func (tcc *TicketCommentController) ListTicketComments(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -48,7 +55,15 @@ func (tcc *TicketCommentController) ListTicketComments(c *gin.Context) {
 }
 
 // CreateTicketComment 创建工单评论
-// POST /api/v1/tickets/:id/comments
+// @Summary 创建工单评论
+// @Description 为工单添加评论
+// @Tags 工单评论
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param request body dto.CreateTicketCommentRequest true "评论信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets/{id}/comments [post]
 func (tcc *TicketCommentController) CreateTicketComment(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

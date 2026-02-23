@@ -21,6 +21,13 @@ func NewSimpleNotificationController(notificationService *service.SimpleNotifica
 }
 
 // GetNotifications 获取通知列表
+// @Summary 获取通知列表
+// @Description 获取当前用户的通知列表
+// @Tags 通知管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} common.Response
+// @Router /api/v1/simple/notifications [get]
 func (c *SimpleNotificationController) GetNotifications(ctx *gin.Context) {
 	userID, err := c.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
@@ -44,6 +51,14 @@ func (c *SimpleNotificationController) GetNotifications(ctx *gin.Context) {
 }
 
 // MarkNotificationRead 标记通知为已读
+// @Summary 标记通知为已读
+// @Description 将指定通知标记为已读
+// @Tags 通知管理
+// @Accept json
+// @Produce json
+// @Param id path int true "通知ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/simple/notifications/{id}/read [post]
 func (c *SimpleNotificationController) MarkNotificationRead(ctx *gin.Context) {
 	notificationID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {

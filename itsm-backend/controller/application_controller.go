@@ -22,6 +22,14 @@ func NewApplicationController(client *ent.Client) *ApplicationController {
 }
 
 // CreateApplication 创建应用
+// @Summary 创建应用
+// @Description 创建新的应用
+// @Tags 应用管理
+// @Accept json
+// @Produce json
+// @Param request body object true "应用信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/applications [post]
 func (c *ApplicationController) CreateApplication(ctx *gin.Context) {
 	var req struct {
 		Name      string `json:"name" binding:"required"`
@@ -50,6 +58,13 @@ func (c *ApplicationController) CreateApplication(ctx *gin.Context) {
 }
 
 // ListApplications 获取应用列表
+// @Summary 获取应用列表
+// @Description 获取所有应用列表
+// @Tags 应用管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} common.Response
+// @Router /api/v1/applications [get]
 func (c *ApplicationController) ListApplications(ctx *gin.Context) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {

@@ -25,6 +25,14 @@ func NewProblemController(logger *zap.SugaredLogger, problemService *service.Pro
 }
 
 // CreateProblem 创建问题
+// @Summary 创建问题
+// @Description 创建新的问题记录
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateProblemRequest true "问题信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/problems [post]
 func (pc *ProblemController) CreateProblem(c *gin.Context) {
 	var req dto.CreateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -49,6 +57,14 @@ func (pc *ProblemController) CreateProblem(c *gin.Context) {
 }
 
 // GetProblem 获取问题详情
+// @Summary 获取问题详情
+// @Description 获取指定问题的详细信息
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/problems/{id} [get]
 func (pc *ProblemController) GetProblem(c *gin.Context) {
 	problemID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -69,6 +85,16 @@ func (pc *ProblemController) GetProblem(c *gin.Context) {
 }
 
 // ListProblems 获取问题列表
+// @Summary 获取问题列表
+// @Description 获取问题列表，支持分页和状态过滤
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Param status query string false "问题状态"
+// @Success 200 {object} common.Response
+// @Router /api/v1/problems [get]
 func (pc *ProblemController) ListProblems(c *gin.Context) {
 	var req dto.ListProblemsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {

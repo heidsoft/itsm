@@ -27,6 +27,18 @@ func NewAssetController(logger *zap.SugaredLogger, assetService *service.AssetSe
 }
 
 // ListAssets 获取资产列表
+// @Summary 获取资产列表
+// @Description 获取所有资产的列表，支持分页和筛选
+// @Tags 资产管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param type query string false "资产类型"
+// @Param status query string false "资产状态"
+// @Param category query string false "资产分类"
+// @Success 200 {object} common.Response
+// @Router /api/v1/assets [get]
 func (ac *AssetController) ListAssets(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
@@ -51,6 +63,14 @@ func (ac *AssetController) ListAssets(c *gin.Context) {
 }
 
 // CreateAsset 创建资产
+// @Summary 创建资产
+// @Description 创建新的资产记录
+// @Tags 资产管理
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateAssetRequest true "创建资产请求"
+// @Success 200 {object} common.Response
+// @Router /api/v1/assets [post]
 func (ac *AssetController) CreateAsset(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
@@ -75,6 +95,14 @@ func (ac *AssetController) CreateAsset(c *gin.Context) {
 }
 
 // GetAsset 获取资产详情
+// @Summary 获取资产详情
+// @Description 根据ID获取资产的详细信息
+// @Tags 资产管理
+// @Accept json
+// @Produce json
+// @Param id path int true "资产ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/assets/{id} [get]
 func (ac *AssetController) GetAsset(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {

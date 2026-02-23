@@ -22,6 +22,14 @@ func NewTeamController(client *ent.Client) *TeamController {
 }
 
 // CreateTeam 创建团队
+// @Summary 创建团队
+// @Description 创建新的团队
+// @Tags 团队管理
+// @Accept json
+// @Produce json
+// @Param request body object true "团队信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/teams [post]
 func (c *TeamController) CreateTeam(ctx *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`

@@ -28,6 +28,14 @@ func NewTicketController(ticketService *service.TicketService, ticketDependencyS
 }
 
 // CreateTicket 创建工单
+// @Summary 创建工单
+// @Description 创建新的工单
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateTicketRequest true "创建工单请求"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets [post]
 func (tc *TicketController) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

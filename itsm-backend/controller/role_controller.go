@@ -27,6 +27,14 @@ func NewRoleController(roleService *service.RoleService, logger *zap.SugaredLogg
 }
 
 // CreateRole 创建角色
+// @Summary 创建角色
+// @Description 创建新的角色
+// @Tags 角色管理
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateRoleRequest true "角色信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/roles [post]
 func (rc *RoleController) CreateRole(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {

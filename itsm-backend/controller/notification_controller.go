@@ -21,6 +21,16 @@ func NewNotificationController(notificationService *service.NotificationService)
 }
 
 // GetNotifications 获取通知列表
+// @Summary 获取通知列表
+// @Description 获取当前用户的所有通知，支持分页和状态过滤
+// @Tags 通知管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param size query int false "每页数量"
+// @Param is_read query bool false "已读状态"
+// @Success 200 {object} common.Response
+// @Router /api/v1/notifications [get]
 func (c *NotificationController) GetNotifications(ctx *gin.Context) {
 	var req dto.GetNotificationsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
@@ -62,6 +72,14 @@ func (c *NotificationController) GetNotifications(ctx *gin.Context) {
 }
 
 // MarkNotificationRead 标记通知为已读
+// @Summary 标记通知为已读
+// @Description 将指定通知标记为已读状态
+// @Tags 通知管理
+// @Accept json
+// @Produce json
+// @Param id path int true "通知ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/notifications/{id}/read [post]
 func (c *NotificationController) MarkNotificationRead(ctx *gin.Context) {
 	notificationID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -97,6 +115,13 @@ func (c *NotificationController) MarkNotificationRead(ctx *gin.Context) {
 }
 
 // MarkAllNotificationsRead 标记所有通知为已读
+// @Summary 标记所有通知为已读
+// @Description 将当前用户的所有未读通知标记为已读
+// @Tags 通知管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} common.Response
+// @Router /api/v1/notifications/read-all [post]
 func (c *NotificationController) MarkAllNotificationsRead(ctx *gin.Context) {
 	userID, err := c.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
@@ -125,6 +150,14 @@ func (c *NotificationController) MarkAllNotificationsRead(ctx *gin.Context) {
 }
 
 // DeleteNotification 删除通知
+// @Summary 删除通知
+// @Description 删除指定的通知
+// @Tags 通知管理
+// @Accept json
+// @Produce json
+// @Param id path int true "通知ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/notifications/{id} [delete]
 func (c *NotificationController) DeleteNotification(ctx *gin.Context) {
 	notificationID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {

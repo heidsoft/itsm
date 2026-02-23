@@ -22,6 +22,14 @@ func NewTagController(client *ent.Client) *TagController {
 }
 
 // CreateTag 创建标签
+// @Summary 创建标签
+// @Description 创建新的标签
+// @Tags 标签管理
+// @Accept json
+// @Produce json
+// @Param request body object true "标签信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tags [post]
 func (c *TagController) CreateTag(ctx *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`

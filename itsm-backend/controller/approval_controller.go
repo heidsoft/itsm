@@ -23,6 +23,14 @@ func NewApprovalController(approvalService *service.ApprovalService) *ApprovalCo
 }
 
 // CreateWorkflow 创建审批工作流
+// @Summary 创建审批工作流
+// @Description 创建新的审批工作流定义
+// @Tags 审批管理
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateApprovalWorkflowRequest true "工作流信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/approval-workflows [post]
 func (c *ApprovalController) CreateWorkflow(ctx *gin.Context) {
 	var req dto.CreateApprovalWorkflowRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -46,6 +54,15 @@ func (c *ApprovalController) CreateWorkflow(ctx *gin.Context) {
 }
 
 // UpdateWorkflow 更新审批工作流
+// @Summary 更新审批工作流
+// @Description 更新已有的审批工作流定义
+// @Tags 审批管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工作流ID"
+// @Param request body dto.UpdateApprovalWorkflowRequest true "工作流信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/approval-workflows/{id} [put]
 func (c *ApprovalController) UpdateWorkflow(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -76,6 +93,14 @@ func (c *ApprovalController) UpdateWorkflow(ctx *gin.Context) {
 }
 
 // DeleteWorkflow 删除审批工作流
+// @Summary 删除审批工作流
+// @Description 删除指定的审批工作流
+// @Tags 审批管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工作流ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/approval-workflows/{id} [delete]
 func (c *ApprovalController) DeleteWorkflow(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -100,6 +125,18 @@ func (c *ApprovalController) DeleteWorkflow(ctx *gin.Context) {
 }
 
 // ListWorkflows 获取审批工作流列表
+// @Summary 获取审批工作流列表
+// @Description 获取所有审批工作流，支持分页和过滤
+// @Tags 审批管理
+// @Accept json
+// @Produce json
+// @Param ticket_type query string false "工单类型"
+// @Param priority query string false "优先级"
+// @Param is_active query bool false "是否激活"
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} common.Response
+// @Router /api/v1/approval-workflows [get]
 func (c *ApprovalController) ListWorkflows(ctx *gin.Context) {
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {

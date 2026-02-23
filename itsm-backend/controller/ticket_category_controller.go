@@ -22,6 +22,14 @@ func NewTicketCategoryController(categoryService *service.TicketCategoryService,
 }
 
 // CreateCategory 创建工单分类
+// @Summary 创建工单分类
+// @Description 创建新的工单分类
+// @Tags 工单分类
+// @Accept json
+// @Produce json
+// @Param request body service.CreateCategoryRequest true "分类信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/ticket-categories [post]
 func (tc *TicketCategoryController) CreateCategory(c *gin.Context) {
 	var req service.CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -43,6 +51,15 @@ func (tc *TicketCategoryController) CreateCategory(c *gin.Context) {
 }
 
 // UpdateCategory 更新工单分类
+// @Summary 更新工单分类
+// @Description 更新工单分类信息
+// @Tags 工单分类
+// @Accept json
+// @Produce json
+// @Param id path int true "分类ID"
+// @Param request body service.CreateCategoryRequest true "分类信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/ticket-categories/{id} [put]
 func (tc *TicketCategoryController) UpdateCategory(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

@@ -27,6 +27,17 @@ func NewChangeController(logger *zap.SugaredLogger, changeService *service.Chang
 }
 
 // ListChanges 获取变更列表
+// @Summary 获取变更列表
+// @Description 获取所有变更的列表，支持分页和筛选
+// @Tags 变更管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param pageSize query int false "每页数量"
+// @Param status query string false "状态筛选"
+// @Param search query string false "关键词搜索"
+// @Success 200 {object} common.Response
+// @Router /api/v1/changes [get]
 func (cc *ChangeController) ListChanges(c *gin.Context) {
 	// 获取租户信息
 	tenantID, err := middleware.GetTenantID(c)

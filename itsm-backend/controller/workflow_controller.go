@@ -40,6 +40,14 @@ func NewWorkflowController(
 }
 
 // CreateWorkflow 创建工作流
+// @Summary 创建工作流
+// @Description 创建新的工作流定义
+// @Tags 工作流管理
+// @Accept json
+// @Produce json
+// @Param request body service.CreateWorkflowRequest true "工作流信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/workflows [post]
 func (wc *WorkflowController) CreateWorkflow(c *gin.Context) {
 	var req service.CreateWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,6 +69,15 @@ func (wc *WorkflowController) CreateWorkflow(c *gin.Context) {
 }
 
 // UpdateWorkflow 更新工作流
+// @Summary 更新工作流
+// @Description 更新已有的工作流定义
+// @Tags 工作流管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工作流ID"
+// @Param request body service.CreateWorkflowRequest true "工作流信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/workflows/{id} [put]
 func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
 	workflowID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -85,6 +102,14 @@ func (wc *WorkflowController) UpdateWorkflow(c *gin.Context) {
 }
 
 // DeleteWorkflow 删除工作流
+// @Summary 删除工作流
+// @Description 删除指定的工作流
+// @Tags 工作流管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工作流ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/workflows/{id} [delete]
 func (wc *WorkflowController) DeleteWorkflow(c *gin.Context) {
 	workflowID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -103,6 +128,14 @@ func (wc *WorkflowController) DeleteWorkflow(c *gin.Context) {
 }
 
 // GetWorkflow 获取工作流
+// @Summary 获取工作流详情
+// @Description 获取指定工作流的详细信息
+// @Tags 工作流管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工作流ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/workflows/{id} [get]
 func (wc *WorkflowController) GetWorkflow(c *gin.Context) {
 	workflowID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -121,6 +154,15 @@ func (wc *WorkflowController) GetWorkflow(c *gin.Context) {
 }
 
 // ListWorkflows 获取工作流列表
+// @Summary 获取工作流列表
+// @Description 获取所有工作流列表，支持分页
+// @Tags 工作流管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} common.Response
+// @Router /api/v1/workflows [get]
 func (wc *WorkflowController) ListWorkflows(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	pageStr := c.DefaultQuery("page", "1")

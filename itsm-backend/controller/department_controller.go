@@ -22,6 +22,14 @@ func NewDepartmentController(client *ent.Client) *DepartmentController {
 }
 
 // CreateDepartment 创建部门
+// @Summary 创建部门
+// @Description 创建新的部门
+// @Tags 部门管理
+// @Accept json
+// @Produce json
+// @Param request body object true "部门信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/departments [post]
 func (c *DepartmentController) CreateDepartment(ctx *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`
@@ -51,6 +59,13 @@ func (c *DepartmentController) CreateDepartment(ctx *gin.Context) {
 }
 
 // GetDepartmentTree 获取部门树
+// @Summary 获取部门树
+// @Description 获取部门层级树形结构
+// @Tags 部门管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} common.Response
+// @Router /api/v1/departments/tree [get]
 func (c *DepartmentController) GetDepartmentTree(ctx *gin.Context) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
@@ -66,6 +81,15 @@ func (c *DepartmentController) GetDepartmentTree(ctx *gin.Context) {
 }
 
 // UpdateDepartment 更新部门
+// @Summary 更新部门
+// @Description 更新部门信息
+// @Tags 部门管理
+// @Accept json
+// @Produce json
+// @Param id path int true "部门ID"
+// @Param request body object true "部门信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/departments/{id} [put]
 func (c *DepartmentController) UpdateDepartment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)

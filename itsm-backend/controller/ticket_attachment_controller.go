@@ -24,7 +24,14 @@ func NewTicketAttachmentController(attachmentService *service.TicketAttachmentSe
 }
 
 // ListTicketAttachments 获取工单附件列表
-// GET /api/v1/tickets/:id/attachments
+// @Summary 获取工单附件列表
+// @Description 获取指定工单的所有附件
+// @Tags 工单附件
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets/{id}/attachments [get]
 func (tac *TicketAttachmentController) ListTicketAttachments(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

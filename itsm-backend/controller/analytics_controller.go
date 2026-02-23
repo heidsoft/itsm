@@ -21,6 +21,14 @@ func NewAnalyticsController(analyticsService *service.AnalyticsService) *Analyti
 }
 
 // GetDeepAnalytics 获取深度分析数据
+// @Summary 获取深度分析数据
+// @Description 获取深度分析数据，支持多维度聚合
+// @Tags 数据分析
+// @Accept json
+// @Produce json
+// @Param request body dto.DeepAnalyticsRequest true "分析请求"
+// @Success 200 {object} common.Response
+// @Router /api/v1/analytics/deep [post]
 func (c *AnalyticsController) GetDeepAnalytics(ctx *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -44,6 +52,14 @@ func (c *AnalyticsController) GetDeepAnalytics(ctx *gin.Context) {
 }
 
 // ExportAnalytics 导出分析数据
+// @Summary 导出分析数据
+// @Description 导出分析数据为CSV格式
+// @Tags 数据分析
+// @Accept json
+// @Produce json
+// @Param request body dto.DeepAnalyticsRequest true "导出请求"
+// @Success 200 {object} common.Response
+// @Router /api/v1/analytics/export [post]
 func (c *AnalyticsController) ExportAnalytics(ctx *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

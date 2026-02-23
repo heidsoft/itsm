@@ -22,6 +22,14 @@ func NewProjectController(client *ent.Client) *ProjectController {
 }
 
 // CreateProject 创建项目
+// @Summary 创建项目
+// @Description 创建新的项目
+// @Tags 项目管理
+// @Accept json
+// @Produce json
+// @Param request body object true "项目信息"
+// @Success 200 {object} common.Response
+// @Router /api/v1/projects [post]
 func (c *ProjectController) CreateProject(ctx *gin.Context) {
 	var req struct {
 		Name         string `json:"name" binding:"required"`
@@ -50,6 +58,13 @@ func (c *ProjectController) CreateProject(ctx *gin.Context) {
 }
 
 // ListProjects 获取项目列表
+// @Summary 获取项目列表
+// @Description 获取所有项目列表
+// @Tags 项目管理
+// @Accept json
+// @Produce json
+// @Success 200 {object} common.Response
+// @Router /api/v1/projects [get]
 func (c *ProjectController) ListProjects(ctx *gin.Context) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
