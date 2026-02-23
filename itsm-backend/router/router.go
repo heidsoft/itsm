@@ -23,6 +23,7 @@ import (
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -103,6 +104,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.PrometheusMetricsMiddleware())
 
 	// 安全中间件
 	// 速率限制：从环境变量读取，默认每分钟500次请求（测试环境可配置为更高）
@@ -134,6 +136,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "1.0.0", "build": "dev"})
 		})
+
+		// Prometheus metrics 端点
+		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	}
 
 	// 认证路由（需要JWT）

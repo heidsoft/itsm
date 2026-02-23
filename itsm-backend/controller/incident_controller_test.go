@@ -44,11 +44,12 @@ func setupTestIncidentController(t *testing.T) (*gin.Engine, *IncidentController
 
 func createTestTenantAndUserForIncident(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -56,8 +57,8 @@ func createTestTenantAndUserForIncident(t *testing.T, client *ent.Client) (*ent.
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash("hashedpassword").
 		SetName("Test User").
 		SetDepartment("IT").

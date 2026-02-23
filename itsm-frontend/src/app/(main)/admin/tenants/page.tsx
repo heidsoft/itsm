@@ -36,6 +36,7 @@ import {
   message,
   Divider,
   Tag,
+  DatePicker,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 const { Title, Text } = Typography;
@@ -487,7 +488,7 @@ export default function TenantManagement() {
           </Row>
 
           <Form.Item label='到期时间' name='expires_at'>
-            <Input type='date' />
+            <DatePicker style={{ width: '100%' }} placeholder='选择到期时间' />
           </Form.Item>
         </Form>
       </Modal>

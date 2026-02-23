@@ -26,7 +26,7 @@ type ServiceRequest struct {
 	CiID int `json:"ci_id,omitempty"`
 	// 申请人ID
 	RequesterID int `json:"requester_id,omitempty"`
-	// 状态
+	// 状态: submitted|approved|rejected|in_progress|completed|cancelled
 	Status string `json:"status,omitempty"`
 	// 请求标题
 	Title string `json:"title,omitempty"`
@@ -50,6 +50,22 @@ type ServiceRequest struct {
 	CurrentLevel int `json:"current_level,omitempty"`
 	// 总审批级别数
 	TotalLevels int `json:"total_levels,omitempty"`
+	// 当前审批人
+	CurrentApprover string `json:"current_approver,omitempty"`
+	// 审批完成时间
+	ApprovedAt time.Time `json:"approved_at,omitempty"`
+	// 审批意见
+	ApproverComment string `json:"approver_comment,omitempty"`
+	// 审批历史
+	ApprovalHistory []map[string]interface{} `json:"approval_history,omitempty"`
+	// 处理人ID
+	ProcessorID int `json:"processor_id,omitempty"`
+	// 开始处理时间
+	StartedAt time.Time `json:"started_at,omitempty"`
+	// 完成时间
+	CompletedAt time.Time `json:"completed_at,omitempty"`
+	// 完成备注
+	CompletionNote string `json:"completion_note,omitempty"`
 	// 最近一次错误信息
 	LastError string `json:"last_error,omitempty"`
 	// 创建时间
@@ -64,15 +80,15 @@ func (*ServiceRequest) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicerequest.FieldFormData, servicerequest.FieldSourceIPWhitelist:
+		case servicerequest.FieldFormData, servicerequest.FieldSourceIPWhitelist, servicerequest.FieldApprovalHistory:
 			values[i] = new([]byte)
 		case servicerequest.FieldNeedsPublicIP, servicerequest.FieldComplianceAck:
 			values[i] = new(sql.NullBool)
-		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldCiID, servicerequest.FieldRequesterID, servicerequest.FieldCurrentLevel, servicerequest.FieldTotalLevels:
+		case servicerequest.FieldID, servicerequest.FieldTenantID, servicerequest.FieldCatalogID, servicerequest.FieldCiID, servicerequest.FieldRequesterID, servicerequest.FieldCurrentLevel, servicerequest.FieldTotalLevels, servicerequest.FieldProcessorID:
 			values[i] = new(sql.NullInt64)
-		case servicerequest.FieldStatus, servicerequest.FieldTitle, servicerequest.FieldReason, servicerequest.FieldCostCenter, servicerequest.FieldDataClassification, servicerequest.FieldLastError:
+		case servicerequest.FieldStatus, servicerequest.FieldTitle, servicerequest.FieldReason, servicerequest.FieldCostCenter, servicerequest.FieldDataClassification, servicerequest.FieldCurrentApprover, servicerequest.FieldApproverComment, servicerequest.FieldCompletionNote, servicerequest.FieldLastError:
 			values[i] = new(sql.NullString)
-		case servicerequest.FieldExpireAt, servicerequest.FieldCreatedAt, servicerequest.FieldUpdatedAt:
+		case servicerequest.FieldExpireAt, servicerequest.FieldApprovedAt, servicerequest.FieldStartedAt, servicerequest.FieldCompletedAt, servicerequest.FieldCreatedAt, servicerequest.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -195,6 +211,56 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sr.TotalLevels = int(value.Int64)
 			}
+		case servicerequest.FieldCurrentApprover:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field current_approver", values[i])
+			} else if value.Valid {
+				sr.CurrentApprover = value.String
+			}
+		case servicerequest.FieldApprovedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field approved_at", values[i])
+			} else if value.Valid {
+				sr.ApprovedAt = value.Time
+			}
+		case servicerequest.FieldApproverComment:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field approver_comment", values[i])
+			} else if value.Valid {
+				sr.ApproverComment = value.String
+			}
+		case servicerequest.FieldApprovalHistory:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field approval_history", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sr.ApprovalHistory); err != nil {
+					return fmt.Errorf("unmarshal field approval_history: %w", err)
+				}
+			}
+		case servicerequest.FieldProcessorID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field processor_id", values[i])
+			} else if value.Valid {
+				sr.ProcessorID = int(value.Int64)
+			}
+		case servicerequest.FieldStartedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field started_at", values[i])
+			} else if value.Valid {
+				sr.StartedAt = value.Time
+			}
+		case servicerequest.FieldCompletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field completed_at", values[i])
+			} else if value.Valid {
+				sr.CompletedAt = value.Time
+			}
+		case servicerequest.FieldCompletionNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field completion_note", values[i])
+			} else if value.Valid {
+				sr.CompletionNote = value.String
+			}
 		case servicerequest.FieldLastError:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field last_error", values[i])
@@ -296,6 +362,30 @@ func (sr *ServiceRequest) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("total_levels=")
 	builder.WriteString(fmt.Sprintf("%v", sr.TotalLevels))
+	builder.WriteString(", ")
+	builder.WriteString("current_approver=")
+	builder.WriteString(sr.CurrentApprover)
+	builder.WriteString(", ")
+	builder.WriteString("approved_at=")
+	builder.WriteString(sr.ApprovedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("approver_comment=")
+	builder.WriteString(sr.ApproverComment)
+	builder.WriteString(", ")
+	builder.WriteString("approval_history=")
+	builder.WriteString(fmt.Sprintf("%v", sr.ApprovalHistory))
+	builder.WriteString(", ")
+	builder.WriteString("processor_id=")
+	builder.WriteString(fmt.Sprintf("%v", sr.ProcessorID))
+	builder.WriteString(", ")
+	builder.WriteString("started_at=")
+	builder.WriteString(sr.StartedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("completed_at=")
+	builder.WriteString(sr.CompletedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("completion_note=")
+	builder.WriteString(sr.CompletionNote)
 	builder.WriteString(", ")
 	builder.WriteString("last_error=")
 	builder.WriteString(sr.LastError)

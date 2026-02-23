@@ -54,6 +54,34 @@ func (scc *ServiceCatalogCreate) SetNillableCategory(s *string) *ServiceCatalogC
 	return scc
 }
 
+// SetIcon sets the "icon" field.
+func (scc *ServiceCatalogCreate) SetIcon(s string) *ServiceCatalogCreate {
+	scc.mutation.SetIcon(s)
+	return scc
+}
+
+// SetNillableIcon sets the "icon" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableIcon(s *string) *ServiceCatalogCreate {
+	if s != nil {
+		scc.SetIcon(*s)
+	}
+	return scc
+}
+
+// SetServiceType sets the "service_type" field.
+func (scc *ServiceCatalogCreate) SetServiceType(s string) *ServiceCatalogCreate {
+	scc.mutation.SetServiceType(s)
+	return scc
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableServiceType(s *string) *ServiceCatalogCreate {
+	if s != nil {
+		scc.SetServiceType(*s)
+	}
+	return scc
+}
+
 // SetPrice sets the "price" field.
 func (scc *ServiceCatalogCreate) SetPrice(f float64) *ServiceCatalogCreate {
 	scc.mutation.SetPrice(f)
@@ -78,6 +106,82 @@ func (scc *ServiceCatalogCreate) SetDeliveryTime(i int) *ServiceCatalogCreate {
 func (scc *ServiceCatalogCreate) SetNillableDeliveryTime(i *int) *ServiceCatalogCreate {
 	if i != nil {
 		scc.SetDeliveryTime(*i)
+	}
+	return scc
+}
+
+// SetUnit sets the "unit" field.
+func (scc *ServiceCatalogCreate) SetUnit(s string) *ServiceCatalogCreate {
+	scc.mutation.SetUnit(s)
+	return scc
+}
+
+// SetNillableUnit sets the "unit" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableUnit(s *string) *ServiceCatalogCreate {
+	if s != nil {
+		scc.SetUnit(*s)
+	}
+	return scc
+}
+
+// SetRequiresApproval sets the "requires_approval" field.
+func (scc *ServiceCatalogCreate) SetRequiresApproval(b bool) *ServiceCatalogCreate {
+	scc.mutation.SetRequiresApproval(b)
+	return scc
+}
+
+// SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableRequiresApproval(b *bool) *ServiceCatalogCreate {
+	if b != nil {
+		scc.SetRequiresApproval(*b)
+	}
+	return scc
+}
+
+// SetApprovalLevel sets the "approval_level" field.
+func (scc *ServiceCatalogCreate) SetApprovalLevel(i int) *ServiceCatalogCreate {
+	scc.mutation.SetApprovalLevel(i)
+	return scc
+}
+
+// SetNillableApprovalLevel sets the "approval_level" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableApprovalLevel(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetApprovalLevel(*i)
+	}
+	return scc
+}
+
+// SetApprovers sets the "approvers" field.
+func (scc *ServiceCatalogCreate) SetApprovers(i []int) *ServiceCatalogCreate {
+	scc.mutation.SetApprovers(i)
+	return scc
+}
+
+// SetSLAResponseTime sets the "sla_response_time" field.
+func (scc *ServiceCatalogCreate) SetSLAResponseTime(i int) *ServiceCatalogCreate {
+	scc.mutation.SetSLAResponseTime(i)
+	return scc
+}
+
+// SetNillableSLAResponseTime sets the "sla_response_time" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableSLAResponseTime(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetSLAResponseTime(*i)
+	}
+	return scc
+}
+
+// SetSLAResolutionTime sets the "sla_resolution_time" field.
+func (scc *ServiceCatalogCreate) SetSLAResolutionTime(i int) *ServiceCatalogCreate {
+	scc.mutation.SetSLAResolutionTime(i)
+	return scc
+}
+
+// SetNillableSLAResolutionTime sets the "sla_resolution_time" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableSLAResolutionTime(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetSLAResolutionTime(*i)
 	}
 	return scc
 }
@@ -107,6 +211,24 @@ func (scc *ServiceCatalogCreate) SetNillableCloudServiceID(i *int) *ServiceCatal
 	if i != nil {
 		scc.SetCloudServiceID(*i)
 	}
+	return scc
+}
+
+// SetFormSchema sets the "form_schema" field.
+func (scc *ServiceCatalogCreate) SetFormSchema(m map[string]interface{}) *ServiceCatalogCreate {
+	scc.mutation.SetFormSchema(m)
+	return scc
+}
+
+// SetAvailableRegions sets the "available_regions" field.
+func (scc *ServiceCatalogCreate) SetAvailableRegions(s []string) *ServiceCatalogCreate {
+	scc.mutation.SetAvailableRegions(s)
+	return scc
+}
+
+// SetAvailableSpecs sets the "available_specs" field.
+func (scc *ServiceCatalogCreate) SetAvailableSpecs(s []string) *ServiceCatalogCreate {
+	scc.mutation.SetAvailableSpecs(s)
 	return scc
 }
 
@@ -140,6 +262,20 @@ func (scc *ServiceCatalogCreate) SetIsActive(b bool) *ServiceCatalogCreate {
 func (scc *ServiceCatalogCreate) SetNillableIsActive(b *bool) *ServiceCatalogCreate {
 	if b != nil {
 		scc.SetIsActive(*b)
+	}
+	return scc
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (scc *ServiceCatalogCreate) SetSortOrder(i int) *ServiceCatalogCreate {
+	scc.mutation.SetSortOrder(i)
+	return scc
+}
+
+// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
+func (scc *ServiceCatalogCreate) SetNillableSortOrder(i *int) *ServiceCatalogCreate {
+	if i != nil {
+		scc.SetSortOrder(*i)
 	}
 	return scc
 }
@@ -207,6 +343,18 @@ func (scc *ServiceCatalogCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (scc *ServiceCatalogCreate) defaults() {
+	if _, ok := scc.mutation.ServiceType(); !ok {
+		v := servicecatalog.DefaultServiceType
+		scc.mutation.SetServiceType(v)
+	}
+	if _, ok := scc.mutation.RequiresApproval(); !ok {
+		v := servicecatalog.DefaultRequiresApproval
+		scc.mutation.SetRequiresApproval(v)
+	}
+	if _, ok := scc.mutation.ApprovalLevel(); !ok {
+		v := servicecatalog.DefaultApprovalLevel
+		scc.mutation.SetApprovalLevel(v)
+	}
 	if _, ok := scc.mutation.Status(); !ok {
 		v := servicecatalog.DefaultStatus
 		scc.mutation.SetStatus(v)
@@ -214,6 +362,10 @@ func (scc *ServiceCatalogCreate) defaults() {
 	if _, ok := scc.mutation.IsActive(); !ok {
 		v := servicecatalog.DefaultIsActive
 		scc.mutation.SetIsActive(v)
+	}
+	if _, ok := scc.mutation.SortOrder(); !ok {
+		v := servicecatalog.DefaultSortOrder
+		scc.mutation.SetSortOrder(v)
 	}
 	if _, ok := scc.mutation.CreatedAt(); !ok {
 		v := servicecatalog.DefaultCreatedAt()
@@ -235,6 +387,15 @@ func (scc *ServiceCatalogCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.name": %w`, err)}
 		}
 	}
+	if _, ok := scc.mutation.ServiceType(); !ok {
+		return &ValidationError{Name: "service_type", err: errors.New(`ent: missing required field "ServiceCatalog.service_type"`)}
+	}
+	if _, ok := scc.mutation.RequiresApproval(); !ok {
+		return &ValidationError{Name: "requires_approval", err: errors.New(`ent: missing required field "ServiceCatalog.requires_approval"`)}
+	}
+	if _, ok := scc.mutation.ApprovalLevel(); !ok {
+		return &ValidationError{Name: "approval_level", err: errors.New(`ent: missing required field "ServiceCatalog.approval_level"`)}
+	}
 	if _, ok := scc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ServiceCatalog.status"`)}
 	}
@@ -248,6 +409,9 @@ func (scc *ServiceCatalogCreate) check() error {
 	}
 	if _, ok := scc.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ServiceCatalog.is_active"`)}
+	}
+	if _, ok := scc.mutation.SortOrder(); !ok {
+		return &ValidationError{Name: "sort_order", err: errors.New(`ent: missing required field "ServiceCatalog.sort_order"`)}
 	}
 	if _, ok := scc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceCatalog.created_at"`)}
@@ -293,6 +457,14 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
+	if value, ok := scc.mutation.Icon(); ok {
+		_spec.SetField(servicecatalog.FieldIcon, field.TypeString, value)
+		_node.Icon = value
+	}
+	if value, ok := scc.mutation.ServiceType(); ok {
+		_spec.SetField(servicecatalog.FieldServiceType, field.TypeString, value)
+		_node.ServiceType = value
+	}
 	if value, ok := scc.mutation.Price(); ok {
 		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
 		_node.Price = value
@@ -301,6 +473,30 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
 		_node.DeliveryTime = value
 	}
+	if value, ok := scc.mutation.Unit(); ok {
+		_spec.SetField(servicecatalog.FieldUnit, field.TypeString, value)
+		_node.Unit = value
+	}
+	if value, ok := scc.mutation.RequiresApproval(); ok {
+		_spec.SetField(servicecatalog.FieldRequiresApproval, field.TypeBool, value)
+		_node.RequiresApproval = value
+	}
+	if value, ok := scc.mutation.ApprovalLevel(); ok {
+		_spec.SetField(servicecatalog.FieldApprovalLevel, field.TypeInt, value)
+		_node.ApprovalLevel = value
+	}
+	if value, ok := scc.mutation.Approvers(); ok {
+		_spec.SetField(servicecatalog.FieldApprovers, field.TypeJSON, value)
+		_node.Approvers = value
+	}
+	if value, ok := scc.mutation.SLAResponseTime(); ok {
+		_spec.SetField(servicecatalog.FieldSLAResponseTime, field.TypeInt, value)
+		_node.SLAResponseTime = value
+	}
+	if value, ok := scc.mutation.SLAResolutionTime(); ok {
+		_spec.SetField(servicecatalog.FieldSLAResolutionTime, field.TypeInt, value)
+		_node.SLAResolutionTime = value
+	}
 	if value, ok := scc.mutation.CiTypeID(); ok {
 		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
 		_node.CiTypeID = value
@@ -308,6 +504,18 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 	if value, ok := scc.mutation.CloudServiceID(); ok {
 		_spec.SetField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
 		_node.CloudServiceID = value
+	}
+	if value, ok := scc.mutation.FormSchema(); ok {
+		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
+		_node.FormSchema = value
+	}
+	if value, ok := scc.mutation.AvailableRegions(); ok {
+		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)
+		_node.AvailableRegions = value
+	}
+	if value, ok := scc.mutation.AvailableSpecs(); ok {
+		_spec.SetField(servicecatalog.FieldAvailableSpecs, field.TypeJSON, value)
+		_node.AvailableSpecs = value
 	}
 	if value, ok := scc.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
@@ -320,6 +528,10 @@ func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.Create
 	if value, ok := scc.mutation.IsActive(); ok {
 		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if value, ok := scc.mutation.SortOrder(); ok {
+		_spec.SetField(servicecatalog.FieldSortOrder, field.TypeInt, value)
+		_node.SortOrder = value
 	}
 	if value, ok := scc.mutation.CreatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)

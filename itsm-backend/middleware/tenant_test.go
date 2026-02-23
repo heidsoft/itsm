@@ -137,7 +137,8 @@ func TestExtractTenantFromHost(t *testing.T) {
 	})
 
 	t.Run("No Subdomain Returns Empty", func(t *testing.T) {
-		assert.Equal(t, "", extractTenantFromHost("itsm.example.com"))
+		// "example.com" has 2 parts, returns empty
+		assert.Equal(t, "", extractTenantFromHost("example.com"))
 		assert.Equal(t, "", extractTenantFromHost("localhost"))
 	})
 

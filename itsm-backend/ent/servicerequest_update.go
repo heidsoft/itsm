@@ -327,6 +327,171 @@ func (sru *ServiceRequestUpdate) AddTotalLevels(i int) *ServiceRequestUpdate {
 	return sru
 }
 
+// SetCurrentApprover sets the "current_approver" field.
+func (sru *ServiceRequestUpdate) SetCurrentApprover(s string) *ServiceRequestUpdate {
+	sru.mutation.SetCurrentApprover(s)
+	return sru
+}
+
+// SetNillableCurrentApprover sets the "current_approver" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCurrentApprover(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetCurrentApprover(*s)
+	}
+	return sru
+}
+
+// ClearCurrentApprover clears the value of the "current_approver" field.
+func (sru *ServiceRequestUpdate) ClearCurrentApprover() *ServiceRequestUpdate {
+	sru.mutation.ClearCurrentApprover()
+	return sru
+}
+
+// SetApprovedAt sets the "approved_at" field.
+func (sru *ServiceRequestUpdate) SetApprovedAt(t time.Time) *ServiceRequestUpdate {
+	sru.mutation.SetApprovedAt(t)
+	return sru
+}
+
+// SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableApprovedAt(t *time.Time) *ServiceRequestUpdate {
+	if t != nil {
+		sru.SetApprovedAt(*t)
+	}
+	return sru
+}
+
+// ClearApprovedAt clears the value of the "approved_at" field.
+func (sru *ServiceRequestUpdate) ClearApprovedAt() *ServiceRequestUpdate {
+	sru.mutation.ClearApprovedAt()
+	return sru
+}
+
+// SetApproverComment sets the "approver_comment" field.
+func (sru *ServiceRequestUpdate) SetApproverComment(s string) *ServiceRequestUpdate {
+	sru.mutation.SetApproverComment(s)
+	return sru
+}
+
+// SetNillableApproverComment sets the "approver_comment" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableApproverComment(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetApproverComment(*s)
+	}
+	return sru
+}
+
+// ClearApproverComment clears the value of the "approver_comment" field.
+func (sru *ServiceRequestUpdate) ClearApproverComment() *ServiceRequestUpdate {
+	sru.mutation.ClearApproverComment()
+	return sru
+}
+
+// SetApprovalHistory sets the "approval_history" field.
+func (sru *ServiceRequestUpdate) SetApprovalHistory(m []map[string]interface{}) *ServiceRequestUpdate {
+	sru.mutation.SetApprovalHistory(m)
+	return sru
+}
+
+// AppendApprovalHistory appends m to the "approval_history" field.
+func (sru *ServiceRequestUpdate) AppendApprovalHistory(m []map[string]interface{}) *ServiceRequestUpdate {
+	sru.mutation.AppendApprovalHistory(m)
+	return sru
+}
+
+// ClearApprovalHistory clears the value of the "approval_history" field.
+func (sru *ServiceRequestUpdate) ClearApprovalHistory() *ServiceRequestUpdate {
+	sru.mutation.ClearApprovalHistory()
+	return sru
+}
+
+// SetProcessorID sets the "processor_id" field.
+func (sru *ServiceRequestUpdate) SetProcessorID(i int) *ServiceRequestUpdate {
+	sru.mutation.ResetProcessorID()
+	sru.mutation.SetProcessorID(i)
+	return sru
+}
+
+// SetNillableProcessorID sets the "processor_id" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableProcessorID(i *int) *ServiceRequestUpdate {
+	if i != nil {
+		sru.SetProcessorID(*i)
+	}
+	return sru
+}
+
+// AddProcessorID adds i to the "processor_id" field.
+func (sru *ServiceRequestUpdate) AddProcessorID(i int) *ServiceRequestUpdate {
+	sru.mutation.AddProcessorID(i)
+	return sru
+}
+
+// ClearProcessorID clears the value of the "processor_id" field.
+func (sru *ServiceRequestUpdate) ClearProcessorID() *ServiceRequestUpdate {
+	sru.mutation.ClearProcessorID()
+	return sru
+}
+
+// SetStartedAt sets the "started_at" field.
+func (sru *ServiceRequestUpdate) SetStartedAt(t time.Time) *ServiceRequestUpdate {
+	sru.mutation.SetStartedAt(t)
+	return sru
+}
+
+// SetNillableStartedAt sets the "started_at" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableStartedAt(t *time.Time) *ServiceRequestUpdate {
+	if t != nil {
+		sru.SetStartedAt(*t)
+	}
+	return sru
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (sru *ServiceRequestUpdate) ClearStartedAt() *ServiceRequestUpdate {
+	sru.mutation.ClearStartedAt()
+	return sru
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (sru *ServiceRequestUpdate) SetCompletedAt(t time.Time) *ServiceRequestUpdate {
+	sru.mutation.SetCompletedAt(t)
+	return sru
+}
+
+// SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCompletedAt(t *time.Time) *ServiceRequestUpdate {
+	if t != nil {
+		sru.SetCompletedAt(*t)
+	}
+	return sru
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (sru *ServiceRequestUpdate) ClearCompletedAt() *ServiceRequestUpdate {
+	sru.mutation.ClearCompletedAt()
+	return sru
+}
+
+// SetCompletionNote sets the "completion_note" field.
+func (sru *ServiceRequestUpdate) SetCompletionNote(s string) *ServiceRequestUpdate {
+	sru.mutation.SetCompletionNote(s)
+	return sru
+}
+
+// SetNillableCompletionNote sets the "completion_note" field if the given value is not nil.
+func (sru *ServiceRequestUpdate) SetNillableCompletionNote(s *string) *ServiceRequestUpdate {
+	if s != nil {
+		sru.SetCompletionNote(*s)
+	}
+	return sru
+}
+
+// ClearCompletionNote clears the value of the "completion_note" field.
+func (sru *ServiceRequestUpdate) ClearCompletionNote() *ServiceRequestUpdate {
+	sru.mutation.ClearCompletionNote()
+	return sru
+}
+
 // SetLastError sets the "last_error" field.
 func (sru *ServiceRequestUpdate) SetLastError(s string) *ServiceRequestUpdate {
 	sru.mutation.SetLastError(s)
@@ -531,6 +696,62 @@ func (sru *ServiceRequestUpdate) sqlSave(ctx context.Context) (n int, err error)
 	}
 	if value, ok := sru.mutation.AddedTotalLevels(); ok {
 		_spec.AddField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.CurrentApprover(); ok {
+		_spec.SetField(servicerequest.FieldCurrentApprover, field.TypeString, value)
+	}
+	if sru.mutation.CurrentApproverCleared() {
+		_spec.ClearField(servicerequest.FieldCurrentApprover, field.TypeString)
+	}
+	if value, ok := sru.mutation.ApprovedAt(); ok {
+		_spec.SetField(servicerequest.FieldApprovedAt, field.TypeTime, value)
+	}
+	if sru.mutation.ApprovedAtCleared() {
+		_spec.ClearField(servicerequest.FieldApprovedAt, field.TypeTime)
+	}
+	if value, ok := sru.mutation.ApproverComment(); ok {
+		_spec.SetField(servicerequest.FieldApproverComment, field.TypeString, value)
+	}
+	if sru.mutation.ApproverCommentCleared() {
+		_spec.ClearField(servicerequest.FieldApproverComment, field.TypeString)
+	}
+	if value, ok := sru.mutation.ApprovalHistory(); ok {
+		_spec.SetField(servicerequest.FieldApprovalHistory, field.TypeJSON, value)
+	}
+	if value, ok := sru.mutation.AppendedApprovalHistory(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicerequest.FieldApprovalHistory, value)
+		})
+	}
+	if sru.mutation.ApprovalHistoryCleared() {
+		_spec.ClearField(servicerequest.FieldApprovalHistory, field.TypeJSON)
+	}
+	if value, ok := sru.mutation.ProcessorID(); ok {
+		_spec.SetField(servicerequest.FieldProcessorID, field.TypeInt, value)
+	}
+	if value, ok := sru.mutation.AddedProcessorID(); ok {
+		_spec.AddField(servicerequest.FieldProcessorID, field.TypeInt, value)
+	}
+	if sru.mutation.ProcessorIDCleared() {
+		_spec.ClearField(servicerequest.FieldProcessorID, field.TypeInt)
+	}
+	if value, ok := sru.mutation.StartedAt(); ok {
+		_spec.SetField(servicerequest.FieldStartedAt, field.TypeTime, value)
+	}
+	if sru.mutation.StartedAtCleared() {
+		_spec.ClearField(servicerequest.FieldStartedAt, field.TypeTime)
+	}
+	if value, ok := sru.mutation.CompletedAt(); ok {
+		_spec.SetField(servicerequest.FieldCompletedAt, field.TypeTime, value)
+	}
+	if sru.mutation.CompletedAtCleared() {
+		_spec.ClearField(servicerequest.FieldCompletedAt, field.TypeTime)
+	}
+	if value, ok := sru.mutation.CompletionNote(); ok {
+		_spec.SetField(servicerequest.FieldCompletionNote, field.TypeString, value)
+	}
+	if sru.mutation.CompletionNoteCleared() {
+		_spec.ClearField(servicerequest.FieldCompletionNote, field.TypeString)
 	}
 	if value, ok := sru.mutation.LastError(); ok {
 		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)
@@ -862,6 +1083,171 @@ func (sruo *ServiceRequestUpdateOne) AddTotalLevels(i int) *ServiceRequestUpdate
 	return sruo
 }
 
+// SetCurrentApprover sets the "current_approver" field.
+func (sruo *ServiceRequestUpdateOne) SetCurrentApprover(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetCurrentApprover(s)
+	return sruo
+}
+
+// SetNillableCurrentApprover sets the "current_approver" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCurrentApprover(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetCurrentApprover(*s)
+	}
+	return sruo
+}
+
+// ClearCurrentApprover clears the value of the "current_approver" field.
+func (sruo *ServiceRequestUpdateOne) ClearCurrentApprover() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearCurrentApprover()
+	return sruo
+}
+
+// SetApprovedAt sets the "approved_at" field.
+func (sruo *ServiceRequestUpdateOne) SetApprovedAt(t time.Time) *ServiceRequestUpdateOne {
+	sruo.mutation.SetApprovedAt(t)
+	return sruo
+}
+
+// SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableApprovedAt(t *time.Time) *ServiceRequestUpdateOne {
+	if t != nil {
+		sruo.SetApprovedAt(*t)
+	}
+	return sruo
+}
+
+// ClearApprovedAt clears the value of the "approved_at" field.
+func (sruo *ServiceRequestUpdateOne) ClearApprovedAt() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearApprovedAt()
+	return sruo
+}
+
+// SetApproverComment sets the "approver_comment" field.
+func (sruo *ServiceRequestUpdateOne) SetApproverComment(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetApproverComment(s)
+	return sruo
+}
+
+// SetNillableApproverComment sets the "approver_comment" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableApproverComment(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetApproverComment(*s)
+	}
+	return sruo
+}
+
+// ClearApproverComment clears the value of the "approver_comment" field.
+func (sruo *ServiceRequestUpdateOne) ClearApproverComment() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearApproverComment()
+	return sruo
+}
+
+// SetApprovalHistory sets the "approval_history" field.
+func (sruo *ServiceRequestUpdateOne) SetApprovalHistory(m []map[string]interface{}) *ServiceRequestUpdateOne {
+	sruo.mutation.SetApprovalHistory(m)
+	return sruo
+}
+
+// AppendApprovalHistory appends m to the "approval_history" field.
+func (sruo *ServiceRequestUpdateOne) AppendApprovalHistory(m []map[string]interface{}) *ServiceRequestUpdateOne {
+	sruo.mutation.AppendApprovalHistory(m)
+	return sruo
+}
+
+// ClearApprovalHistory clears the value of the "approval_history" field.
+func (sruo *ServiceRequestUpdateOne) ClearApprovalHistory() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearApprovalHistory()
+	return sruo
+}
+
+// SetProcessorID sets the "processor_id" field.
+func (sruo *ServiceRequestUpdateOne) SetProcessorID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.ResetProcessorID()
+	sruo.mutation.SetProcessorID(i)
+	return sruo
+}
+
+// SetNillableProcessorID sets the "processor_id" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableProcessorID(i *int) *ServiceRequestUpdateOne {
+	if i != nil {
+		sruo.SetProcessorID(*i)
+	}
+	return sruo
+}
+
+// AddProcessorID adds i to the "processor_id" field.
+func (sruo *ServiceRequestUpdateOne) AddProcessorID(i int) *ServiceRequestUpdateOne {
+	sruo.mutation.AddProcessorID(i)
+	return sruo
+}
+
+// ClearProcessorID clears the value of the "processor_id" field.
+func (sruo *ServiceRequestUpdateOne) ClearProcessorID() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearProcessorID()
+	return sruo
+}
+
+// SetStartedAt sets the "started_at" field.
+func (sruo *ServiceRequestUpdateOne) SetStartedAt(t time.Time) *ServiceRequestUpdateOne {
+	sruo.mutation.SetStartedAt(t)
+	return sruo
+}
+
+// SetNillableStartedAt sets the "started_at" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableStartedAt(t *time.Time) *ServiceRequestUpdateOne {
+	if t != nil {
+		sruo.SetStartedAt(*t)
+	}
+	return sruo
+}
+
+// ClearStartedAt clears the value of the "started_at" field.
+func (sruo *ServiceRequestUpdateOne) ClearStartedAt() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearStartedAt()
+	return sruo
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (sruo *ServiceRequestUpdateOne) SetCompletedAt(t time.Time) *ServiceRequestUpdateOne {
+	sruo.mutation.SetCompletedAt(t)
+	return sruo
+}
+
+// SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCompletedAt(t *time.Time) *ServiceRequestUpdateOne {
+	if t != nil {
+		sruo.SetCompletedAt(*t)
+	}
+	return sruo
+}
+
+// ClearCompletedAt clears the value of the "completed_at" field.
+func (sruo *ServiceRequestUpdateOne) ClearCompletedAt() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearCompletedAt()
+	return sruo
+}
+
+// SetCompletionNote sets the "completion_note" field.
+func (sruo *ServiceRequestUpdateOne) SetCompletionNote(s string) *ServiceRequestUpdateOne {
+	sruo.mutation.SetCompletionNote(s)
+	return sruo
+}
+
+// SetNillableCompletionNote sets the "completion_note" field if the given value is not nil.
+func (sruo *ServiceRequestUpdateOne) SetNillableCompletionNote(s *string) *ServiceRequestUpdateOne {
+	if s != nil {
+		sruo.SetCompletionNote(*s)
+	}
+	return sruo
+}
+
+// ClearCompletionNote clears the value of the "completion_note" field.
+func (sruo *ServiceRequestUpdateOne) ClearCompletionNote() *ServiceRequestUpdateOne {
+	sruo.mutation.ClearCompletionNote()
+	return sruo
+}
+
 // SetLastError sets the "last_error" field.
 func (sruo *ServiceRequestUpdateOne) SetLastError(s string) *ServiceRequestUpdateOne {
 	sruo.mutation.SetLastError(s)
@@ -1096,6 +1482,62 @@ func (sruo *ServiceRequestUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	}
 	if value, ok := sruo.mutation.AddedTotalLevels(); ok {
 		_spec.AddField(servicerequest.FieldTotalLevels, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.CurrentApprover(); ok {
+		_spec.SetField(servicerequest.FieldCurrentApprover, field.TypeString, value)
+	}
+	if sruo.mutation.CurrentApproverCleared() {
+		_spec.ClearField(servicerequest.FieldCurrentApprover, field.TypeString)
+	}
+	if value, ok := sruo.mutation.ApprovedAt(); ok {
+		_spec.SetField(servicerequest.FieldApprovedAt, field.TypeTime, value)
+	}
+	if sruo.mutation.ApprovedAtCleared() {
+		_spec.ClearField(servicerequest.FieldApprovedAt, field.TypeTime)
+	}
+	if value, ok := sruo.mutation.ApproverComment(); ok {
+		_spec.SetField(servicerequest.FieldApproverComment, field.TypeString, value)
+	}
+	if sruo.mutation.ApproverCommentCleared() {
+		_spec.ClearField(servicerequest.FieldApproverComment, field.TypeString)
+	}
+	if value, ok := sruo.mutation.ApprovalHistory(); ok {
+		_spec.SetField(servicerequest.FieldApprovalHistory, field.TypeJSON, value)
+	}
+	if value, ok := sruo.mutation.AppendedApprovalHistory(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicerequest.FieldApprovalHistory, value)
+		})
+	}
+	if sruo.mutation.ApprovalHistoryCleared() {
+		_spec.ClearField(servicerequest.FieldApprovalHistory, field.TypeJSON)
+	}
+	if value, ok := sruo.mutation.ProcessorID(); ok {
+		_spec.SetField(servicerequest.FieldProcessorID, field.TypeInt, value)
+	}
+	if value, ok := sruo.mutation.AddedProcessorID(); ok {
+		_spec.AddField(servicerequest.FieldProcessorID, field.TypeInt, value)
+	}
+	if sruo.mutation.ProcessorIDCleared() {
+		_spec.ClearField(servicerequest.FieldProcessorID, field.TypeInt)
+	}
+	if value, ok := sruo.mutation.StartedAt(); ok {
+		_spec.SetField(servicerequest.FieldStartedAt, field.TypeTime, value)
+	}
+	if sruo.mutation.StartedAtCleared() {
+		_spec.ClearField(servicerequest.FieldStartedAt, field.TypeTime)
+	}
+	if value, ok := sruo.mutation.CompletedAt(); ok {
+		_spec.SetField(servicerequest.FieldCompletedAt, field.TypeTime, value)
+	}
+	if sruo.mutation.CompletedAtCleared() {
+		_spec.ClearField(servicerequest.FieldCompletedAt, field.TypeTime)
+	}
+	if value, ok := sruo.mutation.CompletionNote(); ok {
+		_spec.SetField(servicerequest.FieldCompletionNote, field.TypeString, value)
+	}
+	if sruo.mutation.CompletionNoteCleared() {
+		_spec.ClearField(servicerequest.FieldCompletionNote, field.TypeString)
 	}
 	if value, ok := sruo.mutation.LastError(); ok {
 		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)

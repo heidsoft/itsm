@@ -23,6 +23,7 @@ import {
   Table,
   Button,
   Input,
+  InputNumber,
   Modal,
   Form,
   Select,
@@ -657,6 +658,76 @@ const ServiceCatalogManagement = () => {
 
           <Row gutter={16}>
             <Col span={12}>
+              <Form.Item
+                name='serviceType'
+                label='服务类型'
+                tooltip='用于动态加载对应的申请表单'
+              >
+                <Select placeholder='选择服务类型' allowClear>
+                  <Option value='vm'>云服务器 (VM)</Option>
+                  <Option value='rds'>数据库 (RDS)</Option>
+                  <Option value='oss'>对象存储 (OSS)</Option>
+                  <Option value='network'>网络服务</Option>
+                  <Option value='storage'>存储服务</Option>
+                  <Option value='security'>安全服务</Option>
+                  <Option value='custom'>自定义服务</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name='delivery_time'
+                label='交付时间'
+              >
+                <Input placeholder='例如：1-3个工作日' />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* 审批配置 */}
+          <div className='bg-gray-50 p-4 rounded-lg mb-4'>
+            <Text strong className='block mb-3'>审批配置</Text>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item name='requiresApproval' label='需要审批' valuePropName='checked'>
+                  <Select placeholder='是否需要审批'>
+                    <Option value={true}>是</Option>
+                    <Option value={false}>否</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name='approvalLevel' label='审批级别'>
+                  <InputNumber min={1} max={3} placeholder='1-3' style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name='sortOrder' label='排序'>
+                  <InputNumber min={0} placeholder='0' style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          {/* SLA配置 */}
+          <div className='bg-blue-50 p-4 rounded-lg mb-4'>
+            <Text strong className='block mb-3'>SLA配置</Text>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name='slaResponseTime' label='响应时间(分钟)' tooltip='SLA响应时间要求'>
+                  <InputNumber min={0} placeholder='例如：30' style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name='slaResolutionTime' label='解决时间(分钟)' tooltip='SLA解决时间要求'>
+                  <InputNumber min={0} placeholder='例如：240' style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          <Row gutter={16}>
+            <Col span={12}>
               <Form.Item name='ciTypeId' label='关联CI类型'>
                 <Select placeholder='选择CI类型' allowClear loading={optionsLoading}>
                   {ciTypes.map(type => (
@@ -685,15 +756,6 @@ const ServiceCatalogManagement = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name='delivery_time'
-                label='交付时间'
-                rules={[{ required: true, message: '请输入交付时间' }]}
-              >
-                <Input placeholder='例如：1-3个工作日' />
-              </Form.Item>
-            </Col>
             <Col span={12}>
               <Form.Item
                 name='status'

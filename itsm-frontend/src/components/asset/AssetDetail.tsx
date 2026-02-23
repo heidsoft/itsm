@@ -18,6 +18,7 @@ import {
   Form,
   Select,
   message,
+  Typography,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -27,7 +28,6 @@ import {
 } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
-import { Typography } from 'antd';
 
 import { AssetApi, Asset } from '@/lib/api/asset-api';
 

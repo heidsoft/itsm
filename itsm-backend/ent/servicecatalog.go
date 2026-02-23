@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"itsm-backend/ent/servicecatalog"
 	"strings"
@@ -23,20 +24,44 @@ type ServiceCatalog struct {
 	Description string `json:"description,omitempty"`
 	// 服务分类
 	Category string `json:"category,omitempty"`
+	// 服务图标
+	Icon string `json:"icon,omitempty"`
+	// 服务类型: vm|rds|oss|network|storage|security|custom
+	ServiceType string `json:"service_type,omitempty"`
 	// 价格
 	Price float64 `json:"price,omitempty"`
 	// 交付时间（天）
 	DeliveryTime int `json:"delivery_time,omitempty"`
+	// 计价单位: 月|次|用户
+	Unit string `json:"unit,omitempty"`
+	// 是否需要审批
+	RequiresApproval bool `json:"requires_approval,omitempty"`
+	// 审批级别: 1-3
+	ApprovalLevel int `json:"approval_level,omitempty"`
+	// 审批人ID列表
+	Approvers []int `json:"approvers,omitempty"`
+	// SLA响应时间(分钟)
+	SLAResponseTime int `json:"sla_response_time,omitempty"`
+	// SLA解决时间(分钟)
+	SLAResolutionTime int `json:"sla_resolution_time,omitempty"`
 	// 关联CI类型ID
 	CiTypeID int `json:"ci_type_id,omitempty"`
 	// 关联云服务ID
 	CloudServiceID int `json:"cloud_service_id,omitempty"`
+	// 表单JSON配置
+	FormSchema map[string]interface{} `json:"form_schema,omitempty"`
+	// 可选区域
+	AvailableRegions []string `json:"available_regions,omitempty"`
+	// 可选规格
+	AvailableSpecs []string `json:"available_specs,omitempty"`
 	// 状态
 	Status string `json:"status,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 是否激活
 	IsActive bool `json:"is_active,omitempty"`
+	// 排序
+	SortOrder int `json:"sort_order,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -49,13 +74,15 @@ func (*ServiceCatalog) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case servicecatalog.FieldIsActive:
+		case servicecatalog.FieldApprovers, servicecatalog.FieldFormSchema, servicecatalog.FieldAvailableRegions, servicecatalog.FieldAvailableSpecs:
+			values[i] = new([]byte)
+		case servicecatalog.FieldRequiresApproval, servicecatalog.FieldIsActive:
 			values[i] = new(sql.NullBool)
 		case servicecatalog.FieldPrice:
 			values[i] = new(sql.NullFloat64)
-		case servicecatalog.FieldID, servicecatalog.FieldDeliveryTime, servicecatalog.FieldCiTypeID, servicecatalog.FieldCloudServiceID, servicecatalog.FieldTenantID:
+		case servicecatalog.FieldID, servicecatalog.FieldDeliveryTime, servicecatalog.FieldApprovalLevel, servicecatalog.FieldSLAResponseTime, servicecatalog.FieldSLAResolutionTime, servicecatalog.FieldCiTypeID, servicecatalog.FieldCloudServiceID, servicecatalog.FieldTenantID, servicecatalog.FieldSortOrder:
 			values[i] = new(sql.NullInt64)
-		case servicecatalog.FieldName, servicecatalog.FieldDescription, servicecatalog.FieldCategory, servicecatalog.FieldStatus:
+		case servicecatalog.FieldName, servicecatalog.FieldDescription, servicecatalog.FieldCategory, servicecatalog.FieldIcon, servicecatalog.FieldServiceType, servicecatalog.FieldUnit, servicecatalog.FieldStatus:
 			values[i] = new(sql.NullString)
 		case servicecatalog.FieldCreatedAt, servicecatalog.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -98,6 +125,18 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sc.Category = value.String
 			}
+		case servicecatalog.FieldIcon:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field icon", values[i])
+			} else if value.Valid {
+				sc.Icon = value.String
+			}
+		case servicecatalog.FieldServiceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field service_type", values[i])
+			} else if value.Valid {
+				sc.ServiceType = value.String
+			}
 		case servicecatalog.FieldPrice:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field price", values[i])
@@ -110,6 +149,44 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sc.DeliveryTime = int(value.Int64)
 			}
+		case servicecatalog.FieldUnit:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field unit", values[i])
+			} else if value.Valid {
+				sc.Unit = value.String
+			}
+		case servicecatalog.FieldRequiresApproval:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field requires_approval", values[i])
+			} else if value.Valid {
+				sc.RequiresApproval = value.Bool
+			}
+		case servicecatalog.FieldApprovalLevel:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field approval_level", values[i])
+			} else if value.Valid {
+				sc.ApprovalLevel = int(value.Int64)
+			}
+		case servicecatalog.FieldApprovers:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field approvers", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sc.Approvers); err != nil {
+					return fmt.Errorf("unmarshal field approvers: %w", err)
+				}
+			}
+		case servicecatalog.FieldSLAResponseTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_response_time", values[i])
+			} else if value.Valid {
+				sc.SLAResponseTime = int(value.Int64)
+			}
+		case servicecatalog.FieldSLAResolutionTime:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_resolution_time", values[i])
+			} else if value.Valid {
+				sc.SLAResolutionTime = int(value.Int64)
+			}
 		case servicecatalog.FieldCiTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
@@ -121,6 +198,30 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field cloud_service_id", values[i])
 			} else if value.Valid {
 				sc.CloudServiceID = int(value.Int64)
+			}
+		case servicecatalog.FieldFormSchema:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field form_schema", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sc.FormSchema); err != nil {
+					return fmt.Errorf("unmarshal field form_schema: %w", err)
+				}
+			}
+		case servicecatalog.FieldAvailableRegions:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field available_regions", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sc.AvailableRegions); err != nil {
+					return fmt.Errorf("unmarshal field available_regions: %w", err)
+				}
+			}
+		case servicecatalog.FieldAvailableSpecs:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field available_specs", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &sc.AvailableSpecs); err != nil {
+					return fmt.Errorf("unmarshal field available_specs: %w", err)
+				}
 			}
 		case servicecatalog.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -139,6 +240,12 @@ func (sc *ServiceCatalog) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
 				sc.IsActive = value.Bool
+			}
+		case servicecatalog.FieldSortOrder:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sort_order", values[i])
+			} else if value.Valid {
+				sc.SortOrder = int(value.Int64)
 			}
 		case servicecatalog.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -197,17 +304,50 @@ func (sc *ServiceCatalog) String() string {
 	builder.WriteString("category=")
 	builder.WriteString(sc.Category)
 	builder.WriteString(", ")
+	builder.WriteString("icon=")
+	builder.WriteString(sc.Icon)
+	builder.WriteString(", ")
+	builder.WriteString("service_type=")
+	builder.WriteString(sc.ServiceType)
+	builder.WriteString(", ")
 	builder.WriteString("price=")
 	builder.WriteString(fmt.Sprintf("%v", sc.Price))
 	builder.WriteString(", ")
 	builder.WriteString("delivery_time=")
 	builder.WriteString(fmt.Sprintf("%v", sc.DeliveryTime))
 	builder.WriteString(", ")
+	builder.WriteString("unit=")
+	builder.WriteString(sc.Unit)
+	builder.WriteString(", ")
+	builder.WriteString("requires_approval=")
+	builder.WriteString(fmt.Sprintf("%v", sc.RequiresApproval))
+	builder.WriteString(", ")
+	builder.WriteString("approval_level=")
+	builder.WriteString(fmt.Sprintf("%v", sc.ApprovalLevel))
+	builder.WriteString(", ")
+	builder.WriteString("approvers=")
+	builder.WriteString(fmt.Sprintf("%v", sc.Approvers))
+	builder.WriteString(", ")
+	builder.WriteString("sla_response_time=")
+	builder.WriteString(fmt.Sprintf("%v", sc.SLAResponseTime))
+	builder.WriteString(", ")
+	builder.WriteString("sla_resolution_time=")
+	builder.WriteString(fmt.Sprintf("%v", sc.SLAResolutionTime))
+	builder.WriteString(", ")
 	builder.WriteString("ci_type_id=")
 	builder.WriteString(fmt.Sprintf("%v", sc.CiTypeID))
 	builder.WriteString(", ")
 	builder.WriteString("cloud_service_id=")
 	builder.WriteString(fmt.Sprintf("%v", sc.CloudServiceID))
+	builder.WriteString(", ")
+	builder.WriteString("form_schema=")
+	builder.WriteString(fmt.Sprintf("%v", sc.FormSchema))
+	builder.WriteString(", ")
+	builder.WriteString("available_regions=")
+	builder.WriteString(fmt.Sprintf("%v", sc.AvailableRegions))
+	builder.WriteString(", ")
+	builder.WriteString("available_specs=")
+	builder.WriteString(fmt.Sprintf("%v", sc.AvailableSpecs))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(sc.Status)
@@ -217,6 +357,9 @@ func (sc *ServiceCatalog) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", sc.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("sort_order=")
+	builder.WriteString(fmt.Sprintf("%v", sc.SortOrder))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(sc.CreatedAt.Format(time.ANSIC))

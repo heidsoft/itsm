@@ -19,20 +19,44 @@ const (
 	FieldDescription = "description"
 	// FieldCategory holds the string denoting the category field in the database.
 	FieldCategory = "category"
+	// FieldIcon holds the string denoting the icon field in the database.
+	FieldIcon = "icon"
+	// FieldServiceType holds the string denoting the service_type field in the database.
+	FieldServiceType = "service_type"
 	// FieldPrice holds the string denoting the price field in the database.
 	FieldPrice = "price"
 	// FieldDeliveryTime holds the string denoting the delivery_time field in the database.
 	FieldDeliveryTime = "delivery_time"
+	// FieldUnit holds the string denoting the unit field in the database.
+	FieldUnit = "unit"
+	// FieldRequiresApproval holds the string denoting the requires_approval field in the database.
+	FieldRequiresApproval = "requires_approval"
+	// FieldApprovalLevel holds the string denoting the approval_level field in the database.
+	FieldApprovalLevel = "approval_level"
+	// FieldApprovers holds the string denoting the approvers field in the database.
+	FieldApprovers = "approvers"
+	// FieldSLAResponseTime holds the string denoting the sla_response_time field in the database.
+	FieldSLAResponseTime = "sla_response_time"
+	// FieldSLAResolutionTime holds the string denoting the sla_resolution_time field in the database.
+	FieldSLAResolutionTime = "sla_resolution_time"
 	// FieldCiTypeID holds the string denoting the ci_type_id field in the database.
 	FieldCiTypeID = "ci_type_id"
 	// FieldCloudServiceID holds the string denoting the cloud_service_id field in the database.
 	FieldCloudServiceID = "cloud_service_id"
+	// FieldFormSchema holds the string denoting the form_schema field in the database.
+	FieldFormSchema = "form_schema"
+	// FieldAvailableRegions holds the string denoting the available_regions field in the database.
+	FieldAvailableRegions = "available_regions"
+	// FieldAvailableSpecs holds the string denoting the available_specs field in the database.
+	FieldAvailableSpecs = "available_specs"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
+	// FieldSortOrder holds the string denoting the sort_order field in the database.
+	FieldSortOrder = "sort_order"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -47,13 +71,25 @@ var Columns = []string{
 	FieldName,
 	FieldDescription,
 	FieldCategory,
+	FieldIcon,
+	FieldServiceType,
 	FieldPrice,
 	FieldDeliveryTime,
+	FieldUnit,
+	FieldRequiresApproval,
+	FieldApprovalLevel,
+	FieldApprovers,
+	FieldSLAResponseTime,
+	FieldSLAResolutionTime,
 	FieldCiTypeID,
 	FieldCloudServiceID,
+	FieldFormSchema,
+	FieldAvailableRegions,
+	FieldAvailableSpecs,
 	FieldStatus,
 	FieldTenantID,
 	FieldIsActive,
+	FieldSortOrder,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -71,12 +107,20 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultServiceType holds the default value on creation for the "service_type" field.
+	DefaultServiceType string
+	// DefaultRequiresApproval holds the default value on creation for the "requires_approval" field.
+	DefaultRequiresApproval bool
+	// DefaultApprovalLevel holds the default value on creation for the "approval_level" field.
+	DefaultApprovalLevel int
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
+	// DefaultSortOrder holds the default value on creation for the "sort_order" field.
+	DefaultSortOrder int
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -108,6 +152,16 @@ func ByCategory(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCategory, opts...).ToFunc()
 }
 
+// ByIcon orders the results by the icon field.
+func ByIcon(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIcon, opts...).ToFunc()
+}
+
+// ByServiceType orders the results by the service_type field.
+func ByServiceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldServiceType, opts...).ToFunc()
+}
+
 // ByPrice orders the results by the price field.
 func ByPrice(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPrice, opts...).ToFunc()
@@ -116,6 +170,31 @@ func ByPrice(opts ...sql.OrderTermOption) OrderOption {
 // ByDeliveryTime orders the results by the delivery_time field.
 func ByDeliveryTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeliveryTime, opts...).ToFunc()
+}
+
+// ByUnit orders the results by the unit field.
+func ByUnit(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUnit, opts...).ToFunc()
+}
+
+// ByRequiresApproval orders the results by the requires_approval field.
+func ByRequiresApproval(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRequiresApproval, opts...).ToFunc()
+}
+
+// ByApprovalLevel orders the results by the approval_level field.
+func ByApprovalLevel(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApprovalLevel, opts...).ToFunc()
+}
+
+// BySLAResponseTime orders the results by the sla_response_time field.
+func BySLAResponseTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResponseTime, opts...).ToFunc()
+}
+
+// BySLAResolutionTime orders the results by the sla_resolution_time field.
+func BySLAResolutionTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSLAResolutionTime, opts...).ToFunc()
 }
 
 // ByCiTypeID orders the results by the ci_type_id field.
@@ -141,6 +220,11 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 // ByIsActive orders the results by the is_active field.
 func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
+}
+
+// BySortOrder orders the results by the sort_order field.
+func BySortOrder(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSortOrder, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

@@ -204,6 +204,110 @@ func (src *ServiceRequestCreate) SetNillableTotalLevels(i *int) *ServiceRequestC
 	return src
 }
 
+// SetCurrentApprover sets the "current_approver" field.
+func (src *ServiceRequestCreate) SetCurrentApprover(s string) *ServiceRequestCreate {
+	src.mutation.SetCurrentApprover(s)
+	return src
+}
+
+// SetNillableCurrentApprover sets the "current_approver" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableCurrentApprover(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetCurrentApprover(*s)
+	}
+	return src
+}
+
+// SetApprovedAt sets the "approved_at" field.
+func (src *ServiceRequestCreate) SetApprovedAt(t time.Time) *ServiceRequestCreate {
+	src.mutation.SetApprovedAt(t)
+	return src
+}
+
+// SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableApprovedAt(t *time.Time) *ServiceRequestCreate {
+	if t != nil {
+		src.SetApprovedAt(*t)
+	}
+	return src
+}
+
+// SetApproverComment sets the "approver_comment" field.
+func (src *ServiceRequestCreate) SetApproverComment(s string) *ServiceRequestCreate {
+	src.mutation.SetApproverComment(s)
+	return src
+}
+
+// SetNillableApproverComment sets the "approver_comment" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableApproverComment(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetApproverComment(*s)
+	}
+	return src
+}
+
+// SetApprovalHistory sets the "approval_history" field.
+func (src *ServiceRequestCreate) SetApprovalHistory(m []map[string]interface{}) *ServiceRequestCreate {
+	src.mutation.SetApprovalHistory(m)
+	return src
+}
+
+// SetProcessorID sets the "processor_id" field.
+func (src *ServiceRequestCreate) SetProcessorID(i int) *ServiceRequestCreate {
+	src.mutation.SetProcessorID(i)
+	return src
+}
+
+// SetNillableProcessorID sets the "processor_id" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableProcessorID(i *int) *ServiceRequestCreate {
+	if i != nil {
+		src.SetProcessorID(*i)
+	}
+	return src
+}
+
+// SetStartedAt sets the "started_at" field.
+func (src *ServiceRequestCreate) SetStartedAt(t time.Time) *ServiceRequestCreate {
+	src.mutation.SetStartedAt(t)
+	return src
+}
+
+// SetNillableStartedAt sets the "started_at" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableStartedAt(t *time.Time) *ServiceRequestCreate {
+	if t != nil {
+		src.SetStartedAt(*t)
+	}
+	return src
+}
+
+// SetCompletedAt sets the "completed_at" field.
+func (src *ServiceRequestCreate) SetCompletedAt(t time.Time) *ServiceRequestCreate {
+	src.mutation.SetCompletedAt(t)
+	return src
+}
+
+// SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableCompletedAt(t *time.Time) *ServiceRequestCreate {
+	if t != nil {
+		src.SetCompletedAt(*t)
+	}
+	return src
+}
+
+// SetCompletionNote sets the "completion_note" field.
+func (src *ServiceRequestCreate) SetCompletionNote(s string) *ServiceRequestCreate {
+	src.mutation.SetCompletionNote(s)
+	return src
+}
+
+// SetNillableCompletionNote sets the "completion_note" field if the given value is not nil.
+func (src *ServiceRequestCreate) SetNillableCompletionNote(s *string) *ServiceRequestCreate {
+	if s != nil {
+		src.SetCompletionNote(*s)
+	}
+	return src
+}
+
 // SetLastError sets the "last_error" field.
 func (src *ServiceRequestCreate) SetLastError(s string) *ServiceRequestCreate {
 	src.mutation.SetLastError(s)
@@ -454,6 +558,38 @@ func (src *ServiceRequestCreate) createSpec() (*ServiceRequest, *sqlgraph.Create
 	if value, ok := src.mutation.TotalLevels(); ok {
 		_spec.SetField(servicerequest.FieldTotalLevels, field.TypeInt, value)
 		_node.TotalLevels = value
+	}
+	if value, ok := src.mutation.CurrentApprover(); ok {
+		_spec.SetField(servicerequest.FieldCurrentApprover, field.TypeString, value)
+		_node.CurrentApprover = value
+	}
+	if value, ok := src.mutation.ApprovedAt(); ok {
+		_spec.SetField(servicerequest.FieldApprovedAt, field.TypeTime, value)
+		_node.ApprovedAt = value
+	}
+	if value, ok := src.mutation.ApproverComment(); ok {
+		_spec.SetField(servicerequest.FieldApproverComment, field.TypeString, value)
+		_node.ApproverComment = value
+	}
+	if value, ok := src.mutation.ApprovalHistory(); ok {
+		_spec.SetField(servicerequest.FieldApprovalHistory, field.TypeJSON, value)
+		_node.ApprovalHistory = value
+	}
+	if value, ok := src.mutation.ProcessorID(); ok {
+		_spec.SetField(servicerequest.FieldProcessorID, field.TypeInt, value)
+		_node.ProcessorID = value
+	}
+	if value, ok := src.mutation.StartedAt(); ok {
+		_spec.SetField(servicerequest.FieldStartedAt, field.TypeTime, value)
+		_node.StartedAt = value
+	}
+	if value, ok := src.mutation.CompletedAt(); ok {
+		_spec.SetField(servicerequest.FieldCompletedAt, field.TypeTime, value)
+		_node.CompletedAt = value
+	}
+	if value, ok := src.mutation.CompletionNote(); ok {
+		_spec.SetField(servicerequest.FieldCompletionNote, field.TypeString, value)
+		_node.CompletionNote = value
 	}
 	if value, ok := src.mutation.LastError(); ok {
 		_spec.SetField(servicerequest.FieldLastError, field.TypeString, value)

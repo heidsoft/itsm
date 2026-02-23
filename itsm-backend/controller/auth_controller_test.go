@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -53,11 +54,12 @@ func setupTestAuthController(t *testing.T) (*gin.Engine, *ent.Client, *AuthContr
 
 func createTestTenantAndUser(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -69,8 +71,8 @@ func createTestTenantAndUser(t *testing.T, client *ent.Client) (*ent.Tenant, *en
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetName("Test User").
 		SetDepartment("IT").
@@ -307,11 +309,12 @@ func TestAuthController_LoginWithInactiveUser(t *testing.T) {
 	defer client.Close()
 
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -323,8 +326,8 @@ func TestAuthController_LoginWithInactiveUser(t *testing.T) {
 
 	// 创建非活跃用户
 	inactiveUser, err := client.User.Create().
-		SetUsername("inactiveuser").
-		SetEmail("inactive@example.com").
+		SetUsername("inactiveuser" + uniqueID).
+		SetEmail("inactive" + uniqueID + "@example.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetName("Inactive User").
 		SetDepartment("IT").
@@ -367,11 +370,12 @@ func TestAuthController_LoginWithInactiveTenant(t *testing.T) {
 	defer client.Close()
 
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建非活跃租户
 	inactiveTenant, err := client.Tenant.Create().
 		SetName("Inactive Tenant").
-		SetCode("INACTIVE").
+		SetCode("INACTIVE" + uniqueID).
 		SetDomain("inactive.com").
 		SetStatus("inactive"). // 设置为非活跃
 		Save(ctx)
@@ -383,8 +387,8 @@ func TestAuthController_LoginWithInactiveTenant(t *testing.T) {
 
 	// 在非活跃租户下创建用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@inactive.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@inactive.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetName("Test User").
 		SetDepartment("IT").
@@ -501,11 +505,12 @@ func BenchmarkAuthController_Login(b *testing.B) {
 
 	// 创建测试数据
 	ctx := context.Background()
+	uniqueID := fmt.Sprintf("%d", b.N)
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -517,8 +522,8 @@ func BenchmarkAuthController_Login(b *testing.B) {
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetName("Test User").
 		SetDepartment("IT").
@@ -571,11 +576,12 @@ func BenchmarkAuthController_RefreshToken(b *testing.B) {
 
 	// 创建测试数据
 	ctx := context.Background()
+	uniqueID := fmt.Sprintf("%d", b.N)
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -587,8 +593,8 @@ func BenchmarkAuthController_RefreshToken(b *testing.B) {
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetName("Test User").
 		SetDepartment("IT").

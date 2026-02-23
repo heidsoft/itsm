@@ -45,6 +45,22 @@ const (
 	FieldCurrentLevel = "current_level"
 	// FieldTotalLevels holds the string denoting the total_levels field in the database.
 	FieldTotalLevels = "total_levels"
+	// FieldCurrentApprover holds the string denoting the current_approver field in the database.
+	FieldCurrentApprover = "current_approver"
+	// FieldApprovedAt holds the string denoting the approved_at field in the database.
+	FieldApprovedAt = "approved_at"
+	// FieldApproverComment holds the string denoting the approver_comment field in the database.
+	FieldApproverComment = "approver_comment"
+	// FieldApprovalHistory holds the string denoting the approval_history field in the database.
+	FieldApprovalHistory = "approval_history"
+	// FieldProcessorID holds the string denoting the processor_id field in the database.
+	FieldProcessorID = "processor_id"
+	// FieldStartedAt holds the string denoting the started_at field in the database.
+	FieldStartedAt = "started_at"
+	// FieldCompletedAt holds the string denoting the completed_at field in the database.
+	FieldCompletedAt = "completed_at"
+	// FieldCompletionNote holds the string denoting the completion_note field in the database.
+	FieldCompletionNote = "completion_note"
 	// FieldLastError holds the string denoting the last_error field in the database.
 	FieldLastError = "last_error"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -74,6 +90,14 @@ var Columns = []string{
 	FieldComplianceAck,
 	FieldCurrentLevel,
 	FieldTotalLevels,
+	FieldCurrentApprover,
+	FieldApprovedAt,
+	FieldApproverComment,
+	FieldApprovalHistory,
+	FieldProcessorID,
+	FieldStartedAt,
+	FieldCompletedAt,
+	FieldCompletionNote,
 	FieldLastError,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -192,6 +216,41 @@ func ByCurrentLevel(opts ...sql.OrderTermOption) OrderOption {
 // ByTotalLevels orders the results by the total_levels field.
 func ByTotalLevels(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotalLevels, opts...).ToFunc()
+}
+
+// ByCurrentApprover orders the results by the current_approver field.
+func ByCurrentApprover(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCurrentApprover, opts...).ToFunc()
+}
+
+// ByApprovedAt orders the results by the approved_at field.
+func ByApprovedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApprovedAt, opts...).ToFunc()
+}
+
+// ByApproverComment orders the results by the approver_comment field.
+func ByApproverComment(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldApproverComment, opts...).ToFunc()
+}
+
+// ByProcessorID orders the results by the processor_id field.
+func ByProcessorID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProcessorID, opts...).ToFunc()
+}
+
+// ByStartedAt orders the results by the started_at field.
+func ByStartedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartedAt, opts...).ToFunc()
+}
+
+// ByCompletedAt orders the results by the completed_at field.
+func ByCompletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCompletedAt, opts...).ToFunc()
+}
+
+// ByCompletionNote orders the results by the completion_note field.
+func ByCompletionNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCompletionNote, opts...).ToFunc()
 }
 
 // ByLastError orders the results by the last_error field.

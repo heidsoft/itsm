@@ -12,6 +12,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -82,6 +83,40 @@ func (scu *ServiceCatalogUpdate) ClearCategory() *ServiceCatalogUpdate {
 	return scu
 }
 
+// SetIcon sets the "icon" field.
+func (scu *ServiceCatalogUpdate) SetIcon(s string) *ServiceCatalogUpdate {
+	scu.mutation.SetIcon(s)
+	return scu
+}
+
+// SetNillableIcon sets the "icon" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableIcon(s *string) *ServiceCatalogUpdate {
+	if s != nil {
+		scu.SetIcon(*s)
+	}
+	return scu
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (scu *ServiceCatalogUpdate) ClearIcon() *ServiceCatalogUpdate {
+	scu.mutation.ClearIcon()
+	return scu
+}
+
+// SetServiceType sets the "service_type" field.
+func (scu *ServiceCatalogUpdate) SetServiceType(s string) *ServiceCatalogUpdate {
+	scu.mutation.SetServiceType(s)
+	return scu
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableServiceType(s *string) *ServiceCatalogUpdate {
+	if s != nil {
+		scu.SetServiceType(*s)
+	}
+	return scu
+}
+
 // SetPrice sets the "price" field.
 func (scu *ServiceCatalogUpdate) SetPrice(f float64) *ServiceCatalogUpdate {
 	scu.mutation.ResetPrice()
@@ -133,6 +168,133 @@ func (scu *ServiceCatalogUpdate) AddDeliveryTime(i int) *ServiceCatalogUpdate {
 // ClearDeliveryTime clears the value of the "delivery_time" field.
 func (scu *ServiceCatalogUpdate) ClearDeliveryTime() *ServiceCatalogUpdate {
 	scu.mutation.ClearDeliveryTime()
+	return scu
+}
+
+// SetUnit sets the "unit" field.
+func (scu *ServiceCatalogUpdate) SetUnit(s string) *ServiceCatalogUpdate {
+	scu.mutation.SetUnit(s)
+	return scu
+}
+
+// SetNillableUnit sets the "unit" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableUnit(s *string) *ServiceCatalogUpdate {
+	if s != nil {
+		scu.SetUnit(*s)
+	}
+	return scu
+}
+
+// ClearUnit clears the value of the "unit" field.
+func (scu *ServiceCatalogUpdate) ClearUnit() *ServiceCatalogUpdate {
+	scu.mutation.ClearUnit()
+	return scu
+}
+
+// SetRequiresApproval sets the "requires_approval" field.
+func (scu *ServiceCatalogUpdate) SetRequiresApproval(b bool) *ServiceCatalogUpdate {
+	scu.mutation.SetRequiresApproval(b)
+	return scu
+}
+
+// SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableRequiresApproval(b *bool) *ServiceCatalogUpdate {
+	if b != nil {
+		scu.SetRequiresApproval(*b)
+	}
+	return scu
+}
+
+// SetApprovalLevel sets the "approval_level" field.
+func (scu *ServiceCatalogUpdate) SetApprovalLevel(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetApprovalLevel()
+	scu.mutation.SetApprovalLevel(i)
+	return scu
+}
+
+// SetNillableApprovalLevel sets the "approval_level" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableApprovalLevel(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetApprovalLevel(*i)
+	}
+	return scu
+}
+
+// AddApprovalLevel adds i to the "approval_level" field.
+func (scu *ServiceCatalogUpdate) AddApprovalLevel(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddApprovalLevel(i)
+	return scu
+}
+
+// SetApprovers sets the "approvers" field.
+func (scu *ServiceCatalogUpdate) SetApprovers(i []int) *ServiceCatalogUpdate {
+	scu.mutation.SetApprovers(i)
+	return scu
+}
+
+// AppendApprovers appends i to the "approvers" field.
+func (scu *ServiceCatalogUpdate) AppendApprovers(i []int) *ServiceCatalogUpdate {
+	scu.mutation.AppendApprovers(i)
+	return scu
+}
+
+// ClearApprovers clears the value of the "approvers" field.
+func (scu *ServiceCatalogUpdate) ClearApprovers() *ServiceCatalogUpdate {
+	scu.mutation.ClearApprovers()
+	return scu
+}
+
+// SetSLAResponseTime sets the "sla_response_time" field.
+func (scu *ServiceCatalogUpdate) SetSLAResponseTime(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetSLAResponseTime()
+	scu.mutation.SetSLAResponseTime(i)
+	return scu
+}
+
+// SetNillableSLAResponseTime sets the "sla_response_time" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableSLAResponseTime(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetSLAResponseTime(*i)
+	}
+	return scu
+}
+
+// AddSLAResponseTime adds i to the "sla_response_time" field.
+func (scu *ServiceCatalogUpdate) AddSLAResponseTime(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddSLAResponseTime(i)
+	return scu
+}
+
+// ClearSLAResponseTime clears the value of the "sla_response_time" field.
+func (scu *ServiceCatalogUpdate) ClearSLAResponseTime() *ServiceCatalogUpdate {
+	scu.mutation.ClearSLAResponseTime()
+	return scu
+}
+
+// SetSLAResolutionTime sets the "sla_resolution_time" field.
+func (scu *ServiceCatalogUpdate) SetSLAResolutionTime(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetSLAResolutionTime()
+	scu.mutation.SetSLAResolutionTime(i)
+	return scu
+}
+
+// SetNillableSLAResolutionTime sets the "sla_resolution_time" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableSLAResolutionTime(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetSLAResolutionTime(*i)
+	}
+	return scu
+}
+
+// AddSLAResolutionTime adds i to the "sla_resolution_time" field.
+func (scu *ServiceCatalogUpdate) AddSLAResolutionTime(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddSLAResolutionTime(i)
+	return scu
+}
+
+// ClearSLAResolutionTime clears the value of the "sla_resolution_time" field.
+func (scu *ServiceCatalogUpdate) ClearSLAResolutionTime() *ServiceCatalogUpdate {
+	scu.mutation.ClearSLAResolutionTime()
 	return scu
 }
 
@@ -190,6 +352,54 @@ func (scu *ServiceCatalogUpdate) ClearCloudServiceID() *ServiceCatalogUpdate {
 	return scu
 }
 
+// SetFormSchema sets the "form_schema" field.
+func (scu *ServiceCatalogUpdate) SetFormSchema(m map[string]interface{}) *ServiceCatalogUpdate {
+	scu.mutation.SetFormSchema(m)
+	return scu
+}
+
+// ClearFormSchema clears the value of the "form_schema" field.
+func (scu *ServiceCatalogUpdate) ClearFormSchema() *ServiceCatalogUpdate {
+	scu.mutation.ClearFormSchema()
+	return scu
+}
+
+// SetAvailableRegions sets the "available_regions" field.
+func (scu *ServiceCatalogUpdate) SetAvailableRegions(s []string) *ServiceCatalogUpdate {
+	scu.mutation.SetAvailableRegions(s)
+	return scu
+}
+
+// AppendAvailableRegions appends s to the "available_regions" field.
+func (scu *ServiceCatalogUpdate) AppendAvailableRegions(s []string) *ServiceCatalogUpdate {
+	scu.mutation.AppendAvailableRegions(s)
+	return scu
+}
+
+// ClearAvailableRegions clears the value of the "available_regions" field.
+func (scu *ServiceCatalogUpdate) ClearAvailableRegions() *ServiceCatalogUpdate {
+	scu.mutation.ClearAvailableRegions()
+	return scu
+}
+
+// SetAvailableSpecs sets the "available_specs" field.
+func (scu *ServiceCatalogUpdate) SetAvailableSpecs(s []string) *ServiceCatalogUpdate {
+	scu.mutation.SetAvailableSpecs(s)
+	return scu
+}
+
+// AppendAvailableSpecs appends s to the "available_specs" field.
+func (scu *ServiceCatalogUpdate) AppendAvailableSpecs(s []string) *ServiceCatalogUpdate {
+	scu.mutation.AppendAvailableSpecs(s)
+	return scu
+}
+
+// ClearAvailableSpecs clears the value of the "available_specs" field.
+func (scu *ServiceCatalogUpdate) ClearAvailableSpecs() *ServiceCatalogUpdate {
+	scu.mutation.ClearAvailableSpecs()
+	return scu
+}
+
 // SetStatus sets the "status" field.
 func (scu *ServiceCatalogUpdate) SetStatus(s string) *ServiceCatalogUpdate {
 	scu.mutation.SetStatus(s)
@@ -236,6 +446,27 @@ func (scu *ServiceCatalogUpdate) SetNillableIsActive(b *bool) *ServiceCatalogUpd
 	if b != nil {
 		scu.SetIsActive(*b)
 	}
+	return scu
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (scu *ServiceCatalogUpdate) SetSortOrder(i int) *ServiceCatalogUpdate {
+	scu.mutation.ResetSortOrder()
+	scu.mutation.SetSortOrder(i)
+	return scu
+}
+
+// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
+func (scu *ServiceCatalogUpdate) SetNillableSortOrder(i *int) *ServiceCatalogUpdate {
+	if i != nil {
+		scu.SetSortOrder(*i)
+	}
+	return scu
+}
+
+// AddSortOrder adds i to the "sort_order" field.
+func (scu *ServiceCatalogUpdate) AddSortOrder(i int) *ServiceCatalogUpdate {
+	scu.mutation.AddSortOrder(i)
 	return scu
 }
 
@@ -342,6 +573,15 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if scu.mutation.CategoryCleared() {
 		_spec.ClearField(servicecatalog.FieldCategory, field.TypeString)
 	}
+	if value, ok := scu.mutation.Icon(); ok {
+		_spec.SetField(servicecatalog.FieldIcon, field.TypeString, value)
+	}
+	if scu.mutation.IconCleared() {
+		_spec.ClearField(servicecatalog.FieldIcon, field.TypeString)
+	}
+	if value, ok := scu.mutation.ServiceType(); ok {
+		_spec.SetField(servicecatalog.FieldServiceType, field.TypeString, value)
+	}
 	if value, ok := scu.mutation.Price(); ok {
 		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
 	}
@@ -359,6 +599,50 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	}
 	if scu.mutation.DeliveryTimeCleared() {
 		_spec.ClearField(servicecatalog.FieldDeliveryTime, field.TypeInt)
+	}
+	if value, ok := scu.mutation.Unit(); ok {
+		_spec.SetField(servicecatalog.FieldUnit, field.TypeString, value)
+	}
+	if scu.mutation.UnitCleared() {
+		_spec.ClearField(servicecatalog.FieldUnit, field.TypeString)
+	}
+	if value, ok := scu.mutation.RequiresApproval(); ok {
+		_spec.SetField(servicecatalog.FieldRequiresApproval, field.TypeBool, value)
+	}
+	if value, ok := scu.mutation.ApprovalLevel(); ok {
+		_spec.SetField(servicecatalog.FieldApprovalLevel, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedApprovalLevel(); ok {
+		_spec.AddField(servicecatalog.FieldApprovalLevel, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.Approvers(); ok {
+		_spec.SetField(servicecatalog.FieldApprovers, field.TypeJSON, value)
+	}
+	if value, ok := scu.mutation.AppendedApprovers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicecatalog.FieldApprovers, value)
+		})
+	}
+	if scu.mutation.ApproversCleared() {
+		_spec.ClearField(servicecatalog.FieldApprovers, field.TypeJSON)
+	}
+	if value, ok := scu.mutation.SLAResponseTime(); ok {
+		_spec.SetField(servicecatalog.FieldSLAResponseTime, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedSLAResponseTime(); ok {
+		_spec.AddField(servicecatalog.FieldSLAResponseTime, field.TypeInt, value)
+	}
+	if scu.mutation.SLAResponseTimeCleared() {
+		_spec.ClearField(servicecatalog.FieldSLAResponseTime, field.TypeInt)
+	}
+	if value, ok := scu.mutation.SLAResolutionTime(); ok {
+		_spec.SetField(servicecatalog.FieldSLAResolutionTime, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedSLAResolutionTime(); ok {
+		_spec.AddField(servicecatalog.FieldSLAResolutionTime, field.TypeInt, value)
+	}
+	if scu.mutation.SLAResolutionTimeCleared() {
+		_spec.ClearField(servicecatalog.FieldSLAResolutionTime, field.TypeInt)
 	}
 	if value, ok := scu.mutation.CiTypeID(); ok {
 		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
@@ -378,6 +662,34 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if scu.mutation.CloudServiceIDCleared() {
 		_spec.ClearField(servicecatalog.FieldCloudServiceID, field.TypeInt)
 	}
+	if value, ok := scu.mutation.FormSchema(); ok {
+		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
+	}
+	if scu.mutation.FormSchemaCleared() {
+		_spec.ClearField(servicecatalog.FieldFormSchema, field.TypeJSON)
+	}
+	if value, ok := scu.mutation.AvailableRegions(); ok {
+		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)
+	}
+	if value, ok := scu.mutation.AppendedAvailableRegions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicecatalog.FieldAvailableRegions, value)
+		})
+	}
+	if scu.mutation.AvailableRegionsCleared() {
+		_spec.ClearField(servicecatalog.FieldAvailableRegions, field.TypeJSON)
+	}
+	if value, ok := scu.mutation.AvailableSpecs(); ok {
+		_spec.SetField(servicecatalog.FieldAvailableSpecs, field.TypeJSON, value)
+	}
+	if value, ok := scu.mutation.AppendedAvailableSpecs(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicecatalog.FieldAvailableSpecs, value)
+		})
+	}
+	if scu.mutation.AvailableSpecsCleared() {
+		_spec.ClearField(servicecatalog.FieldAvailableSpecs, field.TypeJSON)
+	}
 	if value, ok := scu.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
 	}
@@ -389,6 +701,12 @@ func (scu *ServiceCatalogUpdate) sqlSave(ctx context.Context) (n int, err error)
 	}
 	if value, ok := scu.mutation.IsActive(); ok {
 		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := scu.mutation.SortOrder(); ok {
+		_spec.SetField(servicecatalog.FieldSortOrder, field.TypeInt, value)
+	}
+	if value, ok := scu.mutation.AddedSortOrder(); ok {
+		_spec.AddField(servicecatalog.FieldSortOrder, field.TypeInt, value)
 	}
 	if value, ok := scu.mutation.CreatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)
@@ -470,6 +788,40 @@ func (scuo *ServiceCatalogUpdateOne) ClearCategory() *ServiceCatalogUpdateOne {
 	return scuo
 }
 
+// SetIcon sets the "icon" field.
+func (scuo *ServiceCatalogUpdateOne) SetIcon(s string) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetIcon(s)
+	return scuo
+}
+
+// SetNillableIcon sets the "icon" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableIcon(s *string) *ServiceCatalogUpdateOne {
+	if s != nil {
+		scuo.SetIcon(*s)
+	}
+	return scuo
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (scuo *ServiceCatalogUpdateOne) ClearIcon() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearIcon()
+	return scuo
+}
+
+// SetServiceType sets the "service_type" field.
+func (scuo *ServiceCatalogUpdateOne) SetServiceType(s string) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetServiceType(s)
+	return scuo
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableServiceType(s *string) *ServiceCatalogUpdateOne {
+	if s != nil {
+		scuo.SetServiceType(*s)
+	}
+	return scuo
+}
+
 // SetPrice sets the "price" field.
 func (scuo *ServiceCatalogUpdateOne) SetPrice(f float64) *ServiceCatalogUpdateOne {
 	scuo.mutation.ResetPrice()
@@ -521,6 +873,133 @@ func (scuo *ServiceCatalogUpdateOne) AddDeliveryTime(i int) *ServiceCatalogUpdat
 // ClearDeliveryTime clears the value of the "delivery_time" field.
 func (scuo *ServiceCatalogUpdateOne) ClearDeliveryTime() *ServiceCatalogUpdateOne {
 	scuo.mutation.ClearDeliveryTime()
+	return scuo
+}
+
+// SetUnit sets the "unit" field.
+func (scuo *ServiceCatalogUpdateOne) SetUnit(s string) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetUnit(s)
+	return scuo
+}
+
+// SetNillableUnit sets the "unit" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableUnit(s *string) *ServiceCatalogUpdateOne {
+	if s != nil {
+		scuo.SetUnit(*s)
+	}
+	return scuo
+}
+
+// ClearUnit clears the value of the "unit" field.
+func (scuo *ServiceCatalogUpdateOne) ClearUnit() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearUnit()
+	return scuo
+}
+
+// SetRequiresApproval sets the "requires_approval" field.
+func (scuo *ServiceCatalogUpdateOne) SetRequiresApproval(b bool) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetRequiresApproval(b)
+	return scuo
+}
+
+// SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableRequiresApproval(b *bool) *ServiceCatalogUpdateOne {
+	if b != nil {
+		scuo.SetRequiresApproval(*b)
+	}
+	return scuo
+}
+
+// SetApprovalLevel sets the "approval_level" field.
+func (scuo *ServiceCatalogUpdateOne) SetApprovalLevel(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetApprovalLevel()
+	scuo.mutation.SetApprovalLevel(i)
+	return scuo
+}
+
+// SetNillableApprovalLevel sets the "approval_level" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableApprovalLevel(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetApprovalLevel(*i)
+	}
+	return scuo
+}
+
+// AddApprovalLevel adds i to the "approval_level" field.
+func (scuo *ServiceCatalogUpdateOne) AddApprovalLevel(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddApprovalLevel(i)
+	return scuo
+}
+
+// SetApprovers sets the "approvers" field.
+func (scuo *ServiceCatalogUpdateOne) SetApprovers(i []int) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetApprovers(i)
+	return scuo
+}
+
+// AppendApprovers appends i to the "approvers" field.
+func (scuo *ServiceCatalogUpdateOne) AppendApprovers(i []int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AppendApprovers(i)
+	return scuo
+}
+
+// ClearApprovers clears the value of the "approvers" field.
+func (scuo *ServiceCatalogUpdateOne) ClearApprovers() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearApprovers()
+	return scuo
+}
+
+// SetSLAResponseTime sets the "sla_response_time" field.
+func (scuo *ServiceCatalogUpdateOne) SetSLAResponseTime(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetSLAResponseTime()
+	scuo.mutation.SetSLAResponseTime(i)
+	return scuo
+}
+
+// SetNillableSLAResponseTime sets the "sla_response_time" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableSLAResponseTime(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetSLAResponseTime(*i)
+	}
+	return scuo
+}
+
+// AddSLAResponseTime adds i to the "sla_response_time" field.
+func (scuo *ServiceCatalogUpdateOne) AddSLAResponseTime(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddSLAResponseTime(i)
+	return scuo
+}
+
+// ClearSLAResponseTime clears the value of the "sla_response_time" field.
+func (scuo *ServiceCatalogUpdateOne) ClearSLAResponseTime() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearSLAResponseTime()
+	return scuo
+}
+
+// SetSLAResolutionTime sets the "sla_resolution_time" field.
+func (scuo *ServiceCatalogUpdateOne) SetSLAResolutionTime(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetSLAResolutionTime()
+	scuo.mutation.SetSLAResolutionTime(i)
+	return scuo
+}
+
+// SetNillableSLAResolutionTime sets the "sla_resolution_time" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableSLAResolutionTime(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetSLAResolutionTime(*i)
+	}
+	return scuo
+}
+
+// AddSLAResolutionTime adds i to the "sla_resolution_time" field.
+func (scuo *ServiceCatalogUpdateOne) AddSLAResolutionTime(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddSLAResolutionTime(i)
+	return scuo
+}
+
+// ClearSLAResolutionTime clears the value of the "sla_resolution_time" field.
+func (scuo *ServiceCatalogUpdateOne) ClearSLAResolutionTime() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearSLAResolutionTime()
 	return scuo
 }
 
@@ -578,6 +1057,54 @@ func (scuo *ServiceCatalogUpdateOne) ClearCloudServiceID() *ServiceCatalogUpdate
 	return scuo
 }
 
+// SetFormSchema sets the "form_schema" field.
+func (scuo *ServiceCatalogUpdateOne) SetFormSchema(m map[string]interface{}) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetFormSchema(m)
+	return scuo
+}
+
+// ClearFormSchema clears the value of the "form_schema" field.
+func (scuo *ServiceCatalogUpdateOne) ClearFormSchema() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearFormSchema()
+	return scuo
+}
+
+// SetAvailableRegions sets the "available_regions" field.
+func (scuo *ServiceCatalogUpdateOne) SetAvailableRegions(s []string) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetAvailableRegions(s)
+	return scuo
+}
+
+// AppendAvailableRegions appends s to the "available_regions" field.
+func (scuo *ServiceCatalogUpdateOne) AppendAvailableRegions(s []string) *ServiceCatalogUpdateOne {
+	scuo.mutation.AppendAvailableRegions(s)
+	return scuo
+}
+
+// ClearAvailableRegions clears the value of the "available_regions" field.
+func (scuo *ServiceCatalogUpdateOne) ClearAvailableRegions() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearAvailableRegions()
+	return scuo
+}
+
+// SetAvailableSpecs sets the "available_specs" field.
+func (scuo *ServiceCatalogUpdateOne) SetAvailableSpecs(s []string) *ServiceCatalogUpdateOne {
+	scuo.mutation.SetAvailableSpecs(s)
+	return scuo
+}
+
+// AppendAvailableSpecs appends s to the "available_specs" field.
+func (scuo *ServiceCatalogUpdateOne) AppendAvailableSpecs(s []string) *ServiceCatalogUpdateOne {
+	scuo.mutation.AppendAvailableSpecs(s)
+	return scuo
+}
+
+// ClearAvailableSpecs clears the value of the "available_specs" field.
+func (scuo *ServiceCatalogUpdateOne) ClearAvailableSpecs() *ServiceCatalogUpdateOne {
+	scuo.mutation.ClearAvailableSpecs()
+	return scuo
+}
+
 // SetStatus sets the "status" field.
 func (scuo *ServiceCatalogUpdateOne) SetStatus(s string) *ServiceCatalogUpdateOne {
 	scuo.mutation.SetStatus(s)
@@ -624,6 +1151,27 @@ func (scuo *ServiceCatalogUpdateOne) SetNillableIsActive(b *bool) *ServiceCatalo
 	if b != nil {
 		scuo.SetIsActive(*b)
 	}
+	return scuo
+}
+
+// SetSortOrder sets the "sort_order" field.
+func (scuo *ServiceCatalogUpdateOne) SetSortOrder(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.ResetSortOrder()
+	scuo.mutation.SetSortOrder(i)
+	return scuo
+}
+
+// SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
+func (scuo *ServiceCatalogUpdateOne) SetNillableSortOrder(i *int) *ServiceCatalogUpdateOne {
+	if i != nil {
+		scuo.SetSortOrder(*i)
+	}
+	return scuo
+}
+
+// AddSortOrder adds i to the "sort_order" field.
+func (scuo *ServiceCatalogUpdateOne) AddSortOrder(i int) *ServiceCatalogUpdateOne {
+	scuo.mutation.AddSortOrder(i)
 	return scuo
 }
 
@@ -760,6 +1308,15 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	if scuo.mutation.CategoryCleared() {
 		_spec.ClearField(servicecatalog.FieldCategory, field.TypeString)
 	}
+	if value, ok := scuo.mutation.Icon(); ok {
+		_spec.SetField(servicecatalog.FieldIcon, field.TypeString, value)
+	}
+	if scuo.mutation.IconCleared() {
+		_spec.ClearField(servicecatalog.FieldIcon, field.TypeString)
+	}
+	if value, ok := scuo.mutation.ServiceType(); ok {
+		_spec.SetField(servicecatalog.FieldServiceType, field.TypeString, value)
+	}
 	if value, ok := scuo.mutation.Price(); ok {
 		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
 	}
@@ -777,6 +1334,50 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	}
 	if scuo.mutation.DeliveryTimeCleared() {
 		_spec.ClearField(servicecatalog.FieldDeliveryTime, field.TypeInt)
+	}
+	if value, ok := scuo.mutation.Unit(); ok {
+		_spec.SetField(servicecatalog.FieldUnit, field.TypeString, value)
+	}
+	if scuo.mutation.UnitCleared() {
+		_spec.ClearField(servicecatalog.FieldUnit, field.TypeString)
+	}
+	if value, ok := scuo.mutation.RequiresApproval(); ok {
+		_spec.SetField(servicecatalog.FieldRequiresApproval, field.TypeBool, value)
+	}
+	if value, ok := scuo.mutation.ApprovalLevel(); ok {
+		_spec.SetField(servicecatalog.FieldApprovalLevel, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedApprovalLevel(); ok {
+		_spec.AddField(servicecatalog.FieldApprovalLevel, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.Approvers(); ok {
+		_spec.SetField(servicecatalog.FieldApprovers, field.TypeJSON, value)
+	}
+	if value, ok := scuo.mutation.AppendedApprovers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicecatalog.FieldApprovers, value)
+		})
+	}
+	if scuo.mutation.ApproversCleared() {
+		_spec.ClearField(servicecatalog.FieldApprovers, field.TypeJSON)
+	}
+	if value, ok := scuo.mutation.SLAResponseTime(); ok {
+		_spec.SetField(servicecatalog.FieldSLAResponseTime, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedSLAResponseTime(); ok {
+		_spec.AddField(servicecatalog.FieldSLAResponseTime, field.TypeInt, value)
+	}
+	if scuo.mutation.SLAResponseTimeCleared() {
+		_spec.ClearField(servicecatalog.FieldSLAResponseTime, field.TypeInt)
+	}
+	if value, ok := scuo.mutation.SLAResolutionTime(); ok {
+		_spec.SetField(servicecatalog.FieldSLAResolutionTime, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedSLAResolutionTime(); ok {
+		_spec.AddField(servicecatalog.FieldSLAResolutionTime, field.TypeInt, value)
+	}
+	if scuo.mutation.SLAResolutionTimeCleared() {
+		_spec.ClearField(servicecatalog.FieldSLAResolutionTime, field.TypeInt)
 	}
 	if value, ok := scuo.mutation.CiTypeID(); ok {
 		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
@@ -796,6 +1397,34 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	if scuo.mutation.CloudServiceIDCleared() {
 		_spec.ClearField(servicecatalog.FieldCloudServiceID, field.TypeInt)
 	}
+	if value, ok := scuo.mutation.FormSchema(); ok {
+		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
+	}
+	if scuo.mutation.FormSchemaCleared() {
+		_spec.ClearField(servicecatalog.FieldFormSchema, field.TypeJSON)
+	}
+	if value, ok := scuo.mutation.AvailableRegions(); ok {
+		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)
+	}
+	if value, ok := scuo.mutation.AppendedAvailableRegions(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicecatalog.FieldAvailableRegions, value)
+		})
+	}
+	if scuo.mutation.AvailableRegionsCleared() {
+		_spec.ClearField(servicecatalog.FieldAvailableRegions, field.TypeJSON)
+	}
+	if value, ok := scuo.mutation.AvailableSpecs(); ok {
+		_spec.SetField(servicecatalog.FieldAvailableSpecs, field.TypeJSON, value)
+	}
+	if value, ok := scuo.mutation.AppendedAvailableSpecs(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, servicecatalog.FieldAvailableSpecs, value)
+		})
+	}
+	if scuo.mutation.AvailableSpecsCleared() {
+		_spec.ClearField(servicecatalog.FieldAvailableSpecs, field.TypeJSON)
+	}
 	if value, ok := scuo.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
 	}
@@ -807,6 +1436,12 @@ func (scuo *ServiceCatalogUpdateOne) sqlSave(ctx context.Context) (_node *Servic
 	}
 	if value, ok := scuo.mutation.IsActive(); ok {
 		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
+	}
+	if value, ok := scuo.mutation.SortOrder(); ok {
+		_spec.SetField(servicecatalog.FieldSortOrder, field.TypeInt, value)
+	}
+	if value, ok := scuo.mutation.AddedSortOrder(); ok {
+		_spec.AddField(servicecatalog.FieldSortOrder, field.TypeInt, value)
 	}
 	if value, ok := scuo.mutation.CreatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)

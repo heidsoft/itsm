@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -54,11 +55,12 @@ func setupTestTicketController(t *testing.T) (*gin.Engine, *ent.Client, *TicketC
 
 func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -66,8 +68,8 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash("hashedpassword").
 		SetName("Test User").
 		SetDepartment("IT").
@@ -82,7 +84,7 @@ func createTestTenantAndUserForTicket(t *testing.T, client *ent.Client) (*ent.Te
 }
 
 func TestTicketController_CreateTicket(t *testing.T) {
-	r, client, _ := setupTestTicketController(t)
+	_, client, _ := setupTestTicketController(t)
 	defer client.Close()
 
 	tenant, user := createTestTenantAndUserForTicket(t, client)
@@ -108,6 +110,7 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
 			setupContext: func(c *gin.Context) {
+				t.Logf("Setting tenant_id: %d, user_id: %d", tenant.ID, user.ID)
 				c.Set("tenant_id", tenant.ID)
 				c.Set("user_id", user.ID)
 			},
@@ -183,7 +186,7 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			require.NoError(t, err)
 			req.Header.Set("Content-Type", "application/json")
 
-			// 执行请求
+			// 直接调用控制器方法
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
@@ -193,26 +196,11 @@ func TestTicketController_CreateTicket(t *testing.T) {
 				tt.setupContext(c)
 			}
 
-			// 调用处理器
-			r.ServeHTTP(w, req)
-
-			// 对于需要模拟上下文的测试，直接调用控制器方法
-			if tt.setupContext != nil && w.Code == 0 {
-				// 重新创建 recorder
-				w2 := httptest.NewRecorder()
-				c2, _ := gin.CreateTestContext(w2)
-				c2.Request = req
-				tt.setupContext(c2)
-
-				// 直接调用控制器
-				controller := NewTicketController(
-					service.NewTicketService(client, zaptest.NewLogger(t).Sugar()),
-					nil,
-					zaptest.NewLogger(t).Sugar(),
-				)
-				controller.CreateTicket(c2)
-				w = w2
-			}
+			// 直接调用控制器
+			ticketService := service.NewTicketService(client, zaptest.NewLogger(t).Sugar())
+			controller := NewTicketController(ticketService, nil, zaptest.NewLogger(t).Sugar())
+			controller.CreateTicket(c)
+			w = w
 
 			// 验证响应
 			var response common.Response
@@ -221,9 +209,13 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			// 如果无法解析响应，至少检查状态码
 			if err != nil {
 				// 可能是因为上下文未正确设置
+				t.Logf("Response body: %s", w.Body.String())
 				return
 			}
 
+			if response.Code != tt.expectedCode {
+				t.Logf("Expected code: %d, Got: %d, Message: %s", tt.expectedCode, response.Code, response.Message)
+			}
 			assert.Equal(t, tt.expectedCode, response.Code)
 		})
 	}
@@ -238,6 +230,7 @@ func TestTicketController_GetTicket(t *testing.T) {
 	// 先创建一个工单
 	ctx := context.Background()
 	ticket, err := client.Ticket.Create().
+		SetTicketNumber("TKT-001").
 		SetTitle("测试工单").
 		SetDescription("描述").
 		SetPriority("medium").
@@ -302,8 +295,10 @@ func TestTicketController_ListTickets(t *testing.T) {
 
 	// 创建一些测试工单
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 	for i := 0; i < 3; i++ {
 		_, err := client.Ticket.Create().
+			SetTicketNumber(fmt.Sprintf("TKT-%s-%03d", uniqueID, i+1)).
 			SetTitle("测试工单 " + string(rune('A'+i))).
 			SetDescription("描述 " + string(rune('A'+i))).
 			SetPriority("medium").
@@ -373,6 +368,7 @@ func TestTicketController_UpdateTicket(t *testing.T) {
 	// 创建一个工单
 	ctx := context.Background()
 	ticket, err := client.Ticket.Create().
+		SetTicketNumber("TKT-002").
 		SetTitle("原始标题").
 		SetDescription("原始描述").
 		SetPriority("low").
@@ -451,6 +447,7 @@ func TestTicketController_DeleteTicket(t *testing.T) {
 	// 创建一个工单
 	ctx := context.Background()
 	ticket, err := client.Ticket.Create().
+		SetTicketNumber("TKT-003").
 		SetTitle("待删除工单").
 		SetDescription("将被删除").
 		SetPriority("low").

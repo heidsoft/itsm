@@ -65,11 +65,12 @@ func setupTestUserController(t *testing.T) (*gin.Engine, *ent.Client, *UserContr
 
 func createTestUserData(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -81,8 +82,8 @@ func createTestUserData(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.Use
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash(string(hashedPassword)).
 		SetName("Test User").
 		SetDepartment("IT").
@@ -101,6 +102,23 @@ func TestUserController_CreateUser(t *testing.T) {
 
 	// 创建测试数据
 	tenant, _ := createTestUserData(t, client)
+
+	// 先创建一个用户用于测试"用户名已存在"的场景
+	existingUsername := "existinguser"
+	existingUserRequest := dto.CreateUserRequest{
+		Username:   existingUsername,
+		Email:      "existing@example.com",
+		Name:       "Existing User",
+		Department: "IT",
+		Phone:      "5555555555",
+		Password:   "password123",
+		TenantID:   tenant.ID,
+	}
+	existingUserBody, _ := json.Marshal(existingUserRequest)
+	existingUserReq, _ := http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(existingUserBody))
+	existingUserReq.Header.Set("Content-Type", "application/json")
+	existingUserW := httptest.NewRecorder()
+	r.ServeHTTP(existingUserW, existingUserReq)
 
 	tests := []struct {
 		name           string
@@ -125,7 +143,7 @@ func TestUserController_CreateUser(t *testing.T) {
 		{
 			name: "用户名已存在",
 			request: dto.CreateUserRequest{
-				Username:   "testuser", // 已存在的用户名
+				Username:   existingUsername, // 使用上面已创建的用户名
 				Email:      "another@example.com",
 				Name:       "Another User",
 				Department: "Finance",
@@ -644,9 +662,10 @@ func BenchmarkUserController_CreateUser(b *testing.B) {
 
 	// 创建测试数据
 	ctx := context.Background()
+	uniqueID := fmt.Sprintf("%d", b.N)
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -655,8 +674,8 @@ func BenchmarkUserController_CreateUser(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		request := dto.CreateUserRequest{
-			Username:   fmt.Sprintf("user%d", i),
-			Email:      fmt.Sprintf("user%d@example.com", i),
+			Username:   fmt.Sprintf("user%d%s", i, uniqueID),
+			Email:      fmt.Sprintf("user%d%s@example.com", i, uniqueID),
 			Name:       fmt.Sprintf("User %d", i),
 			Department: "IT",
 			Phone:      "1234567890",
@@ -704,9 +723,10 @@ func BenchmarkUserController_ListUsers(b *testing.B) {
 
 	// 创建测试数据
 	ctx := context.Background()
+	uniqueID := fmt.Sprintf("%d", b.N)
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -716,8 +736,8 @@ func BenchmarkUserController_ListUsers(b *testing.B) {
 	for i := 0; i < 10; i++ {
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 		client.User.Create().
-			SetUsername(fmt.Sprintf("user%d", i)).
-			SetEmail(fmt.Sprintf("user%d@example.com", i)).
+			SetUsername(fmt.Sprintf("user%d%s", i, uniqueID)).
+			SetEmail(fmt.Sprintf("user%d%s@example.com", i, uniqueID)).
 			SetPasswordHash(string(hashedPassword)).
 			SetName(fmt.Sprintf("User %d", i)).
 			SetDepartment("IT").

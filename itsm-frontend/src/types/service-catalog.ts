@@ -24,6 +24,19 @@ export enum ServiceStatus {
 }
 
 /**
+ * 服务类型 - 用于动态表单
+ */
+export enum ServiceType {
+  VM = 'vm',           // 云服务器
+  RDS = 'rds',         // 数据库
+  OSS = 'oss',         // 对象存储
+  NETWORK = 'network', // 网络
+  STORAGE = 'storage', // 存储
+  SECURITY = 'security', // 安全服务
+  CUSTOM = 'custom',   // 自定义服务
+}
+
+/**
  * 服务项
  */
 export interface ServiceItem {
@@ -35,6 +48,23 @@ export interface ServiceItem {
   fullDescription?: string;
   ciTypeId?: number;
   cloudServiceId?: number;
+
+  // 服务类型 - 用于动态表单
+  serviceType?: ServiceType;
+
+  // 审批配置
+  requiresApproval?: boolean;
+  approvalLevel?: number;
+  approvers?: number[];
+
+  // SLA配置
+  slaResponseTime?: number;
+  slaResolutionTime?: number;
+
+  // 表单配置
+  formSchema?: Record<string, unknown>;
+  availableRegions?: string[];
+  availableSpecs?: string[];
   
   // 图标和图片
   icon?: string;
@@ -79,11 +109,10 @@ export interface ServiceItem {
   // 标签和搜索
   tags: string[];
   searchKeywords?: string[];
-  
+
   // 审批流程
-  requiresApproval: boolean;
   approvalWorkflow?: string;      // 审批工作流ID
-  
+
   // 元数据
   createdBy: number;
   createdByName: string;

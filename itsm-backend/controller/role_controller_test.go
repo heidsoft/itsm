@@ -48,11 +48,12 @@ func setupTestRoleController(t *testing.T) (*gin.Engine, *ent.Client, *RoleContr
 
 func createTestTenantForRole(t *testing.T, client *ent.Client) *ent.Tenant {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TESTROLE").
+		SetCode("TESTROLE" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)

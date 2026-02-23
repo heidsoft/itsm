@@ -15,6 +15,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -54,11 +55,12 @@ func setupTestChangeController(t *testing.T) (*gin.Engine, *ent.Client, *ChangeC
 
 func createTestTenantAndUserForChange(t *testing.T, client *ent.Client) (*ent.Tenant, *ent.User) {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TEST").
+		SetCode("TEST" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
@@ -66,8 +68,8 @@ func createTestTenantAndUserForChange(t *testing.T, client *ent.Client) (*ent.Te
 
 	// 创建测试用户
 	user, err := client.User.Create().
-		SetUsername("testuser").
-		SetEmail("test@example.com").
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
 		SetPasswordHash("hashedpassword").
 		SetName("Test User").
 		SetDepartment("IT").
@@ -82,10 +84,13 @@ func createTestTenantAndUserForChange(t *testing.T, client *ent.Client) (*ent.Te
 }
 
 func TestChangeController_ListChanges(t *testing.T) {
-	r, client, _ := setupTestChangeController(t)
+	_, client, _ := setupTestChangeController(t)
 	defer client.Close()
 
 	tenant, _ := createTestTenantAndUserForChange(t, client)
+	logger := zaptest.NewLogger(t).Sugar()
+	changeService := service.NewChangeService(client, logger)
+	changeController := NewChangeController(logger, changeService)
 
 	tests := []struct {
 		name           string
@@ -132,9 +137,16 @@ func TestChangeController_ListChanges(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			c.Set("tenant_id", tenant.ID)
 
-			r.ServeHTTP(w, req)
+			// 设置租户上下文
+			tenantCtx := &middleware.TenantContext{
+				TenantID: tenant.ID,
+				Tenant: tenant,
+			}
+			c.Set(middleware.TenantContextKey, tenantCtx)
+
+			// 直接调用控制器
+			changeController.ListChanges(c)
 
 			// 验证响应
 			var response common.Response
@@ -147,7 +159,7 @@ func TestChangeController_ListChanges(t *testing.T) {
 }
 
 func TestChangeController_CreateChange(t *testing.T) {
-	r, client, _ := setupTestChangeController(t)
+	_, client, _ := setupTestChangeController(t)
 	defer client.Close()
 
 	tenant, user := createTestTenantAndUserForChange(t, client)
@@ -200,19 +212,30 @@ func TestChangeController_CreateChange(t *testing.T) {
 			require.NoError(t, err)
 			req.Header.Set("Content-Type", "application/json")
 
-			// 设置上下文
+			// 设置上下文并直接调用控制器
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			c.Set("tenant_id", tenant.ID)
+
+			// 设置租户上下文
+			tenantCtx := &middleware.TenantContext{
+				TenantID: tenant.ID,
+				Tenant: tenant,
+			}
+			c.Set(middleware.TenantContextKey, tenantCtx)
 			c.Set("user_id", user.ID)
 
-			r.ServeHTTP(w, req)
+			// 直接调用控制器
+			logger := zaptest.NewLogger(t).Sugar()
+			changeService := service.NewChangeService(client, logger)
+			changeController := NewChangeController(logger, changeService)
+			changeController.CreateChange(c)
 
 			// 验证响应
 			var response common.Response
 			err = json.Unmarshal(w.Body.Bytes(), &response)
 			if err == nil {
+				t.Logf("Response code: %d, message: %s", response.Code, response.Message)
 				assert.Equal(t, tt.expectedCode, response.Code)
 			}
 		})

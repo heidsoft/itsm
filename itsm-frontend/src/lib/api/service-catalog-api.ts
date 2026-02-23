@@ -307,6 +307,24 @@ export class ServiceCatalogApi {
     } as any);
   }
 
+  /**
+   * 获取服务请求详情（包含审批历史）
+   */
+  static async getServiceRequestDetail(id: number): Promise<any> {
+    const response = await httpClient.get(`/api/v1/service-requests/${id}`);
+    return response;
+  }
+
+  /**
+   * 获取待审批数量
+   */
+  static async getPendingApprovalCount(): Promise<number> {
+    const response = await httpClient.get<{ total: number }>(
+      '/api/v1/service-requests/approvals/pending'
+    );
+    return response.total || 0;
+  }
+
   // ==================== 收藏和评分 ====================
 
   /**

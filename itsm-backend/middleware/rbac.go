@@ -218,6 +218,11 @@ var RolePermissions = map[string][]Permission{
 
 // loadRolePermissionsFromDB 从数据库加载角色的权限
 func loadRolePermissionsFromDB(client *ent.Client, roleName string, tenantID int) []Permission {
+	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
+	if client == nil {
+		return nil
+	}
+
 	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
 
 	// 先检查缓存

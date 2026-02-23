@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common" // Import common package
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
@@ -28,13 +29,15 @@ const (
 type ServiceRequestService struct {
 	client          *ent.Client
 	logger          *zap.SugaredLogger
+	notificationSvc *NotificationService // 通知服务
 	approvalService *ApprovalService
 }
 
-func NewServiceRequestService(client *ent.Client, logger *zap.SugaredLogger, approvalService *ApprovalService) *ServiceRequestService {
+func NewServiceRequestService(client *ent.Client, logger *zap.SugaredLogger, approvalService *ApprovalService, notificationSvc *NotificationService) *ServiceRequestService {
 	return &ServiceRequestService{
 		client:          client,
 		logger:          logger,
+		notificationSvc:  notificationSvc,
 		approvalService: approvalService,
 	}
 }
@@ -146,8 +149,61 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 		return nil, fmt.Errorf("提交事务失败: %w", err) // Keep fmt.Errorf for internal errors for now
 	}
 
+	// 发送新申请通知给审批人
+	go s.sendNewRequestNotification(ctx, request.ID, tenantID, requesterID)
+
 	// 返回详情（含 approvals）
 	return s.GetServiceRequestDetail(ctx, request.ID, tenantID)
+}
+
+// sendNewRequestNotification 发送新申请通知给审批人
+func (s *ServiceRequestService) sendNewRequestNotification(ctx context.Context, requestID, tenantID, requesterID int) {
+	if s.notificationSvc == nil {
+		return
+	}
+
+	// 获取请求详情
+	req, err := s.client.ServiceRequest.Query().
+		Where(servicerequest.ID(requestID)).
+		Where(servicerequest.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		s.logger.Errorw("获取服务请求失败", "error", err)
+		return
+	}
+
+	// 获取服务目录信息
+	catalog, err := s.client.ServiceCatalog.Query().
+		Where(servicecatalog.ID(req.CatalogID)).
+		First(ctx)
+	if err != nil {
+		s.logger.Errorw("获取服务目录失败", "error", err)
+		return
+	}
+
+	// 查找审批人（主管角色）
+	approvers, err := s.client.User.Query().
+		Where(user.TenantIDEQ(tenantID)).
+		Where(user.RoleEQ("manager")).
+		All(ctx)
+	if err != nil || len(approvers) == 0 {
+		s.logger.Errorw("查找审批人失败", "error", err)
+		return
+	}
+
+	title := "新的服务请求待审批"
+	message := fmt.Sprintf("您有待审批的服务请求：「%s」(%s)，请及时处理", req.Title, catalog.Name)
+
+	// 给所有审批人发送通知
+	for _, approver := range approvers {
+		_, _ = s.notificationSvc.CreateNotification(ctx, &dto.CreateNotificationRequest{
+			UserID:  approver.ID,
+			TenantID: tenantID,
+			Title:   title,
+			Message: message,
+			Type:    "info",
+		})
+	}
 }
 
 // ListPendingApprovals 返回当前用户的审批待办（按角色/步骤过滤）。
@@ -449,7 +505,46 @@ func (s *ServiceRequestService) ApplyApprovalAction(ctx context.Context, request
 	if err := tx.Commit(); err != nil {
 		return nil, common.NewInternalError("提交事务失败", err)
 	}
+
+	// 发送通知
+	go s.sendApprovalNotification(ctx, requestID, tenantID, reqEnt.RequesterID, action, comment)
+
 	return s.GetServiceRequestDetail(ctx, requestID, tenantID)
+}
+
+// sendApprovalNotification 发送审批通知
+func (s *ServiceRequestService) sendApprovalNotification(ctx context.Context, requestID, tenantID, requesterID int, action, comment string) {
+	if s.notificationSvc == nil {
+		return
+	}
+
+	// 获取请求详情
+	req, err := s.client.ServiceRequest.Query().
+		Where(servicerequest.ID(requestID)).
+		Where(servicerequest.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		s.logger.Errorw("获取服务请求失败", "error", err)
+		return
+	}
+
+	// 构建通知内容
+	title := "服务请求审批通知"
+	var message string
+	if action == "approve" {
+		message = fmt.Sprintf("您的服务请求「%s」已通过审批", req.Title)
+	} else {
+		message = fmt.Sprintf("您的服务请求「%s」已被拒绝，原因：%s", req.Title, comment)
+	}
+
+	// 发送站内通知
+	_, _ = s.notificationSvc.CreateNotification(ctx, &dto.CreateNotificationRequest{
+		UserID:    requesterID,
+		TenantID:  tenantID,
+		Title:     title,
+		Message:   message,
+		Type:      "info",
+	})
 }
 
 // New constants for user roles

@@ -69,6 +69,16 @@ func Category(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldCategory, v))
 }
 
+// Icon applies equality check predicate on the "icon" field. It's identical to IconEQ.
+func Icon(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldIcon, v))
+}
+
+// ServiceType applies equality check predicate on the "service_type" field. It's identical to ServiceTypeEQ.
+func ServiceType(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldServiceType, v))
+}
+
 // Price applies equality check predicate on the "price" field. It's identical to PriceEQ.
 func Price(v float64) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldPrice, v))
@@ -77,6 +87,31 @@ func Price(v float64) predicate.ServiceCatalog {
 // DeliveryTime applies equality check predicate on the "delivery_time" field. It's identical to DeliveryTimeEQ.
 func DeliveryTime(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldDeliveryTime, v))
+}
+
+// Unit applies equality check predicate on the "unit" field. It's identical to UnitEQ.
+func Unit(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldUnit, v))
+}
+
+// RequiresApproval applies equality check predicate on the "requires_approval" field. It's identical to RequiresApprovalEQ.
+func RequiresApproval(v bool) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldRequiresApproval, v))
+}
+
+// ApprovalLevel applies equality check predicate on the "approval_level" field. It's identical to ApprovalLevelEQ.
+func ApprovalLevel(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldApprovalLevel, v))
+}
+
+// SLAResponseTime applies equality check predicate on the "sla_response_time" field. It's identical to SLAResponseTimeEQ.
+func SLAResponseTime(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldSLAResponseTime, v))
+}
+
+// SLAResolutionTime applies equality check predicate on the "sla_resolution_time" field. It's identical to SLAResolutionTimeEQ.
+func SLAResolutionTime(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldSLAResolutionTime, v))
 }
 
 // CiTypeID applies equality check predicate on the "ci_type_id" field. It's identical to CiTypeIDEQ.
@@ -102,6 +137,11 @@ func TenantID(v int) predicate.ServiceCatalog {
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldIsActive, v))
+}
+
+// SortOrder applies equality check predicate on the "sort_order" field. It's identical to SortOrderEQ.
+func SortOrder(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldSortOrder, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -329,6 +369,146 @@ func CategoryContainsFold(v string) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldCategory, v))
 }
 
+// IconEQ applies the EQ predicate on the "icon" field.
+func IconEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldIcon, v))
+}
+
+// IconNEQ applies the NEQ predicate on the "icon" field.
+func IconNEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldIcon, v))
+}
+
+// IconIn applies the In predicate on the "icon" field.
+func IconIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldIcon, vs...))
+}
+
+// IconNotIn applies the NotIn predicate on the "icon" field.
+func IconNotIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldIcon, vs...))
+}
+
+// IconGT applies the GT predicate on the "icon" field.
+func IconGT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldIcon, v))
+}
+
+// IconGTE applies the GTE predicate on the "icon" field.
+func IconGTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldIcon, v))
+}
+
+// IconLT applies the LT predicate on the "icon" field.
+func IconLT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldIcon, v))
+}
+
+// IconLTE applies the LTE predicate on the "icon" field.
+func IconLTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldIcon, v))
+}
+
+// IconContains applies the Contains predicate on the "icon" field.
+func IconContains(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContains(FieldIcon, v))
+}
+
+// IconHasPrefix applies the HasPrefix predicate on the "icon" field.
+func IconHasPrefix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldIcon, v))
+}
+
+// IconHasSuffix applies the HasSuffix predicate on the "icon" field.
+func IconHasSuffix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldIcon, v))
+}
+
+// IconIsNil applies the IsNil predicate on the "icon" field.
+func IconIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldIcon))
+}
+
+// IconNotNil applies the NotNil predicate on the "icon" field.
+func IconNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldIcon))
+}
+
+// IconEqualFold applies the EqualFold predicate on the "icon" field.
+func IconEqualFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldIcon, v))
+}
+
+// IconContainsFold applies the ContainsFold predicate on the "icon" field.
+func IconContainsFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldIcon, v))
+}
+
+// ServiceTypeEQ applies the EQ predicate on the "service_type" field.
+func ServiceTypeEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldServiceType, v))
+}
+
+// ServiceTypeNEQ applies the NEQ predicate on the "service_type" field.
+func ServiceTypeNEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldServiceType, v))
+}
+
+// ServiceTypeIn applies the In predicate on the "service_type" field.
+func ServiceTypeIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldServiceType, vs...))
+}
+
+// ServiceTypeNotIn applies the NotIn predicate on the "service_type" field.
+func ServiceTypeNotIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldServiceType, vs...))
+}
+
+// ServiceTypeGT applies the GT predicate on the "service_type" field.
+func ServiceTypeGT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldServiceType, v))
+}
+
+// ServiceTypeGTE applies the GTE predicate on the "service_type" field.
+func ServiceTypeGTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldServiceType, v))
+}
+
+// ServiceTypeLT applies the LT predicate on the "service_type" field.
+func ServiceTypeLT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldServiceType, v))
+}
+
+// ServiceTypeLTE applies the LTE predicate on the "service_type" field.
+func ServiceTypeLTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldServiceType, v))
+}
+
+// ServiceTypeContains applies the Contains predicate on the "service_type" field.
+func ServiceTypeContains(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContains(FieldServiceType, v))
+}
+
+// ServiceTypeHasPrefix applies the HasPrefix predicate on the "service_type" field.
+func ServiceTypeHasPrefix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldServiceType, v))
+}
+
+// ServiceTypeHasSuffix applies the HasSuffix predicate on the "service_type" field.
+func ServiceTypeHasSuffix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldServiceType, v))
+}
+
+// ServiceTypeEqualFold applies the EqualFold predicate on the "service_type" field.
+func ServiceTypeEqualFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldServiceType, v))
+}
+
+// ServiceTypeContainsFold applies the ContainsFold predicate on the "service_type" field.
+func ServiceTypeContainsFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldServiceType, v))
+}
+
 // PriceEQ applies the EQ predicate on the "price" field.
 func PriceEQ(v float64) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldPrice, v))
@@ -429,6 +609,241 @@ func DeliveryTimeNotNil() predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNotNull(FieldDeliveryTime))
 }
 
+// UnitEQ applies the EQ predicate on the "unit" field.
+func UnitEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldUnit, v))
+}
+
+// UnitNEQ applies the NEQ predicate on the "unit" field.
+func UnitNEQ(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldUnit, v))
+}
+
+// UnitIn applies the In predicate on the "unit" field.
+func UnitIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldUnit, vs...))
+}
+
+// UnitNotIn applies the NotIn predicate on the "unit" field.
+func UnitNotIn(vs ...string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldUnit, vs...))
+}
+
+// UnitGT applies the GT predicate on the "unit" field.
+func UnitGT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldUnit, v))
+}
+
+// UnitGTE applies the GTE predicate on the "unit" field.
+func UnitGTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldUnit, v))
+}
+
+// UnitLT applies the LT predicate on the "unit" field.
+func UnitLT(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldUnit, v))
+}
+
+// UnitLTE applies the LTE predicate on the "unit" field.
+func UnitLTE(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldUnit, v))
+}
+
+// UnitContains applies the Contains predicate on the "unit" field.
+func UnitContains(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContains(FieldUnit, v))
+}
+
+// UnitHasPrefix applies the HasPrefix predicate on the "unit" field.
+func UnitHasPrefix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasPrefix(FieldUnit, v))
+}
+
+// UnitHasSuffix applies the HasSuffix predicate on the "unit" field.
+func UnitHasSuffix(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldHasSuffix(FieldUnit, v))
+}
+
+// UnitIsNil applies the IsNil predicate on the "unit" field.
+func UnitIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldUnit))
+}
+
+// UnitNotNil applies the NotNil predicate on the "unit" field.
+func UnitNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldUnit))
+}
+
+// UnitEqualFold applies the EqualFold predicate on the "unit" field.
+func UnitEqualFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEqualFold(FieldUnit, v))
+}
+
+// UnitContainsFold applies the ContainsFold predicate on the "unit" field.
+func UnitContainsFold(v string) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldContainsFold(FieldUnit, v))
+}
+
+// RequiresApprovalEQ applies the EQ predicate on the "requires_approval" field.
+func RequiresApprovalEQ(v bool) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldRequiresApproval, v))
+}
+
+// RequiresApprovalNEQ applies the NEQ predicate on the "requires_approval" field.
+func RequiresApprovalNEQ(v bool) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldRequiresApproval, v))
+}
+
+// ApprovalLevelEQ applies the EQ predicate on the "approval_level" field.
+func ApprovalLevelEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldApprovalLevel, v))
+}
+
+// ApprovalLevelNEQ applies the NEQ predicate on the "approval_level" field.
+func ApprovalLevelNEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldApprovalLevel, v))
+}
+
+// ApprovalLevelIn applies the In predicate on the "approval_level" field.
+func ApprovalLevelIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldApprovalLevel, vs...))
+}
+
+// ApprovalLevelNotIn applies the NotIn predicate on the "approval_level" field.
+func ApprovalLevelNotIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldApprovalLevel, vs...))
+}
+
+// ApprovalLevelGT applies the GT predicate on the "approval_level" field.
+func ApprovalLevelGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldApprovalLevel, v))
+}
+
+// ApprovalLevelGTE applies the GTE predicate on the "approval_level" field.
+func ApprovalLevelGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldApprovalLevel, v))
+}
+
+// ApprovalLevelLT applies the LT predicate on the "approval_level" field.
+func ApprovalLevelLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldApprovalLevel, v))
+}
+
+// ApprovalLevelLTE applies the LTE predicate on the "approval_level" field.
+func ApprovalLevelLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldApprovalLevel, v))
+}
+
+// ApproversIsNil applies the IsNil predicate on the "approvers" field.
+func ApproversIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldApprovers))
+}
+
+// ApproversNotNil applies the NotNil predicate on the "approvers" field.
+func ApproversNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldApprovers))
+}
+
+// SLAResponseTimeEQ applies the EQ predicate on the "sla_response_time" field.
+func SLAResponseTimeEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldSLAResponseTime, v))
+}
+
+// SLAResponseTimeNEQ applies the NEQ predicate on the "sla_response_time" field.
+func SLAResponseTimeNEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldSLAResponseTime, v))
+}
+
+// SLAResponseTimeIn applies the In predicate on the "sla_response_time" field.
+func SLAResponseTimeIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldSLAResponseTime, vs...))
+}
+
+// SLAResponseTimeNotIn applies the NotIn predicate on the "sla_response_time" field.
+func SLAResponseTimeNotIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldSLAResponseTime, vs...))
+}
+
+// SLAResponseTimeGT applies the GT predicate on the "sla_response_time" field.
+func SLAResponseTimeGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldSLAResponseTime, v))
+}
+
+// SLAResponseTimeGTE applies the GTE predicate on the "sla_response_time" field.
+func SLAResponseTimeGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldSLAResponseTime, v))
+}
+
+// SLAResponseTimeLT applies the LT predicate on the "sla_response_time" field.
+func SLAResponseTimeLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldSLAResponseTime, v))
+}
+
+// SLAResponseTimeLTE applies the LTE predicate on the "sla_response_time" field.
+func SLAResponseTimeLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldSLAResponseTime, v))
+}
+
+// SLAResponseTimeIsNil applies the IsNil predicate on the "sla_response_time" field.
+func SLAResponseTimeIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldSLAResponseTime))
+}
+
+// SLAResponseTimeNotNil applies the NotNil predicate on the "sla_response_time" field.
+func SLAResponseTimeNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldSLAResponseTime))
+}
+
+// SLAResolutionTimeEQ applies the EQ predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldSLAResolutionTime, v))
+}
+
+// SLAResolutionTimeNEQ applies the NEQ predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeNEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldSLAResolutionTime, v))
+}
+
+// SLAResolutionTimeIn applies the In predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldSLAResolutionTime, vs...))
+}
+
+// SLAResolutionTimeNotIn applies the NotIn predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeNotIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldSLAResolutionTime, vs...))
+}
+
+// SLAResolutionTimeGT applies the GT predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldSLAResolutionTime, v))
+}
+
+// SLAResolutionTimeGTE applies the GTE predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldSLAResolutionTime, v))
+}
+
+// SLAResolutionTimeLT applies the LT predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldSLAResolutionTime, v))
+}
+
+// SLAResolutionTimeLTE applies the LTE predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldSLAResolutionTime, v))
+}
+
+// SLAResolutionTimeIsNil applies the IsNil predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldSLAResolutionTime))
+}
+
+// SLAResolutionTimeNotNil applies the NotNil predicate on the "sla_resolution_time" field.
+func SLAResolutionTimeNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldSLAResolutionTime))
+}
+
 // CiTypeIDEQ applies the EQ predicate on the "ci_type_id" field.
 func CiTypeIDEQ(v int) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldEQ(FieldCiTypeID, v))
@@ -527,6 +942,36 @@ func CloudServiceIDIsNil() predicate.ServiceCatalog {
 // CloudServiceIDNotNil applies the NotNil predicate on the "cloud_service_id" field.
 func CloudServiceIDNotNil() predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNotNull(FieldCloudServiceID))
+}
+
+// FormSchemaIsNil applies the IsNil predicate on the "form_schema" field.
+func FormSchemaIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldFormSchema))
+}
+
+// FormSchemaNotNil applies the NotNil predicate on the "form_schema" field.
+func FormSchemaNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldFormSchema))
+}
+
+// AvailableRegionsIsNil applies the IsNil predicate on the "available_regions" field.
+func AvailableRegionsIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldAvailableRegions))
+}
+
+// AvailableRegionsNotNil applies the NotNil predicate on the "available_regions" field.
+func AvailableRegionsNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldAvailableRegions))
+}
+
+// AvailableSpecsIsNil applies the IsNil predicate on the "available_specs" field.
+func AvailableSpecsIsNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIsNull(FieldAvailableSpecs))
+}
+
+// AvailableSpecsNotNil applies the NotNil predicate on the "available_specs" field.
+func AvailableSpecsNotNil() predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotNull(FieldAvailableSpecs))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -642,6 +1087,46 @@ func IsActiveEQ(v bool) predicate.ServiceCatalog {
 // IsActiveNEQ applies the NEQ predicate on the "is_active" field.
 func IsActiveNEQ(v bool) predicate.ServiceCatalog {
 	return predicate.ServiceCatalog(sql.FieldNEQ(FieldIsActive, v))
+}
+
+// SortOrderEQ applies the EQ predicate on the "sort_order" field.
+func SortOrderEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldEQ(FieldSortOrder, v))
+}
+
+// SortOrderNEQ applies the NEQ predicate on the "sort_order" field.
+func SortOrderNEQ(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNEQ(FieldSortOrder, v))
+}
+
+// SortOrderIn applies the In predicate on the "sort_order" field.
+func SortOrderIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldIn(FieldSortOrder, vs...))
+}
+
+// SortOrderNotIn applies the NotIn predicate on the "sort_order" field.
+func SortOrderNotIn(vs ...int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldNotIn(FieldSortOrder, vs...))
+}
+
+// SortOrderGT applies the GT predicate on the "sort_order" field.
+func SortOrderGT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGT(FieldSortOrder, v))
+}
+
+// SortOrderGTE applies the GTE predicate on the "sort_order" field.
+func SortOrderGTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldGTE(FieldSortOrder, v))
+}
+
+// SortOrderLT applies the LT predicate on the "sort_order" field.
+func SortOrderLT(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLT(FieldSortOrder, v))
+}
+
+// SortOrderLTE applies the LTE predicate on the "sort_order" field.
+func SortOrderLTE(v int) predicate.ServiceCatalog {
+	return predicate.ServiceCatalog(sql.FieldLTE(FieldSortOrder, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

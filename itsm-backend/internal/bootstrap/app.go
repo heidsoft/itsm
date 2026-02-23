@@ -78,7 +78,6 @@ func NewApplication() *Application {
 	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
 	// 审批服务
 	approvalService := service.NewApprovalService(client, sugar)
-	serviceRequestService := service.NewServiceRequestService(client, sugar, approvalService)
 
 	cmdbService := service.NewCMDBService(client)
 	problemService := service.NewProblemService(client, sugar)
@@ -129,6 +128,9 @@ func NewApplication() *Application {
 	// General Notification Service & Controller
 	notificationService := service.NewNotificationService(client)
 	notificationController := controller.NewNotificationController(notificationService)
+
+	// 服务请求服务（依赖通知服务）
+	serviceRequestService := service.NewServiceRequestService(client, sugar, approvalService, notificationService)
 
 	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)

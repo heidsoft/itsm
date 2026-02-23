@@ -33,11 +33,12 @@ func setupTestTagController(t *testing.T) (*gin.Engine, *ent.Client) {
 
 func createTestTenantForTag(t *testing.T, client *ent.Client) *ent.Tenant {
 	ctx := context.Background()
+	uniqueID := uniqueTestID()
 
 	// 创建测试租户
 	tenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
-		SetCode("TESTTAG").
+		SetCode("TESTTAG" + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").
 		Save(ctx)
