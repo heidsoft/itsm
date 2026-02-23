@@ -23,12 +23,17 @@ func toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 	if a == nil {
 		return nil
 	}
+	status := "draft"
+	if a.IsPublished {
+		status = "published"
+	}
 	return &dto.KnowledgeArticleResponse{
 		ID:        a.ID,
 		Title:     a.Title,
 		Content:   a.Content,
 		Category:  a.Category,
 		Tags:      a.Tags,
+		Status:    status,
 		TenantID:  a.TenantID,
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
@@ -43,16 +48,35 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	userIDVal, _ := c.Get("user_id")
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	userIDVal, ok := c.Get("user_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "User ID not found")
+		return
+	}
+
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
+	userID, ok := userIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
 
 	article := &Article{
 		Title:    req.Title,
 		Content:  req.Content,
 		Category: req.Category,
 		Tags:     req.Tags,
-		AuthorID: userIDVal.(int),
-		TenantID: tenantIDVal.(int),
+		AuthorID: userID,
+		TenantID: tenantID,
 	}
 
 	res, err := h.svc.CreateArticle(c.Request.Context(), article)
@@ -67,10 +91,24 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 // GetArticle handles GET /api/v1/knowledge-articles/:id
 func (h *Handler) GetArticle(c *gin.Context) {
 	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid article ID")
+		return
+	}
 
-	res, err := h.svc.GetArticle(c.Request.Context(), id, tenantIDVal.(int))
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
+
+	res, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, http.StatusNotFound, "Article not found")
 		return
@@ -86,9 +124,19 @@ func (h *Handler) ListArticles(c *gin.Context) {
 	category := c.Query("category")
 	search := c.Query("search")
 	status := c.Query("status")
-	tenantIDVal, _ := c.Get("tenant_id")
 
-	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantIDVal.(int), page, pageSize, category, search, status)
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
+
+	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantID, page, pageSize, category, search, status)
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return
@@ -110,8 +158,22 @@ func (h *Handler) ListArticles(c *gin.Context) {
 // UpdateArticle handles PUT /api/v1/knowledge-articles/:id
 func (h *Handler) UpdateArticle(c *gin.Context) {
 	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid article ID")
+		return
+	}
+
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
 
 	var req dto.UpdateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -119,7 +181,7 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	existing, err := h.svc.GetArticle(c.Request.Context(), id, tenantIDVal.(int))
+	existing, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, http.StatusNotFound, "Article not found")
 		return
@@ -137,6 +199,9 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 	if req.Tags != nil {
 		existing.Tags = req.Tags
 	}
+	if req.Status != nil {
+		existing.IsPublished = *req.Status == "published"
+	}
 
 	res, err := h.svc.UpdateArticle(c.Request.Context(), existing)
 	if err != nil {
@@ -150,10 +215,24 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 // DeleteArticle handles DELETE /api/v1/knowledge-articles/:id
 func (h *Handler) DeleteArticle(c *gin.Context) {
 	idStr := c.Param("id")
-	id, _ := strconv.Atoi(idStr)
-	tenantIDVal, _ := c.Get("tenant_id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid article ID")
+		return
+	}
 
-	if err := h.svc.DeleteArticle(c.Request.Context(), id, tenantIDVal.(int)); err != nil {
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
+
+	if err := h.svc.DeleteArticle(c.Request.Context(), id, tenantID); err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -203,9 +282,18 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 
 // GetCategories handles GET /api/v1/knowledge-articles/categories
 func (h *Handler) GetCategories(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
 
-	list, err := h.svc.GetCategories(c.Request.Context(), tenantIDVal.(int))
+	list, err := h.svc.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		common.Fail(c, http.StatusInternalServerError, err.Error())
 		return

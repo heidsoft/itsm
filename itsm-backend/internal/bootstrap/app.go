@@ -277,6 +277,12 @@ func NewApplication() *Application {
 	userService := service.NewUserService(client, sugar)
 	userController := controller.NewUserController(userService, sugar)
 
+	// Role & Permission Controllers (database-backed with tenant isolation)
+	roleService := service.NewRoleService(client, sugar)
+	roleController := controller.NewRoleController(roleService, sugar)
+	permissionService := service.NewPermissionService(client, sugar)
+	permissionController := controller.NewPermissionController(permissionService, sugar)
+
 	// SLA Monitor & Alert Services (legacy, for background tasks)
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaAlertService := service.NewSLAAlertService(client, sugar)
@@ -322,6 +328,10 @@ func NewApplication() *Application {
 		TicketCategoryController:        ticketCategoryController,
 		TicketTagController:             ticketTagController,
 		UserController:                  userController,
+
+		// Role & Permission Controllers
+		RoleController:           roleController,
+		PermissionController:     permissionController,
 
 		// CMDB Controller (新增)
 		CMDBController: cmdbController,
