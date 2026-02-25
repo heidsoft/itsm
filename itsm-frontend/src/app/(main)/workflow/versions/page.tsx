@@ -1,7 +1,8 @@
 "use client";
-// @ts-nocheck
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { WorkflowAPI } from "@/lib/api/workflow-api";
 import {
   Card,
   Table,
@@ -72,6 +73,7 @@ interface VersionComparison {
 
 const WorkflowVersionsPage = () => {
   const { message } = App.useApp();
+  const searchParams = useSearchParams();
   const [versions, setVersions] = useState<WorkflowVersion[]>([]);
   const [loading, setLoading] = useState(false);
   const [compareModalVisible, setCompareModalVisible] = useState(false);
@@ -80,45 +82,40 @@ const WorkflowVersionsPage = () => {
   const [comparison, setComparison] = useState<VersionComparison | null>(null);
   const [workflowId, setWorkflowId] = useState<number>(1);
 
+  // 从URL读取workflowId参数
+  useEffect(() => {
+    const id = searchParams.get('workflowId');
+    if (id) {
+      const parsedId = parseInt(id, 10);
+      if (!isNaN(parsedId)) {
+        setWorkflowId(parsedId);
+      }
+    }
+  }, [searchParams]);
+
   const loadVersions = React.useCallback(async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      // 模拟版本数据
-      const mockVersions: WorkflowVersion[] = [
-        {
-          id: 1,
-          workflow_id: workflowId,
-          version: "1.0.0",
-          bpmn_xml: "<bpmn:definitions>...</bpmn:definitions>",
-          process_variables: { maxApprovers: 3, timeout: 24 },
-          status: "active",
-          created_by: "张三",
-          created_at: "2024-01-15 10:30:00",
-          change_log: "初始版本",
-          is_current: true,
-          metadata: { description: "工单审批流程初始版本" }
-        },
-        {
-          id: 2,
-          workflow_id: workflowId,
-          version: "0.9.0",
-          bpmn_xml: "<bpmn:definitions>...</bpmn:definitions>",
-          process_variables: { maxApprovers: 2, timeout: 48 },
-          status: "archived",
-          created_by: "李四",
-          created_at: "2024-01-10 14:20:00",
-          change_log: "测试版本",
-          is_current: false,
-          metadata: { description: "测试版本，已归档" }
-        }
-      ];
-      
-      setVersions(mockVersions);
+      // 调用真实 API
+      const response = await WorkflowAPI.getWorkflowVersions(workflowId.toString());
+      // 适配后端返回格式
+      const adaptedVersions = (response || []).map((v: any): WorkflowVersion => ({
+        id: v.id || 0,
+        workflow_id: v.process_definition_key || workflowId,
+        version: v.version?.toString() || '1.0.0',
+        bpmn_xml: v.bpmn_xml || '',
+        process_variables: v.process_variables || {},
+        status: (v.is_active ? 'active' : 'archived') as 'draft' | 'active' | 'archived',
+        created_by: v.created_by || 'System',
+        created_at: v.created_at || new Date().toISOString(),
+        change_log: v.change_log || '',
+        is_current: v.is_active || false,
+        metadata: v.metadata || {},
+      }));
+      setVersions(adaptedVersions);
     } catch (error) {
       console.error('Failed to load versions:', error);
+      message.error('加载版本列表失败');
     } finally {
       setLoading(false);
     }
@@ -135,54 +132,78 @@ const WorkflowVersionsPage = () => {
 
   const handleDeployVersion = async (version: WorkflowVersion) => {
     try {
-      // 模拟部署
+      // 调用真实 API 激活版本
+      await WorkflowAPI.activateVersion(workflowId.toString(), parseInt(version.version));
       message.success(`版本 ${version.version} 部署成功`);
       loadVersions();
-    } catch {
+    } catch (error) {
+      console.error('部署版本失败:', error);
       message.error("部署失败");
     }
   };
 
   const handleRollbackVersion = async (version: WorkflowVersion) => {
     try {
-      // 模拟回滚
+      // 调用真实 API 回滚版本
+      await WorkflowAPI.rollbackVersion(workflowId.toString(), parseInt(version.version), '回滚操作');
       message.success(`回滚到版本 ${version.version} 成功`);
       loadVersions();
-    } catch {
+    } catch (error) {
+      console.error('回滚版本失败:', error);
       message.error("回滚失败");
     }
   };
 
-  const handleCompareVersions = (
+  const handleCompareVersions = async (
     version1: WorkflowVersion,
     version2: WorkflowVersion
   ) => {
-    // 模拟版本比较
-    const mockComparison: VersionComparison = {
-      version1,
-      version2,
-      comparison: {
-        elements_added: ["user_task_3", "exclusive_gateway_1"],
-        elements_removed: [],
-        elements_modified: ["user_task_1"],
-        connections_added: ["flow_5", "flow_6"],
-        connections_removed: [],
-        variables_changed: ["department"],
-        is_identical: false,
-      },
-    };
-    setComparison(mockComparison);
-    setCompareModalVisible(true);
+    try {
+      // 调用真实 API 进行版本比较
+      const compareResult = await WorkflowAPI.compareVersions(
+        workflowId.toString(),
+        parseInt(version1.version),
+        parseInt(version2.version)
+      );
+
+      // 适配后端返回格式
+      const adaptedComparison: VersionComparison = {
+        version1,
+        version2,
+        comparison: compareResult || {
+          elements_added: [],
+          elements_removed: [],
+          elements_modified: [],
+          connections_added: [],
+          connections_removed: [],
+          variables_changed: [],
+          is_identical: true,
+        },
+      };
+      setComparison(adaptedComparison);
+      setCompareModalVisible(true);
+    } catch (error) {
+      console.error('版本比较失败:', error);
+      message.error('版本比较失败');
+    }
   };
 
   const handleDeleteVersion = async (versionId: number) => {
     try {
-      // 模拟删除
-      void versionId;
-      message.success("版本删除成功");
+      // 获取对应的版本号
+      const versionToDelete = versions.find(v => v.id === versionId);
+      if (!versionToDelete) {
+        message.error('未找到要删除的版本');
+        return;
+      }
+
+      // 调用真实 API 删除版本
+      await WorkflowAPI.deleteVersion(workflowId.toString(), parseInt(versionToDelete.version));
+      message.success('版本删除成功');
       loadVersions();
-    } catch {
-      message.error("删除失败");
+    } catch (error) {
+      console.error('删除版本失败:', error);
+      message.error('删除失败');
     }
   };
 

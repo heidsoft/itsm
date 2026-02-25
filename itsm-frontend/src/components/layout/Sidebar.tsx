@@ -17,9 +17,13 @@ import {
   Rocket,
   Monitor,
   Key,
+  Workflow,
+  Play,
+  Settings,
+  History,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import styles from './Sidebar.module.css';
 import { useI18n } from '@/lib/i18n';
@@ -140,12 +144,42 @@ const getMenuConfig = (t: any) => ({
   ],
   admin: [
     {
-      key: '/workflow',
+      key: 'workflow-group',
       icon: <GitMerge style={iconStyle} />,
       label: t('workflow.title'),
       path: '/workflow',
       permission: 'workflow:config',
       description: t('workflow.description'),
+      children: [
+        {
+          key: '/workflow',
+          icon: <Workflow style={iconStyle} />,
+          label: '工作流列表',
+          path: '/workflow',
+          permission: 'workflow:config',
+        },
+        {
+          key: '/workflow/designer',
+          icon: <Settings style={iconStyle} />,
+          label: '流程设计器',
+          path: '/workflow/designer',
+          permission: 'workflow:config',
+        },
+        {
+          key: '/workflow/instances',
+          icon: <Play style={iconStyle} />,
+          label: '流程实例',
+          path: '/workflow/instances',
+          permission: 'workflow:view',
+        },
+        {
+          key: '/workflow/versions',
+          icon: <History style={iconStyle} />,
+          label: '版本管理',
+          path: '/workflow/versions',
+          permission: 'workflow:config',
+        },
+      ],
     },
     {
       key: '/admin',
@@ -169,6 +203,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const { t } = useI18n();
+  // 手动触发 auth store 的 hydration
+  useAuthStoreHydration();
   const MENU_CONFIG = getMenuConfig(t);
 
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -178,19 +214,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   // 渲染菜单项，支持徽章和描述
-  const renderMenuItems = (items: typeof MENU_CONFIG.main) => {
-    return items.map(item => ({
-      key: item.key,
-      icon: item.icon,
-      label: (
-        <div className={styles.menuItemLabel} title={item.description || item.label}>
-          <span className="truncate">{item.label}</span>
-          {item.badge && <Badge count={item.badge} size='small' className={styles.menuItemBadge} />}
-        </div>
-      ),
-      onClick: () => handleMenuClick({ key: item.key }),
-      className: styles.menuItem,
-    }));
+  const renderMenuItems = (items: any[]) => {
+    return items.map(item => {
+      // 如果有子菜单
+      if (item.children) {
+        return {
+          key: item.key,
+          icon: item.icon,
+          label: (
+            <div className={styles.menuItemLabel} title={item.description || item.label}>
+              <span className="truncate">{item.label}</span>
+            </div>
+          ),
+          children: item.children.map((child: any) => ({
+            key: child.key,
+            icon: child.icon,
+            label: child.label,
+            onClick: () => handleMenuClick({ key: child.key }),
+          })),
+        };
+      }
+
+      return {
+        key: item.key,
+        icon: item.icon,
+        label: (
+          <div className={styles.menuItemLabel} title={item.description || item.label}>
+            <span className="truncate">{item.label}</span>
+            {item.badge && <Badge count={item.badge} size='small' className={styles.menuItemBadge} />}
+          </div>
+        ),
+        onClick: () => handleMenuClick({ key: item.key }),
+        className: styles.menuItem,
+      };
+    });
   };
 
   return (

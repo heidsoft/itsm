@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// Application is the client for interacting with the Application builders.
 	Application *ApplicationClient
+	// ApprovalChain is the client for interacting with the ApprovalChain builders.
+	ApprovalChain *ApprovalChainClient
 	// ApprovalRecord is the client for interacting with the ApprovalRecord builders.
 	ApprovalRecord *ApprovalRecordClient
 	// ApprovalWorkflow is the client for interacting with the ApprovalWorkflow builders.
@@ -124,6 +126,8 @@ type Tx struct {
 	ServiceRequest *ServiceRequestClient
 	// ServiceRequestApproval is the client for interacting with the ServiceRequestApproval builders.
 	ServiceRequestApproval *ServiceRequestApprovalClient
+	// SystemConfig is the client for interacting with the SystemConfig builders.
+	SystemConfig *SystemConfigClient
 	// Tag is the client for interacting with the Tag builders.
 	Tag *TagClient
 	// Team is the client for interacting with the Team builders.
@@ -294,6 +298,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Application = NewApplicationClient(tx.config)
+	tx.ApprovalChain = NewApprovalChainClient(tx.config)
 	tx.ApprovalRecord = NewApprovalRecordClient(tx.config)
 	tx.ApprovalWorkflow = NewApprovalWorkflowClient(tx.config)
 	tx.Asset = NewAssetClient(tx.config)
@@ -349,6 +354,7 @@ func (tx *Tx) init() {
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)
 	tx.ServiceRequestApproval = NewServiceRequestApprovalClient(tx.config)
+	tx.SystemConfig = NewSystemConfigClient(tx.config)
 	tx.Tag = NewTagClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"itsm-backend/ent/application"
+	"itsm-backend/ent/approvalchain"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/asset"
@@ -60,6 +61,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
@@ -118,6 +120,30 @@ func init() {
 	application.DefaultUpdatedAt = applicationDescUpdatedAt.Default.(func() time.Time)
 	// application.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	application.UpdateDefaultUpdatedAt = applicationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	approvalchainFields := schema.ApprovalChain{}.Fields()
+	_ = approvalchainFields
+	// approvalchainDescName is the schema descriptor for name field.
+	approvalchainDescName := approvalchainFields[0].Descriptor()
+	// approvalchain.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	approvalchain.NameValidator = approvalchainDescName.Validators[0].(func(string) error)
+	// approvalchainDescEntityType is the schema descriptor for entity_type field.
+	approvalchainDescEntityType := approvalchainFields[2].Descriptor()
+	// approvalchain.DefaultEntityType holds the default value on creation for the entity_type field.
+	approvalchain.DefaultEntityType = approvalchainDescEntityType.Default.(string)
+	// approvalchainDescStatus is the schema descriptor for status field.
+	approvalchainDescStatus := approvalchainFields[4].Descriptor()
+	// approvalchain.DefaultStatus holds the default value on creation for the status field.
+	approvalchain.DefaultStatus = approvalchainDescStatus.Default.(string)
+	// approvalchainDescCreatedAt is the schema descriptor for created_at field.
+	approvalchainDescCreatedAt := approvalchainFields[7].Descriptor()
+	// approvalchain.DefaultCreatedAt holds the default value on creation for the created_at field.
+	approvalchain.DefaultCreatedAt = approvalchainDescCreatedAt.Default.(func() time.Time)
+	// approvalchainDescUpdatedAt is the schema descriptor for updated_at field.
+	approvalchainDescUpdatedAt := approvalchainFields[8].Descriptor()
+	// approvalchain.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	approvalchain.DefaultUpdatedAt = approvalchainDescUpdatedAt.Default.(func() time.Time)
+	// approvalchain.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	approvalchain.UpdateDefaultUpdatedAt = approvalchainDescUpdatedAt.UpdateDefault.(func() time.Time)
 	approvalrecordFields := schema.ApprovalRecord{}.Fields()
 	_ = approvalrecordFields
 	// approvalrecordDescTicketID is the schema descriptor for ticket_id field.
@@ -2088,6 +2114,30 @@ func init() {
 	servicerequestapprovalDescCreatedAt := servicerequestapprovalFields[15].Descriptor()
 	// servicerequestapproval.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequestapproval.DefaultCreatedAt = servicerequestapprovalDescCreatedAt.Default.(func() time.Time)
+	systemconfigFields := schema.SystemConfig{}.Fields()
+	_ = systemconfigFields
+	// systemconfigDescKey is the schema descriptor for key field.
+	systemconfigDescKey := systemconfigFields[0].Descriptor()
+	// systemconfig.KeyValidator is a validator for the "key" field. It is called by the builders before save.
+	systemconfig.KeyValidator = systemconfigDescKey.Validators[0].(func(string) error)
+	// systemconfigDescValueType is the schema descriptor for value_type field.
+	systemconfigDescValueType := systemconfigFields[2].Descriptor()
+	// systemconfig.DefaultValueType holds the default value on creation for the value_type field.
+	systemconfig.DefaultValueType = systemconfigDescValueType.Default.(string)
+	// systemconfigDescCategory is the schema descriptor for category field.
+	systemconfigDescCategory := systemconfigFields[3].Descriptor()
+	// systemconfig.DefaultCategory holds the default value on creation for the category field.
+	systemconfig.DefaultCategory = systemconfigDescCategory.Default.(string)
+	// systemconfigDescCreatedAt is the schema descriptor for created_at field.
+	systemconfigDescCreatedAt := systemconfigFields[7].Descriptor()
+	// systemconfig.DefaultCreatedAt holds the default value on creation for the created_at field.
+	systemconfig.DefaultCreatedAt = systemconfigDescCreatedAt.Default.(func() time.Time)
+	// systemconfigDescUpdatedAt is the schema descriptor for updated_at field.
+	systemconfigDescUpdatedAt := systemconfigFields[8].Descriptor()
+	// systemconfig.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	systemconfig.DefaultUpdatedAt = systemconfigDescUpdatedAt.Default.(func() time.Time)
+	// systemconfig.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	systemconfig.UpdateDefaultUpdatedAt = systemconfigDescUpdatedAt.UpdateDefault.(func() time.Time)
 	tagFields := schema.Tag{}.Fields()
 	_ = tagFields
 	// tagDescName is the schema descriptor for name field.

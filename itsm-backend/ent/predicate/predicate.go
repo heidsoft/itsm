@@ -9,6 +9,9 @@ import (
 // Application is the predicate function for application builders.
 type Application func(*sql.Selector)
 
+// ApprovalChain is the predicate function for approvalchain builders.
+type ApprovalChain func(*sql.Selector)
+
 // ApprovalRecord is the predicate function for approvalrecord builders.
 type ApprovalRecord func(*sql.Selector)
 
@@ -173,6 +176,9 @@ type ServiceRequest func(*sql.Selector)
 
 // ServiceRequestApproval is the predicate function for servicerequestapproval builders.
 type ServiceRequestApproval func(*sql.Selector)
+
+// SystemConfig is the predicate function for systemconfig builders.
+type SystemConfig func(*sql.Selector)
 
 // Tag is the predicate function for tag builders.
 type Tag func(*sql.Selector)

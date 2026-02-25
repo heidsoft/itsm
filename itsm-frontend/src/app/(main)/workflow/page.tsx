@@ -101,16 +101,24 @@ const WorkflowManagementPage = () => {
     avgExecutionTime: 0,
   });
 
-  const loadWorkflows = useCallback(async () => {
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  // 分页加载工作流列表
+  const loadWorkflows = useCallback(async (page: number = 1, pageSize: number = 10) => {
     setLoading(true);
     try {
       const response = await WorkflowAPI.getWorkflows({
-        page: 1,
-        pageSize: 100,
+        page,
+        pageSize,
       });
       // 适配后端返回格式
       const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: any) => ({
-        id: w.id || 0,
+        id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
         name: w.name || w.code || 'Unknown',
         description: w.description || '',
         category: w.category || 'general',
@@ -124,42 +132,43 @@ const WorkflowManagementPage = () => {
         created_by: w.createdBy || w.created_by || 'System',
       }));
       setWorkflows(adaptedWorkflows);
-      // 基于实际数据计算统计
-      setStats(prev => ({
+      // 更新分页信息
+      setPagination(prev => ({
         ...prev,
-        total: adaptedWorkflows.length,
-        active: adaptedWorkflows.filter(w => w.status === 'active').length,
-        draft: adaptedWorkflows.filter(w => w.status === 'draft').length,
-        inactive: adaptedWorkflows.filter(w => w.status === 'inactive').length,
-        running: adaptedWorkflows.reduce((sum, w) => sum + w.running_instances, 0),
-        completed: adaptedWorkflows.reduce(
-          (sum, w) => sum + (w.instances_count - w.running_instances),
-          0
-        ),
+        current: page,
+        pageSize,
+        total: response.total || 0,
       }));
     } catch (error) {
       console.error('Failed to load workflows:', error);
-      message.error(t('workflow.loadFailed'));
+      // 显示实际错误信息以便调试
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      message.error(t('workflow.loadFailed') + ': ' + errorMessage);
       setWorkflows([]); // 确保清空列表
     } finally {
       setLoading(false);
     }
   }, [t]);
 
+  // 分页/排序/筛选变化处理
+  const handleTableChange = (newPagination: any) => {
+    loadWorkflows(newPagination.current, newPagination.pageSize);
+  };
+
   const loadStats = useCallback(async () => {
     // 统计已经在 loadWorkflows 中一起计算了
     // 这里保持空实现作为占位符
   }, []);
 
+  // 初始加载工作流列表
   useEffect(() => {
-    loadWorkflows();
-    loadStats();
-  }, [loadWorkflows, loadStats]);
+    loadWorkflows(pagination.current, pagination.pageSize);
+  }, []); // 只在组件挂载时加载一次
 
-  // 当filters变化时重新加载数据
+  // 当filters变化时重新加载数据（重置到第一页）
   useEffect(() => {
-    loadWorkflows();
-  }, [filters, loadWorkflows]);
+    loadWorkflows(1, pagination.pageSize);
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateWorkflow = () => {
     setEditingWorkflow(null);
@@ -174,14 +183,8 @@ const WorkflowManagementPage = () => {
   const handleDesignWorkflow = (workflow: Workflow) => {
     setEditingWorkflow(workflow);
 
-    // 根据工作流类型选择对应的设计器
-    if (workflow.category === 'ticket_approval' || workflow.category === t('workflow.approvalProcess') || workflow.name.includes(t('workflow.approvalProcess'))) {
-      // 工单审批流程使用专门的设计器
-      router.push(`/workflow/ticket-approval?id=${workflow.id}`);
-    } else {
-      // 通用工作流使用BPMN设计器
-      setDesignerVisible(true);
-    }
+    // 统一使用BPMN设计器，传递 key 而不是 id
+    router.push(`/workflow/designer?id=${workflow.id}&key=${workflow.id}`);
   };
 
   const handleViewBPMN = (workflow: Workflow) => {
@@ -580,9 +583,22 @@ const WorkflowManagementPage = () => {
     {
       title: t('workflow.actions'),
       key: 'action',
-      width: 200,
+      width: 280,
       render: (record: Workflow) => (
         <Space>
+          {/* 快捷部署按钮 - 直接显示在操作栏 */}
+          {record.status !== 'active' && (
+            <Tooltip title={record.status === 'draft' ? '部署' : '重新部署'}>
+              <Button
+                type='primary'
+                size='small'
+                icon={<PlayCircle className='w-3 h-3' />}
+                onClick={() => handleDeployWorkflow(record.id)}
+              >
+                部署
+              </Button>
+            </Tooltip>
+          )}
           <Tooltip title={t('workflow.designWorkflow')}>
             <Button
               type='text'
@@ -594,7 +610,7 @@ const WorkflowManagementPage = () => {
             <Button
               type='text'
               icon={<Eye className='w-4 h-4' />}
-              onClick={() => window.open(`/workflow/${record.id}`, '_blank')}
+              onClick={() => router.push(`/workflow/designer?id=${record.id}&key=${record.id}`)}
             />
           </Tooltip>
           <Dropdown
@@ -808,7 +824,7 @@ const WorkflowManagementPage = () => {
                       key: 'ticket_approval',
                       label: t('workflow.ticketApprovalProcess'),
                       icon: <GitBranch className='w-4 h-4' />,
-                      onClick: () => router.push('/workflow/ticket-approval'),
+                      onClick: () => router.push('/workflow/designer'),
                     },
                     {
                       key: 'general',
@@ -833,10 +849,18 @@ const WorkflowManagementPage = () => {
                   {t('workflow.newWorkflow')} <MoreHorizontal className='w-3 h-3 ml-1' />
                 </Button>
               </Dropdown>
+              {/* 发起流程快捷入口 - 跳转到实例管理页面 */}
+              <Button
+                type='default'
+                icon={<PlayCircle className='w-4 h-4' />}
+                onClick={() => router.push('/workflow/instances')}
+              >
+                发起流程
+              </Button>
               <Button icon={<Upload className='w-4 h-4' />} onClick={handleImportWorkflow}>
                 {t('workflow.import')}
               </Button>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadWorkflows}>
+              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}>
                 {t('workflow.refresh')}
               </Button>
             </Space>
@@ -916,9 +940,13 @@ const WorkflowManagementPage = () => {
             ],
           }}
           pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => t('workflow.showTotal', { start: range[0], end: range[1], total }),
+            onChange: handleTableChange,
           }}
           scroll={{ x: 1200 }}
         />

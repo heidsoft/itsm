@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/user"
 	"itsm-backend/ent/workflowtask"
 
 	"go.uber.org/zap"
@@ -49,6 +52,7 @@ type ProcessInstanceService interface {
 	GetProcessInstanceVariables(ctx context.Context, processInstanceID string) (map[string]interface{}, error)
 	SetProcessInstanceVariables(ctx context.Context, processInstanceID string, variables map[string]interface{}) error
 	GetProcessInstanceHistory(ctx context.Context, processInstanceID string) ([]*ent.ProcessExecutionHistory, error)
+	GetInstanceStatistics(ctx context.Context, req *InstanceStatisticsRequest) (*InstanceStatistics, error)
 }
 
 // TaskService 任务管理服务接口
@@ -66,6 +70,10 @@ type TaskService interface {
 	EscalateTask(ctx context.Context, taskID string, reason string) error
 	BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string) error
 	GetTaskStatistics(ctx context.Context, req *TaskStatisticsRequest) (*TaskStatistics, error)
+	// 会签相关
+	CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*ent.ProcessTask, error)
+	GetCounterSignStatus(ctx context.Context, parentTaskID string) (*CounterSignStatus, error)
+	Vote(ctx context.Context, taskID string, req *VoteRequest) error
 }
 
 // CustomProcessEngine 是ProcessEngine接口的实现
@@ -166,7 +174,7 @@ func (e *CustomProcessEngine) ProcessInstanceService() ProcessInstanceService {
 
 // TaskService 返回任务服务
 func (e *CustomProcessEngine) TaskService() TaskService {
-	return &bpmnTaskService{client: e.client}
+	return &bpmnTaskService{client: e.client, logger: e.logger}
 }
 
 // StartProcess 启动流程实例
@@ -233,10 +241,8 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		return fmt.Errorf("获取任务失败: %w", err)
 	}
 
-	// 2. 获取流程实例
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(fmt.Sprintf("%d", task.ProcessInstanceID))).
-		First(ctx)
+	// 2. 获取流程实例 - 使用任务中存储的ProcessInstanceID (ent自动生成的ID)
+	instance, err := e.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil {
 		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -313,14 +319,27 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, instance *ent.Pro
 }
 
 func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, elementID string) error {
+	// Find the element name for logging
+	elementName := elementID
+	if task := e.findUserTask(process, elementID); task != nil {
+		elementName = task.Name
+	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
+		elementName = endEvent.Name
+	}
+
 	_, err := e.client.ProcessInstance.UpdateOne(instance).
 		SetCurrentActivityID(elementID).
+		SetCurrentActivityName(elementName).
 		Save(ctx)
 	if err != nil {
 		return err
 	}
 
+	// Debug: log element info
+	e.logger.Debugw("handleElement called", "elementID", elementID, "elementName", elementName, "userTasksCount", len(process.UserTasks))
+
 	if task := e.findUserTask(process, elementID); task != nil {
+		e.logger.Infow("Found user task, creating task", "taskID", task.ID, "taskName", task.Name)
 		return e.createUserTask(ctx, instance, task)
 	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
 		return e.completeProcess(ctx, instance)
@@ -335,22 +354,113 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, instance *ent.P
 }
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) error {
-	// Parse the instance.ProcessInstanceID (string) to int
-	instanceID, _ := strconv.Atoi(instance.ProcessInstanceID)
+	// 自动分配逻辑：优先级 BPMN定义 > 流程变量(request/assignee) > 默认分配
+	assignee := task.Assignee
+
+	// 辅助函数：从变量中提取用户ID
+	getUserID := func(key string) string {
+		if v, ok := instance.Variables[key]; ok {
+			switch val := v.(type) {
+			case float64:
+				// JSON numbers are float64
+				if val > 0 {
+					return strconv.FormatFloat(val, 'f', 0, 64)
+				}
+			case int:
+				if val > 0 {
+					return strconv.Itoa(val)
+				}
+			case string:
+				if val != "" && val != "0" {
+					return val
+				}
+			}
+		}
+		return ""
+	}
+
+	// 如果BPMN没有定义分配人，从流程变量中获取
+	if assignee == "" {
+		// 优先使用 requester_id（工单申请人）
+		assignee = getUserID("requester_id")
+		// 其次使用 triggered_by（触发者）
+		if assignee == "" {
+			assignee = getUserID("triggered_by")
+		}
+		// 再其次使用 assignee_id
+		if assignee == "" {
+			assignee = getUserID("assignee_id")
+		}
+		// 如果还是没有，根据任务名称自动分配
+		if assignee == "" {
+			assignee = e.getDefaultAssigntee(ctx, instance, task)
+		}
+	}
+
+	// Use instance.ID (auto-generated integer) for the relationship
 	_, err := e.client.ProcessTask.Create().
 		SetTaskID(fmt.Sprintf("TASK-%s-%d", task.ID, time.Now().UnixNano())).
-		SetProcessInstanceID(instanceID).
+		SetProcessInstanceID(instance.ID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
 		SetTaskDefinitionKey(task.ID).
 		SetTaskName(task.Name).
 		SetTaskType("user_task").
 		SetStatus("created").
-		SetAssignee(task.Assignee).
+		SetAssignee(assignee).
 		SetCandidateUsers(task.CandidateUsers).
 		SetCandidateGroups(task.CandidateGroups).
 		SetTenantID(instance.TenantID).
+		SetCreatedTime(time.Now()).
 		Save(ctx)
-	return err
+	if err != nil {
+		return fmt.Errorf("创建用户任务失败: %w", err)
+	}
+	e.logger.Infow("User task created with auto-assignment", "taskID", task.ID, "taskName", task.Name, "assignee", assignee)
+	return nil
+}
+
+// getDefaultAssigntee 根据任务类型和业务逻辑获取默认分配人
+func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) string {
+	taskName := task.Name
+
+	// 1. 审批类任务 - 尝试分配给管理员或安全审批人
+	if strings.Contains(taskName, "审批") || strings.Contains(taskName, "审核") || strings.Contains(taskName, "批准") {
+		// 查找有审批权限的用户 (角色为 admin 或 security)
+		users, err := e.client.User.Query().
+			Where(user.RoleIn("admin", "security")).
+			Where(user.TenantID(instance.TenantID)).
+			Where(user.Active(true)).
+			Limit(1).
+			All(ctx)
+		if err == nil && len(users) > 0 {
+			return strconv.Itoa(users[0].ID)
+		}
+	}
+
+	// 2. 处理类任务 - 分配给工程师
+	if strings.Contains(taskName, "处理") || strings.Contains(taskName, "执行") || strings.Contains(taskName, "处理") {
+		users, err := e.client.User.Query().
+			Where(user.RoleIn("engineer", "admin")).
+			Where(user.TenantID(instance.TenantID)).
+			Where(user.Active(true)).
+			Limit(1).
+			All(ctx)
+		if err == nil && len(users) > 0 {
+			return strconv.Itoa(users[0].ID)
+		}
+	}
+
+	// 3. 默认分配 - 返回第一个活跃用户
+	users, err := e.client.User.Query().
+		Where(user.TenantID(instance.TenantID)).
+		Where(user.Active(true)).
+		Limit(1).
+		All(ctx)
+	if err == nil && len(users) > 0 {
+		return strconv.Itoa(users[0].ID)
+	}
+
+	return ""
 }
 
 func (e *CustomProcessEngine) completeProcess(ctx context.Context, instance *ent.ProcessInstance) error {
@@ -524,6 +634,48 @@ type TaskStatistics struct {
 	TimeDistribution  map[string]interface{} `json:"time_distribution"`
 }
 
+// InstanceStatisticsRequest 实例统计请求
+type InstanceStatisticsRequest struct {
+	ProcessDefinitionKey string     `json:"process_definition_key"`
+	Status               string     `json:"status"`
+	TenantID             int        `json:"tenant_id"`
+	StartDate            *time.Time `json:"start_date"`
+	EndDate              *time.Time `json:"end_date"`
+}
+
+// InstanceStatistics 实例统计
+type InstanceStatistics struct {
+	Total      int            `json:"total"`
+	Running    int            `json:"running"`
+	Completed  int            `json:"completed"`
+	Suspended  int            `json:"suspended"`
+	Terminated int            `json:"terminated"`
+}
+
+// CounterSignStatus 会签状态
+type CounterSignStatus struct {
+	ParentTaskID string `json:"parent_task_id"`
+	Total        int    `json:"total"`
+	Completed    int    `json:"completed"`
+	Approved     int    `json:"approved"`
+	Rejected     int    `json:"rejected"`
+	Pending      int    `json:"pending"`
+	Status       string `json:"status"` // pending, approved, rejected
+}
+
+// CounterSignRequest 会签请求
+type CounterSignRequest struct {
+	ApprovalType string   `json:"approval_type"` // serial, parallel
+	Approvers   []string `json:"approvers"`
+	Threshold   int      `json:"threshold"`
+}
+
+// VoteRequest 投票请求
+type VoteRequest struct {
+	Approved bool   `json:"approved"`
+	Comment  string `json:"comment"`
+}
+
 // Service implementations
 type bpmnProcessDefinitionService struct {
 	client *ent.Client
@@ -531,9 +683,37 @@ type bpmnProcessDefinitionService struct {
 }
 
 func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Context, req *CreateProcessDefinitionRequest) (*ent.ProcessDefinition, error) {
+	// 首先检查或创建 ProcessDeployment
+	var deployment *ent.ProcessDeployment
+	existingDeployments, err := s.client.ProcessDeployment.Query().
+		Where(processdeployment.TenantID(req.TenantID)).
+		Order(ent.Desc("created_at")).
+		Limit(1).
+		All(ctx)
+
+	if err == nil && len(existingDeployments) > 0 {
+		deployment = existingDeployments[0]
+	} else {
+		// 创建新的部署记录
+		deployment, err = s.client.ProcessDeployment.Create().
+			SetDeploymentID(fmt.Sprintf("deploy-%d", time.Now().UnixNano())).
+			SetDeploymentName(req.Name + "-deployment").
+			SetDeploymentSource("api").
+			SetTenantID(req.TenantID).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("创建部署记录失败: %w", err)
+		}
+	}
+
+	// 获取当前最高版本号
+	nextVersion := s.getNextVersion(ctx, req.Key, req.TenantID)
+
+	// 将旧版本标记为非最新
 	existing, err := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(req.Key)).
 		Where(processdefinition.IsLatest(true)).
+		Where(processdefinition.TenantID(req.TenantID)).
 		First(ctx)
 
 	if err == nil && existing != nil {
@@ -552,10 +732,12 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetCategory(req.Category).
 		SetBpmnXML([]byte(req.BPMNXML)).
 		SetProcessVariables(req.ProcessVariables).
-		SetVersion("1.0.0").
+		SetVersion(nextVersion).
 		SetIsActive(true).
 		SetIsLatest(true).
 		SetTenantID(req.TenantID).
+		SetDeploymentID(deployment.ID).
+		SetDeploymentName(deployment.DeploymentName).
 		Save(ctx)
 
 	if err != nil {
@@ -563,6 +745,57 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 	}
 
 	return definition, nil
+}
+
+// getNextVersion 获取下一个版本号
+func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key string, tenantID int) string {
+	// 查询当前最高版本
+	existing, err := s.client.ProcessDefinition.Query().
+		Where(processdefinition.Key(key)).
+		Where(processdefinition.TenantID(tenantID)).
+		Order(ent.Desc("version")).
+		First(ctx)
+
+	if err != nil {
+		// 没有版本，返回初始版本
+		return "1.0.0"
+	}
+
+	// 解析当前版本号并递增
+	currentVersion := existing.Version
+	// 支持 v1.0.0, 1.0.0, 1 等格式
+	versionNum := 1
+	if currentVersion != "" {
+		// 尝试提取数字部分
+		var major, minor, patch int
+		_, err := fmt.Sscanf(currentVersion, "%d.%d.%d", &major, &minor, &patch)
+		if err != nil {
+			// 如果解析失败，尝试只解析主版本号
+			fmt.Sscanf(currentVersion, "%d", &major)
+			versionNum = major
+		} else {
+			versionNum = major*100 + minor*10 + patch
+		}
+	}
+
+	// 递增版本号 (使用语义化版本号)
+	newMajor := versionNum / 100
+	newMinor := (versionNum / 10) % 10
+	newPatch := versionNum % 10
+
+	// 如果patch已达9，重置并递增minor
+	if newPatch >= 9 {
+		newPatch = 0
+		newMinor++
+		if newMinor >= 9 {
+			newMinor = 0
+			newMajor++
+		}
+	} else {
+		newPatch++
+	}
+
+	return fmt.Sprintf("%d.%d.%d", newMajor, newMinor, newPatch)
 }
 
 func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context, key string, version string) (*ent.ProcessDefinition, error) {
@@ -759,6 +992,67 @@ func (s *bpmnProcessInstanceService) GetProcessInstanceHistory(ctx context.Conte
 	return []*ent.ProcessExecutionHistory{}, nil
 }
 
+// GetInstanceStatistics 获取实例统计
+func (s *bpmnProcessInstanceService) GetInstanceStatistics(ctx context.Context, req *InstanceStatisticsRequest) (*InstanceStatistics, error) {
+	query := s.client.ProcessInstance.Query()
+
+	if req.ProcessDefinitionKey != "" {
+		query = query.Where(processinstance.ProcessDefinitionKey(req.ProcessDefinitionKey))
+	}
+	if req.TenantID > 0 {
+		query = query.Where(processinstance.TenantID(req.TenantID))
+	}
+	if req.StartDate != nil {
+		query = query.Where(processinstance.StartTimeGTE(*req.StartDate))
+	}
+	if req.EndDate != nil {
+		query = query.Where(processinstance.StartTimeLTE(*req.EndDate))
+	}
+
+	instances, err := query.All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取实例统计失败: %w", err)
+	}
+
+	stats := &InstanceStatistics{
+		Total:      len(instances),
+		Running:    0,
+		Completed:  0,
+		Suspended:  0,
+		Terminated: 0,
+	}
+
+	for _, inst := range instances {
+		switch inst.Status {
+		case "running":
+			stats.Running++
+		case "completed":
+			stats.Completed++
+		case "suspended":
+			stats.Suspended++
+		case "terminated":
+			stats.Terminated++
+		}
+	}
+
+	// 如果有状态筛选，返回筛选后的统计
+	if req.Status != "" {
+		stats.Total = 0
+		switch req.Status {
+		case "running":
+			stats.Total = stats.Running
+		case "completed":
+			stats.Total = stats.Completed
+		case "suspended":
+			stats.Total = stats.Suspended
+		case "terminated":
+			stats.Total = stats.Terminated
+		}
+	}
+
+	return stats, nil
+}
+
 type bpmnTaskService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
@@ -777,7 +1071,12 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 }
 
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
+	s.logger.Debugw("ListUserTasks called", "assignee", req.Assignee, "tenantID", req.TenantID)
 	query := s.client.ProcessTask.Query()
+
+	// Debug: count all tasks
+	totalAll, _ := s.client.ProcessTask.Query().Count(ctx)
+	s.logger.Debugw("Total tasks in DB", "count", totalAll)
 
 	if req.Assignee != "" {
 		query = query.Where(processtask.Assignee(req.Assignee))
@@ -1039,4 +1338,205 @@ func (s *bpmnTaskService) GetTaskStatistics(ctx context.Context, req *TaskStatis
 	stats.PendingTasks = stats.StatusBreakdown["pending"] + stats.StatusBreakdown["assigned"]
 
 	return stats, nil
+}
+
+// CreateCounterSignTasks 创建会签子任务
+func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*ent.ProcessTask, error) {
+	// 获取父任务
+	parentTask, err := s.client.ProcessTask.Query().
+		Where(processtask.TaskID(parentTaskID)).
+		First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取父任务失败: %w", err)
+	}
+
+	// 生成根任务ID（如果是第一个会签任务）
+	rootTaskID := parentTaskID
+	if parentTask.RootTaskID != "" {
+		rootTaskID = parentTask.RootTaskID
+	}
+
+	threshold := req.Threshold
+	if threshold == 0 {
+		threshold = len(req.Approvers)
+	}
+
+	var tasks []*ent.ProcessTask
+	for i, approver := range req.Approvers {
+		taskID := fmt.Sprintf("%s_countersign_%d", parentTaskID, i)
+		task, err := s.client.ProcessTask.Create().
+			SetTaskID(taskID).
+			SetProcessInstanceID(parentTask.ProcessInstanceID).
+			SetProcessDefinitionKey(parentTask.ProcessDefinitionKey).
+			SetTaskDefinitionKey(parentTask.TaskDefinitionKey + "_counter").
+			SetTaskName(parentTask.TaskName + "_会签").
+			SetTaskType("user_task").
+			SetAssignee(approver).
+			SetStatus("assigned").
+			SetPriority(parentTask.Priority).
+			SetParentTaskID(parentTaskID).
+			SetRootTaskID(rootTaskID).
+			SetTenantID(parentTask.TenantID).
+			SetCreatedTime(time.Now()).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("创建会签任务失败: %w", err)
+		}
+		tasks = append(tasks, task)
+	}
+
+	// 更新父任务状态为会签中
+	_, err = s.client.ProcessTask.UpdateOneID(parentTask.ID).
+		SetTaskVariables(map[string]interface{}{
+			"approval_type": req.ApprovalType,
+			"threshold":     threshold,
+			"total":          len(req.Approvers),
+			"completed":      0,
+			"approved":       0,
+			"rejected":       0,
+		}).
+		Save(ctx)
+	if err != nil {
+		s.logger.Warnf("更新父任务变量失败: %v", err)
+	}
+
+	return tasks, nil
+}
+
+// GetCounterSignStatus 获取会签状态
+func (s *bpmnTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID string) (*CounterSignStatus, error) {
+	// 获取所有会签子任务
+	subTasks, err := s.client.ProcessTask.Query().
+		Where(processtask.ParentTaskID(parentTaskID)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取会签子任务失败: %w", err)
+	}
+
+	status := &CounterSignStatus{
+		ParentTaskID: parentTaskID,
+		Total:        len(subTasks),
+		Completed:    0,
+		Approved:     0,
+		Rejected:     0,
+		Pending:      len(subTasks),
+		Status:       "pending",
+	}
+
+	for _, task := range subTasks {
+		switch task.Status {
+		case "completed":
+			status.Completed++
+			status.Pending--
+			// 检查审批结果
+			if vars := task.TaskVariables; vars != nil {
+				if approved, ok := vars["approved"].(bool); ok && approved {
+					status.Approved++
+				} else {
+					status.Rejected++
+				}
+			}
+		case "assigned", "created":
+			// still pending
+		}
+	}
+
+	// 确定会签整体状态
+	if status.Rejected > 0 {
+		status.Status = "rejected"
+	} else if status.Completed == status.Total {
+		status.Status = "approved"
+	} else {
+		status.Status = "pending"
+	}
+
+	return status, nil
+}
+
+// Vote 投票（完成会签任务）
+func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequest) error {
+	task, err := s.client.ProcessTask.Query().
+		Where(processtask.TaskID(taskID)).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("获取任务失败: %w", err)
+	}
+
+	// 更新任务状态为完成
+	_, err = s.client.ProcessTask.UpdateOneID(task.ID).
+		SetStatus("completed").
+		SetCompletedTime(time.Now()).
+		SetTaskVariables(map[string]interface{}{
+			"approved": req.Approved,
+			"comment":  req.Comment,
+		}).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("完成任务失败: %w", err)
+	}
+
+	// 获取会签状态
+	parentTaskID := task.ParentTaskID
+	if parentTaskID == "" {
+		return nil // 没有父任务，不需要检查会签状态
+	}
+
+	status, err := s.GetCounterSignStatus(ctx, parentTaskID)
+	if err != nil {
+		return fmt.Errorf("获取会签状态失败: %w", err)
+	}
+
+	// 根据会签类型和阈值判断是否需要终止其他任务
+	parentTask, err := s.client.ProcessTask.Query().
+		Where(processtask.TaskID(parentTaskID)).
+		First(ctx)
+	if err != nil {
+		return nil
+	}
+
+	vars := parentTask.TaskVariables
+	if vars == nil {
+		vars = make(map[string]interface{})
+	}
+	threshold := 1
+	if t, ok := vars["threshold"].(int); ok {
+		threshold = t
+	}
+	approvalType := "parallel"
+	if at, ok := vars["approval_type"].(string); ok {
+		approvalType = at
+	}
+
+	// 并行会签：一人拒绝则全部拒绝
+	if approvalType == "parallel" && req.Approved == false {
+		// 取消其他未完成的会签任务
+		subTasks, _ := s.client.ProcessTask.Query().
+			Where(processtask.ParentTaskID(parentTaskID)).
+			Where(processtask.StatusNEQ("completed")).
+			All(ctx)
+		for _, st := range subTasks {
+			s.client.ProcessTask.UpdateOneID(st.ID).
+				SetStatus("cancelled").
+				SetCompletedTime(time.Now()).
+				Exec(ctx)
+		}
+	}
+
+	// 检查是否达到阈值
+	if status.Status == "approved" || status.Status == "rejected" {
+		// 更新父任务
+		s.client.ProcessTask.UpdateOneID(parentTask.ID).
+			SetTaskVariables(map[string]interface{}{
+				"approval_type": approvalType,
+				"threshold":     threshold,
+				"total":         status.Total,
+				"completed":     status.Completed,
+				"approved":      status.Approved,
+				"rejected":      status.Rejected,
+				"final_status":  status.Status,
+			}).
+			Exec(ctx)
+	}
+
+	return nil
 }

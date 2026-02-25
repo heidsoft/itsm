@@ -170,3 +170,129 @@ func (tc *TenantController) UpdateTenantStatus(c *gin.Context) {
 
 	common.Success(c, nil)
 }
+
+// GetTenant 获取租户详情
+// @Summary 获取租户详情
+// @Description 获取指定租户的详细信息
+// @Tags 租户管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户ID"
+// @Success 200 {object} common.Response{data=dto.TenantResponse}
+// @Failure 400 {object} common.Response
+// @RouterIgnore /api/admin/tenants/{id} [get]
+func (tc *TenantController) GetTenant(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, 1001, "无效的租户ID")
+		return
+	}
+
+	tenant, err := tc.tenantService.GetTenant(c.Request.Context(), id)
+	if err != nil {
+		tc.logger.Errorf("获取租户详情失败: %v", err)
+		common.Fail(c, 5001, "获取租户详情失败: "+err.Error())
+		return
+	}
+
+	var domain *string
+	if tenant.Domain != "" {
+		domain = &tenant.Domain
+	}
+
+	response := &dto.TenantResponse{
+		ID:        tenant.ID,
+		Name:      tenant.Name,
+		Code:      tenant.Code,
+		Domain:    domain,
+		Type:      tenant.Type,
+		Status:    tenant.Status,
+		ExpiresAt: &tenant.ExpiresAt,
+		CreatedAt: tenant.CreatedAt,
+		UpdatedAt: tenant.UpdatedAt,
+	}
+
+	common.Success(c, response)
+}
+
+// UpdateTenant 更新租户
+// @Summary 更新租户
+// @Description 更新指定租户的信息
+// @Tags 租户管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户ID"
+// @Param tenant body dto.UpdateTenantRequest true "租户信息"
+// @Success 200 {object} common.Response{data=dto.TenantResponse}
+// @Failure 400 {object} common.Response
+// @RouterIgnore /api/admin/tenants/{id} [put]
+func (tc *TenantController) UpdateTenant(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, 1001, "无效的租户ID")
+		return
+	}
+
+	var req dto.UpdateTenantRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		tc.logger.Errorf("参数绑定失败: %v", err)
+		common.Fail(c, 1001, "参数错误: "+err.Error())
+		return
+	}
+
+	tenant, err := tc.tenantService.UpdateTenant(c.Request.Context(), id, &req)
+	if err != nil {
+		tc.logger.Errorf("更新租户失败: %v", err)
+		common.Fail(c, 5001, "更新租户失败: "+err.Error())
+		return
+	}
+
+	var domain *string
+	if tenant.Domain != "" {
+		domain = &tenant.Domain
+	}
+
+	response := &dto.TenantResponse{
+		ID:        tenant.ID,
+		Name:      tenant.Name,
+		Code:      tenant.Code,
+		Domain:    domain,
+		Type:      tenant.Type,
+		Status:    tenant.Status,
+		ExpiresAt: &tenant.ExpiresAt,
+		CreatedAt: tenant.CreatedAt,
+		UpdatedAt: tenant.UpdatedAt,
+	}
+
+	common.Success(c, response)
+}
+
+// DeleteTenant 删除租户
+// @Summary 删除租户
+// @Description 删除指定租户
+// @Tags 租户管理
+// @Accept json
+// @Produce json
+// @Param id path int true "租户ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @RouterIgnore /api/admin/tenants/{id} [delete]
+func (tc *TenantController) DeleteTenant(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		common.Fail(c, 1001, "无效的租户ID")
+		return
+	}
+
+	err = tc.tenantService.DeleteTenant(c.Request.Context(), id)
+	if err != nil {
+		tc.logger.Errorf("删除租户失败: %v", err)
+		common.Fail(c, 5001, "删除租户失败: "+err.Error())
+		return
+	}
+
+	common.Success(c, nil)
+}

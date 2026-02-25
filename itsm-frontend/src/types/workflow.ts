@@ -543,3 +543,76 @@ export interface WorkflowExport {
 
 export default WorkflowDefinition;
 
+// ==================== 会签审批类型 ====================
+
+/**
+ * 会签配置
+ */
+export interface CounterSignConfig {
+  approvalType: 'serial' | 'parallel'; // serial: 顺序会签, parallel: 并行会签
+  approvers: string[];                  // 审批人ID列表
+  threshold?: number;                   // 投票阈值（默认等于审批人数）
+}
+
+/**
+ * 会签状态
+ */
+export interface CounterSignStatus {
+  parentTaskId: string;    // 父任务ID
+  total: number;            // 总审批人数
+  completed: number;       // 已完成审批人数
+  approved: number;       // 已通过人数
+  rejected: number;       // 已拒绝人数
+  pending: number;        // 待审批人数
+  status: 'pending' | 'approved' | 'rejected'; // 会签整体状态
+}
+
+/**
+ * 投票请求
+ */
+export interface VoteRequest {
+  approved: boolean;       // 是否通过
+  comment?: string;        // 审批意见
+}
+
+// ==================== API 响应类型 ====================
+
+/**
+ * 工作流列表响应
+ */
+export interface WorkflowListResponse {
+  workflows: WorkflowDefinition[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * 实例列表响应
+ */
+export interface InstanceListResponse {
+  instances: WorkflowInstance[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * 实例统计
+ */
+export interface InstanceStats {
+  total: number;
+  running: number;
+  completed: number;
+  suspended: number;
+  terminated: number;
+}
+
+/**
+ * 任务列表响应
+ */
+export interface TaskListResponse {
+  tasks: NodeInstance[];
+  total: number;
+}
+

@@ -17,8 +17,9 @@ import type {
   WorkflowQuery,
   WorkflowExport,
   NodeExecutionStats,
+  InstanceStats,
 } from '@/types/workflow';
-import { WorkflowStatus } from '@/types/workflow';
+import { WorkflowStatus, WorkflowType, WorkflowInstanceStatus } from '@/types/workflow';
 
 // Re-export commonly used workflow types for page imports
 export type {
@@ -35,6 +36,7 @@ export type {
   WorkflowQuery,
   WorkflowExport,
   NodeExecutionStats,
+  InstanceStats,
 };
 
 // Backward-compatible alias used by some pages
@@ -52,26 +54,46 @@ export class WorkflowApi {
     workflows: WorkflowDefinition[];
     total: number;
   }> {
-    const params: any = {};
+    const params: Record<string, string | number> = {};
     if (query?.page) params.page = query.page;
     if (query?.pageSize) params.page_size = query.pageSize;
-    
+
     // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res: any = await httpClient.get('/api/v1/bpmn/process-definitions', params);
-    const list = Array.isArray(res) ? res : (res?.data || res?.items || []);
-    const total = res?.pagination?.total || res?.total || list.length || 0;
-    // 适配后端返回格式
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return {
-      workflows: list.map((item: any) => ({
-        ...item,
-        code: item.key, // Map key to code
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-      })),
-      total
-    };
+    const res = await httpClient.get<Array<{
+      id: number;
+      key: string;
+      name: string;
+      description?: string;
+      version: number;
+      status: string;
+      created_at: string;
+      updated_at: string;
+    }>>('/api/v1/bpmn/process-definitions', params);
+
+    const list = Array.isArray(res) ? res : [];
+    const workflows: WorkflowDefinition[] = list.map((item) => ({
+      id: String(item.id || ''),
+      code: item.key || '',
+      name: item.name || '',
+      type: WorkflowType.TICKET,
+      version: item.version || 1,
+      status: item.status ? (item.status as WorkflowStatus) : WorkflowStatus.DRAFT,
+      nodes: [],
+      connections: [],
+      variables: [],
+      triggers: [],
+      settings: {
+        allowParallelInstances: true,
+        enableVersionControl: true,
+        enableAuditLog: true,
+      },
+      createdBy: 0,
+      createdByName: '',
+      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
+      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      description: item.description,
+    })) as WorkflowDefinition[];
+    return { workflows, total: list.length };
   }
 
   /**
@@ -80,14 +102,39 @@ export class WorkflowApi {
   static async getWorkflow(id: string): Promise<WorkflowDefinition> {
     // Assuming id is the key for BPMN controller which uses key
     // 修正: 确保路径与后端一致
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res: any = await httpClient.get(`/api/v1/bpmn/process-definitions/${id}`);
-    const item = res?.data || res;
+    const res = await httpClient.get<{
+      id: number;
+      key: string;
+      name: string;
+      description?: string;
+      version: number;
+      status: string;
+      created_at: string;
+      updated_at: string;
+    }>(`/api/v1/bpmn/process-definitions/${id}`);
+
+    const item = res;
     return {
-        ...item,
-        code: item.key,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
+      id: String(item.id || ''),
+      code: item.key || '',
+      name: item.name || '',
+      type: WorkflowType.TICKET,
+      version: item.version || 1,
+      status: item.status ? (item.status as WorkflowStatus) : WorkflowStatus.DRAFT,
+      nodes: [],
+      connections: [],
+      variables: [],
+      triggers: [],
+      settings: {
+        allowParallelInstances: true,
+        enableVersionControl: true,
+        enableAuditLog: true,
+      },
+      createdBy: 0,
+      createdByName: '',
+      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
+      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      description: item.description,
     };
   }
 
@@ -106,14 +153,14 @@ export class WorkflowApi {
     return WorkflowApi.createWorkflow(request as any);
   }
 
-  static async updateProcessDefinition(key: string, request: unknown): Promise<WorkflowDefinition> {
+  static async updateProcessDefinition(key: string, request: unknown, version?: string): Promise<WorkflowDefinition> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return WorkflowApi.updateWorkflow(key, request as any);
+    return WorkflowApi.updateWorkflow(key, request as any, version);
   }
 
-  static async deployProcessDefinition(key: string): Promise<void> {
+  static async deployProcessDefinition(key: string, version?: string): Promise<void> {
     // 激活工作流即视为部署
-    await WorkflowApi.activateWorkflow(key);
+    await WorkflowApi.activateWorkflow(key, version);
   }
 
   static async createProcessVersion(key: string): Promise<WorkflowDefinition> {
@@ -132,7 +179,12 @@ export class WorkflowApi {
 
   static async deployWorkflow(workflowId: string): Promise<void> {
     // 激活工作流即视为部署
-    await WorkflowApi.activateWorkflow(workflowId);
+    try {
+      await WorkflowApi.activateWorkflow(workflowId);
+    } catch (error) {
+      console.error('部署工作流失败:', error);
+      throw error;
+    }
   }
 
   static async listWorkflowInstances(params?: unknown): Promise<{ instances: WorkflowInstance[]; total: number }> {
@@ -163,13 +215,16 @@ export class WorkflowApi {
   static async createWorkflow(
     request: CreateWorkflowRequest
   ): Promise<WorkflowDefinition> {
+    // 从 httpClient 获取当前租户ID
+    const tenantId = httpClient.getTenantId() || 1;
+
     const payload = {
         key: request.code || `process_${Date.now()}`,
         name: request.name,
         description: request.description,
         category: request.type, // Map type to category
         bpmn_xml: (request as any).bpmn_xml,
-        tenant_id: 1, // Default tenant
+        tenant_id: tenantId,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
   }
@@ -179,7 +234,8 @@ export class WorkflowApi {
    */
   static async updateWorkflow(
     id: string,
-    request: UpdateWorkflowRequest
+    request: UpdateWorkflowRequest,
+    version?: string
   ): Promise<WorkflowDefinition> {
     const payload = {
         name: request.name,
@@ -188,11 +244,17 @@ export class WorkflowApi {
     };
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.
-    // Ideally frontend should pass version. For now let's try without or hardcode.
-    // Backend UpdateProcessDefinition: PUT /process-definitions/:key?version=...
-    // If we don't know version, this might fail if backend requires it strictly.
-    // Let's assume we fetch latest version logic or pass a default.
-    return httpClient.put(`/api/v1/bpmn/process-definitions/${id}?version=1.0.0`, payload);
+    const ver = version || '1.0.0';
+    const response = await httpClient.put<{
+      code: number;
+      message: string;
+      data: WorkflowDefinition;
+    }>(`/api/v1/bpmn/process-definitions/${id}?version=${ver}`, payload);
+
+    if (response?.code !== 0) {
+      throw new Error(response?.message || '更新工作流失败');
+    }
+    return response?.data;
   }
 
   /**
@@ -226,15 +288,24 @@ export class WorkflowApi {
   /**
    * 激活工作流
    */
-  static async activateWorkflow(id: string): Promise<void> {
-    await httpClient.put(`/api/v1/bpmn/process-definitions/${id}/active?version=1.0.0`, { active: true });
+  static async activateWorkflow(id: string, version?: string): Promise<void> {
+    const ver = version || '1.0.0';
+    const response = await httpClient.put<{
+      code: number;
+      message: string;
+    }>(`/api/v1/bpmn/process-definitions/${id}/active?version=${ver}`, { active: true });
+
+    if (response?.code !== 0) {
+      throw new Error(response?.message || '激活工作流失败');
+    }
   }
 
   /**
    * 停用工作流
    */
-  static async deactivateWorkflow(id: string): Promise<void> {
-    await httpClient.put(`/api/v1/bpmn/process-definitions/${id}/active?version=1.0.0`, { active: false });
+  static async deactivateWorkflow(id: string, version?: string): Promise<void> {
+    const ver = version || '1.0.0';
+    await httpClient.put(`/api/v1/bpmn/process-definitions/${id}/active?version=${ver}`, { active: false });
   }
 
   /**
@@ -291,11 +362,58 @@ export class WorkflowApi {
   static async getWorkflowVersions(
     workflowId: string
   ): Promise<WorkflowDefinition[]> {
-     // Backend ListProcessDefinitions supports filter by key which gives versions
-     // 修正: 确保路径与后端一致
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-     const res: any = await httpClient.get(`/api/v1/bpmn/process-definitions?key=${workflowId}`);
-     return res?.data || res?.items || res || [];
+    interface ProcessDefinitionResponse {
+      id?: number;
+      key?: string;
+      name?: string;
+      description?: string;
+      version?: number;
+      status?: string;
+      created_at?: string;
+      updated_at?: string;
+      [key: string]: unknown;
+    }
+
+    interface PaginatedResponse<T> {
+      data?: T[];
+      items?: T[];
+    }
+
+     // 使用新的版本 API
+     const res = await httpClient.get<Array<{
+      id: number;
+      key: string;
+      name: string;
+      description?: string;
+      version: number;
+      status: string;
+      created_at: string;
+      updated_at: string;
+     }>>(`/api/v1/bpmn/versions?process_key=${workflowId}`);
+
+    const list = Array.isArray(res) ? res : [];
+    return list.map((item) => ({
+      id: String(item.id || ''),
+      code: item.key || '',
+      name: item.name || '',
+      type: WorkflowType.TICKET,
+      version: item.version || 1,
+      status: (item.status as WorkflowStatus) || WorkflowStatus.DRAFT,
+      nodes: [],
+      connections: [],
+      variables: [],
+      triggers: [],
+      settings: {
+        allowParallelInstances: true,
+        enableVersionControl: true,
+        enableAuditLog: true,
+      },
+      createdBy: 0,
+      createdByName: '',
+      createdAt: item.created_at ? new Date(item.created_at) : new Date(),
+      updatedAt: item.updated_at ? new Date(item.updated_at) : new Date(),
+      description: item.description,
+    })) as WorkflowDefinition[];
   }
 
   /**
@@ -313,19 +431,100 @@ export class WorkflowApi {
   }
 
   /**
+   * 激活指定版本
+   */
+  static async activateVersion(
+    processKey: string,
+    version: number
+  ): Promise<void> {
+    await httpClient.put(`/api/v1/bpmn/versions/${processKey}/${version}/activate`, {});
+  }
+
+  /**
    * 回滚到指定版本
    */
   static async rollbackVersion(
-    workflowId: string,
+    processKey: string,
+    version: number,
+    reason?: string
+  ): Promise<void> {
+    await httpClient.put(`/api/v1/bpmn/versions/${processKey}/${version}/rollback`, {
+      reason: reason || '回滚操作',
+    });
+  }
+
+  /**
+   * 删除指定版本
+   */
+  static async deleteVersion(
+    processKey: string,
     version: number
-  ): Promise<WorkflowDefinition> {
-    // 后端暂不支持版本回滚，返回当前版本信息
-    const versions = await WorkflowApi.getWorkflowVersions(workflowId);
-    const targetVersion = versions.find((v: any) => v.version === String(version));
-    if (targetVersion) {
-      return targetVersion;
+  ): Promise<void> {
+    await httpClient.delete(`/api/v1/bpmn/process-definitions/${processKey}?version=${version}`);
+  }
+
+  /**
+   * 比较两个版本
+   */
+  static async compareVersions(
+    processKey: string,
+    baseVersion: number,
+    targetVersion: number
+  ): Promise<{
+    elements_added: string[];
+    elements_removed: string[];
+    elements_modified: string[];
+    connections_added: string[];
+    connections_removed: string[];
+    variables_changed: string[];
+    is_identical: boolean;
+  }> {
+    interface CompareResponse {
+      added_nodes?: string[];
+      removed_nodes?: string[];
+      modified_nodes?: string[];
     }
-    throw new Error(`未找到版本 ${version}`);
+
+    interface VersionComparisonResponse {
+      elements_added: string[];
+      elements_removed: string[];
+      elements_modified: string[];
+      connections_added: string[];
+      connections_removed: string[];
+      variables_changed: string[];
+      is_identical: boolean;
+    }
+
+    const res = await httpClient.get<{
+      added_nodes?: string[];
+      removed_nodes?: string[];
+      modified_nodes?: string[];
+    }>(`/api/v1/bpmn/versions/${processKey}/compare`, {
+      base_version: baseVersion,
+      target_version: targetVersion,
+    });
+    const data = res;
+    if (!data) {
+      return {
+        elements_added: [],
+        elements_removed: [],
+        elements_modified: [],
+        connections_added: [],
+        connections_removed: [],
+        variables_changed: [],
+        is_identical: true,
+      };
+    }
+    // 适配后端返回格式
+    return {
+      elements_added: data.added_nodes || [],
+      elements_removed: data.removed_nodes || [],
+      elements_modified: data.modified_nodes || [],
+      connections_added: [],
+      connections_removed: [],
+      variables_changed: [],
+      is_identical: !(data.added_nodes?.length || data.removed_nodes?.length || data.modified_nodes?.length),
+    };
   }
 
   // ==================== 工作流实例管理 ====================
@@ -341,8 +540,26 @@ export class WorkflowApi {
         business_key: `BIZ-${Date.now()}`, // Auto generate or from request
         variables: request.variables
     };
-    const res: any = await httpClient.post('/api/v1/bpmn/process-instances', payload);
-    return res?.data || res;
+    const item = await httpClient.post<{
+      id: string;
+      process_instance_id: string;
+      process_definition_key: string;
+      business_key: string;
+      status: string;
+      start_time: string;
+      end_time?: string;
+    }>('/api/v1/bpmn/process-instances', payload);
+    return {
+      id: item.process_instance_id || item.id || '',
+      workflowId: item.process_definition_key || '',
+      workflowName: '',
+      version: 1,
+      status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
+      variables: {},
+      startTime: item.start_time ? new Date(item.start_time) : new Date(),
+      startedBy: 0,
+      startedByName: '',
+    };
   }
 
   /**
@@ -358,19 +575,66 @@ export class WorkflowApi {
     instances: WorkflowInstance[];
     total: number;
   }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const query: any = {};
+    interface ProcessInstanceResponse {
+      id?: string;
+      instance_id?: string;
+      process_definition_key?: string;
+      business_key?: string;
+      status?: string;
+      start_time?: string;
+      end_time?: string;
+      [key: string]: unknown;
+    }
+
+    interface PaginatedResponse<T> {
+      data?: T[];
+      items?: T[];
+      instances?: T[];
+      pagination?: {
+        page: number;
+        page_size: number;
+        total: number;
+      };
+      total?: number;
+    }
+
+    const query: Record<string, string | number> = {};
     if (params?.workflowId) query.process_definition_key = params.workflowId;
     if (params?.status) query.status = params.status;
     if (params?.page) query.page = params.page;
     if (params?.pageSize) query.page_size = params.pageSize;
 
     // 修正: 确保路径与后端一致
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res: any = await httpClient.get('/api/v1/bpmn/process-instances', query);
+    const res = await httpClient.get<{
+      data?: Array<{
+        id: string;
+        instance_id: string;
+        process_definition_key: string;
+        business_key: string;
+        status: string;
+        start_time: string;
+        end_time?: string;
+      }>;
+      pagination?: { total: number };
+      total?: number;
+    }>('/api/v1/bpmn/process-instances', query);
+    // httpClient.get returns responseData.data directly, which is an array
+    const list = Array.isArray(res) ? res : (res?.data || []);
+    const instances: WorkflowInstance[] = list.map((item) => ({
+      id: item.instance_id || item.id || '',
+      workflowId: item.process_definition_key || '',
+      workflowName: '',
+      version: 1,
+      status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
+      variables: {},
+      startTime: item.start_time ? new Date(item.start_time) : new Date(),
+      endTime: item.end_time ? new Date(item.end_time) : undefined,
+      startedBy: 0,
+      startedByName: '',
+    }));
     return {
-        instances: res?.data || res?.items || res?.instances || [],
-        total: res?.pagination?.total || res?.total || 0
+        instances,
+        total: (res as any)?.pagination?.total || (res as any)?.total || list.length
     };
   }
 
@@ -378,9 +642,27 @@ export class WorkflowApi {
    * 获取单个工作流实例
    */
   static async getInstance(instanceId: string): Promise<WorkflowInstance> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res: any = await httpClient.get(`/api/v1/bpmn/process-instances/${instanceId}`);
-    return res?.data || res;
+    const item = await httpClient.get<{
+      id: string;
+      instance_id: string;
+      process_definition_key: string;
+      business_key: string;
+      status: string;
+      start_time: string;
+      end_time?: string;
+    }>(`/api/v1/bpmn/process-instances/${instanceId}`);
+    return {
+      id: item.instance_id || item.id || '',
+      workflowId: item.process_definition_key || '',
+      workflowName: '',
+      version: 1,
+      status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
+      variables: {},
+      startTime: item?.start_time ? new Date(item.start_time) : new Date(),
+      endTime: item?.end_time ? new Date(item.end_time) : undefined,
+      startedBy: 0,
+      startedByName: '',
+    };
   }
 
   /**
@@ -423,14 +705,50 @@ export class WorkflowApi {
   static async getNodeInstances(
     instanceId: string
   ): Promise<NodeInstance[]> {
+    interface TaskResponse {
+      id?: string;
+      task_id?: string;
+      name?: string;
+      status?: string;
+      assignee?: string;
+      assignee_name?: string;
+      created_time?: string;
+      due_date?: string;
+      [key: string]: unknown;
+    }
+
+    interface PaginatedResponse<T> {
+      data?: T[];
+      items?: T[];
+    }
+
     // 后端暂无专用节点实例API，尝试从任务列表获取
     try {
       const instance = await WorkflowApi.getInstance(instanceId);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _unused = instance;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tasks: any = await httpClient.get(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
-      return tasks?.data || tasks || [];
+      const tasksRes = await httpClient.get<Array<{
+        id: string;
+        task_id: string;
+        name: string;
+        status: string;
+        assignee?: string;
+        assignee_name?: string;
+        created_time?: string;
+        due_date?: string;
+      }>>(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
+      const list = tasksRes || [];
+      return list.map((item) => ({
+        id: item.task_id || item.id || '',
+        instanceId: instanceId,
+        nodeId: item.task_id || '',
+        nodeName: item.name || '',
+        status: (item.status as 'pending' | 'running' | 'completed' | 'failed' | 'skipped') || 'pending',
+        assignee: item.assignee ? parseInt(item.assignee) : undefined,
+        assigneeName: item.assignee_name,
+        startTime: item.created_time ? new Date(item.created_time) : undefined,
+        retryCount: 0,
+      }));
     } catch {
       return [];
     }
@@ -600,6 +918,178 @@ export class WorkflowApi {
         successRate: 0,
         bottlenecks: []
     };
+  }
+
+  /**
+   * 获取实例统计
+   */
+  static async getInstanceStats(params?: {
+    process_definition_key?: string;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<{
+    total: number;
+    running: number;
+    completed: number;
+    suspended: number;
+    terminated: number;
+  }> {
+    const query: Record<string, string> = {};
+    if (params?.process_definition_key) query.process_definition_key = params.process_definition_key;
+    if (params?.status) query.status = params.status;
+    if (params?.start_date) query.start_date = params.start_date;
+    if (params?.end_date) query.end_date = params.end_date;
+
+    const res = await httpClient.get<{
+      code: number;
+      message: string;
+      data: {
+        total: number;
+        running: number;
+        completed: number;
+        suspended: number;
+        terminated: number;
+      };
+    }>('/api/v1/bpmn/stats/instances', query);
+
+    return res?.data || {
+      total: 0,
+      running: 0,
+      completed: 0,
+      suspended: 0,
+      terminated: 0,
+    };
+  }
+
+  /**
+   * 获取任务统计
+   */
+  static async getTaskStats(params?: {
+    process_definition_key?: string;
+    assignee?: string;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<{
+    total_tasks: number;
+    completed_tasks: number;
+    pending_tasks: number;
+    overdue_tasks: number;
+    average_completion: number;
+  }> {
+    const query: Record<string, string> = {};
+    if (params?.process_definition_key) query.process_definition_key = params.process_definition_key;
+    if (params?.assignee) query.assignee = params.assignee;
+    if (params?.status) query.status = params.status;
+    if (params?.start_date) query.start_date = params.start_date;
+    if (params?.end_date) query.end_date = params.end_date;
+
+    const res = await httpClient.get<{
+      code: number;
+      message: string;
+      data: {
+        total_tasks: number;
+        completed_tasks: number;
+        pending_tasks: number;
+        overdue_tasks: number;
+        average_completion: number;
+      };
+    }>('/api/v1/bpmn/stats/tasks', query);
+
+    return res?.data || {
+      total_tasks: 0,
+      completed_tasks: 0,
+      pending_tasks: 0,
+      overdue_tasks: 0,
+      average_completion: 0,
+    };
+  }
+
+  // ==================== 会签审批 ====================
+
+  /**
+   * 创建会签任务
+   */
+  static async createCounterSignTasks(
+    taskId: string,
+    approvers: string[],
+    approvalType: 'serial' | 'parallel' = 'parallel',
+    threshold?: number
+  ): Promise<Array<{
+    task_id: string;
+    assignee: string;
+    status: string;
+  }>> {
+    const res = await httpClient.post<{
+      code: number;
+      message: string;
+      data: Array<{
+        task_id: string;
+        assignee: string;
+        status: string;
+      }>;
+    }>(`/api/v1/bpmn/tasks/${taskId}/counter-sign`, {
+      approval_type: approvalType,
+      approvers,
+      threshold: threshold || approvers.length,
+    });
+
+    return res?.data || [];
+  }
+
+  /**
+   * 获取会签状态
+   */
+  static async getCounterSignStatus(taskId: string): Promise<{
+    parent_task_id: string;
+    total: number;
+    completed: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+    status: 'pending' | 'approved' | 'rejected';
+  }> {
+    const res = await httpClient.get<{
+      code: number;
+      message: string;
+      data: {
+        parent_task_id: string;
+        total: number;
+        completed: number;
+        approved: number;
+        rejected: number;
+        pending: number;
+        status: 'pending' | 'approved' | 'rejected';
+      };
+    }>(`/api/v1/bpmn/tasks/${taskId}/counter-sign-status`);
+
+    return res?.data || {
+      parent_task_id: taskId,
+      total: 0,
+      completed: 0,
+      approved: 0,
+      rejected: 0,
+      pending: 0,
+      status: 'pending',
+    };
+  }
+
+  /**
+   * 投票（完成会签任务）
+   */
+  static async vote(
+    taskId: string,
+    approved: boolean,
+    comment?: string
+  ): Promise<void> {
+    await httpClient.put<{
+      code: number;
+      message: string;
+    }>(`/api/v1/bpmn/tasks/${taskId}/vote`, {
+      approved,
+      comment,
+    });
   }
 
   /**

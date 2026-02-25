@@ -22,25 +22,21 @@ describe('WorkflowApi', () => {
 
   describe('getWorkflows', () => {
     it('should fetch workflows successfully', async () => {
+      // httpClient.get returns responseData.data directly
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: {
-          items: [
-            {
-              id: 1,
-              key: 'approval_workflow',
-              name: 'Approval Workflow',
-              description: 'Test workflow',
-              version: 1,
-              created_at: '2024-01-01T10:00:00Z',
-              updated_at: '2024-01-01T10:00:00Z',
-            },
-          ],
-          total: 1,
-          page: 1,
-          page_size: 20,
-        },
+        data: [
+          {
+            id: 1,
+            key: 'approval_workflow',
+            name: 'Approval Workflow',
+            description: 'Test workflow',
+            version: 1,
+            created_at: '2024-01-01T10:00:00Z',
+            updated_at: '2024-01-01T10:00:00Z',
+          },
+        ],
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -66,12 +62,7 @@ describe('WorkflowApi', () => {
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: {
-          items: [],
-          total: 0,
-          page: 1,
-          page_size: 20,
-        },
+        data: [],
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -90,12 +81,7 @@ describe('WorkflowApi', () => {
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: {
-          items: [],
-          total: 0,
-          page: 2,
-          page_size: 10,
-        },
+        data: [],
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -222,8 +208,9 @@ describe('WorkflowApi', () => {
 
       const result = await WorkflowApi.getProcessVersions('test_process');
 
+      // getProcessVersions calls getWorkflowVersions which uses /api/v1/bpmn/versions
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/bpmn/process-definitions'),
+        expect.stringContaining('/api/v1/bpmn/versions'),
         expect.objectContaining({
           method: 'GET',
         })
@@ -235,20 +222,21 @@ describe('WorkflowApi', () => {
 
   describe('listWorkflowInstances', () => {
     it('should fetch workflow instances', async () => {
+      // httpClient.get returns responseData.data directly
+      // The API expects instance_id and process_definition_key in snake_case
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: {
-          items: [
-            {
-              id: 1,
-              process_key: 'approval_workflow',
-              status: 'running',
-              start_time: '2024-01-01T10:00:00Z',
-            },
-          ],
-          total: 1,
-        },
+        data: [
+          {
+            id: '1',
+            instance_id: '1',
+            process_definition_key: 'approval_workflow',
+            business_key: 'ticket-123',
+            status: 'running',
+            start_time: '2024-01-01T10:00:00Z',
+          },
+        ],
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({

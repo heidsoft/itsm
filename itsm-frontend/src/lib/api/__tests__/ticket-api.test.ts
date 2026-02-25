@@ -26,7 +26,7 @@ describe('TicketApi', () => {
         code: 0,
         message: 'success',
         data: {
-          items: [
+          tickets: [
             {
               id: 1,
               title: 'Test Ticket',
@@ -58,8 +58,8 @@ describe('TicketApi', () => {
         })
       );
 
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].title).toBe('Test Ticket');
+      expect(result.tickets).toHaveLength(1);
+      expect(result.tickets[0].title).toBe('Test Ticket');
     });
 
     it('should handle empty ticket list', async () => {
@@ -67,7 +67,7 @@ describe('TicketApi', () => {
         code: 0,
         message: 'success',
         data: {
-          items: [],
+          tickets: [],
           total: 0,
           page: 1,
           page_size: 20,
@@ -83,7 +83,7 @@ describe('TicketApi', () => {
 
       const result = await TicketApi.getTickets();
 
-      expect(result.items).toHaveLength(0);
+      expect(result.tickets).toHaveLength(0);
       expect(result.total).toBe(0);
     });
 

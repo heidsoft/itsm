@@ -20,6 +20,18 @@ func (f ApplicationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApplicationMutation", m)
 }
 
+// The ApprovalChainFunc type is an adapter to allow the use of ordinary
+// function as ApprovalChain mutator.
+type ApprovalChainFunc func(context.Context, *ent.ApprovalChainMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ApprovalChainFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ApprovalChainMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApprovalChainMutation", m)
+}
+
 // The ApprovalRecordFunc type is an adapter to allow the use of ordinary
 // function as ApprovalRecord mutator.
 type ApprovalRecordFunc func(context.Context, *ent.ApprovalRecordMutation) (ent.Value, error)
@@ -678,6 +690,18 @@ func (f ServiceRequestApprovalFunc) Mutate(ctx context.Context, m ent.Mutation) 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServiceRequestApprovalMutation", m)
+}
+
+// The SystemConfigFunc type is an adapter to allow the use of ordinary
+// function as SystemConfig mutator.
+type SystemConfigFunc func(context.Context, *ent.SystemConfigMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SystemConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SystemConfigMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SystemConfigMutation", m)
 }
 
 // The TagFunc type is an adapter to allow the use of ordinary

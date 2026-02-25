@@ -1,7 +1,6 @@
 "use client";
-// @ts-nocheck
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   Button,
@@ -41,8 +40,8 @@ import {
   FileText,
   Zap,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import WorkflowEngine from "@/components/workflow/WorkflowEngine";
+import { useRouter, useSearchParams } from "next/navigation";
+import BPMNDesigner from "@/components/workflow/BPMNDesigner";
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
@@ -98,14 +97,125 @@ interface TicketApprovalWorkflow {
   };
 }
 
+// 默认工单审批流程 BPMN XML
+const getDefaultBPMNXML = () => {
+  return '<?xml version="1.0" encoding="UTF-8"?>' +
+'<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" ' +
+'  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" ' +
+'  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" ' +
+'  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" ' +
+'  id="ticket_approval" targetNamespace="http://bpmn.io/schema/bpmn">' +
+'  <bpmn:process id="TicketApproval" name="工单审批流程" isExecutable="true">' +
+'    <bpmn:startEvent id="StartEvent_1" name="工单提交">' +
+'      <bpmn:outgoing>Flow_1</bpmn:outgoing>' +
+'    </bpmn:startEvent>' +
+'    <bpmn:userTask id="Task_approval" name="审批">' +
+'      <bpmn:incoming>Flow_1</bpmn:incoming>' +
+'      <bpmn:outgoing>Flow_2</bpmn:outgoing>' +
+'    </bpmn:userTask>' +
+'    <bpmn:exclusiveGateway id="Gateway_1" name="是否通过">' +
+'      <bpmn:incoming>Flow_2</bpmn:incoming>' +
+'      <bpmn:outgoing>Flow_approved</bpmn:outgoing>' +
+'      <bpmn:outgoing>Flow_rejected</bpmn:outgoing>' +
+'    </bpmn:exclusiveGateway>' +
+'    <bpmn:endEvent id="EndEvent_approved" name="已完成">' +
+'      <bpmn:incoming>Flow_approved</bpmn:incoming>' +
+'    </bpmn:endEvent>' +
+'    <bpmn:endEvent id="EndEvent_rejected" name="已拒绝">' +
+'      <bpmn:incoming>Flow_rejected</bpmn:incoming>' +
+'    </bpmn:endEvent>' +
+'    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_approval"/>' +
+'    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_approval" targetRef="Gateway_1"/>' +
+'    <bpmn:sequenceFlow id="Flow_approved" sourceRef="Gateway_1" targetRef="EndEvent_approved">' +
+'      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>' +
+'    </bpmn:sequenceFlow>' +
+'    <bpmn:sequenceFlow id="Flow_rejected" sourceRef="Gateway_1" targetRef="EndEvent_rejected">' +
+'      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>' +
+'    </bpmn:sequenceFlow>' +
+'  </bpmn:process>' +
+'  <bpmndi:BPMNDiagram id="BPMNDiagram_1">' +
+'    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="TicketApproval"/>' +
+'  </bpmndi:BPMNDiagram>' +
+'</bpmn:definitions>';
+};
+
 const TicketApprovalWorkflowPage = () => {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { modal } = App.useApp();
   const [workflow, setWorkflow] = useState<TicketApprovalWorkflow | null>(null);
   const [loading, setLoading] = useState(false);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [currentXML, setCurrentXML] = useState(getDefaultBPMNXML());
+  const [hasChanges, setHasChanges] = useState(false);
   const [form] = Form.useForm();
+
+  // 从URL参数获取工作流ID（如果有）
+  const workflowId = searchParams.get('id');
+
+  // 加载已有工作流（如果指定了ID）
+  useEffect(() => {
+    if (workflowId) {
+      loadWorkflow(workflowId);
+    }
+  }, [workflowId]);
+
+  const loadWorkflow = async (id: string) => {
+    try {
+      const { WorkflowAPI } = await import('@/lib/api/workflow-api');
+      const response = await WorkflowAPI.getProcessDefinition(id) as any;
+
+      if (response?.bpmn_xml) {
+        let xmlContent = response.bpmn_xml;
+        // 尝试Base64解码
+        if (!xmlContent.trim().startsWith('<?xml')) {
+          try {
+            xmlContent = atob(xmlContent);
+          } catch (e) {
+            console.warn('XML Base64 decode failed');
+          }
+        }
+        setCurrentXML(xmlContent);
+      }
+
+      setWorkflow({
+        id: parseInt(id),
+        name: response.name || t('workflow.ticketApprovalProcess'),
+        description: response.description || '',
+        type: response.category || 'approval',
+        nodes: [],
+        metadata: {
+          version: response.version || '1.0.0',
+          lastModified: response.updated_at || new Date().toISOString(),
+          nodeCount: 0,
+          approvalCount: 0,
+        },
+      });
+    } catch (error) {
+      console.error('加载工作流失败:', error);
+      message.error(t('workflow.loadFailed') || '加载工作流失败');
+    }
+  };
+
+  // BPMN XML 变化处理
+  const handleBPMNChange = useCallback((xml: string) => {
+    setCurrentXML(xml);
+    setHasChanges(true);
+    setWorkflow(prev => prev ? {
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        lastModified: new Date().toISOString(),
+      }
+    } : null);
+  }, []);
+
+  // 保存工作流
+  const handleSave = async (xml: string) => {
+    setSaveModalVisible(true);
+    setCurrentXML(xml);
+  };
 
   const handleSaveWorkflow = (workflowData: any) => {
     console.log("保存工作流数据:", workflowData);
@@ -128,22 +238,24 @@ const TicketApprovalWorkflowPage = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      // 模拟保存API调用
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { WorkflowAPI } = await import('@/lib/api/workflow-api');
 
-      const finalWorkflow = {
-        ...workflow,
-        ...values,
-        id: Date.now(),
-        status: "draft",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        instances_count: 0,
-        running_instances: 0,
-        created_by: t('workflow.currentUser'),
+      // 构建保存数据
+      const workflowData = {
+        code: workflow?.id ? `ticket_approval_${workflow.id}` : `ticket_approval_${Date.now()}`,
+        name: values.name || t('workflow.ticketApprovalProcess'),
+        description: values.description || '',
+        type: values.category || 'approval',
+        bpmn_xml: currentXML,
       };
 
-      console.log("最终保存的工作流:", finalWorkflow);
+      if (workflow?.id) {
+        // 更新已有工作流
+        await WorkflowAPI.updateWorkflow(workflow.id.toString(), workflowData);
+      } else {
+        // 创建新工作流
+        await WorkflowAPI.createWorkflow(workflowData);
+      }
 
       message.success(t('workflow.ticketApprovalSaveSuccess'));
       setSaveModalVisible(false);
@@ -153,6 +265,7 @@ const TicketApprovalWorkflowPage = () => {
         router.push("/workflow");
       }, 1000);
     } catch (error) {
+      console.error('保存工作流失败:', error);
       message.error(t('workflow.saveFailed'));
     } finally {
       setLoading(false);
@@ -275,17 +388,6 @@ const TicketApprovalWorkflowPage = () => {
 
   // getNodeTypeName 已在文件顶部定义，使用国际化版本
 
-  const getNodeTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      start: "green",
-      approval: "blue",
-      condition: "orange",
-      action: "purple",
-      end: "red",
-    };
-    return colors[type] || "default";
-  };
-
   return (
     <div className="h-screen flex flex-col">
       {/* 页面头部 */}
@@ -338,9 +440,14 @@ const TicketApprovalWorkflowPage = () => {
         </div>
       </div>
 
-      {/* 设计器区域 */}
-      <div className="flex-1">
-        <WorkflowEngine mode="design" />
+      {/* BPMN 设计器区域 */}
+      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <BPMNDesigner
+          xml={currentXML}
+          onSave={handleSave}
+          onChange={handleBPMNChange}
+          height="100%"
+        />
       </div>
 
       {/* 保存确认模态框 */}

@@ -40,6 +40,8 @@ import {
   GitBranch,
   Activity,
   History,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 // AppLayout is handled by parent layout
 import { WorkflowAPI, WorkflowInstance as ApiWorkflowInstance, WorkflowTask as ApiWorkflowTask } from '@/lib/api/workflow-api';
@@ -72,7 +74,17 @@ const WorkflowInstancesPage = () => {
   const { message } = App.useApp();
   const [instances, setInstances] = useState<WorkflowInstanceRecord[]>([]);
   const [tasks, setTasks] = useState<WorkflowTaskRecord[]>([]);
+  const [counterSignStatus, setCounterSignStatus] = useState<Record<string, {
+    parent_task_id: string;
+    total: number;
+    completed: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+    status: 'pending' | 'approved' | 'rejected';
+  }>>({});
   const [loading, setLoading] = useState(false);
+  const [votingTaskId, setVotingTaskId] = useState<string | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedInstance, setSelectedInstance] = useState<WorkflowInstanceRecord | null>(null);
   const [filters, setFilters] = useState({
@@ -89,17 +101,25 @@ const WorkflowInstancesPage = () => {
     terminated: 0,
   });
 
-  useEffect(() => {
-    loadInstances();
-    loadStats();
-  }, [filters]);
+  // 分页状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
 
-  const loadInstances = async () => {
+  useEffect(() => {
+    loadInstances(1, pagination.pageSize);
+    loadStats();
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 分页加载实例列表
+  const loadInstances = async (page: number = 1, pageSize: number = 10) => {
     setLoading(true);
     try {
       const response = await WorkflowAPI.listWorkflowInstances({
-        page: 1,
-        page_size: 50,
+        page,
+        page_size: pageSize,
         ...filters,
       });
       const normalized = response.instances.map((instance: any) => ({
@@ -114,25 +134,53 @@ const WorkflowInstancesPage = () => {
         due_date: instance.due_date,
       })) as WorkflowInstanceRecord[];
       setInstances(normalized);
+      // 更新分页信息
+      setPagination(prev => ({
+        ...prev,
+        current: page,
+        pageSize,
+        total: response.total || 0,
+      }));
     } catch (error) {
-      message.error('加载工作流实例失败');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('加载工作流实例失败:', error);
+      message.error('加载工作流实例失败: ' + errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // 分页/排序/筛选变化处理
+  const handleTableChange = async (newPagination: any) => {
+    await loadInstances(newPagination.current, newPagination.pageSize);
+    // 分页变化后更新统计数据
+    loadStats();
+  };
+
   const loadStats = async () => {
     try {
-      // 模拟统计数据
+      // 调用后端API获取真实统计数据
+      const instanceStats = await WorkflowAPI.getInstanceStats({
+        process_definition_key: filters.workflow_id || undefined,
+        status: filters.status || undefined,
+      });
       setStats({
-        total: instances.length,
+        total: instanceStats.total,
+        running: instanceStats.running,
+        completed: instanceStats.completed,
+        suspended: instanceStats.suspended,
+        terminated: instanceStats.terminated,
+      });
+    } catch (error) {
+      console.error('加载统计数据失败:', error);
+      // 降级使用本地过滤
+      setStats({
+        total: pagination.total,
         running: instances.filter(i => String(i.status) === 'running').length,
         completed: instances.filter(i => String(i.status) === 'completed').length,
         suspended: instances.filter(i => String(i.status) === 'suspended').length,
         terminated: instances.filter(i => String(i.status) === 'terminated').length,
       });
-    } catch (error) {
-      console.error('加载统计数据失败:', error);
     }
   };
 
@@ -154,6 +202,79 @@ const WorkflowInstancesPage = () => {
       setTasks(normalized);
     } catch (error) {
       message.error('加载任务列表失败');
+    }
+  };
+
+  // 加载会签状态
+  const loadCounterSignStatus = async (taskId: string) => {
+    try {
+      const status = await WorkflowAPI.getCounterSignStatus(taskId);
+      setCounterSignStatus(prev => ({
+        ...prev,
+        [taskId]: status,
+      }));
+    } catch (error) {
+      console.error('加载会签状态失败:', error);
+    }
+  };
+
+  // 创建会签任务
+  const handleCreateCounterSign = async (taskId: string, approvers: string[], approvalType: 'serial' | 'parallel' = 'parallel') => {
+    try {
+      await WorkflowAPI.createCounterSignTasks(taskId, approvers, approvalType);
+      message.success('会签任务创建成功');
+      // 刷新会签状态
+      await loadCounterSignStatus(taskId);
+      // 刷新任务列表
+      if (selectedInstance) {
+        const tasksResponse = await WorkflowAPI.listWorkflowTasks(selectedInstance.id);
+        const normalized = (tasksResponse as any[]).map((task) => ({
+          ...task,
+          name: task.name || task.nodeName,
+          activity_id: task.activity_id || task.nodeId,
+          type: task.type || task.nodeType || 'task',
+          assignee: task.assigneeName || task.assignee || '',
+          created_at: task.created_at || task.startTime,
+          due_date: task.due_date,
+        })) as WorkflowTaskRecord[];
+        setTasks(normalized);
+      }
+    } catch (error) {
+      message.error('创建会签任务失败');
+    }
+  };
+
+  // 投票（通过/拒绝）
+  const handleVote = async (taskId: string, approved: boolean, comment?: string) => {
+    try {
+      setVotingTaskId(taskId);
+      await WorkflowAPI.vote(taskId, approved, comment);
+      message.success(approved ? '已同意' : '已拒绝');
+
+      // 查找父任务ID并刷新会签状态
+      const task = tasks.find(t => t.id === taskId);
+      if (task?.activity_id) {
+        await loadCounterSignStatus(task.activity_id);
+      }
+
+      // 刷新任务列表
+      if (selectedInstance) {
+        const tasksResponse = await WorkflowAPI.listWorkflowTasks(selectedInstance.id);
+        const normalized = (tasksResponse as any[]).map((t) => ({
+          ...t,
+          name: t.name || t.nodeName,
+          activity_id: t.activity_id || t.nodeId,
+          type: t.type || t.nodeType || 'task',
+          assignee: t.assigneeName || t.assignee || '',
+          created_at: t.created_at || t.startTime,
+          due_date: t.due_date,
+        })) as WorkflowTaskRecord[];
+        setTasks(normalized);
+      }
+    } catch (error) {
+      message.error('投票失败');
+    } finally {
+      setVotingTaskId(null);
     }
   };
 
@@ -373,6 +494,74 @@ const WorkflowInstancesPage = () => {
         <div className='text-sm'>{date ? new Date(date).toLocaleString('zh-CN') : '-'}</div>
       ),
     },
+    {
+      title: '操作',
+      key: 'action',
+      width: 180,
+      render: (_: any, record: WorkflowTaskRecord) => {
+        const csStatus = counterSignStatus[record.activity_id || record.id];
+
+        // 如果是会签任务，显示投票按钮
+        if (record.activity_id && record.status === 'pending') {
+          return (
+            <Space direction="vertical" size="small">
+              {/* 会签状态显示 */}
+              {csStatus && (
+                <div className="text-xs">
+                  <Tag color={csStatus.status === 'approved' ? 'green' : csStatus.status === 'rejected' ? 'red' : 'blue'}>
+                    {csStatus.status === 'approved' ? '已通过' : csStatus.status === 'rejected' ? '已拒绝' : '会签中'}
+                  </Tag>
+                  <span className="ml-1">
+                    {csStatus.completed}/{csStatus.total}
+                  </span>
+                </div>
+              )}
+              {/* 投票按钮 */}
+              <Space>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<ThumbsUp className="w-3 h-3" />}
+                  onClick={() => handleVote(record.id, true)}
+                  loading={votingTaskId === record.id}
+                  disabled={csStatus?.status !== 'pending'}
+                >
+                  通过
+                </Button>
+                <Button
+                  size="small"
+                  danger
+                  icon={<ThumbsDown className="w-3 h-3" />}
+                  onClick={() => handleVote(record.id, false)}
+                  loading={votingTaskId === record.id}
+                  disabled={csStatus?.status !== 'pending'}
+                >
+                  拒绝
+                </Button>
+              </Space>
+            </Space>
+          );
+        }
+
+        // 普通任务，显示完成按钮
+        return (
+          <Space>
+            {record.status === 'pending' && (
+              <Button
+                type="link"
+                size="small"
+                onClick={() => {
+                  // TODO: 完成任务的处理
+                  message.info('完成任务功能开发中');
+                }}
+              >
+                处理
+              </Button>
+            )}
+          </Space>
+        );
+      },
+    },
   ];
 
   return (
@@ -472,7 +661,7 @@ const WorkflowInstancesPage = () => {
           </Col>
           <Col xs={24} sm={12} md={10}>
             <Space>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadInstances}>
+              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={() => loadInstances(pagination.current, pagination.pageSize)}>
                 刷新
               </Button>
               <Button icon={<BarChart3 className='w-4 h-4' />}>统计报告</Button>
@@ -489,9 +678,13 @@ const WorkflowInstancesPage = () => {
           rowKey='id'
           loading={loading}
           pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            onChange: handleTableChange,
           }}
           scroll={{ x: 1200 }}
         />

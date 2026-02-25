@@ -68,6 +68,9 @@ type RouterConfig struct {
 	// Role & Permission Controllers (new database-backed implementation)
 	RoleController                   *controller.RoleController
 	PermissionController             *controller.PermissionController
+	TenantController                 *controller.TenantController
+	SystemConfigController           *controller.SystemConfigController
+	ApprovalChainController        *controller.ApprovalChainController
 	NotificationPreferenceController *controller.NotificationPreferenceController
 	NotificationController        *controller.NotificationController
 
@@ -261,6 +264,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.POST("/automation-rules/:id/test", config.TicketAutomationRuleController.TestAutomationRule)
 			}
 
+			// 工单分配规则
+			if config.TicketAssignmentSmartController != nil {
+				tickets.GET("/assignment-rules", config.TicketAssignmentSmartController.ListAssignmentRules)
+				tickets.POST("/assignment-rules", config.TicketAssignmentSmartController.CreateAssignmentRule)
+				tickets.GET("/assignment-rules/:id", config.TicketAssignmentSmartController.GetAssignmentRule)
+				tickets.PUT("/assignment-rules/:id", config.TicketAssignmentSmartController.UpdateAssignmentRule)
+				tickets.DELETE("/assignment-rules/:id", config.TicketAssignmentSmartController.DeleteAssignmentRule)
+			}
+
 			// 工单评分
 			if config.TicketRatingController != nil {
 				tickets.POST("/:id/rating", config.TicketRatingController.SubmitRating)
@@ -284,28 +296,50 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== System Configs ====================
-		sysConfigs := tenant.(*gin.RouterGroup).Group("/system-configs")
-		{
-			sysConfigs.GET("/status", func(c *gin.Context) {
-				// 返回简单的系统状态信息
-				// 实际项目中可以集成 prometheus 或 gopsutil
-				var m runtime.MemStats
-				runtime.ReadMemStats(&m)
+		if config.SystemConfigController != nil {
+			sysConfigs := tenant.(*gin.RouterGroup).Group("/system-configs")
+			{
+				// 配置管理
+				sysConfigs.GET("", config.SystemConfigController.ListConfigs)
+				sysConfigs.GET("/init", config.SystemConfigController.InitDefaultConfigs)
+				sysConfigs.GET("/:id", config.SystemConfigController.GetConfig)
+				sysConfigs.GET("/key/:key", config.SystemConfigController.GetConfigByKey)
+				sysConfigs.PUT("/:id", config.SystemConfigController.UpdateConfig)
+				sysConfigs.PUT("/batch", config.SystemConfigController.BatchUpdateConfigs)
 
-				c.JSON(200, gin.H{
-					"cpu": gin.H{
-						"usage": 0, // 需要额外库支持
-						"cores": runtime.NumCPU(),
-					},
-					"memory": gin.H{
-						"used":  m.Alloc / 1024 / 1024,
-						"total": m.Sys / 1024 / 1024,
-						"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-					},
-					"goroutines": runtime.NumGoroutine(),
-					"timestamp":  time.Now(),
+				// 系统状态
+				sysConfigs.GET("/status", func(c *gin.Context) {
+					var m runtime.MemStats
+					runtime.ReadMemStats(&m)
+
+					c.JSON(200, gin.H{
+						"cpu": gin.H{
+							"usage": 0,
+							"cores": runtime.NumCPU(),
+						},
+						"memory": gin.H{
+							"used":  m.Alloc / 1024 / 1024,
+							"total": m.Sys / 1024 / 1024,
+							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
+						},
+						"goroutines": runtime.NumGoroutine(),
+						"timestamp":  time.Now(),
+					})
 				})
-			})
+			}
+		}
+
+		// ==================== Approval Chains ====================
+		if config.ApprovalChainController != nil {
+			approvalChains := tenant.(*gin.RouterGroup).Group("/approval-chains")
+			{
+				approvalChains.GET("", config.ApprovalChainController.ListChains)
+				approvalChains.GET("/stats", config.ApprovalChainController.GetStats)
+				approvalChains.POST("", config.ApprovalChainController.CreateChain)
+				approvalChains.GET("/:id", config.ApprovalChainController.GetChain)
+				approvalChains.PUT("/:id", config.ApprovalChainController.UpdateChain)
+				approvalChains.DELETE("/:id", config.ApprovalChainController.DeleteChain)
+			}
 		}
 
 		// ==================== Incidents (DDD) ====================
@@ -600,25 +634,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sys.GET("/audit-logs", config.CommonHandler.GetAuditLogs)
 			}
 
-			// Roles (old in-memory handler)
-			if config.RoleHandler != nil {
-				roles := tenant.(*gin.RouterGroup).Group("/roles")
-				{
-					roles.GET("", config.RoleHandler.ListRoles)
-					roles.POST("", config.RoleHandler.CreateRole)
-					roles.GET("/:id", config.RoleHandler.GetRole)
-					roles.PUT("/:id", config.RoleHandler.UpdateRole)
-					roles.DELETE("/:id", config.RoleHandler.DeleteRole)
-				}
-
-				// Permissions
-				permissions := tenant.(*gin.RouterGroup).Group("/permissions")
-				{
-					permissions.GET("", config.RoleHandler.ListPermissions)
-				}
-			}
-
-			// New Role & Permission Controllers (database-backed with tenant isolation)
+			// Role & Permission Controllers (database-backed with tenant isolation)
 			if config.RoleController != nil {
 				roles := tenant.(*gin.RouterGroup).Group("/roles")
 				{
@@ -637,6 +653,19 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					permissions.GET("", config.PermissionController.ListPermissions)
 					permissions.POST("", config.PermissionController.CreatePermission)
 					permissions.POST("/init", config.PermissionController.InitDefaultPermissions)
+				}
+			}
+
+			// Tenant Management (admin only)
+			if config.TenantController != nil {
+				tenants := tenant.(*gin.RouterGroup).Group("/tenants")
+				{
+					tenants.GET("", config.TenantController.ListTenants)
+					tenants.POST("", config.TenantController.CreateTenant)
+					tenants.GET("/:id", config.TenantController.GetTenant)
+					tenants.PUT("/:id", config.TenantController.UpdateTenant)
+					tenants.DELETE("/:id", config.TenantController.DeleteTenant)
+					tenants.PUT("/:id/status", config.TenantController.UpdateTenantStatus)
 				}
 			}
 

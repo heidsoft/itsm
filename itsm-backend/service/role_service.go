@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -31,10 +33,16 @@ func NewRoleService(client *ent.Client, logger *zap.SugaredLogger) *RoleService 
 func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	s.logger.Infow("Creating role", "name", req.Name, "tenant_id", tenantID)
 
+	// 如果 code 为空，从 name 自动生成
+	code := req.Code
+	if code == "" {
+		code = generateCodeFromName(req.Name)
+	}
+
 	roleEntity, err := s.client.Role.Create().
 		SetName(req.Name).
 		SetDescription(req.Description).
-		SetCode(req.Code).
+		SetCode(code).
 		SetTenantID(tenantID).
 		SetIsSystem(req.IsSystem).
 		Save(ctx)
@@ -332,4 +340,20 @@ func (s *PermissionService) toPermissionResponse(permEntity *ent.Permission) *dt
 		CreatedAt:   permEntity.CreatedAt,
 		UpdatedAt:   permEntity.UpdatedAt,
 	}
+}
+
+// generateCodeFromName 从名称生成代码
+func generateCodeFromName(name string) string {
+	// 将名称转换为小写，移除特殊字符，用下划线替换空格
+	code := strings.ToLower(name)
+	code = regexp.MustCompile(`[^a-z0-9\u4e00-\u9fa5]`).ReplaceAllString(code, "_")
+	// 移除连续的下划线
+	code = regexp.MustCompile(`_+`).ReplaceAllString(code, "_")
+	// 移除首尾的下划线
+	code = strings.Trim(code, "_")
+	// 添加时间戳后缀避免重复
+	if len(code) > 20 {
+		code = code[:20]
+	}
+	return code
 }

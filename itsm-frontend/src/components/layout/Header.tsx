@@ -26,7 +26,7 @@ import {
   CheckCheck,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import styles from './Header.module.css';
 import { useI18n } from '@/lib/i18n';
 import { globalSearchApi, GlobalSearchResult } from '@/lib/api/global-search-api';
@@ -58,6 +58,8 @@ export const Header: React.FC<HeaderProps> = ({
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { t } = useI18n();
+  // 手动触发 auth store 的 hydration
+  useAuthStoreHydration();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');

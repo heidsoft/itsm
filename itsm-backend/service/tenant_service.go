@@ -6,6 +6,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/user"
 	"time"
 
 	"go.uber.org/zap"
@@ -131,4 +132,99 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 	}
 
 	return tenants, total, nil
+}
+
+// GetTenant 获取租户详情
+func (s *TenantService) GetTenant(ctx context.Context, tenantID int) (*ent.Tenant, error) {
+	tenantEntity, err := s.client.Tenant.
+		Query().
+		Where(tenant.ID(tenantID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("租户不存在: %d", tenantID)
+		}
+		s.logger.Errorf("查询租户失败: %v", err)
+		return nil, fmt.Errorf("查询租户失败: %w", err)
+	}
+	return tenantEntity, nil
+}
+
+// UpdateTenant 更新租户
+func (s *TenantService) UpdateTenant(ctx context.Context, tenantID int, req *dto.UpdateTenantRequest) (*ent.Tenant, error) {
+	// 检查租户是否存在
+	exists, err := s.client.Tenant.Query().
+		Where(tenant.ID(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorf("检查租户失败: %v", err)
+		return nil, fmt.Errorf("检查租户失败: %w", err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("租户不存在: %d", tenantID)
+	}
+
+	// 构建更新操作
+	update := s.client.Tenant.UpdateOneID(tenantID).SetUpdatedAt(time.Now())
+
+	if req.Name != nil && *req.Name != "" {
+		update = update.SetName(*req.Name)
+	}
+	if req.Domain != nil {
+		update = update.SetNillableDomain(req.Domain)
+	}
+	if req.Type != nil && *req.Type != "" {
+		update = update.SetType(*req.Type)
+	}
+	if req.Status != nil && *req.Status != "" {
+		update = update.SetStatus(*req.Status)
+	}
+	if req.ExpiresAt != nil {
+		update = update.SetNillableExpiresAt(req.ExpiresAt)
+	}
+
+	tenantEntity, err := update.Save(ctx)
+	if err != nil {
+		s.logger.Errorf("更新租户失败: %v", err)
+		return nil, fmt.Errorf("更新租户失败: %w", err)
+	}
+
+	s.logger.Infof("成功更新租户: %d", tenantID)
+	return tenantEntity, nil
+}
+
+// DeleteTenant 删除租户
+func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
+	// 检查租户是否存在
+	exists, err := s.client.Tenant.Query().
+		Where(tenant.ID(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorf("检查租户失败: %v", err)
+		return fmt.Errorf("检查租户失败: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("租户不存在: %d", tenantID)
+	}
+
+	// 检查租户下是否有用户
+	userCount, err := s.client.User.Query().
+		Where(user.TenantID(tenantID)).
+		Count(ctx)
+	if err != nil {
+		s.logger.Errorf("检查租户用户失败: %v", err)
+		return fmt.Errorf("检查租户用户失败: %w", err)
+	}
+	if userCount > 0 {
+		return fmt.Errorf("租户下还有用户，无法删除")
+	}
+
+	err = s.client.Tenant.DeleteOneID(tenantID).Exec(ctx)
+	if err != nil {
+		s.logger.Errorf("删除租户失败: %v", err)
+		return fmt.Errorf("删除租户失败: %w", err)
+	}
+
+	s.logger.Infof("成功删除租户: %d", tenantID)
+	return nil
 }

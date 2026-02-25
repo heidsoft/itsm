@@ -276,8 +276,8 @@ class HttpClient {
           const retryData = await retryResponse.json() as ApiResponse<T>;
           logger.debug('HTTP Client Retry Response Data:', retryData);
           
-          // Check response code
-          if (retryData.code !== 0) {
+          // Check response code - 容忍后端没有返回 code 字段的情况
+          if (retryData.code !== undefined && retryData.code !== null && retryData.code !== 0) {
             const rid = retryResponse.headers.get('X-Request-Id') || '';
             const suffix = rid ? ` [RID: ${rid}]` : '';
             throw new Error((retryData.message || 'Request failed') + suffix);
@@ -307,8 +307,9 @@ class HttpClient {
       const responseData = await response.json() as ApiResponse<T>;
       logger.debug('HTTP Client Raw Response Data:', responseData);
       
-      // Check response code
-      if (responseData.code !== 0) {
+      // Check response code - 容忍后端没有返回 code 字段的情况（如 BPMN workflow controller）
+      // 允许 code 为 0、undefined、null 或不存在
+      if (responseData.code !== undefined && responseData.code !== null && responseData.code !== 0) {
         const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
         throw new Error((responseData.message || 'Request failed') + suffix);
@@ -490,7 +491,8 @@ class HttpClient {
       }
 
       const responseData = (await response.json()) as ApiResponse<T>;
-      if (responseData.code !== 0) {
+      // 容忍后端没有返回 code 字段的情况
+      if (responseData.code !== undefined && responseData.code !== null && responseData.code !== 0) {
         throw new Error(responseData.message || 'Request failed');
       }
       

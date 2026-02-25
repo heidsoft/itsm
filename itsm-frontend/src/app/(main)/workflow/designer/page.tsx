@@ -22,6 +22,9 @@ import {
   Alert,
   Checkbox,
 } from 'antd';
+import { UserApi } from '@/lib/api/user-api';
+import { RoleAPI } from '@/lib/api/role-api';
+import { httpClient } from '@/lib/api/http-client';
 import {
   ArrowLeft,
   Save,
@@ -33,9 +36,11 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { WORKFLOW_TEMPLATES, TEMPLATE_CATEGORIES, getTemplateById } from '@/lib/workflow-templates';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -109,8 +114,12 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
   const [resolvedParams, setResolvedParams] = useState<{ id?: string }>({ id: undefined });
 
   const [form] = Form.useForm();
+  const [metadataForm] = Form.useForm();
 
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
+  const [showNewWorkflowModal, setShowNewWorkflowModal] = useState(false);
+  const [newWorkflowForm] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [currentXML, setCurrentXML] = useState('');
@@ -127,6 +136,48 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     escalation_rules: [],
   });
 
+  // 用户和角色列表
+  const [userList, setUserList] = useState<{ id: number; name: string; username: string }[]>([]);
+  const [roleList, setRoleList] = useState<{ id: number; name: string; code: string }[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingRoles, setLoadingRoles] = useState(false);
+
+  // 加载用户列表
+  const loadUserList = async () => {
+    setLoadingUsers(true);
+    try {
+      const response = await UserApi.getUsers({ page: 1, page_size: 100 });
+      const users = (response.users || []).map((u: any) => ({
+        id: u.id,
+        name: u.name || u.username || '未知用户',
+        username: u.username,
+      }));
+      setUserList(users);
+    } catch (error) {
+      console.error('加载用户列表失败:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // 加载角色列表
+  const loadRoleList = async () => {
+    setLoadingRoles(true);
+    try {
+      const response = await RoleAPI.getRoles() as any;
+      const roles = (response.roles || response.data || []).map((r: any) => ({
+        id: r.id,
+        name: r.name || r.code || '未知角色',
+        code: r.code,
+      }));
+      setRoleList(roles);
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
   // 解析 Promise params
   useEffect(() => {
     params.then(setResolvedParams).catch(console.error);
@@ -135,45 +186,69 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
   // 从URL参数获取工作流ID
   const workflowId = resolvedParams?.id || searchParams.get('id');
 
+  // 加载用户和角色列表
   useEffect(() => {
-    if (workflowId) {
+    loadUserList();
+    loadRoleList();
+  }, []);
+
+  // 加载工作流配置（审批配置+SLA）
+  const loadWorkflowConfig = async (key: string) => {
+    try {
+      // 从后端获取工作流配置
+      const response = (await WorkflowAPI.getProcessDefinition(key)) as any;
+      if (response) {
+        setApprovalConfig({
+          require_approval: response.require_approval ?? true,
+          approval_type: response.approval_type || 'sequential',
+          approvers: response.approvers || [],
+          auto_approve_roles: response.auto_approve_roles || [],
+          escalation_rules: response.escalation_rules || [],
+        });
+        setWorkflow(prev =>
+          prev
+            ? {
+                ...prev,
+                sla_config: response.sla_config || {
+                  response_time_hours: 24,
+                  resolution_time_hours: 72,
+                  business_hours_only: true,
+                  exclude_weekends: true,
+                  exclude_holidays: true,
+                },
+              }
+            : null
+        );
+      }
+    } catch (error) {
+      console.error('加载工作流配置失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (workflowId && workflowId !== 'new') {
       loadWorkflow(workflowId);
       loadWorkflowVersions(workflowId);
-    } else {
-      // 创建新工作流
-      const newWorkflow: WorkflowDefinition = {
-        id: 'new',
-        name: '新工作流',
-        description: '',
-        version: '1.0.0',
-        category: 'general',
-        status: 'draft',
-        xml: getDefaultBPMNXML(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        created_by: '当前用户',
-        tags: [],
-        approval_config: approvalConfig,
-        variables: [],
-        sla_config: {
-          response_time_hours: 24,
-          resolution_time_hours: 72,
-          business_hours_only: true,
-          exclude_weekends: true,
-          exclude_holidays: true,
-        },
-      };
-      setWorkflow(newWorkflow);
-      setCurrentXML(getDefaultBPMNXML());
+      loadWorkflowConfig(workflowId);
+    } else if (!workflowId) {
+      // 显示新工作流创建向导
+      setShowNewWorkflowModal(true);
     }
   }, [workflowId]);
 
   const loadWorkflow = async (id: string) => {
-    if (id === 'new') return;
+    if (id === 'new' || !id) return;
 
     try {
       // 使用新的BPMN API
       const response = (await WorkflowAPI.getProcessDefinition(id)) as any;
+
+      // 如果返回空或无效，提示错误并跳转到列表
+      if (!response || (!response.key && !response.id && !response.name)) {
+        message.error('加载工作流失败，该工作流可能不存在');
+        router.push('/workflow');
+        return;
+      }
 
       let xmlContent = '';
       if (response.bpmn_xml) {
@@ -196,9 +271,9 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 
       setWorkflow({
         id: response.key || response.id,
-        name: response.name,
+        name: response.name || '未命名工作流',
         description: response.description || '',
-        version: response.version.toString(),
+        version: (response.version || '1').toString(),
         category: response.category || response.type || 'general',
         status: response.is_active ? 'active' : 'inactive',
         xml: xmlContent,
@@ -314,6 +389,170 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 </bpmn:definitions>`;
   };
 
+  // 工单流程模板
+  const getTicketWorkflowBPMN = (name: string) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Ticket" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_Ticket" name="${name}" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Ticket" name="新建工单">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_Assign" name="分配处理人">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Handle" name="处理工单">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Confirm" name="确认完成">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_Ticket" name="工单关闭">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Ticket" targetRef="Activity_Assign" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Assign" targetRef="Activity_Handle" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Handle" targetRef="Activity_Confirm" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Confirm" targetRef="EndEvent_Ticket" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_Ticket">
+      <bpmndi:BPMNShape id="StartEvent_Ticket_di" bpmnElement="StartEvent_Ticket">
+        <dc:Bounds x="152" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Assign_di" bpmnElement="Activity_Assign">
+        <dc:Bounds x="240" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Handle_di" bpmnElement="Activity_Handle">
+        <dc:Bounds x="380" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Confirm_di" bpmnElement="Activity_Confirm">
+        <dc:Bounds x="520" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Ticket_di" bpmnElement="EndEvent_Ticket">
+        <dc:Bounds x="672" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
+  };
+
+  // 事件流程模板
+  const getIncidentWorkflowBPMN = (name: string) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Incident" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_Incident" name="${name}" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Incident" name="故障发生">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_Triage" name="事件定级">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Resolve" name="故障处理">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Verify" name="验证恢复">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Review" name="事件回顾">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_Incident" name="事件关闭">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Incident" targetRef="Activity_Triage" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Triage" targetRef="Activity_Resolve" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Resolve" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Verify" targetRef="Activity_Review" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Review" targetRef="EndEvent_Incident" />
+  </bpmn:process>
+</bpmn:definitions>`;
+  };
+
+  // 变更流程模板
+  const getChangeWorkflowBPMN = (name: string) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Change" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_Change" name="${name}" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Change" name="变更申请">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_Review" name="变更评审">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Approval" name="经理审批">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Implement" name="实施变更">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Verify" name="验证确认">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_Change" name="变更完成">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Change" targetRef="Activity_Review" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Review" targetRef="Activity_Approval" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Approval" targetRef="Activity_Implement" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Implement" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Verify" targetRef="EndEvent_Change" />
+  </bpmn:process>
+</bpmn:definitions>`;
+  };
+
+  // 审批流程模板
+  const getApprovalWorkflowBPMN = (name: string) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Approval" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_Approval" name="${name}" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Approval" name="提交申请">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_Approve1" name="一级审批">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_Approve2" name="二级审批">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_Approval" name="审批完成">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Approval" targetRef="Activity_Approve1" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Approve1" targetRef="Activity_Approve2" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Approve2" targetRef="EndEvent_Approval" />
+  </bpmn:process>
+</bpmn:definitions>`;
+  };
+
   const handleSave = async (xml: string) => {
     if (!workflow) return;
 
@@ -321,20 +560,22 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     try {
       if (workflow.id === 'new') {
         // 创建新工作流 - 使用新的BPMN API
+        const tenantId = httpClient.getTenantId() || 1;
         const response = (await WorkflowAPI.createProcessDefinition({
           name: workflow.name,
           description: workflow.description,
           category: workflow.category,
           bpmn_xml: xml,
-          tenant_id: 1, // 从当前用户信息中获取
+          tenant_id: tenantId,
         })) as any;
 
-        // 更新工作流ID和状态
+        // 更新工作流ID（使用key）、版本和状态
         setWorkflow(prev =>
           prev
             ? {
                 ...prev,
-                id: response.key || response.id,
+                id: response.key || response.id, // 使用 key 作为 id
+                version: response.version || '1.0.0',
                 status: 'draft',
               }
             : null
@@ -342,13 +583,25 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 
         message.success('工作流创建成功');
       } else {
-        // 更新现有工作流
-        await WorkflowAPI.updateProcessDefinition(workflow.id, {
+        // 更新现有工作流（包括BPMN XML + 配置）
+        const response = (await WorkflowAPI.updateProcessDefinition(workflow.id, {
           name: workflow.name,
           description: workflow.description,
           category: workflow.category,
           bpmn_xml: xml,
-        });
+          approval_config: approvalConfig,
+          sla_config: workflow.sla_config,
+        }, workflow.version)) as any;
+
+        // 更新版本号
+        setWorkflow(prev =>
+          prev
+            ? {
+                ...prev,
+                version: response.version || prev.version,
+              }
+            : null
+        );
 
         message.success('工作流更新成功');
       }
@@ -357,7 +610,7 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
       setHasChanges(false);
     } catch (error) {
       console.error('保存工作流失败:', error);
-      message.error('保存工作流失败');
+      message.error('保存工作流失败: ' + (error as Error).message);
     } finally {
       setSaving(false);
     }
@@ -368,8 +621,8 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
 
     setDeploying(true);
     try {
-      // 部署工作流
-      await WorkflowAPI.deployProcessDefinition(workflow.id);
+      // 部署工作流，传递版本号
+      await WorkflowAPI.deployProcessDefinition(workflow.id, workflow.version);
 
       // 更新状态
       setWorkflow(prev =>
@@ -386,6 +639,104 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
       console.error('部署工作流失败:', error);
       message.error('部署工作流失败');
     } finally {
+      setDeploying(false);
+    }
+  };
+
+  // 保存并部署 - 一键完成
+  const handleSaveAndDeploy = async (xml: string) => {
+    if (!workflow) return;
+
+    setSaving(true);
+    setDeploying(true);
+    try {
+      // 获取当前版本号
+      const currentVersion = workflow.version || '1.0.0';
+      console.log('handleSaveAndDeploy:', { id: workflow.id, version: currentVersion, name: workflow.name });
+
+      if (workflow.id === 'new') {
+        // 创建并部署新工作流
+        const createData = {
+          name: workflow.name,
+          description: workflow.description || '',
+          category: workflow.category || 'general',
+          bpmn_xml: xml,
+          tenant_id: httpClient.getTenantId() || 1,
+        };
+        console.log('Creating workflow:', createData);
+
+        const response = await WorkflowAPI.createProcessDefinition(createData) as any;
+        console.log('Create response:', response);
+
+        if (!response) {
+          throw new Error('创建工作流失败：服务器返回空响应');
+        }
+
+        const newVersion = response.version || '1.0.0';
+        const newKey = response.key || response.id;
+
+        if (!newKey) {
+          throw new Error('创建工作流失败：未获取到工作流ID');
+        }
+
+        console.log('Deploying workflow:', { key: newKey, version: newVersion });
+        // 等待一下确保创建完成
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 立即部署
+        await WorkflowAPI.deployProcessDefinition(newKey, newVersion);
+
+        // 更新工作流状态
+        setWorkflow(prev =>
+          prev
+            ? {
+                ...prev,
+                id: newKey,
+                version: newVersion,
+                status: 'active',
+              }
+            : null
+        );
+
+        message.success('工作流创建并部署成功');
+      } else {
+        // 先保存 - 只传递简单字段，避免序列化问题
+        const updateData = {
+          name: workflow.name,
+          description: workflow.description || '',
+          category: workflow.category || 'general',
+          bpmn_xml: xml,
+        };
+        console.log('Updating workflow:', { id: workflow.id, version: currentVersion, data: updateData });
+
+        const updateResponse = await WorkflowAPI.updateProcessDefinition(workflow.id, updateData, currentVersion) as any;
+        console.log('Update response:', updateResponse);
+
+        // 再部署
+        console.log('Deploying workflow:', { id: workflow.id, version: currentVersion });
+        await WorkflowAPI.deployProcessDefinition(workflow.id, currentVersion);
+
+        // 更新状态
+        setWorkflow(prev =>
+          prev
+            ? {
+                ...prev,
+                status: 'active',
+              }
+            : null
+        );
+
+        message.success('工作流保存并部署成功');
+      }
+
+      setCurrentXML(xml);
+      setHasChanges(false);
+    } catch (error) {
+      console.error('保存并部署失败:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      message.error('保存并部署失败: ' + errorMsg);
+    } finally {
+      setSaving(false);
       setDeploying(false);
     }
   };
@@ -508,8 +859,21 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
               返回
             </Button>
             <div>
-              <Title level={4} className='!mb-0 !text-base'>
+              <Title level={4} className='!mb-0 !text-base flex items-center gap-2'>
                 {workflow?.name || '工作流设计器'}
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<Edit3 className="w-3 h-3" />}
+                  onClick={() => {
+                    metadataForm.setFieldsValue({
+                      name: workflow?.name,
+                      description: workflow?.description,
+                      category: workflow?.category,
+                    });
+                    setShowMetadataModal(true);
+                  }}
+                />
               </Title>
               <div className='flex items-center gap-2 mt-1'>
                 <Tag color={getStatusColor(workflow?.status || 'draft')} className='mr-0'>
@@ -553,12 +917,19 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
               icon={<Save className='w-4 h-4' />}
               loading={saving}
               onClick={() => handleSave(currentXML)}
-              disabled={!hasChanges}
             >
               保存
             </Button>
             <Button
               type='primary'
+              icon={<PlayCircle className='w-4 h-4' />}
+              loading={saving || deploying}
+              onClick={() => handleSaveAndDeploy(currentXML)}
+              disabled={!workflow}
+            >
+              保存并部署
+            </Button>
+            <Button
               icon={<PlayCircle className='w-4 h-4' />}
               loading={deploying}
               onClick={handleDeploy}
@@ -703,10 +1074,13 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
                                 }))
                               }
                               className='w-full'
+                              loading={loadingUsers}
                             >
-                              <Option value='user1'>张三</Option>
-                              <Option value='user2'>李四</Option>
-                              <Option value='user3'>王五</Option>
+                              {userList.map(user => (
+                                <Option key={user.id} value={String(user.id)}>
+                                  {user.name}
+                                </Option>
+                              ))}
                             </Select>
                           </div>
 
@@ -725,10 +1099,13 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
                                 }))
                               }
                               className='w-full'
+                              loading={loadingRoles}
                             >
-                              <Option value='admin'>管理员</Option>
-                              <Option value='manager'>经理</Option>
-                              <Option value='supervisor'>主管</Option>
+                              {roleList.map(role => (
+                                <Option key={role.code} value={role.code}>
+                                  {role.name}
+                                </Option>
+                              ))}
                             </Select>
                           </div>
                         </div>
@@ -913,10 +1290,12 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
                     </Form.Item>
 
                     <Form.Item label='审批人' name={['approval_config', 'approvers']}>
-                      <Select mode='multiple' placeholder='选择审批人'>
-                        <Option value='user1'>张三</Option>
-                        <Option value='user2'>李四</Option>
-                        <Option value='user3'>王五</Option>
+                      <Select mode='multiple' placeholder='选择审批人' loading={loadingUsers}>
+                        {userList.map(user => (
+                          <Option key={user.id} value={String(user.id)}>
+                            {user.name}
+                          </Option>
+                        ))}
                       </Select>
                     </Form.Item>
                   </>
@@ -953,6 +1332,187 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
             ]}
           />
         </Form>
+      </Modal>
+
+      {/* 工作流元数据编辑模态框 */}
+      <Modal
+        title='编辑工作流信息'
+        open={showMetadataModal}
+        onOk={() => {
+          metadataForm.validateFields().then(values => {
+            setWorkflow(prev =>
+              prev
+                ? {
+                    ...prev,
+                    name: values.name,
+                    description: values.description,
+                    category: values.category,
+                  }
+                : null
+            );
+            setShowMetadataModal(false);
+          });
+        }}
+        onCancel={() => setShowMetadataModal(false)}
+        okText='保存'
+        cancelText='取消'
+      >
+        <Form form={metadataForm} layout='vertical'>
+          <Form.Item
+            label='工作流名称'
+            name='name'
+            rules={[{ required: true, message: '请输入工作流名称' }]}
+          >
+            <Input placeholder='请输入工作流名称' />
+          </Form.Item>
+          <Form.Item label='描述' name='description'>
+            <Input.TextArea rows={3} placeholder='请输入工作流描述' />
+          </Form.Item>
+          <Form.Item label='分类' name='category'>
+            <Select placeholder='请选择分类'>
+              <Option value='general'>通用</Option>
+              <Option value='approval'>审批流程</Option>
+              <Option value='ticket'>工单流程</Option>
+              <Option value='incident'>事件流程</Option>
+              <Option value='change'>变更流程</Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 新建工作流向导弹窗 - 模板选择 */}
+      <Modal
+        title='选择工作流模板'
+        open={showNewWorkflowModal}
+        onCancel={() => {
+          setShowNewWorkflowModal(false);
+          router.push('/workflow');
+        }}
+        footer={null}
+        width={900}
+        destroyOnClose
+      >
+        <div className='mb-4'>
+          <Input.Search
+            placeholder='搜索模板...'
+            style={{ width: 300 }}
+            onSearch={(value) => {
+              // 可以添加搜索功能
+            }}
+          />
+        </div>
+
+        <div className='grid grid-cols-2 md:grid-cols-3 gap-4' style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {WORKFLOW_TEMPLATES.map((template) => (
+            <div
+              key={template.id}
+              className='border rounded-lg p-4 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all'
+              style={{
+                border: '1px solid #d9d9d9',
+                borderRadius: '8px',
+                padding: '16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onClick={() => {
+                // 选择模板后创建工作流
+                const newWorkflow: WorkflowDefinition = {
+                  id: 'new',
+                  name: template.name,
+                  description: template.description,
+                  version: '1.0.0',
+                  category: template.category,
+                  status: 'draft',
+                  xml: template.bpmn_xml,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  created_by: '当前用户',
+                  tags: [],
+                  approval_config: {
+                    require_approval: template.approval_config.require_approval,
+                    approval_type: template.approval_config.approval_type,
+                    approvers: template.approval_config.approvers,
+                    auto_approve_roles: [],
+                    escalation_rules: [],
+                  },
+                  variables: [],
+                  sla_config: {
+                    response_time_hours: 24,
+                    resolution_time_hours: 72,
+                    business_hours_only: true,
+                    exclude_weekends: true,
+                    exclude_holidays: true,
+                  },
+                };
+                setWorkflow(newWorkflow);
+                setCurrentXML(newWorkflow.xml);
+                setShowNewWorkflowModal(false);
+              }}
+            >
+              <div className='flex items-center mb-2'>
+                <div className='w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mr-3'>
+                  <FileText className='w-5 h-5 text-blue-600' />
+                </div>
+                <div>
+                  <div className='font-medium'>{template.name}</div>
+                  <div className='text-xs text-gray-500'>{TEMPLATE_CATEGORIES.find(c => c.key === template.category)?.name || template.category}</div>
+                </div>
+              </div>
+              <div className='text-xs text-gray-500 mt-2'>{template.description}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className='mt-6 border-t pt-4'>
+          <div className='text-sm text-gray-500 mb-3'>或者自定义创建</div>
+          <Form
+            form={newWorkflowForm}
+            layout='vertical'
+            onFinish={(values) => {
+              const newWorkflow: WorkflowDefinition = {
+                id: 'new',
+                name: values.name,
+                description: values.description || '',
+                version: '1.0.0',
+                category: 'custom',
+                status: 'draft',
+                xml: getDefaultBPMNXML(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                created_by: '当前用户',
+                tags: [],
+                approval_config: approvalConfig,
+                variables: [],
+                sla_config: {
+                  response_time_hours: values.sla_response || 24,
+                  resolution_time_hours: values.sla_resolution || 72,
+                  business_hours_only: true,
+                  exclude_weekends: true,
+                  exclude_holidays: true,
+                },
+              };
+              setWorkflow(newWorkflow);
+              setCurrentXML(newWorkflow.xml);
+              setShowNewWorkflowModal(false);
+            }}
+          >
+            <div className='flex gap-4'>
+              <Form.Item
+                label='工作流名称'
+                name='name'
+                rules={[{ required: true, message: '请输入工作流名称' }]}
+                style={{ flex: 1 }}
+              >
+                <Input placeholder='自定义流程名称' />
+              </Form.Item>
+              <Form.Item style={{ marginTop: '32px' }}>
+                <Button type='primary' htmlType='submit'>
+                  创建空白流程
+                </Button>
+              </Form.Item>
+            </div>
+          </Form>
+        </div>
       </Modal>
     </Layout>
   );

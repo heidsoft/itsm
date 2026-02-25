@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"strconv"
 
 	"itsm-backend/common"
@@ -98,7 +99,7 @@ func (rc *RoleController) ListRoles(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"data":  roles,
+		"roles": roles,
 		"total": total,
 		"page":  page,
 		"size":  pageSize,
@@ -239,7 +240,13 @@ func (pc *PermissionController) ListPermissions(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, perms)
+	// Convert to string array for frontend compatibility
+	permStrings := make([]string, len(perms))
+	for i, p := range perms {
+		permStrings[i] = fmt.Sprintf("%s:%s", p.Resource, p.Action)
+	}
+
+	common.Success(c, gin.H{"permissions": permStrings})
 }
 
 // InitDefaultPermissions 初始化默认权限

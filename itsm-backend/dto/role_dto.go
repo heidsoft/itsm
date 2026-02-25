@@ -29,7 +29,7 @@ type RoleListResponse struct {
 // CreateRoleRequest represents the request for creating a role
 type CreateRoleRequest struct {
 	Name        string   `json:"name" binding:"required"`
-	Code        string   `json:"code" binding:"required"`
+	Code        string   `json:"code"` // Optional - auto-generated if empty
 	Description string   `json:"description"`
 	Permissions []string `json:"permissions"`
 	Status      string   `json:"status"`

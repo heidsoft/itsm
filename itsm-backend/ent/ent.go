@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/application"
+	"itsm-backend/ent/approvalchain"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/asset"
@@ -62,6 +63,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
@@ -148,6 +150,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			application.Table:             application.ValidColumn,
+			approvalchain.Table:           approvalchain.ValidColumn,
 			approvalrecord.Table:          approvalrecord.ValidColumn,
 			approvalworkflow.Table:        approvalworkflow.ValidColumn,
 			asset.Table:                   asset.ValidColumn,
@@ -203,6 +206,7 @@ func checkColumn(table, column string) error {
 			servicecatalog.Table:          servicecatalog.ValidColumn,
 			servicerequest.Table:          servicerequest.ValidColumn,
 			servicerequestapproval.Table:  servicerequestapproval.ValidColumn,
+			systemconfig.Table:            systemconfig.ValidColumn,
 			tag.Table:                     tag.ValidColumn,
 			team.Table:                    team.ValidColumn,
 			tenant.Table:                  tenant.ValidColumn,

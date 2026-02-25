@@ -36,6 +36,37 @@ var (
 			},
 		},
 	}
+	// ApprovalChainsColumns holds the columns for the "approval_chains" table.
+	ApprovalChainsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "entity_type", Type: field.TypeString, Default: "ticket"},
+		{Name: "chain", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "created_by", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ApprovalChainsTable holds the schema information for the "approval_chains" table.
+	ApprovalChainsTable = &schema.Table{
+		Name:       "approval_chains",
+		Columns:    ApprovalChainsColumns,
+		PrimaryKey: []*schema.Column{ApprovalChainsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "approvalchain_tenant_id_entity_type",
+				Unique:  false,
+				Columns: []*schema.Column{ApprovalChainsColumns[7], ApprovalChainsColumns[3]},
+			},
+			{
+				Name:    "approvalchain_status",
+				Unique:  false,
+				Columns: []*schema.Column{ApprovalChainsColumns[5]},
+			},
+		},
+	}
 	// ApprovalRecordsColumns holds the columns for the "approval_records" table.
 	ApprovalRecordsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2257,6 +2288,32 @@ var (
 			},
 		},
 	}
+	// SystemConfigsColumns holds the columns for the "system_configs" table.
+	SystemConfigsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "value", Type: field.TypeString, Nullable: true},
+		{Name: "value_type", Type: field.TypeString, Default: "string"},
+		{Name: "category", Type: field.TypeString, Default: "general"},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "created_by", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SystemConfigsTable holds the schema information for the "system_configs" table.
+	SystemConfigsTable = &schema.Table{
+		Name:       "system_configs",
+		Columns:    SystemConfigsColumns,
+		PrimaryKey: []*schema.Column{SystemConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "systemconfig_tenant_id_category",
+				Unique:  false,
+				Columns: []*schema.Column{SystemConfigsColumns[7], SystemConfigsColumns[4]},
+			},
+		},
+	}
 	// TagsColumns holds the columns for the "tags" table.
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3167,6 +3224,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ApplicationsTable,
+		ApprovalChainsTable,
 		ApprovalRecordsTable,
 		ApprovalWorkflowsTable,
 		AssetsTable,
@@ -3222,6 +3280,7 @@ var (
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
 		ServiceRequestApprovalsTable,
+		SystemConfigsTable,
 		TagsTable,
 		TeamsTable,
 		TenantsTable,

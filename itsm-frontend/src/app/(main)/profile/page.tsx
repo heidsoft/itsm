@@ -26,6 +26,7 @@ import { User, Mail, Phone, Building, Shield, Bell, Key, Camera, Save, Edit } fr
 import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
+import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -55,6 +56,9 @@ interface UserStats {
 
 export default function ProfilePage() {
   const { t } = useI18n();
+  const { user } = useAuthStore();
+  // 手动触发 auth store 的 hydration
+  useAuthStoreHydration();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,29 +76,55 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      // 从 localStorage 或 API 获取当前用户信息
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        const userData = await UserApi.getUserById(Number(userId));
+      // 直接从 auth store 获取用户信息
+      if (user) {
         setProfile({
-          id: userData.id,
-          username: userData.username,
-          email: userData.email,
-          name: userData.name,
-          department: userData.department,
-          phone: userData.phone,
-          role: 'user', // 从 userData 获取或从 token 解析
-          tenant_id: userData.tenant_id,
-          created_at: userData.created_at,
+          id: user.id,
+          username: user.username,
+          email: user.email || '',
+          name: user.name || user.username,
+          department: (user as any).department || '',
+          phone: (user as any).phone || '',
+          role: user.role || 'user',
+          tenant_id: user.tenantId || 1,
+          created_at: user.createdAt || new Date().toISOString(),
         });
         profileForm.setFieldsValue({
-          name: userData.name,
-          username: userData.username,
-          email: userData.email,
-          phone: userData.phone,
-          department: userData.department,
-          tenant: 'Default Tenant', // 从 tenant 信息获取
+          name: user.name || user.username,
+          username: user.username,
+          email: user.email || '',
+          phone: (user as any).phone || '',
+          department: (user as any).department || '',
+          tenant: '默认租户',
         });
+      } else {
+        // 如果 store 中没有用户信息，尝试从 localStorage 获取
+        const storedUser = localStorage.getItem('auth-storage');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const storedUserData = parsed?.state?.user;
+          if (storedUserData) {
+            setProfile({
+              id: storedUserData.id,
+              username: storedUserData.username,
+              email: storedUserData.email || '',
+              name: storedUserData.name || storedUserData.username,
+              department: storedUserData.department || '',
+              phone: storedUserData.phone || '',
+              role: storedUserData.role || 'user',
+              tenant_id: storedUserData.tenantId || 1,
+              created_at: storedUserData.createdAt || new Date().toISOString(),
+            });
+            profileForm.setFieldsValue({
+              name: storedUserData.name || storedUserData.username,
+              username: storedUserData.username,
+              email: storedUserData.email || '',
+              phone: storedUserData.phone || '',
+              department: storedUserData.department || '',
+              tenant: '默认租户',
+            });
+          }
+        }
       }
     } catch (error) {
       console.error('加载用户信息失败:', error);

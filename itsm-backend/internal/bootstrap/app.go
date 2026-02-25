@@ -180,7 +180,8 @@ func NewApplication() *Application {
 	ticketTagController := controller.NewTicketTagController(ticketTagService, sugar.Desugar())
 
 	processEngine := service.NewCustomProcessEngine(client, sugar)
-	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine)
+	bpmnVersionService := service.NewBPMNVersionService(client, sugar)
+	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine, bpmnVersionService)
 
 	// BPMN Process Trigger Service & Controller (统一流程触发接口)
 	bpmnTemplateService := service.NewBPMNTemplateService(client)
@@ -283,6 +284,18 @@ func NewApplication() *Application {
 	permissionService := service.NewPermissionService(client, sugar)
 	permissionController := controller.NewPermissionController(permissionService, sugar)
 
+	// Tenant Controller
+	tenantService := service.NewTenantService(client, sugar)
+	tenantController := controller.NewTenantController(tenantService, sugar)
+
+	// System Config Controller
+	systemConfigService := service.NewSystemConfigService(client, sugar)
+	systemConfigController := controller.NewSystemConfigController(systemConfigService, sugar)
+
+	// Approval Chain Controller
+	approvalChainService := service.NewApprovalChainService(client, sugar)
+	approvalChainController := controller.NewApprovalChainController(approvalChainService, sugar)
+
 	// SLA Monitor & Alert Services (legacy, for background tasks)
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaAlertService := service.NewSLAAlertService(client, sugar)
@@ -332,6 +345,9 @@ func NewApplication() *Application {
 		// Role & Permission Controllers
 		RoleController:           roleController,
 		PermissionController:     permissionController,
+		TenantController:         tenantController,
+		SystemConfigController:   systemConfigController,
+		ApprovalChainController:      approvalChainController,
 
 		// CMDB Controller (新增)
 		CMDBController: cmdbController,
