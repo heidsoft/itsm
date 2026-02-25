@@ -13,7 +13,7 @@ import { ArrowLeftOutlined, EditOutlined, UserOutlined, CalendarOutlined, Folder
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { KnowledgeApi } from '@/lib/api/';
+import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { KnowledgeStatus, KnowledgeStatusLabels, KnowledgeStatusColors } from '@/constants/knowledge';
 import type { KnowledgeArticle } from '@/types/biz/knowledge';
 import ArticleVersionControl from './ArticleVersionControl';
@@ -36,7 +36,7 @@ const ArticleDetail: React.FC = () => {
     const loadDetail = async () => {
         setLoading(true);
         try {
-            const data = await KnowledgeApi.getArticle(Number(id!));
+            const data = await KnowledgeBaseApi.getArticle(id);
             setArticle(data as unknown as KnowledgeArticle);
             // 设置页面标题
             if (typeof document !== 'undefined' && data?.title) {

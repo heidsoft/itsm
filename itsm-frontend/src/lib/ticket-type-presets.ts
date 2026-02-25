@@ -12,6 +12,8 @@ export interface TicketTypePreset {
   color: string;
   category: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  // 关联的工作流模板ID（对应工作流定义的code）
+  workflowTemplateId?: string;
   // 预设的表单字段配置
   fields?: {
     name: string;
@@ -34,6 +36,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#1890ff',
     category: '技术支持',
     priority: 'high',
+    workflowTemplateId: 'ticket_urgent_flow',
     fields: [
       {
         name: 'cluster',
@@ -84,6 +87,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#722ed1',
     category: '技术支持',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'db_type',
@@ -148,6 +152,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#13c2c2',
     category: '技术支持',
     priority: 'low',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'data_source',
@@ -208,6 +213,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#2f54eb',
     category: '技术支持',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'vm_name',
@@ -294,6 +300,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#52c41a',
     category: '账户问题',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'account_type',
@@ -372,6 +379,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#fa541c',
     category: '账户问题',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'repo_name',
@@ -443,6 +451,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#eb2f96',
     category: '系统故障',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'domain_name',
@@ -508,6 +517,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#fa8c16',
     category: '系统故障',
     priority: 'high',
+    workflowTemplateId: 'ticket_urgent_flow',
     fields: [
       {
         name: 'rule_type',
@@ -584,6 +594,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#1890ff',
     category: '技术支持',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'app_name',
@@ -687,6 +698,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#722ed1',
     category: '技术支持',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'project_name',
@@ -751,6 +763,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#faad14',
     category: '系统故障',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
     fields: [
       {
         name: 'db_type',
@@ -831,6 +844,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
     color: '#8c8c8c',
     category: '系统故障',
     priority: 'medium',
+    workflowTemplateId: 'ticket_general_flow',
   },
 ];
 
@@ -853,4 +867,10 @@ export function getTicketTypesByCategory(category: string): TicketTypePreset[] {
     return ticketTypePresets;
   }
   return ticketTypePresets.filter(t => t.category === category);
+}
+
+// 根据工单类型获取关联的工作流模板ID
+export function getWorkflowTemplateIdByTicketType(ticketTypeCode: string): string | undefined {
+  const preset = ticketTypePresets.find(t => t.code === ticketTypeCode);
+  return preset?.workflowTemplateId;
 }

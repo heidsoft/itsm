@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Card,
   Typography,
@@ -31,11 +32,28 @@ import {
   Target,
 } from 'lucide-react';
 import { TicketAnalyticsApi, type AnalyticsConfig, type AnalyticsResponse } from '@/lib/api/ticket-analytics-api';
-import ReportsCharts from '@/components/reports/ReportsCharts';
-import ReportGenerator from '@/components/reports/ReportGenerator';
-import AdvancedAnalytics from '@/components/reports/AdvancedAnalytics';
-import RealTimeMonitoring from '@/components/reports/RealTimeMonitoring';
 import { format, subDays } from 'date-fns';
+
+// 动态导入报告组件 - 减少初始 bundle 大小
+const ReportsCharts = dynamic(() => import('@/components/reports/ReportsCharts'), {
+  ssr: false,
+  loading: () => <Spin />,
+});
+
+const ReportGenerator = dynamic(() => import('@/components/reports/ReportGenerator'), {
+  ssr: false,
+  loading: () => <Spin />,
+});
+
+const AdvancedAnalytics = dynamic(() => import('@/components/reports/AdvancedAnalytics'), {
+  ssr: false,
+  loading: () => <Spin />,
+});
+
+const RealTimeMonitoring = dynamic(() => import('@/components/reports/RealTimeMonitoring'), {
+  ssr: false,
+  loading: () => <Spin />,
+});
 
 const { Title, Text } = Typography;
 const { Option } = Select;

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Form, Input, Select, Row, Col, Space, Divider, App } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
-import { KnowledgeApi } from '@/lib/api/knowledge-api';
+import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -24,8 +24,10 @@ export default function CreateArticlePage() {
 
     const loadCategories = async () => {
       try {
-        const res = await KnowledgeApi.categories();
-        setCategories(res || []);
+        const res = await KnowledgeBaseApi.getCategories();
+        // Map KnowledgeCategory objects to strings for backward compatibility
+        const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
+        setCategories(categoryNames);
       } catch (error) {
         // Use default categories if API fails
         setCategories(['故障排查', '解决方案', '操作流程', '最佳实践', '技术文档']);
@@ -37,10 +39,10 @@ export default function CreateArticlePage() {
   const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
-      await KnowledgeApi.create({
+      await KnowledgeBaseApi.createArticle({
         title: values.title,
         content: values.content,
-        category: values.category,
+        categoryId: values.category,
         tags: values.tags || [],
       });
       message.success('文章创建成功');
@@ -100,8 +102,8 @@ export default function CreateArticlePage() {
                 rules={[{ required: true, message: '请选择分类' }]}
               >
                 <Select placeholder='请选择分类'>
-                  {categories.map(cat => (
-                    <Option key={cat} value={cat}>{cat}</Option>
+                  {categories.map((cat, idx) => (
+                    <Option key={idx} value={cat}>{cat}</Option>
                   ))}
                 </Select>
               </Form.Item>

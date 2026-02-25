@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Layout,
@@ -21,6 +22,7 @@ import {
   Badge,
   Alert,
   Checkbox,
+  Spin,
 } from 'antd';
 import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
@@ -38,9 +40,18 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
-import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { WORKFLOW_TEMPLATES, TEMPLATE_CATEGORIES, getTemplateById } from '@/lib/workflow-templates';
+
+// 动态导入 BPMN 设计器 - bpmn-js 库较大，按需加载
+const BPMNDesigner = dynamic(() => import('@/components/workflow/BPMNDesigner'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <Spin size="large" tip="加载流程设计器..." />
+    </div>
+  ),
+});
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;

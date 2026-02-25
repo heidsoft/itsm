@@ -49,6 +49,7 @@ type RouterConfig struct {
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	BPMNProcessTriggerController   *controller.BPMNProcessTriggerController
+	A2UITicketController           *controller.A2UITicketController
 	DashboardHandler                *handlers.DashboardHandler
 
 	// Organization & Project
@@ -732,6 +733,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// BPMN Process Trigger Controller (统一流程触发接口)
 		if config.BPMNProcessTriggerController != nil {
 			config.BPMNProcessTriggerController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// A2UI Ticket Controller (AI-driven UI表单)
+		if config.A2UITicketController != nil {
+			config.A2UITicketController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		if config.DashboardHandler != nil {

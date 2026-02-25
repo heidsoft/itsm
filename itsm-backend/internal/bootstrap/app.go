@@ -189,6 +189,10 @@ func NewApplication() *Application {
 	processTriggerService := service.NewProcessTriggerService(client, processEngine)
 	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService)
 
+	// A2UI Ticket Controller (AI-driven UI表单)
+	a2uiTicketService := service.NewA2UITicketService(nil)
+	a2uiTicketController := controller.NewA2UITicketController(a2uiTicketService)
+
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
 
@@ -335,6 +339,7 @@ func NewApplication() *Application {
 		ApprovalController:              approvalController,
 		BPMNWorkflowController:          bpmnWorkflowController,
 		BPMNProcessTriggerController:   bpmnProcessTriggerController,
+		A2UITicketController:          a2uiTicketController,
 		DashboardHandler:                dashboardHandler,
 		ProjectController:               projectController,
 		ApplicationController:           applicationController,

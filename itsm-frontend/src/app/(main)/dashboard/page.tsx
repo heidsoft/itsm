@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Card,
   Button,
@@ -24,13 +25,42 @@ import { ChartsSection } from './components/ChartsSection';
 import { QuickActions } from './components/QuickActions';
 import { useDashboardData } from './hooks/useDashboardData';
 import { QuickAction } from './types/dashboard.types';
-import TicketTrendChart from './components/TicketTrendChart';
-import IncidentDistributionChart from './components/IncidentDistributionChart';
-import SLAComplianceChart from './components/SLAComplianceChart';
-import UserSatisfactionChart from './components/UserSatisfactionChart';
-import ResponseTimeChart from './components/ResponseTimeChart';
-import TeamWorkloadChart from './components/TeamWorkloadChart';
-import PeakHoursChart from './components/PeakHoursChart';
+
+// 动态导入图表组件 - 按需加载，减少初始 bundle 大小
+const TicketTrendChart = dynamic(() => import('./components/TicketTrendChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
+
+const IncidentDistributionChart = dynamic(() => import('./components/IncidentDistributionChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
+
+const SLAComplianceChart = dynamic(() => import('./components/SLAComplianceChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
+
+const UserSatisfactionChart = dynamic(() => import('./components/UserSatisfactionChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
+
+const ResponseTimeChart = dynamic(() => import('./components/ResponseTimeChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
+
+const TeamWorkloadChart = dynamic(() => import('./components/TeamWorkloadChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
+
+const PeakHoursChart = dynamic(() => import('./components/PeakHoursChart'), {
+  ssr: false,
+  loading: () => <Skeleton active />,
+});
 
 export default function DashboardPage() {
   const router = useRouter();

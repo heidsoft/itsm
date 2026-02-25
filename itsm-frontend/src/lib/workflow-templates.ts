@@ -10,6 +10,8 @@ export interface WorkflowTemplate {
   category: string;
   icon: string;
   bpmn_xml: string;
+  // 关联的工单类型code（如 k8s_scale, account_apply 等）
+  ticketTypeCode?: string;
   approval_config: {
     require_approval: boolean;
     approval_type: 'single' | 'parallel' | 'sequential';
@@ -297,8 +299,24 @@ export const TEMPLATE_CATEGORIES = [
   { key: 'procurement', name: '采购管理', icon: 'ShoppingCart' },
   { key: 'it', name: 'IT管理', icon: 'Server' },
   { key: 'legal', name: '法务合同', icon: 'FileText' },
+  { key: 'ticket', name: '工单流程', icon: 'Ticket' },
   { key: 'custom', name: '自定义', icon: 'Plus' },
 ];
+
+/**
+ * 根据工单类型获取对应的模板
+ * 用于工单创建时关联工作流
+ */
+export const getTemplateByTicketType = (ticketTypeCode: string): WorkflowTemplate | undefined => {
+  return WORKFLOW_TEMPLATES.find(t => t.ticketTypeCode === ticketTypeCode);
+};
+
+/**
+ * 获取所有工单相关的模板
+ */
+export const getTicketWorkflowTemplates = (): WorkflowTemplate[] => {
+  return WORKFLOW_TEMPLATES.filter(t => t.ticketTypeCode !== undefined);
+};
 
 /**
  * 根据类别获取模板

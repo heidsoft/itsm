@@ -11,7 +11,6 @@ import {
   Space,
   Typography,
   App,
-  Divider,
   Empty,
   Tag,
   Row,
@@ -179,48 +178,6 @@ export default function CreateTicketPage() {
     );
   };
 
-  // 渲染动态表单字段
-  const renderDynamicFields = () => {
-    if (!selectedType?.fields || selectedType.fields.length === 0) {
-      return null;
-    }
-
-    return (
-      <Card title={`${selectedType.name} - 详细信息`} style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 0]}>
-          {selectedType.fields.map(field => (
-            <Col span={24} key={field.name}>
-              <Form.Item
-                name={field.name}
-                label={field.label}
-                rules={
-                  field.required
-                    ? [{ required: true, message: `请填写${field.label}` }]
-                    : []
-                }
-              >
-                {field.type === 'textarea' ? (
-                  <TextArea rows={3} placeholder={field.placeholder} />
-                ) : field.type === 'select' ? (
-                  <Select
-                    placeholder={field.placeholder || `请选择${field.label}`}
-                    options={field.options}
-                  />
-                ) : field.type === 'number' ? (
-                  <Input type='number' placeholder={field.placeholder} />
-                ) : field.type === 'date' ? (
-                  <Input type='date' />
-                ) : (
-                  <Input placeholder={field.placeholder} />
-                )}
-              </Form.Item>
-            </Col>
-          ))}
-        </Row>
-      </Card>
-    );
-  };
-
   return (
     <div className='max-w-6xl mx-auto p-6'>
       <Space orientation='vertical' size={16} style={{ width: '100%' }}>
@@ -293,97 +250,138 @@ export default function CreateTicketPage() {
                     background: `${selectedType.color}08`,
                   }}
                 >
-                  <Space>
-                    <div style={{ color: selectedType.color }}>
-                      {iconMap[selectedType.icon] || <FileText className='w-5 h-5' />}
-                    </div>
-                    <div>
-                      <div className='font-medium'>{selectedType.name}</div>
-                      <Text type='secondary'>{selectedType.description}</Text>
-                    </div>
-                    <Button
-                      type='link'
-                      size='small'
-                      onClick={() => setSelectedType(null)}
-                    >
-                      更换
-                    </Button>
+                  <Space direction='vertical' style={{ width: '100%' }}>
+                    <Space>
+                      <div style={{ color: selectedType.color }}>
+                        {iconMap[selectedType.icon] || <FileText className='w-5 h-5' />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div className='font-medium'>{selectedType.name}</div>
+                        <Text type='secondary'>{selectedType.description}</Text>
+                      </div>
+                      <Button
+                        type='link'
+                        size='small'
+                        onClick={() => setSelectedType(null)}
+                      >
+                        更换
+                      </Button>
+                    </Space>
+                    {/* 关联的工作流信息 */}
+                    {selectedType.workflowTemplateId && (
+                      <div style={{ marginTop: 8, padding: '8px 12px', background: '#fff', borderRadius: 4, border: `1px solid ${selectedType.color}30` }}>
+                        <Space>
+                          <Tag color={selectedType.priority === 'urgent' ? 'red' : selectedType.priority === 'high' ? 'orange' : 'blue'}>
+                            {selectedType.priority === 'urgent' ? '紧急' : selectedType.priority === 'high' ? '高' : selectedType.priority === 'medium' ? '中' : '低'}
+                          </Tag>
+                          <Text type='secondary'>审批流程: </Text>
+                          <Text strong>{selectedType.workflowTemplateId}</Text>
+                        </Space>
+                      </div>
+                    )}
                   </Space>
                 </Card>
               )}
 
-              {/* 动态字段 */}
-              {renderDynamicFields()}
-
-              {/* 基础字段 */}
-              <Card title='基础信息'>
-                <Form.Item
-                  name='title'
-                  label='标题'
-                  rules={[{ required: true, message: '请输入标题', min: 2 }]}
+              {/* 智能显示表单：已选类型有字段→自定义表单 | 已选类型无字段或未选择→基础表单 */}
+              {selectedType?.fields && selectedType.fields.length > 0 ? (
+                /* 有自定义字段：只显示自定义表单（已包含所有必要信息） */
+                <Card
+                  title={`${selectedType.name} - 详细信息`}
+                  style={{ marginBottom: 16 }}
                 >
-                  <Input
-                    placeholder={
-                      selectedType
-                        ? `例如：${selectedType.name} - xxx`
-                        : '例如：VPN 无法连接'
-                    }
-                  />
-                </Form.Item>
+                  <Row gutter={[16, 0]}>
+                    {selectedType.fields.map(field => (
+                      <Col span={24} key={field.name}>
+                        <Form.Item
+                          name={field.name}
+                          label={field.label}
+                          rules={
+                            field.required
+                              ? [{ required: true, message: `请填写${field.label}` }]
+                              : []
+                          }
+                        >
+                          {field.type === 'textarea' ? (
+                            <TextArea rows={3} placeholder={field.placeholder} />
+                          ) : field.type === 'select' ? (
+                            <Select
+                              placeholder={field.placeholder || `请选择${field.label}`}
+                              options={field.options}
+                            />
+                          ) : field.type === 'number' ? (
+                            <Input type='number' placeholder={field.placeholder} />
+                          ) : field.type === 'date' ? (
+                            <Input type='date' />
+                          ) : (
+                            <Input placeholder={field.placeholder} />
+                          )}
+                        </Form.Item>
+                      </Col>
+                    ))}
+                  </Row>
+                </Card>
+              ) : (
+                /* 无自定义字段：显示基础表单 */
+                <Card title='工单信息' style={{ marginBottom: 16 }}>
+                  <Form.Item
+                    name='title'
+                    label='标题'
+                    rules={[{ required: true, message: '请输入标题', min: 2 }]}
+                  >
+                    <Input placeholder='例如：VPN 无法连接' />
+                  </Form.Item>
 
-                <Form.Item
-                  name='description'
-                  label='详细描述'
-                  rules={[
-                    { required: true, message: '请输入描述（至少10个字符）' },
-                    { min: 10, message: '描述至少需要10个字符' },
-                  ]}
-                >
-                  <TextArea
-                    rows={6}
-                    placeholder={
-                      selectedType
-                        ? `请详细描述${selectedType.name}的具体需求...`
-                        : '请详细描述问题/需求与影响范围...'
-                    }
-                  />
-                </Form.Item>
+                  <Form.Item
+                    name='description'
+                    label='详细描述'
+                    rules={[
+                      { required: true, message: '请输入描述（至少10个字符）' },
+                      { min: 10, message: '描述至少需要10个字符' },
+                    ]}
+                  >
+                    <TextArea
+                      rows={6}
+                      placeholder='请详细描述问题/需求与影响范围...'
+                    />
+                  </Form.Item>
 
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name='priority'
-                      label='优先级'
-                      initialValue='medium'
-                      rules={[{ required: true }]}
-                    >
-                      <Select<Priority>
-                        options={[
-                          { label: '低', value: 'low' },
-                          { label: '中', value: 'medium' },
-                          { label: '高', value: 'high' },
-                          { label: '紧急', value: 'urgent' },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name='category'
-                      label='分类'
-                      initialValue={selectedType?.category || '技术支持'}
-                    >
-                      <Select
-                        options={[
-                          { label: '技术支持', value: '技术支持' },
-                          { label: '账户问题', value: '账户问题' },
-                          { label: '系统故障', value: '系统故障' },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Form.Item
+                        name='priority'
+                        label='优先级'
+                        initialValue='medium'
+                        rules={[{ required: true }]}
+                      >
+                        <Select<Priority>
+                          options={[
+                            { label: '低', value: 'low' },
+                            { label: '中', value: 'medium' },
+                            { label: '高', value: 'high' },
+                            { label: '紧急', value: 'urgent' },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                      <Form.Item
+                        name='category'
+                        label='分类'
+                        initialValue='技术支持'
+                      >
+                        <Select
+                          options={[
+                            { label: '技术支持', value: '技术支持' },
+                            { label: '账户问题', value: '账户问题' },
+                            { label: '系统故障', value: '系统故障' },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Card>
+              )}
 
               <Space>
                 <Button type='primary' onClick={handleSubmit} loading={loading}>

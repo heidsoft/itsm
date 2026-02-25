@@ -31,9 +31,9 @@ import {
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
-import { KnowledgeApi } from '@/lib/api/';
+import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { KnowledgeStatus, KnowledgeStatusLabels, KnowledgeStatusColors } from '@/constants/knowledge';
-import type { KnowledgeArticle, ArticleQuery } from '@/types/biz/knowledge';
+import type { KnowledgeArticle, ArticleQuery } from '@/types/knowledge-base';
 
 const { Option } = Select;
 
@@ -48,13 +48,15 @@ const ArticleList: React.FC = () => {
 
   const [query, setQuery] = useState<ArticleQuery>({
     page: 1,
-    page_size: 10,
+    pageSize: 10,
   });
 
   const loadCategories = async () => {
     try {
-      const res = await KnowledgeApi.getCategories();
-      setCategories(res || []);
+      const res = await KnowledgeBaseApi.getCategories();
+      // Map KnowledgeCategory objects to strings for backward compatibility
+      const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
+      setCategories(categoryNames);
     } catch (e) {
       // console.error(e);
     }
@@ -69,9 +71,10 @@ const ArticleList: React.FC = () => {
       } catch (e) {
         // Form validation may fail on initial load, use empty values
       }
-      const resp = await KnowledgeApi.getArticles({
+      const resp = await KnowledgeBaseApi.getArticles({
         ...query,
         ...values,
+        categoryId: (values as any).category || undefined,
       });
       console.log('Knowledge API response:', resp);
       // HTTP client already extracts data, so resp is ListKnowledgeArticlesResponse
@@ -97,13 +100,13 @@ const ArticleList: React.FC = () => {
     setQuery(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string | number) => {
     Modal.confirm({
       title: '确定要删除此文章吗？',
       content: '删除后无法恢复。',
       onOk: async () => {
         try {
-          await KnowledgeApi.deleteArticle(id);
+          await KnowledgeBaseApi.deleteArticle(id.toString());
           message.success('删除成功');
           loadData();
         } catch (e) {
@@ -217,8 +220,8 @@ const ArticleList: React.FC = () => {
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
             >
               {Array.isArray(categories) &&
-                categories.map(c => (
-                  <Option key={c} value={c}>
+                categories.map((c, idx) => (
+                  <Option key={idx} value={c}>
                     {c}
                   </Option>
                 ))}
@@ -265,11 +268,11 @@ const ArticleList: React.FC = () => {
             loading={loading}
             pagination={{
               current: query.page,
-              pageSize: query.page_size,
+              pageSize: query.pageSize,
               total: total,
               showSizeChanger: true,
               showTotal: (total) => `共 ${total} 条记录`,
-              onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
+              onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
             }}
             scroll={{ x: 1000 }}
             getPopupContainer={(node) => node.parentElement || document.body}

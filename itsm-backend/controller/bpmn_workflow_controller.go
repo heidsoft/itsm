@@ -657,6 +657,16 @@ func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
 		return
 	}
 
+	// 如果 process_key 是数字ID，尝试查找对应的流程定义key
+	if id, err := strconv.Atoi(processKey); err == nil {
+		def, err := c.processEngine.ProcessDefinitionService().GetProcessDefinitionByID(ctx, id)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "流程定义不存在"})
+			return
+		}
+		processKey = def.Key
+	}
+
 	versions, err := c.versionService.ListVersions(ctx, processKey, tenantID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取版本列表失败: " + err.Error()})

@@ -4,8 +4,8 @@
  */
 
 // 基础类
-export { BaseApi } from './base-api';
-export type { BaseApiV2, ApiError, ApiResult, CrudApiInterface, PaginatedApiInterface, BatchApiInterface } from './base-api-v2';
+export { BaseApi, ApiError, ApiResult, ApiResponseHandler } from './base-api';
+export type { CrudApiInterface, PaginatedApiInterface, BatchApiInterface, BaseApiV2, ApiErrorCode } from './base-api';
 export { httpClient } from './http-client';
 
 // 类型定义
@@ -18,7 +18,6 @@ export type {
   RequestOptions,
   UploadProgress,
   FileUploadOptions,
-  ApiErrorCode,
 } from './types';
 
 // ==================== 核心业务API ====================
@@ -58,7 +57,6 @@ export { serviceRequestAPI as ServiceRequestApi } from './service-request-api';
 export { ServiceCatalogApi } from './service-catalog-api';
 
 // 知识库
-export { KnowledgeApi } from './knowledge-api';
 export { KnowledgeBaseApi } from './knowledge-base-api';
 
 // ==================== 系统管理API ====================

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { WorkflowAPI } from "@/lib/api/workflow-api";
 import {
   Card,
@@ -73,6 +73,7 @@ interface VersionComparison {
 
 const WorkflowVersionsPage = () => {
   const { message } = App.useApp();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [versions, setVersions] = useState<WorkflowVersion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,6 +82,7 @@ const WorkflowVersionsPage = () => {
     useState<WorkflowVersion | null>(null);
   const [comparison, setComparison] = useState<VersionComparison | null>(null);
   const [workflowId, setWorkflowId] = useState<number>(1);
+  const [processKey, setProcessKey] = useState<string>('');
 
   // 从URL读取workflowId参数
   useEffect(() => {
@@ -99,10 +101,15 @@ const WorkflowVersionsPage = () => {
       // 调用真实 API
       const response = await WorkflowAPI.getWorkflowVersions(workflowId.toString());
       // 适配后端返回格式
-      const adaptedVersions = (response || []).map((v: any): WorkflowVersion => ({
-        id: v.id || 0,
-        workflow_id: v.process_definition_key || workflowId,
-        version: v.version?.toString() || '1.0.0',
+      const adaptedVersions = (response || []).map((v: any): WorkflowVersion => {
+        // 保存 process_key 用于后续 API 调用
+        if (v.process_definition_key && !processKey) {
+          setProcessKey(v.process_definition_key);
+        }
+        return {
+          id: v.id || 0,
+          workflow_id: v.process_definition_key || workflowId,
+          version: v.version?.toString() || '1.0.0',
         bpmn_xml: v.bpmn_xml || '',
         process_variables: v.process_variables || {},
         status: (v.is_active ? 'active' : 'archived') as 'draft' | 'active' | 'archived',
@@ -111,7 +118,8 @@ const WorkflowVersionsPage = () => {
         change_log: v.change_log || '',
         is_current: v.is_active || false,
         metadata: v.metadata || {},
-      }));
+        };
+      });
       setVersions(adaptedVersions);
     } catch (error) {
       console.error('Failed to load versions:', error);
@@ -119,21 +127,25 @@ const WorkflowVersionsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [workflowId]);
+  }, [workflowId, processKey]);
 
   useEffect(() => {
     loadVersions();
   }, [loadVersions]);
 
   const handleCreateVersion = () => {
-    setSelectedVersion(null);
-    // setModalVisible(true); // 暂时注释掉，因为没有对应的Modal组件
+    // 跳转到工作流设计器创建新版本
+    router.push('/workflow/designer?workflowId=' + workflowId);
   };
 
   const handleDeployVersion = async (version: WorkflowVersion) => {
+    if (!processKey) {
+      message.error('无法获取流程定义Key');
+      return;
+    }
     try {
-      // 调用真实 API 激活版本
-      await WorkflowAPI.activateVersion(workflowId.toString(), parseInt(version.version));
+      // 调用真实 API 激活版本，使用 processKey 而不是 workflowId
+      await WorkflowAPI.activateVersion(processKey, parseInt(version.version));
       message.success(`版本 ${version.version} 部署成功`);
       loadVersions();
     } catch (error) {
@@ -143,9 +155,13 @@ const WorkflowVersionsPage = () => {
   };
 
   const handleRollbackVersion = async (version: WorkflowVersion) => {
+    if (!processKey) {
+      message.error('无法获取流程定义Key');
+      return;
+    }
     try {
-      // 调用真实 API 回滚版本
-      await WorkflowAPI.rollbackVersion(workflowId.toString(), parseInt(version.version), '回滚操作');
+      // 调用真实 API 回滚版本，使用 processKey 而不是 workflowId
+      await WorkflowAPI.rollbackVersion(processKey, parseInt(version.version), '回滚操作');
       message.success(`回滚到版本 ${version.version} 成功`);
       loadVersions();
     } catch (error) {
@@ -189,6 +205,10 @@ const WorkflowVersionsPage = () => {
   };
 
   const handleDeleteVersion = async (versionId: number) => {
+    if (!processKey) {
+      message.error('无法获取流程定义Key');
+      return;
+    }
     try {
       // 获取对应的版本号
       const versionToDelete = versions.find(v => v.id === versionId);
@@ -197,8 +217,8 @@ const WorkflowVersionsPage = () => {
         return;
       }
 
-      // 调用真实 API 删除版本
-      await WorkflowAPI.deleteVersion(workflowId.toString(), parseInt(versionToDelete.version));
+      // 调用真实 API 删除版本，使用 processKey 而不是 workflowId
+      await WorkflowAPI.deleteVersion(processKey, parseInt(versionToDelete.version));
       message.success('版本删除成功');
       loadVersions();
     } catch (error) {

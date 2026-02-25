@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, Form, Input, Select, Row, Col, Space, Divider, App } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
-import { KnowledgeApi } from '@/lib/api/knowledge-api';
+import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -24,8 +24,10 @@ export default function EditArticlePage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const res = await KnowledgeApi.categories();
-        setCategories(res || []);
+        const res = await KnowledgeBaseApi.getCategories();
+        // Map KnowledgeCategory objects to strings for backward compatibility
+        const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
+        setCategories(categoryNames);
       } catch (error) {
         setCategories(['故障排查', '解决方案', '操作流程', '最佳实践', '技术文档']);
       }
@@ -40,12 +42,13 @@ export default function EditArticlePage() {
     const fetchArticle = async () => {
       setFetching(true);
       try {
-        const data = await KnowledgeApi.get(Number(id));
+        const data = await KnowledgeBaseApi.getArticle(id);
         setArticleData(data);
+        const anyData = data as any;
         form.setFieldsValue({
           title: data.title,
           content: data.content,
-          category: data.category,
+          category: data.categoryId || anyData.category,
           tags: data.tags || [],
         });
         // Set page title
@@ -71,10 +74,10 @@ export default function EditArticlePage() {
 
     setLoading(true);
     try {
-      await KnowledgeApi.update(Number(id), {
+      await KnowledgeBaseApi.updateArticle(id, {
         title: values.title,
         content: values.content,
-        category: values.category,
+        categoryId: values.category,
         tags: values.tags || [],
       });
       message.success('更新成功');
@@ -132,8 +135,8 @@ export default function EditArticlePage() {
                 rules={[{ required: true, message: '请选择分类' }]}
               >
                 <Select placeholder='请选择分类'>
-                  {categories.map(cat => (
-                    <Option key={cat} value={cat}>{cat}</Option>
+                  {categories.map((cat, idx) => (
+                    <Option key={idx} value={cat}>{cat}</Option>
                   ))}
                 </Select>
               </Form.Item>
