@@ -22,9 +22,9 @@ Thumbs.db
 *.dylib
 *.test
 *.out
-/bin/
-/pkg/
-/vendor/
+bin/
+pkg/
+vendor/
 go.work
 go.work.sum
 
@@ -81,13 +81,31 @@ itsm-frontend/.swc/
 # Backup files
 *.bak
 *.backup
-tests/
+
+# Debug files (generated during development)
 *.png
-*.txt
-itsm-frontend/reports
-itsm-frontend/test-results
+debug*.log
+debug*.txt
+debug*.png
+test_result*.log
+server.log
+
+# Test outputs
+itsm-frontend/test-results/
+itsm-frontend/reports/
 reports/
 report.html
 report.xml
-itsm-backend/server
+
+# Build binaries
+itsm-backend/itsm
 itsm-backend/itsm-backend
+itsm-backend/server
+
+# Python / Test
+tests/
+itsm-frontend/tests/e2e/venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
