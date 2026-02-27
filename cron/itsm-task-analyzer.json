@@ -1,0 +1,13 @@
+{
+  "name": "itsm-task-analyzer",
+  "description": "基于 GitHub Actions 状态分析 ITSM 需求并生成开发任务列表",
+  "cron": "0 */2 * * *",
+  "timezone": "Asia/Shanghai",
+  "agent": "dev",
+  "message": "分析 ITSM 项目状态并生成开发任务",
+  "task": "分析 ITSM 项目并生成开发任务列表：\n1. 检查 GitHub Actions 最近构建状态\n2. 查看 ITERATION_PLAN.md 当前迭代进度\n3. 分析 GitHub issues 和 PRs\n4. 识别阻塞问题和完成的功能\n5. 生成下一步开发任务清单\n6. 更新 dev agent 的 PROJECTS.md 或创建任务文档",
+  "enabled": true,
+  "announce": true,
+  "timeout": 120000,
+  "sessionTarget": "isolated"
+}

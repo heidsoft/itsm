@@ -1,0 +1,12 @@
+{
+  "name": "github-actions-monitor",
+  "description": "定期检查 GitHub Actions 构建状态",
+  "cron": "*/15 * * * *",
+  "timezone": "Asia/Shanghai",
+  "agent": "main",
+  "message": "检查 GitHub Actions 状态",
+  "task": "检查 https://github.com/heidsoft/itsm/actions 的最近构建状态，如果有新的完成或失败的构建，报告详细结果。重点关注：\n1. 最近的 workflow runs 状态\n2. 是否有失败的构建\n3. 构建耗时\n4. 如果有失败，分析可能的原因",
+  "enabled": true,
+  "announce": true,
+  "timeout": 60000
+}
