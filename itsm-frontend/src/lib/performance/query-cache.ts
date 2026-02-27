@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ITSM前端性能优化 - React Query缓存策略优化
  * 

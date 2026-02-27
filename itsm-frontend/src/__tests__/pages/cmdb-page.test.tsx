@@ -1,7 +1,6 @@
-/**
+ /**
  * CMDB 页面测试
  */
-// @ts-nocheck - 测试文件暂时禁用类型检查
 /* eslint-disable react/display-name */
 
 import React from 'react';
