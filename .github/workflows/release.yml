@@ -63,12 +63,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
+          node-version: '22'
 
       - name: Install dependencies
-        run: cd itsm-frontend && npm ci --legacy-peer-deps
+        run: cd itsm-frontend && npm ci
 
       - name: Build
         run: cd itsm-frontend && npm run build
