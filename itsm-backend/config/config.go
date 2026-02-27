@@ -39,8 +39,13 @@ type JWTConfig struct {
 }
 
 type LogConfig struct {
-	Level string `mapstructure:"level"`
-	Path  string `mapstructure:"path"`
+	Level            string `mapstructure:"level"`             // 日志级别: debug, info, warn, error
+	Path             string `mapstructure:"path"`              // 日志文件目录
+	MaxSize          int    `mapstructure:"max_size"`          // 单个日志文件最大大小(MB)
+	MaxBackups       int    `mapstructure:"max_backups"`       // 保留的旧日志文件数量
+	MaxAge           int    `mapstructure:"max_age"`           // 日志文件保留天数
+	Compress         bool   `mapstructure:"compress"`          // 是否压缩旧日志文件
+	Development      bool   `mapstructure:"development"`       // 开发模式(输出到console)
 }
 
 type LLMConfig struct {
@@ -150,6 +155,8 @@ func LoadConfig() (*Config, error) {
 	config.Database.Password = getEnvWithDefault("DB_PASSWORD", config.Database.Password)
 	config.Server.Mode = getEnvWithDefault("SERVER_MODE", config.Server.Mode)
 	config.Log.Level = getEnvWithDefault("LOG_LEVEL", config.Log.Level)
+	config.Log.Path = getEnvWithDefault("LOG_PATH", config.Log.Path)
+	config.Log.Development = os.Getenv("LOG_DEVELOPMENT") == "true"
 	config.LLM.APIKey = getEnvWithDefault("OPENAI_API_KEY", config.LLM.APIKey)
 
 	// SMS 环境变量

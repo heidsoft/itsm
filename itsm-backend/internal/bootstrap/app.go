@@ -3,6 +3,9 @@ package bootstrap
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"itsm-backend/common"
 	"itsm-backend/config"
 	"itsm-backend/controller"
@@ -23,8 +26,6 @@ import (
 	"itsm-backend/pkg/seeder"
 	"itsm-backend/router"
 	"itsm-backend/service"
-	"log"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -49,7 +50,7 @@ func NewApplication() *Application {
 	}
 
 	// 2. 初始化日志系统
-	logger, _ := zap.NewDevelopment()
+	logger := initLogger(&cfg.Log)
 	sugar := logger.Sugar()
 	middleware.SetLogger(sugar)
 

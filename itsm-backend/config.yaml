@@ -23,8 +23,13 @@ jwt:
   refresh_expire_time: 604800  # 7天 (refresh token)
 
 log:
-  level: "${LOG_LEVEL:info}"  # Use env: LOG_LEVEL, default info
-  path: ./logs/app.log
+  level: "${LOG_LEVEL:info}"  # debug, info, warn, error
+  path: ./logs                # 日志文件目录
+  max_size: 100               # 单个日志文件最大大小(MB)
+  max_backups: 30            # 保留的旧日志文件数量
+  max_age: 90                # 日志文件保留天数
+  compress: true              # 是否压缩旧日志文件
+  development: false          # 开发模式(输出到console)
 
 llm:
   provider: openai        # openai, azure, local

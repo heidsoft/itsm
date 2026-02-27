@@ -413,6 +413,30 @@ export const routes: RouteConfig[] = [
     ],
   },
   {
+    path: '/ai',
+    name: 'ai',
+    title: '智能助手',
+    icon: 'Bot',
+    permissions: [{ resource: 'ai', action: 'read' }],
+    meta: {
+      requireAuth: true,
+      breadcrumb: true,
+    },
+    children: [
+      {
+        path: '/ai/chat',
+        name: 'ai-chat',
+        title: 'AI 问答',
+        component: 'AIChat',
+        permissions: [{ resource: 'ai', action: 'read' }],
+        meta: {
+          requireAuth: true,
+          keepAlive: true,
+        },
+      },
+    ],
+  },
+  {
     path: '/cmdb',
     name: 'cmdb',
     title: '配置管理',

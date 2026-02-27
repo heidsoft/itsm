@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Layout, Button } from 'antd';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Layout, Button, Drawer } from 'antd';
+import { ArrowLeft, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
+import { useResponsive } from '@/hooks/useResponsive';
 
-const { Content } = Layout;
+const { Content, Sider } = Layout;
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,16 +33,65 @@ export function AppLayout({
   showPageHeader = true, // 默认显示页面头部
 }: AppLayoutProps) {
   const router = useRouter();
+  const { isMobile, isTablet } = useResponsive();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
+
+  // 移动端自动折叠侧边栏
+  useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  }, [isMobile]);
+
+  // 移动端Drawer侧边栏
+  const MobileSidebar = () => (
+    <Drawer
+      placement="left"
+      onClose={() => setMobileDrawerVisible(false)}
+      open={mobileDrawerVisible}
+      width={280}
+      bodyStyle={{ padding: 0 }}
+      headerStyle={{ display: 'none' }}
+    >
+      <Sidebar collapsed={false} onCollapse={(c) => {
+        setCollapsed(c);
+        if (c) setMobileDrawerVisible(false);
+      }} />
+    </Drawer>
+  );
 
   return (
     <Layout hasSider style={{ minHeight: '100vh' }}>
-      {/* 侧边栏 - 使用 Ant Design 标准尺寸 */}
-      <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+      {/* 移动端顶部菜单按钮 */}
+      {isMobile && (
+        <Button
+          type="text"
+          icon={<Menu />}
+          onClick={() => setMobileDrawerVisible(true)}
+          style={{
+            position: 'fixed',
+            top: 64,
+            left: 0,
+            zIndex: 100,
+            height: '100vh',
+            width: 40,
+            background: 'rgba(255,255,255,0.8)',
+            borderRadius: 0,
+            boxShadow: '2px 0 8px rgba(0,0,0,0.1)',
+          }}
+        />
+      )}
+
+      {/* 移动端Drawer侧边栏 */}
+      {isMobile && <MobileSidebar />}
+
+      {/* 桌面端侧边栏 */}
+      {!isMobile && <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />}
 
       <Layout
         style={{
-          marginLeft: collapsed ? LAYOUT_CONFIG.sider.collapsedWidth : LAYOUT_CONFIG.sider.width,
+          marginLeft: isMobile ? 0 : (collapsed ? LAYOUT_CONFIG.sider.collapsedWidth : LAYOUT_CONFIG.sider.width),
           transition: LAYOUT_CONFIG.transitions.base,
         }}
       >
