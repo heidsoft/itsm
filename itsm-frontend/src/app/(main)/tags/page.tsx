@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Tag, Space, Modal, Form, Input, ColorPicker, message } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, TagOutlined, SyncOutlined } from "@ant-design/icons";
-import { PageContainer } from "@ant-design/pro-components";
+import { PageContainer } from "@/app/components/PageContainer";
 import { tagService, Tag as ITag } from "@/lib/services/tag-service";
 
 export default function TagsPage() {

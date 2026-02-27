@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Tag, Space, Modal, Form, Input, Select, DatePicker, Progress, message } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, ProjectOutlined, SyncOutlined } from "@ant-design/icons";
-import { PageContainer } from "@ant-design/pro-components";
+import { PageContainer } from "@/app/components/PageContainer";
 import { projectService, Project } from "@/lib/services/project-service";
 
 const { RangePicker } = DatePicker;

@@ -9,7 +9,7 @@ import {
   TeamOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { PageContainer } from '@ant-design/pro-components';
+import { PageContainer } from '@/app/components/PageContainer';
 import { departmentService, Department } from '@/lib/services/department-service';
 
 import { UserApi } from '@/lib/api/user-api';
