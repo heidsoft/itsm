@@ -181,4 +181,3 @@ func (tc *TicketTypeController) DeleteTicketType(c *gin.Context) {
 
 	common.Success(c, gin.H{"message": "工单类型删除成功"})
 }
-

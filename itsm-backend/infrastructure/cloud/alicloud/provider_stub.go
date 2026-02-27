@@ -38,5 +38,3 @@ func (p *StubProvider) Execute(ctx context.Context, payload map[string]any) (*cl
 		},
 	}, nil
 }
-
-

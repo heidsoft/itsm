@@ -13,16 +13,16 @@ import (
 )
 
 type AnalyticsService struct {
-	client           *ent.Client
-	logger           *zap.SugaredLogger
-	reportExport     *ReportExportService
+	client       *ent.Client
+	logger       *zap.SugaredLogger
+	reportExport *ReportExportService
 }
 
 func NewAnalyticsService(client *ent.Client, logger *zap.SugaredLogger) *AnalyticsService {
 	return &AnalyticsService{
-		client:           client,
-		logger:           logger,
-		reportExport:     NewReportExportService(),
+		client:       client,
+		logger:       logger,
+		reportExport: NewReportExportService(),
 	}
 }
 
@@ -87,7 +87,7 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 // analyzeByDimensions 按维度分析数据
 func (s *AnalyticsService) analyzeByDimensions(tickets []*ent.Ticket, dimensions []string, metrics []string, groupBy *string) []dto.AnalyticsDataPoint {
 	dataPoints := make([]dto.AnalyticsDataPoint, 0)
-	
+
 	// 如果指定了groupBy，按该维度分组
 	if groupBy != nil && *groupBy != "" {
 		groups := make(map[string][]*ent.Ticket)
@@ -273,10 +273,10 @@ func (s *AnalyticsService) ExportAnalytics(ctx context.Context, req *dto.DeepAna
 // exportToCSV 导出为CSV格式
 func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]byte, string, error) {
 	var csvData string
-	
+
 	// CSV头部
 	csvData = "名称,数值,数量,平均时间\n"
-	
+
 	// 数据行
 	for _, point := range response.Data {
 		avgTime := ""
@@ -285,7 +285,7 @@ func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]b
 		}
 		csvData += fmt.Sprintf("%s,%.2f,%d,%s\n", point.Name, point.Value, point.Count, avgTime)
 	}
-	
+
 	// 添加汇总信息
 	csvData += "\n汇总信息\n"
 	csvData += fmt.Sprintf("总计,%d\n", response.Summary.Total)
@@ -294,7 +294,7 @@ func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]b
 	csvData += fmt.Sprintf("平均解决时间,%.2f\n", response.Summary.AvgResolutionTime)
 	csvData += fmt.Sprintf("SLA合规率,%.2f%%\n", response.Summary.SLACompliance)
 	csvData += fmt.Sprintf("客户满意度,%.2f\n", response.Summary.CustomerSatisfaction)
-	
+
 	filename := fmt.Sprintf("analytics_%s.csv", time.Now().Format("20060102_150405"))
 	return []byte(csvData), filename, nil
 }
@@ -308,4 +308,3 @@ func (s *AnalyticsService) exportToExcel(response *dto.DeepAnalyticsResponse) ([
 func (s *AnalyticsService) exportToPDF(response *dto.DeepAnalyticsResponse) ([]byte, string, error) {
 	return s.reportExport.ExportToPDF(context.Background(), response)
 }
-

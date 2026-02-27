@@ -73,3 +73,16 @@ admin:
   username: "admin"
   password: "${ADMIN_PASSWORD:CHANGE_THIS_PASSWORD_IMMEDIATELY}" # 生产环境请务必修改
   email: "admin@example.com"
+
+# SMTP Email Configuration
+# Used for sending notifications, SLA alerts, and system emails
+smtp:
+  enabled: false  # Set to true to enable email notifications
+  host: "${SMTP_HOST:smtp.example.com}"      # SMTP server host
+  port: "${SMTP_PORT:587}"                   # SMTP port (587 for TLS, 465 for SSL)
+  username: "${SMTP_USERNAME:}"              # SMTP username (email address)
+  password: "${SMTP_PASSWORD:}"              # SMTP password or app-specific password
+  from_email: "${SMTP_FROM_EMAIL:noreply@example.com}"  # Sender email address
+  from_name: "${SMTP_FROM_NAME:ITSM System}" # Sender name
+  encryption: "${SMTP_ENCRYPTION:tls}"       # tls, ssl, or none
+  skip_verify: "${SMTP_SKIP_VERIFY:false}"   # Skip TLS certificate verification (dev only)

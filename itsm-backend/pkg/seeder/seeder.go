@@ -429,20 +429,20 @@ func (s *Seeder) seedAssets(ctx context.Context) {
 
 	// 创建资产
 	assets := []struct {
-		Number      string
-		Name        string
-		Description string
-		Type        string
-		Status      string
-		Category    string
-		Subcategory string
-		Serial      string
-		Model       string
+		Number       string
+		Name         string
+		Description  string
+		Type         string
+		Status       string
+		Category     string
+		Subcategory  string
+		Serial       string
+		Model        string
 		Manufacturer string
-		Vendor      string
-		Location    string
-		Department  string
-		Tags        []string
+		Vendor       string
+		Location     string
+		Department   string
+		Tags         []string
 	}{
 		{"AST-001", "MacBook Pro 14寸", "开发工程师笔记本", "hardware", "in-use", "笔记本", "MacBook", "MBP-2023-001", "MacBook Pro 14 M2", "Apple", "Apple Store", "A座302", "研发部", []string{"mac", "laptop"}},
 		{"AST-002", "Dell XPS 15", "测试工程师笔记本", "hardware", "in-use", "笔记本", "Dell", "DELL-2023-002", "XPS 15 9530", "Dell", "Dell", "B座201", "测试部", []string{"windows", "laptop"}},
@@ -591,16 +591,16 @@ func (s *Seeder) seedReleases(ctx context.Context) {
 		Tags       []string
 	}{
 		{
-			Number:   "REL-2023-001",
-			Title:    "v2.0.0 主版本发布",
-			Desc:     "全新 UI 设计和用户中心模块上线",
-			Type:     "major",
-			Status:   "completed",
-			Severity: "high",
-			Env:      "production",
-			PlanDate: now.Add(-48 * time.Hour),
-			PlanStart: now.Add(-47 * time.Hour),
-			PlanEnd:   now.Add(-46 * time.Hour),
+			Number:     "REL-2023-001",
+			Title:      "v2.0.0 主版本发布",
+			Desc:       "全新 UI 设计和用户中心模块上线",
+			Type:       "major",
+			Status:     "completed",
+			Severity:   "high",
+			Env:        "production",
+			PlanDate:   now.Add(-48 * time.Hour),
+			PlanStart:  now.Add(-47 * time.Hour),
+			PlanEnd:    now.Add(-46 * time.Hour),
 			ActualDate: now.Add(-46 * time.Hour),
 			Notes:      "本次发布包含全新的用户界面设计和用户中心模块，支持用户自助服务",
 			Rollback:   "1. 停止新版本服务\n2. 回滚代码到 v1.9.0\n3. 启动旧版本服务\n4. 验证核心功能正常",
@@ -618,16 +618,16 @@ func (s *Seeder) seedReleases(ctx context.Context) {
 			Tags: []string{"major", "ui", "user-center"},
 		},
 		{
-			Number:   "REL-2023-002",
-			Title:    "v2.1.0 功能增强发布",
-			Desc:     "工单流程优化和报表功能增强",
-			Type:     "minor",
-			Status:   "completed",
-			Severity: "medium",
-			Env:      "production",
-			PlanDate: now.Add(-30 * 24 * time.Hour),
-			PlanStart: now.Add(-29 * 24 * time.Hour),
-			PlanEnd:   now.Add(-28 * 24 * time.Hour),
+			Number:     "REL-2023-002",
+			Title:      "v2.1.0 功能增强发布",
+			Desc:       "工单流程优化和报表功能增强",
+			Type:       "minor",
+			Status:     "completed",
+			Severity:   "medium",
+			Env:        "production",
+			PlanDate:   now.Add(-30 * 24 * time.Hour),
+			PlanStart:  now.Add(-29 * 24 * time.Hour),
+			PlanEnd:    now.Add(-28 * 24 * time.Hour),
 			ActualDate: now.Add(-28 * 24 * time.Hour),
 			Notes:      "优化工单流转流程，新增自定义报表功能",
 			Rollback:   "回滚到 v2.0.0 版本",
@@ -642,16 +642,16 @@ func (s *Seeder) seedReleases(ctx context.Context) {
 			Tags: []string{"minor", "workflow", "report"},
 		},
 		{
-			Number:   "REL-2023-003",
-			Title:    "v2.1.1 Bug 修复",
-			Desc:     "修复工单附件上传失败的问题",
-			Type:     "patch",
-			Status:   "in-progress",
-			Severity: "low",
-			Env:      "production",
-			PlanDate: now.Add(2 * time.Hour),
-			PlanStart: now.Add(3 * time.Hour),
-			PlanEnd:   now.Add(4 * time.Hour),
+			Number:     "REL-2023-003",
+			Title:      "v2.1.1 Bug 修复",
+			Desc:       "修复工单附件上传失败的问题",
+			Type:       "patch",
+			Status:     "in-progress",
+			Severity:   "low",
+			Env:        "production",
+			PlanDate:   now.Add(2 * time.Hour),
+			PlanStart:  now.Add(3 * time.Hour),
+			PlanEnd:    now.Add(4 * time.Hour),
 			Notes:      "紧急修复工单附件上传问题",
 			Rollback:   "回滚到 v2.1.0",
 			Validation: "1. 工单附件可以正常上传\n2. 大文件上传正常",
@@ -664,16 +664,16 @@ func (s *Seeder) seedReleases(ctx context.Context) {
 			Tags: []string{"patch", "bugfix"},
 		},
 		{
-			Number:   "REL-2023-004",
-			Title:    "v3.0.0 大版本升级",
-			Desc:     "微服务架构改造和性能优化",
-			Type:     "major",
-			Status:   "scheduled",
-			Severity: "critical",
-			Env:      "production",
-			PlanDate: now.Add(7 * 24 * time.Hour),
-			PlanStart: now.Add(8 * 24 * time.Hour),
-			PlanEnd:   now.Add(12 * 24 * time.Hour),
+			Number:     "REL-2023-004",
+			Title:      "v3.0.0 大版本升级",
+			Desc:       "微服务架构改造和性能优化",
+			Type:       "major",
+			Status:     "scheduled",
+			Severity:   "critical",
+			Env:        "production",
+			PlanDate:   now.Add(7 * 24 * time.Hour),
+			PlanStart:  now.Add(8 * 24 * time.Hour),
+			PlanEnd:    now.Add(12 * 24 * time.Hour),
 			Notes:      "系统架构升级为微服务，性能提升 50%",
 			Rollback:   "1. 停止微服务\n2. 恢复单体架构版本\n3. 验证功能",
 			Validation: "1. 所有服务正常运行\n2. 性能指标达标\n3. 数据一致",

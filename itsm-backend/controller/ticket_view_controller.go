@@ -161,4 +161,3 @@ func (tvc *TicketViewController) ShareTicketView(c *gin.Context) {
 
 	common.Success(c, nil)
 }
-

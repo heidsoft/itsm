@@ -11,8 +11,8 @@ import (
 	"itsm-backend/ent/enttest"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTenantMiddleware(t *testing.T) {

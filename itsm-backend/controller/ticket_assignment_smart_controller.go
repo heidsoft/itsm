@@ -201,5 +201,3 @@ func (tasc *TicketAssignmentSmartController) TestAssignmentRule(c *gin.Context) 
 
 	common.Success(c, response)
 }
-
-

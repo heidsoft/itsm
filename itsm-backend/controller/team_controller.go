@@ -152,4 +152,3 @@ func (c *TeamController) DeleteTeam(ctx *gin.Context) {
 
 	common.Success(ctx, gin.H{"message": "删除成功"})
 }
-

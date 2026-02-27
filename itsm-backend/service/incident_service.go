@@ -8,18 +8,18 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
-	"itsm-backend/ent/processinstance"
-	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
+	"itsm-backend/ent/processinstance"
 
 	"go.uber.org/zap"
 )
 
 type IncidentService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
+	client                *ent.Client
+	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
 
@@ -1125,16 +1125,16 @@ func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incide
 
 	// 构建流程变量
 	variables := map[string]interface{}{
-		"incident_id":      inc.ID,
+		"incident_id":     inc.ID,
 		"incident_number": inc.IncidentNumber,
 		"title":           inc.Title,
 		"description":     inc.Description,
 		"priority":        inc.Priority,
-		"severity":       inc.Severity,
-		"status":         inc.Status,
-		"category":       inc.Category,
-		"reporter_id":    inc.ReporterID,
-		"assignee_id":    inc.AssigneeID,
+		"severity":        inc.Severity,
+		"status":          inc.Status,
+		"category":        inc.Category,
+		"reporter_id":     inc.ReporterID,
+		"assignee_id":     inc.AssigneeID,
 	}
 
 	// 根据严重程度选择不同的流程
@@ -1146,12 +1146,12 @@ func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incide
 	// 触发流程
 	triggerReq := &dto.ProcessTriggerRequest{
 		BusinessType:         dto.BusinessTypeIncident,
-		BusinessID:          incidentID,
+		BusinessID:           incidentID,
 		ProcessDefinitionKey: processKey,
-		Variables:           variables,
-		TriggeredBy:         fmt.Sprintf("%d", inc.ReporterID),
-		TriggeredAt:         time.Now(),
-		TenantID:           tenantID,
+		Variables:            variables,
+		TriggeredBy:          fmt.Sprintf("%d", inc.ReporterID),
+		TriggeredAt:          time.Now(),
+		TenantID:             tenantID,
 	}
 
 	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
@@ -1196,12 +1196,12 @@ func (s *IncidentService) GetWorkflowStatus(ctx context.Context, incidentID int,
 		ProcessInstanceID:     processInstance.ID,
 		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
 		ProcessDefinitionName: processDefName,
-		BusinessKey:          processInstance.BusinessKey,
-		Status:               s.mapProcessStatus(processInstance.Status),
+		BusinessKey:           processInstance.BusinessKey,
+		Status:                s.mapProcessStatus(processInstance.Status),
 		CurrentActivityID:     processInstance.CurrentActivityID,
 		CurrentActivityName:   processInstance.CurrentActivityName,
-		StartTime:            processInstance.StartTime,
-		EndTime:              &processInstance.EndTime,
+		StartTime:             processInstance.StartTime,
+		EndTime:               &processInstance.EndTime,
 	}, nil
 }
 

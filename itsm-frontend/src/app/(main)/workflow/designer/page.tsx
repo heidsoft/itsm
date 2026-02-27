@@ -663,7 +663,6 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
     try {
       // 获取当前版本号
       const currentVersion = workflow.version || '1.0.0';
-      console.log('handleSaveAndDeploy:', { id: workflow.id, version: currentVersion, name: workflow.name });
 
       if (workflow.id === 'new') {
         // 创建并部署新工作流
@@ -674,10 +673,8 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
           bpmn_xml: xml,
           tenant_id: httpClient.getTenantId() || 1,
         };
-        console.log('Creating workflow:', createData);
 
         const response = await WorkflowAPI.createProcessDefinition(createData) as any;
-        console.log('Create response:', response);
 
         if (!response) {
           throw new Error('创建工作流失败：服务器返回空响应');
@@ -690,7 +687,6 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
           throw new Error('创建工作流失败：未获取到工作流ID');
         }
 
-        console.log('Deploying workflow:', { key: newKey, version: newVersion });
         // 等待一下确保创建完成
         await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -718,13 +714,10 @@ const WorkflowDesignerPage: React.FC<WorkflowDesignerPageProps> = ({ params }) =
           category: workflow.category || 'general',
           bpmn_xml: xml,
         };
-        console.log('Updating workflow:', { id: workflow.id, version: currentVersion, data: updateData });
 
         const updateResponse = await WorkflowAPI.updateProcessDefinition(workflow.id, updateData, currentVersion) as any;
-        console.log('Update response:', updateResponse);
 
         // 再部署
-        console.log('Deploying workflow:', { id: workflow.id, version: currentVersion });
         await WorkflowAPI.deployProcessDefinition(workflow.id, currentVersion);
 
         // 更新状态

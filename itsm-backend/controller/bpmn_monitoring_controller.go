@@ -29,18 +29,18 @@ func (c *BPMNMonitoringController) RegisterRoutes(r *gin.RouterGroup) {
 		// 流程指标监控
 		monitoring.GET("/metrics", c.GetProcessMetrics)
 		monitoring.GET("/metrics/:processKey", c.GetProcessMetricsByKey)
-		
+
 		// 流程实例状态监控
 		monitoring.GET("/instances/:instanceId/status", c.GetProcessInstanceStatus)
 		monitoring.GET("/instances/status", c.ListProcessInstancesStatus)
-		
+
 		// 性能监控
 		monitoring.GET("/performance", c.GetPerformanceMetrics)
 		monitoring.GET("/performance/alerts", c.GetPerformanceAlerts)
-		
+
 		// 系统健康检查
 		monitoring.GET("/health", c.GetSystemHealth)
-		
+
 		// 审计日志
 		monitoring.GET("/audit-logs", c.GetAuditLogs)
 	}
@@ -114,8 +114,8 @@ func (c *BPMNMonitoringController) GetProcessMetricsByKey(ctx *gin.Context) {
 
 	req := &service.ProcessMetricsRequest{
 		ProcessDefinitionKey: processKey,
-		TenantID:            tenantID.(int),
-		TimeRange:           timeRange,
+		TenantID:             tenantID.(int),
+		TimeRange:            timeRange,
 	}
 
 	// 解析时间范围
@@ -183,7 +183,7 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 	// 解析分页参数
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "20"))
-	
+
 	// 解析查询参数
 	processKey := ctx.Query("process_key")
 	status := ctx.Query("status")
@@ -200,7 +200,7 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 		StartTime  *time.Time
 		EndTime    *time.Time
 	}
-	
+
 	query := &ProcessInstanceStatusQuery{
 		TenantID:   tenantID.(int),
 		Page:       page,
@@ -242,7 +242,7 @@ func (c *BPMNMonitoringController) GetPerformanceMetrics(ctx *gin.Context) {
 
 	// 解析时间范围
 	timeRange := ctx.DefaultQuery("time_range", "24h")
-	
+
 	req := &service.ProcessMetricsRequest{
 		TenantID:  tenantID.(int),
 		TimeRange: timeRange,
@@ -320,13 +320,13 @@ func (c *BPMNMonitoringController) GetAuditLogs(ctx *gin.Context) {
 	resourceID := ctx.Query("resource_id")
 
 	req := &service.AuditLogRequest{
-		TenantID:   tenantID.(int),
-		Page:       page,
-		PageSize:   pageSize,
-		UserID:     userID,
-		Action:     action,
+		TenantID:     tenantID.(int),
+		Page:         page,
+		PageSize:     pageSize,
+		UserID:       userID,
+		Action:       action,
 		ResourceType: resourceType,
-		ResourceID: resourceID,
+		ResourceID:   resourceID,
 	}
 
 	// 解析时间范围
@@ -351,9 +351,9 @@ func (c *BPMNMonitoringController) GetAuditLogs(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "获取审计日志成功",
 		"data": gin.H{
-			"logs":  logs,
-			"total": total,
-			"page":  page,
+			"logs":      logs,
+			"total":     total,
+			"page":      page,
 			"page_size": pageSize,
 		},
 	})

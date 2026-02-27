@@ -14,8 +14,8 @@ import (
 
 // ProblemService 问题管理服务
 type ProblemService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
+	client                *ent.Client
+	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
 
@@ -240,7 +240,7 @@ func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemI
 
 	// 构建流程变量
 	variables := map[string]interface{}{
-		"problem_id":   p.ID,
+		"problem_id":  p.ID,
 		"title":       p.Title,
 		"description": p.Description,
 		"priority":    p.Priority,
@@ -254,12 +254,12 @@ func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemI
 	// 触发问题管理流程
 	triggerReq := &dto.ProcessTriggerRequest{
 		BusinessType:         dto.BusinessTypeProblem,
-		BusinessID:          problemID,
+		BusinessID:           problemID,
 		ProcessDefinitionKey: "problem_management_flow",
-		Variables:           variables,
-		TriggeredBy:        fmt.Sprintf("%d", p.CreatedBy),
-		TriggeredAt:         time.Now(),
-		TenantID:           tenantID,
+		Variables:            variables,
+		TriggeredBy:          fmt.Sprintf("%d", p.CreatedBy),
+		TriggeredAt:          time.Now(),
+		TenantID:             tenantID,
 	}
 
 	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
@@ -302,12 +302,12 @@ func (s *ProblemService) GetWorkflowStatus(ctx context.Context, problemID int, t
 		ProcessInstanceID:     processInstance.ID,
 		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
 		ProcessDefinitionName: processDefName,
-		BusinessKey:          processInstance.BusinessKey,
-		Status:               s.mapProcessStatus(processInstance.Status),
+		BusinessKey:           processInstance.BusinessKey,
+		Status:                s.mapProcessStatus(processInstance.Status),
 		CurrentActivityID:     processInstance.CurrentActivityID,
 		CurrentActivityName:   processInstance.CurrentActivityName,
-		StartTime:            processInstance.StartTime,
-		EndTime:              &processInstance.EndTime,
+		StartTime:             processInstance.StartTime,
+		EndTime:               &processInstance.EndTime,
 	}, nil
 }
 

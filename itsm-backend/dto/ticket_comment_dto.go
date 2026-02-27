@@ -7,17 +7,17 @@ import (
 
 // CreateTicketCommentRequest 创建工单评论请求
 type CreateTicketCommentRequest struct {
-	Content    string  `json:"content" binding:"required,min=1,max=5000"`
-	IsInternal bool    `json:"is_internal"` // 是否内部备注
-	Mentions   []int   `json:"mentions"`    // @的用户ID列表
-	Attachments []int  `json:"attachments"`  // 附件ID列表（后续实现）
+	Content     string `json:"content" binding:"required,min=1,max=5000"`
+	IsInternal  bool   `json:"is_internal"` // 是否内部备注
+	Mentions    []int  `json:"mentions"`    // @的用户ID列表
+	Attachments []int  `json:"attachments"` // 附件ID列表（后续实现）
 }
 
 // UpdateTicketCommentRequest 更新工单评论请求
 type UpdateTicketCommentRequest struct {
-	Content    string  `json:"content" binding:"omitempty,min=1,max=5000"`
-	IsInternal *bool   `json:"is_internal"` // 是否内部备注
-	Mentions   []int   `json:"mentions"`    // @的用户ID列表
+	Content    string `json:"content" binding:"omitempty,min=1,max=5000"`
+	IsInternal *bool  `json:"is_internal"` // 是否内部备注
+	Mentions   []int  `json:"mentions"`    // @的用户ID列表
 }
 
 // TicketCommentResponse 工单评论响应
@@ -37,7 +37,7 @@ type TicketCommentResponse struct {
 // ListTicketCommentsResponse 工单评论列表响应
 type ListTicketCommentsResponse struct {
 	Comments []*TicketCommentResponse `json:"comments"`
-	Total    int                        `json:"total"`
+	Total    int                      `json:"total"`
 }
 
 // ToTicketCommentResponse 将 Ent 实体转换为 DTO
@@ -77,4 +77,3 @@ func ToTicketCommentResponse(comment *ent.TicketComment, user *ent.User) *Ticket
 
 	return resp
 }
-

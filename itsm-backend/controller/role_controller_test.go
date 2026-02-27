@@ -145,8 +145,8 @@ func TestRoleController_GetRole(t *testing.T) {
 	tenant := createTestTenantForRole(t, client)
 
 	tests := []struct {
-		name    string
-		roleID  string
+		name   string
+		roleID string
 	}{
 		{
 			name:   "成功获取角色",

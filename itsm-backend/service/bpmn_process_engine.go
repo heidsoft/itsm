@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"itsm-backend/ent"
-	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/user"
@@ -80,11 +80,11 @@ type TaskService interface {
 // CustomProcessEngine 是ProcessEngine接口的实现
 // 充当领域服务(Domain Service)，协调流程定义、实例和任务实体的生命周期
 type CustomProcessEngine struct {
-	client          *ent.Client
-	logger          *zap.SugaredLogger
-	parser          *BPMNParser       // 使用自定义的BPMN解析器
-	exprEngine      *ExpressionEngine // 表达式引擎
-	expressionVars  map[string]interface{} // 表达式变量
+	client         *ent.Client
+	logger         *zap.SugaredLogger
+	parser         *BPMNParser            // 使用自定义的BPMN解析器
+	exprEngine     *ExpressionEngine      // 表达式引擎
+	expressionVars map[string]interface{} // 表达式变量
 	// 内部服务
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
@@ -94,11 +94,11 @@ type CustomProcessEngine struct {
 // NewCustomProcessEngine 创建自定义流程引擎实例
 func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) ProcessEngine {
 	engine := &CustomProcessEngine{
-		client:          client,
-		logger:          logger,
-		parser:          NewBPMNParser(),
-		exprEngine:      NewExpressionEngine(),
-		expressionVars:  make(map[string]interface{}),
+		client:         client,
+		logger:         logger,
+		parser:         NewBPMNParser(),
+		exprEngine:     NewExpressionEngine(),
+		expressionVars: make(map[string]interface{}),
 	}
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
@@ -646,11 +646,11 @@ type InstanceStatisticsRequest struct {
 
 // InstanceStatistics 实例统计
 type InstanceStatistics struct {
-	Total      int            `json:"total"`
-	Running    int            `json:"running"`
-	Completed  int            `json:"completed"`
-	Suspended  int            `json:"suspended"`
-	Terminated int            `json:"terminated"`
+	Total      int `json:"total"`
+	Running    int `json:"running"`
+	Completed  int `json:"completed"`
+	Suspended  int `json:"suspended"`
+	Terminated int `json:"terminated"`
 }
 
 // CounterSignStatus 会签状态
@@ -667,8 +667,8 @@ type CounterSignStatus struct {
 // CounterSignRequest 会签请求
 type CounterSignRequest struct {
 	ApprovalType string   `json:"approval_type"` // serial, parallel
-	Approvers   []string `json:"approvers"`
-	Threshold   int      `json:"threshold"`
+	Approvers    []string `json:"approvers"`
+	Threshold    int      `json:"threshold"`
 }
 
 // VoteRequest 投票请求
@@ -1402,10 +1402,10 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 		SetTaskVariables(map[string]interface{}{
 			"approval_type": req.ApprovalType,
 			"threshold":     threshold,
-			"total":          len(req.Approvers),
-			"completed":      0,
-			"approved":       0,
-			"rejected":       0,
+			"total":         len(req.Approvers),
+			"completed":     0,
+			"approved":      0,
+			"rejected":      0,
 		}).
 		Save(ctx)
 	if err != nil {

@@ -52,7 +52,7 @@ func (e *EncryptionService) Encrypt(plaintext string) (string, error) {
 
 	// 加密数据
 	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
-	
+
 	// 返回base64编码的结果
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
@@ -121,7 +121,7 @@ func VerifyPassword(hashedPassword, password string) bool {
 // EncryptSensitiveFields 加密敏感字段
 func (e *EncryptionService) EncryptSensitiveFields(data map[string]interface{}) error {
 	sensitiveFields := []string{"phone", "email", "id_card", "address", "bank_account"}
-	
+
 	for _, field := range sensitiveFields {
 		if value, exists := data[field]; exists {
 			if strValue, ok := value.(string); ok && strValue != "" {
@@ -133,14 +133,14 @@ func (e *EncryptionService) EncryptSensitiveFields(data map[string]interface{}) 
 			}
 		}
 	}
-	
+
 	return nil
 }
 
 // DecryptSensitiveFields 解密敏感字段
 func (e *EncryptionService) DecryptSensitiveFields(data map[string]interface{}) error {
 	sensitiveFields := []string{"phone", "email", "id_card", "address", "bank_account"}
-	
+
 	for _, field := range sensitiveFields {
 		if value, exists := data[field]; exists {
 			if strValue, ok := value.(string); ok && strValue != "" {
@@ -152,7 +152,7 @@ func (e *EncryptionService) DecryptSensitiveFields(data map[string]interface{}) 
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -161,11 +161,11 @@ func GenerateSecureToken(length int) (string, error) {
 	if length <= 0 {
 		length = 32
 	}
-	
+
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", fmt.Errorf("生成随机令牌失败: %w", err)
 	}
-	
+
 	return base64.URLEncoding.EncodeToString(bytes), nil
 }

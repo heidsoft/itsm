@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"itsm-backend/ent"
-	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcategory"
 	"time"
 )
 
@@ -252,22 +252,22 @@ type UpdateCategoryRequest struct {
 
 // ListCategoriesRequest 获取分类列表请求
 type ListCategoriesRequest struct {
-	Page      int  `json:"page" form:"page"`
-	PageSize  int  `json:"page_size" form:"page_size"`
-	ParentID  *int `json:"parent_id" form:"parent_id"`
-	Level     int  `json:"level" form:"level"`
-	IsActive  *bool `json:"is_active" form:"is_active"`
-	TenantID  int  `json:"tenant_id" form:"tenant_id"`
+	Page     int   `json:"page" form:"page"`
+	PageSize int   `json:"page_size" form:"page_size"`
+	ParentID *int  `json:"parent_id" form:"parent_id"`
+	Level    int   `json:"level" form:"level"`
+	IsActive *bool `json:"is_active" form:"is_active"`
+	TenantID int   `json:"tenant_id" form:"tenant_id"`
 }
 
 // CategoryTreeItem 分类树项目
 type CategoryTreeItem struct {
-	ID          int                `json:"id"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Code        string             `json:"code"`
-	Level       int                `json:"level"`
-	SortOrder   int                `json:"sort_order"`
-	IsActive    bool               `json:"is_active"`
+	ID          int                 `json:"id"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Code        string              `json:"code"`
+	Level       int                 `json:"level"`
+	SortOrder   int                 `json:"sort_order"`
+	IsActive    bool                `json:"is_active"`
 	Children    []*CategoryTreeItem `json:"children"`
 }

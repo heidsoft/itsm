@@ -10,8 +10,8 @@ import (
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap/zaptest"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 )
 
 func init() {
@@ -49,7 +49,7 @@ func RequireTestDB(t *testing.T) *ent.Client {
 func CreateTestTenantWithID(t *testing.T, client *ent.Client, prefix string) *ent.Tenant {
 	uniqueID := uniqueTestID()
 	tenant, err := client.Tenant.Create().
-		SetName(prefix+" Tenant "+uniqueID).
+		SetName(prefix + " Tenant " + uniqueID).
 		SetCode(prefix + uniqueID).
 		SetDomain("test.com").
 		SetStatus("active").

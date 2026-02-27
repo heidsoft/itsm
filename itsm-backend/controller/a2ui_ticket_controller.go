@@ -26,8 +26,8 @@ type GenerateFormRequest struct {
 
 // GenerateFormResponse represents the response with A2UI messages
 type GenerateFormResponse struct {
-	Code    int      `json:"code"`
-	Message string   `json:"message"`
+	Code     int      `json:"code"`
+	Message  string   `json:"message"`
 	Messages []string `json:"messages"`
 }
 
@@ -75,8 +75,8 @@ func (c *A2UITicketController) GenerateForm(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, GenerateFormResponse{
-		Code:    0,
-		Message: "success",
+		Code:     0,
+		Message:  "success",
 		Messages: messages,
 	})
 }

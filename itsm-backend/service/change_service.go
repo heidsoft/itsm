@@ -15,10 +15,10 @@ import (
 
 // ChangeService 变更管理服务
 type ChangeService struct {
-	client               *ent.Client
-	logger               *zap.SugaredLogger
+	client                *ent.Client
+	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
-	approvalService      *ApprovalService
+	approvalService       *ApprovalService
 }
 
 // NewChangeService 创建变更管理服务
@@ -526,16 +526,16 @@ func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID i
 
 	// 构建流程变量
 	variables := map[string]interface{}{
-		"change_id":      ch.ID,
-		"title":         ch.Title,
-		"description":   ch.Description,
-		"type":          ch.Type,
-		"priority":      ch.Priority,
-		"status":        ch.Status,
-		"impact_scope":  ch.ImpactScope,
-		"risk_level":    ch.RiskLevel,
-		"created_by":    ch.CreatedBy,
-		"assignee_id":   ch.AssigneeID,
+		"change_id":    ch.ID,
+		"title":        ch.Title,
+		"description":  ch.Description,
+		"type":         ch.Type,
+		"priority":     ch.Priority,
+		"status":       ch.Status,
+		"impact_scope": ch.ImpactScope,
+		"risk_level":   ch.RiskLevel,
+		"created_by":   ch.CreatedBy,
+		"assignee_id":  ch.AssigneeID,
 	}
 
 	// 根据变更类型选择不同的流程
@@ -547,12 +547,12 @@ func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID i
 	// 触发流程
 	triggerReq := &dto.ProcessTriggerRequest{
 		BusinessType:         dto.BusinessTypeChange,
-		BusinessID:        changeID,
+		BusinessID:           changeID,
 		ProcessDefinitionKey: processKey,
-		Variables:         variables,
-		TriggeredBy:      fmt.Sprintf("%d", ch.CreatedBy),
-		TriggeredAt:       time.Now(),
-		TenantID:         tenantID,
+		Variables:            variables,
+		TriggeredBy:          fmt.Sprintf("%d", ch.CreatedBy),
+		TriggeredAt:          time.Now(),
+		TenantID:             tenantID,
 	}
 
 	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
@@ -596,12 +596,12 @@ func (s *ChangeService) GetWorkflowStatus(ctx context.Context, changeID int, ten
 		ProcessInstanceID:     processInstance.ID,
 		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
 		ProcessDefinitionName: processDefName,
-		BusinessKey:          processInstance.BusinessKey,
-		Status:               s.mapProcessStatus(processInstance.Status),
+		BusinessKey:           processInstance.BusinessKey,
+		Status:                s.mapProcessStatus(processInstance.Status),
 		CurrentActivityID:     processInstance.CurrentActivityID,
 		CurrentActivityName:   processInstance.CurrentActivityName,
-		StartTime:            processInstance.StartTime,
-		EndTime:              &processInstance.EndTime,
+		StartTime:             processInstance.StartTime,
+		EndTime:               &processInstance.EndTime,
 	}, nil
 }
 

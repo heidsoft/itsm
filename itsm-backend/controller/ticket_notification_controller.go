@@ -208,4 +208,3 @@ func (tnc *TicketNotificationController) UpdateNotificationPreferences(c *gin.Co
 
 	common.Success(c, preferences)
 }
-

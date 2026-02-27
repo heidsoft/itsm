@@ -47,12 +47,12 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 	rootCausesMap := make([]map[string]interface{}, len(rootCauses))
 	for i, rc := range rootCauses {
 		rootCausesMap[i] = map[string]interface{}{
-			"id":             rc.ID,
-			"title":          rc.Title,
-			"description":    rc.Description,
-			"confidence":     rc.Confidence,
-			"category":       rc.Category,
-			"status":         rc.Status,
+			"id":          rc.ID,
+			"title":       rc.Title,
+			"description": rc.Description,
+			"confidence":  rc.Confidence,
+			"category":    rc.Category,
+			"status":      rc.Status,
 		}
 	}
 
@@ -114,11 +114,11 @@ func (s *RootCauseService) GetAnalysisReport(ctx context.Context, ticketID int, 
 	if analysis.RootCauses != nil {
 		for i, rcMap := range analysis.RootCauses {
 			rc := dto.TicketRootCauseResponse{
-				ID:          fmt.Sprintf("rc%d", i+1),
-				CreatedAt:   analysis.CreatedAt,
-				UpdatedAt:   analysis.UpdatedAt,
+				ID:        fmt.Sprintf("rc%d", i+1),
+				CreatedAt: analysis.CreatedAt,
+				UpdatedAt: analysis.UpdatedAt,
 			}
-			
+
 			if title, ok := rcMap["title"].(string); ok {
 				rc.Title = title
 			}
@@ -134,7 +134,7 @@ func (s *RootCauseService) GetAnalysisReport(ctx context.Context, ticketID int, 
 			if status, ok := rcMap["status"].(string); ok {
 				rc.Status = status
 			}
-			
+
 			rootCauses = append(rootCauses, rc)
 		}
 	}
@@ -285,4 +285,3 @@ func (s *RootCauseService) ResolveRootCause(ctx context.Context, ticketID int, r
 
 	return nil
 }
-

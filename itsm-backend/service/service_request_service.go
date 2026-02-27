@@ -37,7 +37,7 @@ func NewServiceRequestService(client *ent.Client, logger *zap.SugaredLogger, app
 	return &ServiceRequestService{
 		client:          client,
 		logger:          logger,
-		notificationSvc:  notificationSvc,
+		notificationSvc: notificationSvc,
 		approvalService: approvalService,
 	}
 }
@@ -197,11 +197,11 @@ func (s *ServiceRequestService) sendNewRequestNotification(ctx context.Context, 
 	// 给所有审批人发送通知
 	for _, approver := range approvers {
 		_, _ = s.notificationSvc.CreateNotification(ctx, &dto.CreateNotificationRequest{
-			UserID:  approver.ID,
+			UserID:   approver.ID,
 			TenantID: tenantID,
-			Title:   title,
-			Message: message,
-			Type:    "info",
+			Title:    title,
+			Message:  message,
+			Type:     "info",
 		})
 	}
 }
@@ -539,11 +539,11 @@ func (s *ServiceRequestService) sendApprovalNotification(ctx context.Context, re
 
 	// 发送站内通知
 	_, _ = s.notificationSvc.CreateNotification(ctx, &dto.CreateNotificationRequest{
-		UserID:    requesterID,
-		TenantID:  tenantID,
-		Title:     title,
-		Message:   message,
-		Type:      "info",
+		UserID:   requesterID,
+		TenantID: tenantID,
+		Title:    title,
+		Message:  message,
+		Type:     "info",
 	})
 }
 

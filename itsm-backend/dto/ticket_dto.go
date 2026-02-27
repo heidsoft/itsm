@@ -20,10 +20,10 @@ type CreateTicketRequest struct {
 	Description    string                 `json:"description" binding:"required,min=10,max=5000"`
 	Priority       string                 `json:"priority" binding:"required"`
 	Type           string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket"` // 工单类型
-	Category       string                 `json:"category"`              // 分类名称（可选，前端传入）
-	CategoryID     *int                   `json:"category_id,omitempty"` // 分类ID（优先使用）
-	TemplateID     *int                   `json:"template_id,omitempty"` // 模板ID
-	RequesterID    int                    `json:"requester_id" binding:"omitempty"` // 从认证上下文中获取，前端可不传
+	Category       string                 `json:"category"`                                                              // 分类名称（可选，前端传入）
+	CategoryID     *int                   `json:"category_id,omitempty"`                                                 // 分类ID（优先使用）
+	TemplateID     *int                   `json:"template_id,omitempty"`                                                 // 模板ID
+	RequesterID    int                    `json:"requester_id" binding:"omitempty"`                                      // 从认证上下文中获取，前端可不传
 	AssigneeID     int                    `json:"assignee_id"`
 	ParentTicketID *int                   `json:"parent_ticket_id,omitempty"`
 	TagIDs         []int                  `json:"tag_ids,omitempty"` // 标签ID列表

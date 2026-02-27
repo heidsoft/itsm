@@ -484,4 +484,3 @@ func joinWhereClausesAnd(clauses []string) string {
 	}
 	return result
 }
-

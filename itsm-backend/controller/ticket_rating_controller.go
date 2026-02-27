@@ -96,4 +96,3 @@ func (trc *TicketRatingController) GetRatingStats(c *gin.Context) {
 
 	common.Success(c, stats)
 }
-

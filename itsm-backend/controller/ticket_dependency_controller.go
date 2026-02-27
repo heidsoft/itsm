@@ -59,4 +59,3 @@ func (c *TicketDependencyController) AnalyzeDependencyImpact(ctx *gin.Context) {
 
 	common.Success(ctx, impact)
 }
-

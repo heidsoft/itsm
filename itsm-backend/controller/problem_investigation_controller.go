@@ -367,7 +367,7 @@ func (pc *ProblemInvestigationController) CreateProblemRelationship(c *gin.Conte
 		"tenant_id", tenantID)
 
 	common.Success(c, gin.H{
-		"message":       "问题关联创建成功",
+		"message":      "问题关联创建成功",
 		"problem_id":   req.ProblemID,
 		"related_type": req.RelatedType,
 		"related_id":   req.RelatedID,
@@ -389,7 +389,7 @@ func (pc *ProblemInvestigationController) GetProblemRelationships(c *gin.Context
 	pc.logger.Info("Getting problem relationships", "problem_id", problemID, "tenant_id", tenantID)
 
 	common.Success(c, gin.H{
-		"problem_id":     problemID,
+		"problem_id":    problemID,
 		"relationships": []interface{}{},
 	})
 }
@@ -439,12 +439,12 @@ func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context)
 		"message":    "知识库文章创建成功",
 		"article_id": article.ID,
 		"article": gin.H{
-			"id":           article.ID,
-			"title":        article.Title,
-			"content":      article.Content,
-			"category":     article.Category,
-			"tags":         article.Tags,
-			"author_id":    article.AuthorID,
+			"id":        article.ID,
+			"title":     article.Title,
+			"content":   article.Content,
+			"category":  article.Category,
+			"tags":      article.Tags,
+			"author_id": article.AuthorID,
 		},
 	})
 }
@@ -479,15 +479,15 @@ func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Con
 	var result []gin.H
 	for _, a := range articles {
 		result = append(result, gin.H{
-			"id":           a.ID,
-			"title":        a.Title,
-			"content":      a.Content,
-			"category":     a.Category,
-			"tags":         a.Tags,
-			"author_id":    a.AuthorID,
-			"view_count":   a.ViewCount,
-			"like_count":   a.LikeCount,
-			"created_at":   a.CreatedAt,
+			"id":         a.ID,
+			"title":      a.Title,
+			"content":    a.Content,
+			"category":   a.Category,
+			"tags":       a.Tags,
+			"author_id":  a.AuthorID,
+			"view_count": a.ViewCount,
+			"like_count": a.LikeCount,
+			"created_at": a.CreatedAt,
 		})
 	}
 

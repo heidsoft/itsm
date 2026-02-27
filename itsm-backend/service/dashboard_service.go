@@ -876,8 +876,8 @@ func (s *DashboardService) getSatisfactionDataForDashboard(ctx context.Context, 
 
 		if monthlyData[monthKey] == nil {
 			monthlyData[monthKey] = &SatisfactionData{
-				Month:    monthLabel,
-				Rating:   0,
+				Month:     monthLabel,
+				Rating:    0,
 				Responses: 0,
 			}
 		}
@@ -950,11 +950,11 @@ func (s *DashboardService) getRecentActivitiesForDashboard(ctx context.Context, 
 
 	// 获取状态映射
 	statusNames := map[string]string{
-		"open":       "待处理",
+		"open":        "待处理",
 		"in_progress": "处理中",
-		"pending":    "等待中",
-		"resolved":   "已解决",
-		"closed":     "已关闭",
+		"pending":     "等待中",
+		"resolved":    "已解决",
+		"closed":      "已关闭",
 	}
 
 	activities := make([]RecentActivityData, 0, len(tickets))

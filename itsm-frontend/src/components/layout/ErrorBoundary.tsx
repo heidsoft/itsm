@@ -61,7 +61,6 @@ class ErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     };
 
-    console.log("Error report:", errorReport);
     // Here you would typically send the error report to your error tracking service
   };
 

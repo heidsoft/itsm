@@ -14,10 +14,10 @@ import (
 
 // JWTClaims JWT Token Claims
 type JWTClaims struct {
-	UserID    int    `json:"user_id"`
-	Username  string `json:"username"`
-	Role      string `json:"role"`
-	TenantID  int    `json:"tenant_id"`
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
+	TenantID int    `json:"tenant_id"`
 	jwt.RegisteredClaims
 }
 

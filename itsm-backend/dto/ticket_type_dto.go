@@ -15,18 +15,18 @@ const (
 type CustomFieldType string
 
 const (
-	CustomFieldTypeText              CustomFieldType = "text"
-	CustomFieldTypeTextarea          CustomFieldType = "textarea"
-	CustomFieldTypeNumber            CustomFieldType = "number"
-	CustomFieldTypeDate              CustomFieldType = "date"
-	CustomFieldTypeDatetime          CustomFieldType = "datetime"
-	CustomFieldTypeSelect            CustomFieldType = "select"
-	CustomFieldTypeMultiSelect       CustomFieldType = "multi_select"
-	CustomFieldTypeCheckbox          CustomFieldType = "checkbox"
-	CustomFieldTypeRadio             CustomFieldType = "radio"
-	CustomFieldTypeFile              CustomFieldType = "file"
-	CustomFieldTypeUserPicker        CustomFieldType = "user_picker"
-	CustomFieldTypeDepartmentPicker  CustomFieldType = "department_picker"
+	CustomFieldTypeText             CustomFieldType = "text"
+	CustomFieldTypeTextarea         CustomFieldType = "textarea"
+	CustomFieldTypeNumber           CustomFieldType = "number"
+	CustomFieldTypeDate             CustomFieldType = "date"
+	CustomFieldTypeDatetime         CustomFieldType = "datetime"
+	CustomFieldTypeSelect           CustomFieldType = "select"
+	CustomFieldTypeMultiSelect      CustomFieldType = "multi_select"
+	CustomFieldTypeCheckbox         CustomFieldType = "checkbox"
+	CustomFieldTypeRadio            CustomFieldType = "radio"
+	CustomFieldTypeFile             CustomFieldType = "file"
+	CustomFieldTypeUserPicker       CustomFieldType = "user_picker"
+	CustomFieldTypeDepartmentPicker CustomFieldType = "department_picker"
 )
 
 // CustomFieldOption 字段选项
@@ -93,8 +93,8 @@ type ApprovalChainDefinition struct {
 	RejectAction     string              `json:"reject_action"` // end, return, custom
 	ReturnToLevel    *int                `json:"return_to_level,omitempty"`
 	Conditions       []ApprovalCondition `json:"conditions,omitempty"`
-	Timeout          *int                `json:"timeout,omitempty"`          // 超时时间（小时）
-	TimeoutAction    string              `json:"timeout_action,omitempty"`   // auto_approve, auto_reject, escalate
+	Timeout          *int                `json:"timeout,omitempty"`        // 超时时间（小时）
+	TimeoutAction    string              `json:"timeout_action,omitempty"` // auto_approve, auto_reject, escalate
 }
 
 // AssignToConfig 分配目标配置
@@ -226,4 +226,3 @@ type TicketTypeListResponse struct {
 	PageSize   int                    `json:"page_size"`
 	TotalPages int                    `json:"total_pages"`
 }
-

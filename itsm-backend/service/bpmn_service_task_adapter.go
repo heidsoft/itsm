@@ -52,8 +52,8 @@ func getTenantIDFromVars(variables map[string]interface{}) int {
 
 // ProcessCallbackService 流程回调服务实现
 type ProcessCallbackService struct {
-	client    *ent.Client
-	handlers  map[string]ServiceTaskHandlerInterface
+	client     *ent.Client
+	handlers   map[string]ServiceTaskHandlerInterface
 	handlersMu sync.RWMutex
 }
 
@@ -179,7 +179,7 @@ type TicketServiceTaskHandler struct {
 func NewTicketServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger) *TicketServiceTaskHandler {
 	handler := &TicketServiceTaskHandler{
 		ServiceTaskHandlerBase: &ServiceTaskHandlerBase{client: client},
-		logger:                logger,
+		logger:                 logger,
 	}
 	// 初始化通知服务
 	handler.notificationService = NewTicketNotificationService(client, logger)
@@ -568,8 +568,8 @@ func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables m
 	h.logger.Infow("Change updated via BPMN", "change_id", changeID)
 
 	return &dto.ServiceTaskResult{
-		Success:  true,
-		Message:  fmt.Sprintf("变更 %d 已更新", changeID),
+		Success: true,
+		Message: fmt.Sprintf("变更 %d 已更新", changeID),
 	}, nil
 }
 
@@ -1131,7 +1131,7 @@ type ProblemServiceTaskHandler struct {
 func NewProblemServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger) *ProblemServiceTaskHandler {
 	return &ProblemServiceTaskHandler{
 		ServiceTaskHandlerBase: &ServiceTaskHandlerBase{client: client},
-		logger:               logger,
+		logger:                 logger,
 	}
 }
 
@@ -1510,7 +1510,7 @@ type ServiceRequestServiceTaskHandler struct {
 func NewServiceRequestServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger) *ServiceRequestServiceTaskHandler {
 	return &ServiceRequestServiceTaskHandler{
 		ServiceTaskHandlerBase: &ServiceTaskHandlerBase{client: client},
-		logger:               logger,
+		logger:                 logger,
 	}
 }
 
@@ -1562,7 +1562,7 @@ func (h *ServiceRequestServiceTaskHandler) createRequest(ctx context.Context, va
 	h.logger.Infow("Service request creation via BPMN", "title", title, "catalog_id", catalogID)
 
 	return &dto.ServiceTaskResult{
-		Success:  true,
+		Success: true,
 		Message: "服务请求已创建",
 	}, nil
 }

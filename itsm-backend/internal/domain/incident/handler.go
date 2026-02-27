@@ -302,11 +302,11 @@ func (h *Handler) GetStats(c *gin.Context) {
 	closed, _ := entClient.Incident.Query().Where(incident.TenantID(tenantIDInt), incident.Status("closed")).Count(c.Request.Context())
 
 	common.Success(c, gin.H{
-		"total_incidents":    total,
-		"open_incidents":     open + inProgress,
-		"critical_incidents": 0,
-		"major_incidents":    0,
-		"resolved_incidents": resolved + closed,
+		"total_incidents":     total,
+		"open_incidents":      open + inProgress,
+		"critical_incidents":  0,
+		"major_incidents":     0,
+		"resolved_incidents":  resolved + closed,
 		"avg_resolution_time": 0,
 	})
 }
@@ -328,8 +328,8 @@ func (h *Handler) GetRootCause(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"incident_id":   incident.ID,
-		"root_cause":    incident.RootCause,
+		"incident_id":         incident.ID,
+		"root_cause":          incident.RootCause,
 		"root_cause_analysis": incident.ImpactAnalysis,
 	})
 }
@@ -383,8 +383,8 @@ func (h *Handler) GetImpactAssessment(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"incident_id":         incident.ID,
-		"impact_assessment":   incident.ImpactAnalysis,
+		"incident_id":       incident.ID,
+		"impact_assessment": incident.ImpactAnalysis,
 	})
 }
 
@@ -503,13 +503,13 @@ func (h *Handler) GetIncidentEvents(c *gin.Context) {
 	var result []gin.H
 	for _, e := range inc.Edges.IncidentEvents {
 		result = append(result, gin.H{
-			"id":           e.ID,
-			"incident_id":  e.IncidentID,
-			"event_type":   e.EventType,
-			"event_name":   e.EventName,
-			"description":  e.Description,
-			"occurred_at":  e.OccurredAt,
-			"created_at":   e.CreatedAt,
+			"id":          e.ID,
+			"incident_id": e.IncidentID,
+			"event_type":  e.EventType,
+			"event_name":  e.EventName,
+			"description": e.Description,
+			"occurred_at": e.OccurredAt,
+			"created_at":  e.CreatedAt,
 		})
 	}
 
@@ -546,12 +546,12 @@ func (h *Handler) GetIncidentAlerts(c *gin.Context) {
 	var result []gin.H
 	for _, a := range inc.Edges.IncidentAlerts {
 		result = append(result, gin.H{
-			"id":          a.ID,
-			"incident_id": a.IncidentID,
-			"alert_name":  a.AlertName,
-			"alert_type":  a.AlertType,
-			"severity":    a.Severity,
-			"status":      a.Status,
+			"id":           a.ID,
+			"incident_id":  a.IncidentID,
+			"alert_name":   a.AlertName,
+			"alert_type":   a.AlertType,
+			"severity":     a.Severity,
+			"status":       a.Status,
 			"triggered_at": a.TriggeredAt,
 		})
 	}

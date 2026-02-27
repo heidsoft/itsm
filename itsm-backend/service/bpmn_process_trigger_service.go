@@ -15,9 +15,9 @@ import (
 
 // ProcessTriggerService 流程触发服务实现
 type ProcessTriggerService struct {
-	client               *ent.Client
-	processEngine        ProcessEngine
-	processBindingSvc    *ProcessBindingService
+	client            *ent.Client
+	processEngine     ProcessEngine
+	processBindingSvc *ProcessBindingService
 }
 
 // NewProcessTriggerService 创建流程触发服务
@@ -80,15 +80,15 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 
 	// 7. 返回响应
 	return &dto.ProcessTriggerResponse{
-		ProcessInstanceID:    instance.ID,
-		ProcessDefinitionKey: processDefKey,
+		ProcessInstanceID:     instance.ID,
+		ProcessDefinitionKey:  processDefKey,
 		ProcessDefinitionName: definition.Name,
-		BusinessKey:         businessKey,
-		Status:              s.mapInstanceStatus(instance.Status),
-		CurrentActivityID:   instance.CurrentActivityID,
-		CurrentActivityName: instance.CurrentActivityName,
-		StartTime:          instance.StartTime,
-		Message:            "流程启动成功",
+		BusinessKey:           businessKey,
+		Status:                s.mapInstanceStatus(instance.Status),
+		CurrentActivityID:     instance.CurrentActivityID,
+		CurrentActivityName:   instance.CurrentActivityName,
+		StartTime:             instance.StartTime,
+		Message:               "流程启动成功",
 	}, nil
 }
 
@@ -147,15 +147,15 @@ func (s *ProcessTriggerService) GetProcessStatus(ctx context.Context, processIns
 		Only(ctx)
 
 	return &dto.ProcessTriggerResponse{
-		ProcessInstanceID:    instance.ID,
-		ProcessDefinitionKey: instance.ProcessDefinitionKey,
+		ProcessInstanceID:     instance.ID,
+		ProcessDefinitionKey:  instance.ProcessDefinitionKey,
 		ProcessDefinitionName: definition.Name,
-		BusinessKey:         instance.BusinessKey,
-		Status:              s.mapInstanceStatus(instance.Status),
-		CurrentActivityID:   instance.CurrentActivityID,
-		CurrentActivityName: instance.CurrentActivityName,
-		StartTime:          instance.StartTime,
-		EndTime:            &instance.EndTime,
+		BusinessKey:           instance.BusinessKey,
+		Status:                s.mapInstanceStatus(instance.Status),
+		CurrentActivityID:     instance.CurrentActivityID,
+		CurrentActivityName:   instance.CurrentActivityName,
+		StartTime:             instance.StartTime,
+		EndTime:               &instance.EndTime,
 	}, nil
 }
 

@@ -18,10 +18,10 @@ import (
 )
 
 type TicketAttachmentService struct {
-	client      *ent.Client
-	logger      *zap.SugaredLogger
-	uploadDir   string
-	maxFileSize int64 // 最大文件大小（字节），默认10MB
+	client       *ent.Client
+	logger       *zap.SugaredLogger
+	uploadDir    string
+	maxFileSize  int64    // 最大文件大小（字节），默认10MB
 	allowedTypes []string // 允许的文件类型
 }
 
@@ -355,4 +355,3 @@ func (s *TicketAttachmentService) isAllowedType(mimeType string) bool {
 
 	return false
 }
-

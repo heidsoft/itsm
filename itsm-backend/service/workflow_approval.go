@@ -103,10 +103,10 @@ func (s *WorkflowApprovalService) ApproveTask(ctx context.Context, req *ApproveT
 
 	// 更新工作流实例变量
 	variables := map[string]interface{}{
-		"approval_status": "approved",
+		"approval_status":  "approved",
 		"approval_comment": req.Comment,
 		"approval_user_id": req.UserID,
-		"approval_time": time.Now(),
+		"approval_time":    time.Now(),
 	}
 
 	// 完成工作流步骤
@@ -152,10 +152,10 @@ func (s *WorkflowApprovalService) RejectTask(ctx context.Context, req *RejectTas
 
 	// 更新工作流实例变量
 	variables := map[string]interface{}{
-		"approval_status": "rejected",
+		"approval_status":  "rejected",
 		"approval_comment": req.Comment,
 		"approval_user_id": req.UserID,
-		"approval_time": time.Now(),
+		"approval_time":    time.Now(),
 	}
 
 	// 完成工作流步骤

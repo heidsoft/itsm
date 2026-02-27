@@ -261,11 +261,11 @@ func (c *ApprovalController) GetApprovalRecords(ctx *gin.Context) {
 // SubmitApproval 提交审批
 func (c *ApprovalController) SubmitApproval(ctx *gin.Context) {
 	var req struct {
-		TicketID        int    `json:"ticket_id" binding:"required"`
-		ApprovalID      int    `json:"approval_id" binding:"required"`
-		Action          string `json:"action" binding:"required,oneof=approve reject delegate"`
-		Comment         string `json:"comment"`
-		DelegateToUserID *int  `json:"delegate_to_user_id,omitempty"`
+		TicketID         int    `json:"ticket_id" binding:"required"`
+		ApprovalID       int    `json:"approval_id" binding:"required"`
+		Action           string `json:"action" binding:"required,oneof=approve reject delegate"`
+		Comment          string `json:"comment"`
+		DelegateToUserID *int   `json:"delegate_to_user_id,omitempty"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -302,4 +302,3 @@ func (c *ApprovalController) SubmitApproval(ctx *gin.Context) {
 
 	common.Success(ctx, map[string]string{"message": "审批已提交"})
 }
-

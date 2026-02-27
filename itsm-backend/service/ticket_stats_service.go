@@ -197,7 +197,7 @@ func (s *TicketStatsService) calculateSummary(tickets []*ent.Ticket, metrics []s
 	// 状态分布
 	statusCount := make(map[string]int)
 	priorityCount := make(map[string]int)
-	
+
 	for _, ticket := range tickets {
 		statusCount[ticket.Status]++
 		priorityCount[ticket.Priority]++
@@ -209,7 +209,7 @@ func (s *TicketStatsService) calculateSummary(tickets []*ent.Ticket, metrics []s
 	// 平均处理时间（简化计算）
 	var totalProcessingTime time.Duration
 	processedCount := 0
-	
+
 	for _, ticket := range tickets {
 		if ticket.Status == "resolved" || ticket.Status == "closed" {
 			processingTime := ticket.UpdatedAt.Sub(ticket.CreatedAt)

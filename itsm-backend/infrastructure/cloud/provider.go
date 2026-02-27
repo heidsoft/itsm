@@ -12,5 +12,3 @@ type Provider interface {
 	Name() string
 	Execute(ctx context.Context, payload map[string]any) (*ExecuteResult, error)
 }
-
-

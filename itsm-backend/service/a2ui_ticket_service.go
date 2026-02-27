@@ -20,8 +20,8 @@ type SurfaceUpdate struct {
 }
 
 type Component struct {
-	ID        string           `json:"id"`
-	Component ComponentDef     `json:"component"`
+	ID        string       `json:"id"`
+	Component ComponentDef `json:"component"`
 }
 
 type ComponentDef map[string]interface{}
@@ -66,7 +66,7 @@ type DeleteSurface struct {
 // ==================== 工单表单服务 ====================
 
 type A2UITicketService struct {
-	llmGateway  *LLMGateway
+	llmGateway *LLMGateway
 }
 
 // 新的工单表单服务
@@ -117,7 +117,7 @@ func (s *A2UITicketService) buildSurfaceUpdateMessage(surfaceID string, fields m
 			ID: "header",
 			Component: ComponentDef{
 				"Text": map[string]interface{}{
-					"text": map[string]string{"literalString": "创建工单"},
+					"text":      map[string]string{"literalString": "创建工单"},
 					"usageHint": "h1",
 				},
 			},
@@ -161,8 +161,8 @@ func (s *A2UITicketService) buildSurfaceUpdateMessage(surfaceID string, fields m
 			ID: "type-field",
 			Component: ComponentDef{
 				"PickerSelect": map[string]interface{}{
-					"label":      map[string]string{"literalString": "工单类型"},
-					"selection":  map[string]string{"path": "/ticket/type"},
+					"label":     map[string]string{"literalString": "工单类型"},
+					"selection": map[string]string{"path": "/ticket/type"},
 					"options": map[string]interface{}{
 						"explicitList": []map[string]string{
 							{"id": "hardware", "text": "硬件申请"},
@@ -180,8 +180,8 @@ func (s *A2UITicketService) buildSurfaceUpdateMessage(surfaceID string, fields m
 			ID: "priority-field",
 			Component: ComponentDef{
 				"PickerSelect": map[string]interface{}{
-					"label":      map[string]string{"literalString": "优先级"},
-					"selection":  map[string]string{"path": "/ticket/priority"},
+					"label":     map[string]string{"literalString": "优先级"},
+					"selection": map[string]string{"path": "/ticket/priority"},
 					"options": map[string]interface{}{
 						"explicitList": []map[string]string{
 							{"id": "low", "text": "低"},

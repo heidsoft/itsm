@@ -323,4 +323,3 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 
 	common.Success(c, state)
 }
-

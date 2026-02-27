@@ -180,19 +180,15 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
 
   // 子任务处理函数
   const handleCreateSubtask = async (data: Partial<Ticket>) => {
-    console.log('Create subtask:', data);
   };
 
   const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {
-    console.log('Update subtask:', id, data);
   };
 
   const handleDeleteSubtask = async (id: number) => {
-    console.log('Delete subtask:', id);
   };
 
   const handleViewSubtask = (subtask: Subtask) => {
-    console.log('View subtask:', subtask.id);
   };
 
   return (
@@ -317,7 +313,6 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                     ticket={ticket}
                     canManage={canEdit}
                     onWorkflowChange={workflowId => {
-                      console.log('Workflow changed:', workflowId);
                     }}
                   />
                 </div>
@@ -332,7 +327,6 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                     ticketId={ticket.id}
                     autoAnalyze={false}
                     onAnalysisComplete={report => {
-                      console.log('Root cause analysis completed:', report);
                     }}
                   />
                 </div>

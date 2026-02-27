@@ -100,4 +100,3 @@ func (c *AnalyticsController) ExportAnalytics(ctx *gin.Context) {
 	ctx.Header("Content-Disposition", "attachment; filename="+filename)
 	ctx.Data(200, contentType, data)
 }
-

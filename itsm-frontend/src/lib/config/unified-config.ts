@@ -440,8 +440,6 @@ export const initConfig = () => {
   
   if (ENV_CONFIG.NEXT_PUBLIC_ENABLE_DEBUG) {
     console.group('🔧 Configuration Debug');
-    console.log('Current config:', getCurrentConfig());
-    console.log('Validation result:', validation);
     console.groupEnd();
   }
   

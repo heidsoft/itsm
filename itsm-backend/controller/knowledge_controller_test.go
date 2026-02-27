@@ -114,7 +114,7 @@ func TestKnowledgeController_GetArticle(t *testing.T) {
 	tenant := createTestTenantForKnowledge(t, client)
 
 	tests := []struct {
-		name     string
+		name      string
 		articleID string
 	}{
 		{

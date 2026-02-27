@@ -226,7 +226,6 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   const refreshData = () => {
     // 模拟数据刷新
     setLastRefresh(new Date());
-    console.log('Real-time data refreshed');
   };
 
   // 手动刷新

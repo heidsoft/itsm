@@ -14,8 +14,8 @@ type ProcessTriggerServiceInterface interface {
 }
 
 type Service struct {
-	repo              Repository
-	logger            *zap.SugaredLogger
+	repo                  Repository
+	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
 

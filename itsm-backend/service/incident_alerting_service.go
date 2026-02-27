@@ -54,20 +54,20 @@ func (c *EmailChannel) Send(ctx context.Context, alert *dto.IncidentAlertRespons
 
 	// 真实邮件发送逻辑
 	auth := smtp.PlainAuth("", c.smtpUsername, c.smtpPassword, c.smtpHost)
-	
+
 	msg := []byte(fmt.Sprintf("To: %s\r\n"+
 		"Subject: [ITSM Alert] %s\r\n"+
 		"\r\n"+
 		"%s\r\n", alert.Recipients[0], alert.AlertName, alert.Message))
 
 	addr := fmt.Sprintf("%s:%d", c.smtpHost, c.smtpPort)
-	
+
 	// 在非测试/开发环境中尝试发送
 	if os.Getenv("GIN_MODE") == "release" || os.Getenv("ENABLE_EMAIL_SENDING") == "true" {
 		if err := smtp.SendMail(addr, auth, c.fromEmail, alert.Recipients, msg); err != nil {
 			c.logger.Errorw("Failed to send email via SMTP", "error", err)
 			// 降级为模拟，以免阻塞流程（实际生产中应返回错误）
-			time.Sleep(100 * time.Millisecond) 
+			time.Sleep(100 * time.Millisecond)
 		} else {
 			c.logger.Infow("Email sent via SMTP successfully")
 		}
@@ -356,7 +356,7 @@ func (s *IncidentAlertingService) createSystemNotification(ctx context.Context, 
 		SetTitle(alert.AlertName).
 		SetMessage(alert.Message).
 		SetType("incident_alert").
-		SetUserID(userID). 
+		SetUserID(userID).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
@@ -532,7 +532,7 @@ func (s *IncidentAlertingService) GetAlertStatistics(ctx context.Context, tenant
 			Limit(100).
 			Select(incidentalert.FieldTriggeredAt, incidentalert.FieldAcknowledgedAt).
 			All(ctx)
-			
+
 		if err == nil && len(recentAlerts) > 0 {
 			var totalDiff float64
 			count := 0

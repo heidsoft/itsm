@@ -48,9 +48,9 @@ type KPIMetric struct {
 	Value       float64 `json:"value"`
 	Unit        string  `json:"unit"`
 	Color       string  `json:"color"`
-	Trend       string  `json:"trend"`        // up, down, stable
-	Change      float64 `json:"change"`       // 变化百分比
-	ChangeType  string  `json:"changeType"`   // increase, decrease, stable
+	Trend       string  `json:"trend"`      // up, down, stable
+	Change      float64 `json:"change"`     // 变化百分比
+	ChangeType  string  `json:"changeType"` // increase, decrease, stable
 	Description string  `json:"description"`
 }
 
@@ -132,16 +132,16 @@ type PeakHourData struct {
 
 // DashboardOverview Dashboard概览数据
 type DashboardOverview struct {
-	KPIMetrics              []KPIMetric                    `json:"kpiMetrics"`
-	TicketTrend             []TicketTrendData              `json:"ticketTrend"`
-	IncidentDistribution    []IncidentDistributionData    `json:"incidentDistribution"`
-	SLAData                 []SLAData                      `json:"slaData"`
-	SatisfactionData        []SatisfactionData             `json:"satisfactionData"`
-	QuickActions            []QuickAction                  `json:"quickActions"`
-	RecentActivities        []RecentActivity               `json:"recentActivities"`
+	KPIMetrics               []KPIMetric                    `json:"kpiMetrics"`
+	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
+	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
+	SLAData                  []SLAData                      `json:"slaData"`
+	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
+	QuickActions             []QuickAction                  `json:"quickActions"`
+	RecentActivities         []RecentActivity               `json:"recentActivities"`
 	ResponseTimeDistribution []ResponseTimeDistributionData `json:"responseTimeDistribution,omitempty"`
-	TeamWorkload            []TeamWorkloadData             `json:"teamWorkload,omitempty"`
-	PeakHours               []PeakHourData                 `json:"peakHours,omitempty"`
+	TeamWorkload             []TeamWorkloadData             `json:"teamWorkload,omitempty"`
+	PeakHours                []PeakHourData                 `json:"peakHours,omitempty"`
 }
 
 // GetOverview 获取Dashboard概览数据
@@ -178,16 +178,16 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 
 	// 转换为Handler期望的格式
 	overview := DashboardOverview{
-		KPIMetrics:              convertKPIMetrics(overviewData.KPIMetrics),
-		TicketTrend:               convertTicketTrend(overviewData.TicketTrend),
-		IncidentDistribution:      convertIncidentDistribution(overviewData.IncidentDistribution),
-		SLAData:                   convertSLAData(overviewData.SLAData),
-		SatisfactionData:           convertSatisfactionData(overviewData.SatisfactionData),
-		QuickActions:               convertQuickActions(overviewData.QuickActions),
-		RecentActivities:          convertRecentActivities(overviewData.RecentActivities),
-		ResponseTimeDistribution:   convertResponseTimeDistribution(overviewData.ResponseTimeDistribution),
-		TeamWorkload:              convertTeamWorkload(overviewData.TeamWorkload),
-		PeakHours:                 convertPeakHours(overviewData.PeakHours),
+		KPIMetrics:               convertKPIMetrics(overviewData.KPIMetrics),
+		TicketTrend:              convertTicketTrend(overviewData.TicketTrend),
+		IncidentDistribution:     convertIncidentDistribution(overviewData.IncidentDistribution),
+		SLAData:                  convertSLAData(overviewData.SLAData),
+		SatisfactionData:         convertSatisfactionData(overviewData.SatisfactionData),
+		QuickActions:             convertQuickActions(overviewData.QuickActions),
+		RecentActivities:         convertRecentActivities(overviewData.RecentActivities),
+		ResponseTimeDistribution: convertResponseTimeDistribution(overviewData.ResponseTimeDistribution),
+		TeamWorkload:             convertTeamWorkload(overviewData.TeamWorkload),
+		PeakHours:                convertPeakHours(overviewData.PeakHours),
 	}
 
 	// 使用统一的响应格式
@@ -612,4 +612,3 @@ func (h *DashboardHandler) GetStats(c *gin.Context) {
 	// 直接复用 GetOverview 的逻辑
 	h.GetOverview(c)
 }
-

@@ -55,7 +55,6 @@ export const TestRunner: React.FC = () => {
   const runAllTests = useCallback(async () => {
     // 实际的测试执行逻辑应该调用后端API或使用真实的测试框架
     // 这里暂时保留为空，等待对接真实的测试执行引擎
-    console.log('Starting test execution...');
   }, []);
 
   const getStatusIcon = (status: string) => {

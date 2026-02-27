@@ -162,5 +162,3 @@ func (pc *ProvisioningController) ExecuteProvisioningTask(c *gin.Context) {
 		UpdatedAt:        task.UpdatedAt,
 	})
 }
-
-

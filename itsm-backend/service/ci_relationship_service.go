@@ -267,9 +267,9 @@ func (s *CIRelationshipService) GetCIRelationships(ctx context.Context, req *dto
 
 // TopologyGraphData 用于构建拓扑图的临时结构
 type TopologyGraphData struct {
-	Nodes      []dto.TopologyNode
-	Edges      []dto.TopologyEdge
-	NodesMap   map[int]*dto.TopologyNode
+	Nodes    []dto.TopologyNode
+	Edges    []dto.TopologyEdge
+	NodesMap map[int]*dto.TopologyNode
 }
 
 // GetTopologyGraph 获取拓扑图
@@ -403,9 +403,9 @@ func (s *CIRelationshipService) AnalyzeImpact(ctx context.Context, ciID int, ten
 
 	targetNode := s.toTopologyNode(ci)
 	response := &dto.ImpactAnalysisResponse{
-		TargetCI:            &targetNode,
-		UpstreamImpact:     []dto.ImpactAnalysisItem{},
-		DownstreamImpact:   []dto.ImpactAnalysisItem{},
+		TargetCI:             &targetNode,
+		UpstreamImpact:       []dto.ImpactAnalysisItem{},
+		DownstreamImpact:     []dto.ImpactAnalysisItem{},
 		CriticalDependencies: []dto.ImpactAnalysisItem{},
 	}
 
@@ -528,35 +528,35 @@ func (s *CIRelationshipService) toCIRelationshipResponse(rel *ent.CIRelationship
 	}
 
 	return &dto.CIRelationshipResponse{
-		ID:                rel.ID,
-		SourceCIID:        rel.SourceCiID,
-		SourceCIName:      sourceCIName,
-		SourceCIType:      sourceCIType,
-		TargetCIID:        rel.TargetCiID,
-		TargetCIName:      targetCIName,
-		TargetCIType:      targetCIType,
-		RelationshipType:  dto.CIRelationshipType(rel.RelationshipType),
+		ID:                   rel.ID,
+		SourceCIID:           rel.SourceCiID,
+		SourceCIName:         sourceCIName,
+		SourceCIType:         sourceCIType,
+		TargetCIID:           rel.TargetCiID,
+		TargetCIName:         targetCIName,
+		TargetCIType:         targetCIType,
+		RelationshipType:     dto.CIRelationshipType(rel.RelationshipType),
 		RelationshipTypeName: s.getRelationshipTypeName(rel.RelationshipType),
-		Strength:          dto.RelationshipStrength(rel.Strength),
-		ImpactLevel:       dto.ImpactLevel(rel.ImpactLevel),
-		IsActive:         rel.IsActive,
-		IsDiscovered:     rel.IsDiscovered,
-		Description:       rel.Description,
-		Metadata:          rel.Metadata,
-		CreatedAt:        rel.CreatedAt,
-		UpdatedAt:        rel.UpdatedAt,
+		Strength:             dto.RelationshipStrength(rel.Strength),
+		ImpactLevel:          dto.ImpactLevel(rel.ImpactLevel),
+		IsActive:             rel.IsActive,
+		IsDiscovered:         rel.IsDiscovered,
+		Description:          rel.Description,
+		Metadata:             rel.Metadata,
+		CreatedAt:            rel.CreatedAt,
+		UpdatedAt:            rel.UpdatedAt,
 	}, nil
 }
 
 func (s *CIRelationshipService) toTopologyNode(ci *ent.ConfigurationItem) dto.TopologyNode {
 	return dto.TopologyNode{
-		ID:         ci.ID,
-		Name:       ci.Name,
-		Type:       ci.CiType,
-		TypeName:   ci.CiType,
-		Status:     ci.Status,
+		ID:          ci.ID,
+		Name:        ci.Name,
+		Type:        ci.CiType,
+		TypeName:    ci.CiType,
+		Status:      ci.Status,
 		Criticality: ci.Criticality,
-		Attributes: ci.Attributes,
+		Attributes:  ci.Attributes,
 	}
 }
 

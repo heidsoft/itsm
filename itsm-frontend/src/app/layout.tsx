@@ -122,7 +122,6 @@ export default function RootLayout({
                   try {
                     const perfData = performance.getEntriesByType('navigation')[0];
                     if (perfData) {
-                      console.log('页面加载性能:', {
                         'DNS查询': perfData.domainLookupEnd - perfData.domainLookupStart + 'ms',
                         'TCP连接': perfData.connectEnd - perfData.connectStart + 'ms',
                         '请求响应': perfData.responseEnd - perfData.requestStart + 'ms',

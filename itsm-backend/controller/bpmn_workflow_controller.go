@@ -13,14 +13,14 @@ import (
 
 // BPMNWorkflowController BPMN工作流控制器
 type BPMNWorkflowController struct {
-	processEngine   service.ProcessEngine
+	processEngine  service.ProcessEngine
 	versionService *service.BPMNVersionService
 }
 
 // NewBPMNWorkflowController 创建BPMN工作流控制器
 func NewBPMNWorkflowController(processEngine service.ProcessEngine, versionService *service.BPMNVersionService) *BPMNWorkflowController {
 	return &BPMNWorkflowController{
-		processEngine:   processEngine,
+		processEngine:  processEngine,
 		versionService: versionService,
 	}
 }
@@ -236,7 +236,7 @@ func (c *BPMNWorkflowController) ExportProcessDefinition(ctx *gin.Context) {
 			"description": definition.Description,
 			"category":    definition.Category,
 			"version":     definition.Version,
-			"bpmn_xml":   string(definition.BpmnXML),
+			"bpmn_xml":    string(definition.BpmnXML),
 		},
 		"exportTime":    time.Now().Format(time.RFC3339),
 		"exportVersion": "1.0",

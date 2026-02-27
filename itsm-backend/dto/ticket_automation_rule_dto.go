@@ -33,10 +33,10 @@ type TestAutomationRuleRequest struct {
 
 // TestAutomationRuleResponse 测试自动化规则响应
 type TestAutomationRuleResponse struct {
-	Matched    bool     `json:"matched"`
-	Actions    []string `json:"actions,omitempty"`
-	Reason     string   `json:"reason,omitempty"`
-	Error      string   `json:"error,omitempty"`
+	Matched bool     `json:"matched"`
+	Actions []string `json:"actions,omitempty"`
+	Reason  string   `json:"reason,omitempty"`
+	Error   string   `json:"error,omitempty"`
 }
 
 // AutomationRuleResponse 自动化规则响应
@@ -51,7 +51,7 @@ type AutomationRuleResponse struct {
 	ExecutionCount int                      `json:"execution_count"`
 	LastExecutedAt *time.Time               `json:"last_executed_at,omitempty"`
 	CreatedBy      int                      `json:"created_by"`
-	Creator        *UserResponse             `json:"creator,omitempty"`
+	Creator        *UserResponse            `json:"creator,omitempty"`
 	TenantID       int                      `json:"tenant_id"`
 	CreatedAt      time.Time                `json:"created_at"`
 	UpdatedAt      time.Time                `json:"updated_at"`
@@ -101,4 +101,3 @@ func ToAutomationRuleResponse(rule *ent.TicketAutomationRule, creator *ent.User)
 
 	return response
 }
-

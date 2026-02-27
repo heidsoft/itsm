@@ -16,6 +16,7 @@ type Config struct {
 	Log      LogConfig      `mapstructure:"log"`
 	LLM      LLMConfig      `mapstructure:"llm"`
 	SMS      SMSConfig      `mapstructure:"sms"`
+	SMTP     SMTPConfig     `mapstructure:"smtp"`
 }
 
 type DatabaseConfig struct {
@@ -57,8 +58,8 @@ type LLMConfig struct {
 }
 
 type SMSConfig struct {
-	Provider string          `mapstructure:"provider"` // "aliyun" or "tencent", empty means disabled
-	Aliyun   AliyunSMSConfig `mapstructure:"aliyun"`
+	Provider string           `mapstructure:"provider"` // "aliyun" or "tencent", empty means disabled
+	Aliyun   AliyunSMSConfig  `mapstructure:"aliyun"`
 	Tencent  TencentSMSConfig `mapstructure:"tencent"`
 }
 
@@ -77,40 +78,53 @@ type TencentSMSConfig struct {
 	Endpoint  string `mapstructure:"endpoint"`
 }
 
+// SMTPConfig 邮件服务配置
+type SMTPConfig struct {
+	Enabled    bool   `mapstructure:"enabled"`
+	Host       string `mapstructure:"host"`
+	Port       int    `mapstructure:"port"`
+	Username   string `mapstructure:"username"`
+	Password   string `mapstructure:"password"`
+	FromEmail  string `mapstructure:"from_email"`
+	FromName   string `mapstructure:"from_name"`
+	Encryption string `mapstructure:"encryption"` // tls, ssl, or none
+	SkipVerify bool   `mapstructure:"skip_verify"`
+}
+
 // envVarPattern matches ${VAR:default} format
 var envVarPattern = regexp.MustCompile(`\$\{([^:}]+)(?::([^}]*))?\}`)
 
 // resolveEnvVars 解析配置文件中的环境变量 ${VAR:default}
 func resolveEnvVars(input string) string {
 	return envVarPattern.ReplaceAllStringFunc(input, func(match string) string {
-	 submatches := envVarPattern.FindStringSubmatch(match)
-	 if len(submatches) >= 3 {
-		 envName := submatches[1]
-		 defaultValue := submatches[2]
-		 if value := os.Getenv(envName); value != "" {
-			 return value
-		 }
-		 return defaultValue
-	 }
-	 return match
+		submatches := envVarPattern.FindStringSubmatch(match)
+		if len(submatches) >= 3 {
+			envName := submatches[1]
+			defaultValue := submatches[2]
+			if value := os.Getenv(envName); value != "" {
+				return value
+			}
+			return defaultValue
+		}
+		return match
 	})
 }
 
 // resolveMapEnvVars 递归解析 map 中的环境变量
 func resolveMapEnvVars(m map[string]interface{}) {
 	for k, v := range m {
-	 switch val := v.(type) {
-	 case string:
-		 m[k] = resolveEnvVars(val)
-	 case map[string]interface{}:
-		 resolveMapEnvVars(val)
-	 case []interface{}:
-		 for i, item := range val {
-			 if s, ok := item.(string); ok {
-				 val[i] = resolveEnvVars(s)
-			 }
-		 }
-	 }
+		switch val := v.(type) {
+		case string:
+			m[k] = resolveEnvVars(val)
+		case map[string]interface{}:
+			resolveMapEnvVars(val)
+		case []interface{}:
+			for i, item := range val {
+				if s, ok := item.(string); ok {
+					val[i] = resolveEnvVars(s)
+				}
+			}
+		}
 	}
 }
 
@@ -144,6 +158,7 @@ func LoadConfig() (*Config, error) {
 	viper.Set("log", rawConfig["log"])
 	viper.Set("llm", rawConfig["llm"])
 	viper.Set("sms", rawConfig["sms"])
+	viper.Set("smtp", rawConfig["smtp"])
 
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
@@ -168,6 +183,14 @@ func LoadConfig() (*Config, error) {
 			config.SMS.Provider = "tencent"
 		}
 	}
+
+	// SMTP 环境变量支持
+	config.SMTP.Enabled = config.SMTP.Enabled || os.Getenv("SMTP_ENABLED") == "true"
+	config.SMTP.Host = getEnvWithDefault("SMTP_HOST", config.SMTP.Host)
+	config.SMTP.Username = getEnvWithDefault("SMTP_USERNAME", config.SMTP.Username)
+	config.SMTP.Password = getEnvWithDefault("SMTP_PASSWORD", config.SMTP.Password)
+	config.SMTP.FromEmail = getEnvWithDefault("SMTP_FROM_EMAIL", config.SMTP.FromEmail)
+	config.SMTP.FromName = getEnvWithDefault("SMTP_FROM_NAME", config.SMTP.FromName)
 
 	return &config, nil
 }

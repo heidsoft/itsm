@@ -256,4 +256,3 @@ func (s *TicketViewService) ShareTicketView(
 
 	return nil
 }
-

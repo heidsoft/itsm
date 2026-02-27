@@ -79,7 +79,6 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
         selectedRowKeys.length > PERFORMANCE_CONFIG.BATCH_OPERATION_THRESHOLD
       ) {
         // 这里可以添加更复杂的确认逻辑
-        console.log(`Batch deleting ${selectedRowKeys.length} tickets`);
       }
 
       onBatchDelete();
@@ -91,7 +90,6 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
         // 大量选择时使用防抖
         if (keys.length > PERFORMANCE_CONFIG.BATCH_OPERATION_THRESHOLD) {
           // 这里可以添加防抖逻辑
-          console.log(`Selecting ${keys.length} tickets`);
         }
         onRowSelectionChange(keys);
       },

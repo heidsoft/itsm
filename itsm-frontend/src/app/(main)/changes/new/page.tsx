@@ -61,7 +61,6 @@ const CreateChangePage = () => {
       related_tickets: []
     };
 
-    console.log('新建变更数据:', JSON.stringify(changeData, null, 2));
 
     try {
       await ChangeApi.createChange(changeData);

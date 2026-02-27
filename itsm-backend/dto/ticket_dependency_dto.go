@@ -8,15 +8,15 @@ type RelationImpactAnalysisRequest struct {
 }
 
 type RelationImpactAnalysis struct {
-	TicketID         int                 `json:"ticket_id" example:"1001"`
-	TicketNumber     string              `json:"ticket_number" example:"T-2024-001"`
-	TicketTitle      string              `json:"ticket_title" example:"系统响应缓慢"`
-	Action           string              `json:"action" example:"close"`
-	AffectedCount    int                 `json:"affected_count" example:"3"`
-	AffectedTickets  []AffectedTicketInfo `json:"affected_tickets"`
-	Warnings         []string            `json:"warnings"`
-	Recommendations  []string            `json:"recommendations"`
-	RiskLevel        string              `json:"risk_level" example:"medium"`
+	TicketID        int                  `json:"ticket_id" example:"1001"`
+	TicketNumber    string               `json:"ticket_number" example:"T-2024-001"`
+	TicketTitle     string               `json:"ticket_title" example:"系统响应缓慢"`
+	Action          string               `json:"action" example:"close"`
+	AffectedCount   int                  `json:"affected_count" example:"3"`
+	AffectedTickets []AffectedTicketInfo `json:"affected_tickets"`
+	Warnings        []string             `json:"warnings"`
+	Recommendations []string             `json:"recommendations"`
+	RiskLevel       string               `json:"risk_level" example:"medium"`
 }
 
 type AffectedTicketInfo struct {

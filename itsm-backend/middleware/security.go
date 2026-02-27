@@ -69,7 +69,7 @@ func (rl *RateLimiter) Allow(clientIP string) bool {
 func RateLimitMiddleware(limiter *RateLimiter) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		
+
 		if !limiter.Allow(clientIP) {
 			common.Fail(c, http.StatusTooManyRequests, "请求过于频繁，请稍后再试")
 			c.Abort()
@@ -241,22 +241,22 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 防止点击劫持
 		c.Header("X-Frame-Options", "DENY")
-		
+
 		// 防止MIME类型嗅探
 		c.Header("X-Content-Type-Options", "nosniff")
-		
+
 		// XSS保护
 		c.Header("X-XSS-Protection", "1; mode=block")
-		
+
 		// 强制HTTPS
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-		
+
 		// 内容安全策略
 		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' https:")
-		
+
 		// 引用策略
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		
+
 		// 权限策略
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 

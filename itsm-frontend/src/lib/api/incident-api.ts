@@ -298,7 +298,6 @@ export interface CloudProductEventRequest {
 export class IncidentAPI {
   // 获取事件列表
   static async listIncidents(params: ListIncidentsRequest = {}): Promise<ListIncidentsResponse> {
-    console.log('IncidentAPI.listIncidents called with params:', params);
     try {
       // 标准化参数
       const normalizedParams = {
@@ -312,7 +311,6 @@ export class IncidentAPI {
       );
       
       const response = await httpClient.get<ListIncidentsResponse>(API_URLS.INCIDENTS(), cleanParams);
-      console.log('IncidentAPI.listIncidents response:', response);
       return response;
     } catch (error) {
       console.error('IncidentAPI.listIncidents error:', error);

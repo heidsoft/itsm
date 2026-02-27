@@ -34,7 +34,7 @@ type RouterConfig struct {
 	Client    *ent.Client
 
 	// Controllers
-	ProblemInvestigationController *controller.ProblemInvestigationController
+	ProblemInvestigationController  *controller.ProblemInvestigationController
 	TicketController                *controller.TicketController
 	TicketDependencyController      *controller.TicketDependencyController
 	TicketCommentController         *controller.TicketCommentController
@@ -44,12 +44,12 @@ type RouterConfig struct {
 	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
 	TicketViewController            *controller.TicketViewController
 	TicketWorkflowController        *controller.TicketWorkflowController
-	TicketAutomationRuleController *controller.TicketAutomationRuleController
+	TicketAutomationRuleController  *controller.TicketAutomationRuleController
 	IncidentController              *controller.IncidentController
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
-	BPMNProcessTriggerController   *controller.BPMNProcessTriggerController
-	A2UITicketController           *controller.A2UITicketController
+	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
+	A2UITicketController            *controller.A2UITicketController
 	DashboardHandler                *handlers.DashboardHandler
 
 	// Organization & Project
@@ -71,21 +71,21 @@ type RouterConfig struct {
 	PermissionController             *controller.PermissionController
 	TenantController                 *controller.TenantController
 	SystemConfigController           *controller.SystemConfigController
-	ApprovalChainController        *controller.ApprovalChainController
+	ApprovalChainController          *controller.ApprovalChainController
 	NotificationPreferenceController *controller.NotificationPreferenceController
-	NotificationController        *controller.NotificationController
+	NotificationController           *controller.NotificationController
 
 	// Additional domain controllers
-	ServiceController         *controller.ServiceController
-	ProblemController         *controller.ProblemController
-	ChangeController          *controller.ChangeController
-	ChangeApprovalController  *controller.ChangeApprovalController
-	ProvisioningController    *controller.ProvisioningController
-	AnalyticsController       *controller.AnalyticsController
-	PredictionController      *controller.PredictionController
-	ReleaseController         *controller.ReleaseController
+	ServiceController        *controller.ServiceController
+	ProblemController        *controller.ProblemController
+	ChangeController         *controller.ChangeController
+	ChangeApprovalController *controller.ChangeApprovalController
+	ProvisioningController   *controller.ProvisioningController
+	AnalyticsController      *controller.AnalyticsController
+	PredictionController     *controller.PredictionController
+	ReleaseController        *controller.ReleaseController
 	AssetController          *controller.AssetController
-	AssetLicenseController    *controller.AssetLicenseController
+	AssetLicenseController   *controller.AssetLicenseController
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler

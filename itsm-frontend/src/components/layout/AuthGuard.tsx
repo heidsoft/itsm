@@ -17,32 +17,27 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log("AuthGuard: 初始化认证状态", { pathname });
 
       try {
         // 初始化认证服务
         await (MockAuthService as any).initialize();  // 使用any避免类型错误
         
         const authenticated = (MockAuthService as any).isAuthenticated();  // 使用any避免类型错误
-        console.log("AuthGuard: 认证状态", { authenticated, pathname });
 
         setIsLoading(false);
 
         // 如果未认证且不在登录页面，重定向到登录页
         if (!authenticated && pathname !== "/login") {
-          console.log("AuthGuard: 未认证，重定向到登录页");
           router.push("/login");
           return;
         }
 
         // 如果已认证且在登录页面，重定向到dashboard
         if (authenticated && pathname === "/login") {
-          console.log("AuthGuard: 已认证且在登录页，重定向到dashboard");
           router.push("/dashboard");
           return;
         }
 
-        console.log("AuthGuard: 状态正常，显示内容");
       } catch (error) {
         console.error("AuthGuard: 初始化认证失败", error);
         setIsLoading(false);
@@ -58,7 +53,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [router, pathname]);
 
   if (isLoading) {
-    console.log("AuthGuard: 显示加载状态");
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -71,18 +65,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // 如果在登录页面，直接显示内容
   if (pathname === "/login") {
-    console.log("AuthGuard: 在登录页面，直接显示内容");
     return <>{children}</>;
   }
 
   // 如果已认证，显示内容
   if (isAuthenticated) {
-    console.log("AuthGuard: 已认证，显示内容");
     return <>{children}</>;
   }
 
   // 其他情况显示加载状态
-  console.log("AuthGuard: 其他情况，显示加载状态");
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">

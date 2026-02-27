@@ -182,7 +182,6 @@ if (process.env.NODE_ENV === 'development') {
     `❌ Sider宽度 ${LAYOUT_CONFIG.sider.width}px 不符合 Ant Design 公式 (200+8n)`
   );
 
-  console.log('✅ Layout配置符合 Ant Design 官方设计规范');
 }
 
 export default LAYOUT_CONFIG;

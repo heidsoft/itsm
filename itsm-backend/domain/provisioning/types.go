@@ -27,5 +27,3 @@ const (
 	ResourceVPC ResourceType = "vpc"
 	ResourceIAM ResourceType = "iam"
 )
-
-

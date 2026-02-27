@@ -13,10 +13,10 @@ import (
 )
 
 type TicketAssignmentSmartService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
-	assignmentService   *TicketAssignmentService
-	ruleService         *TicketAssignmentRuleService
+	client            *ent.Client
+	logger            *zap.SugaredLogger
+	assignmentService *TicketAssignmentService
+	ruleService       *TicketAssignmentRuleService
 }
 
 func NewTicketAssignmentSmartService(
@@ -267,4 +267,3 @@ func joinStrings(strs []string, sep string) string {
 	}
 	return result
 }
-

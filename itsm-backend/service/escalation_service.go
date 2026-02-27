@@ -16,9 +16,9 @@ import (
 )
 
 type EscalationService struct {
-	client            *ent.Client
-	logger            *zap.SugaredLogger
-	notificationSvc   *TicketNotificationService
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	notificationSvc *TicketNotificationService
 }
 
 func NewEscalationService(client *ent.Client, logger *zap.SugaredLogger) *EscalationService {
@@ -141,7 +141,7 @@ func (e *EscalationService) escalateToLevel(ctx context.Context, alert *ent.SLAA
 				Channel: "in_app",
 				Content: content,
 			}, tenantID)
-			
+
 			if err != nil {
 				e.logger.Errorw("Failed to send SLA escalation notification", "user_id", userID, "error", err)
 			}

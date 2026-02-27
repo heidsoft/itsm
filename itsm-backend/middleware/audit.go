@@ -15,34 +15,34 @@ import (
 type AuditableAction string
 
 const (
-	ActionLogin          AuditableAction = "login"
-	ActionLogout         AuditableAction = "logout"
-	ActionCreate         AuditableAction = "create"
-	ActionUpdate         AuditableAction = "update"
-	ActionDelete         AuditableAction = "delete"
-	ActionView           AuditableAction = "view"
-	ActionSearch         AuditableAction = "search"
-	ActionExport         AuditableAction = "export"
-	ActionImport         AuditableAction = "import"
-	ActionAssign         AuditableAction = "assign"
-	ActionEscalate       AuditableAction = "escalate"
-	ActionResolve        AuditableAction = "resolve"
-	ActionClose          AuditableAction = "close"
-	ActionReopen         AuditableAction = "reopen"
-	ActionComment        AuditableAction = "comment"
-	ActionAttachment     AuditableAction = "attachment"
-	ActionPermission     AuditableAction = "permission"
-	ActionConfiguration  AuditableAction = "configuration"
+	ActionLogin         AuditableAction = "login"
+	ActionLogout        AuditableAction = "logout"
+	ActionCreate        AuditableAction = "create"
+	ActionUpdate        AuditableAction = "update"
+	ActionDelete        AuditableAction = "delete"
+	ActionView          AuditableAction = "view"
+	ActionSearch        AuditableAction = "search"
+	ActionExport        AuditableAction = "export"
+	ActionImport        AuditableAction = "import"
+	ActionAssign        AuditableAction = "assign"
+	ActionEscalate      AuditableAction = "escalate"
+	ActionResolve       AuditableAction = "resolve"
+	ActionClose         AuditableAction = "close"
+	ActionReopen        AuditableAction = "reopen"
+	ActionComment       AuditableAction = "comment"
+	ActionAttachment    AuditableAction = "attachment"
+	ActionPermission    AuditableAction = "permission"
+	ActionConfiguration AuditableAction = "configuration"
 )
 
 // SensitiveResource 敏感资源类型
 var SensitiveResources = map[string]bool{
-	"users":         true,
-	"roles":         true,
-	"permissions":   true,
+	"users":          true,
+	"roles":          true,
+	"permissions":    true,
 	"configurations": true,
-	"audit_logs":    true,
-	"system":        true,
+	"audit_logs":     true,
+	"system":         true,
 }
 
 // AuditMiddleware persists audit logs for operations with enhanced security tracking
@@ -70,7 +70,7 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		tenantID := c.GetInt("tenant_id")
 		userID := 0
 		username := ""
-		
+
 		if v, ok := c.Get("user_id"); ok {
 			switch t := v.(type) {
 			case int:
@@ -81,7 +81,7 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 				userID = int(t)
 			}
 		}
-		
+
 		if v, ok := c.Get("username"); ok {
 			if uname, ok := v.(string); ok {
 				username = uname
@@ -196,12 +196,12 @@ func shouldAuditRequest(c *gin.Context) bool {
 func determineActionAndResource(c *gin.Context) (string, string, string) {
 	method := c.Request.Method
 	path := c.Request.URL.Path
-	
+
 	// 解析路径获取资源和ID
 	pathParts := strings.Split(strings.Trim(path, "/"), "/")
-	
+
 	var resource, resourceID, action string
-	
+
 	// 基本资源识别
 	if len(pathParts) >= 3 && pathParts[0] == "api" && pathParts[1] == "v1" {
 		resource = pathParts[2]
@@ -264,13 +264,13 @@ func isActionPath(pathPart string) bool {
 		"comment", "attachment", "export", "import",
 		"search", "stats", "analytics", "batch",
 	}
-	
+
 	for _, actionPath := range actionPaths {
 		if pathPart == actionPath {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

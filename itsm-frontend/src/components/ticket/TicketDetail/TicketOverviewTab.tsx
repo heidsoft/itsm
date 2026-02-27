@@ -197,7 +197,6 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
             requesterId={ticket.requesterId}
             canRate={canEdit}
             onRatingSubmitted={newRating => {
-              console.log('Rating submitted:', newRating);
             }}
           />
 
