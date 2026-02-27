@@ -57,11 +57,12 @@ import {
 import { CheckCircleOutlined } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-const { CheckboxGroup } = Checkbox;
+const CheckboxGroup = Checkbox.Group;
 
 interface AnalyticsDimension {
   key: string;
@@ -86,10 +87,10 @@ interface ChartData {
 interface AnalyticsConfig {
   dimensions: string[];
   metrics: string[];
-  chartType: 'line' | 'bar' | 'pie' | 'area' | 'table';
-  timeRange: [string, string];
-  filters: Record<string, any>;
-  groupBy?: string;
+  chart_type: 'line' | 'bar' | 'pie' | 'area' | 'table';
+  time_range: [string, string];
+  filters: Record<string, unknown>;
+  group_by?: string;
 }
 
 interface TicketDeepAnalyticsProps {
@@ -108,8 +109,8 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   const [config, setConfig] = useState<AnalyticsConfig>({
     dimensions: ['status'],
     metrics: ['count'],
-    chartType: 'bar',
-    timeRange: [
+    chart_type: 'bar',
+    time_range: [
       format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
       format(new Date(), 'yyyy-MM-dd'),
     ],
@@ -235,7 +236,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
 
     const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'];
 
-    switch (config.chartType) {
+    switch (config.chart_type) {
       case 'line':
         return (
           <ResponsiveContainer width='100%' height={400}>
@@ -271,7 +272,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
                 cx='50%'
                 cy='50%'
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                 outerRadius={120}
                 fill='#8884d8'
                 dataKey='value'
@@ -356,21 +357,21 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Space className='mb-4' wrap>
           <RangePicker
             value={[
-              config.timeRange[0] ? new Date(config.timeRange[0]) : null,
-              config.timeRange[1] ? new Date(config.timeRange[1]) : null,
+              config.time_range[0] ? dayjs(config.time_range[0]) : null,
+              config.time_range[1] ? dayjs(config.time_range[1]) : null,
             ]}
             onChange={dates => {
               if (dates) {
                 setConfig({
                   ...config,
-                  timeRange: [format(dates[0]!, 'yyyy-MM-dd'), format(dates[1]!, 'yyyy-MM-dd')],
+                  time_range: [dates[0]!.format('YYYY-MM-DD'), dates[1]!.format('YYYY-MM-DD')],
                 });
               }
             }}
           />
           <Select
-            value={config.chartType}
-            onChange={value => setConfig({ ...config, chartType: value })}
+            value={config.chart_type}
+            onChange={value => setConfig({ ...config, chart_type: value })}
             style={{ width: 120 }}
           >
             <Option value='line'>
@@ -477,7 +478,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               ))}
             </CheckboxGroup>
           </Form.Item>
-          <Form.Item name='chartType' label='图表类型'>
+          <Form.Item name='chart_type' label='图表类型'>
             <Radio.Group>
               <Radio value='line'>折线图</Radio>
               <Radio value='bar'>柱状图</Radio>
@@ -486,7 +487,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               <Radio value='table'>表格</Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item name='groupBy' label='分组方式'>
+          <Form.Item name='group_by' label='分组方式'>
             <Select placeholder='请选择分组方式' allowClear>
               {availableDimensions
                 .filter(d => d.type === 'category')
