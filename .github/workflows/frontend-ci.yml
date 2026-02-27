@@ -18,6 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -27,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run lint
         working-directory: ./itsm-frontend
@@ -40,6 +41,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -49,7 +51,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run type check
         working-directory: ./itsm-frontend
@@ -62,6 +64,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -71,7 +74,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run unit tests
         working-directory: ./itsm-frontend
@@ -90,6 +93,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -99,7 +103,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run integration tests
         working-directory: ./itsm-frontend
@@ -113,6 +117,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -122,7 +127,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build application
         working-directory: ./itsm-frontend
@@ -139,6 +144,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -148,7 +154,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Install Playwright browsers
         working-directory: ./itsm-frontend

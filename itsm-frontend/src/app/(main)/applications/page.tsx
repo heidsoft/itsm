@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Tag, Space, Modal, Form, Input, Select, Tabs, message } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined, AppstoreOutlined, ApiOutlined, SyncOutlined } from "@ant-design/icons";
-import { PageContainer } from "@ant-design/pro-components";
+import { PageContainer } from "@/app/components/PageContainer";
 import { applicationService, Application, Microservice } from "@/lib/services/application-service";
 
 const { TabPane } = Tabs;

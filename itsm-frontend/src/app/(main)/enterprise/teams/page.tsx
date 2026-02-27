@@ -21,7 +21,7 @@ import {
   UserOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { PageContainer } from '@ant-design/pro-components';
+import { PageContainer } from '@/app/components/PageContainer';
 import { teamService, Team } from '@/lib/services/team-service';
 
 import { UserApi } from '@/lib/api/user-api';
