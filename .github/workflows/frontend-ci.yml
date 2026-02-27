@@ -18,25 +18,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: itsm-frontend/pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci --legacy-peer-deps
 
       - name: Run lint
         working-directory: ./itsm-frontend
-        run: pnpm run lint:check
+        run: npm run lint:check
 
   type-check:
     name: Type Check
@@ -45,25 +41,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: itsm-frontend/pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci --legacy-peer-deps
 
       - name: Run type check
         working-directory: ./itsm-frontend
-        run: pnpm run type-check
+        run: npm run type-check
 
   unit-tests:
     name: Unit Tests
@@ -72,25 +64,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: itsm-frontend/pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci --legacy-peer-deps
 
       - name: Run unit tests
         working-directory: ./itsm-frontend
-        run: pnpm run test:unit
+        run: npm run test:unit
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -105,25 +93,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: itsm-frontend/pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci --legacy-peer-deps
 
       - name: Run integration tests
         working-directory: ./itsm-frontend
-        run: pnpm run test:integration
+        run: npm run test:integration
 
   build:
     name: Build
@@ -133,25 +117,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: itsm-frontend/pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci --legacy-peer-deps
 
       - name: Build application
         working-directory: ./itsm-frontend
-        run: pnpm run build
+        run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080
 
@@ -164,21 +144,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: itsm-frontend/pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
-        run: pnpm install --frozen-lockfile
+        run: npm ci --legacy-peer-deps
 
       - name: Install Playwright browsers
         working-directory: ./itsm-frontend
@@ -186,14 +162,14 @@ jobs:
 
       - name: Build application
         working-directory: ./itsm-frontend
-        run: pnpm run build
+        run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080
 
       - name: Start dev server
         working-directory: ./itsm-frontend
         run: |
-          pnpm run dev &
+          npm run dev &
           sleep 10
 
       - name: Run E2E tests
