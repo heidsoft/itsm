@@ -40,13 +40,14 @@ type JWTConfig struct {
 }
 
 type LogConfig struct {
-	Level            string `mapstructure:"level"`             // 日志级别: debug, info, warn, error
-	Path             string `mapstructure:"path"`              // 日志文件目录
-	MaxSize          int    `mapstructure:"max_size"`          // 单个日志文件最大大小(MB)
-	MaxBackups       int    `mapstructure:"max_backups"`       // 保留的旧日志文件数量
-	MaxAge           int    `mapstructure:"max_age"`           // 日志文件保留天数
-	Compress         bool   `mapstructure:"compress"`          // 是否压缩旧日志文件
-	Development      bool   `mapstructure:"development"`       // 开发模式(输出到console)
+	Level       string `mapstructure:"level"`       // 日志级别: debug, info, warn, error
+	Path        string `mapstructure:"path"`        // 日志文件目录
+	MaxSize     int    `mapstructure:"max_size"`    // 单个日志文件最大大小(MB)
+	MaxBackups  int    `mapstructure:"max_backups"` // 保留的旧日志文件数量
+	MaxAge      int    `mapstructure:"max_age"`     // 日志文件保留天数
+	Compress    bool   `mapstructure:"compress"`    // 是否压缩旧日志文件
+	LocalTime   bool   `mapstructure:"local_time"`  // 日志文件名是否使用本地时间 (默认 UTC)
+	Development bool   `mapstructure:"development"` // 开发模式(输出到console)
 }
 
 type LLMConfig struct {

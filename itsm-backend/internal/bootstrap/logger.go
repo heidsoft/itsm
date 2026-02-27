@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"itsm-backend/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"itsm-backend/config"
 )
 
 // initLogger 初始化日志系统
@@ -46,10 +46,11 @@ func initLogger(cfg *config.LogConfig) *zap.Logger {
 	// 文件输出配置
 	fileWriter := zapcore.AddSync(&lumberjack.Logger{
 		Filename:   filepath.Join(cfg.Path, "itsm.log"),
-		MaxSize:   cfg.MaxSize, // MB
+		MaxSize:    cfg.MaxSize, // MB
 		MaxBackups: cfg.MaxBackups,
 		MaxAge:     cfg.MaxAge, // days
 		Compress:   cfg.Compress,
+		LocalTime:  cfg.LocalTime, // 使用本地时间戳
 	})
 
 	// 控制台输出
