@@ -40,6 +40,7 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
       process.env.NODE_ENV === 'development' &&
       process.env.NEXT_PUBLIC_DEBUG_DASHBOARD === 'true'
     ) {
+      console.log('SLA Debug:', {
         averageSLA,
         percent,
         clampedPercent,
