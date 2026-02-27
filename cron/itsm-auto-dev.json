@@ -1,0 +1,13 @@
+{
+  "name": "itsm-auto-dev",
+  "description": "根据 ITSM 任务列表自动完成开发任务并提交 GitHub",
+  "cron": "0 10 * * *",
+  "timezone": "Asia/Shanghai",
+  "agent": "dev",
+  "message": "执行 ITSM 自动化开发任务",
+  "task": "ITSM 自动化开发流程：\n\n1️⃣ **任务选择**\n   - 读取 /root/.openclaw/workspace/dev/ITSM-TASK-LIST.md\n   - 选择 P1/P2 优先级的待开始任务\n   - 每次最多处理 1-2 个小任务\n\n2️⃣ **代码开发**\n   - 读取相关源文件\n   - 实现功能/修复问题\n   - 遵循项目代码规范\n\n3️⃣ **本地验证**\n   - 检查代码格式\n   - 运行简单验证（如 go fmt, npm run type-check）\n   - 确保不破坏现有功能\n\n4️⃣ **提交审查**\n   - 生成变更摘要\n   - 等待人工确认（不自动 push）\n   - 或 push 到 feature 分支\n\n5️⃣ **输出报告**\n   - 完成的任务\n   - 修改的文件\n   - 遇到的问题\n   - 后续建议\n\n⚠️ **限制**:\n- 不修改核心业务逻辑\n- 不删除现有代码\n- 不自动 push 到 main 分支\n- 复杂任务等待人工确认",
+  "enabled": true,
+  "announce": true,
+  "timeout": 300000,
+  "sessionTarget": "isolated"
+}
