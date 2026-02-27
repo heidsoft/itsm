@@ -11,6 +11,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 env:
   GOPROXY: "https://goproxy.io,direct"
 
