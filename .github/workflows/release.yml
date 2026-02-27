@@ -90,27 +90,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download backend artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: itsm-backend-*
+          merge-multiple: true
           path: artifacts
 
       - name: Create release archives
         run: |
           cd artifacts
-          for dir in itsm-backend-*; do
-            if [ -d "$dir" ]; then
-              cd "$dir"
-              zip ../../${dir}.zip *
-              cd ..
-            fi
-          done
+          ls -la
+          zip -r ../itsm-v1.0.0-backends.zip .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: artifacts/*.zip
+          files: itsm-v1.0.0-backends.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
