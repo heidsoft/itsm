@@ -27,8 +27,8 @@ on:
           - database
 
 env:
-  ITSM_API_URL:8080
-  http://localhost: ITSM_UI_URL: http://localhost:3000
+  ITSM_API_URL: http://localhost:8080
+  ITSM_UI_URL: http://localhost:3000
   ITSM_DB_HOST: localhost
   ITSM_DB_PORT: 5432
   ITSM_DB_NAME: itsm
