@@ -39,7 +39,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci --legacy-peer-deps
+      run: npm ci
       
     - name: Warm up Node.js
       run: node -e "console.log('Node.js warmed up')"
@@ -99,7 +99,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci --legacy-peer-deps
+      run: npm ci
       
     - name: Run benchmark tests
       run: |
@@ -141,7 +141,7 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci --legacy-peer-deps
+      run: npm ci
       
     - name: Run memory leak tests
       run: |
