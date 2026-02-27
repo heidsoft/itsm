@@ -69,6 +69,8 @@ jobs:
 
       - name: Build
         run: cd itsm-frontend && npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
