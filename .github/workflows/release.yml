@@ -65,7 +65,7 @@ jobs:
           cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
-        run: cd itsm-frontend && npm ci
+        run: cd itsm-frontend && npm ci --legacy-peer-deps
 
       - name: Build
         run: cd itsm-frontend && npm run build
