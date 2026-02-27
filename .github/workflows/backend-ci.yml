@@ -2,6 +2,7 @@ name: backend-ci
 
 on:
   push:
+    branches: [main, develop]
     paths:
       - 'itsm-backend/**'
       - '.github/workflows/backend-ci.yml'
@@ -10,6 +11,9 @@ on:
       - 'itsm-backend/**'
       - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
+
+env:
+  GOPROXY: "https://goproxy.io,direct"
 
 jobs:
   lint:
@@ -21,7 +25,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
@@ -55,12 +59,19 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
       - name: Build
-        run: cd itsm-backend && go build -o /dev/null ./...
+        run: cd itsm-backend && go build -o itsm ./main.go
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: itsm-backend-binary
+          path: itsm-backend/itsm
+          retention-days: 7
 
   test:
     runs-on: ubuntu-latest
@@ -72,7 +83,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
