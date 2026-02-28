@@ -49,6 +49,48 @@ jobs:
           cache: true
           args: '-checks=all,-ST1000,-U1000' itsm-backend/...
 
+      - name: Code quality checks (file size & function length)
+        run: |
+          chmod +x scripts/code-quality-check.sh
+          # Run only backend code checks (skip frontend, perf, security for CI speed)
+          cd itsm-backend
+          echo "=== File Size Check (>500 lines warning) ==="
+          large_files=$(find . -name "*.go" -not -path "./vendor/*" -not -path "./ent/*" | while read f; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt 500 ]; then
+              echo "  WARNING: $f ($lines lines)"
+            fi
+          done)
+          if [ -n "$large_files" ]; then
+            echo "$large_files"
+            echo "::warning::Found large files (>500 lines). Consider refactoring."
+          else
+            echo "✓ No large files found"
+          fi
+          
+          echo "=== Function Length Check (>50 lines warning) ==="
+          # Simple function length check using awk
+          long_funcs=$(find . -name "*.go" -not -path "./vendor/*" -not -path "./ent/*" -not -path "./.git/*" -exec awk '
+          /^[[:space:]]*func[[:space:]]+/ {
+              func_name = $0; gsub(/^[[:space:]]*func[[:space:]]+/, "", func_name)
+              gsub(/\(.*/, "", func_name); gsub(/\{.*/, "", func_name)
+              start = NR; braces = 0; in_func = 1
+          }
+          in_func && /\{/ { braces += gsub(/\{/, "{") }
+          in_func && /\}/ { braces -= gsub(/\}/, "}") }
+          in_func && braces == 0 {
+              len = NR - start + 1
+              if (len > 50) printf "  WARNING: %s:%s (%d lines)\n", FILENAME, func_name, len
+              in_func = 0
+          }
+          ' {} \; | head -10)
+          if [ -n "$long_funcs" ]; then
+            echo "$long_funcs"
+            echo "::warning::Found long functions (>50 lines). Consider refactoring."
+          else
+            echo "✓ No long functions found"
+          fi
+
   build:
     runs-on: ubuntu-latest
     needs: lint
